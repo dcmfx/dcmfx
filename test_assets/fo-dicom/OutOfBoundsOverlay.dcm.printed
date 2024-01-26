@@ -1,0 +1,243 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (Digital Mammography X-Ray Image Storage - For Presentation)
+(0002,0003) UI Media Storage SOP Instance UID       [    16 bytes] "1.3.12.2.1107.4"
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1]))
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0.7230010.3.0.3.6.7"
+(0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMTK_367"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    28 bytes] "DERIVED", "PRIMARY", "STEREO", …
+(0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Digital Mammography X-Ray Image Storage - For Presentation)
+(0008,0018) UI SOP Instance UID                     [    16 bytes] "1.3.12.2.1107.4"
+(0008,0020) DA Study Date                           [     8 bytes] 2020-09-10
+(0008,0021) DA Series Date                          [     8 bytes] 2020-09-10
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2020-09-10
+(0008,0023) DA Content Date                         [     8 bytes] 2020-09-10
+(0008,0030) TM Study Time                           [     6 bytes] 11:00:00
+(0008,0031) TM Series Time                          [     6 bytes] 11:00:00
+(0008,0032) TM Acquisition Time                     [     6 bytes] 11:00:00
+(0008,0033) TM Content Time                         [     6 bytes] 11:00:00
+(0008,0050) SH Accession Number                     [    12 bytes] "202009101100"
+(0008,0060) CS Modality                             [     2 bytes] "MG" (Mammography)
+(0008,0068) CS Presentation Intent Type             [    16 bytes] "FOR PRESENTATION"
+(0008,0090) PN Referring Physician's Name           [    10 bytes] "TEST TEST"
+(0008,1030) LO Study Description                    [    16 bytes] "cilinderbiopsie"
+(0008,103E) LO Series Description                   [    14 bytes] "SINGLE IMAGES"
+(0008,1040) LO Institutional Department Name        [    10 bytes] "Department"
+(0008,1090) LO Manufacturer's Model Name            [    20 bytes] "Mammomat Inspiration"
+(0008,1111) SQ Referenced Performed Procedure Step Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Modality Performed Procedure Step SOP Class)
+    (0008,1155) UI Referenced SOP Instance UID          [    56 bytes] "1.3.12.2.1107.5.12.7.2608. …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,1120) SQ Referenced Patient Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Detached Patient Management SOP Class)
+    (0008,1155) UI Referenced SOP Instance UID          [    54 bytes] "1.2.124.113532.80.22199.55 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,1140) SQ Referenced Image Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    28 bytes] "1.2.840 … (Digital Mammography X-Ray Image Storage - For Presentation)
+    (0008,1155) UI Referenced SOP Instance UID          [    56 bytes] "1.3.12.2.1107.5.12.7.2608. …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,2112) SQ Source Image Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    30 bytes] "1.2.840 … (Digital Mammography X-Ray Image Storage - For Processing)
+    (0008,1155) UI Referenced SOP Instance UID          [    56 bytes] "1.3.12.2.1107.5.12.7.2608. …
+    (0028,135A) CS Spatial Locations Preserved          [     4 bytes] "YES"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,2218) SQ Anatomic Region Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     8 bytes] "T-04000"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SNM3"
+    (0008,0104) LO Code Meaning                         [     6 bytes] "Breast"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0010,0010) PN Patient's Name                       [    14 bytes] "AAAAAA^BBBBBBB"
+(0010,0020) LO Patient ID                           [    12 bytes] "202009101100"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 2000-01-01
+(0010,0040) CS Patient's Sex                        [     2 bytes] "F" (Female)
+(0018,0010) LO Contrast/Bolus Agent                 [     0 bytes] ""
+(0018,0015) CS Body Part Examined                   [     6 bytes] "BREAST"
+(0018,0060) DS KVP                                  [     2 bytes] "24"
+(0018,1000) LO Device Serial Number                 [     4 bytes] "2608"
+(0018,1030) LO Protocol Name                        [    20 bytes] "PUNCTIE BORST LINKS"
+(0018,1110) DS Distance Source to Detector          [     4 bytes] "650"
+(0018,1111) DS Distance Source to Patient           [     4 bytes] "623"
+(0018,1114) DS Estimated Radiographic Magnification Factor  [    16 bytes] "1.0433386837881"
+(0018,1138) DS Table Angle                          [     2 bytes] "0"
+(0018,113A) CS Table Type                           [     4 bytes] "NONE"
+(0018,1147) CS Field of View Shape                  [    10 bytes] "RECTANGLE"
+(0018,1149) IS Field of View Dimension(s)           [     6 bytes] "67", "112"
+(0018,1150) IS Exposure Time                        [     4 bytes] "298"
+(0018,1151) IS X-Ray Tube Current                   [     4 bytes] "149"
+(0018,1152) IS Exposure                             [     2 bytes] "44"
+(0018,1153) IS Exposure in µAs                     [     6 bytes] "44410"
+(0018,1156) CS Rectification Type                   [    16 bytes] "CONST POTENTIAL"
+(0018,1164) DS Imager Pixel Spacing                 [    12 bytes] "0.085", "0.085"
+(0018,1166) CS Grid                                 [     4 bytes] "NONE"
+(0018,1190) DS Focal Spot(s)                        [     4 bytes] "0.3"
+(0018,1191) CS Anode Target Material                [    10 bytes] "MOLYBDENUM"
+(0018,11A0) DS Body Part Thickness                  [     2 bytes] "14"
+(0018,11A2) DS Compression Force                    [     4 bytes] "59.2"
+(0018,1400) LO Acquisition Device Processing Description  [     0 bytes] ""
+(0018,1401) LO Acquisition Device Processing Code   [     0 bytes] ""
+(0018,1405) IS Relative X-Ray Exposure              [     4 bytes] "173"
+(0018,1460) DS Tomo Layer Height                    [     2 bytes] "0"
+(0018,1508) CS Positioner Type                      [    12 bytes] "MAMMOGRAPHIC"
+(0018,1510) DS Positioner Primary Angle             [     4 bytes] "0.03"
+(0018,1511) DS Positioner Secondary Angle           [     2 bytes] "0"
+(0018,1530) DS Detector Primary Angle               [     6 bytes] "-15.03"
+(0018,1531) DS Detector Secondary Angle             [     2 bytes] "0"
+(0018,1600) CS Shutter Shape                        [    12 bytes] "RECTANGULAR"
+(0018,1602) IS Shutter Left Vertical Edge           [     2 bytes] "0"
+(0018,1604) IS Shutter Right Vertical Edge          [     4 bytes] "1318"
+(0018,1606) IS Shutter Upper Horizontal Edge        [     2 bytes] "0"
+(0018,1608) IS Shutter Lower Horizontal Edge        [     4 bytes] "788"
+(0018,5101) CS View Position                        [     2 bytes] "CC"
+(0018,7000) CS Detector Conditions Nominal Flag     [     4 bytes] "YES"
+(0018,7001) DS Detector Temperature                 [    12 bytes] "29.58984375"
+(0018,7004) CS Detector Type                        [     6 bytes] "DIRECT"
+(0018,7005) CS Detector Configuration               [     4 bytes] "AREA"
+(0018,7006) LT Detector Description                 [    96 bytes] "SN=L03-02246;ctx=contact;mc=3. …
+(0018,7008) LT Detector Mode                        [     6 bytes] "STEREO"
+(0018,700A) SH Detector ID                          [    10 bytes] "L03-02246"
+(0018,700C) DA Date of Last Detector Calibration    [     8 bytes] 2020-07-16
+(0018,700E) TM Time of Last Detector Calibration    [    14 bytes] 12:32:27
+(0018,7010) IS Exposures on Detector Since Last Calibration  [     4 bytes] "326"
+(0018,7011) IS Exposures on Detector Since Manufactured  [     6 bytes] "140070"
+(0018,7012) DS Detector Time Since Last Exposure    [     6 bytes] "43.938"
+(0018,7014) DS Detector Active Time                 [     4 bytes] "3000"
+(0018,7016) DS Detector Activation Offset From Exposure  [     2 bytes] "0"
+(0018,701A) DS Detector Binning                     [     4 bytes] "1", "1"
+(0018,7020) DS Detector Element Physical Size       [    12 bytes] "0.085", "0.085"
+(0018,7022) DS Detector Element Spacing             [    12 bytes] "0.085", "0.085"
+(0018,7024) CS Detector Active Shape                [    10 bytes] "RECTANGLE"
+(0018,7026) DS Detector Active Dimension(s)         [    14 bytes] "304.64", "239.36"
+(0018,7028) DS Detector Active Origin               [     4 bytes] "0", "0"
+(0018,7030) DS Field of View Origin                 [     8 bytes] "859", "2026"
+(0018,7032) DS Field of View Rotation               [     2 bytes] "90"
+(0018,7034) CS Field of View Horizontal Flip        [     2 bytes] "NO"
+(0018,7050) CS Filter Material                      [     8 bytes] "RHODIUM"
+(0018,7052) DS Filter Thickness Minimum             [     6 bytes] "0.025"
+(0018,7054) DS Filter Thickness Maximum             [     6 bytes] "0.025"
+(0018,7060) CS Exposure Control Mode                [     6 bytes] "MANUAL"
+(0018,7062) LT Exposure Control Mode Description    [    62 bytes] "TableID=4;PaddleID=20;Dose Lev …
+(0018,7064) CS Exposure Status                      [     6 bytes] "NORMAL"
+(0018,8150) DS Exposure Time in µS                 [     6 bytes] "298000"
+(0018,8151) DS X-Ray Tube Current in µA            [    16 bytes] "149026.84563758"
+(0020,000D) UI Study Instance UID                   [    10 bytes] "1.2.124.1"
+(0020,000E) UI Series Instance UID                  [    18 bytes] "1.3.12.2.1107.5.12"
+(0020,0010) SH Study ID                             [     2 bytes] "1"
+(0020,0011) IS Series Number                        [     2 bytes] "2"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "2"
+(0020,0013) IS Instance Number                      [     2 bytes] "2"
+(0020,0020) CS Patient Orientation                  [     4 bytes] "R", "P"
+(0020,0062) CS Image Laterality                     [     2 bytes] "L" (Left)
+(0020,4000) LT Image Comments                       [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 788
+(0028,0011) US Columns                              [     2 bytes] 1318
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 12
+(0028,0102) US High Bit                             [     2 bytes] 11
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,0120) US Pixel Padding Value                  [     2 bytes] 0
+(0028,0300) CS Quality Control Image                [     2 bytes] "NO"
+(0028,0301) CS Burned In Annotation                 [     2 bytes] "NO"
+(0028,1040) CS Pixel Intensity Relationship         [     4 bytes] "LOG" (Non-linear "Log Function")
+(0028,1041) SS Pixel Intensity Relationship Sign    [     2 bytes] 1
+(0028,1050) DS Window Center                        [     4 bytes] "2048"
+(0028,1051) DS Window Width                         [     4 bytes] "4096"
+(0028,1052) DS Rescale Intercept                    [     2 bytes] "0"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0028,1054) LO Rescale Type                         [     2 bytes] "US"
+(0028,1055) LO Window Center & Width Explanation    [    10 bytes] "linear LUT"
+(0028,1300) CS Breast Implant Present               [     2 bytes] "NO"
+(0028,1350) CS Partial View                         [     2 bytes] "NO"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
+(0032,000A) CS Study Status ID                      [    10 bytes] "COMPLETED"
+(0032,000C) CS Study Priority ID                    [     4 bytes] "LOW"
+(0032,1032) PN Requesting Physician                 [    14 bytes] "CCCCCC DDDDDD"
+(0032,1060) LO Requested Procedure Description      [    20 bytes] "PUNCTIE BORST LINKS"
+(0032,4000) LT Study Comments                       [     0 bytes] ""
+(0038,0300) LO Current Patient Location             [     4 bytes] "gang"
+(0040,0244) DA Performed Procedure Step Start Date  [     8 bytes] 2020-08-27
+(0040,0245) TM Performed Procedure Step Start Time  [    14 bytes] 11:51:33.812
+(0040,0253) SH Performed Procedure Step ID          [    16 bytes] "MG20200827115133"
+(0040,0254) LO Performed Procedure Step Description  [    20 bytes] "PUNCTIE BORST LINKS"
+(0040,0275) SQ Request Attributes Sequence
+  (FFFE,E000) Item
+    (0008,0050) SH Accession Number                     [    12 bytes] "300827159361"
+    (0008,1110) SQ Referenced Study Sequence
+      (FFFE,E000) Item
+        (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Detached Study Management SOP Class)
+        (0008,1155) UI Referenced SOP Instance UID          [    54 bytes] "1.2.124.113532.80.2219 …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0020,000D) UI Study Instance UID                   [    54 bytes] "1.2.124.113532.80.22199.42 …
+    (0032,1060) LO Requested Procedure Description      [    28 bytes] "cilinderbiopsie borst links"
+    (0032,1064) SQ Requested Procedure Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     4 bytes] "361"
+        (0008,0102) SH Coding Scheme Designator             [     2 bytes] "RP"
+        (0008,0103) SH Coding Scheme Version                [     0 bytes] ""
+        (0008,0104) LO Code Meaning                         [    28 bytes] "cilinderbiopsie borst  …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0040,0009) SH Scheduled Procedure Step ID          [    12 bytes] "300827159361"
+    (0040,1001) SH Requested Procedure ID               [    12 bytes] "300827159361"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0040,0302) US Entrance Dose                        [     2 bytes] 0
+(0040,0306) DS Distance Source to Entrance          [     4 bytes] "609"
+(0040,0316) DS Organ Dose                           [     8 bytes] "0.011805"
+(0040,0318) CS Organ Exposed                        [     6 bytes] "BREAST"
+(0040,0555) SQ Acquisition Context Sequence
+(FFFE,E0DD) Sequence Delimitation Item
+(0040,1001) SH Requested Procedure ID               [    12 bytes] "300827159361"
+(0040,2016) LO Placer Order Number / Imaging Service Request  [    12 bytes] "30082715915"
+(0040,8302) DS Entrance Dose in mGy                 [    16 bytes] "1.8121681064816"
+(0050,0004) CS Calibration Image                    [     2 bytes] "NO"
+(0054,0220) SQ View Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     8 bytes] "R-10242"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SNM3"
+    (0008,0104) LO Code Meaning                         [    14 bytes] "cranio-caudal"
+    (0054,0222) SQ View Modifier Code Sequence
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(2050,0020) CS Presentation LUT Shape               [     8 bytes] "IDENTITY"
+(6000,0010) US Overlay Rows                         [     2 bytes] 101
+(6000,0011) US Overlay Columns                      [     2 bytes] 101
+(6000,0015) IS Number of Frames in Overlay          [     2 bytes] "1"
+(6000,0022) LO Overlay Description                  [    20 bytes] "First reference mark"
+(6000,0040) CS Overlay Type                         [     2 bytes] "G" (Graphics)
+(6000,0050) SS Overlay Origin                       [     4 bytes] 704, 409
+(6000,0051) US Image Frame Origin                   [     2 bytes] 1
+(6000,0100) US Overlay Bits Allocated               [     2 bytes] 1
+(6000,0102) US Overlay Bit Position                 [     2 bytes] 0
+(6000,3000) OW Overlay Data                         [  1276 bytes] [00 00 00 00 00 00 04 00 00 00  …
+(6002,0010) US Overlay Rows                         [     2 bytes] 101
+(6002,0011) US Overlay Columns                      [     2 bytes] 101
+(6002,0015) IS Number of Frames in Overlay          [     2 bytes] "1"
+(6002,0022) LO Overlay Description                  [    18 bytes] "First target mark"
+(6002,0040) CS Overlay Type                         [     2 bytes] "G" (Graphics)
+(6002,0050) SS Overlay Origin                       [     4 bytes] -25, -25
+(6002,0051) US Image Frame Origin                   [     2 bytes] 1
+(6002,0100) US Overlay Bits Allocated               [     2 bytes] 1
+(6002,0102) US Overlay Bit Position                 [     2 bytes] 0
+(6002,3000) OW Overlay Data                         [  1276 bytes] [00 00 00 00 00 00 04 00 00 00  …
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     0 bytes] 
+  (FFFE,E000) Item                                    [1014540 bytes] 
+(FFFE,E0DD) Sequence Delimitation Item
+(CB0D,0010) LO Private Creator                      [    22 bytes] "DOBCO Medical Systems"
+(CB0D,1001) SS unknown_private_tag                  [     2 bytes] 0
+(CB0D,1011) US unknown_private_tag                  [     2 bytes] 1
+(CB0D,1012) US unknown_private_tag                  [     2 bytes] 220

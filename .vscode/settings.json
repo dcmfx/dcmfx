@@ -1,0 +1,36 @@
+{
+  "editor.rulers": [80],
+  "editor.tabSize": 2,
+
+  "cSpell.enableFiletypes": ["gleam"],
+  "cSpell.words": [
+    "anonymization",
+    "bigi",
+    "byteorder",
+    "charset",
+    "charsets",
+    "codepoint",
+    "codepoints",
+    "concat",
+    "DICM",
+    "DICOM",
+    "endianness",
+    "dcmfx",
+    "gleeunit",
+    "ints",
+    "println",
+    "signedness",
+    "simplifile",
+    "submatches",
+    "uids"
+  ],
+
+  "files.exclude": {
+    "**/build": true,
+    "**/target": true
+  },
+
+  "coverage-gutters.coverageFileNames": ["rust/coverage/tests.lcov"],
+
+  "debug.allowBreakpointsEverywhere": true
+}

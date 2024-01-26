@@ -1,0 +1,217 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (Positron Emission Tomography Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    44 bytes] "2.25.8977747882704482283632496 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1]))
+(0002,0012) UI Implementation Class UID             [    20 bytes] "1.3.6.1.4.1.30071.8"
+(0002,0013) SH Implementation Version Name          [    14 bytes] "fo-dicom 3.1.0"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "WORK-HP1"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    16 bytes] "ORIGINAL", "PRIMARY"
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2016-11-29
+(0008,0013) TM Instance Creation Time               [     6 bytes] 11:58:26
+(0008,0014) UI Instance Creator UID                 [    44 bytes] "2.25.7530633241913499286677962 …
+(0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Positron Emission Tomography Image Storage)
+(0008,0018) UI SOP Instance UID                     [    44 bytes] "2.25.8977747882704482283632496 …
+(0008,0020) DA Study Date                           [     8 bytes] 2017-01-01
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2017-01-01
+(0008,0023) DA Content Date                         [     8 bytes] 2017-01-01
+(0008,0030) TM Study Time                           [     6 bytes] 12:01:01
+(0008,0032) TM Acquisition Time                     [     6 bytes] 12:01:01
+(0008,0033) TM Content Time                         [     6 bytes] 12:01:01
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "PT" (Positron emission tomography (PET))
+(0008,0070) LO Manufacturer                         [    18 bytes] "GE MEDICAL SYSTEMS"
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,0096) SQ Referring Physician Identification Sequence
+  (FFFE,E000) Item
+    (0040,1101) SQ Person Identification Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     8 bytes] "7060SVMC"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,1030) LO Study Description                    [    26 bytes] "GE Pet Modality Lut Issue"
+(0008,103E) LO Series Description                   [    10 bytes] "LUT Series"
+(0008,1090) LO Manufacturer's Model Name            [    14 bytes] "Discovery STE"
+(0010,0010) PN Patient's Name                       [    14 bytes] "GEModalityLut"
+(0010,0020) LO Patient ID                           [     8 bytes] "ModLutId"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0018,0050) DS Slice Thickness                      [     6 bytes] "3.2700"
+(0018,0071) CS Acquisition Termination Condition    [     4 bytes] "TIME" (Preset time limit was reached)
+(0018,0073) CS Acquisition Start Condition          [     4 bytes] "MANU"
+(0018,0074) IS Acquisition Start Condition Data     [     2 bytes] "0"
+(0018,0075) IS Acquisition Termination Condition Data  [     2 bytes] "0"
+(0018,1020) LO Software Versions                    [     6 bytes] "41.04"
+(0018,1060) DS Trigger Time                         [     2 bytes] "0"
+(0018,1063) DS Frame Time                           [     2 bytes] "0"
+(0018,1083) IS Intervals Acquired                   [     2 bytes] "0"
+(0018,1084) IS Intervals Rejected                   [     2 bytes] "0"
+(0018,1100) DS Reconstruction Diameter              [     4 bytes] "700"
+(0018,1120) DS Gantry/Detector Tilt                 [     2 bytes] "0"
+(0018,1147) CS Field of View Shape                  [    16 bytes] "CYLINDRICAL RING"
+(0018,1149) IS Field of View Dimension(s)           [     8 bytes] "700", "153"
+(0018,1181) CS Collimator Type                      [     4 bytes] "NONE" (No collimator)
+(0018,1242) IS Actual Frame Duration                [     6 bytes] "180000"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0020,000D) UI Study Instance UID                   [    44 bytes] "2.25.8359804650454579056294879 …
+(0020,000E) UI Series Instance UID                  [    44 bytes] "2.25.1308636871417666043711426 …
+(0020,0010) SH Study ID                             [     0 bytes] ""
+(0020,0011) IS Series Number                        [     2 bytes] "4"
+(0020,0013) IS Instance Number                      [     4 bytes] "250"
+(0020,0032) DS Image Position (Patient)             [    50 bytes] "-347.26562500000", "-347.26562 …
+(0020,0037) DS Image Orientation (Patient)          [    12 bytes] "1", "0", "0", "0", "1", "-0"
+(0020,0052) UI Frame of Reference UID               [    44 bytes] "2.25.2843060487286691756110898 …
+(0020,1040) LO Position Reference Indicator         [     2 bytes] "OM"
+(0020,1041) DS Slice Location                       [    10 bytes] "-782.1900"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 128
+(0028,0011) US Columns                              [     2 bytes] 128
+(0028,0030) DS Pixel Spacing                        [    16 bytes] "5.46875", "5.46875"
+(0028,0051) CS Corrected Image                      [    30 bytes] "DECY", "DTIM", "RAN", "DCAL",  …
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 1
+(0028,0106) SS Smallest Image Pixel Value           [     2 bytes] 0
+(0028,0107) SS Largest Image Pixel Value            [     2 bytes] 32767
+(0028,1052) DS Rescale Intercept                    [     2 bytes] "0"
+(0028,1053) DS Rescale Slope                        [    12 bytes] "5.94901e-08"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
+(0040,0009) SH Scheduled Procedure Step ID          [     2 bytes] "1"
+(0040,0275) SQ Request Attributes Sequence
+  (FFFE,E000) Item
+    (0040,1001) SH Requested Procedure ID               [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0040,0555) SQ Acquisition Context Sequence
+  (FFFE,E000) Item
+    (0040,A043) SQ Concept Name Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     6 bytes] "109054"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+        (0008,0104) LO Code Meaning                         [    14 bytes] "Patient State"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0040,A168) SQ Concept Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     8 bytes] "F-01604"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SRT"
+        (0008,0104) LO Code Meaning                         [    14 bytes] "Resting State"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,0013) SQ Energy Window Range Sequence
+  (FFFE,E000) Item
+    (0054,0014) DS Energy Window Lower Limit            [     4 bytes] "425"
+    (0054,0015) DS Energy Window Upper Limit            [     4 bytes] "650"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,0016) SQ Radiopharmaceutical Information Sequence
+  (FFFE,E000) Item
+    (0018,0031) LO Radiopharmaceutical                  [    26 bytes] "FDG -- fluorodeoxyglucose"
+    (0018,1071) DS Radiopharmaceutical Volume           [     2 bytes] "0"
+    (0018,1072) TM Radiopharmaceutical Start Time       [    10 bytes] 10:35:00
+    (0018,1073) TM Radiopharmaceutical Stop Time        [    10 bytes] 10:36:00
+    (0018,1074) DS Radionuclide Total Dose              [    10 bytes] "422895936"
+    (0018,1075) DS Radionuclide Half Life               [     4 bytes] "6588"
+    (0018,1076) DS Radionuclide Positron Fraction       [    16 bytes] "0.97000002861023"
+    (0018,1078) DT Radiopharmaceutical Start DateTime   [    18 bytes] 2016-11-29T10:35:00
+    (0018,1079) DT Radiopharmaceutical Stop DateTime    [    18 bytes] 2016-11-29T10:36:00
+    (0054,0300) SQ Radionuclide Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     8 bytes] "C-111A1"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SNM3"
+        (0008,0104) LO Code Meaning                         [     4 bytes] "18F"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0054,0304) SQ Radiopharmaceutical Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     8 bytes] "C-B1031"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SNM3"
+        (0008,0104) LO Code Meaning                         [    26 bytes] "FDG -- fluorodeoxygluc …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,0081) US Number of Slices                     [     2 bytes] 263
+(0054,0202) CS Type of Detector Motion              [     4 bytes] "NONE"
+(0054,0410) SQ Patient Orientation Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     8 bytes] "F-10450"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SNM3"
+    (0008,0104) LO Code Meaning                         [    10 bytes] "recumbent"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,0412) SQ Patient Orientation Modifier Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     8 bytes] "F-10340"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SNM3"
+    (0008,0104) LO Code Meaning                         [     6 bytes] "supine"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,0414) SQ Patient Gantry Relationship Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     8 bytes] "F-10470"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SNM3"
+    (0008,0104) LO Code Meaning                         [    10 bytes] "headfirst"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,1000) CS Series Type                          [    12 bytes] "STATIC", "IMAGE"
+(0054,1001) CS Units                                [     8 bytes] "PROPCPS"
+(0054,1002) CS Counts Source                        [     8 bytes] "EMISSION"
+(0054,1100) CS Randoms Correction Method            [     4 bytes] "SING"
+(0054,1101) LO Attenuation Correction Method        [    20 bytes] "NONE, 0.000000 cm-1,"
+(0054,1102) CS Decay Correction                     [     6 bytes] "START"
+(0054,1103) LO Reconstruction Method                [     6 bytes] "3D IR"
+(0054,1104) LO Detector Lines of Response Used      [     2 bytes] "0"
+(0054,1105) LO Scatter Correction Method            [     4 bytes] "None"
+(0054,1201) IS Axial Mash                           [     4 bytes] "1", "2"
+(0054,1202) IS Transverse Mash                      [     2 bytes] "2"
+(0054,1210) DS Coincidence Window Width             [     2 bytes] "0"
+(0054,1300) DS Frame Reference Time                 [     8 bytes] "1092000"
+(0054,1310) IS Primary (Prompts) Counts Accumulated  [     2 bytes] "0"
+(0054,1311) IS Secondary Counts Accumulated         [     2 bytes] "0"
+(0054,1320) DS Slice Sensitivity Factor             [     2 bytes] "1"
+(0054,1321) DS Decay Factor                         [     8 bytes] "1.13241"
+(0054,1322) DS Dose Calibration Factor              [     4 bytes] "989"
+(0054,1323) DS Scatter Fraction Factor              [     2 bytes] "0"
+(0054,1324) DS Dead Time Factor                     [     8 bytes] "1.19697"
+(0054,1330) US Image Index                          [     2 bytes] 14
+(0400,0561) SQ Original Attributes Sequence
+  (FFFE,E000) Item
+    (0400,0550) SQ Modified Attributes Sequence
+      (FFFE,E000) Item
+        (0008,0050) SH Accession Number                     [    16 bytes] "00001PT160000447"
+        (0008,0090) PN Referring Physician's Name           [    20 bytes] "Dhanjal^Sandhya^^MD"
+        (0008,0096) SQ Referring Physician Identification Sequence
+          (FFFE,E000) Item
+            (0040,1101) SQ Person Identification Code Sequence
+              (FFFE,E000) Item
+                (0008,0100) SH Code Value                           [     0 bytes] ""
+              (FFFE,E00D) Item Delimitation Item
+            (FFFE,E0DD) Sequence Delimitation Item
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (0008,1030) LO Study Description                    [    22 bytes] "PET w/CT Scan Skull Ba"
+        (0010,0010) PN Patient's Name                       [    14 bytes] "ROACH^AGNES^S"
+        (0010,0020) LO Patient ID                           [    12 bytes] "00037241SVMC"
+        (0010,0030) DA Patient's Birth Date                 [     8 bytes] 1937-12-08
+        (0010,0040) CS Patient's Sex                        [     2 bytes] "F" (Female)
+        (0040,0009) SH Scheduled Procedure Step ID          [     0 bytes] ""
+        (0040,1001) SH Requested Procedure ID               [     0 bytes] ""
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0400,0562) DT Attribute Modification DateTime      [    18 bytes] 2016-11-29T12:26:37.699
+    (0400,0563) LO Modifying System                     [    44 bytes] "INTELEPACSPACS-4-6-1-P310L …
+    (0400,0564) LO Source of Previous Values            [    12 bytes] "sourceOfPrev"
+    (0400,0565) CS Reason for the Attribute Modification  [     8 bytes] "CORRECT"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     4 bytes] 
+  (FFFE,E000) Item                                    [ 18052 bytes] 
+(FFFE,E0DD) Sequence Delimitation Item

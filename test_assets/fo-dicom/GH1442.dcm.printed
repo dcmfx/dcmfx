@@ -1,0 +1,182 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [0, 1]
+(0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (X-Ray Angiographic Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    44 bytes] "2.25.2828555972645648479465794 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1]))
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0.7230010.3.0.3.6.7"
+(0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMTK_367"
+(0008,0008) CS Image Type                           [    38 bytes] "ORIGINAL", "PRIMARY", "SINGLE  …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2022-09-09
+(0008,0013) TM Instance Creation Time               [     6 bytes] 15:36:35
+(0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (X-Ray Angiographic Image Storage)
+(0008,0018) UI SOP Instance UID                     [    44 bytes] "2.25.2828555972645648479465794 …
+(0008,0020) DA Study Date                           [     8 bytes] 2022-09-09
+(0008,0021) DA Series Date                          [     8 bytes] 2022-09-09
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2022-09-09
+(0008,0023) DA Content Date                         [     8 bytes] 2022-09-09
+(0008,0030) TM Study Time                           [     6 bytes] 15:36:35
+(0008,0031) TM Series Time                          [     6 bytes] 15:36:35
+(0008,0032) TM Acquisition Time                     [     6 bytes] 15:36:35
+(0008,0033) TM Content Time                         [     6 bytes] 15:36:35
+(0008,0050) SH Accession Number                     [    16 bytes] "XA2022090915361"
+(0008,0060) CS Modality                             [     2 bytes] "XA"
+(0008,0070) LO Manufacturer                         [    24 bytes] "Philips Medical Systems"
+(0008,0080) LO Institution Name                     [    18 bytes] "Random Hospital 64"
+(0008,0090) PN Referring Physician's Name           [    14 bytes] "Charlet^Bertha"
+(0008,1010) SH Station Name                         [    10 bytes] "722003-984"
+(0008,1030) LO Study Description                    [    38 bytes] "Ablatie AV-nodale tachycardie  …
+(0008,103E) LO Series Description                   [    18 bytes] "Stereotaxis 7.5frs"
+(0008,1040) LO Institutional Department Name        [     8 bytes] "DEFAULT"
+(0008,1050) PN Performing Physician's Name          [    12 bytes] "Behm^Andree"
+(0008,1060) PN Name of Physician(s) Reading Study   [    12 bytes] "Behm^Andree"
+(0008,1090) LO Manufacturer's Model Name            [    10 bytes] "AlluraXper"
+(0008,2144) IS Recommended Display Frame Rate       [     2 bytes] "7"
+(0010,0010) PN Patient's Name                       [    16 bytes] "Boswall^Hyacinth"
+(0010,0020) LO Patient ID                           [    16 bytes] "PAT2022090915361"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1944-11-24
+(0010,0040) CS Patient's Sex                        [     2 bytes] "M"
+(0010,1000) LO Other Patient IDs                    [    12 bytes] "44112495010"
+(0010,1002) SQ Other Patient IDs Sequence           
+  (FFFE,E000) Item                                    
+    (0010,0020) LO Patient ID                           [    16 bytes] "PAT2022090915361"
+    (0010,0021) LO Issuer of Patient ID                 [    12 bytes] "DcmAnonymize"
+    (0010,0022) CS Type of Patient ID                   [    10 bytes] "PATIENTID"
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0010,0020) LO Patient ID                           [    12 bytes] "44112495010"
+    (0010,0021) LO Issuer of Patient ID                 [    12 bytes] "DcmAnonymize"
+    (0010,0022) CS Type of Patient ID                   [    14 bytes] "NATIONALNUMBER"
+  (FFFE,E00D) Item Delimitation Item                  
+(FFFE,E0DD) Sequence Delimitation Item              
+(0010,1010) AS Patient's Age                        [     4 bytes] 77 years
+(0012,0062) CS Patient Identity Removed             [     4 bytes] "YES"
+(0012,0063) LO De-identification Method             [    20 bytes] "DcmAnonymize 1.6.0.0"
+(0018,0010) LO Contrast/Bolus Agent                 [     8 bytes] "UNKNOWN"
+(0018,0040) IS Cine Rate                            [     2 bytes] "7"
+(0018,0060) DS KVP                                  [     4 bytes] "67.0"
+(0018,1000) LO Device Serial Number                 [    10 bytes] "722003-984"
+(0018,1020) LO Software Versions                    [   100 bytes] "Allura Xper 3.1.7 with Niobe i …
+(0018,1030) LO Protocol Name                        [    24 bytes] "Stereotaxis/Biosense EP"
+(0018,1063) DS Frame Time                           [     8 bytes] "133.354"
+(0018,1066) DS Frame Delay                          [     4 bytes] "0.0"
+(0018,1110) DS Distance Source to Detector          [     6 bytes] "927.0"
+(0018,1111) DS Distance Source to Patient           [     6 bytes] "765.0"
+(0018,1150) IS Exposure Time                        [     2 bytes] "4"
+(0018,1151) IS X-Ray Tube Current                   [     4 bytes] "417"
+(0018,1155) CS Radiation Setting                    [     2 bytes] "GR"
+(0018,1164) DS Imager Pixel Spacing                 [    12 bytes] "0.184", "0.184"
+(0018,1500) CS Positioner Motion                    [     6 bytes] "STATIC"
+(0018,1510) DS Positioner Primary Angle             [     4 bytes] "1.2"
+(0018,1511) DS Positioner Secondary Angle           [     4 bytes] "0.2"
+(0018,1600) CS Shutter Shape                        [    12 bytes] "RECTANGULAR"
+(0018,1602) IS Shutter Left Vertical Edge           [     2 bytes] "78"
+(0018,1604) IS Shutter Right Vertical Edge          [     4 bytes] "947"
+(0018,1606) IS Shutter Upper Horizontal Edge        [     2 bytes] "52"
+(0018,1608) IS Shutter Lower Horizontal Edge        [     4 bytes] "973"
+(0020,000D) UI Study Instance UID                   [    44 bytes] "2.25.2443892286650310224544434 …
+(0020,000E) UI Series Instance UID                  [    44 bytes] "2.25.1959020518589609295173301 …
+(0020,0010) SH Study ID                             [    16 bytes] "XA2022090915361"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,0060) CS Laterality                           [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0008) IS Number of Frames                     [     2 bytes] "7"
+(0028,0009) AT Frame Increment Pointer              [     4 bytes] (0018,1063)
+(0028,0010) US Rows                                 [     2 bytes] 1024
+(0028,0011) US Columns                              [     2 bytes] 1024
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 10
+(0028,0102) US High Bit                             [     2 bytes] 9
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,1040) CS Pixel Intensity Relationship         [     4 bytes] "LOG"
+(0028,1050) DS Window Center                        [     6 bytes] "532.0"
+(0028,1051) DS Window Width                         [     6 bytes] "931.0"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00"
+(0028,3000) SQ Modality LUT Sequence                
+  (FFFE,E000) Item                                    
+    (0028,3002) US LUT Descriptor                       [     6 bytes] 1024, 0, 10
+    (0028,3004) LO Modality LUT Type                    [     2 bytes] "US"
+    (0028,3006) US LUT Data                             [  2048 bytes] 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  (FFFE,E00D) Item Delimitation Item                  
+(FFFE,E0DD) Sequence Delimitation Item              
+(0032,000A) CS Study Status ID                      [    10 bytes] "COMPLETED"
+(0032,1032) PN Requesting Physician                 [    14 bytes] "Charlet^Bertha"
+(0032,4000) LT Study Comments                       [     0 bytes] ""
+(0038,0300) LO Current Patient Location             [     8 bytes] "^^^^^^^^"
+(0040,0244) DA Performed Procedure Step Start Date  [     8 bytes] 2015-03-25
+(0040,0245) TM Performed Procedure Step Start Time  [     6 bytes] 13:21:07
+(0040,0253) SH Performed Procedure Step ID          [    16 bytes] "ANCA_15001146_01"
+(0040,0275) SQ Request Attributes Sequence          
+  (FFFE,E000) Item                                    
+    (0008,0050) SH Accession Number                     [    16 bytes] "ANCA_15001146_01"
+    (0020,000D) UI Study Instance UID                   [    60 bytes] "1.2.124.113532.59449.13802 …
+    (0032,1060) LO Requested Procedure Description      [    38 bytes] "Ablatie AV-nodale tachycar …
+    (0032,1064) SQ Requested Procedure Code Sequence    
+      (FFFE,E000) Item                                    
+        (0008,0100) SH Code Value                           [     6 bytes] "AVNRT"
+        (0008,0102) SH Coding Scheme Designator             [     2 bytes] "RP"
+        (0008,0103) SH Coding Scheme Version                [     0 bytes] ""
+        (0008,0104) LO Code Meaning                         [    38 bytes] "Ablatie AV-nodale tach …
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0040,0009) SH Scheduled Procedure Step ID          [    16 bytes] "ANCA_15001146_01"
+    (0040,1001) SH Requested Procedure ID               [    16 bytes] "ANCA_15001146_01"
+  (FFFE,E00D) Item Delimitation Item                  
+(FFFE,E0DD) Sequence Delimitation Item              
+(0040,0306) DS Distance Source to Entrance          [     6 bytes] "619.2"
+(0040,1001) SH Requested Procedure ID               [    16 bytes] "ANCA_15001146_01"
+(5000,0005) US Curve Dimensions                     [     2 bytes] 2
+(5000,0010) US Number of Points                     [     2 bytes] 251
+(5000,0020) CS Type of Data                         [     4 bytes] "ECG"
+(5000,0030) SH Axis Units                           [    10 bytes] "DPPS", "NONE"
+(5000,0103) US Data Value Representation            [     2 bytes] 0
+(5000,0104) US Minimum Coordinate Value             [     4 bytes] 0, 0
+(5000,0105) US Maximum Coordinate Value             [     4 bytes] 0, 4095
+(5000,0110) US Curve Data Descriptor                [     4 bytes] 0, 1
+(5000,0112) US Coordinate Start Value               [     2 bytes] 0
+(5000,0114) US Coordinate Step Value                [     2 bytes] 300
+(5000,3000) OW Curve Data                           [   502 bytes] [151, 8, 227, 8, 207, 8, 133, 8 …
+(5002,0005) US Curve Dimensions                     [     2 bytes] 2
+(5002,0010) US Number of Points                     [     2 bytes] 251
+(5002,0020) CS Type of Data                         [     4 bytes] "ECG"
+(5002,0030) SH Axis Units                           [    10 bytes] "DPPS", "NONE"
+(5002,0103) US Data Value Representation            [     2 bytes] 0
+(5002,0104) US Minimum Coordinate Value             [     4 bytes] 0, 0
+(5002,0105) US Maximum Coordinate Value             [     4 bytes] 0, 4095
+(5002,0110) US Curve Data Descriptor                [     4 bytes] 0, 1
+(5002,0112) US Coordinate Start Value               [     2 bytes] 0
+(5002,0114) US Coordinate Step Value                [     2 bytes] 300
+(5002,3000) OW Curve Data                           [   502 bytes] [0, 8, 0, 8, 0, 8, 0, 8, 0, 8, 0]
+(5004,0005) US Curve Dimensions                     [     2 bytes] 2
+(5004,0010) US Number of Points                     [     2 bytes] 251
+(5004,0020) CS Type of Data                         [     4 bytes] "ECG"
+(5004,0030) SH Axis Units                           [    10 bytes] "DPPS", "NONE"
+(5004,0103) US Data Value Representation            [     2 bytes] 0
+(5004,0104) US Minimum Coordinate Value             [     4 bytes] 0, 0
+(5004,0105) US Maximum Coordinate Value             [     4 bytes] 0, 4095
+(5004,0110) US Curve Data Descriptor                [     4 bytes] 0, 1
+(5004,0112) US Coordinate Start Value               [     2 bytes] 0
+(5004,0114) US Coordinate Step Value                [     2 bytes] 300
+(5004,3000) OW Curve Data                           [   502 bytes] [0, 8, 0, 8, 1, 8, 0, 8, 1, 8, 1]
+(5006,0005) US Curve Dimensions                     [     2 bytes] 2
+(5006,0010) US Number of Points                     [     2 bytes] 251
+(5006,0020) CS Type of Data                         [     4 bytes] "ECG"
+(5006,0030) SH Axis Units                           [    10 bytes] "DPPS", "NONE"
+(5006,0103) US Data Value Representation            [     2 bytes] 0
+(5006,0104) US Minimum Coordinate Value             [     4 bytes] 0, 0
+(5006,0105) US Maximum Coordinate Value             [     4 bytes] 0, 4095
+(5006,0110) US Curve Data Descriptor                [     4 bytes] 0, 1
+(5006,0112) US Coordinate Start Value               [     2 bytes] 0
+(5006,0114) US Coordinate Step Value                [     2 bytes] 300
+(5006,3000) OW Curve Data                           [   502 bytes] [0, 8, 0, 8, 0, 8, 0, 8, 0, 8, 0]
+(7FE0,0010) OB Pixel Data                           
+  (FFFE,E000) Item                                    [    28 bytes] 
+  (FFFE,E000) Item                                    [816022 bytes] 
+  (FFFE,E000) Item                                    [813870 bytes] 
+  (FFFE,E000) Item                                    [810006 bytes] 
+  (FFFE,E000) Item                                    [807904 bytes] 
+  (FFFE,E000) Item                                    [808496 bytes] 
+  (FFFE,E000) Item                                    [809056 bytes] 
+  (FFFE,E000) Item                                    [809956 bytes] 
+(FFFE,E0DD) Sequence Delimitation Item              

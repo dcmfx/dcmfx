@@ -1,0 +1,16 @@
+(0001,0001) SQ unknown_private_tag
+  (FFFE,E000) Item
+    (0001,0001) SQ unknown_private_tag
+      (FFFE,E000) Item
+        (0001,0001) UN unknown_private_tag                  [    16 bytes] [44 6F 75 62 6C 65 20 4 …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0001,0002) UN unknown_private_tag                  [     9 bytes] [4E 65 73 74 65 64 20 53 51]
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [     0 bytes] ""
+(0002,0003) UI Media Storage SOP Instance UID       [     0 bytes] ""
+(0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    20 bytes] "1234567890.1998.310"
+(7FE0,0010) OW Pixel Data                           [     2 bytes] [00 00]

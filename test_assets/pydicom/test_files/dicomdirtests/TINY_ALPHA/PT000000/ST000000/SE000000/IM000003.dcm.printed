@@ -1,0 +1,20 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    64 bytes] "1.2.826.0.1.3680043.8.498.1364 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.826.0.1.3680043.8.498.1"
+(0002,0013) SH Implementation Version Name          [    14 bytes] "PYDICOM 2.1.0"
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0008,0018) UI SOP Instance UID                     [    64 bytes] "1.2.826.0.1.3680043.8.498.1364 …
+(0008,0020) DA Study Date                           [     8 bytes] 2020-09-13
+(0008,0030) TM Study Time                           [     6 bytes] 16:19:00
+(0008,0050) SH Accession Number                     [     2 bytes] "1"
+(0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+(0008,1030) LO Study Description                    [    16 bytes] "Testing File-set"
+(0010,0010) PN Patient's Name                       [    12 bytes] "Citizen^Jan"
+(0010,0020) LO Patient ID                           [     8 bytes] "12345678"
+(0020,000D) UI Study Instance UID                   [    64 bytes] "1.2.826.0.1.3680043.8.498.6410 …
+(0020,000E) UI Series Instance UID                  [    64 bytes] "1.2.826.0.1.3680043.8.498.7305 …
+(0020,0010) SH Study ID                             [     2 bytes] "1"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "3"

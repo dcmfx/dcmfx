@@ -1,0 +1,80 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Computed Radiography Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    54 bytes] "1.2.392.200036.9125.4.0.470769 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1]))
+(0002,0012) UI Implementation Class UID             [    20 bytes] "1.3.6.1.4.1.30071.8"
+(0002,0013) SH Implementation Version Name          [    14 bytes] "fo-dicom 4.0.0"
+(0002,0016) AE Source Application Entity Title      [    12 bytes] "DicomBrowser"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    40 bytes] "ORIGINAL", "PRIMARY", "NORMALI …
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Computed Radiography Image Storage)
+(0008,0018) UI SOP Instance UID                     [    22 bytes] "999.999.01.23.45.6789"
+(0008,0020) DA Study Date                           [     8 bytes] 2019-04-16
+(0008,0021) DA Series Date                          [     8 bytes] 2019-04-16
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2019-04-16
+(0008,0023) DA Content Date                         [     8 bytes] 2019-04-16
+(0008,0030) TM Study Time                           [     6 bytes] 12:00:00
+(0008,0031) TM Series Time                          [    10 bytes] 12:00:00
+(0008,0032) TM Acquisition Time                     [    10 bytes] 12:00:00
+(0008,0033) TM Content Time                         [    10 bytes] 12:00:00
+(0008,0050) SH Accession Number                     [    16 bytes] "MODALITYLUT-001"
+(0008,0060) CS Modality                             [     2 bytes] "CR" (Computed Radiography)
+(0008,0070) LO Manufacturer                         [     8 bytes] "FO-DICOM"
+(0008,0080) LO Institution Name                     [     8 bytes] "FO-DICOM"
+(0008,0090) PN Referring Physician's Name           [     4 bytes] "X,X"
+(0008,1010) SH Station Name                         [     2 bytes] "XX"
+(0008,1030) LO Study Description                    [    20 bytes] "MODALITYLUT - TEETH"
+(0008,103E) LO Series Description                   [    20 bytes] "MODALITYLUT - TEETH"
+(0008,1048) PN Physician(s) of Record               [     0 bytes] ""
+(0010,0010) PN Patient's Name                       [     6 bytes] "XX^XX"
+(0010,0020) LO Patient ID                           [     2 bytes] "XX"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1900-01-01
+(0010,0040) CS Patient's Sex                        [     2 bytes] "M" (Male)
+(0018,1164) DS Imager Pixel Spacing                 [    10 bytes] "0.15", "0.15"
+(0018,6000) DS Sensitivity                          [     4 bytes] "470"
+(0020,000D) UI Study Instance UID                   [    12 bytes] "1.2.3.4.5.6"
+(0020,000E) UI Series Instance UID                  [    16 bytes] "1.2.3.4.5.6.789"
+(0020,0010) SH Study ID                             [     0 bytes] ""
+(0020,0011) IS Series Number                        [     4 bytes] "1001"
+(0020,0012) IS Acquisition Number                   [     4 bytes] "001"
+(0020,0013) IS Instance Number                      [     4 bytes] "1001"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,0060) CS Laterality                           [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME1"
+(0028,0010) US Rows                                 [     2 bytes] 1576
+(0028,0011) US Columns                              [     2 bytes] 1976
+(0028,0030) DS Pixel Spacing                        [    10 bytes] "0.15", "0.15"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 10
+(0028,0102) US High Bit                             [     2 bytes] 9
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,1052) DS Rescale Intercept                    [     2 bytes] "0"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0028,1054) LO Rescale Type                         [     2 bytes] "US"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
+(0028,3000) SQ Modality LUT Sequence
+  (FFFE,E000) Item
+    (0028,3002) US LUT Descriptor                       [     6 bytes] 1024, 0, 16
+    (0028,3003) LO LUT Explanation                      [     6 bytes] "CRTLUT"
+    (0028,3004) LO Modality LUT Type                    [     2 bytes] "US"
+    (0028,3006) OW LUT Data                             [  2048 bytes] [00 00 00 00 01 00 02 00 02 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0032,1032) PN Requesting Physician                 [     4 bytes] "X,X"
+(2010,0010) ST Image Display Format                 [    12 bytes] "STANDARD\\1,1"
+(2010,0030) CS Annotation Display Format ID         [     4 bytes] "CR00"
+(2010,0040) CS Film Orientation                     [    10 bytes] "LANDSCAPE"
+(2010,0100) CS Border Density                       [     6 bytes] "BLACK"
+(2010,0140) CS Trim                                 [     2 bytes] "NO"
+(50F1,0010) LO Number of Points                     [     8 bytes] "FDMS 1.0"
+(50F1,1010) CS Film Output Format                   [     2 bytes] "10"
+(50F1,1020) CS Image Processing Modification Flag   [     2 bytes] "00"
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     4 bytes] 
+  (FFFE,E000) Item                                    [1258044 bytes] 
+(FFFE,E0DD) Sequence Delimitation Item
+(CB0D,0010) LO Private Creator                      [    22 bytes] "DOBCO Medical Systems"
+(CB0D,1001) SS unknown_private_tag                  [     2 bytes] 0
+(CB0D,1011) US unknown_private_tag                  [     2 bytes] 1
+(CB0D,1012) US unknown_private_tag                  [     2 bytes] 19

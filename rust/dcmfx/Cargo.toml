@@ -1,0 +1,19 @@
+[package]
+name = "dcmfx"
+version = "0.0.0"
+description = "DCMfx DICOM Library"
+license = "AGPL-3.0-only"
+repository = "https://github.com/dcmfx/dcmfx"
+edition = "2021"
+
+[dependencies]
+dcmfx_anonymize = { path = "../libs/dcmfx_anonymize" }
+dcmfx_character_set = { path = "../libs/dcmfx_character_set" }
+dcmfx_core = { path = "../libs/dcmfx_core" }
+dcmfx_json = { path = "../libs/dcmfx_json" }
+dcmfx_p10 = { path = "../libs/dcmfx_p10" }
+dcmfx_pixel_data = { path = "../libs/dcmfx_pixel_data" }
+
+[dev-dependencies]
+serde_json = "1.0.128"
+walkdir = "2.5.0"

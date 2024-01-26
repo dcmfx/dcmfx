@@ -1,0 +1,6 @@
+[package]
+name = "dcmfx_anonymize"
+edition = "2021"
+
+[dependencies]
+dcmfx_core = { path = "../dcmfx_core" }

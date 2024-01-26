@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "[rs] dcmfx_cli",
+      "cargo": {
+        "args": [
+          "build",
+          "--manifest-path=rust/Cargo.toml",
+          "--package=dcmfx_cli"
+        ]
+      },
+      "args": [
+        // CLI args for dcmfx when run under the debugger. Update as needed
+        // during dev.
+
+        "print",
+        "--styled",
+        "true",
+        "./test_assets/pydicom/test_files/693_J2KI.dcm"
+      ],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "[rs] dcmfx: integration tests",
+      "cargo": {
+        "args": ["test", "--no-run", "--manifest-path=rust/Cargo.toml"],
+        "filter": {
+          "name": "dcmfx",
+          "kind": "lib"
+        }
+      },
+      "cwd": "${workspaceFolder}/rust"
+    }
+  ]
+}

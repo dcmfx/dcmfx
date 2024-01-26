@@ -1,0 +1,18 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2"
+    ],
+    "vr": "UI"
+  },
+  "3F030010": {
+    "Value": [
+      "aaabbbccc MEDICAL SYSTEMS"
+    ],
+    "vr": "LO"
+  },
+  "3F031001": {
+    "InlineBinary": "/v8A4J4AAAAIAJAAEAAAADExMTExMTExMTExMTExMSADPxAAGgAAADEyMzQ1Njc4OSAxMjM0NTY3IDEyMzQ1NjcgAz8CEBoAAAAxMTExMTExMTA5MzQwMi4xMDA3MjEtMDcwMAM/AxAUAAAAaW1hZ2UxMjM0NTY3IGF0IDEyMyADPwQQHgAAAFZhbHVlcyB1cGRhdGVkIGZyb20geHh4IHh4eHguIA==",
+    "vr": "UN"
+  }
+}

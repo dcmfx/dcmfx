@@ -1,0 +1,45 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.1"
+    ],
+    "vr": "UI"
+  },
+  "00080100": {
+    "Value": [
+      "Code Value"
+    ],
+    "vr": "SH"
+  },
+  "00321032": {
+    "Value": [
+      {
+        "Alphabetic": "Doctor^Who^^MD"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00321064": {
+    "Value": [
+      {
+        "00080100": {
+          "Value": [
+            "CodeValue"
+          ],
+          "vr": "SH"
+        },
+        "00100010": {
+          "Value": [
+            {
+              "Alphabetic": "\uff94\uff8f\uff80\uff9e^\uff80\uff9b\uff73",
+              "Ideographic": "\u5c71\u7530^\u592a\u90ce",
+              "Phonetic": "\u3084\u307e\u3060^\u305f\u308d\u3046"
+            }
+          ],
+          "vr": "PN"
+        }
+      }
+    ],
+    "vr": "SQ"
+  }
+}

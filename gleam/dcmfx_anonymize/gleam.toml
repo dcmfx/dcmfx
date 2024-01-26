@@ -1,0 +1,15 @@
+name = "dcmfx_anonymize"
+description = "DCMfx - Anonymize Library"
+licences = ["AGPL-3.0-only"]
+repository = { type = "github", user = "dcmfx", repo = "dcmfx" }
+gleam = ">= 1.5.1"
+
+[dependencies]
+dcmfx_core = { path = "../dcmfx_core" }
+gleam_stdlib = ">= 0.40.0 and < 1.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.2.0 and < 2.0.0"
+
+[javascript]
+typescript_declarations = true

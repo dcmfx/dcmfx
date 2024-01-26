@@ -1,0 +1,12 @@
+[package]
+name = "dcmfx_json"
+edition = "2021"
+
+[dependencies]
+base64 = "0.22.1"
+byteorder = "1.5.0"
+dcmfx_core = { path = "../dcmfx_core" }
+dcmfx_p10 = { path = "../dcmfx_p10" }
+num-traits = "0.2.19"
+serde = { version = "1.0.210", features = ["serde_derive"]}
+serde_json = { version = "1.0.128", features = ["float_roundtrip"] }

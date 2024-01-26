@@ -1,0 +1,10 @@
+name = "dcmfx_registry_codegen"
+description = "DCMfx - Registry Codegen"
+licences = ["AGPL-3.0-only"]
+repository = { type = "github", user = "dcmfx", repo = "dcmfx" }
+gleam = ">= 1.5.1"
+
+[dependencies]
+gleam_json = ">= 2.0.0 and < 3.0.0"
+gleam_stdlib = ">= 0.40.0 and < 1.0.0"
+simplifile = ">= 2.2.0 and < 3.0.0"

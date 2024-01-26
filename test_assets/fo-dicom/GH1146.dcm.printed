@@ -1,0 +1,111 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [01 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (MR Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    38 bytes] "1.3.12.2.1107.5.2.17.28529.111 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0.7230010.3.0.3.6.4"
+(0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMTK_364"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    16 bytes] "ORIGINAL", "PRIMARY"
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2020-08-20
+(0008,0013) TM Instance Creation Time               [     6 bytes] 10:25:21
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (MR Image Storage)
+(0008,0018) UI SOP Instance UID                     [    24 bytes] "1.3.6.1.4.1.23438.1.1.1"
+(0008,0020) DA Study Date                           [     8 bytes] 2020-08-20
+(0008,0021) DA Series Date                          [     8 bytes] 2020-08-20
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2020-08-20
+(0008,0023) DA Content Date                         [     8 bytes] 2020-08-20
+(0008,0030) TM Study Time                           [     6 bytes] 10:25:21
+(0008,0031) TM Series Time                          [     6 bytes] 10:25:21
+(0008,0032) TM Acquisition Time                     [     6 bytes] 10:25:21
+(0008,0033) TM Content Time                         [     6 bytes] 10:25:21
+(0008,0050) SH Accession Number                     [     6 bytes] "123456"
+(0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+(0008,0081) ST Institution Address                  [     0 bytes] ""
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1010) SH Station Name                         [     0 bytes] ""
+(0008,1030) LO Study Description                    [    10 bytes] "MRI-Brain"
+(0008,1040) LO Institutional Department Name        [     0 bytes] ""
+(0008,1050) PN Performing Physician's Name          [     0 bytes] ""
+(0008,1070) PN Operators' Name                      [     0 bytes] ""
+(0008,1140) SQ Referenced Image Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    54 bytes] "1.3.6.1.4.1.41390.1.1.0363 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0010,0010) PN Patient's Name                       [     8 bytes] "NV10066"
+(0010,0020) LO Patient ID                           [    12 bytes] "202008201906"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1994-08-20
+(0010,0040) CS Patient's Sex                        [     2 bytes] "M" (Male)
+(0010,1010) AS Patient's Age                        [     4 bytes] 26 years
+(0010,1030) DS Patient's Weight                     [     4 bytes] "60.0"
+(0018,0010) LO Contrast/Bolus Agent                 [     0 bytes] ""
+(0018,0015) CS Body Part Examined                   [     6 bytes] "Brain"
+(0018,0020) CS Scanning Sequence                    [     2 bytes] "SE" (Spin Echo)
+(0018,0021) CS Sequence Variant                     [     4 bytes] "NONE" (No sequence variant)
+(0018,0022) CS Scan Options                         [     4 bytes] "PER" (Phase Encode Reordering)
+(0018,0023) CS MR Acquisition Type                  [     2 bytes] "2D"
+(0018,0024) SH Sequence Name                        [     4 bytes] "MSSE"
+(0018,0025) CS Angio Flag                           [     2 bytes] "N"
+(0018,0050) DS Slice Thickness                      [     4 bytes] "10.0"
+(0018,0080) DS Repetition Time                      [     6 bytes] "12.00"
+(0018,0081) DS Echo Time                            [     4 bytes] "5.60"
+(0018,0082) DS Inversion Time                       [     6 bytes] "415.00"
+(0018,0083) DS Number of Averages                   [     2 bytes] "1"
+(0018,0084) DS Imaging Frequency                    [    10 bytes] "15.200000"
+(0018,0086) IS Echo Number(s)                       [     4 bytes] "185"
+(0018,0087) DS Magnetic Field Strength              [     8 bytes] "1.500000"
+(0018,0088) DS Spacing Between Slices               [     6 bytes] "20.00"
+(0018,0089) IS Number of Phase Encoding Steps       [     4 bytes] "205"
+(0018,0091) IS Echo Train Length                    [     2 bytes] "1"
+(0018,0093) DS Percent Sampling                     [     4 bytes] "0.80"
+(0018,0094) DS Percent Phase Field of View          [     4 bytes] "1.00"
+(0018,0095) DS Pixel Bandwidth                      [    10 bytes] "139.508926"
+(0018,1000) LO Device Serial Number                 [    10 bytes] "0363010001"
+(0018,1050) DS Spatial Resolution                   [     8 bytes] "0.050000"
+(0018,1200) DA Date of Last Calibration             [     8 bytes] 2006-01-01
+(0018,1250) SH Receive Coil Name                    [     4 bytes] "Head"
+(0018,1310) US Acquisition Matrix                   [     8 bytes] 256, 0, 0, 205
+(0018,1312) CS In-plane Phase Encoding Direction    [     4 bytes] "ROW"
+(0018,1314) DS Flip Angle                           [     2 bytes] "20"
+(0018,1315) CS Variable Flip Angle Flag             [     2 bytes] "Y"
+(0018,1316) DS SAR                                  [     4 bytes] "0.19"
+(0018,1318) DS dB/dt                                [     4 bytes] "8.04"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0018,9073) FD Acquisition Duration                 [     8 bytes] 20.0
+(0018,9087) FD Diffusion b-value                    [     8 bytes] 0.0
+(0020,000D) UI Study Instance UID                   [    44 bytes] "1.3.6.1.4.1.41390.1.1.9827.202 …
+(0020,000E) UI Series Instance UID                  [    48 bytes] "1.3.6.1.4.1.41390.1.1.9827.202 …
+(0020,0010) SH Study ID                             [    12 bytes] "202008201907"
+(0020,0011) IS Series Number                        [     2 bytes] "5"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0032) DS Image Position (Patient)             [    50 bytes] "-107.24063930063", "-98.031084 …
+(0020,0037) DS Image Orientation (Patient)          [   102 bytes] "0.99983371289688", "-0.0020001 …
+(0020,0052) UI Frame of Reference UID               [    48 bytes] "1.3.6.1.4.1.41390.1.1.22.10269 …
+(0020,0060) CS Laterality                           [     2 bytes] "U"
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0030) DS Pixel Spacing                        [    14 bytes] "0.5859", "0.5859"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 12
+(0028,0102) US High Bit                             [     2 bytes] 11
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,1052) DS Rescale Intercept                    [     2 bytes] "0"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0029,0001) UN unknown_private_tag                  [     4 bytes] [00 01 00 00]
+(0029,0005) UN unknown_private_tag                  [     2 bytes] [08 00]
+(0029,0006) UN unknown_private_tag                  [     2 bytes] [00 00]
+(0029,0007) UN unknown_private_tag                  [     2 bytes] [00 00]
+(0029,0008) UN unknown_private_tag                  [     2 bytes] [00 00]
+(0029,0010) LO Private Creator                      [     4 bytes] "2.00"
+(0029,0011) LO Private Creator                      [     8 bytes] "Private"
+(0029,0020) LO Private Creator                      [     2 bytes] "1"
+(0029,0021) LO Private Creator                      [     4 bytes] "5.60"
+(0029,0022) LO Private Creator                      [     4 bytes] "0.00"
+(0029,0030) LO Private Creator                      [     4 bytes] "256"
+(0029,1001) IS unknown_private_tag                  [     2 bytes] "1"
+(7FE0,0010) OW Pixel Data                           [     0 bytes] []

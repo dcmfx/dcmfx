@@ -1,0 +1,72 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.4.81"
+    ],
+    "vr": "UI"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.7"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.83170309094709282338053441269889264103"
+    ],
+    "vr": "UI"
+  },
+  "00280002": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "MONOCHROME2"
+    ],
+    "vr": "CS"
+  },
+  "00280010": {
+    "Value": [
+      50
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      10
+    ],
+    "vr": "US"
+  },
+  "00280100": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      15
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "7FE00010": {
+    "InlineBinary": "/v8A4AQAAAAAAAAA/v8A4JYAAAD/2P/3AAsQADIACgEBEQD/+AANAf//ABgATQEiAED/2gAIAQEAAgAAQCAQEBAgQIIIIB//cAAAAAAABzMYIIIQhCEID/BmWhCEIQhEQH4EzKIiIiIiB8FMqIiIiIiB8ETKIiIiSQPghKgEBAQIECCCCAfBAlAICAgQIEEEEA+CAKAQEBAgQIIIIB8EAEEEEIQhCEB8/9k=",
+    "vr": "OB"
+  }
+}

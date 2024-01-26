@@ -1,0 +1,7 @@
+[package]
+name = "dcmfx_pixel_data"
+edition = "2021"
+
+[dependencies]
+byteorder = "1.5.0"
+dcmfx_core = { path = "../dcmfx_core" }

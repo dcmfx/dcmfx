@@ -1,0 +1,735 @@
+import bigi
+import dcmfx_core/data_element_tag.{type DataElementTag, DataElementTag}
+import dcmfx_core/data_element_value.{type DataElementValue}
+import dcmfx_core/data_element_value/attribute_tag
+import dcmfx_core/data_error.{type DataError}
+import dcmfx_core/data_set.{type DataSet}
+import dcmfx_core/data_set_path.{type DataSetPath}
+import dcmfx_core/internal/utils
+import dcmfx_core/registry
+import dcmfx_core/value_representation.{type ValueRepresentation}
+import dcmfx_json/json_config.{type DicomJsonConfig}
+import dcmfx_json/json_error.{type JsonSerializeError}
+import dcmfx_p10/p10_part.{type P10Part}
+import gleam/bit_array
+import gleam/bool
+import gleam/float
+import gleam/int
+import gleam/json
+import gleam/list
+import gleam/order
+import gleam/result
+import gleam/string
+import ieee_float.{type IEEEFloat}
+
+pub type P10JsonTransform {
+  P10JsonTransform(
+    /// The DICOM JSON config to use when serializing the part stream to JSON.
+    config: DicomJsonConfig,
+    /// Whether a comma needs to be inserted before the next JSON value.
+    insert_comma: Bool,
+    /// The data element that value bytes are currently being gathered for.
+    current_data_element: #(DataElementTag, List(BitArray)),
+    /// Whether to ignore DataElementValueBytes parts when they're received.
+    /// This is used to stop certain data elements being included in the JSON.
+    ignore_data_element_value_bytes: Bool,
+    /// Whether parts for encapsulated pixel data are currently being received.
+    in_encapsulated_pixel_data: Bool,
+    /// When multiple binary parts are being directly streamed as an
+    /// InlineBinary, there can be 0, 1, or 2 bytes left over from the previous
+    /// chunk due to Base64 converting in three byte chunks. These leftover
+    /// bytes are prepended to the next chunk of data when it arrives for Base64
+    /// conversion.
+    pending_base64_input: BitArray,
+    /// The data set path to where JSON serialization is currently up to. This
+    /// is used to provide precise location information when an error occurs.
+    data_set_path: DataSetPath,
+    /// The number of items in each active sequence in the data set path. This
+    /// is used to provide precise location information when an error occurs.
+    sequence_item_counts: List(Int),
+  )
+}
+
+/// Constructs a new P10 parts to DICOM JSON transform.
+///
+pub fn new(config: DicomJsonConfig) -> P10JsonTransform {
+  P10JsonTransform(
+    config:,
+    insert_comma: False,
+    current_data_element: #(DataElementTag(0, 0), []),
+    ignore_data_element_value_bytes: False,
+    in_encapsulated_pixel_data: False,
+    pending_base64_input: <<>>,
+    data_set_path: data_set_path.new(),
+    sequence_item_counts: [],
+  )
+}
+
+/// Adds the next DICOM P10 part to this JSON transform. Bytes of JSON data are
+/// written to the provided `stream` as they become available. Note that if P10
+/// parts are provided in an invalid order then no error will be returned, but
+/// the resulting JSON will most likely be invalid.
+///
+pub fn add_part(
+  transform: P10JsonTransform,
+  part: P10Part,
+) -> Result(#(P10JsonTransform, String), JsonSerializeError) {
+  case part {
+    p10_part.FilePreambleAndDICMPrefix(..) -> Ok(#(transform, ""))
+    p10_part.FileMetaInformation(data_set) -> Ok(begin(transform, data_set))
+
+    p10_part.DataElementHeader(tag, vr, length) -> {
+      let #(transform, json) =
+        write_data_element_header(transform, tag, vr, length)
+
+      let path =
+        data_set_path.add_data_element(transform.data_set_path, tag)
+        |> result.unwrap(transform.data_set_path)
+      let transform = P10JsonTransform(..transform, data_set_path: path)
+
+      Ok(#(transform, json))
+    }
+    p10_part.DataElementValueBytes(vr, data, bytes_remaining) -> {
+      use #(transform, json) <- result.map(write_data_element_value_bytes(
+        transform,
+        vr,
+        data,
+        bytes_remaining,
+      ))
+
+      let transform = case bytes_remaining {
+        0 -> {
+          let path = data_set_path.pop(transform.data_set_path)
+          P10JsonTransform(..transform, data_set_path: path)
+        }
+        _ -> transform
+      }
+
+      #(transform, json)
+    }
+
+    p10_part.SequenceStart(tag, vr) -> {
+      use #(transform, json) <- result.map(write_sequence_start(
+        transform,
+        tag,
+        vr,
+      ))
+
+      let path =
+        data_set_path.add_data_element(transform.data_set_path, tag)
+        |> result.unwrap(transform.data_set_path)
+      let transform =
+        P10JsonTransform(
+          ..transform,
+          data_set_path: path,
+          sequence_item_counts: [0, ..transform.sequence_item_counts],
+        )
+
+      #(transform, json)
+    }
+    p10_part.SequenceDelimiter -> {
+      let #(transform, json) = write_sequence_end(transform)
+
+      let path = data_set_path.pop(transform.data_set_path)
+      let sequence_item_counts =
+        list.rest(transform.sequence_item_counts) |> result.unwrap([])
+
+      let transform =
+        P10JsonTransform(
+          ..transform,
+          data_set_path: path,
+          sequence_item_counts:,
+        )
+
+      Ok(#(transform, json))
+    }
+
+    p10_part.SequenceItemStart -> {
+      let #(transform, json) = write_sequence_item_start(transform)
+
+      let #(path, sequence_item_counts) = case transform.sequence_item_counts {
+        [count, ..rest] -> {
+          let path =
+            data_set_path.add_sequence_item(transform.data_set_path, count)
+            |> result.unwrap(transform.data_set_path)
+
+          #(path, [count + 1, ..rest])
+        }
+        _ -> #(transform.data_set_path, transform.sequence_item_counts)
+      }
+
+      let transform =
+        P10JsonTransform(
+          ..transform,
+          data_set_path: path,
+          sequence_item_counts:,
+        )
+
+      Ok(#(transform, json))
+    }
+    p10_part.SequenceItemDelimiter -> Ok(write_sequence_item_end(transform))
+
+    p10_part.PixelDataItem(length) -> {
+      use #(transform, json) <- result.map(write_encapsulated_pixel_data_item(
+        transform,
+        length,
+      ))
+
+      let path = data_set_path.pop(transform.data_set_path)
+      let transform = P10JsonTransform(..transform, data_set_path: path)
+
+      #(transform, json)
+    }
+
+    p10_part.End -> Ok(#(transform, end()))
+  }
+}
+
+fn begin(
+  transform: P10JsonTransform,
+  file_meta_information: DataSet,
+) -> #(P10JsonTransform, String) {
+  let json = "{"
+
+  // Exclude all File Meta Information data elements except for '(0002,0010)
+  // Transfer Syntax UID' when encapsulated pixel data is being included as it
+  // is needed to interpret that data
+  let #(transform, transfer_syntax_json) = case
+    transform.config.store_encapsulated_pixel_data
+  {
+    True -> {
+      let transfer_syntax_uid =
+        data_set.get_string(
+          file_meta_information,
+          registry.transfer_syntax_uid.tag,
+        )
+
+      case transfer_syntax_uid {
+        Ok(transfer_syntax_uid) -> {
+          let transform = P10JsonTransform(..transform, insert_comma: True)
+
+          let json =
+            "\"00020010\":{\"vr\":\"UI\",\"Value\":[\""
+            <> transfer_syntax_uid
+            <> "\"]}"
+
+          #(transform, json)
+        }
+        _ -> #(transform, "")
+      }
+    }
+    _ -> #(transform, "")
+  }
+
+  #(transform, json <> transfer_syntax_json)
+}
+
+fn write_data_element_header(
+  transform: P10JsonTransform,
+  tag: DataElementTag,
+  vr: ValueRepresentation,
+  length: Int,
+) -> #(P10JsonTransform, String) {
+  // Exclude group length data elements as these have no use in DICOM JSON. Also
+  // exclude the '(0008,0005) Specific Character Set' data element as DICOM JSON
+  // always uses UTF-8, and the data set
+  use <- bool.lazy_guard(
+    tag.element == 0 || tag == registry.specific_character_set.tag,
+    fn() {
+      let transform =
+        P10JsonTransform(..transform, ignore_data_element_value_bytes: True)
+
+      #(transform, "")
+    },
+  )
+
+  let json = case transform.insert_comma {
+    True -> ","
+    False -> ""
+  }
+
+  let transform =
+    P10JsonTransform(
+      ..transform,
+      insert_comma: True,
+      current_data_element: #(tag, []),
+    )
+
+  // Write the tag and VR
+  let json =
+    json
+    <> "\""
+    <> data_element_tag.to_hex_string(tag)
+    <> "\":{\"vr\":\""
+    <> value_representation.to_string(vr)
+    <> "\""
+
+  // If the value's length is zero then no 'Value' or 'InlineBinary' should be
+  // added to the output. Ref: PS3.18 F.2.5.
+  use <- bool.lazy_guard(length == 0, fn() {
+    let json = json <> "}"
+
+    let transform =
+      P10JsonTransform(..transform, ignore_data_element_value_bytes: True)
+
+    #(transform, json)
+  })
+
+  // The following VRs use InlineBinary in the output
+  let json =
+    json
+    <> case vr {
+      value_representation.OtherByteString
+      | value_representation.OtherDoubleString
+      | value_representation.OtherFloatString
+      | value_representation.OtherLongString
+      | value_representation.OtherVeryLongString
+      | value_representation.OtherWordString
+      | value_representation.Unknown -> ",\"InlineBinary\":\""
+      _ -> ",\"Value\":["
+    }
+
+  #(transform, json)
+}
+
+fn write_data_element_value_bytes(
+  transform: P10JsonTransform,
+  vr: ValueRepresentation,
+  data: BitArray,
+  bytes_remaining: Int,
+) -> Result(#(P10JsonTransform, String), JsonSerializeError) {
+  // If this data element value is being ignored then do nothing
+  use <- bool.lazy_guard(transform.ignore_data_element_value_bytes, fn() {
+    let transform =
+      P10JsonTransform(..transform, ignore_data_element_value_bytes: False)
+
+    Ok(#(transform, ""))
+  })
+
+  // The following VRs are streamed out directly as Base64
+  let is_inline_binary =
+    vr == value_representation.OtherByteString
+    || vr == value_representation.OtherDoubleString
+    || vr == value_representation.OtherFloatString
+    || vr == value_representation.OtherLongString
+    || vr == value_representation.OtherVeryLongString
+    || vr == value_representation.OtherWordString
+    || vr == value_representation.Unknown
+  use <- bool.lazy_guard(is_inline_binary, fn() {
+    let #(transform, json) =
+      write_base64(
+        transform,
+        data,
+        bytes_remaining == 0 && !transform.in_encapsulated_pixel_data,
+      )
+
+    let json =
+      json
+      <> case bytes_remaining == 0 && !transform.in_encapsulated_pixel_data {
+        True -> "\"}"
+        False -> ""
+      }
+
+    Ok(#(transform, json))
+  })
+
+  // If this data element value is not an inline binary and has no data then
+  // there's nothing to do
+  use <- bool.guard(
+    bit_array.byte_size(data) == 0 && bytes_remaining == 0,
+    Ok(#(transform, "")),
+  )
+
+  // Gather the final data for this data element
+  let transform =
+    P10JsonTransform(
+      ..transform,
+      current_data_element: #(transform.current_data_element.0, [
+        data,
+        ..transform.current_data_element.1
+      ]),
+    )
+
+  // Wait until all bytes for the data element have been accumulated
+  use <- bool.guard(bytes_remaining > 0, Ok(#(transform, "")))
+
+  // Create final binary data element value
+  let bytes = bit_array.concat(transform.current_data_element.1)
+  let value = data_element_value.new_binary_unchecked(vr, bytes)
+
+  let json_values =
+    convert_binary_value_to_json(value, bytes)
+    |> result.map_error(fn(e) {
+      json_error.DataError(data_error.with_path(e, transform.data_set_path))
+    })
+  use json_values <- result.try(json_values)
+
+  Ok(#(transform, string.join(json_values, ",") <> "]}"))
+}
+
+fn write_sequence_start(
+  transform: P10JsonTransform,
+  tag: DataElementTag,
+  vr: ValueRepresentation,
+) -> Result(#(P10JsonTransform, String), JsonSerializeError) {
+  let json = case transform.insert_comma {
+    True -> ","
+    False -> ""
+  }
+
+  let transform = P10JsonTransform(..transform, insert_comma: True)
+
+  case vr {
+    value_representation.Sequence -> {
+      let transform = P10JsonTransform(..transform, insert_comma: False)
+
+      let json =
+        json
+        <> "\""
+        <> data_element_tag.to_hex_string(tag)
+        <> "\":{\"vr\":\"SQ\",\"Value\":["
+
+      Ok(#(transform, json))
+    }
+
+    _ -> {
+      use <- bool.lazy_guard(
+        !transform.config.store_encapsulated_pixel_data,
+        fn() {
+          Error(json_error.DataError(
+            data_error.new_value_invalid(
+              "DICOM JSON does not support encapsulated pixel data, consider "
+              <> "enabling this extension in the config",
+            )
+            |> data_error.with_path(transform.data_set_path),
+          ))
+        },
+      )
+
+      let transform =
+        P10JsonTransform(..transform, in_encapsulated_pixel_data: True)
+
+      let json =
+        json
+        <> "\""
+        <> data_element_tag.to_hex_string(tag)
+        <> "\":{\"vr\":\""
+        <> value_representation.to_string(vr)
+        <> "\",\"InlineBinary\":\""
+
+      Ok(#(transform, json))
+    }
+  }
+}
+
+fn write_sequence_end(
+  transform: P10JsonTransform,
+) -> #(P10JsonTransform, String) {
+  case transform.in_encapsulated_pixel_data {
+    True -> {
+      let transform =
+        P10JsonTransform(..transform, in_encapsulated_pixel_data: False)
+
+      let #(transform, json) = write_base64(transform, <<>>, True)
+
+      #(transform, json <> "\"}")
+    }
+
+    False -> {
+      let transform = P10JsonTransform(..transform, insert_comma: True)
+
+      #(transform, "]}")
+    }
+  }
+}
+
+fn write_sequence_item_start(
+  transform: P10JsonTransform,
+) -> #(P10JsonTransform, String) {
+  let json = case transform.insert_comma {
+    True -> ","
+    False -> ""
+  }
+
+  let transform = P10JsonTransform(..transform, insert_comma: False)
+
+  #(transform, json <> "{")
+}
+
+fn write_sequence_item_end(
+  transform: P10JsonTransform,
+) -> #(P10JsonTransform, String) {
+  let transform = P10JsonTransform(..transform, insert_comma: True)
+
+  #(transform, "}")
+}
+
+fn write_encapsulated_pixel_data_item(
+  transform: P10JsonTransform,
+  length: Int,
+) -> Result(#(P10JsonTransform, String), JsonSerializeError) {
+  use <- bool.lazy_guard(!transform.config.store_encapsulated_pixel_data, fn() {
+    Error(json_error.DataError(
+      data_error.new_value_invalid(
+        "DICOM JSON does not support encapsulated pixel data, consider "
+        <> "enabling this extension in the config",
+      )
+      |> data_error.with_path(transform.data_set_path),
+    ))
+  })
+
+  // Construct bytes for the item header
+  let bytes = <<0xFE, 0xFF, 0x00, 0xE0, length:32-little>>
+
+  Ok(write_base64(transform, bytes, False))
+}
+
+fn end() -> String {
+  "}"
+}
+
+fn write_base64(
+  transform: P10JsonTransform,
+  input: BitArray,
+  finish: Bool,
+) -> #(P10JsonTransform, String) {
+  let input_size = bit_array.byte_size(input)
+
+  // If there's still insufficient data to encode with this new data then
+  // accumulate the bytes and wait till next time
+  use <- bool.lazy_guard(
+    bit_array.byte_size(transform.pending_base64_input) + input_size < 3
+      && !finish,
+    fn() {
+      let transform =
+        P10JsonTransform(
+          ..transform,
+          pending_base64_input: <<
+            transform.pending_base64_input:bits,
+            input:bits,
+          >>,
+        )
+
+      #(transform, "")
+    },
+  )
+
+  // Calculate how many of the input bytes to consume. Bytes must be fed to the
+  // Base64 encoder in lots of 3, and any leftover saved till next time. If
+  // these are the final bytes then all remaining bytes are encoded and the
+  // encoder will add any required Base64 padding.
+  let input_bytes_consumed = case finish {
+    True -> input_size
+    False -> {
+      { bit_array.byte_size(transform.pending_base64_input) + input_size }
+      / 3
+      * 3
+      - bit_array.byte_size(transform.pending_base64_input)
+    }
+  }
+
+  let assert Ok(base64_input) = bit_array.slice(input, 0, input_bytes_consumed)
+
+  // Base64 encode the bytes and output to the stream
+  let json =
+    bit_array.base64_encode(
+      <<transform.pending_base64_input:bits, base64_input:bits>>,
+      finish,
+    )
+
+  // Save off unencoded bytes for next time
+  let transform =
+    P10JsonTransform(
+      ..transform,
+      pending_base64_input: case
+        bit_array.slice(
+          input,
+          input_bytes_consumed,
+          input_size - input_bytes_consumed,
+        )
+      {
+        Ok(bytes) -> bytes
+        _ -> <<>>
+      },
+    )
+
+  #(transform, json)
+}
+
+fn convert_binary_value_to_json(
+  value: DataElementValue,
+  bytes: BitArray,
+) -> Result(List(String), DataError) {
+  case data_element_value.value_representation(value) {
+    // AttributeTag value representation
+    value_representation.AttributeTag -> {
+      use tags <- result.try(attribute_tag.from_bytes(bytes))
+
+      tags
+      |> list.map(fn(tag) {
+        "\"" <> data_element_tag.to_hex_string(tag) <> "\""
+      })
+      |> Ok
+    }
+
+    // Floating point value representations
+    value_representation.DecimalString
+    | value_representation.FloatingPointDouble
+    | value_representation.FloatingPointSingle -> {
+      use value <- result.try(data_element_value.get_floats(value))
+
+      Ok(list.map(value, encode_ieee_float))
+    }
+
+    // PersonName value representation
+    value_representation.PersonName -> {
+      let s =
+        bit_array.to_string(bytes)
+        |> result.replace_error(data_error.new_value_invalid(
+          "PersonName is invalid UTF-8",
+        ))
+      use s <- result.try(s)
+
+      s
+      |> string.split("\\")
+      |> list.map(fn(raw_name) {
+        let component_groups: List(String) =
+          raw_name
+          |> string.split("=")
+          |> list.map(string.trim_right)
+
+        use <- bool.guard(
+          list.length(component_groups) > 3,
+          Error(data_error.new_value_invalid(
+            "PersonName has too many component groups: "
+            <> int.to_string(list.length(component_groups)),
+          )),
+        )
+
+        component_groups
+        |> list.index_fold([], fn(acc, s, i) {
+          use <- bool.guard(string.is_empty(s), acc)
+
+          let name = case i {
+            0 -> "Alphabetic"
+            1 -> "Ideographic"
+            _ -> "Phonetic"
+          }
+
+          [#(name, json.string(s)), ..acc]
+        })
+        |> json.object
+        |> json.to_string
+        |> Ok
+      })
+      |> result.all
+    }
+
+    // Binary signed/unsigned integer value representations
+    value_representation.SignedLong
+    | value_representation.SignedShort
+    | value_representation.UnsignedLong
+    | value_representation.UnsignedShort
+    | value_representation.IntegerString ->
+      value
+      |> data_element_value.get_ints
+      |> result.map(list.map(_, int.to_string))
+
+    // Binary signed/unsigned big integer value representations
+    value_representation.SignedVeryLong | value_representation.UnsignedVeryLong -> {
+      use value <- result.try(data_element_value.get_big_ints(value))
+
+      // Integers outside of the range representable by a JavaScript number are
+      // instead output as strings
+      let assert Ok(min_safe_integer) = bigi.from_string("-9007199254740991")
+      let assert Ok(max_safe_integer) = bigi.from_string("9007199254740991")
+
+      value
+      |> list.map(fn(i) {
+        case
+          bigi.compare(i, min_safe_integer) != order.Lt
+          && bigi.compare(i, max_safe_integer) != order.Gt
+        {
+          True -> {
+            let assert Ok(i) = bigi.to_int(i)
+            int.to_string(i)
+          }
+          False -> "\"" <> bigi.to_string(i) <> "\""
+        }
+      })
+      |> Ok
+    }
+
+    // Handle string VRs that have explicit internal structure. Their value
+    // is deliberately not parsed or validated beyond conversion to UTF-8, and
+    // is just passed straight through.
+    value_representation.AgeString
+    | value_representation.Date
+    | value_representation.DateTime
+    | value_representation.Time ->
+      bytes
+      |> bit_array.to_string
+      |> result.map_error(fn(_) {
+        data_error.new_value_invalid("String bytes are not valid UTF-8")
+      })
+      |> result.map(utils.trim_right_codepoints(_, [0x00, 0x20]))
+      |> result.map(prepare_json_string)
+      |> result.map(fn(s) { [s] })
+
+    // Handle string VRs that don't support multiplicity
+    value_representation.ApplicationEntity
+    | value_representation.LongText
+    | value_representation.ShortText
+    | value_representation.UniversalResourceIdentifier
+    | value_representation.UnlimitedText -> {
+      use value <- result.try(data_element_value.get_string(value))
+
+      value
+      |> prepare_json_string
+      |> fn(s) { [s] }
+      |> Ok
+    }
+
+    // Handle remaining string-based VRs that support multiplicity
+    value_representation.CodeString
+    | value_representation.LongString
+    | value_representation.ShortString
+    | value_representation.UnlimitedCharacters
+    | value_representation.UniqueIdentifier -> {
+      use value <- result.try(data_element_value.get_strings(value))
+
+      value
+      |> list.map(prepare_json_string)
+      |> Ok
+    }
+
+    _ ->
+      Error(data_error.new_value_invalid(
+        "Data element value not valid for its VR",
+      ))
+  }
+}
+
+fn prepare_json_string(value: String) -> String {
+  case value == "" {
+    True -> "null"
+    False -> json.to_string(json.string(value))
+  }
+}
+
+/// Encodes an `IEEEFloat` to JSON. Because gleam_json on Erlang doesn't
+/// natively support Infinity and NaN values, these are instead converted to
+/// strings.
+///
+fn encode_ieee_float(f: IEEEFloat) -> String {
+  case ieee_float.to_finite(f) {
+    Ok(f) -> float.to_string(f)
+
+    _ -> {
+      use <- bool.guard(f == ieee_float.positive_infinity(), "\"Infinity\"")
+      use <- bool.guard(f == ieee_float.negative_infinity(), "\"-Infinity\"")
+
+      "\"NaN\""
+    }
+  }
+}

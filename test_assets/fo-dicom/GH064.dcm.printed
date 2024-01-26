@@ -1,0 +1,680 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (MR Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    52 bytes] "1.3.46.670589.11.30069.5.0.768 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG 2000 Image Compression (Lossless Only))
+(0002,0012) UI Implementation Class UID             [    18 bytes] "1.2.40.0.13.1.1.1"
+(0002,0013) SH Implementation Version Name          [    14 bytes] "dcm4che-1.4.33"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    28 bytes] "DERIVED", "PRIMARY", "M_FFE",  …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2012-10-08
+(0008,0013) TM Instance Creation Time               [     6 bytes] 11:32:58
+(0008,0014) UI Instance Creator UID                 [    24 bytes] "1.3.46.670589.11.30069.5"
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (MR Image Storage)
+(0008,0018) UI SOP Instance UID                     [    52 bytes] "1.3.46.670589.11.30069.5.0.768 …
+(0008,0020) DA Study Date                           [     8 bytes] 2012-10-08
+(0008,0021) DA Series Date                          [     8 bytes] 2012-10-08
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2012-10-08
+(0008,0023) DA Content Date                         [     8 bytes] 2012-10-08
+(0008,0030) TM Study Time                           [     6 bytes] 10:49:42
+(0008,0031) TM Series Time                          [    10 bytes] 10:59:01.67
+(0008,0032) TM Acquisition Time                     [    10 bytes] 10:59:01.67
+(0008,0033) TM Content Time                         [    10 bytes] 10:59:01.67
+(0008,0050) SH Accession Number                     [     8 bytes] "1218096"
+(0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+(0008,0070) LO Manufacturer                         [    24 bytes] "Philips Medical Systems"
+(0008,0080) LO Institution Name                     [    28 bytes] "Inst. de Radiologia de Natal"
+(0008,0090) PN Referring Physician's Name           [    14 bytes] "SERGIO DANTAS"
+(0008,0100) SH Code Value                           [     0 bytes] ""
+(0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+(0008,0104) LO Code Meaning                         [     0 bytes] ""
+(0008,1010) SH Station Name                         [     6 bytes] "INTERA"
+(0008,1030) LO Study Description                    [    12 bytes] "RM DE CRANIO"
+(0008,103E) LO Series Description                   [    10 bytes] "Survey_MST"
+(0008,1040) LO Institutional Department Name        [    12 bytes] "RESSONANCIA"
+(0008,1050) PN Performing Physician's Name          [    14 bytes] "NEWTON JUNIOR"
+(0008,1070) PN Operators' Name                      [     0 bytes] ""
+(0008,1080) LO Admitting Diagnoses Description      [     0 bytes] ""
+(0008,1090) LO Manufacturer's Model Name            [     8 bytes] "Achieva"
+(0008,1111) SQ Referenced Performed Procedure Step Sequence
+  (FFFE,E000) Item
+    (0008,0012) DA Instance Creation Date               [     8 bytes] 2012-10-08
+    (0008,0013) TM Instance Creation Time               [     6 bytes] 11:32:58
+    (0008,0014) UI Instance Creator UID                 [    24 bytes] "1.3.46.670589.11.30069.5"
+    (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Modality Performed Procedure Step SOP Class)
+    (0008,1155) UI Referenced SOP Instance UID          [    52 bytes] "1.3.46.670589.11.30069.5.0 …
+    (0020,0013) IS Instance Number                      [     2 bytes] "0"
+    (2005,0010) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 005"
+    (2005,0014) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 005"
+    (2005,1006) SS Unknown                              [     2 bytes] 0
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,1140) SQ Referenced Image Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    52 bytes] "1.3.46.670589.11.30069.5.0 …
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    52 bytes] "1.3.46.670589.11.30069.5.0 …
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    52 bytes] "1.3.46.670589.11.30069.5.0 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,2111) ST Derivation Description               [   152 bytes] "LossLess compression with JPEG …
+(0008,9215) SQ Derivation Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     6 bytes] "121327"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+    (0008,0104) LO Code Meaning                         [    56 bytes] "Full fidelity image, uncom …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0010,0010) PN Patient's Name                       [    20 bytes] "Brain Navegatium MRi"
+(0010,0020) LO Patient ID                           [     6 bytes] "14079"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1952-03-22
+(0010,0040) CS Patient's Sex                        [     2 bytes] "F" (Female)
+(0010,1000) LO Other Patient IDs                    [     0 bytes] ""
+(0010,1030) DS Patient's Weight                     [     2 bytes] "60"
+(0010,21C0) US Pregnancy Status                     [     2 bytes] 4
+(0018,0015) CS Body Part Examined                   [     4 bytes] "HEAD"
+(0018,0020) CS Scanning Sequence                    [     2 bytes] "GR" (Gradient Recalled)
+(0018,0021) CS Sequence Variant                     [     2 bytes] "MP" (MAG prepared)
+(0018,0022) CS Scan Options                         [     6 bytes] "OTHER"
+(0018,0023) CS MR Acquisition Type                  [     2 bytes] "2D"
+(0018,0024) SH Sequence Name                        [     0 bytes] ""
+(0018,0050) DS Slice Thickness                      [     2 bytes] "10"
+(0018,0080) DS Repetition Time                      [     2 bytes] "15"
+(0018,0081) DS Echo Time                            [     6 bytes] "5.355"
+(0018,0083) DS Number of Averages                   [     2 bytes] "1"
+(0018,0084) DS Imaging Frequency                    [    10 bytes] "63.881806"
+(0018,0085) SH Imaged Nucleus                       [     2 bytes] "1H"
+(0018,0086) IS Echo Number(s)                       [     2 bytes] "1"
+(0018,0087) DS Magnetic Field Strength              [     4 bytes] "1.5"
+(0018,0088) DS Spacing Between Slices               [     2 bytes] "20"
+(0018,0089) IS Number of Phase Encoding Steps       [     4 bytes] "126"
+(0018,0091) IS Echo Train Length                    [     2 bytes] "42"
+(0018,0093) DS Percent Sampling                     [     2 bytes] "50"
+(0018,0094) DS Percent Phase Field of View          [     4 bytes] "100"
+(0018,0095) DS Pixel Bandwidth                      [     4 bytes] "187"
+(0018,1000) LO Device Serial Number                 [     6 bytes] "30069"
+(0018,1020) LO Software Versions                    [    14 bytes] "2.6.3", "2.6.3.7"
+(0018,1030) LO Protocol Name                        [    10 bytes] "Survey_MST"
+(0018,1081) IS Low R-R Value                        [     2 bytes] "0"
+(0018,1082) IS High R-R Value                       [     2 bytes] "0"
+(0018,1083) IS Intervals Acquired                   [     2 bytes] "0"
+(0018,1084) IS Intervals Rejected                   [     2 bytes] "0"
+(0018,1088) IS Heart Rate                           [     2 bytes] "0"
+(0018,1100) DS Reconstruction Diameter              [     4 bytes] "250"
+(0018,1250) SH Receive Coil Name                    [    12 bytes] "SENSE-Head-8"
+(0018,1251) SH Transmit Coil Name                   [     2 bytes] "B"
+(0018,1310) US Acquisition Matrix                   [     8 bytes] 0, 256, 126, 0
+(0018,1312) CS In-plane Phase Encoding Direction    [     4 bytes] "ROW"
+(0018,1314) DS Flip Angle                           [     2 bytes] "20"
+(0018,1316) DS SAR                                  [    16 bytes] "0.27590328454971"
+(0018,1318) DS dB/dt                                [    16 bytes] "14.8109297250769"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0018,9073) FD Acquisition Duration                 [     8 bytes] 17.422658920288086
+(0018,9087) FD Diffusion b-value                    [     8 bytes] 0.0
+(0018,9089) FD Diffusion Gradient Orientation       [    24 bytes] 0.0, 0.0, 0.0
+(0020,000D) UI Study Instance UID                   [    52 bytes] "1.3.46.670589.11.30069.5.0.558 …
+(0020,000E) UI Series Instance UID                  [    52 bytes] "1.3.46.670589.11.30069.5.0.768 …
+(0020,0010) SH Study ID                             [    10 bytes] "402835779"
+(0020,0011) IS Series Number                        [     4 bytes] "301"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "3"
+(0020,0013) IS Instance Number                      [     2 bytes] "3"
+(0020,0032) DS Image Position (Patient)             [    50 bytes] "-10.219132811296", "-106.14625 …
+(0020,0037) DS Image Orientation (Patient)          [   102 bytes] "-0.0042499057017", "0.99325013 …
+(0020,0052) UI Frame of Reference UID               [    52 bytes] "1.3.46.670589.11.30069.5.0.645 …
+(0020,0100) IS Temporal Position Identifier         [     2 bytes] "1"
+(0020,0105) IS Number of Temporal Positions         [     2 bytes] "1"
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0020,1041) DS Slice Location                       [    16 bytes] "39.9999997984767"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 256
+(0028,0011) US Columns                              [     2 bytes] 256
+(0028,0030) DS Pixel Spacing                        [    20 bytes] "0.9765625", "0.9765625"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 12
+(0028,0102) US High Bit                             [     2 bytes] 11
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,1050) DS Window Center                        [     6 bytes] "513.55"
+(0028,1051) DS Window Width                         [     6 bytes] "892.72"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
+(0032,4000) LT Study Comments                       [    26 bytes] "RM DE CRANIO / 60 ANOS J."
+(0040,0006) PN Scheduled Performing Physician's Name  [     0 bytes] ""
+(0040,0241) AE Performed Station AE Title           [     6 bytes] "INTERA"
+(0040,0244) DA Performed Procedure Step Start Date  [     8 bytes] 2012-10-08
+(0040,0245) TM Performed Procedure Step Start Time  [     6 bytes] 10:49:42
+(0040,0250) DA Performed Procedure Step End Date    [     8 bytes] 2012-10-08
+(0040,0251) TM Performed Procedure Step End Time    [     6 bytes] 10:49:42
+(0040,0253) SH Performed Procedure Step ID          [    10 bytes] "402835779"
+(0040,0254) LO Performed Procedure Step Description  [    12 bytes] "RM DE CRANIO"
+(0040,0260) SQ Performed Protocol Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [    10 bytes] "UNDEFINED"
+    (0008,0102) SH Coding Scheme Designator             [    10 bytes] "UNDEFINED"
+    (0008,0104) LO Code Meaning                         [    10 bytes] "UNDEFINED"
+    (0008,010B) CS Context Group Extension Flag         [     2 bytes] "N"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0040,0280) ST Comments on the Performed Procedure Step  [    26 bytes] "RM DE CRANIO / 60 ANOS J."
+(0040,0321) SQ Film Consumption Sequence
+(FFFE,E0DD) Sequence Delimitation Item
+(0040,9096) SQ Real World Value Mapping Sequence
+  (FFFE,E000) Item
+    (0040,9224) FD Real World Value Intercept           [     8 bytes] 0.0
+    (0040,9225) FD Real World Value Slope               [     8 bytes] 2.083516
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(07A1,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+(2001,0010) LO Private Creator                      [    22 bytes] "Philips Imaging DD 001"
+(2001,0090) LO Private Creator                      [    22 bytes] "Philips Imaging DD 129"
+(2001,1001) FL Chemical Shift                       [     4 bytes] 0.0
+(2001,1002) IS Chemical Shift Number MR             [     2 bytes] "0"
+(2001,1003) FL Diffusion B-Factor                   [     4 bytes] 0.0
+(2001,1006) CS Image Enhanced                       [     2 bytes] "N"
+(2001,1007) CS Image Type ED ES                     [     2 bytes] "U"
+(2001,1008) IS Phase Number                         [     2 bytes] "1"
+(2001,1009) FL Unknown                              [     4 bytes] 0.0
+(2001,100A) IS Slice Number MR                      [     2 bytes] "3"
+(2001,100B) CS Slice Orientation                    [     8 bytes] "SAGITTAL"
+(2001,100C) CS Unknown                              [     2 bytes] "N"
+(2001,100E) CS Unknown                              [     2 bytes] "N"
+(2001,100F) SS Unknown                              [     2 bytes] 0
+(2001,1010) CS Cardiac Sync                         [     2 bytes] "NO"
+(2001,1011) FL Diffusion Echo Time                  [     4 bytes] 0.0
+(2001,1012) CS Dynamic Series                       [     2 bytes] "N"
+(2001,1013) SL EPI Factor                           [     4 bytes] 1
+(2001,1014) SL Number of Echoes                     [     4 bytes] 1
+(2001,1015) SS Number of Locations                  [     2 bytes] 1
+(2001,1016) SS Number of PC Directions              [     2 bytes] 0
+(2001,1017) SL Number of Phases MR                  [     4 bytes] 1
+(2001,1018) SL Number of Slices MR                  [     4 bytes] 5
+(2001,1019) CS Partial Matrix Scanned               [     2 bytes] "N"
+(2001,101A) FL PC Velocity                          [    12 bytes] 0.0, 0.0, 0.0
+(2001,101B) FL Prepulse Delay                       [     4 bytes] 372.8203125
+(2001,101C) CS Prepulse Type                        [     4 bytes] "INV"
+(2001,101D) IS Reconstruction Number MR             [     2 bytes] "1"
+(2001,101F) CS Respiration Sync                     [     2 bytes] "NO"
+(2001,1020) LO Scanning Technique Description MR    [     6 bytes] "T1TFE"
+(2001,1021) CS SPIR                                 [     2 bytes] "N"
+(2001,1022) FL Water Fat Shift                      [     4 bytes] 1.1620968580245972
+(2001,1023) DS Flip Angle Philips                   [     2 bytes] "20"
+(2001,1024) CS Interactive                          [     2 bytes] "N"
+(2001,1025) SH Echo Time Display MR                 [     4 bytes] "5.4"
+(2001,105F) SQ Stack Sequence
+  (FFFE,E000) Item
+    (2001,0010) LO Private Creator                      [    22 bytes] "Philips Imaging DD 001"
+    (2001,102D) SS Number of Stack Slices               [     2 bytes] 3
+    (2001,1032) FL Stack Radial Angle                   [     4 bytes] 0.0
+    (2001,1033) CS Stack Radial Axis                    [     2 bytes] "AP"
+    (2001,1035) SS Stack Slice Number                   [     2 bytes] 1
+    (2001,1036) CS Stack Type                           [     8 bytes] "PARALLEL"
+    (2005,0010) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 001"
+    (2005,0013) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 004"
+    (2005,0014) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 005"
+    (2005,1071) FL Unknown                              [     4 bytes] 2.0855815410614014
+    (2005,1072) FL Unknown                              [     4 bytes] 0.24366378784179688
+    (2005,1073) FL Unknown                              [     4 bytes] -6.665299415588379
+    (2005,1074) FL Unknown                              [     4 bytes] 250.0
+    (2005,1075) FL Unknown                              [     4 bytes] 250.0
+    (2005,1076) FL Unknown                              [     4 bytes] 50.0
+    (2005,1078) FL Unknown                              [     4 bytes] 3.510971784591675
+    (2005,1079) FL Unknown                              [     4 bytes] -3.134521007537842
+    (2005,107A) FL Unknown                              [     4 bytes] 4.687171459197998
+    (2005,107B) CS Unknown                              [     2 bytes] "AP"
+    (2005,107E) FL Unknown                              [     4 bytes] 20.0
+    (2005,1081) CS Unknown                              [     2 bytes] "RL"
+    (2005,10A3) IS Unknown                              [     2 bytes] "64"
+    (2005,10A4) IS Unknown                              [     2 bytes] "0"
+    (2005,10A5) IS Unknown                              [     2 bytes] "0"
+    (2005,10A6) IS Unknown                              [     4 bytes] "255"
+    (2005,10A7) CS Unknown                              [     8 bytes] "DEFAULT"
+    (2005,1390) CS Unknown                              [     4 bytes] "R_A"
+    (2005,143C) FL Unknown                              [     4 bytes] 1.6999999760721821e38
+    (2005,143D) FL Unknown                              [     4 bytes] 1.6999999760721821e38
+    (2005,143E) FL Unknown                              [     4 bytes] 1.6999999760721821e38
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (2001,0010) LO Private Creator                      [    22 bytes] "Philips Imaging DD 001"
+    (2001,102D) SS Number of Stack Slices               [     2 bytes] 1
+    (2001,1032) FL Stack Radial Angle                   [     4 bytes] 0.0
+    (2001,1033) CS Stack Radial Axis                    [     2 bytes] "AP"
+    (2001,1035) SS Stack Slice Number                   [     2 bytes] 4
+    (2001,1036) CS Stack Type                           [     8 bytes] "PARALLEL"
+    (2005,0010) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 001"
+    (2005,0013) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 004"
+    (2005,0014) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 005"
+    (2005,1071) FL Unknown                              [     4 bytes] 0.0
+    (2005,1072) FL Unknown                              [     4 bytes] 0.0
+    (2005,1073) FL Unknown                              [     4 bytes] -5.439888000488281
+    (2005,1074) FL Unknown                              [     4 bytes] 10.0
+    (2005,1075) FL Unknown                              [     4 bytes] 250.0
+    (2005,1076) FL Unknown                              [     4 bytes] 250.0
+    (2005,1078) FL Unknown                              [     4 bytes] 7.053291320800781
+    (2005,1079) FL Unknown                              [     4 bytes] -2.7272727489471436
+    (2005,107A) FL Unknown                              [     4 bytes] 0.0
+    (2005,107B) CS Unknown                              [     2 bytes] "RL"
+    (2005,107E) FL Unknown                              [     4 bytes] 20.0
+    (2005,1081) CS Unknown                              [     2 bytes] "AP"
+    (2005,10A3) IS Unknown                              [     2 bytes] "64"
+    (2005,10A4) IS Unknown                              [     2 bytes] "0"
+    (2005,10A5) IS Unknown                              [     2 bytes] "0"
+    (2005,10A6) IS Unknown                              [     4 bytes] "255"
+    (2005,10A7) CS Unknown                              [     8 bytes] "DEFAULT"
+    (2005,1390) CS Unknown                              [     4 bytes] "R_A"
+    (2005,143C) FL Unknown                              [     4 bytes] 1.6999999760721821e38
+    (2005,143D) FL Unknown                              [     4 bytes] 1.6999999760721821e38
+    (2005,143E) FL Unknown                              [     4 bytes] 1.6999999760721821e38
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (2001,0010) LO Private Creator                      [    22 bytes] "Philips Imaging DD 001"
+    (2001,102D) SS Number of Stack Slices               [     2 bytes] 1
+    (2001,1032) FL Stack Radial Angle                   [     4 bytes] 0.0
+    (2001,1033) CS Stack Radial Axis                    [     2 bytes] "AP"
+    (2001,1035) SS Stack Slice Number                   [     2 bytes] 5
+    (2001,1036) CS Stack Type                           [     8 bytes] "PARALLEL"
+    (2005,0010) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 001"
+    (2005,0013) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 004"
+    (2005,0014) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 005"
+    (2005,1071) FL Unknown                              [     4 bytes] 3.2922685146331787
+    (2005,1072) FL Unknown                              [     4 bytes] 0.31934887170791626
+    (2005,1073) FL Unknown                              [     4 bytes] -5.543425559997559
+    (2005,1074) FL Unknown                              [     4 bytes] 250.0
+    (2005,1075) FL Unknown                              [     4 bytes] 10.0
+    (2005,1076) FL Unknown                              [     4 bytes] 250.0
+    (2005,1078) FL Unknown                              [     4 bytes] 1.1598745584487915
+    (2005,1079) FL Unknown                              [     4 bytes] 0.4077107310295105
+    (2005,107A) FL Unknown                              [     4 bytes] -0.006484302692115307
+    (2005,107B) CS Unknown                              [     2 bytes] "RL"
+    (2005,107E) FL Unknown                              [     4 bytes] 20.0
+    (2005,1081) CS Unknown                              [     2 bytes] "FH"
+    (2005,10A3) IS Unknown                              [     2 bytes] "64"
+    (2005,10A4) IS Unknown                              [     2 bytes] "0"
+    (2005,10A5) IS Unknown                              [     2 bytes] "0"
+    (2005,10A6) IS Unknown                              [     4 bytes] "255"
+    (2005,10A7) CS Unknown                              [     8 bytes] "DEFAULT"
+    (2005,1390) CS Unknown                              [     4 bytes] "R_A"
+    (2005,143C) FL Unknown                              [     4 bytes] 1.6999999760721821e38
+    (2005,143D) FL Unknown                              [     4 bytes] 1.6999999760721821e38
+    (2005,143E) FL Unknown                              [     4 bytes] 1.6999999760721821e38
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(2001,1060) SL Number of Stacks                     [     4 bytes] 3
+(2001,1061) CS Unknown                              [     2 bytes] "N"
+(2001,1062) CS Unknown                              [     2 bytes] "N"
+(2001,1063) CS Examination Source                   [    10 bytes] "ELSEWHERE"
+(2001,107B) IS Acquisition Number                   [     2 bytes] "3"
+(2001,1081) IS Number of Dynamic Scans              [     2 bytes] "1"
+(2001,1082) IS Echo Train Length                    [     2 bytes] "42"
+(2001,1083) DS Imaging Frequency                    [    10 bytes] "63.881806"
+(2001,1084) DS Inversion Time                       [     2 bytes] "0"
+(2001,1085) DS Magnetic Field Strength              [     4 bytes] "1.5"
+(2001,1086) IS Unknown                              [     2 bytes] "0"
+(2001,1087) SH Imaged Nucleus                       [     2 bytes] "1H"
+(2001,1088) DS Number of Averages                   [     2 bytes] "1"
+(2001,1089) DS Phase FOV Percent                    [     2 bytes] "0"
+(2001,108A) DS Sampling Percent                     [     2 bytes] "0"
+(2001,108B) SH Unknown                              [     2 bytes] "B"
+(2001,10F1) FL Prospective Motion Correction        [    24 bytes] 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+(2001,9000) SQ Unknown
+  (FFFE,E000) Item
+    (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+    (0008,0012) DA Instance Creation Date               [     8 bytes] 2012-10-08
+    (0008,0013) TM Instance Creation Time               [     6 bytes] 11:32:58
+    (0008,0014) UI Instance Creator UID                 [    24 bytes] "1.3.46.670589.11.30069.5"
+    (0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Grayscale Softcopy Presentation State Storage)
+    (0008,0018) UI SOP Instance UID                     [    58 bytes] "1.3.46.670589.11.0.0.51.4. …
+    (0008,1115) SQ Referenced Series Sequence
+      (FFFE,E000) Item
+        (0008,1140) SQ Referenced Image Sequence
+          (FFFE,E000) Item
+            (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (MR Image Storage)
+            (0008,1155) UI Referenced SOP Instance UID          [    52 bytes] "1.3.46.670589.11.3 …
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (0020,000E) UI Series Instance UID                  [    52 bytes] "1.3.46.670589.11.30069 …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0018,1622) US Shutter Presentation Value           [     2 bytes] 0
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+    (0028,3110) SQ Softcopy VOI LUT Sequence
+      (FFFE,E000) Item
+        (0028,1050) DS Window Center                        [     4 bytes] "1070"
+        (0028,1051) DS Window Width                         [     4 bytes] "1860"
+        (2001,0010) LO Private Creator                      [    22 bytes] "Philips Imaging DD 001"
+        (2001,1053) CS Window Invert                        [     2 bytes] "N"
+        (2001,1077) CS GL TrafoType                         [    10 bytes] "LINEARVOI"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0070,005A) SQ Displayed Area Selection Sequence
+      (FFFE,E000) Item
+        (0070,0052) SL Displayed Area Top Left Hand Corner  [     8 bytes] 1, 1
+        (0070,0053) SL Displayed Area Bottom Right Hand Corner  [     8 bytes] 256, 256
+        (0070,0100) CS Presentation Size Mode               [    12 bytes] "SCALE TO FIT"
+        (0070,0102) IS Presentation Pixel Aspect Ratio      [     4 bytes] "1", "1"
+        (2001,0010) LO Private Creator                      [    22 bytes] "Philips Imaging DD 001"
+        (2001,103F) CS Interpolation Method                 [     8 bytes] "BI_CUBIC"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0070,0080) CS Content Label                        [    12 bytes] "AS LAST SEEN"
+    (0070,0081) LO Content Description                  [     0 bytes] ""
+    (0070,0082) DA Presentation Creation Date           [     8 bytes] 2012-10-08
+    (0070,0083) TM Presentation Creation Time           [     6 bytes] 10:59:25
+    (0070,0084) PN Content Creator's Name               [     8 bytes] "Achieva"
+    (2001,0010) LO Private Creator                      [    22 bytes] "Philips Imaging DD 001"
+    (2001,0090) LO Private Creator                      [    22 bytes] "Philips Imaging DD 129"
+    (2001,1026) CS Presentation State Subtraction Active  [     2 bytes] "N"
+    (2001,1067) CS Unknown                              [     0 bytes] ""
+    (2001,1068) SQ Unknown
+      (FFFE,E000) Item
+        (0028,1052) DS Rescale Intercept                    [     2 bytes] "0"
+        (0028,1053) DS Rescale Slope                        [     8 bytes] "2.083516"
+        (0028,1054) LO Rescale Type                         [    10 bytes] "normalized"
+        (2001,0010) LO Private Creator                      [    22 bytes] "Philips Imaging DD 001"
+        (2001,1077) CS GL TrafoType                         [    14 bytes] "LINEARMODALITY"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (2001,1077) CS GL TrafoType                         [    14 bytes] "L_PRESENTATION"
+    (2001,109F) US Pixel Processing Kernel Size         [     4 bytes] 0, 0
+    (2001,9000) SQ Unknown
+    (FFFE,E0DD) Sequence Delimitation Item
+    (2005,0012) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 003"
+    (2005,0013) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 004"
+    (2005,0014) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 005"
+    (2005,1234) SL Unknown                              [     4 bytes] 0
+    (2005,1257) SS Unknown                              [     2 bytes] 0
+    (2005,1281) UI Unknown                              [     0 bytes] ""
+    (2005,1282) CS Unknown                              [     0 bytes] ""
+    (2005,1389) SQ Unknown
+    (FFFE,E0DD) Sequence Delimitation Item
+    (2005,1406) SS Unknown                              [     2 bytes] 0
+    (2050,0020) CS Presentation LUT Shape               [     8 bytes] "IDENTITY"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,0010) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 001"
+(2005,0011) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 002"
+(2005,0012) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 003"
+(2005,0013) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 004"
+(2005,0014) LO Private Creator                      [    26 bytes] "Philips MR Imaging DD 005"
+(2005,1000) FL Unknown                              [     4 bytes] 2.0855815410614014
+(2005,1001) FL Unknown                              [     4 bytes] 0.24366378784179688
+(2005,1002) FL Unknown                              [     4 bytes] -6.665298938751221
+(2005,1004) CS Unknown                              [     4 bytes] "NONE"
+(2005,1008) FL Unknown                              [     4 bytes] 3.510971784591675
+(2005,1009) FL Unknown                              [     4 bytes] -2.4017302989959717
+(2005,100A) FL Unknown                              [     4 bytes] -15.299399375915527
+(2005,100B) FL Unknown                              [     4 bytes] 125086.578125
+(2005,100C) FL Unknown                              [     4 bytes] 0.0
+(2005,100D) FL Unknown                              [     4 bytes] 0.0
+(2005,100E) FL Unknown                              [     4 bytes] 0.00895005464553833
+(2005,100F) DS Window Center                        [     4 bytes] "1070"
+(2005,1010) DS Window Width                         [     4 bytes] "1860"
+(2005,1011) CS Unknown                              [     2 bytes] "M"
+(2005,1012) CS Unknown                              [     2 bytes] "N"
+(2005,1013) CS Unknown                              [     2 bytes] "NO"
+(2005,1014) CS Unknown                              [     2 bytes] "N"
+(2005,1015) CS Unknown                              [     2 bytes] "N"
+(2005,1016) CS Unknown                              [     2 bytes] "N"
+(2005,1017) CS Unknown                              [     2 bytes] "N"
+(2005,1019) CS Unknown                              [     2 bytes] "N"
+(2005,101A) SS Unknown                              [     2 bytes] 0
+(2005,101B) CS Unknown                              [     2 bytes] "Y"
+(2005,101C) CS Unknown                              [     2 bytes] "N"
+(2005,101D) SS Unknown                              [     2 bytes] 256
+(2005,101E) SH Unknown                              [     8 bytes] "compose"
+(2005,101F) SH Unknown                              [     8 bytes] "compose"
+(2005,1020) SL Number of Chemical Shift             [     4 bytes] 0
+(2005,1021) SS Unknown                              [     2 bytes] 1
+(2005,1022) IS Unknown                              [     2 bytes] "0"
+(2005,1023) SS Unknown                              [     2 bytes] 0
+(2005,1025) SS Unknown                              [     2 bytes] 0
+(2005,1026) CS Unknown                              [     2 bytes] "N"
+(2005,1027) CS Unknown                              [     8 bytes] "MAXIMUM"
+(2005,1028) CS Unknown                              [     2 bytes] "N"
+(2005,1029) CS Unknown                              [     2 bytes] "N"
+(2005,102A) IS Unknown                              [    10 bytes] "413204050"
+(2005,102B) SS Unknown                              [     2 bytes] 100
+(2005,102C) CS Unknown                              [     2 bytes] "N"
+(2005,102D) IS Unknown                              [     2 bytes] "0"
+(2005,102E) CS Unknown                              [     2 bytes] "N"
+(2005,102F) CS Unknown                              [     2 bytes] "N"
+(2005,1030) FL Repetition Time                      [     4 bytes] 15.0
+(2005,1031) CS Unknown                              [     2 bytes] "N"
+(2005,1033) FL Acquisition Duration                 [     4 bytes] 17.422658920288086
+(2005,1034) CS Unknown                              [     2 bytes] "Y"
+(2005,1035) CS Unknown                              [     6 bytes] "PIXEL"
+(2005,1036) CS Unknown                              [     2 bytes] "N"
+(2005,1037) CS Unknown                              [     2 bytes] "N"
+(2005,1038) CS Unknown                              [     2 bytes] "Y"
+(2005,1039) CS Unknown                              [     2 bytes] "N"
+(2005,103B) CS Unknown                              [     2 bytes] "N"
+(2005,103C) CS Unknown                              [     2 bytes] "N"
+(2005,103D) SS Unknown                              [     2 bytes] 102
+(2005,103E) SL Unknown                              [   408 bytes] 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(2005,105F) CS Unknown                              [     8 bytes] "UNKNOWN"
+(2005,1060) IS Unknown                              [     2 bytes] "-1"
+(2005,1061) CS Unknown                              [     2 bytes] "NO"
+(2005,1063) SS Unknown                              [     2 bytes] 0
+(2005,106E) CS Unknown                              [     4 bytes] "FFE"
+(2005,106F) CS Unknown                              [     2 bytes] "MS"
+(2005,1080) SQ Unknown
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,1083) SQ Unknown
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,1084) SQ Unknown
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,1085) SQ Unknown
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,1086) SS Unknown                              [     2 bytes] 0
+(2005,109E) SQ Unknown
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,10A0) FL Unknown                              [     4 bytes] 0.0
+(2005,10A1) CS Syncra Scan Type                     [    12 bytes] "SYN_CLASSIC"
+(2005,10A2) CS Unknown                              [     2 bytes] "N"
+(2005,10A8) DS Unknown                              [     2 bytes] "0"
+(2005,10A9) CS Unknown                              [     4 bytes] "NONE"
+(2005,10B0) FL Diffusion Direction RL               [     4 bytes] 0.0
+(2005,10B1) FL Diffusion Direction AP               [     4 bytes] 0.0
+(2005,10B2) FL Diffusion Direction FH               [     4 bytes] 0.0
+(2005,10C0) CS Unknown                              [     2 bytes] "GR"
+(2005,1199) UL Unknown                              [     4 bytes] 0
+(2005,1200) UL Unknown                              [     4 bytes] 1
+(2005,1201) UL Unknown                              [     4 bytes] 0
+(2005,1213) UL Unknown                              [     4 bytes] 1
+(2005,1245) SS Unknown                              [     2 bytes] 2
+(2005,1249) SS Unknown                              [     2 bytes] 0
+(2005,1251) SS Unknown                              [     2 bytes] 0
+(2005,1252) SS Unknown                              [     2 bytes] 1
+(2005,1253) SS Unknown                              [     2 bytes] 1
+(2005,1325) CS Unknown                              [     2 bytes] "N"
+(2005,1326) FL Unknown                              [     4 bytes] 0.0
+(2005,1327) CS Unknown                              [     4 bytes] "REAL"
+(2005,1328) CS Unknown                              [     8 bytes] "ORIGINAL"
+(2005,1329) FL Unknown                              [     4 bytes] 50.0
+(2005,1330) CS Unknown                              [    56 bytes] "PLUS_A_PLUS_B", "PLUS_A_PLUS_B …
+(2005,1331) SS Unknown                              [     2 bytes] 0
+(2005,1333) FL Unknown                              [    12 bytes] 0.0, 0.0, 0.0
+(2005,1334) CS Unknown                              [     8 bytes] "UNKNOWN"
+(2005,1335) CS Unknown                              [     8 bytes] "UNKNOWN"
+(2005,1336) FL Unknown                              [     4 bytes] 0.0
+(2005,1337) FL Unknown                              [     4 bytes] 0.0
+(2005,1338) FL Unknown                              [     4 bytes] 0.0
+(2005,1339) SS Unknown                              [     4 bytes] 0, 0
+(2005,1340) CS Unknown                              [     6 bytes] "PRE_FT"
+(2005,1341) CS Unknown                              [     8 bytes] "UNKNOWN"
+(2005,1342) CS Unknown                              [     4 bytes] "FID"
+(2005,1343) CS Unknown                              [     2 bytes] "Y"
+(2005,1344) SS Unknown                              [    80 bytes] 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(2005,1345) CS Unknown                              [     2 bytes] "NO"
+(2005,1346) CS Unknown                              [     6 bytes] "HERTZ"
+(2005,1347) FL Unknown                              [     4 bytes] 0.0
+(2005,1348) CS Unknown                              [     4 bytes] "OFF"
+(2005,1349) FL Unknown                              [     4 bytes] 0.0
+(2005,1350) FL Unknown                              [     8 bytes] 0.0, 0.0
+(2005,1351) SS Unknown                              [     2 bytes] 0
+(2005,1352) SS Unknown                              [     2 bytes] 0
+(2005,1355) FL Unknown                              [   120 bytes] 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0 …
+(2005,1356) CS Unknown                              [     2 bytes] "NO"
+(2005,1357) SS Unknown                              [     2 bytes] 0
+(2005,1359) FL Unknown                              [     4 bytes] 1.0
+(2005,1360) FL Unknown                              [     4 bytes] 0.0
+(2005,1361) FL Unknown                              [     8 bytes] 0.0, 0.0
+(2005,1362) FL Unknown                              [     4 bytes] 0.0
+(2005,1363) FL Unknown                              [     4 bytes] 0.0
+(2005,1364) CS Unknown                              [     2 bytes] "NO"
+(2005,1370) SS Unknown                              [     2 bytes] 0
+(2005,1371) SQ Unknown
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,1381) IS Unknown                              [     2 bytes] "3"
+(2005,1382) UL Unknown                              [     4 bytes] 1
+(2005,1391) PN Unknown                              [     0 bytes] ""
+(2005,1392) IS Unknown                              [     2 bytes] "0"
+(2005,1393) IS Unknown                              [     2 bytes] "-1"
+(2005,1396) CS Unknown                              [     2 bytes] "NO"
+(2005,1397) LO Unknown                              [    18 bytes] "SNM3.T-D1100.Head"
+(2005,1398) CS Unknown                              [     2 bytes] "NO"
+(2005,1399) CS Unknown                              [     2 bytes] "NO"
+(2005,1400) CS Unknown                              [     2 bytes] "NO"
+(2005,1401) UL Unknown                              [     4 bytes] 1
+(2005,1402) SQ Unknown
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     0 bytes] ""
+    (0008,0102) SH Coding Scheme Designator             [     0 bytes] ""
+    (0008,0103) SH Coding Scheme Version                [     0 bytes] ""
+    (0008,0104) LO Code Meaning                         [     0 bytes] ""
+    (0008,010B) CS Context Group Extension Flag         [     2 bytes] "N"
+    (0008,010D) UI Context Group Extension Creator UID  [     0 bytes] ""
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,1403) UL Unknown                              [     4 bytes] 1
+(2005,1406) SS Unknown                              [     2 bytes] 0
+(2005,1409) DS Unknown                              [     2 bytes] "0"
+(2005,140A) DS Unknown                              [    16 bytes] "2.08351648351648"
+(2005,140B) LO Unknown                              [    10 bytes] "normalized"
+(2005,140E) SQ Unknown
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,140F) SQ Unknown
+  (FFFE,E000) Item
+    (0008,9007) CS Frame Type                           [     4 bytes] "", "", "", ""
+    (0008,9123) UI Creator-Version UID                  [    16 bytes] "1.3.46.670589.11"
+    (0008,9205) CS Pixel Presentation                   [    10 bytes] "MONOCHROME"
+    (0008,9206) CS Volumetric Properties                [    10 bytes] "DISTORTED"
+    (0008,9207) CS Volume Based Calculation Technique   [     4 bytes] "NONE"
+    (0008,9208) CS Complex Image Component              [     4 bytes] "REAL"
+    (0008,9209) CS Acquisition Contrast                 [     2 bytes] "T1"
+    (0018,1041) DS Contrast/Bolus Volume                [     2 bytes] "0"
+    (0018,1049) DS Contrast/Bolus Ingredient Concentration  [     2 bytes] "0"
+    (0018,9005) SH Pulse Sequence Name                  [     6 bytes] "T1TFE"
+    (0018,9008) CS Echo Pulse Sequence                  [     8 bytes] "GRADIENT"
+    (0018,9009) CS Inversion Recovery                   [     2 bytes] "NO"
+    (0018,9011) CS Multiple Spin Echo                   [     2 bytes] "NO"
+    (0018,9012) CS Multi-planar Excitation              [     2 bytes] "NO"
+    (0018,9014) CS Phase Contrast                       [     2 bytes] "NO"
+    (0018,9015) CS Time of Flight Contrast              [     2 bytes] "NO"
+    (0018,9016) CS Spoiling                             [     2 bytes] "RF"
+    (0018,9017) CS Steady State Pulse Sequence          [    12 bytes] "LONGITUDINAL"
+    (0018,9018) CS Echo Planar Pulse Sequence           [     2 bytes] "NO"
+    (0018,9020) CS Magnetization Transfer               [     4 bytes] "NONE"
+    (0018,9021) CS T2 Preparation                       [     2 bytes] "NO"
+    (0018,9022) CS Blood Signal Nulling                 [     2 bytes] "NO"
+    (0018,9024) CS Saturation Recovery                  [     2 bytes] "NO"
+    (0018,9025) CS Spectrally Selected Suppression      [     4 bytes] "NONE"
+    (0018,9026) CS Spectrally Selected Excitation       [     6 bytes] "WATER"
+    (0018,9027) CS Spatial Pre-saturation               [     4 bytes] "NONE"
+    (0018,9028) CS Tagging                              [     4 bytes] "NONE"
+    (0018,9029) CS Oversampling Phase                   [     4 bytes] "NONE"
+    (0018,9032) CS Geometry of k-Space Traversal        [    12 bytes] "RECTILINEAR"
+    (0018,9033) CS Segmented k-Space Traversal          [     8 bytes] "PARTIAL"
+    (0018,9034) CS Rectilinear Phase Encode Reordering  [     8 bytes] "UNKNOWN"
+    (0018,9035) FD Tag Thickness                        [     8 bytes] 0.0
+    (0018,9036) CS Partial Fourier Direction            [     0 bytes] ""
+    (0018,9037) CS Cardiac Synchronization Technique    [     4 bytes] "NONE"
+    (0018,9041) LO Receive Coil Manufacturer Name       [     0 bytes] ""
+    (0018,9043) CS Receive Coil Type                    [    10 bytes] "MULTICOIL"
+    (0018,9044) CS Quadrature Receive Coil              [     2 bytes] "NO"
+    (0018,9047) SH Multi-Coil Element Name              [     6 bytes] "SENSE"
+    (0018,9048) CS Multi-Coil Element Used              [     4 bytes] "YES"
+    (0018,9051) CS Transmit Coil Type                   [     4 bytes] "BODY"
+    (0018,9053) FD Chemical Shift Reference             [     8 bytes] 4.68
+    (0018,9058) US MR Acquisition Frequency Encoding Steps  [     2 bytes] 256
+    (0018,9059) CS De-coupling                          [     2 bytes] "NO"
+    (0018,9064) CS k-space Filtering                    [     6 bytes] "RIESZ"
+    (0018,9069) FD Parallel Reduction Factor In-plane   [     8 bytes] 1.0
+    (0018,9075) CS Diffusion Directionality             [     4 bytes] "NONE"
+    (0018,9077) CS Parallel Acquisition                 [     2 bytes] "NO"
+    (0018,9079) FD Inversion Times                      [    16 bytes] 0.0, 0.0
+    (0018,9080) ST Metabolite Map Description           [     6 bytes] "WATER"
+    (0018,9081) CS Partial Fourier                      [     2 bytes] "NO"
+    (0018,9090) FD Velocity Encoding Direction          [    24 bytes] 0.0, 0.0, 0.0
+    (0018,9091) FD Velocity Encoding Minimum Value      [     8 bytes] 0.0
+    (0018,9093) US Number of k-Space Trajectories       [     2 bytes] 3
+    (0018,9101) CS Frequency Correction                 [     2 bytes] "NO"
+    (0018,9147) CS Diffusion Anisotropy Type            [     0 bytes] ""
+    (0018,9155) FD Parallel Reduction Factor out-of-plane  [     8 bytes] 1.0
+    (0018,9168) FD Parallel Reduction Factor Second In-plane  [     8 bytes] 1.0
+    (0018,9170) CS Respiratory Motion Compensation Technique  [     4 bytes] "NONE"
+    (0018,9171) CS Respiratory Signal Source            [     4 bytes] "NONE"
+    (0018,9172) CS Bulk Motion Compensation Technique   [     4 bytes] "NONE"
+    (0018,9174) CS Applicable Safety Standard Agency    [     4 bytes] "IEC"
+    (0018,9179) CS Specific Absorption Rate Definition  [    14 bytes] "IEC_WHOLE_BODY"
+    (0018,9180) CS Gradient Output Type                 [     6 bytes] "DB_DT"
+    (0018,9181) FD Specific Absorption Rate Value       [     8 bytes] 0.27590328454971313
+    (0018,9182) FD Gradient Output                      [     8 bytes] 14.810929725076965
+    (0018,9199) CS Water Referenced Phase Correction    [     2 bytes] "NO"
+    (0018,9200) CS MR Spectroscopy Acquisition Type     [     0 bytes] ""
+    (0018,9231) US MR Acquisition Phase Encoding Steps in-plane  [     2 bytes] 126
+    (0018,9232) US MR Acquisition Phase Encoding Steps out-of-plane  [     2 bytes] 1
+    (0018,9240) US RF Echo Train Length                 [     2 bytes] 0
+    (0018,9241) US Gradient Echo Train Length           [     2 bytes] 42
+    (0020,9072) CS Frame Laterality                     [     2 bytes] "U"
+    (0020,9254) FD Respiratory Interval Time            [     8 bytes] 0.0
+    (0020,9255) FD Nominal Respiratory Trigger Delay Time  [     8 bytes] 0.0
+    (0028,3003) LO LUT Explanation                      [    32 bytes] "Philips Real World Value M …
+    (0028,9001) UL Data Point Rows                      [     4 bytes] 1
+    (0028,9002) UL Data Point Columns                   [     4 bytes] 0
+    (0040,9210) SH LUT Label                            [     8 bytes] "Philips"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(2005,1412) IS Unknown                              [     2 bytes] "1"
+(2005,1413) IS Unknown                              [     2 bytes] "1"
+(2005,1414) SL Unknown                              [     4 bytes] 1
+(2005,1415) SL Unknown                              [     4 bytes] 1
+(2005,1416) CS Unknown                              [     4 bytes] "MAN"
+(2005,1418) CS Unknown                              [    24 bytes] "STATIC FIELD", "RF", "GRADIENT"
+(2005,1419) CS Unknown                              [    32 bytes] "IEC_NORMAL", "IEC_NORMAL", "IE …
+(2005,141B) IS Unknown                              [     2 bytes] "0"
+(2005,141C) IS Unknown                              [     2 bytes] "0"
+(2005,141D) IS Unknown                              [     2 bytes] "0"
+(2005,1426) CS Unknown                              [     2 bytes] "N"
+(2005,1428) SL Unknown                              [     4 bytes] 0
+(2005,142A) CS Unknown                              [     8 bytes] "INITIAL"
+(2005,142B) CS Unknown                              [     8 bytes] "INITIAL"
+(2005,142C) CS Unknown                              [     8 bytes] "INITIAL"
+(2005,142D) CS Unknown                              [     8 bytes] "INITIAL"
+(2005,1432) CS Unknown                              [     2 bytes] "N"
+(2005,1435) CS Unknown                              [     2 bytes] "N"
+(2005,143A) LT Unknown                              [    26 bytes] "datadefs $Revision: 26.2 $"
+(2005,143B) CS Unknown                              [     2 bytes] "N"
+(2005,143F) CS Unknown                              [     2 bytes] "N"
+(2005,1440) FL Unknown                              [     4 bytes] 0.0
+(2005,1441) FL Unknown                              [     4 bytes] 0.0
+(2005,1442) FL Unknown                              [     4 bytes] 0.0
+(2005,1443) FL Unknown                              [     4 bytes] 0.0
+(2005,1444) IS Unknown                              [     2 bytes] "42"
+(2005,1445) CS Unknown                              [     2 bytes] "N"
+(2005,1447) FL Unknown                              [     4 bytes] 0.0
+(2005,144A) FL Unknown                              [     4 bytes] 0.0
+(2005,144B) FL Unknown                              [     4 bytes] 0.0
+(2005,144C) FL Unknown                              [     4 bytes] 0.0
+(2005,144D) CS Unknown                              [     2 bytes] "N"
+(2005,144E) CS Unknown                              [     2 bytes] "N"
+(2005,144F) CS Unknown                              [     4 bytes] "NONE"
+(2005,1450) SS Unknown                              [     2 bytes] 0
+(2050,0020) CS Presentation LUT Shape               [     8 bytes] "IDENTITY"
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     0 bytes] 
+  (FFFE,E000) Item                                    [ 46276 bytes] 
+(FFFE,E0DD) Sequence Delimitation Item

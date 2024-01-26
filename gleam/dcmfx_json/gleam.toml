@@ -1,0 +1,19 @@
+name = "dcmfx_json"
+description = "DCMfx - JSON Library"
+licences = ["AGPL-3.0-only"]
+repository = { type = "github", user = "dcmfx", repo = "dcmfx" }
+gleam = ">= 1.5.1"
+
+[dependencies]
+dcmfx_core = { path = "../dcmfx_core" }
+dcmfx_p10 = { path = "../dcmfx_p10" }
+gleam_json = ">= 2.0.0 and < 3.0.0"
+gleam_stdlib = ">= 0.40.0 and < 1.0.0"
+ieee_float = ">= 1.0.2 and < 2.0.0"
+bigi = ">= 3.2.0 and < 4.0.0"
+
+[dev-dependencies]
+gleeunit = "~> 1.0"
+
+[javascript]
+typescript_declarations = true

@@ -1,0 +1,13 @@
+name = "dcmfx_integration_tests"
+description = "DCMfx - Integration Tests"
+licences = ["AGPL-3.0-only"]
+repository = { type = "github", user = "dcmfx", repo = "dcmfx" }
+gleam = ">= 1.5.1"
+
+[dependencies]
+dcmfx_core = { path = "../dcmfx_core" }
+dcmfx_json = { path = "../dcmfx_json" }
+dcmfx_p10 = { path = "../dcmfx_p10" }
+gleam_json = ">= 2.0.0 and < 3.0.0"
+gleam_stdlib = ">= 0.40.0 and < 1.0.0"
+simplifile = ">= 2.2.0 and < 3.0.0"

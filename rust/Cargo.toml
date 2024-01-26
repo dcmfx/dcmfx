@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["dcmfx", "dcmfx_cli"]
+
+[profile.release]
+opt-level = 3
+lto = true

@@ -1,0 +1,36 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    44 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0.977 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (Deflated Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    18 bytes] "1.3.6.1.4.1.5962.2"
+(0002,0013) SH Implementation Version Name          [    10 bytes] "DCTOOL100"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "CLUNIE1"
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0008,0018) UI SOP Instance UID                     [    44 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0.977 …
+(0008,0020) DA Study Date                           [     0 bytes] ""
+(0008,0030) TM Study Time                           [     0 bytes] ""
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "OT" (Other)
+(0008,0064) CS Conversion Type                      [     4 bytes] "WSD" (Workstation)
+(0008,0070) LO Manufacturer                         [     0 bytes] ""
+(0008,0090) PN Referring Physician's Name           [     4 bytes] "^^^^"
+(0010,0010) PN Patient's Name                       [     4 bytes] "^^^^"
+(0010,0020) LO Patient ID                           [     0 bytes] ""
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0020,000D) UI Study Instance UID                   [    40 bytes] "1.3.6.1.4.1.5962.1.2.0.9770673 …
+(0020,000E) UI Series Instance UID                  [    42 bytes] "1.3.6.1.4.1.5962.1.3.0.0.97706 …
+(0020,0010) SH Study ID                             [     0 bytes] ""
+(0020,0011) IS Series Number                        [     0 bytes] ""
+(0020,0013) IS Instance Number                      [     0 bytes] ""
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,4000) LT Image Comments                       [   110 bytes] "THE OUTPUT OF THIS SOFTWARE IS …
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 8
+(0028,0102) US High Bit                             [     2 bytes] 7
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(7FE0,0010) OB Pixel Data                           [262144 bytes] [D5 D5 D5 D5 D5 D5 D5 D5 D5 D5  …

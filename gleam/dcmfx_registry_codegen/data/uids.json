@@ -1,0 +1,3850 @@
+[
+  {
+    "UID": "1.2.840.10008.1.1",
+    "Name": "Verification SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "Verification"
+  },
+  {
+    "UID": "1.2.840.10008.1.2",
+    "Name": "Implicit VR Little Endian",
+    "Type": "Transfer Syntax",
+    "Info": "Default Transfer Syntax for DICOM",
+    "Retired": "",
+    "Keyword": "ImplicitVRLittleEndian"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.1",
+    "Name": "Explicit VR Little Endian",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ExplicitVRLittleEndian"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.1.98",
+    "Name": "Encapsulated Uncompressed Explicit VR Little Endian",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EncapsulatedUncompressedExplicitVRLittleEndian"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.1.99",
+    "Name": "Deflated Explicit VR Little Endian",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DeflatedExplicitVRLittleEndian"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.2",
+    "Name": "Explicit VR Big Endian",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "ExplicitVRBigEndian"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.50",
+    "Name": "JPEG Baseline (Process 1)",
+    "Type": "Transfer Syntax",
+    "Info": "Default Transfer Syntax for Lossy JPEG 8 Bit Image Compression",
+    "Retired": "",
+    "Keyword": "JPEGBaseline8Bit"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.51",
+    "Name": "JPEG Extended (Process 2 and 4)",
+    "Type": "Transfer Syntax",
+    "Info": "Default Transfer Syntax for Lossy JPEG 12 Bit Image Compression (Process 4 only)",
+    "Retired": "",
+    "Keyword": "JPEGExtended12Bit"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.52",
+    "Name": "JPEG Extended (Process 3 and 5)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGExtended35"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.53",
+    "Name": "JPEG Spectral Selection, Non-Hierarchical (Process 6 and 8)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGSpectralSelectionNonHierarchical68"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.54",
+    "Name": "JPEG Spectral Selection, Non-Hierarchical (Process 7 and 9)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGSpectralSelectionNonHierarchical79"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.55",
+    "Name": "JPEG Full Progression, Non-Hierarchical (Process 10 and 12)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGFullProgressionNonHierarchical1012"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.56",
+    "Name": "JPEG Full Progression, Non-Hierarchical (Process 11 and 13)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGFullProgressionNonHierarchical1113"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.57",
+    "Name": "JPEG Lossless, Non-Hierarchical (Process 14)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPEGLossless"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.58",
+    "Name": "JPEG Lossless, Non-Hierarchical (Process 15)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGLosslessNonHierarchical15"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.59",
+    "Name": "JPEG Extended, Hierarchical (Process 16 and 18)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGExtendedHierarchical1618"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.60",
+    "Name": "JPEG Extended, Hierarchical (Process 17 and 19)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGExtendedHierarchical1719"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.61",
+    "Name": "JPEG Spectral Selection, Hierarchical (Process 20 and 22)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGSpectralSelectionHierarchical2022"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.62",
+    "Name": "JPEG Spectral Selection, Hierarchical (Process 21 and 23)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGSpectralSelectionHierarchical2123"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.63",
+    "Name": "JPEG Full Progression, Hierarchical (Process 24 and 26)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGFullProgressionHierarchical2426"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.64",
+    "Name": "JPEG Full Progression, Hierarchical (Process 25 and 27)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGFullProgressionHierarchical2527"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.65",
+    "Name": "JPEG Lossless, Hierarchical (Process 28)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGLosslessHierarchical28"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.66",
+    "Name": "JPEG Lossless, Hierarchical (Process 29)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "JPEGLosslessHierarchical29"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.70",
+    "Name": "JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1])",
+    "Type": "Transfer Syntax",
+    "Info": "Default Transfer Syntax for Lossless JPEG Image Compression",
+    "Retired": "",
+    "Keyword": "JPEGLosslessSV1"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.80",
+    "Name": "JPEG-LS Lossless Image Compression",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPEGLSLossless"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.81",
+    "Name": "JPEG-LS Lossy (Near-Lossless) Image Compression",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPEGLSNearLossless"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.90",
+    "Name": "JPEG 2000 Image Compression (Lossless Only)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPEG2000Lossless"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.91",
+    "Name": "JPEG 2000 Image Compression",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPEG2000"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.92",
+    "Name": "JPEG 2000 Part 2 Multi-component Image Compression (Lossless Only)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPEG2000MCLossless"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.93",
+    "Name": "JPEG 2000 Part 2 Multi-component Image Compression",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPEG2000MC"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.94",
+    "Name": "JPIP Referenced",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPIPReferenced"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.95",
+    "Name": "JPIP Referenced Deflate",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPIPReferencedDeflate"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.100",
+    "Name": "MPEG2 Main Profile / Main Level",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG2MPML"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.100.1",
+    "Name": "Fragmentable MPEG2 Main Profile / Main Level",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG2MPMLF"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.101",
+    "Name": "MPEG2 Main Profile / High Level",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG2MPHL"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.101.1",
+    "Name": "Fragmentable MPEG2 Main Profile / High Level",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG2MPHLF"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.102",
+    "Name": "MPEG-4 AVC/H.264 High Profile / Level 4.1",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP41"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.102.1",
+    "Name": "Fragmentable MPEG-4 AVC/H.264 High Profile / Level 4.1",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP41F"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.103",
+    "Name": "MPEG-4 AVC/H.264 BD-compatible High Profile / Level 4.1",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP41BD"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.103.1",
+    "Name": "Fragmentable MPEG-4 AVC/H.264 BD-compatible High Profile / Level 4.1",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP41BDF"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.104",
+    "Name": "MPEG-4 AVC/H.264 High Profile / Level 4.2 For 2D Video",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP422D"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.104.1",
+    "Name": "Fragmentable MPEG-4 AVC/H.264 High Profile / Level 4.2 For 2D Video",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP422DF"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.105",
+    "Name": "MPEG-4 AVC/H.264 High Profile / Level 4.2 For 3D Video",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP423D"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.105.1",
+    "Name": "Fragmentable MPEG-4 AVC/H.264 High Profile / Level 4.2 For 3D Video",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP423DF"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.106",
+    "Name": "MPEG-4 AVC/H.264 Stereo High Profile / Level 4.2",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP42STEREO"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.106.1",
+    "Name": "Fragmentable MPEG-4 AVC/H.264 Stereo High Profile / Level 4.2",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MPEG4HP42STEREOF"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.107",
+    "Name": "HEVC/H.265 Main Profile / Level 5.1",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HEVCMP51"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.108",
+    "Name": "HEVC/H.265 Main 10 Profile / Level 5.1",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HEVCM10P51"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.201",
+    "Name": "High-Throughput JPEG 2000 Image Compression (Lossless Only)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HTJ2KLossless"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.202",
+    "Name": "High-Throughput JPEG 2000 with RPCL Options Image Compression (Lossless Only)",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HTJ2KLosslessRPCL"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.203",
+    "Name": "High-Throughput JPEG 2000 Image Compression",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HTJ2K"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.204",
+    "Name": "JPIP HTJ2K Referenced",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPIPHTJ2KReferenced"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.4.205",
+    "Name": "JPIP HTJ2K Referenced Deflate",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "JPIPHTJ2KReferencedDeflate"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.5",
+    "Name": "RLE Lossless",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RLELossless"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.6.1",
+    "Name": "RFC 2557 MIME encapsulation",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "RFC2557MIMEEncapsulation"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.6.2",
+    "Name": "XML Encoding",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "XMLEncoding"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.7.1",
+    "Name": "SMPTE ST 2110-20 Uncompressed Progressive Active Video",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SMPTEST211020UncompressedProgressiveActiveVideo"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.7.2",
+    "Name": "SMPTE ST 2110-20 Uncompressed Interlaced Active Video",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SMPTEST211020UncompressedInterlacedActiveVideo"
+  },
+  {
+    "UID": "1.2.840.10008.1.2.7.3",
+    "Name": "SMPTE ST 2110-30 PCM Digital Audio",
+    "Type": "Transfer Syntax",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SMPTEST211030PCMDigitalAudio"
+  },
+  {
+    "UID": "1.2.840.10008.1.3.10",
+    "Name": "Media Storage Directory Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MediaStorageDirectoryStorage"
+  },
+  {
+    "UID": "1.2.840.10008.1.5.1",
+    "Name": "Hot Iron Color Palette SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HotIronPalette"
+  },
+  {
+    "UID": "1.2.840.10008.1.5.2",
+    "Name": "PET Color Palette SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PETPalette"
+  },
+  {
+    "UID": "1.2.840.10008.1.5.3",
+    "Name": "Hot Metal Blue Color Palette SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HotMetalBluePalette"
+  },
+  {
+    "UID": "1.2.840.10008.1.5.4",
+    "Name": "PET 20 Step Color Palette SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PET20StepPalette"
+  },
+  {
+    "UID": "1.2.840.10008.1.5.5",
+    "Name": "Spring Color Palette SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SpringPalette"
+  },
+  {
+    "UID": "1.2.840.10008.1.5.6",
+    "Name": "Summer Color Palette SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SummerPalette"
+  },
+  {
+    "UID": "1.2.840.10008.1.5.7",
+    "Name": "Fall Color Palette SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "FallPalette"
+  },
+  {
+    "UID": "1.2.840.10008.1.5.8",
+    "Name": "Winter Color Palette SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "WinterPalette"
+  },
+  {
+    "UID": "1.2.840.10008.1.9",
+    "Name": "Basic Study Content Notification SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "BasicStudyContentNotification"
+  },
+  {
+    "UID": "1.2.840.10008.1.20",
+    "Name": "Papyrus 3 Implicit VR Little Endian",
+    "Type": "Transfer Syntax",
+    "Info": "(2015c)",
+    "Retired": "Retired",
+    "Keyword": "Papyrus3ImplicitVRLittleEndian"
+  },
+  {
+    "UID": "1.2.840.10008.1.20.1",
+    "Name": "Storage Commitment Push Model SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "StorageCommitmentPushModel"
+  },
+  {
+    "UID": "1.2.840.10008.1.20.1.1",
+    "Name": "Storage Commitment Push Model SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "StorageCommitmentPushModelInstance"
+  },
+  {
+    "UID": "1.2.840.10008.1.20.2",
+    "Name": "Storage Commitment Pull Model SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "StorageCommitmentPullModel"
+  },
+  {
+    "UID": "1.2.840.10008.1.20.2.1",
+    "Name": "Storage Commitment Pull Model SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "StorageCommitmentPullModelInstance"
+  },
+  {
+    "UID": "1.2.840.10008.1.40",
+    "Name": "Procedural Event Logging SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ProceduralEventLogging"
+  },
+  {
+    "UID": "1.2.840.10008.1.40.1",
+    "Name": "Procedural Event Logging SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ProceduralEventLoggingInstance"
+  },
+  {
+    "UID": "1.2.840.10008.1.42",
+    "Name": "Substance Administration Logging SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SubstanceAdministrationLogging"
+  },
+  {
+    "UID": "1.2.840.10008.1.42.1",
+    "Name": "Substance Administration Logging SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SubstanceAdministrationLoggingInstance"
+  },
+  {
+    "UID": "1.2.840.10008.2.6.1",
+    "Name": "DICOM UID Registry",
+    "Type": "DICOM UIDs as a Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DCMUID"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.4",
+    "Name": "DICOM Controlled Terminology",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DCM"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.5",
+    "Name": "Adult Mouse Anatomy Ontology",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MA"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.6",
+    "Name": "Uberon Ontology",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UBERON"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.7",
+    "Name": "Integrated Taxonomic Information System (ITIS) Taxonomic Serial Number (TSN)",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ITIS_TSN"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.8",
+    "Name": "Mouse Genome Initiative (MGI)",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MGI"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.9",
+    "Name": "PubChem Compound CID",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PUBCHEM_CID"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.10",
+    "Name": "Dublin Core",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DC"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.11",
+    "Name": "New York University Melanoma Clinical Cooperative Group",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "NYUMCCG"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.12",
+    "Name": "Mayo Clinic Non-radiological Images Specific Body Structure Anatomical Surface Region Guide",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MAYONRISBSASRG"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.13",
+    "Name": "Image Biomarker Standardisation Initiative",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "IBSI"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.14",
+    "Name": "Radiomics Ontology",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RO"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.15",
+    "Name": "RadElement",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RADELEMENT"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.16",
+    "Name": "ICD-11",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "I11"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.17",
+    "Name": "Unified numbering system (UNS) for metals and alloys",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UNS"
+  },
+  {
+    "UID": "1.2.840.10008.2.16.18",
+    "Name": "Research Resource Identification",
+    "Type": "Coding Scheme",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RRID"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.1.1",
+    "Name": "DICOM Application Context Name",
+    "Type": "Application Context Name",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DICOMApplicationContext"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.1.1",
+    "Name": "Detached Patient Management SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "DetachedPatientManagement"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.1.4",
+    "Name": "Detached Patient Management Meta SOP Class",
+    "Type": "Meta SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "DetachedPatientManagementMeta"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.2.1",
+    "Name": "Detached Visit Management SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "DetachedVisitManagement"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.3.1",
+    "Name": "Detached Study Management SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "DetachedStudyManagement"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.3.2",
+    "Name": "Study Component Management SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "StudyComponentManagement"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.3.3",
+    "Name": "Modality Performed Procedure Step SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ModalityPerformedProcedureStep"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.3.4",
+    "Name": "Modality Performed Procedure Step Retrieve SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ModalityPerformedProcedureStepRetrieve"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.3.5",
+    "Name": "Modality Performed Procedure Step Notification SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ModalityPerformedProcedureStepNotification"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.5.1",
+    "Name": "Detached Results Management SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "DetachedResultsManagement"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.5.4",
+    "Name": "Detached Results Management Meta SOP Class",
+    "Type": "Meta SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "DetachedResultsManagementMeta"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.5.5",
+    "Name": "Detached Study Management Meta SOP Class",
+    "Type": "Meta SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "DetachedStudyManagementMeta"
+  },
+  {
+    "UID": "1.2.840.10008.3.1.2.6.1",
+    "Name": "Detached Interpretation Management SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "DetachedInterpretationManagement"
+  },
+  {
+    "UID": "1.2.840.10008.4.2",
+    "Name": "Storage Service Class",
+    "Type": "Service Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "Storage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.1",
+    "Name": "Basic Film Session SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicFilmSession"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.2",
+    "Name": "Basic Film Box SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicFilmBox"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.4",
+    "Name": "Basic Grayscale Image Box SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicGrayscaleImageBox"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.4.1",
+    "Name": "Basic Color Image Box SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicColorImageBox"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.4.2",
+    "Name": "Referenced Image Box SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "ReferencedImageBox"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.9",
+    "Name": "Basic Grayscale Print Management Meta SOP Class",
+    "Type": "Meta SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicGrayscalePrintManagementMeta"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.9.1",
+    "Name": "Referenced Grayscale Print Management Meta SOP Class",
+    "Type": "Meta SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "ReferencedGrayscalePrintManagementMeta"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.14",
+    "Name": "Print Job SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PrintJob"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.15",
+    "Name": "Basic Annotation Box SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicAnnotationBox"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.16",
+    "Name": "Printer SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "Printer"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.16.376",
+    "Name": "Printer Configuration Retrieval SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PrinterConfigurationRetrieval"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.17",
+    "Name": "Printer SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PrinterInstance"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.17.376",
+    "Name": "Printer Configuration Retrieval SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PrinterConfigurationRetrievalInstance"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.18",
+    "Name": "Basic Color Print Management Meta SOP Class",
+    "Type": "Meta SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicColorPrintManagementMeta"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.18.1",
+    "Name": "Referenced Color Print Management Meta SOP Class",
+    "Type": "Meta SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "ReferencedColorPrintManagementMeta"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.22",
+    "Name": "VOI LUT Box SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VOILUTBox"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.23",
+    "Name": "Presentation LUT SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PresentationLUT"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.24",
+    "Name": "Image Overlay Box SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "ImageOverlayBox"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.24.1",
+    "Name": "Basic Print Image Overlay Box SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "BasicPrintImageOverlayBox"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.25",
+    "Name": "Print Queue SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "PrintQueueInstance"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.26",
+    "Name": "Print Queue Management SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "PrintQueueManagement"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.27",
+    "Name": "Stored Print Storage SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "StoredPrintStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.29",
+    "Name": "Hardcopy Grayscale Image Storage SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "HardcopyGrayscaleImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.30",
+    "Name": "Hardcopy Color Image Storage SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "HardcopyColorImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.31",
+    "Name": "Pull Print Request SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "PullPrintRequest"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.32",
+    "Name": "Pull Stored Print Management Meta SOP Class",
+    "Type": "Meta SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "PullStoredPrintManagementMeta"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.33",
+    "Name": "Media Creation Management SOP Class UID",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MediaCreationManagement"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.40",
+    "Name": "Display System SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DisplaySystem"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.1.40.1",
+    "Name": "Display System SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DisplaySystemInstance"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.1",
+    "Name": "Computed Radiography Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ComputedRadiographyImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.1.1",
+    "Name": "Digital X-Ray Image Storage - For Presentation",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DigitalXRayImageStorageForPresentation"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.1.1.1",
+    "Name": "Digital X-Ray Image Storage - For Processing",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DigitalXRayImageStorageForProcessing"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.1.2",
+    "Name": "Digital Mammography X-Ray Image Storage - For Presentation",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DigitalMammographyXRayImageStorageForPresentation"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.1.2.1",
+    "Name": "Digital Mammography X-Ray Image Storage - For Processing",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DigitalMammographyXRayImageStorageForProcessing"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.1.3",
+    "Name": "Digital Intra-Oral X-Ray Image Storage - For Presentation",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DigitalIntraOralXRayImageStorageForPresentation"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.1.3.1",
+    "Name": "Digital Intra-Oral X-Ray Image Storage - For Processing",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DigitalIntraOralXRayImageStorageForProcessing"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.2",
+    "Name": "CT Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CTImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.2.1",
+    "Name": "Enhanced CT Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedCTImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.2.2",
+    "Name": "Legacy Converted Enhanced CT Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "LegacyConvertedEnhancedCTImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.3",
+    "Name": "Ultrasound Multi-frame Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "UltrasoundMultiFrameImageStorageRetired"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.3.1",
+    "Name": "Ultrasound Multi-frame Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UltrasoundMultiFrameImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.4",
+    "Name": "MR Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MRImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.4.1",
+    "Name": "Enhanced MR Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedMRImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.4.2",
+    "Name": "MR Spectroscopy Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MRSpectroscopyStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.4.3",
+    "Name": "Enhanced MR Color Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedMRColorImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.4.4",
+    "Name": "Legacy Converted Enhanced MR Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "LegacyConvertedEnhancedMRImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.5",
+    "Name": "Nuclear Medicine Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "NuclearMedicineImageStorageRetired"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.6",
+    "Name": "Ultrasound Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "UltrasoundImageStorageRetired"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.6.1",
+    "Name": "Ultrasound Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UltrasoundImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.6.2",
+    "Name": "Enhanced US Volume Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedUSVolumeStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.6.3",
+    "Name": "Photoacoustic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PhotoacousticImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.7",
+    "Name": "Secondary Capture Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SecondaryCaptureImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.7.1",
+    "Name": "Multi-frame Single Bit Secondary Capture Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MultiFrameSingleBitSecondaryCaptureImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.7.2",
+    "Name": "Multi-frame Grayscale Byte Secondary Capture Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MultiFrameGrayscaleByteSecondaryCaptureImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.7.3",
+    "Name": "Multi-frame Grayscale Word Secondary Capture Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MultiFrameGrayscaleWordSecondaryCaptureImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.7.4",
+    "Name": "Multi-frame True Color Secondary Capture Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MultiFrameTrueColorSecondaryCaptureImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.8",
+    "Name": "Standalone Overlay Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "StandaloneOverlayStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9",
+    "Name": "Standalone Curve Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "StandaloneCurveStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.1",
+    "Name": "Waveform Storage - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "WaveformStorageTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.1.1",
+    "Name": "12-lead ECG Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "TwelveLeadECGWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.1.2",
+    "Name": "General ECG Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "GeneralECGWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.1.3",
+    "Name": "Ambulatory ECG Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "AmbulatoryECGWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.1.4",
+    "Name": "General 32-bit ECG Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "General32bitECGWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.2.1",
+    "Name": "Hemodynamic Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HemodynamicWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.3.1",
+    "Name": "Cardiac Electrophysiology Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CardiacElectrophysiologyWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.4.1",
+    "Name": "Basic Voice Audio Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicVoiceAudioWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.4.2",
+    "Name": "General Audio Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "GeneralAudioWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.5.1",
+    "Name": "Arterial Pulse Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ArterialPulseWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.6.1",
+    "Name": "Respiratory Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RespiratoryWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.6.2",
+    "Name": "Multi-channel Respiratory Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MultichannelRespiratoryWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.7.1",
+    "Name": "Routine Scalp Electroencephalogram Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RoutineScalpElectroencephalogramWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.7.2",
+    "Name": "Electromyogram Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ElectromyogramWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.7.3",
+    "Name": "Electrooculogram Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ElectrooculogramWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.7.4",
+    "Name": "Sleep Electroencephalogram Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SleepElectroencephalogramWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.9.8.1",
+    "Name": "Body Position Waveform Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BodyPositionWaveformStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.10",
+    "Name": "Standalone Modality LUT Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "StandaloneModalityLUTStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11",
+    "Name": "Standalone VOI LUT Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "StandaloneVOILUTStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.1",
+    "Name": "Grayscale Softcopy Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "GrayscaleSoftcopyPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.2",
+    "Name": "Color Softcopy Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ColorSoftcopyPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.3",
+    "Name": "Pseudo-Color Softcopy Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PseudoColorSoftcopyPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.4",
+    "Name": "Blending Softcopy Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BlendingSoftcopyPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.5",
+    "Name": "XA/XRF Grayscale Softcopy Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "XAXRFGrayscaleSoftcopyPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.6",
+    "Name": "Grayscale Planar MPR Volumetric Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "GrayscalePlanarMPRVolumetricPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.7",
+    "Name": "Compositing Planar MPR Volumetric Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CompositingPlanarMPRVolumetricPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.8",
+    "Name": "Advanced Blending Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "AdvancedBlendingPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.9",
+    "Name": "Volume Rendering Volumetric Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VolumeRenderingVolumetricPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.10",
+    "Name": "Segmented Volume Rendering Volumetric Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SegmentedVolumeRenderingVolumetricPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.11",
+    "Name": "Multiple Volume Rendering Volumetric Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MultipleVolumeRenderingVolumetricPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.11.12",
+    "Name": "Variable Modality LUT Softcopy Presentation State Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VariableModalityLUTSoftcopyPresentationStateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.12.1",
+    "Name": "X-Ray Angiographic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "XRayAngiographicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.12.1.1",
+    "Name": "Enhanced XA Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedXAImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.12.2",
+    "Name": "X-Ray Radiofluoroscopic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "XRayRadiofluoroscopicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.12.2.1",
+    "Name": "Enhanced XRF Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedXRFImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.12.3",
+    "Name": "X-Ray Angiographic Bi-Plane Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "XRayAngiographicBiPlaneImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.12.77",
+    "Name": "",
+    "Type": "SOP Class",
+    "Info": "(2015c)",
+    "Retired": "Retired",
+    "Keyword": ""
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.13.1.1",
+    "Name": "X-Ray 3D Angiographic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "XRay3DAngiographicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.13.1.2",
+    "Name": "X-Ray 3D Craniofacial Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "XRay3DCraniofacialImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.13.1.3",
+    "Name": "Breast Tomosynthesis Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BreastTomosynthesisImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.13.1.4",
+    "Name": "Breast Projection X-Ray Image Storage - For Presentation",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BreastProjectionXRayImageStorageForPresentation"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.13.1.5",
+    "Name": "Breast Projection X-Ray Image Storage - For Processing",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BreastProjectionXRayImageStorageForProcessing"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.14.1",
+    "Name": "Intravascular Optical Coherence Tomography Image Storage - For Presentation",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "IntravascularOpticalCoherenceTomographyImageStorageForPresentation"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.14.2",
+    "Name": "Intravascular Optical Coherence Tomography Image Storage - For Processing",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "IntravascularOpticalCoherenceTomographyImageStorageForProcessing"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.20",
+    "Name": "Nuclear Medicine Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "NuclearMedicineImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.30",
+    "Name": "Parametric Map Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ParametricMapStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.40",
+    "Name": "",
+    "Type": "SOP Class",
+    "Info": "(2015c)",
+    "Retired": "Retired",
+    "Keyword": ""
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.66",
+    "Name": "Raw Data Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RawDataStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.66.1",
+    "Name": "Spatial Registration Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SpatialRegistrationStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.66.2",
+    "Name": "Spatial Fiducials Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SpatialFiducialsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.66.3",
+    "Name": "Deformable Spatial Registration Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DeformableSpatialRegistrationStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.66.4",
+    "Name": "Segmentation Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SegmentationStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.66.5",
+    "Name": "Surface Segmentation Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SurfaceSegmentationStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.66.6",
+    "Name": "Tractography Results Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "TractographyResultsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.67",
+    "Name": "Real World Value Mapping Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RealWorldValueMappingStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.68.1",
+    "Name": "Surface Scan Mesh Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SurfaceScanMeshStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.68.2",
+    "Name": "Surface Scan Point Cloud Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SurfaceScanPointCloudStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1",
+    "Name": "VL Image Storage - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "VLImageStorageTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.2",
+    "Name": "VL Multi-frame Image Storage - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "VLMultiFrameImageStorageTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.1",
+    "Name": "VL Endoscopic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VLEndoscopicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.1.1",
+    "Name": "Video Endoscopic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VideoEndoscopicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.2",
+    "Name": "VL Microscopic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VLMicroscopicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.2.1",
+    "Name": "Video Microscopic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VideoMicroscopicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.3",
+    "Name": "VL Slide-Coordinates Microscopic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VLSlideCoordinatesMicroscopicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.4",
+    "Name": "VL Photographic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VLPhotographicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.4.1",
+    "Name": "Video Photographic Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VideoPhotographicImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.5.1",
+    "Name": "Ophthalmic Photography 8 Bit Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "OphthalmicPhotography8BitImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.5.2",
+    "Name": "Ophthalmic Photography 16 Bit Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "OphthalmicPhotography16BitImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.5.3",
+    "Name": "Stereometric Relationship Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "StereometricRelationshipStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.5.4",
+    "Name": "Ophthalmic Tomography Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "OphthalmicTomographyImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.5.5",
+    "Name": "Wide Field Ophthalmic Photography Stereographic Projection Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "WideFieldOphthalmicPhotographyStereographicProjectionImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.5.6",
+    "Name": "Wide Field Ophthalmic Photography 3D Coordinates Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "WideFieldOphthalmicPhotography3DCoordinatesImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.5.7",
+    "Name": "Ophthalmic Optical Coherence Tomography En Face Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "OphthalmicOpticalCoherenceTomographyEnFaceImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.5.8",
+    "Name": "Ophthalmic Optical Coherence Tomography B-scan Volume Analysis Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "OphthalmicOpticalCoherenceTomographyBscanVolumeAnalysisStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.6",
+    "Name": "VL Whole Slide Microscopy Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VLWholeSlideMicroscopyImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.7",
+    "Name": "Dermoscopic Photography Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DermoscopicPhotographyImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.8",
+    "Name": "Confocal Microscopy Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ConfocalMicroscopyImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.77.1.9",
+    "Name": "Confocal Microscopy Tiled Pyramidal Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ConfocalMicroscopyTiledPyramidalImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.78.1",
+    "Name": "Lensometry Measurements Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "LensometryMeasurementsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.78.2",
+    "Name": "Autorefraction Measurements Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "AutorefractionMeasurementsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.78.3",
+    "Name": "Keratometry Measurements Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "KeratometryMeasurementsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.78.4",
+    "Name": "Subjective Refraction Measurements Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SubjectiveRefractionMeasurementsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.78.5",
+    "Name": "Visual Acuity Measurements Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VisualAcuityMeasurementsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.78.6",
+    "Name": "Spectacle Prescription Report Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SpectaclePrescriptionReportStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.78.7",
+    "Name": "Ophthalmic Axial Measurements Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "OphthalmicAxialMeasurementsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.78.8",
+    "Name": "Intraocular Lens Calculations Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "IntraocularLensCalculationsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.79.1",
+    "Name": "Macular Grid Thickness and Volume Report Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MacularGridThicknessAndVolumeReportStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.80.1",
+    "Name": "Ophthalmic Visual Field Static Perimetry Measurements Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "OphthalmicVisualFieldStaticPerimetryMeasurementsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.81.1",
+    "Name": "Ophthalmic Thickness Map Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "OphthalmicThicknessMapStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.82.1",
+    "Name": "Corneal Topography Map Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CornealTopographyMapStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.1",
+    "Name": "Text SR Storage - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "TextSRStorageTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.2",
+    "Name": "Audio SR Storage - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "AudioSRStorageTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.3",
+    "Name": "Detail SR Storage - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "DetailSRStorageTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.4",
+    "Name": "Comprehensive SR Storage - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "ComprehensiveSRStorageTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.11",
+    "Name": "Basic Text SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicTextSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.22",
+    "Name": "Enhanced SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.33",
+    "Name": "Comprehensive SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ComprehensiveSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.34",
+    "Name": "Comprehensive 3D SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "Comprehensive3DSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.35",
+    "Name": "Extensible SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ExtensibleSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.40",
+    "Name": "Procedure Log Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ProcedureLogStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.50",
+    "Name": "Mammography CAD SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MammographyCADSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.59",
+    "Name": "Key Object Selection Document Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "KeyObjectSelectionDocumentStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.65",
+    "Name": "Chest CAD SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ChestCADSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.67",
+    "Name": "X-Ray Radiation Dose SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "XRayRadiationDoseSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.68",
+    "Name": "Radiopharmaceutical Radiation Dose SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RadiopharmaceuticalRadiationDoseSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.69",
+    "Name": "Colon CAD SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ColonCADSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.70",
+    "Name": "Implantation Plan SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ImplantationPlanSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.71",
+    "Name": "Acquisition Context SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "AcquisitionContextSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.72",
+    "Name": "Simplified Adult Echo SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SimplifiedAdultEchoSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.73",
+    "Name": "Patient Radiation Dose SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PatientRadiationDoseSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.74",
+    "Name": "Planned Imaging Agent Administration SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PlannedImagingAgentAdministrationSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.75",
+    "Name": "Performed Imaging Agent Administration SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PerformedImagingAgentAdministrationSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.88.76",
+    "Name": "Enhanced X-Ray Radiation Dose SR Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedXRayRadiationDoseSRStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.90.1",
+    "Name": "Content Assessment Results Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ContentAssessmentResultsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.91.1",
+    "Name": "Microscopy Bulk Simple Annotations Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "MicroscopyBulkSimpleAnnotationsStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.104.1",
+    "Name": "Encapsulated PDF Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EncapsulatedPDFStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.104.2",
+    "Name": "Encapsulated CDA Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EncapsulatedCDAStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.104.3",
+    "Name": "Encapsulated STL Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EncapsulatedSTLStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.104.4",
+    "Name": "Encapsulated OBJ Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EncapsulatedOBJStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.104.5",
+    "Name": "Encapsulated MTL Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EncapsulatedMTLStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.128",
+    "Name": "Positron Emission Tomography Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PositronEmissionTomographyImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.128.1",
+    "Name": "Legacy Converted Enhanced PET Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "LegacyConvertedEnhancedPETImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.129",
+    "Name": "Standalone PET Curve Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "StandalonePETCurveStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.130",
+    "Name": "Enhanced PET Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedPETImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.131",
+    "Name": "Basic Structured Display Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BasicStructuredDisplayStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.200.1",
+    "Name": "CT Defined Procedure Protocol Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CTDefinedProcedureProtocolStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.200.2",
+    "Name": "CT Performed Procedure Protocol Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CTPerformedProcedureProtocolStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.200.3",
+    "Name": "Protocol Approval Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ProtocolApprovalStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.200.4",
+    "Name": "Protocol Approval Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ProtocolApprovalInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.200.5",
+    "Name": "Protocol Approval Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ProtocolApprovalInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.200.6",
+    "Name": "Protocol Approval Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ProtocolApprovalInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.200.7",
+    "Name": "XA Defined Procedure Protocol Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "XADefinedProcedureProtocolStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.200.8",
+    "Name": "XA Performed Procedure Protocol Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "XAPerformedProcedureProtocolStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.201.1",
+    "Name": "Inventory Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "InventoryStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.201.2",
+    "Name": "Inventory - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "InventoryFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.201.3",
+    "Name": "Inventory - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "InventoryMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.201.4",
+    "Name": "Inventory - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "InventoryGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.201.5",
+    "Name": "Inventory Creation",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "InventoryCreation"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.201.6",
+    "Name": "Repository Query",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RepositoryQuery"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.201.1.1",
+    "Name": "Storage Management SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "StorageManagementInstance"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.1",
+    "Name": "RT Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.2",
+    "Name": "RT Dose Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTDoseStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.3",
+    "Name": "RT Structure Set Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTStructureSetStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.4",
+    "Name": "RT Beams Treatment Record Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTBeamsTreatmentRecordStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.5",
+    "Name": "RT Plan Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTPlanStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.6",
+    "Name": "RT Brachy Treatment Record Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTBrachyTreatmentRecordStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.7",
+    "Name": "RT Treatment Summary Record Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTTreatmentSummaryRecordStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.8",
+    "Name": "RT Ion Plan Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTIonPlanStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.9",
+    "Name": "RT Ion Beams Treatment Record Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTIonBeamsTreatmentRecordStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.10",
+    "Name": "RT Physician Intent Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTPhysicianIntentStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.11",
+    "Name": "RT Segment Annotation Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTSegmentAnnotationStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.12",
+    "Name": "RT Radiation Set Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTRadiationSetStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.13",
+    "Name": "C-Arm Photon-Electron Radiation Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CArmPhotonElectronRadiationStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.14",
+    "Name": "Tomotherapeutic Radiation Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "TomotherapeuticRadiationStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.15",
+    "Name": "Robotic-Arm Radiation Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RoboticArmRadiationStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.16",
+    "Name": "RT Radiation Record Set Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTRadiationRecordSetStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.17",
+    "Name": "RT Radiation Salvage Record Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTRadiationSalvageRecordStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.18",
+    "Name": "Tomotherapeutic Radiation Record Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "TomotherapeuticRadiationRecordStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.19",
+    "Name": "C-Arm Photon-Electron Radiation Record Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CArmPhotonElectronRadiationRecordStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.20",
+    "Name": "Robotic Radiation Record Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RoboticRadiationRecordStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.21",
+    "Name": "RT Radiation Set Delivery Instruction Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTRadiationSetDeliveryInstructionStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.22",
+    "Name": "RT Treatment Preparation Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTTreatmentPreparationStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.23",
+    "Name": "Enhanced RT Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedRTImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.24",
+    "Name": "Enhanced Continuous RT Image Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "EnhancedContinuousRTImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.481.25",
+    "Name": "RT Patient Position Acquisition Instruction Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTPatientPositionAcquisitionInstructionStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.501.1",
+    "Name": "DICOS CT Image Storage",
+    "Type": "SOP Class",
+    "Info": "DICOS",
+    "Retired": "",
+    "Keyword": "DICOSCTImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.501.2.1",
+    "Name": "DICOS Digital X-Ray Image Storage - For Presentation",
+    "Type": "SOP Class",
+    "Info": "DICOS",
+    "Retired": "",
+    "Keyword": "DICOSDigitalXRayImageStorageForPresentation"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.501.2.2",
+    "Name": "DICOS Digital X-Ray Image Storage - For Processing",
+    "Type": "SOP Class",
+    "Info": "DICOS",
+    "Retired": "",
+    "Keyword": "DICOSDigitalXRayImageStorageForProcessing"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.501.3",
+    "Name": "DICOS Threat Detection Report Storage",
+    "Type": "SOP Class",
+    "Info": "DICOS",
+    "Retired": "",
+    "Keyword": "DICOSThreatDetectionReportStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.501.4",
+    "Name": "DICOS 2D AIT Storage",
+    "Type": "SOP Class",
+    "Info": "DICOS",
+    "Retired": "",
+    "Keyword": "DICOS2DAITStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.501.5",
+    "Name": "DICOS 3D AIT Storage",
+    "Type": "SOP Class",
+    "Info": "DICOS",
+    "Retired": "",
+    "Keyword": "DICOS3DAITStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.501.6",
+    "Name": "DICOS Quadrupole Resonance (QR) Storage",
+    "Type": "SOP Class",
+    "Info": "DICOS",
+    "Retired": "",
+    "Keyword": "DICOSQuadrupoleResonanceStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.601.1",
+    "Name": "Eddy Current Image Storage",
+    "Type": "SOP Class",
+    "Info": "DICONDE ASTM E2934",
+    "Retired": "",
+    "Keyword": "EddyCurrentImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.1.601.2",
+    "Name": "Eddy Current Multi-frame Image Storage",
+    "Type": "SOP Class",
+    "Info": "DICONDE ASTM E2934",
+    "Retired": "",
+    "Keyword": "EddyCurrentMultiFrameImageStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.1.1",
+    "Name": "Patient Root Query/Retrieve Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PatientRootQueryRetrieveInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.1.2",
+    "Name": "Patient Root Query/Retrieve Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PatientRootQueryRetrieveInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.1.3",
+    "Name": "Patient Root Query/Retrieve Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "PatientRootQueryRetrieveInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.2.1",
+    "Name": "Study Root Query/Retrieve Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "StudyRootQueryRetrieveInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.2.2",
+    "Name": "Study Root Query/Retrieve Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "StudyRootQueryRetrieveInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.2.3",
+    "Name": "Study Root Query/Retrieve Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "StudyRootQueryRetrieveInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.3.1",
+    "Name": "Patient/Study Only Query/Retrieve Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "PatientStudyOnlyQueryRetrieveInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.3.2",
+    "Name": "Patient/Study Only Query/Retrieve Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "PatientStudyOnlyQueryRetrieveInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.3.3",
+    "Name": "Patient/Study Only Query/Retrieve Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "PatientStudyOnlyQueryRetrieveInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.4.2",
+    "Name": "Composite Instance Root Retrieve - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CompositeInstanceRootRetrieveMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.4.3",
+    "Name": "Composite Instance Root Retrieve - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CompositeInstanceRootRetrieveGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.1.2.5.3",
+    "Name": "Composite Instance Retrieve Without Bulk Data - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CompositeInstanceRetrieveWithoutBulkDataGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.20.1",
+    "Name": "Defined Procedure Protocol Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DefinedProcedureProtocolInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.20.2",
+    "Name": "Defined Procedure Protocol Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DefinedProcedureProtocolInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.20.3",
+    "Name": "Defined Procedure Protocol Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DefinedProcedureProtocolInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.31",
+    "Name": "Modality Worklist Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ModalityWorklistInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.32",
+    "Name": "General Purpose Worklist Management Meta SOP Class",
+    "Type": "Meta SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "GeneralPurposeWorklistManagementMeta"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.32.1",
+    "Name": "General Purpose Worklist Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "GeneralPurposeWorklistInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.32.2",
+    "Name": "General Purpose Scheduled Procedure Step SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "GeneralPurposeScheduledProcedureStep"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.32.3",
+    "Name": "General Purpose Performed Procedure Step SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "GeneralPurposePerformedProcedureStep"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.33",
+    "Name": "Instance Availability Notification SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "InstanceAvailabilityNotification"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.1",
+    "Name": "RT Beams Delivery Instruction Storage - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "RTBeamsDeliveryInstructionStorageTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.2",
+    "Name": "RT Conventional Machine Verification - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "RTConventionalMachineVerificationTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.3",
+    "Name": "RT Ion Machine Verification - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "RTIonMachineVerificationTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.4",
+    "Name": "Unified Worklist and Procedure Step Service Class - Trial",
+    "Type": "Service Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "UnifiedWorklistAndProcedureStepTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.4.1",
+    "Name": "Unified Procedure Step - Push SOP Class - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "UnifiedProcedureStepPushTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.4.2",
+    "Name": "Unified Procedure Step - Watch SOP Class - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "UnifiedProcedureStepWatchTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.4.3",
+    "Name": "Unified Procedure Step - Pull SOP Class - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "UnifiedProcedureStepPullTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.4.4",
+    "Name": "Unified Procedure Step - Event SOP Class - Trial",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "Retired",
+    "Keyword": "UnifiedProcedureStepEventTrial"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.5",
+    "Name": "UPS Global Subscription SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UPSGlobalSubscriptionInstance"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.5.1",
+    "Name": "UPS Filtered Global Subscription SOP Instance",
+    "Type": "Well-known SOP Instance",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UPSFilteredGlobalSubscriptionInstance"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.6",
+    "Name": "Unified Worklist and Procedure Step Service Class",
+    "Type": "Service Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UnifiedWorklistAndProcedureStep"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.6.1",
+    "Name": "Unified Procedure Step - Push SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UnifiedProcedureStepPush"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.6.2",
+    "Name": "Unified Procedure Step - Watch SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UnifiedProcedureStepWatch"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.6.3",
+    "Name": "Unified Procedure Step - Pull SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UnifiedProcedureStepPull"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.6.4",
+    "Name": "Unified Procedure Step - Event SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UnifiedProcedureStepEvent"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.6.5",
+    "Name": "Unified Procedure Step - Query SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UnifiedProcedureStepQuery"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.7",
+    "Name": "RT Beams Delivery Instruction Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTBeamsDeliveryInstructionStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.8",
+    "Name": "RT Conventional Machine Verification",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTConventionalMachineVerification"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.9",
+    "Name": "RT Ion Machine Verification",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTIonMachineVerification"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.34.10",
+    "Name": "RT Brachy Application Setup Delivery Instruction Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RTBrachyApplicationSetupDeliveryInstructionStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.37.1",
+    "Name": "General Relevant Patient Information Query",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "GeneralRelevantPatientInformationQuery"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.37.2",
+    "Name": "Breast Imaging Relevant Patient Information Query",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "BreastImagingRelevantPatientInformationQuery"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.37.3",
+    "Name": "Cardiac Relevant Patient Information Query",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "CardiacRelevantPatientInformationQuery"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.38.1",
+    "Name": "Hanging Protocol Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HangingProtocolStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.38.2",
+    "Name": "Hanging Protocol Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HangingProtocolInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.38.3",
+    "Name": "Hanging Protocol Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HangingProtocolInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.38.4",
+    "Name": "Hanging Protocol Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "HangingProtocolInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.39.1",
+    "Name": "Color Palette Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ColorPaletteStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.39.2",
+    "Name": "Color Palette Query/Retrieve Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ColorPaletteQueryRetrieveInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.39.3",
+    "Name": "Color Palette Query/Retrieve Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ColorPaletteQueryRetrieveInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.39.4",
+    "Name": "Color Palette Query/Retrieve Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ColorPaletteQueryRetrieveInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.41",
+    "Name": "Product Characteristics Query SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ProductCharacteristicsQuery"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.42",
+    "Name": "Substance Approval Query SOP Class",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SubstanceApprovalQuery"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.43.1",
+    "Name": "Generic Implant Template Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "GenericImplantTemplateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.43.2",
+    "Name": "Generic Implant Template Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "GenericImplantTemplateInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.43.3",
+    "Name": "Generic Implant Template Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "GenericImplantTemplateInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.43.4",
+    "Name": "Generic Implant Template Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "GenericImplantTemplateInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.44.1",
+    "Name": "Implant Assembly Template Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ImplantAssemblyTemplateStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.44.2",
+    "Name": "Implant Assembly Template Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ImplantAssemblyTemplateInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.44.3",
+    "Name": "Implant Assembly Template Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ImplantAssemblyTemplateInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.44.4",
+    "Name": "Implant Assembly Template Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ImplantAssemblyTemplateInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.45.1",
+    "Name": "Implant Template Group Storage",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ImplantTemplateGroupStorage"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.45.2",
+    "Name": "Implant Template Group Information Model - FIND",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ImplantTemplateGroupInformationModelFind"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.45.3",
+    "Name": "Implant Template Group Information Model - MOVE",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ImplantTemplateGroupInformationModelMove"
+  },
+  {
+    "UID": "1.2.840.10008.5.1.4.45.4",
+    "Name": "Implant Template Group Information Model - GET",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ImplantTemplateGroupInformationModelGet"
+  },
+  {
+    "UID": "1.2.840.10008.7.1.1",
+    "Name": "Native DICOM Model",
+    "Type": "Application Hosting Model",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "NativeDICOMModel"
+  },
+  {
+    "UID": "1.2.840.10008.7.1.2",
+    "Name": "Abstract Multi-Dimensional Image Model",
+    "Type": "Application Hosting Model",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "AbstractMultiDimensionalImageModel"
+  },
+  {
+    "UID": "1.2.840.10008.8.1.1",
+    "Name": "DICOM Content Mapping Resource",
+    "Type": "Mapping Resource",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "DICOMContentMappingResource"
+  },
+  {
+    "UID": "1.2.840.10008.10.1",
+    "Name": "Video Endoscopic Image Real-Time Communication",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VideoEndoscopicImageRealTimeCommunication"
+  },
+  {
+    "UID": "1.2.840.10008.10.2",
+    "Name": "Video Photographic Image Real-Time Communication",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "VideoPhotographicImageRealTimeCommunication"
+  },
+  {
+    "UID": "1.2.840.10008.10.3",
+    "Name": "Audio Waveform Real-Time Communication",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "AudioWaveformRealTimeCommunication"
+  },
+  {
+    "UID": "1.2.840.10008.10.4",
+    "Name": "Rendition Selection Document Real-Time Communication",
+    "Type": "SOP Class",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "RenditionSelectionDocumentRealTimeCommunication"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.1",
+    "Name": "dicomDeviceName",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomDeviceName"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.2",
+    "Name": "dicomDescription",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomDescription"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.3",
+    "Name": "dicomManufacturer",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomManufacturer"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.4",
+    "Name": "dicomManufacturerModelName",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomManufacturerModelName"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.5",
+    "Name": "dicomSoftwareVersion",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomSoftwareVersion"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.6",
+    "Name": "dicomVendorData",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomVendorData"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.7",
+    "Name": "dicomAETitle",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomAETitle"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.8",
+    "Name": "dicomNetworkConnectionReference",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomNetworkConnectionReference"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.9",
+    "Name": "dicomApplicationCluster",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomApplicationCluster"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.10",
+    "Name": "dicomAssociationInitiator",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomAssociationInitiator"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.11",
+    "Name": "dicomAssociationAcceptor",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomAssociationAcceptor"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.12",
+    "Name": "dicomHostname",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomHostname"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.13",
+    "Name": "dicomPort",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomPort"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.14",
+    "Name": "dicomSOPClass",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomSOPClass"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.15",
+    "Name": "dicomTransferRole",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomTransferRole"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.16",
+    "Name": "dicomTransferSyntax",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomTransferSyntax"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.17",
+    "Name": "dicomPrimaryDeviceType",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomPrimaryDeviceType"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.18",
+    "Name": "dicomRelatedDeviceReference",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomRelatedDeviceReference"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.19",
+    "Name": "dicomPreferredCalledAETitle",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomPreferredCalledAETitle"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.20",
+    "Name": "dicomTLSCyphersuite",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomTLSCyphersuite"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.21",
+    "Name": "dicomAuthorizedNodeCertificateReference",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomAuthorizedNodeCertificateReference"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.22",
+    "Name": "dicomThisNodeCertificateReference",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomThisNodeCertificateReference"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.23",
+    "Name": "dicomInstalled",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomInstalled"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.24",
+    "Name": "dicomStationName",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomStationName"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.25",
+    "Name": "dicomDeviceSerialNumber",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomDeviceSerialNumber"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.26",
+    "Name": "dicomInstitutionName",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomInstitutionName"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.27",
+    "Name": "dicomInstitutionAddress",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomInstitutionAddress"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.28",
+    "Name": "dicomInstitutionDepartmentName",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomInstitutionDepartmentName"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.29",
+    "Name": "dicomIssuerOfPatientID",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomIssuerOfPatientID"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.30",
+    "Name": "dicomPreferredCallingAETitle",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomPreferredCallingAETitle"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.3.31",
+    "Name": "dicomSupportedCharacterSet",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomSupportedCharacterSet"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.4.1",
+    "Name": "dicomConfigurationRoot",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomConfigurationRoot"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.4.2",
+    "Name": "dicomDevicesRoot",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomDevicesRoot"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.4.3",
+    "Name": "dicomUniqueAETitlesRegistryRoot",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomUniqueAETitlesRegistryRoot"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.4.4",
+    "Name": "dicomDevice",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomDevice"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.4.5",
+    "Name": "dicomNetworkAE",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomNetworkAE"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.4.6",
+    "Name": "dicomNetworkConnection",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomNetworkConnection"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.4.7",
+    "Name": "dicomUniqueAETitle",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomUniqueAETitle"
+  },
+  {
+    "UID": "1.2.840.10008.15.0.4.8",
+    "Name": "dicomTransferCapability",
+    "Type": "LDAP OID",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "dicomTransferCapability"
+  },
+  {
+    "UID": "1.2.840.10008.15.1.1",
+    "Name": "Universal Coordinated Time",
+    "Type": "Synchronization Frame of Reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "UTC"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.1",
+    "Name": "Talairach Brain Atlas Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "TalairachBrainAtlas"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.2",
+    "Name": "SPM2 T1 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2T1"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.3",
+    "Name": "SPM2 T2 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2T2"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.4",
+    "Name": "SPM2 PD Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2PD"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.5",
+    "Name": "SPM2 EPI Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2EPI"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.6",
+    "Name": "SPM2 FIL T1 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2FILT1"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.7",
+    "Name": "SPM2 PET Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2PET"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.8",
+    "Name": "SPM2 TRANSM Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2TRANSM"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.9",
+    "Name": "SPM2 SPECT Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2SPECT"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.10",
+    "Name": "SPM2 GRAY Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2GRAY"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.11",
+    "Name": "SPM2 WHITE Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2WHITE"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.12",
+    "Name": "SPM2 CSF Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2CSF"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.13",
+    "Name": "SPM2 BRAINMASK Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2BRAINMASK"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.14",
+    "Name": "SPM2 AVG305T1 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2AVG305T1"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.15",
+    "Name": "SPM2 AVG152T1 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2AVG152T1"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.16",
+    "Name": "SPM2 AVG152T2 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2AVG152T2"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.17",
+    "Name": "SPM2 AVG152PD Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2AVG152PD"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.1.18",
+    "Name": "SPM2 SINGLESUBJT1 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SPM2SINGLESUBJT1"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.2.1",
+    "Name": "ICBM 452 T1 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ICBM452T1"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.2.2",
+    "Name": "ICBM Single Subject MRI Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "ICBMSingleSubjectMRI"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.3.1",
+    "Name": "IEC 61217 Fixed Coordinate System Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "IEC61217FixedCoordinateSystem"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.3.2",
+    "Name": "Standard Robotic-Arm Coordinate System Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "StandardRoboticArmCoordinateSystem"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.3.3",
+    "Name": "IEC 61217 Table Top Coordinate System Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "IEC61217TableTopCoordinateSystem"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.4.1",
+    "Name": "SRI24 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "SRI24"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.5.1",
+    "Name": "Colin27 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "Colin27"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.6.1",
+    "Name": "LPBA40/AIR Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "LPBA40AIR"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.6.2",
+    "Name": "LPBA40/FLIRT Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "LPBA40FLIRT"
+  },
+  {
+    "UID": "1.2.840.10008.1.4.6.3",
+    "Name": "LPBA40/SPM5 Frame of Reference",
+    "Type": "Well-known frame of reference",
+    "Info": "",
+    "Retired": "",
+    "Keyword": "LPBA40SPM5"
+  }
+]

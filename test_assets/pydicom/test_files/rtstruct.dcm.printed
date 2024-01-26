@@ -1,0 +1,152 @@
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2009-12-23
+(0008,0013) TM Instance Creation Time               [     6 bytes] 12:38:40
+(0008,0014) UI Instance Creator UID                 [    26 bytes] "1.2.826.0.1.3680043.8.498"
+(0008,0016) UI SOP Class UID                        [    30 bytes] "1.2.840 … (RT Structure Set Storage)
+(0008,0018) UI SOP Instance UID                     [    40 bytes] "1.2.826.0.1.3680043.8.498.2010 …
+(0008,0020) DA Study Date                           [     0 bytes] ""
+(0008,0030) TM Study Time                           [     0 bytes] ""
+(0008,0050) SH Accession Number                     [     2 bytes] "1"
+(0008,0060) CS Modality                             [     8 bytes] "RTSTRUCT" (Radiotherapy Structure Set)
+(0008,0070) LO Manufacturer                         [     8 bytes] "pydicom"
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1010) SH Station Name                         [     8 bytes] "station1"
+(0008,1070) PN Operators' Name                      [     6 bytes] "dmason"
+(0008,1090) LO Manufacturer's Model Name            [     4 bytes] "TPS"
+(0010,0010) PN Patient's Name                       [    18 bytes] "Test^Phantom30sep"
+(0010,0020) LO Patient ID                           [    14 bytes] "tPhantom30sep"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1969-12-31
+(0010,0040) CS Patient's Sex                        [     2 bytes] "M" (Male)
+(0018,1020) LO Software Versions                    [     6 bytes] "0.9.3"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0020,000D) UI Study Instance UID                   [    42 bytes] "1.2.826.0.1.3680043.8.498.2010 …
+(0020,000E) UI Series Instance UID                  [    44 bytes] "1.2.826.0.1.3680043.8.498.2010 …
+(0020,0010) SH Study ID                             [     6 bytes] "sep30"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(3006,0002) SH Structure Set Label                  [     6 bytes] "sep30"
+(3006,0004) LO Structure Set Name                   [     6 bytes] "sep30"
+(3006,0008) DA Structure Set Date                   [     8 bytes] 2009-12-23
+(3006,0009) TM Structure Set Time                   [     6 bytes] 12:25:07
+(3006,0010) SQ Referenced Frame of Reference Sequence
+  (FFFE,E000) Item
+    (0020,0052) UI Frame of Reference UID               [    42 bytes] "1.2.826.0.1.3680043.8.498. …
+    (3006,0012) SQ RT Referenced Study Sequence
+      (FFFE,E000) Item
+        (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Detached Study Management SOP Class)
+        (0008,1155) UI Referenced SOP Instance UID          [    44 bytes] "1.2.826.0.1.3680043.8. …
+        (3006,0014) SQ RT Referenced Series Sequence
+          (FFFE,E000) Item
+            (0020,000E) UI Series Instance UID                  [    46 bytes] "1.2.826.0.1.368004 …
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(3006,0020) SQ Structure Set ROI Sequence
+  (FFFE,E000) Item
+    (3006,0022) IS ROI Number                           [     2 bytes] "1"
+    (3006,0024) UI Referenced Frame of Reference UID    [    42 bytes] "1.2.826.0.1.3680043.8.498. …
+    (3006,0026) LO ROI Name                             [     8 bytes] "patient"
+    (3006,0028) ST ROI Description                      [     8 bytes] "patient"
+    (3006,002C) DS ROI Volume                           [     8 bytes] "49200.0"
+    (3006,0036) CS ROI Generation Algorithm             [     6 bytes] "MANUAL"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (3006,0022) IS ROI Number                           [     2 bytes] "2"
+    (3006,0024) UI Referenced Frame of Reference UID    [    42 bytes] "1.2.826.0.1.3680043.8.498. …
+    (3006,0026) LO ROI Name                             [    12 bytes] "Isocenter 1"
+    (3006,0028) ST ROI Description                      [    16 bytes] "Isocenter Beam 1"
+    (3006,0036) CS ROI Generation Algorithm             [     6 bytes] "MANUAL"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (3006,0022) IS ROI Number                           [     2 bytes] "3"
+    (3006,0024) UI Referenced Frame of Reference UID    [    42 bytes] "1.2.826.0.1.3680043.8.498. …
+    (3006,0026) LO ROI Name                             [    12 bytes] "Isocenter 2"
+    (3006,0028) ST ROI Description                      [    16 bytes] "Isocenter Beam 2"
+    (3006,0036) CS ROI Generation Algorithm             [     6 bytes] "MANUAL"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(3006,0039) SQ ROI Contour Sequence
+  (FFFE,E000) Item
+    (3006,002A) IS ROI Display Color                    [    12 bytes] "220", "160", "120"
+    (3006,0040) SQ Contour Sequence
+      (FFFE,E000) Item
+        (3006,0042) CS Contour Geometric Type               [    14 bytes] "CLOSED_PLANAR"
+        (3006,0046) IS Number of Contour Points             [     2 bytes] "5"
+        (3006,0048) IS Contour Number                       [     2 bytes] "1"
+        (3006,0050) DS Contour Data                         [   100 bytes] "-200.0", "150.0", "-20 …
+      (FFFE,E00D) Item Delimitation Item
+      (FFFE,E000) Item
+        (3006,0042) CS Contour Geometric Type               [    14 bytes] "CLOSED_PLANAR"
+        (3006,0046) IS Number of Contour Points             [     2 bytes] "6"
+        (3006,0048) IS Contour Number                       [     2 bytes] "2"
+        (3006,0050) DS Contour Data                         [   116 bytes] "200.0", "-0.0", "-190. …
+      (FFFE,E00D) Item Delimitation Item
+      (FFFE,E000) Item
+        (3006,0042) CS Contour Geometric Type               [    14 bytes] "CLOSED_PLANAR"
+        (3006,0046) IS Number of Contour Points             [     2 bytes] "6"
+        (3006,0048) IS Contour Number                       [     2 bytes] "3"
+        (3006,0050) DS Contour Data                         [   116 bytes] "200.0", "-0.0", "-180. …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (3006,0084) IS Referenced ROI Number                [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (3006,002A) IS ROI Display Color                    [    10 bytes] "255", "64", "255"
+    (3006,0040) SQ Contour Sequence
+      (FFFE,E000) Item
+        (3006,0042) CS Contour Geometric Type               [     6 bytes] "POINT"
+        (3006,0046) IS Number of Contour Points             [     2 bytes] "1"
+        (3006,0048) IS Contour Number                       [     2 bytes] "1"
+        (3006,0050) DS Contour Data                         [    12 bytes] "0.0", "-0.0", "0.0"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (3006,0084) IS Referenced ROI Number                [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (3006,002A) IS ROI Display Color                    [    10 bytes] "255", "64", "255"
+    (3006,0040) SQ Contour Sequence
+      (FFFE,E000) Item
+        (3006,0042) CS Contour Geometric Type               [     6 bytes] "POINT"
+        (3006,0046) IS Number of Contour Points             [     2 bytes] "1"
+        (3006,0048) IS Contour Number                       [     2 bytes] "1"
+        (3006,0050) DS Contour Data                         [    12 bytes] "0.0", "-0.0", "0.0"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (3006,0084) IS Referenced ROI Number                [     2 bytes] "3"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(3006,0080) SQ RT ROI Observations Sequence
+  (FFFE,E000) Item
+    (3006,0082) IS Observation Number                   [     2 bytes] "1"
+    (3006,0084) IS Referenced ROI Number                [     2 bytes] "1"
+    (3006,0085) SH ROI Observation Label                [     8 bytes] "patient"
+    (3006,0088) ST ROI Observation Description          [     8 bytes] "patient"
+    (3006,00A4) CS RT ROI Interpreted Type              [     8 bytes] "EXTERNAL"
+    (3006,00A6) PN ROI Interpreter                      [     0 bytes] ""
+    (3006,00B0) SQ ROI Physical Properties Sequence
+      (FFFE,E000) Item
+        (3006,00B2) CS ROI Physical Property                [    16 bytes] "REL_ELEC_DENSITY"
+        (3006,00B4) DS ROI Physical Property Value          [     6 bytes] "1.000"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (3006,0082) IS Observation Number                   [     2 bytes] "2"
+    (3006,0084) IS Referenced ROI Number                [     2 bytes] "2"
+    (3006,0085) SH ROI Observation Label                [    12 bytes] "Isocenter 1"
+    (3006,0088) ST ROI Observation Description          [    16 bytes] "Isocenter Beam 1"
+    (3006,00A4) CS RT ROI Interpreted Type              [    10 bytes] "ISOCENTER"
+    (3006,00A6) PN ROI Interpreter                      [     0 bytes] ""
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (3006,0082) IS Observation Number                   [     2 bytes] "3"
+    (3006,0084) IS Referenced ROI Number                [     2 bytes] "3"
+    (3006,0085) SH ROI Observation Label                [    12 bytes] "Isocenter 2"
+    (3006,0088) ST ROI Observation Description          [    16 bytes] "Isocenter Beam 2"
+    (3006,00A4) CS RT ROI Interpreted Type              [    10 bytes] "ISOCENTER"
+    (3006,00A6) PN ROI Interpreter                      [     0 bytes] ""
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item

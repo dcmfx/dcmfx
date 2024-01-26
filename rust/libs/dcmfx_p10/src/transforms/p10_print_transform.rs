@@ -1,0 +1,214 @@
+use dcmfx_core::{
+  data_set, registry, DataElementTag, DataElementValue, DataSet,
+  DataSetPrintOptions, ValueRepresentation,
+};
+
+use crate::P10Part;
+
+/// This transform converts a stream of DICOM P10 parts into printable text
+/// that outlines the structure and content of the contained DICOM data.
+///
+/// This is used for printing data sets on the command line, and includes the
+/// ability to style the output via [`DataSetPrintOptions`].
+///
+pub struct P10PrintTransform {
+  print_options: DataSetPrintOptions,
+
+  indent: usize,
+  current_data_element: DataElementTag,
+  ignore_data_element_value_bytes: bool,
+  value_max_width: usize,
+
+  // Track private creator data elements so that private tags can be printed
+  // with the correct names where possible
+  private_creators: Vec<DataSet>,
+  last_data_element_private_creator_tag: Option<DataElementTag>,
+}
+
+impl P10PrintTransform {
+  /// Constructs a new DICOM P10 print transform with the specified print
+  /// options.
+  ///
+  pub fn new(print_options: &DataSetPrintOptions) -> Self {
+    Self {
+      print_options: print_options.clone(),
+      indent: 0,
+      current_data_element: DataElementTag::new(0, 0),
+      ignore_data_element_value_bytes: false,
+      value_max_width: 0,
+      private_creators: vec![DataSet::new()],
+      last_data_element_private_creator_tag: None,
+    }
+  }
+
+  /// Adds the next DICOM P10 part in the stream and returns the next piece of
+  /// text output to be displayed.
+  ///
+  pub fn add_part(&mut self, part: &P10Part) -> String {
+    match part {
+      P10Part::FileMetaInformation { data_set } => {
+        let mut s = "".to_string();
+
+        data_set.to_lines(Some(self.print_options.clone()), &mut |line| {
+          s.push_str(&line);
+          s.push('\n');
+        });
+
+        s
+      }
+
+      P10Part::DataElementHeader { tag, vr, length } => {
+        let (s, width) = data_set::print::format_data_element_prefix(
+          *tag,
+          self.private_creators.last().unwrap().tag_name(*tag),
+          Some(*vr),
+          Some(*length as usize),
+          self.indent,
+          &self.print_options,
+        );
+
+        self.current_data_element = *tag;
+
+        // Calculate the width remaining for previewing the value
+        self.value_max_width =
+          std::cmp::max(self.print_options.max_width.saturating_sub(width), 10);
+
+        // Use the next value bytes part to print a preview of the data
+        // element's value
+        self.ignore_data_element_value_bytes = false;
+
+        // If this is a private creator tag then its value will be stored so
+        // that well-known private tag names can be printed
+        if *vr == ValueRepresentation::LongString && tag.is_private_creator() {
+          self.last_data_element_private_creator_tag = Some(*tag);
+        } else {
+          self.last_data_element_private_creator_tag = None;
+        }
+
+        s
+      }
+
+      P10Part::DataElementValueBytes { vr, data, .. }
+        if !self.ignore_data_element_value_bytes =>
+      {
+        let value = DataElementValue::new_binary_unchecked(*vr, data.clone());
+
+        // Ignore any further value bytes parts now that the value has been
+        // printed
+        self.ignore_data_element_value_bytes = true;
+
+        // Store private creator name data elements
+        if let Some(tag) = self.last_data_element_private_creator_tag {
+          self.private_creators.last_mut().unwrap().insert(
+            tag,
+            DataElementValue::new_binary_unchecked(
+              ValueRepresentation::LongString,
+              data.clone(),
+            ),
+          )
+        }
+
+        format!(
+          "{}\n",
+          value.to_string(self.current_data_element, self.value_max_width)
+        )
+      }
+
+      P10Part::SequenceStart { tag, vr } => {
+        let mut s = data_set::print::format_data_element_prefix(
+          *tag,
+          self.private_creators.last().unwrap().tag_name(*tag),
+          Some(*vr),
+          None,
+          self.indent,
+          &self.print_options,
+        )
+        .0;
+
+        s.push('\n');
+
+        self.indent += 1;
+
+        s
+      }
+
+      P10Part::SequenceDelimiter => {
+        self.indent -= 1;
+
+        let mut s = data_set::print::format_data_element_prefix(
+          registry::SEQUENCE_DELIMITATION_ITEM.tag,
+          registry::SEQUENCE_DELIMITATION_ITEM.name,
+          None,
+          None,
+          self.indent,
+          &self.print_options,
+        )
+        .0;
+
+        s.push('\n');
+
+        s
+      }
+
+      P10Part::SequenceItemStart => {
+        let mut s = data_set::print::format_data_element_prefix(
+          registry::ITEM.tag,
+          registry::ITEM.name,
+          None,
+          None,
+          self.indent,
+          &self.print_options,
+        )
+        .0;
+
+        s.push('\n');
+
+        self.indent += 1;
+        self.private_creators.push(DataSet::new());
+
+        s
+      }
+
+      P10Part::SequenceItemDelimiter => {
+        self.indent -= 1;
+        self.private_creators.pop();
+
+        let mut s = data_set::print::format_data_element_prefix(
+          registry::ITEM_DELIMITATION_ITEM.tag,
+          registry::ITEM_DELIMITATION_ITEM.name,
+          None,
+          None,
+          self.indent,
+          &self.print_options,
+        )
+        .0;
+        s.push('\n');
+
+        s
+      }
+
+      P10Part::PixelDataItem { length } => {
+        let (s, width) = data_set::print::format_data_element_prefix(
+          registry::ITEM.tag,
+          registry::ITEM.name,
+          None,
+          Some(*length as usize),
+          self.indent,
+          &self.print_options,
+        );
+
+        // Calculate the width remaining for previewing the value
+        self.value_max_width =
+          std::cmp::max(self.print_options.max_width.saturating_sub(width), 10);
+
+        // Use the next value bytes part to print a preview of the pixel data
+        // item's value
+        self.ignore_data_element_value_bytes = false;
+
+        s
+      }
+
+      _ => "".to_string(),
+    }
+  }
+}

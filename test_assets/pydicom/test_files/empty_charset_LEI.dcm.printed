@@ -1,0 +1,7 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    22 bytes] "1.2.3.18.133392880203"
+(0002,0013) SH Implementation Version Name          [     0 bytes] ""
+(0002,0016) AE Source Application Entity Title      [     0 bytes] ""
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    30 bytes] "ORIGINAL", "PRIMARY", "SINGLE  …

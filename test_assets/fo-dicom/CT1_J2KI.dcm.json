@@ -1,0 +1,1621 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.4.91"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "PRIMARY",
+      "AXIAL"
+    ],
+    "vr": "CS"
+  },
+  "00080012": {
+    "Value": [
+      "20040826"
+    ],
+    "vr": "DA"
+  },
+  "00080013": {
+    "Value": [
+      "185102"
+    ],
+    "vr": "TM"
+  },
+  "00080014": {
+    "Value": [
+      "1.3.6.1.4.1.5962.3"
+    ],
+    "vr": "UI"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.2"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.1.1.3.20040826185059.5457"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20040826"
+    ],
+    "vr": "DA"
+  },
+  "00080021": {
+    "Value": [
+      "19970430"
+    ],
+    "vr": "DA"
+  },
+  "00080022": {
+    "Value": [
+      "19970430"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "Value": [
+      "19970430"
+    ],
+    "vr": "DA"
+  },
+  "00080030": {
+    "Value": [
+      "185059"
+    ],
+    "vr": "TM"
+  },
+  "00080031": {
+    "Value": [
+      "112749"
+    ],
+    "vr": "TM"
+  },
+  "00080032": {
+    "Value": [
+      "112936"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "Value": [
+      "113008"
+    ],
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "CT"
+    ],
+    "vr": "CS"
+  },
+  "00080070": {
+    "Value": [
+      "GE MEDICAL SYSTEMS"
+    ],
+    "vr": "LO"
+  },
+  "00080080": {
+    "Value": [
+      "JFK IMAGING CENTER"
+    ],
+    "vr": "LO"
+  },
+  "00080090": {
+    "vr": "PN"
+  },
+  "00080201": {
+    "Value": [
+      "-0400"
+    ],
+    "vr": "SH"
+  },
+  "00081010": {
+    "Value": [
+      "CT01_OC0"
+    ],
+    "vr": "SH"
+  },
+  "00081030": {
+    "Value": [
+      "e+1"
+    ],
+    "vr": "LO"
+  },
+  "00081090": {
+    "Value": [
+      "RHAPSODE"
+    ],
+    "vr": "LO"
+  },
+  "00082111": {
+    "Value": [
+      "JPEG 2000 irreversible (lossy) 69:1"
+    ],
+    "vr": "ST"
+  },
+  "00082112": {
+    "Value": [
+      {
+        "00081150": {
+          "Value": [
+            "1.2.840.10008.5.1.4.1.1.2"
+          ],
+          "vr": "UI"
+        },
+        "00081155": {
+          "Value": [
+            "1.3.6.1.4.1.5962.1.1.1.1.1.20040826185059.5457"
+          ],
+          "vr": "UI"
+        },
+        "0040A170": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "121320"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "DCM"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Uncompressed predecessor"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00089215": {
+    "Value": [
+      {
+        "00080100": {
+          "Value": [
+            "113040"
+          ],
+          "vr": "SH"
+        },
+        "00080102": {
+          "Value": [
+            "DCM"
+          ],
+          "vr": "SH"
+        },
+        "00080104": {
+          "Value": [
+            "Lossy Compression"
+          ],
+          "vr": "LO"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00090010": {
+    "Value": [
+      "GEMS_IDEN_01"
+    ],
+    "vr": "LO"
+  },
+  "00091001": {
+    "Value": [
+      "GE_GENESIS_FF"
+    ],
+    "vr": "LO"
+  },
+  "00091002": {
+    "Value": [
+      "CT01"
+    ],
+    "vr": "SH"
+  },
+  "00091004": {
+    "Value": [
+      "HiSpeed CT/i"
+    ],
+    "vr": "SH"
+  },
+  "00091027": {
+    "Value": [
+      862399669
+    ],
+    "vr": "SL"
+  },
+  "00091030": {
+    "vr": "SH"
+  },
+  "00091031": {
+    "vr": "SH"
+  },
+  "000910E6": {
+    "Value": [
+      "05"
+    ],
+    "vr": "SH"
+  },
+  "000910E7": {
+    "Value": [
+      973283917
+    ],
+    "vr": "UL"
+  },
+  "000910E9": {
+    "Value": [
+      862399669
+    ],
+    "vr": "SL"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "CompressedSamples^CT1"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "1CT1"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "O"
+    ],
+    "vr": "CS"
+  },
+  "00101010": {
+    "Value": [
+      "000Y"
+    ],
+    "vr": "AS"
+  },
+  "00101030": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "001021B0": {
+    "vr": "LT"
+  },
+  "00110010": {
+    "Value": [
+      "GEMS_PATI_01"
+    ],
+    "vr": "LO"
+  },
+  "00111010": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00180010": {
+    "Value": [
+      "ISOVUE300/100"
+    ],
+    "vr": "LO"
+  },
+  "00180022": {
+    "Value": [
+      "HELICAL MODE"
+    ],
+    "vr": "CS"
+  },
+  "00180050": {
+    "Value": [
+      5.0
+    ],
+    "vr": "DS"
+  },
+  "00180060": {
+    "Value": [
+      120.0
+    ],
+    "vr": "DS"
+  },
+  "00180088": {
+    "Value": [
+      5.0
+    ],
+    "vr": "DS"
+  },
+  "00180090": {
+    "Value": [
+      480.0
+    ],
+    "vr": "DS"
+  },
+  "00181020": {
+    "Value": [
+      "05"
+    ],
+    "vr": "LO"
+  },
+  "00181040": {
+    "Value": [
+      "IV"
+    ],
+    "vr": "LO"
+  },
+  "00181100": {
+    "Value": [
+      338.6716
+    ],
+    "vr": "DS"
+  },
+  "00181110": {
+    "Value": [
+      1099.3100585938
+    ],
+    "vr": "DS"
+  },
+  "00181111": {
+    "Value": [
+      630.0
+    ],
+    "vr": "DS"
+  },
+  "00181120": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00181130": {
+    "Value": [
+      133.699997
+    ],
+    "vr": "DS"
+  },
+  "00181150": {
+    "Value": [
+      1601
+    ],
+    "vr": "IS"
+  },
+  "00181151": {
+    "Value": [
+      170
+    ],
+    "vr": "IS"
+  },
+  "00181152": {
+    "Value": [
+      170
+    ],
+    "vr": "IS"
+  },
+  "00181160": {
+    "Value": [
+      "LARGE BOWTIE FIL"
+    ],
+    "vr": "SH"
+  },
+  "00181190": {
+    "Value": [
+      0.7
+    ],
+    "vr": "DS"
+  },
+  "00181210": {
+    "Value": [
+      "STANDARD"
+    ],
+    "vr": "SH"
+  },
+  "00185100": {
+    "Value": [
+      "FFS"
+    ],
+    "vr": "CS"
+  },
+  "00190010": {
+    "Value": [
+      "GEMS_ACQU_01"
+    ],
+    "vr": "LO"
+  },
+  "00191002": {
+    "Value": [
+      912
+    ],
+    "vr": "SL"
+  },
+  "00191003": {
+    "Value": [
+      373.75
+    ],
+    "vr": "DS"
+  },
+  "00191004": {
+    "Value": [
+      1.0166
+    ],
+    "vr": "DS"
+  },
+  "0019100F": {
+    "Value": [
+      955.799988
+    ],
+    "vr": "DS"
+  },
+  "00191011": {
+    "Value": [
+      2
+    ],
+    "vr": "SS"
+  },
+  "00191013": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00191014": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00191015": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00191016": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00191017": {
+    "Value": [
+      2
+    ],
+    "vr": "SS"
+  },
+  "00191018": {
+    "Value": [
+      "S"
+    ],
+    "vr": "LO"
+  },
+  "00191019": {
+    "Value": [
+      7.79187
+    ],
+    "vr": "DS"
+  },
+  "0019101A": {
+    "Value": [
+      "I"
+    ],
+    "vr": "LO"
+  },
+  "0019101B": {
+    "Value": [
+      -320.197968
+    ],
+    "vr": "DS"
+  },
+  "0019101E": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00191023": {
+    "Value": [
+      5.0
+    ],
+    "vr": "DS"
+  },
+  "00191024": {
+    "Value": [
+      17.784578
+    ],
+    "vr": "DS"
+  },
+  "00191025": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "00191026": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00191027": {
+    "Value": [
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "0019102A": {
+    "Value": [
+      178.079926
+    ],
+    "vr": "DS"
+  },
+  "0019102B": {
+    "Value": [
+      3994.299316
+    ],
+    "vr": "DS"
+  },
+  "0019102C": {
+    "Value": [
+      10431
+    ],
+    "vr": "SL"
+  },
+  "0019102E": {
+    "Value": [
+      -718.079956
+    ],
+    "vr": "DS"
+  },
+  "0019102F": {
+    "Value": [
+      984.0
+    ],
+    "vr": "DS"
+  },
+  "00191039": {
+    "Value": [
+      16
+    ],
+    "vr": "SS"
+  },
+  "00191040": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00191041": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "00191042": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00191043": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00191044": {
+    "Value": [
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "00191047": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "0019104A": {
+    "Value": [
+      6
+    ],
+    "vr": "SS"
+  },
+  "0019104B": {
+    "Value": [
+      10431
+    ],
+    "vr": "SL"
+  },
+  "00191052": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "00191057": {
+    "Value": [
+      -95
+    ],
+    "vr": "SS"
+  },
+  "00191058": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "0019105E": {
+    "Value": [
+      763
+    ],
+    "vr": "SL"
+  },
+  "0019105F": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00191060": {
+    "Value": [
+      1969
+    ],
+    "vr": "SL"
+  },
+  "00191061": {
+    "Value": [
+      1576
+    ],
+    "vr": "SL"
+  },
+  "00191062": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "0019106A": {
+    "Value": [
+      4
+    ],
+    "vr": "SS"
+  },
+  "0019106B": {
+    "Value": [
+      852
+    ],
+    "vr": "SS"
+  },
+  "00191070": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "00191071": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00191072": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00191073": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00191074": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00191075": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00191076": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "001910DA": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "001910DB": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "001910DC": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "001910DD": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "001910DE": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.2.1.20040826185059.5457"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.3.1.1.20040826185059.5457"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "1CT1"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200012": {
+    "Value": [
+      2
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      3
+    ],
+    "vr": "IS"
+  },
+  "00200032": {
+    "Value": [
+      -158.135803,
+      -179.035797,
+      -75.699997
+    ],
+    "vr": "DS"
+  },
+  "00200037": {
+    "Value": [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00200052": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.4.1.1.20040826185059.5457"
+    ],
+    "vr": "UI"
+  },
+  "00200060": {
+    "vr": "CS"
+  },
+  "00201040": {
+    "Value": [
+      "SN"
+    ],
+    "vr": "LO"
+  },
+  "00201041": {
+    "Value": [
+      -77.2040634155
+    ],
+    "vr": "DS"
+  },
+  "00204000": {
+    "Value": [
+      "JPEG 2000 irreversible (lossy)"
+    ],
+    "vr": "LT"
+  },
+  "00210010": {
+    "Value": [
+      "GEMS_RELA_01"
+    ],
+    "vr": "LO"
+  },
+  "00211003": {
+    "Value": [
+      2
+    ],
+    "vr": "SS"
+  },
+  "00211005": {
+    "Value": [
+      "05"
+    ],
+    "vr": "SH"
+  },
+  "00211007": {
+    "Value": [
+      1605775145
+    ],
+    "vr": "UL"
+  },
+  "00211015": {
+    "Value": [
+      24078
+    ],
+    "vr": "US"
+  },
+  "00211016": {
+    "Value": [
+      2
+    ],
+    "vr": "SS"
+  },
+  "00211018": {
+    "Value": [
+      "05"
+    ],
+    "vr": "SH"
+  },
+  "00211019": {
+    "Value": [
+      750675506
+    ],
+    "vr": "UL"
+  },
+  "00211037": {
+    "Value": [
+      16
+    ],
+    "vr": "SS"
+  },
+  "0021104A": {
+    "vr": "LO"
+  },
+  "00211090": {
+    "Value": [
+      7400
+    ],
+    "vr": "SS"
+  },
+  "00211091": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00211092": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FL"
+  },
+  "00211093": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FL"
+  },
+  "00230010": {
+    "Value": [
+      "GEMS_STDY_01"
+    ],
+    "vr": "LO"
+  },
+  "00231070": {
+    "Value": [
+      862399761.111079
+    ],
+    "vr": "FD"
+  },
+  "00231074": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "0023107D": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00250010": {
+    "Value": [
+      "GEMS_SERS_01"
+    ],
+    "vr": "LO"
+  },
+  "00251006": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00251007": {
+    "Value": [
+      44
+    ],
+    "vr": "SL"
+  },
+  "00251010": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00251011": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00251017": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00251018": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00251019": {
+    "Value": [
+      4
+    ],
+    "vr": "SL"
+  },
+  "0025101A": {
+    "vr": "SH"
+  },
+  "00270010": {
+    "Value": [
+      "GEMS_IMAG_01"
+    ],
+    "vr": "LO"
+  },
+  "00271006": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00271010": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "0027101C": {
+    "Value": [
+      150
+    ],
+    "vr": "SL"
+  },
+  "0027101D": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "0027101E": {
+    "Value": [
+      24
+    ],
+    "vr": "SL"
+  },
+  "0027101F": {
+    "Value": [
+      129
+    ],
+    "vr": "SL"
+  },
+  "00271020": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "00271030": {
+    "vr": "SH"
+  },
+  "00271035": {
+    "Value": [
+      2
+    ],
+    "vr": "SS"
+  },
+  "00271040": {
+    "Value": [
+      "I"
+    ],
+    "vr": "SH"
+  },
+  "00271041": {
+    "Value": [
+      -77.20406341552734
+    ],
+    "vr": "FL"
+  },
+  "00271042": {
+    "Value": [
+      -11.199999809265137
+    ],
+    "vr": "FL"
+  },
+  "00271043": {
+    "Value": [
+      9.699999809265137
+    ],
+    "vr": "FL"
+  },
+  "00271044": {
+    "Value": [
+      -75.69999694824219
+    ],
+    "vr": "FL"
+  },
+  "00271045": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FL"
+  },
+  "00271046": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FL"
+  },
+  "00271047": {
+    "Value": [
+      -1.0
+    ],
+    "vr": "FL"
+  },
+  "00271048": {
+    "Value": [
+      -180.53579711914062
+    ],
+    "vr": "FL"
+  },
+  "00271049": {
+    "Value": [
+      179.03579711914062
+    ],
+    "vr": "FL"
+  },
+  "0027104A": {
+    "Value": [
+      -75.69999694824219
+    ],
+    "vr": "FL"
+  },
+  "0027104B": {
+    "Value": [
+      -180.53579711914062
+    ],
+    "vr": "FL"
+  },
+  "0027104C": {
+    "Value": [
+      -159.63580322265625
+    ],
+    "vr": "FL"
+  },
+  "0027104D": {
+    "Value": [
+      -75.69999694824219
+    ],
+    "vr": "FL"
+  },
+  "00271050": {
+    "Value": [
+      -63.19999694824219
+    ],
+    "vr": "FL"
+  },
+  "00271051": {
+    "Value": [
+      -116.20304870605469
+    ],
+    "vr": "FL"
+  },
+  "00271052": {
+    "Value": [
+      "L"
+    ],
+    "vr": "SH"
+  },
+  "00271053": {
+    "Value": [
+      "A"
+    ],
+    "vr": "SH"
+  },
+  "00271054": {
+    "Value": [
+      "I"
+    ],
+    "vr": "SH"
+  },
+  "00271055": {
+    "Value": [
+      "I"
+    ],
+    "vr": "SH"
+  },
+  "00280002": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "MONOCHROME2"
+    ],
+    "vr": "CS"
+  },
+  "00280010": {
+    "Value": [
+      512
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      512
+    ],
+    "vr": "US"
+  },
+  "00280030": {
+    "Value": [
+      0.661468,
+      0.661468
+    ],
+    "vr": "DS"
+  },
+  "00280100": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      15
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280120": {
+    "Value": [
+      -2000
+    ],
+    "vr": "SS"
+  },
+  "00281052": {
+    "Value": [
+      -1024.0
+    ],
+    "vr": "DS"
+  },
+  "00281053": {
+    "Value": [
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "00282110": {
+    "Value": [
+      "01"
+    ],
+    "vr": "CS"
+  },
+  "00282112": {
+    "Value": [
+      69.0
+    ],
+    "vr": "DS"
+  },
+  "00290010": {
+    "Value": [
+      "GEMS_IMPS_01"
+    ],
+    "vr": "LO"
+  },
+  "00291004": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00291005": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00291006": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00291007": {
+    "Value": [
+      87
+    ],
+    "vr": "SL"
+  },
+  "00291008": {
+    "vr": "SH"
+  },
+  "00291009": {
+    "vr": "SH"
+  },
+  "0029100A": {
+    "Value": [
+      764
+    ],
+    "vr": "SS"
+  },
+  "00291026": {
+    "Value": [
+      2
+    ],
+    "vr": "SS"
+  },
+  "00291034": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00291035": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00430010": {
+    "Value": [
+      "GEMS_PARM_01"
+    ],
+    "vr": "LO"
+  },
+  "00431010": {
+    "Value": [
+      400
+    ],
+    "vr": "US"
+  },
+  "00431011": {
+    "Value": [
+      10431
+    ],
+    "vr": "US"
+  },
+  "00431012": {
+    "Value": [
+      14,
+      2,
+      3
+    ],
+    "vr": "SS"
+  },
+  "00431013": {
+    "Value": [
+      107,
+      21,
+      4,
+      2,
+      20
+    ],
+    "vr": "SS"
+  },
+  "00431014": {
+    "Value": [
+      4,
+      4,
+      5
+    ],
+    "vr": "SS"
+  },
+  "00431015": {
+    "Value": [
+      10431
+    ],
+    "vr": "SS"
+  },
+  "00431016": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00431017": {
+    "Value": [
+      0.095
+    ],
+    "vr": "DS"
+  },
+  "00431018": {
+    "Value": [
+      0.085,
+      1.102,
+      0.095
+    ],
+    "vr": "DS"
+  },
+  "00431019": {
+    "Value": [
+      350
+    ],
+    "vr": "SS"
+  },
+  "0043101A": {
+    "Value": [
+      7
+    ],
+    "vr": "SL"
+  },
+  "0043101B": {
+    "Value": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "vr": "SS"
+  },
+  "0043101C": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "0043101D": {
+    "Value": [
+      40
+    ],
+    "vr": "SS"
+  },
+  "0043101E": {
+    "Value": [
+      2.0
+    ],
+    "vr": "DS"
+  },
+  "0043101F": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00431020": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00431021": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "00431025": {
+    "Value": [
+      1,
+      2,
+      3,
+      748,
+      749,
+      750
+    ],
+    "vr": "SS"
+  },
+  "00431026": {
+    "Value": [
+      0,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    "vr": "US"
+  },
+  "00431027": {
+    "Value": [
+      "/1.0:1"
+    ],
+    "vr": "SH"
+  },
+  "00431028": {
+    "InlineBinary": "Q1QwMQAAAEhpU3BlZWQgQ1QvaQAwNTA1ejo9fAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    "vr": "OB"
+  },
+  "00431029": {
+    "InlineBinary": "AAAAAUPPUhQC1wAACOYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+    "vr": "OB"
+  },
+  "0043102A": {
+    "InlineBinary": "Q1QwMQAAAEhpU3BlZWQgQ1QvaQAwNTA1ejo9fAAAAAAAAAAAAAAAAA==",
+    "vr": "OB"
+  },
+  "0043102B": {
+    "Value": [
+      4,
+      4,
+      0,
+      0
+    ],
+    "vr": "SS"
+  },
+  "00431031": {
+    "Value": [
+      -11.2,
+      9.7
+    ],
+    "vr": "DS"
+  },
+  "00431040": {
+    "Value": [
+      178.07992553710938
+    ],
+    "vr": "FL"
+  },
+  "00431041": {
+    "Value": [
+      3816.219482421875
+    ],
+    "vr": "FL"
+  },
+  "00431042": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00431043": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00431044": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00431045": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00431046": {
+    "Value": [
+      3
+    ],
+    "vr": "SL"
+  },
+  "00431047": {
+    "Value": [
+      -1
+    ],
+    "vr": "SL"
+  },
+  "00431048": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00431049": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "0043104A": {
+    "Value": [
+      1
+    ],
+    "vr": "SS"
+  },
+  "0043104B": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "0043104C": {
+    "Value": [
+      0
+    ],
+    "vr": "SS"
+  },
+  "0043104D": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FL"
+  },
+  "0043104E": {
+    "Value": [
+      10.60060977935791
+    ],
+    "vr": "FL"
+  },
+  "7FE00010": {
+    "InlineBinary": "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",
+    "vr": "OB"
+  }
+}

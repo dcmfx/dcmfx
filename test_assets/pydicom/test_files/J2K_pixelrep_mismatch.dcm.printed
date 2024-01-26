@@ -1,0 +1,103 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    62 bytes] "1.2.392.200036.9123.100.11.150 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG 2000 Image Compression (Lossless Only))
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0.7230010.3.0.3.5.4"
+(0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMTK_354"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    30 bytes] "ORIGINAL", "PRIMARY", "AXIAL", …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2019-10-19
+(0008,0013) TM Instance Creation Time               [    10 bytes] 09:38:29.9
+(0008,0014) UI Instance Creator UID                 [    40 bytes] "1.2.392.200036.9123.100.11.12. …
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0008,0018) UI SOP Instance UID                     [    62 bytes] "1.2.392.200036.9123.100.11.150 …
+(0008,0020) DA Study Date                           [     8 bytes] 2019-10-19
+(0008,0021) DA Series Date                          [     8 bytes] 2019-10-19
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2019-10-19
+(0008,0023) DA Content Date                         [     8 bytes] 2019-10-19
+(0008,0030) TM Study Time                           [    10 bytes] 09:34:31.7
+(0008,0031) TM Series Time                          [    10 bytes] 09:38:20.48
+(0008,0032) TM Acquisition Time                     [    10 bytes] 09:36:06.75
+(0008,0033) TM Content Time                         [    10 bytes] 09:38:29.98
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+(0008,0070) LO Manufacturer                         [     0 bytes] ""
+(0008,0080) LO Institution Name                     [     0 bytes] ""
+(0008,0081) ST Institution Address                  [     0 bytes] ""
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1010) SH Station Name                         [     0 bytes] ""
+(0008,1030) LO Study Description                    [     0 bytes] ""
+(0008,103E) LO Series Description                   [     4 bytes] "Lv2"
+(0008,1040) LO Institutional Department Name        [     0 bytes] ""
+(0008,1050) PN Performing Physician's Name          [     0 bytes] ""
+(0008,1060) PN Name of Physician(s) Reading Study   [     0 bytes] ""
+(0008,1070) PN Operators' Name                      [     0 bytes] ""
+(0008,1090) LO Manufacturer's Model Name            [     6 bytes] "Supria"
+(0009,0010) LO Private Creator                      [     4 bytes] "HMC"
+(0009,0011) LO Private Creator                      [    14 bytes] "HMC - CT - ID"
+(0009,1100) UN Image ID Information (e.g. Patient Name, Patient ID)  [   920 bytes] [00 00 00 00 3 …
+(0009,1101) UN Image ID Information (e.g. Patient Comment)  [  3176 bytes] [20 20 20 20 20 20 20 2 …
+(0010,0010) PN Patient's Name                       [    12 bytes] "JXD191021006"
+(0010,0020) LO Patient ID                           [    12 bytes] "JXD191021006"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0032) TM Patient's Birth Time                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0010,1010) AS Patient's Age                        [     4 bytes] 76 years
+(0010,1020) DS Patient's Size                       [     0 bytes] ""
+(0010,1030) DS Patient's Weight                     [     0 bytes] ""
+(0010,4000) LT Patient Comments                     [     0 bytes] ""
+(0018,0010) LO Contrast/Bolus Agent                 [     0 bytes] ""
+(0018,0015) CS Body Part Examined                   [     4 bytes] "HEAD"
+(0018,0050) DS Slice Thickness                      [     4 bytes] "5.00"
+(0018,0060) DS KVP                                  [     4 bytes] "120"
+(0018,0090) DS Data Collection Diameter             [     4 bytes] "220"
+(0018,1000) LO Device Serial Number                 [    10 bytes] "700006008"
+(0018,1020) LO Software Versions                    [     4 bytes] "0005"
+(0018,1030) LO Protocol Name                        [     4 bytes] "194"
+(0018,1041) DS Contrast/Bolus Volume                [     0 bytes] ""
+(0018,1042) TM Contrast/Bolus Start Time            [     0 bytes] ""
+(0018,1043) TM Contrast/Bolus Stop Time             [     0 bytes] ""
+(0018,1046) DS Contrast Flow Rate                   [     0 bytes] ""
+(0018,1100) DS Reconstruction Diameter              [     4 bytes] "220"
+(0018,1120) DS Gantry/Detector Tilt                 [     6 bytes] "-22.0"
+(0018,1130) DS Table Height                         [     6 bytes] "-340.0"
+(0018,1140) CS Rotation Direction                   [     2 bytes] "CW" (Clockwise)
+(0018,1150) IS Exposure Time                        [     4 bytes] "2000"
+(0018,1151) IS X-Ray Tube Current                   [     4 bytes] "230"
+(0018,1152) IS Exposure                             [     4 bytes] "460"
+(0018,1210) SH Convolution Kernel                   [     2 bytes] "11"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0019,0010) LO Private Creator                      [    10 bytes] "SET WINDOW"
+(0019,1000) UN Set Window Image Filter              [     2 bytes] [30 30]
+(0019,1001) UN Set Window Magnification Power       [     2 bytes] [E8 03]
+(0020,000D) UI Study Instance UID                   [    62 bytes] "1.2.392.200036.9123.100.11.150 …
+(0020,000E) UI Series Instance UID                  [    62 bytes] "1.2.392.200036.9123.100.11.150 …
+(0020,0010) SH Study ID                             [     4 bytes] "4900"
+(0020,0011) IS Series Number                        [     2 bytes] "4"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "2"
+(0020,0013) IS Instance Number                      [     2 bytes] "7"
+(0020,0020) CS Patient Orientation                  [     4 bytes] "L", "PF"
+(0020,0032) DS Image Position (Patient)             [    26 bytes] "-110.2153", "-98.1898", "72.14 …
+(0020,0037) DS Image Orientation (Patient)          [    42 bytes] "1.0000", "0.0000", "0.0000", " …
+(0020,0052) UI Frame of Reference UID               [    60 bytes] "1.2.392.200036.9123.100.11.12. …
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0020,1041) DS Slice Location                       [     8 bytes] "32.3557"
+(0020,4000) LT Image Comments                       [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0030) DS Pixel Spacing                        [    12 bytes] "0.431", "0.431"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 13
+(0028,0102) US High Bit                             [     2 bytes] 12
+(0028,0103) US Pixel Representation                 [     2 bytes] 1
+(0028,1050) DS Window Center                        [     8 bytes] "40", "40", "40"
+(0028,1051) DS Window Width                         [    12 bytes] "100", "100", "200"
+(0028,1052) DS Rescale Intercept                    [     2 bytes] "0"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0032,1033) LO Requesting Service                   [     0 bytes] ""
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     4 bytes] 
+  (FFFE,E000) Item                                    [132502 bytes] 
+(FFFE,E0DD) Sequence Delimitation Item

@@ -1,0 +1,486 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.4.91"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "PRIMARY",
+      "AXIAL"
+    ],
+    "vr": "CS"
+  },
+  "00080012": {
+    "vr": "DA"
+  },
+  "00080013": {
+    "vr": "TM"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.2"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "vr": "DA"
+  },
+  "00080023": {
+    "vr": "DA"
+  },
+  "00080030": {
+    "vr": "TM"
+  },
+  "00080033": {
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "CT"
+    ],
+    "vr": "CS"
+  },
+  "00080070": {
+    "vr": "LO"
+  },
+  "00080090": {
+    "vr": "PN"
+  },
+  "0008103E": {
+    "Value": [
+      "5/5mm Plain"
+    ],
+    "vr": "LO"
+  },
+  "00081090": {
+    "vr": "LO"
+  },
+  "00082111": {
+    "Value": [
+      "lossy conversion"
+    ],
+    "vr": "ST"
+  },
+  "00082112": {
+    "Value": [
+      {
+        "00081150": {
+          "Value": [
+            "1.2.840.10008.5.1.4.1.1.2"
+          ],
+          "vr": "UI"
+        },
+        "00081155": {
+          "Value": [
+            "1.2.276.0.7230010.3.1.4.296485376.1.1521713419.1802510"
+          ],
+          "vr": "UI"
+        },
+        "0040A170": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "121320"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "DCM"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Uncompressed predecessor"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00089215": {
+    "Value": [
+      {
+        "00080100": {
+          "Value": [
+            "113040"
+          ],
+          "vr": "SH"
+        },
+        "00080102": {
+          "Value": [
+            "DCM"
+          ],
+          "vr": "SH"
+        },
+        "00080104": {
+          "Value": [
+            "Lossy Compression"
+          ],
+          "vr": "LO"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "CQ500-CT-310"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "CQ500-CT-310"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "vr": "CS"
+  },
+  "00120062": {
+    "Value": [
+      "YES"
+    ],
+    "vr": "CS"
+  },
+  "00180022": {
+    "Value": [
+      "AXIAL MODE"
+    ],
+    "vr": "CS"
+  },
+  "00180050": {
+    "Value": [
+      5.0
+    ],
+    "vr": "DS"
+  },
+  "00180060": {
+    "Value": [
+      140.0
+    ],
+    "vr": "DS"
+  },
+  "00180088": {
+    "Value": [
+      20.0
+    ],
+    "vr": "DS"
+  },
+  "00180090": {
+    "Value": [
+      320.0
+    ],
+    "vr": "DS"
+  },
+  "00181020": {
+    "Value": [
+      "coreload.81"
+    ],
+    "vr": "LO"
+  },
+  "00181100": {
+    "Value": [
+      245.0
+    ],
+    "vr": "DS"
+  },
+  "00181110": {
+    "Value": [
+      949.147
+    ],
+    "vr": "DS"
+  },
+  "00181111": {
+    "Value": [
+      541.0
+    ],
+    "vr": "DS"
+  },
+  "00181120": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00181130": {
+    "Value": [
+      185.5
+    ],
+    "vr": "DS"
+  },
+  "00181140": {
+    "Value": [
+      "CW"
+    ],
+    "vr": "CS"
+  },
+  "00181150": {
+    "Value": [
+      2000
+    ],
+    "vr": "IS"
+  },
+  "00181151": {
+    "Value": [
+      170
+    ],
+    "vr": "IS"
+  },
+  "00181152": {
+    "Value": [
+      85
+    ],
+    "vr": "IS"
+  },
+  "00181160": {
+    "Value": [
+      "HEAD FILTER"
+    ],
+    "vr": "SH"
+  },
+  "00181170": {
+    "Value": [
+      23800
+    ],
+    "vr": "IS"
+  },
+  "00181190": {
+    "Value": [
+      0.7
+    ],
+    "vr": "DS"
+  },
+  "00181210": {
+    "Value": [
+      "STANDARD"
+    ],
+    "vr": "SH"
+  },
+  "00185100": {
+    "Value": [
+      "HFS"
+    ],
+    "vr": "CS"
+  },
+  "00189305": {
+    "Value": [
+      2.0
+    ],
+    "vr": "FD"
+  },
+  "00189306": {
+    "Value": [
+      0.625
+    ],
+    "vr": "FD"
+  },
+  "00189307": {
+    "Value": [
+      20.0
+    ],
+    "vr": "FD"
+  },
+  "0020000D": {
+    "Value": [
+      "1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      2
+    ],
+    "vr": "IS"
+  },
+  "00200012": {
+    "Value": [
+      6
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      21
+    ],
+    "vr": "IS"
+  },
+  "00200032": {
+    "Value": [
+      -122.5,
+      -112.4,
+      47.0
+    ],
+    "vr": "DS"
+  },
+  "00200037": {
+    "Value": [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00201040": {
+    "Value": [
+      "OM"
+    ],
+    "vr": "LO"
+  },
+  "00201041": {
+    "Value": [
+      47.0
+    ],
+    "vr": "DS"
+  },
+  "00280002": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "MONOCHROME2"
+    ],
+    "vr": "CS"
+  },
+  "00280010": {
+    "Value": [
+      512
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      512
+    ],
+    "vr": "US"
+  },
+  "00280030": {
+    "Value": [
+      0.478516,
+      0.478516
+    ],
+    "vr": "DS"
+  },
+  "00280100": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      14
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      13
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280120": {
+    "Value": [
+      -2000
+    ],
+    "vr": "SS"
+  },
+  "00281050": {
+    "Value": [
+      40.0
+    ],
+    "vr": "DS"
+  },
+  "00281051": {
+    "Value": [
+      100.0
+    ],
+    "vr": "DS"
+  },
+  "00281052": {
+    "Value": [
+      -1024.0
+    ],
+    "vr": "DS"
+  },
+  "00281053": {
+    "Value": [
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "00281054": {
+    "Value": [
+      "HU"
+    ],
+    "vr": "LO"
+  },
+  "00282110": {
+    "Value": [
+      "01"
+    ],
+    "vr": "CS"
+  },
+  "00282112": {
+    "Value": [
+      338.687338501292
+    ],
+    "vr": "DS"
+  },
+  "00400009": {
+    "Value": [
+      "ANON"
+    ],
+    "vr": "SH"
+  },
+  "7FE00010": {
+    "InlineBinary": "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",
+    "vr": "OW"
+  }
+}

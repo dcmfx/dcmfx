@@ -1,0 +1,104 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    64 bytes] "1.2.826.0.1.3680043.2.1143.623 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG 2000 Image Compression)
+(0002,0012) UI Implementation Class UID             [    48 bytes] "1.2.826.0.1.3680043.2.1143.107 …
+(0002,0013) SH Implementation Version Name          [    10 bytes] "GDCM 2.8.4"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "gdcmconv"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    22 bytes] "DERIVED", "PRIMARY", "AXIAL"
+(0008,0012) DA Instance Creation Date               [     0 bytes] ""
+(0008,0013) TM Instance Creation Time               [     0 bytes] ""
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0008,0018) UI SOP Instance UID                     [    64 bytes] "1.2.826.0.1.3680043.2.1143.623 …
+(0008,0020) DA Study Date                           [     0 bytes] ""
+(0008,0023) DA Content Date                         [     0 bytes] ""
+(0008,0030) TM Study Time                           [     0 bytes] ""
+(0008,0033) TM Content Time                         [     0 bytes] ""
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+(0008,0070) LO Manufacturer                         [     0 bytes] ""
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,103E) LO Series Description                   [    12 bytes] "5/5mm Plain"
+(0008,1090) LO Manufacturer's Model Name            [     0 bytes] ""
+(0008,2111) ST Derivation Description               [    16 bytes] "lossy conversion"
+(0008,2112) SQ Source Image Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    54 bytes] "1.2.276.0.7230010.3.1.4.29 …
+    (0040,A170) SQ Purpose of Reference Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     6 bytes] "121320"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+        (0008,0104) LO Code Meaning                         [    24 bytes] "Uncompressed predecess …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,9215) SQ Derivation Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     6 bytes] "113040"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+    (0008,0104) LO Code Meaning                         [    18 bytes] "Lossy Compression"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0010,0010) PN Patient's Name                       [    12 bytes] "CQ500-CT-310"
+(0010,0020) LO Patient ID                           [    12 bytes] "CQ500-CT-310"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0012,0062) CS Patient Identity Removed             [     4 bytes] "YES"
+(0018,0022) CS Scan Options                         [    10 bytes] "AXIAL MODE"
+(0018,0050) DS Slice Thickness                      [     8 bytes] "5.000000"
+(0018,0060) DS KVP                                  [     4 bytes] "140"
+(0018,0088) DS Spacing Between Slices               [    10 bytes] "20.000000"
+(0018,0090) DS Data Collection Diameter             [    10 bytes] "320.000000"
+(0018,1020) LO Software Versions                    [    12 bytes] "coreload.81"
+(0018,1100) DS Reconstruction Diameter              [    10 bytes] "245.000000"
+(0018,1110) DS Distance Source to Detector          [    10 bytes] "949.147000"
+(0018,1111) DS Distance Source to Patient           [    10 bytes] "541.000000"
+(0018,1120) DS Gantry/Detector Tilt                 [     8 bytes] "0.000000"
+(0018,1130) DS Table Height                         [    10 bytes] "185.500000"
+(0018,1140) CS Rotation Direction                   [     2 bytes] "CW" (Clockwise)
+(0018,1150) IS Exposure Time                        [     4 bytes] "2000"
+(0018,1151) IS X-Ray Tube Current                   [     4 bytes] "170"
+(0018,1152) IS Exposure                             [     2 bytes] "85"
+(0018,1160) SH Filter Type                          [    12 bytes] "HEAD FILTER"
+(0018,1170) IS Generator Power                      [     6 bytes] "23800"
+(0018,1190) DS Focal Spot(s)                        [     8 bytes] "0.700000"
+(0018,1210) SH Convolution Kernel                   [     8 bytes] "STANDARD"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0018,9305) FD Revolution Time                      [     8 bytes] 2.0
+(0018,9306) FD Single Collimation Width             [     8 bytes] 0.625
+(0018,9307) FD Total Collimation Width              [     8 bytes] 20.0
+(0020,000D) UI Study Instance UID                   [    54 bytes] "1.2.276.0.7230010.3.1.2.296485 …
+(0020,000E) UI Series Instance UID                  [    54 bytes] "1.2.276.0.7230010.3.1.3.296485 …
+(0020,0010) SH Study ID                             [     0 bytes] ""
+(0020,0011) IS Series Number                        [     2 bytes] "2"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "6"
+(0020,0013) IS Instance Number                      [     2 bytes] "21"
+(0020,0032) DS Image Position (Patient)             [    24 bytes] "-122.500", "-112.400", "47.000"
+(0020,0037) DS Image Orientation (Patient)          [    54 bytes] "1.000000", "0.000000", "0.0000 …
+(0020,1040) LO Position Reference Indicator         [     2 bytes] "OM"
+(0020,1041) DS Slice Location                       [     6 bytes] "47.000"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0030) DS Pixel Spacing                        [    18 bytes] "0.478516", "0.478516"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 14
+(0028,0102) US High Bit                             [     2 bytes] 13
+(0028,0103) US Pixel Representation                 [     2 bytes] 1
+(0028,0120) SS Pixel Padding Value                  [     2 bytes] -2000
+(0028,1050) DS Window Center                        [     2 bytes] "40"
+(0028,1051) DS Window Width                         [     4 bytes] "100"
+(0028,1052) DS Rescale Intercept                    [     6 bytes] "-1024"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0028,1054) LO Rescale Type                         [     2 bytes] "HU"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
+(0028,2112) DS Lossy Image Compression Ratio        [    16 bytes] "338.687338501292"
+(0040,0009) SH Scheduled Procedure Step ID          [     4 bytes] "ANON"
+(7FE0,0010) OW Pixel Data
+  (FFFE,E000) Item                                    [     0 bytes] 
+  (FFFE,E000) Item                                    [  1548 bytes] 
+(FFFE,E0DD) Sequence Delimitation Item

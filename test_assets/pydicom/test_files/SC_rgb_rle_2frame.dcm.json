@@ -1,0 +1,229 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.5"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "SECONDARY",
+      "OTHER"
+    ],
+    "vr": "CS"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.7"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20170101"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "vr": "DA"
+  },
+  "0008002A": {
+    "vr": "DT"
+  },
+  "00080030": {
+    "Value": [
+      "120000"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "OT"
+    ],
+    "vr": "CS"
+  },
+  "00080064": {
+    "Value": [
+      "SYN"
+    ],
+    "vr": "CS"
+  },
+  "00080090": {
+    "Value": [
+      {
+        "Alphabetic": "Moriarty^James"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "Lestrade^G"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "ID1"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "F"
+    ],
+    "vr": "CS"
+  },
+  "00101010": {
+    "Value": [
+      "024Y"
+    ],
+    "vr": "AS"
+  },
+  "00185100": {
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "1"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200020": {
+    "vr": "CS"
+  },
+  "00200060": {
+    "vr": "CS"
+  },
+  "00204000": {
+    "Value": [
+      "Test Image with 10 rows of (255,0,0), 10 rows of (255,128,128), 10 rows of (0,255,0), 10 rows of (128,255,128), 10 rows of (0,0,255), 10 rows of (128,128,255), 10 rows of (0,0,0), 10 rows of (64,64,64), 10 rows of (192,192,192), 10 rows of (255,255,255), uncompressed"
+    ],
+    "vr": "LT"
+  },
+  "00280002": {
+    "Value": [
+      3
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "RGB"
+    ],
+    "vr": "CS"
+  },
+  "00280006": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280008": {
+    "Value": [
+      2
+    ],
+    "vr": "IS"
+  },
+  "00280010": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280030": {
+    "Value": [
+      1.0,
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "00280100": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      7
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280106": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280107": {
+    "Value": [
+      255
+    ],
+    "vr": "US"
+  },
+  "7FE00010": {
+    "InlineBinary": "/v8A4AgAAAAAAAAAoAIAAP7/AOCYAgAAAwAAAEAAAAAIAQAA0AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJ3/nf+d/53/nf+d/53/nf+d/53/nf+d/53/nf+d/53/nf+d/53/nf+dAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ2AnYCdgJ2AnYCdgJ2AnYCdgJ2AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdgJ2AnYCdgJ2AnYCdgJ2AnYCdgJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnUCdQJ1AnUCdQJ1AnUCdQJ1AnUCdwJ3AncCdwJ3AncCdwJ3AncCdwJ3/nf+d/53/nf+d/53/nf+d/53/nQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdgJ2AnYCdgJ2AnYCdgJ2AnYCdgJ3/nf+d/53/nf+d/53/nf+d/53/nf+d/53/nf+d/53/nf+d/53/nf+dAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ2AnYCdgJ2AnYCdgJ2AnYCdgJ2AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdQJ1AnUCdQJ1AnUCdQJ1AnUCdQJ3AncCdwJ3AncCdwJ3AncCdwJ3Anf+d/53/nf+d/53/nf+d/53/nf+dAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ2AnYCdgJ2AnYCdgJ2AnYCdgJ2AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdgJ2AnYCdgJ2AnYCdgJ2AnYCdgJ3/nf+d/53/nf+d/53/nf+d/53/nf+d/53/nf+d/53/nf+d/53/nf+dAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ1AnUCdQJ1AnUCdQJ1AnUCdQJ1AncCdwJ3AncCdwJ3AncCdwJ3AncCd/53/nf+d/53/nf+d/53/nf+d//7/AOCYAgAAAwAAAEAAAAAIAQAA0AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCd/53/nf+d/53/nf+d/53/nf+d/51/nX+df51/nX+df51/nX+df51/nf+d/53/nf+d/53/nf+d/53/nf+df51/nX+df51/nX+df51/nX+df53/nf+d/53/nf+d/53/nf+d/53/nb+dv52/nb+dv52/nb+dv52/nb+dP50/nT+dP50/nT+dP50/nT+dP50AnQCdAJ0AnQCdAJ0AnQCdAJ0Anf+d/53/nf+d/53/nf+d/53/nf+df51/nX+df51/nX+df51/nX+df50AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCd/53/nf+d/53/nf+d/53/nf+d/51/nX+df51/nX+df51/nX+df51/nf+d/53/nf+d/53/nf+d/53/nf+dv52/nb+dv52/nb+dv52/nb+dv50/nT+dP50/nT+dP50/nT+dP50/nQCdAJ0AnQCdAJ0AnQCdAJ0AnQCd/53/nf+d/53/nf+d/53/nf+d/51/nX+df51/nX+df51/nX+df51/nf+d/53/nf+d/53/nf+d/53/nf+df51/nX+df51/nX+df51/nX+df50AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCdAJ0AnQCd/53/nf+d/53/nf+d/53/nf+d/52/nb+dv52/nb+dv52/nb+dv52/nT+dP50/nT+dP50/nT+dP50/nT+dAJ0AnQCdAJ0AnQCdAJ0AnQCdAA==",
+    "vr": "OB"
+  }
+}

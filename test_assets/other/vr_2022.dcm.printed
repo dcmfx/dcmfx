@@ -1,0 +1,94 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    64 bytes] "1.2.826.0.1.3680043.9.4245.440 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    42 bytes] "1.2.826.0.1.3680043.9.4245.0.0 …
+(0002,0013) SH Implementation Version Name          [    12 bytes] "ALIZA2.3.13"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "ALIZAAE"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    18 bytes] "DERIVED", "SECONDARY"
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0008,0018) UI SOP Instance UID                     [    64 bytes] "1.2.826.0.1.3680043.9.4245.440 …
+(0008,0020) DA Study Date                           [     8 bytes] 2019-04-01
+(0008,0021) DA Series Date                          [     8 bytes] 2022-11-09
+(0008,0023) DA Content Date                         [     8 bytes] 2022-11-09
+(0008,0030) TM Study Time                           [     6 bytes] 16:28:37
+(0008,0031) TM Series Time                          [     6 bytes] 07:47:39
+(0008,0033) TM Content Time                         [     6 bytes] 07:47:39
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "OT" (Other)
+(0008,0064) CS Conversion Type                      [     4 bytes] "WSD" (Workstation)
+(0008,0070) LO Manufacturer                         [    22 bytes] "Aliza Medical Imaging"
+(0008,0080) LO Institution Name                     [     0 bytes] ""
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1030) LO Study Description                    [    14 bytes] "VR Conformance"
+(0008,103E) LO Series Description                   [    32 bytes] "Private sequence (0x4d4f,0x100 …
+(0010,0010) PN Patient's Name                       [    16 bytes] "Äneas^Rüdiger"
+(0010,0020) LO Patient ID                           [    12 bytes] "pMoeif3DQJB"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0018,2010) DS Nominal Scanned Pixel Spacing        [     4 bytes] "1", "1"
+(0018,5100) CS Patient Position                     [     0 bytes] ""
+(0020,000D) UI Study Instance UID                   [    64 bytes] "1.2.826.0.1.3680043.9.4245.822 …
+(0020,000E) UI Series Instance UID                  [    64 bytes] "1.2.826.0.1.3680043.9.4245.890 …
+(0020,0010) SH Study ID                             [     8 bytes] "SCSGERM"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,0060) CS Laterality                           [     0 bytes] ""
+(0020,4000) LT Image Comments                       [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 8
+(0028,0102) US High Bit                             [     2 bytes] 7
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,0301) CS Burned In Annotation                 [     2 bytes] "NO"
+(0028,1050) DS Window Center                        [     4 bytes] "128"
+(0028,1051) DS Window Width                         [     4 bytes] "255"
+(0028,1052) DS Rescale Intercept                    [     2 bytes] "0"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0028,1054) LO Rescale Type                         [     2 bytes] "US"
+(0028,1056) CS VOI LUT Function                     [    12 bytes] "LINEAR_EXACT"
+(2050,0020) CS Presentation LUT Shape               [     8 bytes] "IDENTITY"
+(4D4F,0010) LO Private Creator                      [    16 bytes] "MDCM CONFORMANCE"
+(4D4F,1001) SQ unknown_private_tag
+  (FFFE,E000) Item
+    (4D4F,0010) LO Private Creator                      [    16 bytes] "MDCM CONFORMANCE"
+    (4D4F,1010) AE unknown_private_tag                  [     2 bytes] "AE"
+    (4D4F,1011) AS unknown_private_tag                  [     4 bytes] 1 day
+    (4D4F,1012) AT unknown_private_tag                  [     4 bytes] (FFFF,FFFF)
+    (4D4F,1013) CS unknown_private_tag                  [     8 bytes] "FDA", "550K"
+    (4D4F,1014) DA unknown_private_tag                  [     8 bytes] 2019-04-01
+    (4D4F,1015) DS unknown_private_tag                  [    16 bytes] "0.0", "0.0", "0.0", "0.0"
+    (4D4F,1016) DT unknown_private_tag                  [    26 bytes] 2019-04-01T14:05:01.789898+ …
+    (4D4F,1017) FD unknown_private_tag                  [    16 bytes] 2.2250738585072014e-308, 1. …
+    (4D4F,1018) FL unknown_private_tag                  [     8 bytes] 1.1754943508222875e-38, 3.4 …
+    (4D4F,1019) IS unknown_private_tag                  [     8 bytes] "0", "0", "0", "0"
+    (4D4F,101A) LO unknown_private_tag                  [     4 bytes] "Text"
+    (4D4F,101B) LT unknown_private_tag                  [     4 bytes] "Text"
+    (4D4F,101C) OB unknown_private_tag                  [     4 bytes] [00 00 00 00]
+    (4D4F,101D) OF unknown_private_tag                  [    16 bytes] [00 00 00 00 00 00 00 00 00 …
+    (4D4F,101E) OW unknown_private_tag                  [     8 bytes] [00 00 00 00 00 00 00 00]
+    (4D4F,101F) PN unknown_private_tag                  [    42 bytes] "Adams^John Robert Quincy^^ …
+    (4D4F,1020) SH unknown_private_tag                  [     4 bytes] "Text"
+    (4D4F,1021) SL unknown_private_tag                  [     8 bytes] -2147483648, 2147483647
+    (4D4F,1023) SS unknown_private_tag                  [     4 bytes] -32768, 32767
+    (4D4F,1024) ST unknown_private_tag                  [     4 bytes] "Text"
+    (4D4F,1025) TM unknown_private_tag                  [    14 bytes] 14:20:01.654756
+    (4D4F,1026) UI unknown_private_tag                  [    64 bytes] "1.2.826.0.1.3680043.9.4245 …
+    (4D4F,1027) UL unknown_private_tag                  [     8 bytes] 0, 4294967295
+    (4D4F,1029) US unknown_private_tag                  [     4 bytes] 0, 65535
+    (4D4F,102A) UT unknown_private_tag                  [     4 bytes] "Text"
+    (4D4F,102B) OD unknown_private_tag                  [    32 bytes] [00 00 00 00 00 00 00 00 00 …
+    (4D4F,102C) OL unknown_private_tag                  [    16 bytes] [00 00 00 00 00 00 00 00 00 …
+    (4D4F,102D) UC unknown_private_tag                  [     4 bytes] "Text"
+    (4D4F,102E) UR unknown_private_tag                  [    34 bytes] "https://www.aliza-dicom-vi …
+    (4D4F,102F) OV unknown_private_tag                  [    32 bytes] [00 00 00 00 00 00 00 00 00 …
+    (4D4F,1030) SV unknown_private_tag                  [    16 bytes] -9223372036854775808, 92233 …
+    (4D4F,1031) UV unknown_private_tag                  [    16 bytes] 0, 18446744073709551615
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(7FE0,0010) OB Pixel Data                           [262144 bytes] [7F BF BF 7F 7F 7F 7F 7F 7F 7F  …

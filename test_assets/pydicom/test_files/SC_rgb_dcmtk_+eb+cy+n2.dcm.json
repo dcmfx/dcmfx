@@ -1,0 +1,304 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.4.50"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "SECONDARY",
+      "OTHER"
+    ],
+    "vr": "CS"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.7"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.276.0.7230010.3.1.4.8323329.5846.1512159596.457896"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20170101"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "vr": "DA"
+  },
+  "0008002A": {
+    "vr": "DT"
+  },
+  "00080030": {
+    "Value": [
+      "120000"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "OT"
+    ],
+    "vr": "CS"
+  },
+  "00080064": {
+    "Value": [
+      "SYN"
+    ],
+    "vr": "CS"
+  },
+  "00080090": {
+    "Value": [
+      {
+        "Alphabetic": "Moriarty^James"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00082111": {
+    "Value": [
+      "Lossy compression with JPEG baseline, IJG quality factor 90, compression ratio 21.521"
+    ],
+    "vr": "ST"
+  },
+  "00082112": {
+    "Value": [
+      {
+        "00081150": {
+          "Value": [
+            "1.2.840.10008.5.1.4.1.1.7"
+          ],
+          "vr": "UI"
+        },
+        "00081155": {
+          "Value": [
+            "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116"
+          ],
+          "vr": "UI"
+        },
+        "0040A170": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "121320"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "DCM"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Uncompressed predecessor"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00089215": {
+    "Value": [
+      {
+        "00080100": {
+          "Value": [
+            "113040"
+          ],
+          "vr": "SH"
+        },
+        "00080102": {
+          "Value": [
+            "DCM"
+          ],
+          "vr": "SH"
+        },
+        "00080104": {
+          "Value": [
+            "Lossy Compression"
+          ],
+          "vr": "LO"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "Lestrade^G"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "ID1"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "F"
+    ],
+    "vr": "CS"
+  },
+  "00101010": {
+    "Value": [
+      "024Y"
+    ],
+    "vr": "AS"
+  },
+  "00185100": {
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "1"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200020": {
+    "vr": "CS"
+  },
+  "00200060": {
+    "vr": "CS"
+  },
+  "00204000": {
+    "Value": [
+      "Test Image with 10 rows of (255,0,0), 10 rows of (255,128,128), 10 rows of (0,255,0), 10 rows of (128,255,128), 10 rows of (0,0,255), 10 rows of (128,128,255), 10 rows of (0,0,0), 10 rows of (64,64,64), 10 rows of (192,192,192), 10 rows of (255,255,255), uncompressed"
+    ],
+    "vr": "LT"
+  },
+  "00280002": {
+    "Value": [
+      3
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "YBR_FULL"
+    ],
+    "vr": "CS"
+  },
+  "00280006": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280010": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280030": {
+    "Value": [
+      1.0,
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "00280100": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      7
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00282110": {
+    "Value": [
+      "01"
+    ],
+    "vr": "CS"
+  },
+  "00282112": {
+    "Value": [
+      21.521
+    ],
+    "vr": "DS"
+  },
+  "00282114": {
+    "Value": [
+      "ISO_10918_1"
+    ],
+    "vr": "CS"
+  },
+  "7FE00010": {
+    "InlineBinary": "/v8A4AQAAAAAAAAA/v8A4HIFAAD/2P/gABBKRklGAAEBAAABAAEAAP/bAEMAAwICAwICAwMDAwQDAwQFCAUFBAQFCgcHBggMCgwMCwoLCw0OEhANDhEOCwsQFhARExQVFRUMDxcYFhQYEhQVFP/bAEMBAwQEBQQFCQUFCRQNCw0UFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFP/AABEIAGQAZAMBIQACEQEDEQH/xAAZAAEAAwEBAAAAAAAAAAAAAAAABgcICQT/xAAoEAABAgQBDQAAAAAAAAAAAAAAAwYXVaTSBAcVGBlWY2aio6XT4eP/xAAaAQEBAAMBAQAAAAAAAAAAAAAABwUICQYE/8QAKxEAAQAGBgsAAAAAAAAAAAAAAAIFFlOi0QEUZKHS4gMEExUYUVJhZaPj/9oADAMBAAIRAxEAPwDOgIYdUwAAAAAAAAAAADWkDGRJKte8QMZEkq17z1lR1fpvpma/tSuH0KOEQMZEkq17xAxkSSrXvFR1fpvpmGpXD6FHCIGMiSVa94gYyJJVr3io6v030zDUrh9CjhEDGRJKte8QMZEkq17xUdX6b6ZhqVw+hRwiBjIklWveIGMiSVa94qOr9N9Mw1K4fQo4RAxkSSrXvEDGRJKte8VHV+m+mYalcPoUcIgYyJJVr3gVHV+m+mYalcPoUcJJ8+7jn9DPu45/ROm5s0eU548TXh/f8Rn3cc/oZ93HP6Dc2aPKOJrw/v8AiM+7jn9DPu45/QbmzR5RxNeH9/xGfdxz+hn3cc/oNzZo8o4mvD+/4jPu45/Qz7uOf0G5s0eUcTXh/f8AEZ93HP6Gfdxz+g3Nmjyjia8P7/iM+7jn9ANzZo8o4mvD+/4nuh24Zf1k7hDtwy/rJ3Hh9yLB3ejM1BZxaOokZiHbhl/WTuEO3DL+sncNyLB3ejMM4tHUSMxDtwy/rJ3CHbhl/WTuG5Fg7vRmGcWjqJGYh24Zf1k7hDtwy/rJ3Dciwd3ozDOLR1EjMQ7cMv6ydwh24Zf1k7huRYO70ZhnFo6iRmIduGX9ZO4Q7cMv6ydw3IsHd6Mwzi0dRIzEO3DL+sncBuRYO70ZhnFo6iRmXUCqFsAAAAAAAAAAAAOF4O4ZVQAAAAAAAAAAADcWjdk52drsT5Bo3ZOdna7E+Q1/alcPoUcJltho+Q0bsnOztdifING7Jzs7XYnyBqVw+hRwjYaPkNG7Jzs7XYnyDRuyc7O12J8galcPoUcI2Gj5DRuyc7O12J8g0bsnOztdifIGpXD6FHCNho+Q0bsnOztdifING7Jzs7XYnyBqVw+hRwjYaPkNG7Jzs7XYnyDRuyc7O12J8galcPoUcI2Gj5DRuyc7O12J8gDUrh9CjhGw0fIo3WA8B94+A1gPAfePgQBubNHlMrVu41gPAfePgNYDwH3j4BubNHlFW7jWA8B94+A1gPAfePgG5s0eUVbuNYDwH3j4DWA8B94+AbmzR5RVu41gPAfePgNYDwH3j4BubNHlFW7jWA8B94+A1gPAfePgG5s0eUVbuNYDwH3j4ANzZo8oq3czZC1zyyoSuELXPLKhK4lZ9oha55ZUJXCFrnllQlcAIWueWVCVwha55ZUJXACFrnllQlcIWueWVCVwAha55ZUJXCFrnllQlcAIWueWVCVwha55ZUJXACFrnllQlcADQAAAAAAAAAAAAAAOqwAAAAAAAAAAAAAL+hc2JZUK3CFzYllQrcAIXNiWVCtwhc2JZUK3ACFzYllQrcIXNiWVCtwAhc2JZUK3CFzYllQrcAIXNiWVCtwhc2JZUK3ACFzYllQrcIXNiWVCtwAhc2JZUK3AAlQAAAAAAAAAAAAAP//ZAA==",
+    "vr": "OB"
+  }
+}

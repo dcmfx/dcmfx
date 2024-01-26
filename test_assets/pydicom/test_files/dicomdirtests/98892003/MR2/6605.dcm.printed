@@ -1,0 +1,81 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (MR Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0.119 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    18 bytes] "1.3.6.1.4.1.5962.2"
+(0002,0013) SH Implementation Version Name          [    10 bytes] "DCTOOL100"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "CLUNIE1"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTHER"
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2004-06-24
+(0008,0013) TM Instance Creation Time               [     6 bytes] 02:03:21
+(0008,0014) UI Instance Creator UID                 [    18 bytes] "1.3.6.1.4.1.5962.3"
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (MR Image Storage)
+(0008,0018) UI SOP Instance UID                     [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0.119 …
+(0008,0020) DA Study Date                           [     8 bytes] 2003-05-05
+(0008,0021) DA Series Date                          [     8 bytes] 2003-05-05
+(0008,0023) DA Content Date                         [     8 bytes] 2003-05-05
+(0008,0030) TM Study Time                           [     6 bytes] 04:53:57
+(0008,0031) TM Series Time                          [     6 bytes] 04:55:53
+(0008,0033) TM Content Time                         [     6 bytes] 04:56:37
+(0008,0050) SH Accession Number                     [     2 bytes] "2"
+(0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+(0008,0070) LO Manufacturer                         [    30 bytes] "Philips Medical Systems, Inc."
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,0201) SH Timezone Offset From UTC             [     6 bytes] "+0000"
+(0008,1030) LO Study Description                    [    10 bytes] "Brain-MRA"
+(0008,103E) LO Series Description                   [    20 bytes] "T/S/C RF FAST PILOT"
+(0008,1090) LO Manufacturer's Model Name            [    12 bytes] "Eclipse 1.5T"
+(0010,0010) PN Patient's Name                       [    10 bytes] "Doe^Peter"
+(0010,0020) LO Patient ID                           [     8 bytes] "98890234"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     2 bytes] "M" (Male)
+(0010,1010) AS Patient's Age                        [     4 bytes] 45 years
+(0010,1030) DS Patient's Weight                     [    10 bytes] "81.632700"
+(0012,0062) CS Patient Identity Removed             [     4 bytes] "YES"
+(0012,0063) LO De-identification Method             [   146 bytes] "dcanon", "no identifiers", "ke …
+(0018,0010) LO Contrast/Bolus Agent                 [     0 bytes] ""
+(0018,0020) CS Scanning Sequence                    [     2 bytes] "GR" (Gradient Recalled)
+(0018,0021) CS Sequence Variant                     [     6 bytes] "SS", "SP"
+(0018,0022) CS Scan Options                         [     2 bytes] "FC" (Flow Compensation)
+(0018,0023) CS MR Acquisition Type                  [     0 bytes] ""
+(0018,0050) DS Slice Thickness                      [    12 bytes] "1.000000e+01"
+(0018,0080) DS Repetition Time                      [     2 bytes] "30"
+(0018,0081) DS Echo Time                            [    12 bytes] "1.250000e+01"
+(0018,0083) DS Number of Averages                   [     2 bytes] "2"
+(0018,0084) DS Imaging Frequency                    [    12 bytes] "6.36977e+01"
+(0018,0087) DS Magnetic Field Strength              [     4 bytes] "1.5"
+(0018,0091) IS Echo Train Length                    [     2 bytes] "1"
+(0018,0094) DS Percent Phase Field of View          [     4 bytes] "100"
+(0018,1020) LO Software Versions                    [     6 bytes] "VIA5.2"
+(0018,1030) LO Protocol Name                        [    20 bytes] "T/S/C RF FAST PILOT"
+(0018,1310) US Acquisition Matrix                   [     8 bytes] 256, 0, 0, 160
+(0018,1314) DS Flip Angle                           [     2 bytes] "30"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0020,000D) UI Study Instance UID                   [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0.119 …
+(0020,000E) UI Series Instance UID                  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0.119 …
+(0020,0010) SH Study ID                             [     2 bytes] "2"
+(0020,0011) IS Series Number                        [     2 bytes] "2"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "5"
+(0020,0013) IS Instance Number                      [     2 bytes] "2"
+(0020,0032) DS Image Position (Patient)             [    40 bytes] "-6.964260e-01", "-1.462891e+02 …
+(0020,0037) DS Image Orientation (Patient)          [    74 bytes] "0.00000e+00", "1.00000e+00", " …
+(0020,0052) UI Frame of Reference UID               [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0.119 …
+(0020,0100) IS Temporal Position Identifier         [     2 bytes] "1"
+(0020,0105) IS Number of Temporal Positions         [     2 bytes] "1"
+(0020,0110) DS Temporal Resolution                  [     6 bytes] "32040"
+(0020,1002) IS Images in Acquisition                [     2 bytes] "3"
+(0020,1040) LO Position Reference Indicator         [    10 bytes] "Brain-MRA"
+(0020,1041) DS Slice Location                       [    10 bytes] "-0.696426"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 16
+(0028,0011) US Columns                              [     2 bytes] 16
+(0028,0030) DS Pixel Spacing                        [    26 bytes] "1.171875e+00", "1.171875e+00"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 1
+(0028,1050) DS Window Center                        [     4 bytes] "325"
+(0028,1051) DS Window Width                         [     4 bytes] "761"
+(7FE0,0010) OW Pixel Data                           [   512 bytes] [54 02 4B 02 3A 02 27 02 1E 02  …

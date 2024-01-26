@@ -1,0 +1,23 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    42 bytes] "2.16.840.1.113786.1.329.501.67 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1]))
+(0002,0012) UI Implementation Class UID             [    48 bytes] "1.2.826.0.1.3680043.2.1143.107 …
+(0002,0013) SH Implementation Version Name          [    10 bytes] "GDCM 2.4.4"
+(0002,0016) AE Source Application Entity Title      [     4 bytes] "GDCM"
+(4453,100C) SQ unknown_private_tag
+  (FFFE,E000) Item
+    (0008,1115) SQ Referenced Series Sequence
+      (FFFE,E000) Item
+        (0008,1199) SQ Referenced SOP Sequence
+          (FFFE,E000) Item
+            (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (CT Image Storage)
+            (0008,1155) UI Referenced SOP Instance UID          [    54 bytes] "1.2.840.113619.2.3 …
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (0020,000E) UI Series Instance UID                  [    52 bytes] "1.2.840.113619.2.327.3 …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0020,000D) UI Study Instance UID                   [    52 bytes] "1.2.840.113619.2.327.3.185 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item

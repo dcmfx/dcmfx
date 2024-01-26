@@ -1,0 +1,156 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  checks: read
+  contents: write
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check_semantic_release:
+    name: Check semantic release
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+
+    outputs:
+      new_release_published: ${{ steps.semantic-release.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic-release.outputs.new_release_version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Semantic release dry run
+        id: semantic-release
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          dry_run: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for tests to complete
+        if: steps.semantic-release.outputs.new_release_published == 'true'
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          check-regexp: Test
+  
+  build:
+    name: Build
+    timeout-minutes: 10
+
+    needs: check_semantic_release
+    if: needs.check_semantic_release.outputs.new_release_published == 'true'
+
+    strategy:
+      matrix:
+        target:
+          - aarch64-unknown-linux-musl
+          - x86_64-unknown-linux-musl
+          - aarch64-apple-darwin
+          - x86_64-apple-darwin
+          - x86_64-pc-windows-msvc
+        include:
+          - runs-on: ubuntu-24.04
+            target: aarch64-unknown-linux-musl
+            use-cross: true
+          - runs-on: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+            use-cross: true
+          - runs-on: macos-14
+            target: aarch64-apple-darwin
+            use-cross: false
+          - runs-on: macos-13
+            target: x86_64-apple-darwin
+            use-cross: false
+          - runs-on: windows-2022
+            target: x86_64-pc-windows-msvc
+            use-cross: false
+
+    runs-on: ${{ matrix.runs-on }}
+
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.81.0
+          target: ${{ matrix.target }}
+
+      - name: Enable Rust dependency caching
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: v1-${{ matrix.target }}
+          workspaces: rust
+
+      - name: Set version number in Cargo.toml files
+        working-directory: rust
+        shell: bash
+        run: sed -i'' -E "s/^version = \"0.0.0\"/version = \"${{ needs.check_semantic_release.outputs.new_release_version }}\"/" dcmfx/Cargo.toml dcmfx_cli/Cargo.toml
+
+      - name: Build release binary
+        uses: clechasseur/rs-cargo@v2
+        with:
+          working-directory: rust
+          command: build
+          args: --release --target ${{ matrix.target }} --package dcmfx_cli
+          use-cross: ${{ matrix.use-cross }}
+
+      - name: Package
+        shell: bash
+        run: |
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+            BINARY_SUFFIX=".exe"
+          else
+            BINARY_SUFFIX=""
+          fi
+
+          ARCHIVE="dcmfx-cli-v${{ needs.check_semantic_release.outputs.new_release_version }}-${{ matrix.target }}.tar.gz"
+          cp rust/target/${{ matrix.target }}/release/dcmfx_cli$BINARY_SUFFIX dcmfx$BINARY_SUFFIX
+          tar -czvf "$ARCHIVE" dcmfx$BINARY_SUFFIX
+
+          openssl dgst -r -sha256 -out "$ARCHIVE".sha256 "$ARCHIVE"
+          echo "ASSET=$ARCHIVE" >> $GITHUB_ENV
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dcmfx-cli-${{ matrix.target }}
+          path: |
+            ${{ env.ASSET }}
+            ${{ env.ASSET }}.sha256
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    name: Release
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Semantic release
+        id: semantic-release
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

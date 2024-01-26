@@ -1,0 +1,214 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    38 bytes] "1.2.840.113704.7.1.1.4628.1471 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    20 bytes] "1.3.6.1.4.1.30071.8"
+(0002,0013) SH Implementation Version Name          [    14 bytes] "fo-dicom 2.9.9"
+(0002,0016) AE Source Application Entity Title      [    12 bytes] "BMIQUBSPACS"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    30 bytes] "ORIGINAL", "PRIMARY", "LOCALIZ …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2016-08-19
+(0008,0013) TM Instance Creation Time               [     6 bytes] 14:00:08
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0008,0018) UI SOP Instance UID                     [    38 bytes] "1.2.840.113704.7.1.1.4628.1471 …
+(0008,0020) DA Study Date                           [     8 bytes] 2016-08-19
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2016-08-19
+(0008,0023) DA Content Date                         [     8 bytes] 2016-08-19
+(0008,002A) DT Acquisition DateTime                 [    20 bytes] 2016-08-19T14:00:02+0800
+(0008,0030) TM Study Time                           [     6 bytes] 13:54:50
+(0008,0032) TM Acquisition Time                     [     6 bytes] 14:00:02
+(0008,0033) TM Content Time                         [    14 bytes] 14:00:02
+(0008,0050) SH Accession Number                     [     6 bytes] "108630"
+(0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+(0008,0070) LO Manufacturer                         [     8 bytes] "Philips"
+(0008,0080) LO Institution Name                     [    20 bytes] "JOHNury Med Imaging"
+(0008,0081) ST Institution Address                  [     8 bytes] "JOHNury"
+(0008,0090) PN Referring Physician's Name           [    16 bytes] "JOHNOn^MiThelle"
+(0008,1010) SH Station Name                         [     8 bytes] "BMICT01"
+(0008,1030) LO Study Description                    [    30 bytes] "CT Upper Abdomen with contrast"
+(0008,103E) LO Series Description                   [     8 bytes] "Surview"
+(0008,1040) LO Institutional Department Name        [    10 bytes] "Radiology"
+(0008,1070) PN Operators' Name                      [     0 bytes] ""
+(0008,1090) LO Manufacturer's Model Name            [    14 bytes] "Ingenuity Flex"
+(0008,1111) SQ Referenced Performed Procedure Step Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Modality Performed Procedure Step SOP Class)
+    (0008,1155) UI Referenced SOP Instance UID          [    40 bytes] "1.2.840.113704.1.111.6912. …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,3010) UI Irradiation Event UID                [    38 bytes] "1.2.840.113704.1.111.6220.1471 …
+(0010,0010) PN Patient's Name                       [    14 bytes] "JOHNELL^DOEDOE"
+(0010,0020) LO Patient ID                           [     6 bytes] "105534"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1964-11-30
+(0010,0040) CS Patient's Sex                        [     2 bytes] "F" (Female)
+(0010,1000) LO Other Patient IDs                    [     0 bytes] ""
+(0010,1010) AS Patient's Age                        [     4 bytes] 51 years
+(0010,2000) LO Medical Alerts                       [     0 bytes] ""
+(0018,0022) CS Scan Options                         [     8 bytes] "SURVIEW"
+(0018,0050) DS Slice Thickness                      [     4 bytes] "0.75"
+(0018,0060) DS KVP                                  [     4 bytes] "120"
+(0018,0090) DS Data Collection Diameter             [     4 bytes] "500"
+(0018,1020) LO Software Versions                    [     6 bytes] "3.6.6"
+(0018,1030) LO Protocol Name                        [    18 bytes] "Abdomen C+/Abdomen"
+(0018,1100) DS Reconstruction Diameter              [     4 bytes] "500"
+(0018,1120) DS Gantry/Detector Tilt                 [     2 bytes] "0"
+(0018,1130) DS Table Height                         [    10 bytes] "165.000000"
+(0018,1140) CS Rotation Direction                   [     2 bytes] "CW" (Clockwise)
+(0018,1141) DS Angular Position                     [     4 bytes] "180"
+(0018,1143) DS Scan Arc                             [     4 bytes] "180"
+(0018,1150) IS Exposure Time                        [     4 bytes] "5031"
+(0018,1151) IS X-Ray Tube Current                   [     2 bytes] "50"
+(0018,1160) SH Filter Type                          [     2 bytes] "D"
+(0018,5100) CS Patient Position                     [     4 bytes] "FFS" (Feet First-Supine)
+(0018,9323) CS Exposure Modulation Type             [     4 bytes] "NONE"
+(0018,9345) FD CTDIvol                              [     8 bytes] 0.157
+(0020,000D) UI Study Instance UID                   [    38 bytes] "1.2.840.113704.1.111.6220.1471 …
+(0020,000E) UI Series Instance UID                  [    38 bytes] "1.2.840.113704.1.111.6220.1471 …
+(0020,0010) SH Study ID                             [     4 bytes] "5168"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0012) IS Acquisition Number                   [     0 bytes] ""
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0032) DS Image Position (Patient)             [    20 bytes] "-250", "90", "-0.100006104"
+(0020,0037) DS Image Orientation (Patient)          [    12 bytes] "1", "0", "0", "0", "0", "-1"
+(0020,0052) UI Frame of Reference UID               [    38 bytes] "1.2.840.113704.1.111.6220.1471 …
+(0020,0060) CS Laterality                           [     0 bytes] ""
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0020,1041) DS Slice Location                       [     4 bytes] "0.10"
+(0020,4000) LT Image Comments                       [     8 bytes] "Surview"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0030) DS Pixel Spacing                        [    20 bytes] "0.9765625", "0.9765625"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 12
+(0028,0102) US High Bit                             [     2 bytes] 11
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,1050) DS Window Center                        [    12 bytes] "00500", "00500"
+(0028,1051) DS Window Width                         [    12 bytes] "01000", "01000"
+(0028,1052) DS Rescale Intercept                    [     6 bytes] "-1024"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0032,1060) LO Requested Procedure Description      [    30 bytes] "CT Upper Abdomen with contrast"
+(0032,1070) LO Requested Contrast Agent             [     0 bytes] ""
+(0040,0012) LO Pre-Medication                       [     0 bytes] ""
+(0040,0253) SH Performed Procedure Step ID          [     6 bytes] "516820"
+(0040,0254) LO Performed Procedure Step Description  [    30 bytes] "CT Upper Abdomen with contrast"
+(0040,0275) SQ Request Attributes Sequence
+  (FFFE,E000) Item
+    (0040,0007) LO Scheduled Procedure Step Description  [    30 bytes] "CT Upper Abdomen with con …
+    (0040,0008) SQ Scheduled Protocol Code Sequence
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0040,0009) SH Scheduled Procedure Step ID          [     6 bytes] "108630"
+    (0040,1001) SH Requested Procedure ID               [    30 bytes] "CT Upper Abdomen with cont …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(00E1,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+(00E1,1001) US Data Dictionary Version              [     2 bytes] 1
+(00E1,1002) SH unknown_private_tag                  [     4 bytes] "Age3"
+(00E1,1022) DS Presentation Relative Center         [    12 bytes] "00000", "00000"
+(00E1,1023) DS Presentation Relative Part           [    12 bytes] "00001", "00001"
+(00E1,1036) CS unknown_private_tag                  [     2 bytes] "NO"
+(00E1,1040) SH Image Label                          [     2 bytes] "A"
+(00E1,1042) LO Unknown                              [    14 bytes] "453567-023322"
+(00E1,1061) LO Protocol File Name                   [    28 bytes] "Abdomen_Multi_1203_usr.proc"
+(00E1,1063) SH Patient Language                     [     8 bytes] "ENGLISH"
+(01E1,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+(01E1,1041) OW unknown_private_tag                  [   140 bytes] [E1 01 18 00 F7 01 5E 00 F7 01  …
+(01F1,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+(01F1,1001) CS Acquisition Type                     [     6 bytes] "SLICES"
+(01F1,1002) CS Unknown                              [    10 bytes] "ULTRA FAST"
+(01F1,1004) CS Angular Sampling Density             [     6 bytes] "NORMAL"
+(01F1,1008) DS Acquisition Length                   [     4 bytes] "503"
+(01F1,100A) US Edge Enhancement Weight              [     2 bytes] 0
+(01F1,100C) DS Scanner Relative Center              [     4 bytes] "0", "0"
+(01F1,100D) DS Rotation Angle                       [     2 bytes] "0"
+(01F1,100E) FL Unknown                              [     4 bytes] 0.0
+(01F1,1032) CS Image View Convention                [    14 bytes] "RIGHT_ON_LEFT"
+(01F1,1044) OW Unknown                              [   644 bytes] [AA AA AA AA 15 00 00 00 07 00  …
+(01F1,1046) FL Unknown                              [     4 bytes] 0.75
+(01F1,1047) SH Unknown                              [     2 bytes] "2D"
+(01F1,1049) DS Unknown                              [     8 bytes] "67239936"
+(01F1,104A) SH Unknown                              [     4 bytes] "NONE"
+(01F1,104B) SH Unknown                              [     6 bytes] "4x0.75"
+(01F1,104D) SH Unknown                              [     2 bytes] "NO"
+(01F3,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+(01F3,1011) SQ PS Sequence
+  (FFFE,E000) Item
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (01F3,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+    (01F3,1012) SS Unknown                              [     2 bytes] 1
+    (01F3,1013) FL Unknown                              [     8 bytes] 153.49758911132813, 265.216 …
+    (01F3,1014) FL Unknown                              [     4 bytes] 0.0
+    (01F3,1015) US Unknown                              [     2 bytes] 1
+    (01F3,1016) FL Unknown                              [     4 bytes] 0.0
+    (01F3,1017) FL Unknown                              [     4 bytes] 12.288000106811523
+    (01F3,1018) SH Unknown                              [     8 bytes] "Locator"
+    (01F3,1019) FL Unknown                              [     4 bytes] 409.6000061035156
+    (01F3,1023) US Unknown                              [     2 bytes] 1
+    (01F3,1024) IS Unknown                              [     4 bytes] "0", "0"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (01F3,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+    (01F3,1012) SS Unknown                              [     2 bytes] 3
+    (01F3,1013) FL Unknown                              [     8 bytes] 57.75360107421875, 239.6159 …
+    (01F3,1014) FL Unknown                              [     4 bytes] 0.0
+    (01F3,1015) US Unknown                              [     2 bytes] 412
+    (01F3,1016) FL Unknown                              [     4 bytes] 1.0240000486373901
+    (01F3,1017) FL Unknown                              [     4 bytes] 2.0480000972747803
+    (01F3,1018) SH Unknown                              [    16 bytes] "Abdomen Routine,"
+    (01F3,1019) FL Unknown                              [     4 bytes] 456.7040100097656
+    (01F3,1023) US Unknown                              [     2 bytes] 1
+    (01F3,1024) IS Unknown                              [     4 bytes] "0", "0"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(01F3,1012) SS Unknown                              [     2 bytes] 3
+(01F3,1013) FL Unknown                              [     8 bytes] 57.75360107421875, 239.61599731 …
+(01F3,1014) FL Unknown                              [     4 bytes] 0.0
+(01F3,1015) US Unknown                              [     2 bytes] 412
+(01F3,1016) FL Unknown                              [     4 bytes] 1.0240000486373901
+(01F3,1017) FL Unknown                              [     4 bytes] 2.0480000972747803
+(01F3,1018) SH Unknown                              [    16 bytes] "Abdomen Routine,"
+(01F3,1019) FL Unknown                              [     4 bytes] 456.7040100097656
+(01F3,1023) US Unknown                              [     2 bytes] 1
+(01F3,1024) IS Unknown                              [     4 bytes] "0", "0"
+(01F7,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+(01F7,1010) OB Unknown                              [     2 bytes] [00 00]
+(01F7,1011) OW Unknown                              [   552 bytes] [81 2A 00 00 32 00 00 00 78 00  …
+(01F7,1013) OW Unknown                              [   136 bytes] [43 3A 2F 75 73 72 2F 64 69 61  …
+(01F7,1014) OW Unknown                              [   108 bytes] [66 E6 78 43 00 00 00 00 84 E5  …
+(01F7,1015) OW Unknown                              [   188 bytes] [A0 02 00 00 04 00 00 00 88 04  …
+(01F7,1016) OW Unknown                              [    40 bytes] [62 A0 B6 57 06 00 00 00 06 00  …
+(01F7,1017) OW Unknown                              [     8 bytes] [00 00 00 00 00 00 00 00]
+(01F7,1018) OW Unknown                              [   228 bytes] [00 00 00 00 00 00 00 00 00 00  …
+(01F7,1019) OW Unknown                              [  2160 bytes] [00 00 00 00 01 00 00 00 01 00  …
+(01F7,101A) OW Unknown                              [    28 bytes] [8F C2 31 41 3C 05 00 00 03 00  …
+(01F7,101B) OW Unknown                              [  1744 bytes] [A0 02 00 00 61 69 72 53 5F 73  …
+(01F7,101C) OW Unknown                              [   116 bytes] [01 00 00 00 96 00 00 00 05 00  …
+(01F7,101E) OW Unknown                              [   364 bytes] [00 00 00 00 00 00 00 00 00 00  …
+(01F7,101F) OW Unknown                              [   148 bytes] [00 00 00 00 00 00 00 00 00 00  …
+(01F7,1022) UI Unknown                              [    60 bytes] "1.2.840.113704.1.111.6220.1471 …
+(01F7,1023) OW Unknown                              [     4 bytes] [07 00 00 00]
+(01F7,1025) OW Unknown                              [    12 bytes] [00 00 00 00 00 00 00 00 40 EF  …
+(01F7,1026) OW Unknown                              [  9696 bytes] [2D F2 00 00 01 00 00 00 08 00  …
+(01F7,1027) OW Unknown                              [    64 bytes] [00 00 79 43 00 00 00 00 00 00  …
+(01F7,1029) OW Unknown                              [   440 bytes] [00 40 9C 46 00 F0 D2 46 00 00  …
+(01F7,102B) OW Unknown                              [    36 bytes] [08 00 00 00 8F C2 F5 3D 00 00  …
+(01F7,102C) OW Unknown                              [   656 bytes] [00 00 B0 41 00 00 00 00 00 00  …
+(01F7,102D) OW Unknown                              [     8 bytes] [00 00 00 00 00 00 00 00]
+(01F7,1030) OW Unknown                              [    16 bytes] [00 00 00 00 00 00 00 00 00 00  …
+(01F7,1070) OW Unknown                              [  1312 bytes] [00 00 00 00 00 00 24 40 00 00  …
+(01F7,1073) OW Unknown                              [  6144 bytes] [22 9A C3 41 6F 29 C4 41 8C 7C  …
+(01F7,1075) OW Unknown                              [    40 bytes] [01 00 00 00 04 00 00 00 13 DE  …
+(01F7,107F) OW unknown_private_tag                  [  1312 bytes] [00 00 00 00 00 00 24 40 00 00  …
+(01F7,1091) OW unknown_private_tag                  [  4096 bytes] [02 3B B7 41 24 44 B6 41 94 34  …
+(07A1,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+(07A1,1010) LO Tamar Software Version               [     4 bytes] "3.5"
+(7FDF,0010) LO Variable Pixel Data                  [     8 bytes] "ELSCINT1"
+(7FDF,10F0) OB Unknown                              [     0 bytes] []
+(7FDF,10FF) SH Unknown                              [     0 bytes] ""
+(7FE0,0010) OW Pixel Data                           [524288 bytes] [00 00 00 00 F1 00 F4 00 FF 00  …

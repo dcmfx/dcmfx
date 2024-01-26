@@ -1,0 +1,188 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    30 bytes] "1.2.840 … (VL Whole Slide Microscopy Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    46 bytes] "1.2.826.0.1.3680043.10.296.637 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG Baseline (Process 1))
+(0002,0012) UI Implementation Class UID             [    20 bytes] "1.3.6.1.4.1.30071.8"
+(0002,0013) SH Implementation Version Name          [    14 bytes] "fo-dicom 5.0.1"
+(0008,0008) CS Image Type                           [    32 bytes] "DERIVED", "PRIMARY", "VOLUME", …
+(0008,0016) UI SOP Class UID                        [    30 bytes] "1.2.840 … (VL Whole Slide Microscopy Image Storage)
+(0008,0018) UI SOP Instance UID                     [    46 bytes] "1.2.826.0.1.3680043.10.296.637 …
+(0008,0020) DA Study Date                           [     0 bytes] ""
+(0008,0030) TM Study Time                           [     0 bytes] ""
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "SC"
+(0008,0064) CS Conversion Type                      [     2 bytes] "SI" (Scanned Image)
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0010,0010) PN Patient's Name                       [     0 bytes] ""
+(0010,0020) LO Patient ID                           [     0 bytes] ""
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0018,1016) LO Secondary Capture Device Manufacturer  [     0 bytes] ""
+(0018,1018) LO Secondary Capture Device Manufacturer's Model Name  [     0 bytes] ""
+(0020,000D) UI Study Instance UID                   [     0 bytes] ""
+(0020,000E) UI Series Instance UID                  [    46 bytes] "1.2.826.0.1.3680043.10.296.637 …
+(0020,0010) SH Study ID                             [     0 bytes] ""
+(0020,0011) IS Series Number                        [     0 bytes] ""
+(0020,0013) IS Instance Number                      [     0 bytes] ""
+(0020,0052) UI Frame of Reference UID               [    48 bytes] "1.2.826.0.1.3680043.10.296.637 …
+(0020,9311) CS Dimension Organization Type          [    10 bytes] "TILED_FULL"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 3
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "YBR_FULL_422"
+(0028,0006) US Planar Configuration                 [     2 bytes] 0
+(0028,0008) IS Number of Frames                     [     4 bytes] "140"
+(0028,0010) US Rows                                 [     2 bytes] 240
+(0028,0011) US Columns                              [     2 bytes] 240
+(0028,0030) DS Pixel Spacing                        [    16 bytes] "1.03424", "1.03424"
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 8
+(0028,0102) US High Bit                             [     2 bytes] 7
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
+(0028,2114) CS Lossy Image Compression Method       [    12 bytes] "ISO_109 … (JPEG Lossy Compression [ISO/IEC 10918-1])
+(0048,0001) FL Imaged Volume Width                  [     4 bytes] 3283.7119140625
+(0048,0002) FL Imaged Volume Height                 [     4 bytes] 2359.101318359375
+(0048,0006) UL Total Pixel Matrix Columns           [     4 bytes] 3175
+(0048,0007) UL Total Pixel Matrix Rows              [     4 bytes] 2281
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [   560 bytes] 
+  (FFFE,E000) Item                                    [  1112 bytes] 
+  (FFFE,E000) Item                                    [   956 bytes] 
+  (FFFE,E000) Item                                    [  1054 bytes] 
+  (FFFE,E000) Item                                    [  1010 bytes] 
+  (FFFE,E000) Item                                    [  1012 bytes] 
+  (FFFE,E000) Item                                    [  1048 bytes] 
+  (FFFE,E000) Item                                    [  1190 bytes] 
+  (FFFE,E000) Item                                    [  1678 bytes] 
+  (FFFE,E000) Item                                    [  2138 bytes] 
+  (FFFE,E000) Item                                    [  2582 bytes] 
+  (FFFE,E000) Item                                    [  4316 bytes] 
+  (FFFE,E000) Item                                    [  3872 bytes] 
+  (FFFE,E000) Item                                    [  5292 bytes] 
+  (FFFE,E000) Item                                    [   434 bytes] 
+  (FFFE,E000) Item                                    [  3762 bytes] 
+  (FFFE,E000) Item                                    [  5926 bytes] 
+  (FFFE,E000) Item                                    [  4742 bytes] 
+  (FFFE,E000) Item                                    [  5038 bytes] 
+  (FFFE,E000) Item                                    [  5814 bytes] 
+  (FFFE,E000) Item                                    [  5120 bytes] 
+  (FFFE,E000) Item                                    [  5054 bytes] 
+  (FFFE,E000) Item                                    [  4646 bytes] 
+  (FFFE,E000) Item                                    [  4576 bytes] 
+  (FFFE,E000) Item                                    [  3656 bytes] 
+  (FFFE,E000) Item                                    [  3840 bytes] 
+  (FFFE,E000) Item                                    [  4522 bytes] 
+  (FFFE,E000) Item                                    [  4500 bytes] 
+  (FFFE,E000) Item                                    [   546 bytes] 
+  (FFFE,E000) Item                                    [  4206 bytes] 
+  (FFFE,E000) Item                                    [  5188 bytes] 
+  (FFFE,E000) Item                                    [  5646 bytes] 
+  (FFFE,E000) Item                                    [  5540 bytes] 
+  (FFFE,E000) Item                                    [  6012 bytes] 
+  (FFFE,E000) Item                                    [  6364 bytes] 
+  (FFFE,E000) Item                                    [  6190 bytes] 
+  (FFFE,E000) Item                                    [  5760 bytes] 
+  (FFFE,E000) Item                                    [  4902 bytes] 
+  (FFFE,E000) Item                                    [  4252 bytes] 
+  (FFFE,E000) Item                                    [  3920 bytes] 
+  (FFFE,E000) Item                                    [  5226 bytes] 
+  (FFFE,E000) Item                                    [  4712 bytes] 
+  (FFFE,E000) Item                                    [   470 bytes] 
+  (FFFE,E000) Item                                    [  3622 bytes] 
+  (FFFE,E000) Item                                    [  5482 bytes] 
+  (FFFE,E000) Item                                    [  5972 bytes] 
+  (FFFE,E000) Item                                    [  5464 bytes] 
+  (FFFE,E000) Item                                    [  5842 bytes] 
+  (FFFE,E000) Item                                    [  5460 bytes] 
+  (FFFE,E000) Item                                    [  5084 bytes] 
+  (FFFE,E000) Item                                    [  5464 bytes] 
+  (FFFE,E000) Item                                    [  5822 bytes] 
+  (FFFE,E000) Item                                    [  5990 bytes] 
+  (FFFE,E000) Item                                    [  4794 bytes] 
+  (FFFE,E000) Item                                    [  5212 bytes] 
+  (FFFE,E000) Item                                    [  3924 bytes] 
+  (FFFE,E000) Item                                    [   596 bytes] 
+  (FFFE,E000) Item                                    [  3022 bytes] 
+  (FFFE,E000) Item                                    [  4632 bytes] 
+  (FFFE,E000) Item                                    [  5562 bytes] 
+  (FFFE,E000) Item                                    [  5620 bytes] 
+  (FFFE,E000) Item                                    [  5454 bytes] 
+  (FFFE,E000) Item                                    [  5648 bytes] 
+  (FFFE,E000) Item                                    [  5218 bytes] 
+  (FFFE,E000) Item                                    [  5868 bytes] 
+  (FFFE,E000) Item                                    [  5138 bytes] 
+  (FFFE,E000) Item                                    [  6006 bytes] 
+  (FFFE,E000) Item                                    [  5622 bytes] 
+  (FFFE,E000) Item                                    [  5872 bytes] 
+  (FFFE,E000) Item                                    [  4940 bytes] 
+  (FFFE,E000) Item                                    [   442 bytes] 
+  (FFFE,E000) Item                                    [  3068 bytes] 
+  (FFFE,E000) Item                                    [  4540 bytes] 
+  (FFFE,E000) Item                                    [  4654 bytes] 
+  (FFFE,E000) Item                                    [  4738 bytes] 
+  (FFFE,E000) Item                                    [  4780 bytes] 
+  (FFFE,E000) Item                                    [  6282 bytes] 
+  (FFFE,E000) Item                                    [  5190 bytes] 
+  (FFFE,E000) Item                                    [  4672 bytes] 
+  (FFFE,E000) Item                                    [  5428 bytes] 
+  (FFFE,E000) Item                                    [  5916 bytes] 
+  (FFFE,E000) Item                                    [  6612 bytes] 
+  (FFFE,E000) Item                                    [  6168 bytes] 
+  (FFFE,E000) Item                                    [  5408 bytes] 
+  (FFFE,E000) Item                                    [   442 bytes] 
+  (FFFE,E000) Item                                    [  1764 bytes] 
+  (FFFE,E000) Item                                    [  2416 bytes] 
+  (FFFE,E000) Item                                    [  3212 bytes] 
+  (FFFE,E000) Item                                    [  4332 bytes] 
+  (FFFE,E000) Item                                    [  3972 bytes] 
+  (FFFE,E000) Item                                    [  4778 bytes] 
+  (FFFE,E000) Item                                    [  5914 bytes] 
+  (FFFE,E000) Item                                    [  4740 bytes] 
+  (FFFE,E000) Item                                    [  5574 bytes] 
+  (FFFE,E000) Item                                    [  4636 bytes] 
+  (FFFE,E000) Item                                    [  6342 bytes] 
+  (FFFE,E000) Item                                    [  5318 bytes] 
+  (FFFE,E000) Item                                    [  5694 bytes] 
+  (FFFE,E000) Item                                    [   502 bytes] 
+  (FFFE,E000) Item                                    [   828 bytes] 
+  (FFFE,E000) Item                                    [   896 bytes] 
+  (FFFE,E000) Item                                    [  2250 bytes] 
+  (FFFE,E000) Item                                    [  4168 bytes] 
+  (FFFE,E000) Item                                    [  3450 bytes] 
+  (FFFE,E000) Item                                    [  5258 bytes] 
+  (FFFE,E000) Item                                    [  4018 bytes] 
+  (FFFE,E000) Item                                    [  5298 bytes] 
+  (FFFE,E000) Item                                    [  5036 bytes] 
+  (FFFE,E000) Item                                    [  5406 bytes] 
+  (FFFE,E000) Item                                    [  5162 bytes] 
+  (FFFE,E000) Item                                    [  8562 bytes] 
+  (FFFE,E000) Item                                    [  5692 bytes] 
+  (FFFE,E000) Item                                    [   474 bytes] 
+  (FFFE,E000) Item                                    [  1046 bytes] 
+  (FFFE,E000) Item                                    [   982 bytes] 
+  (FFFE,E000) Item                                    [  2082 bytes] 
+  (FFFE,E000) Item                                    [  4104 bytes] 
+  (FFFE,E000) Item                                    [  4502 bytes] 
+  (FFFE,E000) Item                                    [  4788 bytes] 
+  (FFFE,E000) Item                                    [  4580 bytes] 
+  (FFFE,E000) Item                                    [  5596 bytes] 
+  (FFFE,E000) Item                                    [  4334 bytes] 
+  (FFFE,E000) Item                                    [  5610 bytes] 
+  (FFFE,E000) Item                                    [  4852 bytes] 
+  (FFFE,E000) Item                                    [  5768 bytes] 
+  (FFFE,E000) Item                                    [  4752 bytes] 
+  (FFFE,E000) Item                                    [   450 bytes] 
+  (FFFE,E000) Item                                    [   840 bytes] 
+  (FFFE,E000) Item                                    [  1116 bytes] 
+  (FFFE,E000) Item                                    [  1650 bytes] 
+  (FFFE,E000) Item                                    [  4258 bytes] 
+  (FFFE,E000) Item                                    [  3686 bytes] 
+  (FFFE,E000) Item                                    [  4138 bytes] 
+  (FFFE,E000) Item                                    [  3668 bytes] 
+  (FFFE,E000) Item                                    [  2834 bytes] 
+  (FFFE,E000) Item                                    [  2338 bytes] 
+  (FFFE,E000) Item                                    [  1606 bytes] 
+  (FFFE,E000) Item                                    [   642 bytes] 
+  (FFFE,E000) Item                                    [   708 bytes] 
+  (FFFE,E000) Item                                    [   616 bytes] 
+  (FFFE,E000) Item                                    [   488 bytes] 
+(FFFE,E0DD) Sequence Delimitation Item

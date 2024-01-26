@@ -1,0 +1,337 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (Positron Emission Tomography Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    44 bytes] "1.2.840.113619.2.131.9999.1414 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1]))
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.826.0.1.3680043.2.1585.1"
+(0002,0013) SH Implementation Version Name          [    14 bytes] "MGDicom 4.10.2"
+(0002,0016) AE Source Application Entity Title      [    14 bytes] "EPICBP-REMOTE"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    16 bytes] "ORIGINAL", "PRIMARY"
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2014-10-23
+(0008,0013) TM Instance Creation Time               [    10 bytes] 11:25:53
+(0008,0014) UI Instance Creator UID                 [    24 bytes] "1.2.840.113619.1.99.9999"
+(0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Positron Emission Tomography Image Storage)
+(0008,0018) UI SOP Instance UID                     [    44 bytes] "1.2.840.113619.2.131.9999.1414 …
+(0008,0020) DA Study Date                           [     8 bytes] 2014-10-23
+(0008,0021) DA Series Date                          [     8 bytes] 2014-10-23
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2014-10-23
+(0008,0023) DA Content Date                         [     8 bytes] 2014-10-23
+(0008,0030) TM Study Time                           [    14 bytes] 10:58:17
+(0008,0031) TM Series Time                          [    10 bytes] 11:00:36
+(0008,0032) TM Acquisition Time                     [    10 bytes] 11:00:36
+(0008,0033) TM Content Time                         [    10 bytes] 11:04:58
+(0008,0050) SH Accession Number                     [    10 bytes] "A143023056"
+(0008,0060) CS Modality                             [     2 bytes] "PT" (Positron emission tomography (PET))
+(0008,0070) LO Manufacturer                         [    18 bytes] "GE MEDICAL SYSTEMS"
+(0008,0080) LO Institution Name                     [    12 bytes] "SanRaffaele"
+(0008,0090) PN Referring Physician's Name           [     8 bytes] "S029729"
+(0008,1030) LO Study Description                    [    32 bytes] "Tomoscintigrafia PET total body"
+(0008,103E) LO Series Description                   [    18 bytes] "PET  7S 6IT 6 POST"
+(0008,1060) PN Name of Physician(s) Reading Study   [     2 bytes] "GP"
+(0008,1070) PN Operators' Name                      [     2 bytes] "VC"
+(0008,1090) LO Manufacturer's Model Name            [    12 bytes] "Discovery ST"
+(0008,1120) SQ Referenced Patient Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Detached Patient Management SOP Class)
+    (0008,1155) UI Referenced SOP Instance UID          [    52 bytes] "1.2.124.113532.172.29.200. …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0009,0010) LO Private Creator                      [    12 bytes] "GEMS_PETD_01"
+(0009,1001) LO GE Discovery PET Implementation Version Name  [    16 bytes] "GE Discovery ST"
+(0009,1002) LO PET patient_id                       [    14 bytes] "SanRaffa162580"
+(0009,1003) SH PET compatible_version               [     6 bytes] "05.00"
+(0009,1004) SH GE Advance Patient.software_version  [     6 bytes] "26.14"
+(0009,1005) DT PET patient_datetime                 [    18 bytes] 2014-10-23T10:58:51
+(0009,1006) SL PET type                             [     4 bytes] 0
+(0009,1007) UI PET exam_id                          [    52 bytes] "1.2.840.113619.2.55.1.17629278 …
+(0009,1008) SH PET compatible_version               [     6 bytes] "05.00"
+(0009,1009) SH PET software_version                 [     6 bytes] "26.14"
+(0009,100A) UI PET scan_id                          [    46 bytes] "1.2.840.113619.2.131.9999.1414 …
+(0009,100B) SH PET compatible_version               [     6 bytes] "DSTM4"
+(0009,100C) SH PET software_version                 [     6 bytes] "26.14"
+(0009,100D) DT PET scan_datetime                    [    18 bytes] 2014-10-23T11:00:36
+(0009,100E) DT PET scan_ready                       [    18 bytes] 2014-10-23T11:00:35
+(0009,100F) ST PET scan_description                 [    28 bytes] "PET CT INFERIOR TO SUPERIOR"
+(0009,1010) LO PET hospital_name                    [    12 bytes] "SanRaffaele"
+(0009,1011) LO PET scanner_desc                     [    12 bytes] "Discovery ST"
+(0009,1012) LO PET manufacturer                     [    18 bytes] "GE MEDICAL SYSTEMS"
+(0009,1013) UI PET for_identifier                   [    62 bytes] "1.2.840.113619.2.55.1.17629278 …
+(0009,1014) LO PET landmark_name                    [    20 bytes] "Orbital Meatal Line"
+(0009,1015) SH PET landmark_abbrev                  [     2 bytes] "OM"
+(0009,1016) SL PET patient_position                 [     4 bytes] 0
+(0009,1017) SL PET scan_perspective                 [     4 bytes] 0
+(0009,1018) SL PET scan_type                        [     4 bytes] 0
+(0009,1019) SL PET scan_mode                        [     4 bytes] 0
+(0009,101A) SL PET start_condition                  [     4 bytes] 1
+(0009,101B) SL PET start_cond_data                  [     4 bytes] 0
+(0009,101C) SL PET sel_stop_cond                    [     4 bytes] 1
+(0009,101D) SL PET sel_stop_cond_data               [     4 bytes] 0
+(0009,101E) SL PET collect_deadtime                 [     4 bytes] 1
+(0009,101F) SL PET collect_singles                  [     4 bytes] 1
+(0009,1020) SL PET collect_countrate                [     4 bytes] 0
+(0009,1021) SL PET countrate_period                 [     4 bytes] 1
+(0009,1022) SL PET delayed_events                   [     4 bytes] 1
+(0009,1023) SL PET delayed_bias                     [     4 bytes] 0
+(0009,1024) SL PET word_size                        [     4 bytes] 2
+(0009,1025) SL PET axial_acceptance                 [     4 bytes] 5
+(0009,1026) SL PET axial_angle_3d                   [     4 bytes] 5
+(0009,1027) SL PET theta_compression                [     4 bytes] 1
+(0009,1028) SL PET axial_compression                [     4 bytes] 1
+(0009,1029) FL PET gantry_tilt_angle                [     4 bytes] 0.0
+(0009,102A) SL PET collimation                      [     4 bytes] 1
+(0009,102B) SL PET scan_fov                         [     4 bytes] 70
+(0009,102C) SL PET axial_fov                        [     4 bytes] 157
+(0009,102D) SL PET event_separation                 [     4 bytes] 24
+(0009,102E) SL PET mask_width                       [     4 bytes] 0
+(0009,1034) SL PET triggers_acquired                [     4 bytes] 0
+(0009,1035) SL PET triggers_rejected                [     4 bytes] 0
+(0009,1036) LO PET tracer_name                      [    26 bytes] "FDG -- fluorodeoxyglucose"
+(0009,1038) FL PET tracer_activity                  [     4 bytes] 481.0
+(0009,1039) DT PET meas_datetime                    [    18 bytes] 2014-10-23T09:30:00
+(0009,103A) FL PET pre_inj_volume                   [     4 bytes] 0.0
+(0009,103B) DT PET admin_datetime                   [    18 bytes] 2014-10-23T09:32:00
+(0009,103C) FL PET post_inj_activity                [     4 bytes] 0.3700000047683716
+(0009,103D) DT PET post_inj_datetime                [    18 bytes] 2014-10-23T09:33:00
+(0009,103E) SH PET radionuclide_name                [     4 bytes] "18F"
+(0009,103F) FL PET half_life                        [     4 bytes] 6588.0
+(0009,1040) FL PET positron_fraction                [     4 bytes] 0.9700000286102295
+(0009,104D) SL PET emission_present                 [     4 bytes] 0
+(0009,104E) SL PET lower_axial_acc                  [     4 bytes] 5
+(0009,104F) SL PET upper_axial_acc                  [     4 bytes] 5
+(0009,1050) SL PET lower_coinc_limit                [     4 bytes] 4
+(0009,1051) SL PET upper_coinc_limit                [     4 bytes] 4
+(0009,1052) SL PET coinc_delay_offset               [     4 bytes] 32
+(0009,1053) SL PET coinc_output_mode                [     4 bytes] 800
+(0009,1054) SL PET upper_energy_limit               [     4 bytes] 650
+(0009,1055) SL PET lower_energy_limit               [     4 bytes] 375
+(0009,1056) UI PET normal_cal_id                    [    44 bytes] "1.2.840.113619.2.131.9999.1408 …
+(0009,1057) UI PET normal_2d_cal_id                 [    44 bytes] "1.2.840.113619.2.131.9999.1408 …
+(0009,1059) UI PET wc_cal_id                        [    44 bytes] "1.2.840.113619.2.131.9999.1408 …
+(0009,105A) SL PET derived                          [     4 bytes] 0
+(0009,105C) UI PET frame_id                         [    44 bytes] "1.2.840.113619.2.131.9999.1414 …
+(0009,105D) UI PET scan_id                          [    46 bytes] "1.2.840.113619.2.131.9999.1414 …
+(0009,105E) UI PET exam_id                          [    52 bytes] "1.2.840.113619.2.55.1.17629278 …
+(0009,105F) LO PET patient_id                       [    14 bytes] "SanRaffa162580"
+(0009,1060) SH PET compatible_version               [     6 bytes] "DSTM4"
+(0009,1061) SH PET software_version                 [     6 bytes] "26.14"
+(0009,1062) ST PET where_is_frame                   [    40 bytes] "/dos/BUBOXRAA/OILDJXLC/HHWMGLG …
+(0009,1063) SL PET frame_size                       [     4 bytes] 9880176
+(0009,1064) SL PET file_exists                      [     4 bytes] 0
+(0009,1065) SL PET patient_entry                    [     4 bytes] 0
+(0009,1066) FL PET table_height                     [     4 bytes] 132.0
+(0009,1067) FL PET table_z_position                 [     4 bytes] 1470.5
+(0009,1068) DT PET landmark_datetime                [    18 bytes] 2014-10-23T11:00:21
+(0009,1069) SL PET slice_count                      [     4 bytes] 47
+(0009,106A) FL PET start_location                   [     4 bytes] -908.2999877929688
+(0009,106B) SL PET acq_delay                        [     4 bytes] 0
+(0009,106C) DT PET acq_start                        [    18 bytes] 2014-10-23T11:00:36
+(0009,106D) SL PET acq_duration                     [     4 bytes] 240
+(0009,1070) SL PET actual_stop_cond                 [     4 bytes] 0
+(0009,1071) FD PET total_prompts                    [     8 bytes] 9661279.0
+(0009,1072) FD PET total_delays                     [     8 bytes] 2965538.0
+(0009,1073) SL PET frame_valid                      [     4 bytes] 1
+(0009,1074) SL PET validity_info                    [     4 bytes] 255
+(0009,1075) SL PET archived                         [     4 bytes] 0
+(0009,1076) SL PET compression                      [     4 bytes] 0
+(0009,1077) SL PET uncompressed_size                [     4 bytes] 9880176
+(0009,1079) SH PET compatible_version               [     6 bytes] "05.00"
+(0009,107A) SH PET software_version                 [     6 bytes] "26.14"
+(0009,107B) DT PET is_datetime                      [    18 bytes] 2014-10-23T11:04:58
+(0009,107C) SL PET is_source                        [     4 bytes] 0
+(0009,107D) SL PET is_contents                      [     4 bytes] 2
+(0009,107E) SL PET is_type                          [     4 bytes] 0
+(0009,107F) DS PET is_reference                     [     6 bytes] "0", "0", "-0"
+(0009,1080) SL PET multi_patient                    [     4 bytes] 0
+(0009,1084) FL PET rotate                           [     4 bytes] 0.0
+(0009,1085) SL PET flip                             [     4 bytes] 0
+(0009,1086) FL PET zoom                             [     4 bytes] 1.0
+(0009,1087) SL PET pan_x                            [     4 bytes] 0
+(0009,1088) SL PET pan_y                            [     4 bytes] 0
+(0009,108B) SL PET recon_method                     [     4 bytes] 2
+(0009,108C) SL PET attenuation                      [     4 bytes] 2
+(0009,108D) FL PET atten_coefficient                [     4 bytes] 0.09600000083446503
+(0009,108E) SL PET bp_filter                        [     4 bytes] 0
+(0009,1090) SL PET bp_filter_order                  [     4 bytes] 0
+(0009,1091) FL PET bp_center_l                      [     4 bytes] 0.0
+(0009,1092) FL PET bp_center_p                      [     4 bytes] 0.0
+(0009,1093) SL PET atten_smooth                     [     4 bytes] 0
+(0009,1094) SL PET atten_smooth_param               [     4 bytes] 0
+(0009,1095) SL PET angle_smooth_param               [     4 bytes] 0
+(0009,1096) UI PET wellcountercal_id                [    44 bytes] "1.2.840.113619.2.131.9999.1408 …
+(0009,1097) UI PET trans_scan_id                    [    46 bytes] "1.2.840.113619.2.131.9999.1414 …
+(0009,1098) UI PET norm_cal_id                      [    44 bytes] "1.2.840.113619.2.131.9999.1408 …
+(0009,109A) FL PET cac_edge_threshold               [     4 bytes] 0.0
+(0009,109B) FL PET cac_skull_offset                 [     4 bytes] 0.0
+(0009,10A4) SH PET compatible_version               [     6 bytes] "05.00"
+(0009,10A5) SH PET software_version                 [     6 bytes] "26.14"
+(0009,10A6) SL PET slice_number                     [     4 bytes] 1
+(0009,10A7) FL PET total_counts                     [     4 bytes] 28776.0
+(0009,10AA) SL PET archived                         [     4 bytes] 0
+(0009,10AB) FL PET bp_center_x                      [     4 bytes] -0.0
+(0009,10AC) FL PET bp_center_y                      [     4 bytes] 0.0
+(0009,10AD) UI PET trans_frame_id                   [    46 bytes] "1.2.840.113619.2.131.9999.1414 …
+(0009,10B2) SL PET ir_num_iterations                [     4 bytes] 6
+(0009,10B3) SL PET ir_num_subsets                   [     4 bytes] 7
+(0009,10B4) FL PET ir_recon_fov                     [     4 bytes] 70.0
+(0009,10B6) SL PET ir_loop_filter                   [     4 bytes] 0
+(0009,10B8) SL PET ir_loop_filt_parm                [     4 bytes] 0
+(0009,10B9) FL PET response_filt_parm               [     4 bytes] 0.0
+(0009,10BA) SL PET post_filter                      [     4 bytes] 1
+(0009,10BB) FL PET post_filt_parm                   [     4 bytes] 6.0
+(0009,10C7) SL PET overlap                          [     4 bytes] 0
+(0009,10CB) FL PET vqc_x_axis_trans                 [     4 bytes] 0.10516700148582458
+(0009,10CC) FL PET vqc_x_axis_tilt                  [     4 bytes] 0.13002799451351166
+(0009,10CD) FL PET vqc_y_axis_trans                 [     4 bytes] 1.5561569929122925
+(0009,10CE) FL PET vqc_y_axis_swivel                [     4 bytes] 0.05183099955320358
+(0009,10CF) FL PET vqc_z_axis_trans                 [     4 bytes] 1.2999999523162842
+(0009,10D0) FL PET vqc_z_axis_roll                  [     4 bytes] 0.13645799458026886
+(0009,10D5) FL PET loop_filter_parm                 [     4 bytes] 0.0
+(0009,10D6) FL PET image_one_loc                    [     4 bytes] -38.47999954223633
+(0009,10D7) FL PET image_index_loc                  [     4 bytes] -908.2999877929688
+(0009,10D8) SL PET frame_number                     [     4 bytes] 1
+(0010,0010) PN Patient's Name                       [    16 bytes] "xxxxxxxxx^xxxxx"
+(0010,0020) LO Patient ID                           [     6 bytes] "999999"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1700-01-01
+(0010,0040) CS Patient's Sex                        [     2 bytes] "O" (Other)
+(0010,1010) AS Patient's Age                        [     4 bytes] 0 years
+(0010,1020) DS Patient's Size                       [    16 bytes] "1.7000000476837"
+(0010,1030) DS Patient's Weight                     [     2 bytes] "90"
+(0010,21B0) LT Additional Patient History           [     0 bytes] ""
+(0011,0010) LO Private Creator                      [    12 bytes] "GEMS_PETD_01"
+(0011,1001) SQ GE Advance ROI Sequence
+  (FFFE,E000) Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0013,0010) LO Private Creator                      [    12 bytes] "GEMS_PETD_01"
+(0013,1001) SQ GE Advance Annotation Sequence
+  (FFFE,E000) Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0018,0050) DS Slice Thickness                      [    16 bytes] "3.2699999809265"
+(0018,0071) CS Acquisition Termination Condition    [     4 bytes] "TIME" (Preset time limit was reached)
+(0018,0073) CS Acquisition Start Condition          [     4 bytes] "MANU"
+(0018,0074) IS Acquisition Start Condition Data     [     2 bytes] "0"
+(0018,0075) IS Acquisition Termination Condition Data  [     2 bytes] "0"
+(0018,1020) LO Software Versions                    [     6 bytes] "26.14"
+(0018,1040) LO Contrast/Bolus Route                 [     0 bytes] ""
+(0018,1083) IS Intervals Acquired                   [     2 bytes] "0"
+(0018,1084) IS Intervals Rejected                   [     2 bytes] "0"
+(0018,1100) DS Reconstruction Diameter              [     4 bytes] "700"
+(0018,1120) DS Gantry/Detector Tilt                 [     2 bytes] "0"
+(0018,1130) DS Table Height                         [     4 bytes] "132"
+(0018,1147) CS Field of View Shape                  [    16 bytes] "CYLINDRICAL RING"
+(0018,1149) IS Field of View Dimension(s)           [     8 bytes] "700", "157"
+(0018,1181) CS Collimator Type                      [     4 bytes] "RING"
+(0018,1242) IS Actual Frame Duration                [     6 bytes] "240000"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0020,000D) UI Study Instance UID                   [    52 bytes] "1.2.124.113532.80.22178.12191. …
+(0020,000E) UI Series Instance UID                  [    44 bytes] "1.2.840.113619.2.131.9999.1414 …
+(0020,0010) SH Study ID                             [     6 bytes] "20826"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     4 bytes] "267"
+(0020,0032) DS Image Position (Patient)             [    50 bytes] "-347.26562500000", "-347.26562 …
+(0020,0037) DS Image Orientation (Patient)          [    12 bytes] "1", "0", "0", "0", "1", "-0"
+(0020,0052) UI Frame of Reference UID               [    62 bytes] "1.2.840.113619.2.55.1.17629278 …
+(0020,1040) LO Position Reference Indicator         [    20 bytes] "Orbital Meatal Line"
+(0020,1041) DS Slice Location                       [    16 bytes] "-908.29998779296"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 128
+(0028,0011) US Columns                              [     2 bytes] 128
+(0028,0030) DS Pixel Spacing                        [    16 bytes] "5.46875", "5.46875"
+(0028,0051) CS Corrected Image                      [    46 bytes] "DECY", "ATTN", "SCAT", "DTIM", …
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 1
+(0028,1052) DS Rescale Intercept                    [     2 bytes] "0"
+(0028,1053) DS Rescale Slope                        [     8 bytes] "0.234542"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
+(0031,0010) LO Private Creator                      [    32 bytes] "AGFA PACS Archive Mirroring 1.0"
+(0031,1000) CS Unknown                              [     2 bytes] "N"
+(0031,1001) UL Unknown                              [     4 bytes] 1414055890
+(0032,000A) CS Study Status ID                      [     8 bytes] "STARTED"
+(0032,1033) LO Requesting Service                   [     2 bytes] "N"
+(0033,0010) LO Private Creator                      [    32 bytes] "MITRA OBJECT UTF8 ATTRIBUTES 1 …
+(0033,1004) CS Study Description                    [    32 bytes] "Tomoscintigrafia PET total body"
+(0033,1013) PN Patient's Name Single Byte           [    16 bytes] "xxxxxxxxx^xxxxx"
+(0038,0300) LO Current Patient Location             [     2 bytes] "0-"
+(0040,1001) SH Requested Procedure ID               [    10 bytes] "A143023056"
+(0054,0013) SQ Energy Window Range Sequence
+  (FFFE,E000) Item
+    (0054,0014) DS Energy Window Lower Limit            [    16 bytes] "000000000000375"
+    (0054,0015) DS Energy Window Upper Limit            [    16 bytes] "000000000000650"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,0016) SQ Radiopharmaceutical Information Sequence
+  (FFFE,E000) Item
+    (0018,0031) LO Radiopharmaceutical                  [    26 bytes] "FDG -- fluorodeoxyglucose"
+    (0018,1071) DS Radiopharmaceutical Volume           [     2 bytes] "0"
+    (0018,1072) TM Radiopharmaceutical Start Time       [    10 bytes] 09:32:00
+    (0018,1074) DS Radionuclide Total Dose              [    14 bytes] "474592928"
+    (0018,1075) DS Radionuclide Half Life               [     4 bytes] "6588"
+    (0018,1076) DS Radionuclide Positron Fraction       [    16 bytes] "0.97000002861023"
+    (0054,0300) SQ Radionuclide Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     8 bytes] "C-111A1"
+        (0008,0102) SH Coding Scheme Designator             [     6 bytes] "99SDM"
+        (0008,0104) LO Code Meaning                         [     4 bytes] "18F"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0054,0304) SQ Radiopharmaceutical Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     8 bytes] "Y-X1743"
+        (0008,0102) SH Coding Scheme Designator             [     6 bytes] "99SDM"
+        (0008,0104) LO Code Meaning                         [    26 bytes] "FDG -- fluorodeoxygluc …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,0081) US Number of Slices                     [     2 bytes] 267
+(0054,0101) US Number of Time Slices                [     2 bytes] 6
+(0054,0202) CS Type of Detector Motion              [     4 bytes] "NONE"
+(0054,0410) SQ Patient Orientation Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     8 bytes] "F-10450"
+    (0008,0102) SH Coding Scheme Designator             [     6 bytes] "99SDM"
+    (0008,0104) LO Code Meaning                         [    10 bytes] "recumbent"
+    (0054,0412) SQ Patient Orientation Modifier Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     8 bytes] "F-10340"
+        (0008,0102) SH Coding Scheme Designator             [     6 bytes] "99SDM"
+        (0008,0104) LO Code Meaning                         [     6 bytes] "supine"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,0414) SQ Patient Gantry Relationship Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     8 bytes] "F-10470"
+    (0008,0102) SH Coding Scheme Designator             [     6 bytes] "99SDM"
+    (0008,0104) LO Code Meaning                         [    10 bytes] "headfirst"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0054,1000) CS Series Type                          [    12 bytes] "STATIC", "IMAGE"
+(0054,1001) CS Units                                [     4 bytes] "BQML"
+(0054,1002) CS Counts Source                        [     8 bytes] "EMISSION"
+(0054,1100) CS Randoms Correction Method            [     4 bytes] "DLYD"
+(0054,1101) LO Attenuation Correction Method        [    26 bytes] "measured,, 0.096000 cm-1,"
+(0054,1102) CS Decay Correction                     [     6 bytes] "START"
+(0054,1103) LO Reconstruction Method                [     4 bytes] "OSEM"
+(0054,1105) LO Scatter Correction Method            [    24 bytes] "Convolution subtraction"
+(0054,1201) IS Axial Mash                           [     4 bytes] "3", "2"
+(0054,1202) IS Transverse Mash                      [     2 bytes] "2"
+(0054,1210) DS Coincidence Window Width             [     2 bytes] "0"
+(0054,1220) CS Secondary Counts Type                [     4 bytes] "DLYD"
+(0054,1300) DS Frame Reference Time                 [     2 bytes] "0"
+(0054,1310) IS Primary (Prompts) Counts Accumulated  [     6 bytes] "36583"
+(0054,1311) IS Secondary Counts Accumulated         [     4 bytes] "7807"
+(0054,1320) DS Slice Sensitivity Factor             [     8 bytes] "3.22947"
+(0054,1321) DS Decay Factor                         [     8 bytes] "1.01268"
+(0054,1322) DS Dose Calibration Factor              [    10 bytes] "143"
+(0054,1323) DS Scatter Fraction Factor              [     8 bytes] "0.160688"
+(0054,1330) US Image Index                          [     2 bytes] 1
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     0 bytes] 
+  (FFFE,E000) Item                                    [ 14392 bytes] 
+(FFFE,E0DD) Sequence Delimitation Item

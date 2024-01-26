@@ -1,0 +1,310 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.4.50"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "SECONDARY",
+      "OTHER"
+    ],
+    "vr": "CS"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.7"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.826.0.1.3680043.2.1143.6844246171068686447348170864099716226"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20170101"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "vr": "DA"
+  },
+  "0008002A": {
+    "vr": "DT"
+  },
+  "00080030": {
+    "Value": [
+      "120000"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "OT"
+    ],
+    "vr": "CS"
+  },
+  "00080064": {
+    "Value": [
+      "SYN"
+    ],
+    "vr": "CS"
+  },
+  "00080090": {
+    "Value": [
+      {
+        "Alphabetic": "Moriarty^James"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00082111": {
+    "Value": [
+      "lossy conversion"
+    ],
+    "vr": "ST"
+  },
+  "00082112": {
+    "Value": [
+      {
+        "00081150": {
+          "Value": [
+            "1.2.840.10008.5.1.4.1.1.7"
+          ],
+          "vr": "UI"
+        },
+        "00081155": {
+          "Value": [
+            "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116"
+          ],
+          "vr": "UI"
+        },
+        "0040A170": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "121320"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "DCM"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Uncompressed predecessor"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00089215": {
+    "Value": [
+      {
+        "00080100": {
+          "Value": [
+            "113040"
+          ],
+          "vr": "SH"
+        },
+        "00080102": {
+          "Value": [
+            "DCM"
+          ],
+          "vr": "SH"
+        },
+        "00080104": {
+          "Value": [
+            "Lossy Compression"
+          ],
+          "vr": "LO"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "Lestrade^G"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "ID1"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "F"
+    ],
+    "vr": "CS"
+  },
+  "00101010": {
+    "Value": [
+      "024Y"
+    ],
+    "vr": "AS"
+  },
+  "00185100": {
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "1"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200020": {
+    "vr": "CS"
+  },
+  "00200060": {
+    "vr": "CS"
+  },
+  "00204000": {
+    "Value": [
+      "Test Image with 10 rows of (255,0,0), 10 rows of (255,128,128), 10 rows of (0,255,0), 10 rows of (128,255,128), 10 rows of (0,0,255), 10 rows of (128,128,255), 10 rows of (0,0,0), 10 rows of (64,64,64), 10 rows of (192,192,192), 10 rows of (255,255,255), uncompressed"
+    ],
+    "vr": "LT"
+  },
+  "00280002": {
+    "Value": [
+      3
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "YBR_FULL"
+    ],
+    "vr": "CS"
+  },
+  "00280006": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280010": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280030": {
+    "Value": [
+      1.0,
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "00280100": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      7
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280106": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280107": {
+    "Value": [
+      255
+    ],
+    "vr": "US"
+  },
+  "00282110": {
+    "Value": [
+      "01"
+    ],
+    "vr": "CS"
+  },
+  "00282112": {
+    "Value": [
+      9.05250452625226
+    ],
+    "vr": "DS"
+  },
+  "7FE00010": {
+    "InlineBinary": "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",
+    "vr": "OB"
+  }
+}

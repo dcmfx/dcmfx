@@ -1,0 +1,488 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.1"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "PRIMARY"
+    ],
+    "vr": "CS"
+  },
+  "00080012": {
+    "Value": [
+      "20010101"
+    ],
+    "vr": "DA"
+  },
+  "00080013": {
+    "Value": [
+      "055314"
+    ],
+    "vr": "TM"
+  },
+  "00080014": {
+    "Value": [
+      "1.3.6.1.4.1.5962.3"
+    ],
+    "vr": "UI"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.1"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.0.0.0.1196527414.5534.0.7"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20010101"
+    ],
+    "vr": "DA"
+  },
+  "00080022": {
+    "Value": [
+      "20010101"
+    ],
+    "vr": "DA"
+  },
+  "00080030": {
+    "Value": [
+      "000000"
+    ],
+    "vr": "TM"
+  },
+  "00080032": {
+    "Value": [
+      "000009"
+    ],
+    "vr": "TM"
+  },
+  "00080050": {
+    "Value": [
+      "2"
+    ],
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "CR"
+    ],
+    "vr": "CS"
+  },
+  "00080070": {
+    "Value": [
+      "Agfa-Gevaert AG"
+    ],
+    "vr": "LO"
+  },
+  "00080090": {
+    "vr": "PN"
+  },
+  "00080201": {
+    "Value": [
+      "+0000"
+    ],
+    "vr": "SH"
+  },
+  "00081030": {
+    "Value": [
+      "XR C Spine Comp Min 4 Views"
+    ],
+    "vr": "LO"
+  },
+  "0008103E": {
+    "Value": [
+      "Cervical OBLI 1"
+    ],
+    "vr": "LO"
+  },
+  "00081090": {
+    "Value": [
+      "ADC_5146"
+    ],
+    "vr": "LO"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "Doe^Archibald"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "77654033"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "vr": "CS"
+  },
+  "00101010": {
+    "Value": [
+      "047Y"
+    ],
+    "vr": "AS"
+  },
+  "001021B0": {
+    "vr": "LT"
+  },
+  "00104000": {
+    "vr": "LT"
+  },
+  "00120062": {
+    "Value": [
+      "YES"
+    ],
+    "vr": "CS"
+  },
+  "00120063": {
+    "Value": [
+      "dcanon",
+      "no identifiers",
+      "keep descriptions",
+      "keep manufacturer",
+      "keep retired",
+      "keep private",
+      "no uids",
+      "no pet demographics",
+      "keep dates",
+      "dcdtchg change dates"
+    ],
+    "vr": "LO"
+  },
+  "00180015": {
+    "Value": [
+      "CSPINE"
+    ],
+    "vr": "CS"
+  },
+  "00180060": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00181020": {
+    "Value": [
+      "acp_3403"
+    ],
+    "vr": "LO"
+  },
+  "00181041": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00181044": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00181152": {
+    "Value": [
+      0
+    ],
+    "vr": "IS"
+  },
+  "00181164": {
+    "Value": [
+      0.1,
+      0.1
+    ],
+    "vr": "DS"
+  },
+  "00181190": {
+    "vr": "DS"
+  },
+  "00181260": {
+    "Value": [
+      "code38"
+    ],
+    "vr": "SH"
+  },
+  "00181401": {
+    "Value": [
+      "10090"
+    ],
+    "vr": "LO"
+  },
+  "00181402": {
+    "Value": [
+      "PORTRAIT"
+    ],
+    "vr": "CS"
+  },
+  "00181403": {
+    "vr": "CS"
+  },
+  "00181404": {
+    "Value": [
+      997
+    ],
+    "vr": "US"
+  },
+  "00185100": {
+    "vr": "CS"
+  },
+  "00185101": {
+    "Value": [
+      "AP"
+    ],
+    "vr": "CS"
+  },
+  "00186000": {
+    "Value": [
+      400.0
+    ],
+    "vr": "DS"
+  },
+  "00190010": {
+    "Value": [
+      "AGFA"
+    ],
+    "vr": "LO"
+  },
+  "00191010": {
+    "Value": [
+      "MC=3",
+      "EC=0",
+      "LR=2",
+      "NR=0",
+      "FA=C",
+      "FP=0.1",
+      "ECNL=3",
+      "MD0=-0.3",
+      "MD1=0.1",
+      "BALANCE=0",
+      "MLMIN=0.5",
+      "MLMAX=2.5",
+      "MFOC=0.5"
+    ],
+    "vr": "LO"
+  },
+  "00191013": {
+    "Value": [
+      "NK5"
+    ],
+    "vr": "LO"
+  },
+  "00191015": {
+    "Value": [
+      "1.93223989009857"
+    ],
+    "vr": "LO"
+  },
+  "00191060": {
+    "Value": [
+      5
+    ],
+    "vr": "US"
+  },
+  "00191065": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00191070": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00191082": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00191093": {
+    "Value": [
+      "COMPLETED"
+    ],
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.0.0.0.1196527414.5534.0.1"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.0.0.0.1196527414.5534.0.6"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "2"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      2
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200020": {
+    "Value": [
+      "L",
+      "F"
+    ],
+    "vr": "CS"
+  },
+  "00200060": {
+    "vr": "CS"
+  },
+  "00204000": {
+    "Value": [
+      "^^^^"
+    ],
+    "vr": "LT"
+  },
+  "00280002": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "MONOCHROME1"
+    ],
+    "vr": "CS"
+  },
+  "00280010": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280034": {
+    "vr": "IS"
+  },
+  "00280100": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      12
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      11
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280106": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280107": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00281050": {
+    "Value": [
+      1600.0
+    ],
+    "vr": "DS"
+  },
+  "00281051": {
+    "Value": [
+      2800.0
+    ],
+    "vr": "DS"
+  },
+  "00281052": {
+    "Value": [
+      200.0
+    ],
+    "vr": "DS"
+  },
+  "00281053": {
+    "Value": [
+      0.684
+    ],
+    "vr": "DS"
+  },
+  "00281054": {
+    "Value": [
+      "OD"
+    ],
+    "vr": "LO"
+  },
+  "00283003": {
+    "Value": [
+      "NK5"
+    ],
+    "vr": "LO"
+  },
+  "20200020": {
+    "Value": [
+      "NORMAL"
+    ],
+    "vr": "CS"
+  },
+  "300A0212": {
+    "vr": "IS"
+  },
+  "300A0214": {
+    "vr": "CS"
+  },
+  "300E0002": {
+    "Value": [
+      "CREATED"
+    ],
+    "vr": "CS"
+  },
+  "7FE00010": {
+    "InlineBinary": "0AW0Be8FbganBhkGYwYNBoUFOAapBUQG/gVbBuEFBQYtBmcGOAbhBY0GawaFBm4GNQY1BnIGDQZYBgEGlwXoBewFzAYhBkgGSAZ+BmMGFQZbBjwGrwa9BmMGogXQBW4G8QZuBnoGUAY8BvMFRAZzBeUFegaRBtMGOAZ+BRUGZwYCB+kG3gYNBswFUAbMBeUFxQVIBikGdgaFBtAFTAZjBq8GTAchBjwG7AUJBr4F1wWpBeEF9gUNBkAGBQblBZEGnAYRBxUGCQZjBlgG0AW0BRUGgQW0BZAFTAaIBRkGGQa9BpwGOAZ6BnIGbgZMBpsFHQbaBaIFmwUpBvoFtAWiBdsGugZfBgEGNQZnBt4FMQZYBiUGQAaeBb4FegVgBa0FxQZyBlAG0AUtBikGSAb+BQEGQAaQBdMFgQXvBbEEUQUlBkQGawZfBl8GyQVQBogFrQVABvMFQAbCBdcFsAUjBfMFFQZQBiEGJQYtBoUGFQbeBUQGngXoBU0FWQWMBZMF0AUZBm8F+gVMBmsG0wVrBo0G6AUdBlQGOAZMBrsFBAWtBVwFlwWlBQUGcgZ+Bo0G4QWVBt4FiQbBBr4FTAa7Bf4F2gWwBYwFPAZbBjUGfgZyBvoFQAa2Bm4G6AUtBgkGJQbJBfoFXwapBd4FWwZyBrAFMQZ6BlgGcgYhBgkGxQU=",
+    "vr": "OW"
+  }
+}

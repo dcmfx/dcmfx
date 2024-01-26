@@ -1,0 +1,153 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    50 bytes] "1.2.840.113619.2.284.3.1744282 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    20 bytes] "1.2.840.113619.6.284"
+(0002,0013) SH Implementation Version Name          [     0 bytes] ""
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    30 bytes] "DERIVED", "SECONDARY", "SCREEN …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2014-01-06
+(0008,0013) TM Instance Creation Time               [     6 bytes] 08:14:25
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0008,0018) UI SOP Instance UID                     [    50 bytes] "1.2.840.113619.2.284.3.1744282 …
+(0008,0020) DA Study Date                           [     8 bytes] 2014-01-06
+(0008,0021) DA Series Date                          [     8 bytes] 2014-01-06
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2014-01-06
+(0008,0023) DA Content Date                         [     8 bytes] 2014-01-06
+(0008,0030) TM Study Time                           [     6 bytes] 08:14:25
+(0008,0031) TM Series Time                          [     6 bytes] 08:14:25
+(0008,0032) TM Acquisition Time                     [     6 bytes] 08:14:25
+(0008,0033) TM Content Time                         [     6 bytes] 08:14:25
+(0008,0050) SH Accession Number                     [     8 bytes] "9999999"
+(0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+(0008,0064) CS Conversion Type                      [     4 bytes] "WSD" (Workstation)
+(0008,0070) LO Manufacturer                         [    18 bytes] "GE MEDICAL SYSTEMS"
+(0008,0080) LO Institution Name                     [    26 bytes] "XXXXXXXXXXXXXXXXXXXXXXXXXX"
+(0008,0090) PN Referring Physician's Name           [    18 bytes] "XXXXXXXXX^XXXXXXXX"
+(0008,1010) SH Station Name                         [     4 bytes] "ct01"
+(0008,1030) LO Study Description                    [    20 bytes] "CT THORACO-ABDOMINAL"
+(0008,103E) LO Series Description                   [    14 bytes] "Rapport dose."
+(0008,1050) PN Performing Physician's Name          [     0 bytes] ""
+(0008,1090) LO Manufacturer's Model Name            [    14 bytes] "LightSpeed VCT"
+(0008,1110) SQ Referenced Study Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Detached Study Management SOP Class)
+    (0008,1155) UI Referenced SOP Instance UID          [    28 bytes] "1.2.840.113681.1.99.2994400"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0010,0010) PN Patient's Name                       [    14 bytes] "XXXXXX^XXXXXX"
+(0010,0020) LO Patient ID                           [     6 bytes] "55555"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1900-01-01
+(0010,0040) CS Patient's Sex                        [     2 bytes] "M" (Male)
+(0010,1000) LO Other Patient IDs                    [     0 bytes] ""
+(0010,1010) AS Patient's Age                        [     4 bytes] 81 years
+(0010,1030) DS Patient's Weight                     [     2 bytes] "80"
+(0010,21B0) LT Additional Patient History           [     0 bytes] ""
+(0018,1030) LO Protocol Name                        [    54 bytes] "5.8 TAP : 4 HELICES (SANS/THXA …
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0020,000D) UI Study Instance UID                   [    28 bytes] "1.2.840.113681.1.99.2994400"
+(0020,000E) UI Series Instance UID                  [    50 bytes] "1.2.840.113619.2.284.3.1744282 …
+(0020,0010) SH Study ID                             [     6 bytes] "16768"
+(0020,0011) IS Series Number                        [     4 bytes] "999"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 1
+(0028,1050) DS Window Center                        [     2 bytes] "-2"
+(0028,1051) DS Window Width                         [     2 bytes] "1"
+(0028,1052) DS Rescale Intercept                    [     6 bytes] "-1024"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0028,1054) LO Rescale Type                         [     2 bytes] "HU"
+(0040,0275) SQ Request Attributes Sequence
+  (FFFE,E000) Item
+    (0008,0050) SH Accession Number                     [     8 bytes] "2994400"
+    (0008,1110) SQ Referenced Study Sequence
+      (FFFE,E000) Item
+        (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Detached Study Management SOP Class)
+        (0008,1155) UI Referenced SOP Instance UID          [    28 bytes] "1.2.840.113681.1.99.29 …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (0020,000D) UI Study Instance UID                   [    28 bytes] "1.2.840.113681.1.99.2994400"
+    (0032,1060) LO Requested Procedure Description      [    20 bytes] "CT THORACO-ABDOMINAL"
+    (0040,0009) SH Scheduled Procedure Step ID          [     6 bytes] "723031"
+    (0040,1001) SH Requested Procedure ID               [     6 bytes] "723031"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0040,0301) US Total Number of Exposures            [     2 bytes] 4
+(0040,030E) SQ Exposure Dose Sequence
+  (FFFE,E000) Item
+    (0018,0015) CS Body Part Examined                   [     6 bytes] "CHEST"
+    (0018,0060) DS KVP                                  [     4 bytes] "100"
+    (0018,1150) IS Exposure Time                        [     4 bytes] "7099"
+    (0018,8151) DS X-Ray Tube Current in µA            [     8 bytes] "10000.00"
+    (0018,9302) CS Acquisition Type                     [    14 bytes] "CONSTANT_ANGLE"
+    (0018,9306) FD Single Collimation Width             [     8 bytes] 1.25
+    (0018,9307) FD Total Collimation Width              [     8 bytes] 710.0
+    (0018,9346) SQ CTDI Phantom Type Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     6 bytes] "113691"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+        (0008,0104) LO Code Meaning                         [    26 bytes] "IEC Body Dosimetry Pha …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0018,0015) CS Body Part Examined                   [     6 bytes] "CHEST"
+    (0018,0060) DS KVP                                  [     4 bytes] "120"
+    (0018,1150) IS Exposure Time                        [     4 bytes] "7099"
+    (0018,8151) DS X-Ray Tube Current in µA            [     8 bytes] "10000.00"
+    (0018,9302) CS Acquisition Type                     [    14 bytes] "CONSTANT_ANGLE"
+    (0018,9306) FD Single Collimation Width             [     8 bytes] 1.25
+    (0018,9307) FD Total Collimation Width              [     8 bytes] 710.0
+    (0018,9346) SQ CTDI Phantom Type Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     6 bytes] "113691"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+        (0008,0104) LO Code Meaning                         [    26 bytes] "IEC Body Dosimetry Pha …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0018,0015) CS Body Part Examined                   [     6 bytes] "CHEST"
+    (0018,0060) DS KVP                                  [     4 bytes] "120"
+    (0018,1150) IS Exposure Time                        [     4 bytes] "4533"
+    (0018,8151) DS X-Ray Tube Current in µA            [    10 bytes] "536200.01"
+    (0018,9302) CS Acquisition Type                     [     6 bytes] "SPIRAL"
+    (0018,9306) FD Single Collimation Width             [     8 bytes] 0.62
+    (0018,9307) FD Total Collimation Width              [     8 bytes] 5.0
+    (0018,9311) FD Spiral Pitch Factor                  [     8 bytes] 1.38
+    (0018,9345) FD CTDIvol                              [     8 bytes] 15.43
+    (0018,9346) SQ CTDI Phantom Type Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     6 bytes] "113691"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+        (0008,0104) LO Code Meaning                         [    26 bytes] "IEC Body Dosimetry Pha …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0018,0015) CS Body Part Examined                   [     6 bytes] "CHEST"
+    (0018,0060) DS KVP                                  [     4 bytes] "120"
+    (0018,1150) IS Exposure Time                        [     4 bytes] "6380"
+    (0018,8151) DS X-Ray Tube Current in µA            [    10 bytes] "484600.01"
+    (0018,9302) CS Acquisition Type                     [     6 bytes] "SPIRAL"
+    (0018,9306) FD Single Collimation Width             [     8 bytes] 0.62
+    (0018,9307) FD Total Collimation Width              [     8 bytes] 5.0
+    (0018,9311) FD Spiral Pitch Factor                  [     8 bytes] 1.38
+    (0018,9345) FD CTDIvol                              [     8 bytes] 19.53
+    (0018,9346) SQ CTDI Phantom Type Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     6 bytes] "113691"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+        (0008,0104) LO Code Meaning                         [    26 bytes] "IEC Body Dosimetry Pha …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0040,0310) ST Comments on Radiation Dose           [    74 bytes] "TotalDLP=1748.68\r\nEvent=1\r\ …

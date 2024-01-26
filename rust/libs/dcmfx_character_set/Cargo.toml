@@ -1,0 +1,3 @@
+[package]
+name = "dcmfx_character_set"
+edition = "2021"

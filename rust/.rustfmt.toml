@@ -1,0 +1,4 @@
+# This config makes the Rust code format similarly to the Gleam code
+
+max_width = 80
+tab_spaces = 2

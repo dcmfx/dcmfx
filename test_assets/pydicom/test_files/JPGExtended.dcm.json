@@ -1,0 +1,935 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.4.51"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "PRIMARY",
+      "WHOLE BODY",
+      "EMISSION"
+    ],
+    "vr": "CS"
+  },
+  "00080012": {
+    "Value": [
+      "19970911"
+    ],
+    "vr": "DA"
+  },
+  "00080013": {
+    "Value": [
+      "125206"
+    ],
+    "vr": "TM"
+  },
+  "00080014": {
+    "Value": [
+      "1.3.6.1.4.1.5962.3"
+    ],
+    "vr": "UI"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.7"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.8.1.5.20040826185059.5457"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20040826"
+    ],
+    "vr": "DA"
+  },
+  "00080021": {
+    "Value": [
+      "19970806"
+    ],
+    "vr": "DA"
+  },
+  "00080022": {
+    "Value": [
+      "19970806"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "Value": [
+      "19970806"
+    ],
+    "vr": "DA"
+  },
+  "00080030": {
+    "Value": [
+      "185059"
+    ],
+    "vr": "TM"
+  },
+  "00080031": {
+    "Value": [
+      "122931"
+    ],
+    "vr": "TM"
+  },
+  "00080032": {
+    "Value": [
+      "122931"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "Value": [
+      "122931"
+    ],
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "NM"
+    ],
+    "vr": "CS"
+  },
+  "00080064": {
+    "Value": [
+      "WSD"
+    ],
+    "vr": "CS"
+  },
+  "00080070": {
+    "Value": [
+      "GE Medical Systems"
+    ],
+    "vr": "LO"
+  },
+  "00080080": {
+    "Value": [
+      "St. John's Memorial"
+    ],
+    "vr": "LO"
+  },
+  "00080090": {
+    "vr": "PN"
+  },
+  "00080201": {
+    "Value": [
+      "-0400"
+    ],
+    "vr": "SH"
+  },
+  "00081010": {
+    "Value": [
+      "genieacq"
+    ],
+    "vr": "SH"
+  },
+  "00081030": {
+    "Value": [
+      "Whole Body Bone"
+    ],
+    "vr": "LO"
+  },
+  "00081060": {
+    "vr": "PN"
+  },
+  "00081070": {
+    "vr": "PN"
+  },
+  "00081090": {
+    "Value": [
+      "MILLENNIUM MG"
+    ],
+    "vr": "LO"
+  },
+  "00082111": {
+    "Value": [
+      "JPEG lossy 76:1"
+    ],
+    "vr": "ST"
+  },
+  "00082112": {
+    "Value": [
+      {
+        "00081150": {
+          "Value": [
+            "1.2.840.10008.5.1.4.1.1.7"
+          ],
+          "vr": "UI"
+        },
+        "00081155": {
+          "Value": [
+            "1.3.6.1.4.1.5962.1.1.8.1.1.20040826185059.5457"
+          ],
+          "vr": "UI"
+        },
+        "0040A170": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "121320"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "DCM"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Uncompressed predecessor"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00089215": {
+    "Value": [
+      {
+        "00080100": {
+          "Value": [
+            "113040"
+          ],
+          "vr": "SH"
+        },
+        "00080102": {
+          "Value": [
+            "DCM"
+          ],
+          "vr": "SH"
+        },
+        "00080104": {
+          "Value": [
+            "Lossy Compression"
+          ],
+          "vr": "LO"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00090010": {
+    "Value": [
+      "GEMS_GENIE_1"
+    ],
+    "vr": "LO"
+  },
+  "00091010": {
+    "Value": [
+      "WB BONE"
+    ],
+    "vr": "LO"
+  },
+  "00091011": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00091012": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "0009101E": {
+    "Value": [
+      "1.2.840.113619.2.43.16112.2141964.41.61.870888524.19"
+    ],
+    "vr": "UI"
+  },
+  "00091020": {
+    "Value": [
+      "WHOLE BODY"
+    ],
+    "vr": "LO"
+  },
+  "00091021": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00091022": {
+    "vr": "SH"
+  },
+  "00091023": {
+    "Value": [
+      2
+    ],
+    "vr": "SL"
+  },
+  "00091024": {
+    "Value": [
+      60000
+    ],
+    "vr": "SL"
+  },
+  "00091025": {
+    "Value": [
+      20000
+    ],
+    "vr": "SL"
+  },
+  "00091026": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00091027": {
+    "Value": [
+      2
+    ],
+    "vr": "SL"
+  },
+  "0009102A": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "0009102C": {
+    "vr": "LO"
+  },
+  "0009102E": {
+    "Value": [
+      1.899999976158142
+    ],
+    "vr": "FD"
+  },
+  "00091030": {
+    "Value": [
+      "WHOLE BODY"
+    ],
+    "vr": "LO"
+  },
+  "00091040": {
+    "Value": [
+      "BERRA,JAMES"
+    ],
+    "vr": "LO"
+  },
+  "00091041": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00091042": {
+    "Value": [
+      "19970806"
+    ],
+    "vr": "DA"
+  },
+  "00091043": {
+    "Value": [
+      "122538"
+    ],
+    "vr": "TM"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "CompressedSamples^NM1"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "8NM1"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "M"
+    ],
+    "vr": "CS"
+  },
+  "00101000": {
+    "vr": "LO"
+  },
+  "00101001": {
+    "vr": "PN"
+  },
+  "00101010": {
+    "vr": "AS"
+  },
+  "00101020": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00101030": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00102160": {
+    "vr": "SH"
+  },
+  "001021B0": {
+    "vr": "LT"
+  },
+  "00104000": {
+    "vr": "LT"
+  },
+  "00110010": {
+    "Value": [
+      "GEMS_GENIE_1"
+    ],
+    "vr": "LO"
+  },
+  "0011100A": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "0011100B": {
+    "Value": [
+      1210632
+    ],
+    "vr": "SL"
+  },
+  "0011100D": {
+    "Value": [
+      "Tc99m"
+    ],
+    "vr": "LO"
+  },
+  "00111010": {
+    "Value": [
+      "WHOLE BODY_E"
+    ],
+    "vr": "LO"
+  },
+  "00111012": {
+    "Value": [
+      "WHOLE BODY_E"
+    ],
+    "vr": "LO"
+  },
+  "00111013": {
+    "Value": [
+      2
+    ],
+    "vr": "SL"
+  },
+  "00111015": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00111016": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00111019": {
+    "Value": [
+      221.36400640010834
+    ],
+    "vr": "FD"
+  },
+  "0011101A": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "0011101B": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "0011101C": {
+    "Value": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "vr": "SL"
+  },
+  "0011101F": {
+    "Value": [
+      4
+    ],
+    "vr": "SL"
+  },
+  "00111023": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00111027": {
+    "Value": [
+      0,
+      0
+    ],
+    "vr": "SL"
+  },
+  "00111028": {
+    "Value": [
+      0,
+      0
+    ],
+    "vr": "SL"
+  },
+  "00111030": {
+    "Value": [
+      "WHOLE BODY_E"
+    ],
+    "vr": "LO"
+  },
+  "00111033": {
+    "Value": [
+      "ECOR"
+    ],
+    "vr": "LO"
+  },
+  "00111034": {
+    "Value": [
+      "Tc99m"
+    ],
+    "vr": "LO"
+  },
+  "00111035": {
+    "Value": [
+      "PMT"
+    ],
+    "vr": "LO"
+  },
+  "00111038": {
+    "Value": [
+      66
+    ],
+    "vr": "SL"
+  },
+  "0011103A": {
+    "Value": [
+      5
+    ],
+    "vr": "SL"
+  },
+  "0011103B": {
+    "Value": [
+      1.0
+    ],
+    "vr": "FD"
+  },
+  "0011103C": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FD"
+  },
+  "0011103E": {
+    "Value": [
+      10
+    ],
+    "vr": "SL"
+  },
+  "0011103F": {
+    "Value": [
+      1
+    ],
+    "vr": "SL"
+  },
+  "00111044": {
+    "Value": [
+      2048.0
+    ],
+    "vr": "FD"
+  },
+  "00111045": {
+    "Value": [
+      4096.0
+    ],
+    "vr": "FD"
+  },
+  "00111046": {
+    "Value": [
+      2
+    ],
+    "vr": "SL"
+  },
+  "00111055": {
+    "Value": [
+      1.0
+    ],
+    "vr": "FD"
+  },
+  "00111056": {
+    "Value": [
+      1.0
+    ],
+    "vr": "FD"
+  },
+  "00130010": {
+    "Value": [
+      "GEMS_GENIE_1"
+    ],
+    "vr": "LO"
+  },
+  "00131010": {
+    "Value": [
+      578.5599975585938,
+      2314.239990234375
+    ],
+    "vr": "FD"
+  },
+  "00131011": {
+    "Value": [
+      5
+    ],
+    "vr": "SL"
+  },
+  "00131012": {
+    "Value": [
+      0
+    ],
+    "vr": "SL"
+  },
+  "00131016": {
+    "Value": [
+      140
+    ],
+    "vr": "SL"
+  },
+  "00131017": {
+    "Value": [
+      5
+    ],
+    "vr": "SL"
+  },
+  "00131018": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FD"
+  },
+  "00131019": {
+    "Value": [
+      70.0
+    ],
+    "vr": "FD"
+  },
+  "0013101A": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FD"
+  },
+  "0013101C": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FD"
+  },
+  "0013101D": {
+    "Value": [
+      0.0
+    ],
+    "vr": "FD"
+  },
+  "00131026": {
+    "vr": "LT"
+  },
+  "00180015": {
+    "Value": [
+      "WHOLE BODY"
+    ],
+    "vr": "CS"
+  },
+  "00180070": {
+    "Value": [
+      3596452
+    ],
+    "vr": "IS"
+  },
+  "00180071": {
+    "Value": [
+      "MANU"
+    ],
+    "vr": "CS"
+  },
+  "00181000": {
+    "Value": [
+      "172.16.193.2"
+    ],
+    "vr": "LO"
+  },
+  "00181020": {
+    "Value": [
+      "2.0"
+    ],
+    "vr": "LO"
+  },
+  "00181030": {
+    "Value": [
+      "Whole Body Bone"
+    ],
+    "vr": "LO"
+  },
+  "00181130": {
+    "Value": [
+      654.820025
+    ],
+    "vr": "DS"
+  },
+  "00181131": {
+    "Value": [
+      1572.260022
+    ],
+    "vr": "DS"
+  },
+  "00181242": {
+    "Value": [
+      1210434
+    ],
+    "vr": "IS"
+  },
+  "00181243": {
+    "Value": [
+      950
+    ],
+    "vr": "IS"
+  },
+  "00181300": {
+    "Value": [
+      1.671598
+    ],
+    "vr": "DS"
+  },
+  "00181301": {
+    "Value": [
+      "1PS"
+    ],
+    "vr": "CS"
+  },
+  "00181302": {
+    "Value": [
+      1899
+    ],
+    "vr": "IS"
+  },
+  "00185100": {
+    "Value": [
+      "HFS"
+    ],
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.2.8.20040826185059.5457"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.3.8.1.20040826185059.5457"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "8NM1"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      5
+    ],
+    "vr": "IS"
+  },
+  "00200020": {
+    "vr": "CS"
+  },
+  "00200052": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.4.8.1.20040826185059.5457"
+    ],
+    "vr": "UI"
+  },
+  "00201040": {
+    "vr": "LO"
+  },
+  "00204000": {
+    "Value": [
+      "JPEG lossy"
+    ],
+    "vr": "LT"
+  },
+  "00280002": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "MONOCHROME2"
+    ],
+    "vr": "CS"
+  },
+  "00280008": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00280009": {
+    "Value": [
+      "00540010",
+      "00540020"
+    ],
+    "vr": "AT"
+  },
+  "00280010": {
+    "Value": [
+      1024
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      256
+    ],
+    "vr": "US"
+  },
+  "00280030": {
+    "Value": [
+      2.26,
+      2.26
+    ],
+    "vr": "DS"
+  },
+  "00280051": {
+    "Value": [
+      "NRGY",
+      "LIN"
+    ],
+    "vr": "CS"
+  },
+  "00280100": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      12
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      11
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280106": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280107": {
+    "Value": [
+      278
+    ],
+    "vr": "US"
+  },
+  "00282110": {
+    "Value": [
+      "01"
+    ],
+    "vr": "CS"
+  },
+  "00282112": {
+    "Value": [
+      76.0
+    ],
+    "vr": "DS"
+  },
+  "00540010": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00540011": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00540020": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00540021": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00540400": {
+    "Value": [
+      "WHOLE BODY_E"
+    ],
+    "vr": "SH"
+  },
+  "7FE00010": {
+    "InlineBinary": "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",
+    "vr": "OB"
+  }
+}

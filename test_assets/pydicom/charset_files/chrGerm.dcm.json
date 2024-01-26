@@ -1,0 +1,181 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.1"
+    ],
+    "vr": "UI"
+  },
+  "00080012": {
+    "Value": [
+      "20070405"
+    ],
+    "vr": "DA"
+  },
+  "00080013": {
+    "Value": [
+      "082252"
+    ],
+    "vr": "TM"
+  },
+  "00080014": {
+    "Value": [
+      "1.3.6.1.4.1.5962.3"
+    ],
+    "vr": "UI"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.7"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.0.1.1.1175775772.5723.0"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "vr": "DA"
+  },
+  "00080030": {
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "OT"
+    ],
+    "vr": "CS"
+  },
+  "00080064": {
+    "Value": [
+      "WSD"
+    ],
+    "vr": "CS"
+  },
+  "00080070": {
+    "vr": "LO"
+  },
+  "00080090": {
+    "Value": [
+      {
+        "Alphabetic": "^^^^"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00080201": {
+    "Value": [
+      "-0400"
+    ],
+    "vr": "SH"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "\u00c4neas^R\u00fcdiger"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "SCSGERM"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.2.0.1175775772.5723.0"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.3.0.1.1175775772.5723.0"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "SCSGERM"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200020": {
+    "vr": "CS"
+  },
+  "00280002": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "MONOCHROME2"
+    ],
+    "vr": "CS"
+  },
+  "00280010": {
+    "Value": [
+      32
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      32
+    ],
+    "vr": "US"
+  },
+  "00280100": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      7
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "7FE00010": {
+    "InlineBinary": "f7+/f39/f39/f39/f39/f39/f39/f39/f39/f39/f3+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/f7+/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/v79/f39/f39/f39/f39/f39/f39/f39/f39/f39/f3+/v39/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/f7+/f3+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v79/v79/f7+/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH+/v39/v7//////////////////////////////////f7+/f3+/vwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/v79/f7+//////////////////////////////////3+/v39/v78AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf7+/f3+/v/////////////////////////////////9/v79/f7+/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH+/v39/v7//////////////////////////////////f7+/f3+/vwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/v79/f7+//////////////////////////////////3+/v39/v78AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf7+/f3+/v/////////////////////////////////9/v79/f7+/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH+/v39/v7//////////////////////////////////f7+/f3+/vwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/v79/f7+//////////////////////////////////3+/v39/v78AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf7+/f3+/v/////////////////////////////////9/v79/f7+/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH+/v39/v7//////////////////////////////////f7+/f3+/vwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/v79/f7+//////////////////////////////////3+/v39/v78AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf7+/f3+/v/////////////////////////////////9/v79/f7+/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+    "vr": "OB"
+  }
+}

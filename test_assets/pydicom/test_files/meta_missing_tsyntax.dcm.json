@@ -1,0 +1,28 @@
+{
+  "00010001": {
+    "Value": [
+      {
+        "00010001": {
+          "Value": [
+            {
+              "00010001": {
+                "InlineBinary": "RG91YmxlIE5lc3RlZCBTUQ==",
+                "vr": "UN"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "00010002": {
+          "InlineBinary": "TmVzdGVkIFNR",
+          "vr": "UN"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "7FE00010": {
+    "InlineBinary": "AAA=",
+    "vr": "OW"
+  }
+}

@@ -1,0 +1,597 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    20 bytes] "1.2.840 … (Media Storage Directory Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    48 bytes] "1.2.276.0.7230010.3.1.4.0.3190 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Big Endian)
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0.7230010.3.0.3.6.3"
+(0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMTK_363"
+(0004,1130) CS File-set ID                          [    12 bytes] "PYDICOM_TEST"
+(0004,1200) UL Offset of the First Directory Record of the Root Directory Entity  [     4 bytes] 396
+(0004,1202) UL Offset of the Last Directory Record of the Root Directory Entity  [     4 bytes] 3126
+(0004,1212) US File-set Consistency Flag            [     2 bytes] 0
+(0004,1220) SQ Directory Record Sequence
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 3126
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 510
+    (0004,1430) CS Directory Record Type                [     8 bytes] "PATIENT"
+    (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+    (0010,0010) PN Patient's Name                       [    14 bytes] "Doe^Archibald"
+    (0010,0020) LO Patient ID                           [     8 bytes] "77654033"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 1814
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 724
+    (0004,1430) CS Directory Record Type                [     6 bytes] "STUDY"
+    (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+    (0008,0020) DA Study Date                           [     8 bytes] 2001-01-01
+    (0008,0030) TM Study Time                           [     6 bytes] 00:00:00
+    (0008,0050) SH Accession Number                     [     2 bytes] "2"
+    (0008,1030) LO Study Description                    [    28 bytes] "XR C Spine Comp Min 4 Views"
+    (0020,000D) UI Study Instance UID                   [    46 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0010) SH Study ID                             [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 1090
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 856
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "CR" (Computed Radiography)
+    (0020,000E) UI Series Instance UID                  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "77654033", "CR1", "6154"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (Computed Radiography Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    16 bytes] "DERIVED", "PRIMARY"
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 1452
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 1220
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "CR" (Computed Radiography)
+    (0020,000E) UI Series Instance UID                  [    46 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "77654033", "CR2", "6247"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (Computed Radiography Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    46 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    16 bytes] "DERIVED", "PRIMARY"
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 1582
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "CR" (Computed Radiography)
+    (0020,000E) UI Series Instance UID                  [    46 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "3"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "77654033", "CR3", "6278"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (Computed Radiography Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    46 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    16 bytes] "DERIVED", "PRIMARY"
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 2028
+    (0004,1430) CS Directory Record Type                [     6 bytes] "STUDY"
+    (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+    (0008,0020) DA Study Date                           [     8 bytes] 1995-09-03
+    (0008,0030) TM Study Time                           [     6 bytes] 17:30:32
+    (0008,0050) SH Accession Number                     [     2 bytes] "2"
+    (0008,1030) LO Study Description                    [    26 bytes] "CT, HEAD/BRAIN WO CONTRAST"
+    (0020,000D) UI Study Instance UID                   [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0010) SH Study ID                             [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 2160
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+    (0020,000E) UI Series Instance UID                  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 2400
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "77654033", "CT2", "17106"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXI …
+    (0020,0013) IS Instance Number                      [     2 bytes] "18"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 2642
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "77654033", "CT2", "17136"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXI …
+    (0020,0013) IS Instance Number                      [     4 bytes] "180"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 2884
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "77654033", "CT2", "17166"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXI …
+    (0020,0013) IS Instance Number                      [     4 bytes] "181"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "77654033", "CT2", "17196"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXI …
+    (0020,0013) IS Instance Number                      [     4 bytes] "182"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 3236
+    (0004,1430) CS Directory Record Type                [     8 bytes] "PATIENT"
+    (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+    (0010,0010) PN Patient's Name                       [    10 bytes] "Doe^Peter"
+    (0010,0020) LO Patient ID                           [     8 bytes] "98890234"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 5376
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 3424
+    (0004,1430) CS Directory Record Type                [     6 bytes] "STUDY"
+    (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+    (0008,0020) DA Study Date                           [     8 bytes] 2001-01-01
+    (0008,0030) TM Study Time                           [     6 bytes] 00:00:00
+    (0008,0050) SH Accession Number                     [     2 bytes] "2"
+    (0008,1030) LO Study Description                    [     0 bytes] ""
+    (0020,000D) UI Study Instance UID                   [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0010) SH Study ID                             [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 4044
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 3556
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+    (0020,000E) UI Series Instance UID                  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "4"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 3800
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892001", "CT2N", "6293"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    26 bytes] "ORIGINAL", "PRIMARY", "LOC …
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892001", "CT2N", "6924"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    26 bytes] "ORIGINAL", "PRIMARY", "LOC …
+    (0020,0013) IS Instance Number                      [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 4176
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+    (0020,000E) UI Series Instance UID                  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "5"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 4416
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892001", "CT5N", "2062"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXI …
+    (0020,0013) IS Instance Number                      [     2 bytes] "6"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 4656
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892001", "CT5N", "2392"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXI …
+    (0020,0013) IS Instance Number                      [     2 bytes] "7"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 4896
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892001", "CT5N", "2693"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXI …
+    (0020,0013) IS Instance Number                      [     2 bytes] "8"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 5136
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892001", "CT5N", "3023"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXI …
+    (0020,0013) IS Instance Number                      [     2 bytes] "9"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892001", "CT5N", "3353"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXI …
+    (0020,0013) IS Instance Number                      [     2 bytes] "10"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 6330
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 5578
+    (0004,1430) CS Directory Record Type                [     6 bytes] "STUDY"
+    (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+    (0008,0020) DA Study Date                           [     8 bytes] 2003-05-05
+    (0008,0030) TM Study Time                           [     6 bytes] 05:07:43
+    (0008,0050) SH Accession Number                     [     4 bytes] "428"
+    (0008,1030) LO Study Description                    [     8 bytes] "Carotids"
+    (0020,000D) UI Study Instance UID                   [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0010) SH Study ID                             [     4 bytes] "428"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 5954
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 5712
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+    (0020,000E) UI Series Instance UID                  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR1", "15820"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 6088
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+    (0020,000E) UI Series Instance UID                  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR2", "15970"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 7766
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 6530
+    (0004,1430) CS Directory Record Type                [     6 bytes] "STUDY"
+    (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+    (0008,0020) DA Study Date                           [     8 bytes] 2003-05-05
+    (0008,0030) TM Study Time                           [     6 bytes] 02:51:09
+    (0008,0050) SH Accession Number                     [     4 bytes] "134"
+    (0008,1030) LO Study Description                    [     6 bytes] "Brain"
+    (0020,000D) UI Study Instance UID                   [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0010) SH Study ID                             [     4 bytes] "134"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 6906
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 6664
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+    (0020,000E) UI Series Instance UID                  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR1", "4919"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 7040
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+    (0020,000E) UI Series Instance UID                  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 7282
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR2", "4950"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 7524
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR2", "5011"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR2", "4981"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "3"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 7964
+    (0004,1430) CS Directory Record Type                [     6 bytes] "STUDY"
+    (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+    (0008,0020) DA Study Date                           [     8 bytes] 2003-05-05
+    (0008,0030) TM Study Time                           [     6 bytes] 04:53:57
+    (0008,0050) SH Accession Number                     [     2 bytes] "2"
+    (0008,1030) LO Study Description                    [    10 bytes] "Brain-MRA"
+    (0020,000D) UI Study Instance UID                   [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0010) SH Study ID                             [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 8336
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 8096
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+    (0020,000E) UI Series Instance UID                  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR1", "5641"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 9188
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 8468
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+    (0020,000E) UI Series Instance UID                  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 8708
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR2", "6935"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 8948
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR2", "6605"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    18 bytes] "98892003", "MR2", "6273"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    48 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTH …
+    (0020,0013) IS Instance Number                      [     2 bytes] "3"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 9324
+    (0004,1430) CS Directory Record Type                [     6 bytes] "SERIES"
+    (0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+    (0020,000E) UI Series Instance UID                  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0020,0011) IS Series Number                        [     4 bytes] "700"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 9580
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    20 bytes] "98892003", "MR700", "4558"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    34 bytes] "DERIVED", "SECONDARY", "PR …
+    (0020,0013) IS Instance Number                      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 9836
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    20 bytes] "98892003", "MR700", "4528"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    34 bytes] "DERIVED", "SECONDARY", "PR …
+    (0020,0013) IS Instance Number                      [     2 bytes] "2"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 10092
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    20 bytes] "98892003", "MR700", "4588"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    34 bytes] "DERIVED", "SECONDARY", "PR …
+    (0020,0013) IS Instance Number                      [     2 bytes] "3"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 10348
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    20 bytes] "98892003", "MR700", "4467"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    34 bytes] "DERIVED", "SECONDARY", "PR …
+    (0020,0013) IS Instance Number                      [     2 bytes] "4"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 10604
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    20 bytes] "98892003", "MR700", "4618"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    34 bytes] "DERIVED", "SECONDARY", "PR …
+    (0020,0013) IS Instance Number                      [     2 bytes] "5"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 10860
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    20 bytes] "98892003", "MR700", "4678"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    34 bytes] "DERIVED", "SECONDARY", "PR …
+    (0020,0013) IS Instance Number                      [     2 bytes] "6"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0004,1400) UL Offset of the Next Directory Record  [     4 bytes] 0
+    (0004,1410) US Record In-use Flag                   [     2 bytes] 65535
+    (0004,1420) UL Offset of Referenced Lower-Level Directory Entity  [     4 bytes] 0
+    (0004,1430) CS Directory Record Type                [     6 bytes] "IMAGE"
+    (0004,1500) CS Referenced File ID                   [    20 bytes] "98892003", "MR700", "4648"
+    (0004,1510) UI Referenced SOP Class UID in File     [    26 bytes] "1.2.840 … (MR Image Storage)
+    (0004,1511) UI Referenced SOP Instance UID in File  [    50 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0 …
+    (0004,1512) UI Referenced Transfer Syntax UID in File  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+    (0008,0008) CS Image Type                           [    34 bytes] "DERIVED", "SECONDARY", "PR …
+    (0020,0013) IS Instance Number                      [     2 bytes] "7"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item

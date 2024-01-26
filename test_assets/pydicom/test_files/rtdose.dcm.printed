@@ -1,0 +1,65 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    30 bytes] "1.2.840.1000 … (RT Dose Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    42 bytes] "1.2.999.999.99.9.9999.9999.200 …
+(0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    20 bytes] "1.2.999.999.99.9.9.9"
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2003-09-03
+(0008,0013) TM Instance Creation Time               [     6 bytes] 15:00:31
+(0008,0016) UI SOP Class UID                        [    30 bytes] "1.2.840.1000 … (RT Dose Storage)
+(0008,0018) UI SOP Instance UID                     [    42 bytes] "1.9.999.999.99.9.9999.9999.200 …
+(0008,0020) DA Study Date                           [     8 bytes] 2003-08-05
+(0008,0030) TM Study Time                           [     6 bytes] 11:57:47
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     6 bytes] "RTDOSE" (Radiotherapy Dose)
+(0008,0070) LO Manufacturer                         [    22 bytes] "Manufacturer name here"
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1010) SH Station Name                         [    12 bytes] "Computer001"
+(0008,1090) LO Manufacturer's Model Name            [    36 bytes] "Treatment Planning System name …
+(0010,0010) PN Patient's Name                       [    18 bytes] "Lastname^Firstname"
+(0010,0020) LO Patient ID                           [     8 bytes] "id11111"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     2 bytes] "O" (Other)
+(0018,0050) DS Slice Thickness                      [     0 bytes] ""
+(0018,1020) LO Software Versions                    [    10 bytes] "version 1"
+(0020,000D) UI Study Instance UID                   [    26 bytes] "1.2.999.999.99.9.9999.8888"
+(0020,000E) UI Series Instance UID                  [    26 bytes] "1.2.777.777.77.7.7777.7777"
+(0020,0010) SH Study ID                             [     2 bytes] "S1"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     0 bytes] ""
+(0020,0032) DS Image Position (Patient)             [    50 bytes] "189.431250000000", "199.431250 …
+(0020,0037) DS Image Orientation (Patient)          [    50 bytes] "1.00000000000000", "0.0", "0.0 …
+(0020,0052) UI Frame of Reference UID               [    50 bytes] "2.22.222.2.222222.2.2222222222 …
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0008) IS Number of Frames                     [     2 bytes] "15"
+(0028,0009) AT Frame Increment Pointer              [     4 bytes] (3004,000C)
+(0028,0010) US Rows                                 [     2 bytes] 10
+(0028,0011) US Columns                              [     2 bytes] 10
+(0028,0030) DS Pixel Spacing                        [    34 bytes] "10.0000000000000", "10.0000000 …
+(0028,0100) US Bits Allocated                       [     2 bytes] 32
+(0028,0101) US Bits Stored                          [     2 bytes] 32
+(0028,0102) US High Bit                             [     2 bytes] 31
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(3004,0002) CS Dose Units                           [     8 bytes] "RELATIVE"
+(3004,0004) CS Dose Type                            [     8 bytes] "PHYSICAL"
+(3004,000A) CS Dose Summation Type                  [     4 bytes] "BEAM"
+(3004,000C) DS Grid Frame Offset Vector             [   242 bytes] "0.0", "5.00000000000000", "10. …
+(3004,000E) DS Dose Grid Scaling                    [    12 bytes] "1.0000000e-6"
+(300C,0002) SQ Referenced RT Plan Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    30 bytes] "1.2.840. … (RT Plan Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    42 bytes] "1.2.123.456.78.9.0123.4567 …
+    (300C,0020) SQ Referenced Fraction Group Sequence
+      (FFFE,E000) Item
+        (300C,0004) SQ Referenced Beam Sequence
+          (FFFE,E000) Item
+            (300C,0006) IS Referenced Beam Number               [     2 bytes] "1"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (300C,0022) IS Referenced Fraction Group Number     [     2 bytes] "1"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(7FE0,0010) OW Pixel Data                           [  6000 bytes] [E8 0E 13 00 E8 0E 13 00 D0 12  …

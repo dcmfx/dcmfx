@@ -1,0 +1,32 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [01 00]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    38 bytes] "1.2.840.113704.7.1.1.1096.1405 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    26 bytes] "2.16.840.1.114151.100.1.1"
+(0002,0013) SH Implementation Version Name          [    14 bytes] "MergeCOM3_390"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    30 bytes] "ORIGINAL", "PRIMARY", "LOCALIZ …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2014-07-12
+(0008,0013) TM Instance Creation Time               [     6 bytes] 14:08:15
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0008,0018) UI SOP Instance UID                     [    38 bytes] "1.2.840.113704.7.1.1.1096.1405 …
+(01F3,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+(01F3,1011) SQ PS Sequence
+  (FFFE,E000) Item
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (01F3,0010) LO Private Creator                      [     8 bytes] "ELSCINT1"
+    (01F3,1012) SS Unknown                              [     2 bytes] 2
+    (01F3,1013) FL Unknown                              [     8 bytes] 209.9199981689453, 256.0
+    (01F3,1014) FL Unknown                              [     4 bytes] -0.0
+    (01F3,1015) US Unknown                              [     2 bytes] 319
+    (01F3,1016) FL Unknown                              [     4 bytes] -0.5120000243186951
+    (01F3,1017) FL Unknown                              [     4 bytes] -1.0240000486373901
+    (01F3,1018) SH Unknown                              [    14 bytes] "Head, Helical"
+    (01F3,1019) FL Unknown                              [     4 bytes] 256.0
+    (01F3,1023) US Unknown                              [     2 bytes] 1
+    (01F3,1024) IS Unknown                              [     4 bytes] "0", "0"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(01F3,1012) SS Unknown                              [     2 bytes] 2
+(01F3,1013) FL Unknown                              [     8 bytes] 209.9199981689453, 256.0

@@ -1,0 +1,80 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [0, 1]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    54 bytes] "1.2.156.14702.1.1000.64.2.2019 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0.7230010.3.0.3.6.6"
+(0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMTK_366"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    24 bytes] "DERIVED", "SECONDARY", "AXIAL"
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2019-04-22
+(0008,0013) TM Instance Creation Time               [    10 bytes] 11:01:44.456
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0008,0018) UI SOP Instance UID                     [    54 bytes] "1.2.156.14702.1.1000.64.2.2019 …
+(0008,0020) DA Study Date                           [     0 bytes] ""
+(0008,0023) DA Content Date                         [     0 bytes] ""
+(0008,0030) TM Study Time                           [     0 bytes] ""
+(0008,0033) TM Content Time                         [     0 bytes] ""
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "CT"
+(0008,0064) CS Conversion Type                      [     4 bytes] "WSD"
+(0008,0070) LO Manufacturer                         [     0 bytes] ""
+(0008,0080) LO Institution Name                     [     0 bytes] ""
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,103E) LO Series Description                   [     0 bytes] ""
+(0010,0010) PN Patient's Name                       [     0 bytes] ""
+(0010,0020) LO Patient ID                           [     0 bytes] ""
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0010,1010) AS Patient's Age                        [     0 bytes] ""
+(0018,0010) LO Contrast/Bolus Agent                 [     0 bytes] ""
+(0018,0050) DS Slice Thickness                      [     4 bytes] "1.25"
+(0018,0060) DS KVP                                  [     4 bytes] "120"
+(0018,1016) LO Secondary Capture Device Manufacturer  [     4 bytes] "NMS"
+(0018,1018) LO Secondary Capture Device Manufacturer's Model Name  [     4 bytes] "1.0"
+(0018,1020) LO Software Versions                    [    22 bytes] "NeuViz 16 Essence 1.0"
+(0018,1030) LO Protocol Name                        [     0 bytes] ""
+(0018,1120) DS Gantry/Detector Tilt                 [    16 bytes] "6.19999980926514"
+(0018,1130) DS Table Height                         [     6 bytes] "398.5"
+(0018,1151) IS X-Ray Tube Current                   [     4 bytes] "401"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS"
+(0018,9305) FD Revolution Time                      [     8 bytes] 1.0
+(0018,9345) FD CTDIvol                              [     8 bytes] 56.01123
+(0020,000D) UI Study Instance UID                   [    44 bytes] "1.2.156.14702.1.1001.17.0.2019 …
+(0020,000E) UI Series Instance UID                  [    48 bytes] "1.2.156.14702.1.1000.64.1.2019 …
+(0020,0010) SH Study ID                             [     0 bytes] ""
+(0020,0011) IS Series Number                        [     6 bytes] "10002"
+(0020,0013) IS Instance Number                      [     2 bytes] "33"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,0032) DS Image Position (Patient)             [    50 bytes] "61.2311661243439", "-213.60451 …
+(0020,0037) DS Image Orientation (Patient)          [    54 bytes] "0.000000", "1.000000", "0.0000 …
+(0020,0052) UI Frame of Reference UID               [    48 bytes] "1.2.156.14702.1.1001.17.3.164. …
+(0020,1041) DS Slice Location                       [    16 bytes] "-76.867979171013"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 568
+(0028,0011) US Columns                              [     2 bytes] 652
+(0028,0030) DS Pixel Spacing                        [    34 bytes] "0.48615400416544", "0.48615400 …
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,0301) CS Burned In Annotation                 [     4 bytes] "YES"
+(0028,1050) DS Window Center                        [     2 bytes] "40"
+(0028,1051) DS Window Width                         [     2 bytes] "85"
+(0028,1052) DS Rescale Intercept                    [     6 bytes] "-1024"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0028,1054) LO Rescale Type                         [     2 bytes] "US"
+(0032,1033) LO Requesting Service                   [     0 bytes] ""
+(01E3,0010) LO Private Creator                      [    18 bytes] "NMSPrivateCreator"
+(3001,0010) LO Private Creator                      [    18 bytes] "NMSPrivateCreator"
+(3001,1003) LO unknown_private_tag                  [     6 bytes] "SIMPLE"
+(6000,0010) US Overlay Rows                         [     2 bytes] 567
+(6000,0011) US Overlay Columns                      [     2 bytes] 652
+(6000,0022) LO Overlay Description                  [     4 bytes] "NMS"
+(6000,0040) CS Overlay Type                         [     2 bytes] "G"
+(6000,0050) SS Overlay Origin                       [     4 bytes] 1, 1
+(6000,0100) US Overlay Bits Allocated               [     2 bytes] 1
+(6000,0102) US Overlay Bit Position                 [     2 bytes] 0
+(6000,1500) LO Overlay Label                        [    12 bytes] "NMS_OVERLAY"
+(6000,3000) OW Overlay Data                         [ 46210 bytes] [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+(7FE0,0010) OW Pixel Data                           [740672 bytes] [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

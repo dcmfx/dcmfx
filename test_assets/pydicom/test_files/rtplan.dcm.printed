@@ -1,0 +1,179 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    30 bytes] "1.2.840.1000 … (RT Plan Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    42 bytes] "1.2.999.999.99.9.9999.9999.200 …
+(0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    20 bytes] "1.2.888.888.88.8.8.8"
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2003-09-03
+(0008,0013) TM Instance Creation Time               [     6 bytes] 15:00:31
+(0008,0016) UI SOP Class UID                        [    30 bytes] "1.2.840.1000 … (RT Plan Storage)
+(0008,0018) UI SOP Instance UID                     [    42 bytes] "1.2.777.777.77.7.7777.7777.200 …
+(0008,0020) DA Study Date                           [     8 bytes] 2003-07-16
+(0008,0030) TM Study Time                           [     6 bytes] 15:35:57
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     6 bytes] "RTPLAN" (Radiotherapy Plan)
+(0008,0070) LO Manufacturer                         [    22 bytes] "Manufacturer name here"
+(0008,0080) LO Institution Name                     [     4 bytes] "Here"
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1010) SH Station Name                         [    12 bytes] "COMPUTER002"
+(0008,1040) LO Institutional Department Name        [    16 bytes] "Radiation Therap"
+(0008,1070) PN Operators' Name                      [     8 bytes] "operator"
+(0008,1090) LO Manufacturer's Model Name            [    36 bytes] "Treatment Planning System name …
+(0010,0010) PN Patient's Name                       [    18 bytes] "Last^First^mid^pre"
+(0010,0020) LO Patient ID                           [     8 bytes] "id00001"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     2 bytes] "O" (Other)
+(0018,1020) LO Software Versions                    [    10 bytes] "softwareV1"
+(0020,000D) UI Study Instance UID                   [    48 bytes] "1.22.333.4.555555.6.7777777777 …
+(0020,000E) UI Series Instance UID                  [    26 bytes] "1.2.333.444.55.6.7777.8888"
+(0020,0010) SH Study ID                             [     6 bytes] "study1"
+(0020,0011) IS Series Number                        [     2 bytes] "2"
+(300A,0002) SH RT Plan Label                        [     6 bytes] "Plan1"
+(300A,0003) LO RT Plan Name                         [     6 bytes] "Plan1"
+(300A,0006) DA RT Plan Date                         [     8 bytes] 2003-09-03
+(300A,0007) TM RT Plan Time                         [     6 bytes] 15:00:23
+(300A,000C) CS RT Plan Geometry                     [     8 bytes] "PATIENT"
+(300A,0010) SQ Dose Reference Sequence
+  (FFFE,E000) Item
+    (300A,0012) IS Dose Reference Number                [     2 bytes] "1"
+    (300A,0014) CS Dose Reference Structure Type        [    12 bytes] "COORDINATES"
+    (300A,0016) LO Dose Reference Description           [     4 bytes] "iso"
+    (300A,0018) DS Dose Reference Point Coordinates     [    50 bytes] "239.531250000000", "239.53 …
+    (300A,0020) CS Dose Reference Type                  [    14 bytes] "ORGAN_AT_RISK"
+    (300A,0023) DS Delivery Maximum Dose                [    16 bytes] "75.0000000000000"
+    (300A,002C) DS Organ at Risk Maximum Dose           [    16 bytes] "75.0000000000000"
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (300A,0012) IS Dose Reference Number                [     2 bytes] "2"
+    (300A,0014) CS Dose Reference Structure Type        [    12 bytes] "COORDINATES"
+    (300A,0016) LO Dose Reference Description           [     4 bytes] "PTV"
+    (300A,0018) DS Dose Reference Point Coordinates     [    50 bytes] "239.531250000000", "239.53 …
+    (300A,0020) CS Dose Reference Type                  [     6 bytes] "TARGET"
+    (300A,0026) DS Target Prescription Dose             [    16 bytes] "30.8262030000000"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(300A,0070) SQ Fraction Group Sequence
+  (FFFE,E000) Item
+    (300A,0071) IS Fraction Group Number                [     2 bytes] "1"
+    (300A,0078) IS Number of Fractions Planned          [     2 bytes] "30"
+    (300A,0080) IS Number of Beams                      [     2 bytes] "1"
+    (300A,00A0) IS Number of Brachy Application Setups  [     2 bytes] "0"
+    (300C,0004) SQ Referenced Beam Sequence
+      (FFFE,E000) Item
+        (300A,0082) DS Beam Dose Specification Point        [    50 bytes] "239.531250000000", "23 …
+        (300A,0084) DS Beam Dose                            [    16 bytes] "1.02754010000000"
+        (300A,0086) DS Beam Meterset                        [    16 bytes] "116.003669700000"
+        (300C,0006) IS Referenced Beam Number               [     2 bytes] "1"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(300A,00B0) SQ Beam Sequence
+  (FFFE,E000) Item
+    (0008,0070) LO Manufacturer                         [    10 bytes] "Linac co."
+    (0008,0080) LO Institution Name                     [     4 bytes] "Here"
+    (0008,1040) LO Institutional Department Name        [    16 bytes] "Radiation Therap"
+    (0008,1090) LO Manufacturer's Model Name            [    10 bytes] "Zapper9000"
+    (0018,1000) LO Device Serial Number                 [     4 bytes] "9999"
+    (300A,00B2) SH Treatment Machine Name               [     8 bytes] "unit001"
+    (300A,00B3) CS Primary Dosimeter Unit               [     2 bytes] "MU"
+    (300A,00B4) DS Source-Axis Distance                 [    16 bytes] "1000.00000000000"
+    (300A,00B6) SQ Beam Limiting Device Sequence
+      (FFFE,E000) Item
+        (300A,00B8) CS RT Beam Limiting Device Type         [     2 bytes] "X"
+        (300A,00BC) IS Number of Leaf/Jaw Pairs             [     2 bytes] "1"
+      (FFFE,E00D) Item Delimitation Item
+      (FFFE,E000) Item
+        (300A,00B8) CS RT Beam Limiting Device Type         [     2 bytes] "Y"
+        (300A,00BC) IS Number of Leaf/Jaw Pairs             [     2 bytes] "1"
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (300A,00C0) IS Beam Number                          [     2 bytes] "1"
+    (300A,00C2) LO Beam Name                            [     8 bytes] "Field 1"
+    (300A,00C4) CS Beam Type                            [     6 bytes] "STATIC"
+    (300A,00C6) CS Radiation Type                       [     6 bytes] "PHOTON"
+    (300A,00CE) CS Treatment Delivery Type              [    10 bytes] "TREATMENT"
+    (300A,00D0) IS Number of Wedges                     [     2 bytes] "0"
+    (300A,00E0) IS Number of Compensators               [     2 bytes] "0"
+    (300A,00ED) IS Number of Boli                       [     2 bytes] "0"
+    (300A,00F0) IS Number of Blocks                     [     2 bytes] "0"
+    (300A,010E) DS Final Cumulative Meterset Weight     [    16 bytes] "1.00000000000000"
+    (300A,0110) IS Number of Control Points             [     2 bytes] "2"
+    (300A,0111) SQ Control Point Sequence
+      (FFFE,E000) Item
+        (300A,0112) IS Control Point Index                  [     2 bytes] "0"
+        (300A,0114) DS Nominal Beam Energy                  [    16 bytes] "6.00000000000000"
+        (300A,0115) DS Dose Rate Set                        [    16 bytes] "650.000000000000"
+        (300A,011A) SQ Beam Limiting Device Position Sequence
+          (FFFE,E000) Item
+            (300A,00B8) CS RT Beam Limiting Device Type         [     2 bytes] "X"
+            (300A,011C) DS Leaf/Jaw Positions                   [    34 bytes] "-100.00000000000", …
+          (FFFE,E00D) Item Delimitation Item
+          (FFFE,E000) Item
+            (300A,00B8) CS RT Beam Limiting Device Type         [     2 bytes] "Y"
+            (300A,011C) DS Leaf/Jaw Positions                   [    34 bytes] "-100.00000000000", …
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (300A,011E) DS Gantry Angle                         [     4 bytes] "0.0"
+        (300A,011F) CS Gantry Rotation Direction            [     4 bytes] "NONE"
+        (300A,0120) DS Beam Limiting Device Angle           [     4 bytes] "0.0"
+        (300A,0121) CS Beam Limiting Device Rotation Direction  [     4 bytes] "NONE"
+        (300A,0122) DS Patient Support Angle                [     4 bytes] "0.0"
+        (300A,0123) CS Patient Support Rotation Direction   [     4 bytes] "NONE"
+        (300A,0125) DS Table Top Eccentric Angle            [     4 bytes] "0.0"
+        (300A,0126) CS Table Top Eccentric Rotation Direction  [     4 bytes] "NONE"
+        (300A,0128) DS Table Top Vertical Position          [     0 bytes] ""
+        (300A,0129) DS Table Top Longitudinal Position      [     0 bytes] ""
+        (300A,012A) DS Table Top Lateral Position           [     0 bytes] ""
+        (300A,012C) DS Isocenter Position                   [    50 bytes] "235.711172833292", "24 …
+        (300A,0130) DS Source to Surface Distance           [    16 bytes] "898.429664831309"
+        (300A,0134) DS Cumulative Meterset Weight           [     4 bytes] "0.0"
+        (300C,0050) SQ Referenced Dose Reference Sequence
+          (FFFE,E000) Item
+            (300A,010C) DS Cumulative Dose Reference Coefficient  [     4 bytes] "0.0"
+            (300C,0051) IS Referenced Dose Reference Number     [     2 bytes] "1"
+          (FFFE,E00D) Item Delimitation Item
+          (FFFE,E000) Item
+            (300A,010C) DS Cumulative Dose Reference Coefficient  [     4 bytes] "0.0"
+            (300C,0051) IS Referenced Dose Reference Number     [     2 bytes] "2"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+      (FFFE,E00D) Item Delimitation Item
+      (FFFE,E000) Item
+        (300A,0112) IS Control Point Index                  [     2 bytes] "1"
+        (300A,0134) DS Cumulative Meterset Weight           [    16 bytes] "1.00000000000000"
+        (300C,0050) SQ Referenced Dose Reference Sequence
+          (FFFE,E000) Item
+            (300A,010C) DS Cumulative Dose Reference Coefficient  [    12 bytes] "9.9902680e-1"
+            (300C,0051) IS Referenced Dose Reference Number     [     2 bytes] "1"
+          (FFFE,E00D) Item Delimitation Item
+          (FFFE,E000) Item
+            (300A,010C) DS Cumulative Dose Reference Coefficient  [    16 bytes] "1.00000000000000"
+            (300C,0051) IS Referenced Dose Reference Number     [     2 bytes] "2"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (300C,006A) IS Referenced Patient Setup Number      [     2 bytes] "1"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(300A,0180) SQ Patient Setup Sequence
+  (FFFE,E000) Item
+    (0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+    (300A,0182) IS Patient Setup Number                 [     2 bytes] "1"
+    (300A,01B2) ST Setup Technique Description          [     0 bytes] ""
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(300C,0002) SQ Referenced RT Plan Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    30 bytes] "1.2.840. … (RT Plan Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    42 bytes] "1.9.999.999.99.9.9999.9999 …
+    (300A,0055) CS RT Plan Relationship                 [    12 bytes] "PREDECESSOR"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(300C,0060) SQ Referenced Structure Set Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    30 bytes] "1.2.840 … (RT Structure Set Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    28 bytes] "1.2.333.444.55.6.7777.88888"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(300E,0002) CS Approval Status                      [    10 bytes] "UNAPPROVED"

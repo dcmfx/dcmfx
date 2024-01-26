@@ -1,0 +1,667 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.1"
+    ],
+    "vr": "UI"
+  },
+  "00080012": {
+    "Value": [
+      "20050530"
+    ],
+    "vr": "DA"
+  },
+  "00080013": {
+    "Value": [
+      "160527"
+    ],
+    "vr": "TM"
+  },
+  "00080014": {
+    "Value": [
+      "1.2.276.0.7230010.3.0.3.5.3"
+    ],
+    "vr": "UI"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.88.11"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.276.0.7230010.3.1.4.1787205428.166.1117461927.10"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "vr": "DA"
+  },
+  "00080023": {
+    "Value": [
+      "20050530"
+    ],
+    "vr": "DA"
+  },
+  "00080030": {
+    "vr": "TM"
+  },
+  "00080033": {
+    "Value": [
+      "160527"
+    ],
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "SR"
+    ],
+    "vr": "CS"
+  },
+  "00080070": {
+    "Value": [
+      "Kuratorium OFFIS e.V."
+    ],
+    "vr": "LO"
+  },
+  "00080090": {
+    "Value": [
+      {
+        "Alphabetic": "Last Name^First Name"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00080110": {
+    "Value": [
+      {
+        "00080102": {
+          "Value": [
+            "99_OFFIS_DCMTK"
+          ],
+          "vr": "SH"
+        },
+        "0008010C": {
+          "Value": [
+            "1.2.276.0.7230010.3.0.0.1"
+          ],
+          "vr": "UI"
+        },
+        "00080115": {
+          "Value": [
+            "OFFIS DCMTK Coding Scheme"
+          ],
+          "vr": "ST"
+        },
+        "00080116": {
+          "Value": [
+            "Kuratorium OFFIS e.V., Escherweg 2, 26121 Oldenburg, Germany"
+          ],
+          "vr": "ST"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00081030": {
+    "Value": [
+      "OFFIS Structured Reporting Templates"
+    ],
+    "vr": "LO"
+  },
+  "0008103E": {
+    "Value": [
+      "IHE Year 2 - Simple Image Report"
+    ],
+    "vr": "LO"
+  },
+  "00081111": {
+    "Value": [],
+    "vr": "SQ"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "Last Name^First Name"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "O"
+    ],
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.2.276.0.7230010.3.1.2.1787205428.166.1117461927.5"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.2.276.0.7230010.3.1.3.1787205428.166.1117461927.11"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "0040A040": {
+    "Value": [
+      "CONTAINER"
+    ],
+    "vr": "CS"
+  },
+  "0040A043": {
+    "Value": [
+      {
+        "00080100": {
+          "Value": [
+            "IHE.01"
+          ],
+          "vr": "SH"
+        },
+        "00080102": {
+          "Value": [
+            "99_OFFIS_DCMTK"
+          ],
+          "vr": "SH"
+        },
+        "00080104": {
+          "Value": [
+            "Document Title"
+          ],
+          "vr": "LO"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "0040A050": {
+    "Value": [
+      "SEPARATE"
+    ],
+    "vr": "CS"
+  },
+  "0040A372": {
+    "Value": [],
+    "vr": "SQ"
+  },
+  "0040A491": {
+    "Value": [
+      "PARTIAL"
+    ],
+    "vr": "CS"
+  },
+  "0040A493": {
+    "Value": [
+      "UNVERIFIED"
+    ],
+    "vr": "CS"
+  },
+  "0040A730": {
+    "Value": [
+      {
+        "0040A010": {
+          "Value": [
+            "HAS OBS CONTEXT"
+          ],
+          "vr": "CS"
+        },
+        "0040A040": {
+          "Value": [
+            "CODE"
+          ],
+          "vr": "CS"
+        },
+        "0040A043": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "IHE.02"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "99_OFFIS_DCMTK"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Observation Context Mode"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "0040A168": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "IHE.03"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "99_OFFIS_DCMTK"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "DIRECT"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      },
+      {
+        "0040A010": {
+          "Value": [
+            "HAS OBS CONTEXT"
+          ],
+          "vr": "CS"
+        },
+        "0040A040": {
+          "Value": [
+            "PNAME"
+          ],
+          "vr": "CS"
+        },
+        "0040A043": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "IHE.04"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "99_OFFIS_DCMTK"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Recording Observer's Name"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "0040A123": {
+          "Value": [
+            {
+              "Alphabetic": "Enter text"
+            }
+          ],
+          "vr": "PN"
+        }
+      },
+      {
+        "0040A010": {
+          "Value": [
+            "HAS OBS CONTEXT"
+          ],
+          "vr": "CS"
+        },
+        "0040A040": {
+          "Value": [
+            "TEXT"
+          ],
+          "vr": "CS"
+        },
+        "0040A043": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "IHE.05"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "99_OFFIS_DCMTK"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Recording Observer's Organization Name"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "0040A160": {
+          "Value": [
+            "Enter text"
+          ],
+          "vr": "UT"
+        }
+      },
+      {
+        "0040A010": {
+          "Value": [
+            "HAS OBS CONTEXT"
+          ],
+          "vr": "CS"
+        },
+        "0040A040": {
+          "Value": [
+            "CODE"
+          ],
+          "vr": "CS"
+        },
+        "0040A043": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "IHE.06"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "99_OFFIS_DCMTK"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Observation Context Mode"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "0040A168": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "IHE.07"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "99_OFFIS_DCMTK"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "PATIENT"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      },
+      {
+        "0040A010": {
+          "Value": [
+            "CONTAINS"
+          ],
+          "vr": "CS"
+        },
+        "0040A040": {
+          "Value": [
+            "CONTAINER"
+          ],
+          "vr": "CS"
+        },
+        "0040A043": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "IHE.08"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "99_OFFIS_DCMTK"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Section Heading"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "0040A050": {
+          "Value": [
+            "SEPARATE"
+          ],
+          "vr": "CS"
+        },
+        "0040A730": {
+          "Value": [
+            {
+              "0040A010": {
+                "Value": [
+                  "CONTAINS"
+                ],
+                "vr": "CS"
+              },
+              "0040A040": {
+                "Value": [
+                  "TEXT"
+                ],
+                "vr": "CS"
+              },
+              "0040A043": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "IHE.09"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "99_OFFIS_DCMTK"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Report Text"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "0040A160": {
+                "Value": [
+                  "Enter text"
+                ],
+                "vr": "UT"
+              },
+              "0040A730": {
+                "Value": [
+                  {
+                    "00081199": {
+                      "Value": [
+                        {
+                          "00081150": {
+                            "Value": [
+                              "0"
+                            ],
+                            "vr": "UI"
+                          },
+                          "00081155": {
+                            "Value": [
+                              "0"
+                            ],
+                            "vr": "UI"
+                          }
+                        }
+                      ],
+                      "vr": "SQ"
+                    },
+                    "0040A010": {
+                      "Value": [
+                        "INFERRED FROM"
+                      ],
+                      "vr": "CS"
+                    },
+                    "0040A040": {
+                      "Value": [
+                        "IMAGE"
+                      ],
+                      "vr": "CS"
+                    },
+                    "0040A043": {
+                      "Value": [
+                        {
+                          "00080100": {
+                            "Value": [
+                              "IHE.10"
+                            ],
+                            "vr": "SH"
+                          },
+                          "00080102": {
+                            "Value": [
+                              "99_OFFIS_DCMTK"
+                            ],
+                            "vr": "SH"
+                          },
+                          "00080104": {
+                            "Value": [
+                              "Image Reference"
+                            ],
+                            "vr": "LO"
+                          }
+                        }
+                      ],
+                      "vr": "SQ"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              }
+            },
+            {
+              "00081199": {
+                "Value": [
+                  {
+                    "00081150": {
+                      "Value": [
+                        "0"
+                      ],
+                      "vr": "UI"
+                    },
+                    "00081155": {
+                      "Value": [
+                        "0"
+                      ],
+                      "vr": "UI"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "0040A010": {
+                "Value": [
+                  "CONTAINS"
+                ],
+                "vr": "CS"
+              },
+              "0040A040": {
+                "Value": [
+                  "IMAGE"
+                ],
+                "vr": "CS"
+              },
+              "0040A043": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "IHE.10"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "99_OFFIS_DCMTK"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Image Reference"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  }
+}

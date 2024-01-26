@@ -1,0 +1,668 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [0, 1]
+(0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (Enhanced MR Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    46 bytes] "1.3.6.1.4.1.5962.1.1.5000.3.1. …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    18 bytes] "1.3.6.1.4.1.5962.2"
+(0002,0013) SH Implementation Version Name          [    10 bytes] "DCTOOL100"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "CLUNIE1"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    28 bytes] "ORIGINAL", "PRIMARY", "MOTION" …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2006-12-19
+(0008,0013) TM Instance Creation Time               [     6 bytes] 14:33:29
+(0008,0014) UI Instance Creator UID                 [    18 bytes] "1.3.6.1.4.1.5962.3"
+(0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Enhanced MR Image Storage)
+(0008,0018) UI SOP Instance UID                     [    46 bytes] "1.3.6.1.4.1.5962.1.1.5000.3.1. …
+(0008,0020) DA Study Date                           [     8 bytes] 2006-12-19
+(0008,0021) DA Series Date                          [     8 bytes] 2006-12-19
+(0008,0023) DA Content Date                         [     8 bytes] 2006-12-19
+(0008,002A) DT Acquisition DateTime                 [    14 bytes] 2006-12-19T12:09:00
+(0008,0030) TM Study Time                           [     6 bytes] 11:35:00
+(0008,0031) TM Series Time                          [     6 bytes] 11:35:00
+(0008,0033) TM Content Time                         [     6 bytes] 12:09:00
+(0008,0050) SH Accession Number                     [     8 bytes] "9995000"
+(0008,0060) CS Modality                             [     2 bytes] "MR"
+(0008,0070) LO Manufacturer                         [    20 bytes] "Acme Medical Devices"
+(0008,0080) LO Institution Name                     [    20 bytes] "St. Nowhere Hospital"
+(0008,0090) PN Referring Physician's Name           [    14 bytes] "Thomas^Albert"
+(0008,0201) SH Timezone Offset From UTC             [     6 bytes] "-0500"
+(0008,1010) SH Station Name                         [    10 bytes] "CONSOLE01"
+(0008,1030) LO Study Description                    [    12 bytes] "Moving knee"
+(0008,103E) LO Series Description                   [    58 bytes] "Sagittal,1 stack,1 dimension,t …
+(0008,1040) LO Institutional Department Name        [     4 bytes] "MRI"
+(0008,1050) PN Performing Physician's Name          [    10 bytes] "Smith^John"
+(0008,1060) PN Name of Physician(s) Reading Study   [    10 bytes] "Smith^John"
+(0008,1070) PN Operators' Name                      [    12 bytes] "Jones^Molly"
+(0008,1090) LO Manufacturer's Model Name            [    20 bytes] "Super Dooper Scanner"
+(0008,9092) SQ Referenced Image Evidence Sequence   
+  (FFFE,E000) Item                                    
+    (0008,1115) SQ Referenced Series Sequence           
+      (FFFE,E000) Item                                    
+        (0008,1199) SQ Referenced SOP Sequence              
+          (FFFE,E000) Item                                    
+            (0008,1150) UI Referenced SOP Class UID             [    28 bytes] "1.2.840 … (Enhanced MR Image Storage)
+            (0008,1155) UI Referenced SOP Instance UID          [    46 bytes] "1.3.6.1.4.1.5962.1 …
+          (FFFE,E00D) Item Delimitation Item                  
+        (FFFE,E0DD) Sequence Delimitation Item              
+        (0020,000E) UI Series Instance UID                  [    44 bytes] "1.3.6.1.4.1.5962.1.3.5 …
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0020,000D) UI Study Instance UID                   [    42 bytes] "1.3.6.1.4.1.5962.1.2.5000. …
+  (FFFE,E00D) Item Delimitation Item                  
+(FFFE,E0DD) Sequence Delimitation Item              
+(0008,9121) SQ Referenced Raw Data Sequence         
+  (FFFE,E000) Item                                    
+    (0008,1115) SQ Referenced Series Sequence           
+      (FFFE,E000) Item                                    
+        (0008,1199) SQ Referenced SOP Sequence              
+          (FFFE,E000) Item                                    
+            (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (Raw Data Storage)
+            (0008,1155) UI Referenced SOP Instance UID          [    44 bytes] "1.3.6.1.4.1.5962.1 …
+          (FFFE,E00D) Item Delimitation Item                  
+        (FFFE,E0DD) Sequence Delimitation Item              
+        (0020,000E) UI Series Instance UID                  [    44 bytes] "1.3.6.1.4.1.5962.1.3.5 …
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0020,000D) UI Study Instance UID                   [    42 bytes] "1.3.6.1.4.1.5962.1.2.5000. …
+  (FFFE,E00D) Item Delimitation Item                  
+(FFFE,E0DD) Sequence Delimitation Item              
+(0008,9205) CS Pixel Presentation                   [    10 bytes] "MONOCHROME"
+(0008,9206) CS Volumetric Properties                [     6 bytes] "VOLUME"
+(0008,9207) CS Volume Based Calculation Technique   [     4 bytes] "NONE"
+(0008,9208) CS Complex Image Component              [    10 bytes] "MAGNITUDE"
+(0008,9209) CS Acquisition Contrast                 [     2 bytes] "T1"
+(0010,0010) PN Patient's Name                       [    12 bytes] "Knee^Moving"
+(0010,0020) LO Patient ID                           [    10 bytes] "MF-0000000"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1950-07-04
+(0010,0040) CS Patient's Sex                        [     2 bytes] "M"
+(0010,1010) AS Patient's Age                        [     4 bytes] 52 years
+(0010,1020) DS Patient's Size                       [     4 bytes] "1.6"
+(0010,1030) DS Patient's Weight                     [     2 bytes] "75"
+(0018,0023) CS MR Acquisition Type                  [     2 bytes] "2D"
+(0018,0087) DS Magnetic Field Strength              [     4 bytes] "1.5"
+(0018,1000) LO Device Serial Number                 [     6 bytes] "123456"
+(0018,1020) LO Software Versions                    [     4 bytes] "1.00"
+(0018,1030) LO Protocol Name                        [    10 bytes] "t1sagknee"
+(0018,5100) CS Patient Position                     [     4 bytes] "FFS"
+(0018,9004) CS Content Qualification                [     8 bytes] "PRODUCT"
+(0018,9005) SH Pulse Sequence Name                  [     2 bytes] "SE"
+(0018,9008) CS Echo Pulse Sequence                  [     4 bytes] "SPIN"
+(0018,9011) CS Multiple Spin Echo                   [     2 bytes] "NO"
+(0018,9012) CS Multi-planar Excitation              [     2 bytes] "NO"
+(0018,9014) CS Phase Contrast                       [     2 bytes] "NO"
+(0018,9015) CS Time of Flight Contrast              [     2 bytes] "NO"
+(0018,9017) CS Steady State Pulse Sequence          [     4 bytes] "NONE"
+(0018,9018) CS Echo Planar Pulse Sequence           [     2 bytes] "NO"
+(0018,9024) CS Saturation Recovery                  [     2 bytes] "NO"
+(0018,9025) CS Spectrally Selected Suppression      [     4 bytes] "NONE"
+(0018,9029) CS Oversampling Phase                   [     4 bytes] "NONE"
+(0018,9032) CS Geometry of k-Space Traversal        [    12 bytes] "RECTILINEAR"
+(0018,9033) CS Segmented k-Space Traversal          [     6 bytes] "SINGLE"
+(0018,9034) CS Rectilinear Phase Encode Reordering  [     6 bytes] "LINEAR"
+(0018,9064) CS k-space Filtering                    [     4 bytes] "NONE"
+(0018,9073) FD Acquisition Duration                 [     8 bytes] 76.80004882812499
+(0018,9093) US Number of k-Space Trajectories       [     2 bytes] 1
+(0018,9100) CS Resonant Nucleus                     [     2 bytes] "1H"
+(0018,9174) CS Applicable Safety Standard Agency    [     4 bytes] "FDA"
+(0020,000D) UI Study Instance UID                   [    42 bytes] "1.3.6.1.4.1.5962.1.2.5000.1166 …
+(0020,000E) UI Series Instance UID                  [    44 bytes] "1.3.6.1.4.1.5962.1.3.5000.3.11 …
+(0020,0010) SH Study ID                             [     6 bytes] "05000"
+(0020,0011) IS Series Number                        [     2 bytes] "3"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0052) UI Frame of Reference UID               [    44 bytes] "1.3.6.1.4.1.5962.1.4.5000.1.11 …
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0020,9221) SQ Dimension Organization Sequence      
+  (FFFE,E000) Item                                    
+    (0020,9164) UI Dimension Organization UID           [    46 bytes] "1.3.6.1.4.1.5962.1.6.5000. …
+  (FFFE,E00D) Item Delimitation Item                  
+(FFFE,E0DD) Sequence Delimitation Item              
+(0020,9222) SQ Dimension Index Sequence             
+  (FFFE,E000) Item                                    
+    (0020,9164) UI Dimension Organization UID           [    46 bytes] "1.3.6.1.4.1.5962.1.6.5000. …
+    (0020,9165) AT Dimension Index Pointer              [     4 bytes] (0020,9128)
+    (0020,9167) AT Functional Group Pointer             [     4 bytes] (0020,9111)
+  (FFFE,E00D) Item Delimitation Item                  
+(FFFE,E0DD) Sequence Delimitation Item              
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0008) IS Number of Frames                     [     2 bytes] "19"
+(0028,0010) US Rows                                 [     2 bytes] 256
+(0028,0011) US Columns                              [     2 bytes] 256
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 12
+(0028,0102) US High Bit                             [     2 bytes] 11
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,0301) CS Burned In Annotation                 [     2 bytes] "NO"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00"
+(0040,0555) SQ Acquisition Context Sequence         
+(FFFE,E0DD) Sequence Delimitation Item              
+(2050,0020) CS Presentation LUT Shape               [     8 bytes] "IDENTITY"
+(5200,9229) SQ Shared Functional Groups Sequence    
+  (FFFE,E000) Item                                    
+    (0008,1140) SQ Referenced Image Sequence            
+      (FFFE,E000) Item                                    
+        (0008,1150) UI Referenced SOP Class UID             [    28 bytes] "1.2.840 … (Enhanced MR Image Storage)
+        (0008,1155) UI Referenced SOP Instance UID          [    46 bytes] "1.3.6.1.4.1.5962.1.1.5 …
+        (0008,1160) IS Referenced Frame Number              [     6 bytes] "1", "2", "3"
+        (0040,A170) SQ Purpose of Reference Code Sequence   
+          (FFFE,E000) Item                                    
+            (0008,0100) SH Code Value                           [     6 bytes] "121311"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+            (0008,0104) LO Code Meaning                         [    10 bytes] "Localizer"
+          (FFFE,E00D) Item Delimitation Item                  
+        (FFFE,E0DD) Sequence Delimitation Item              
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0018,9006) SQ MR Imaging Modifier Sequence         
+      (FFFE,E000) Item                                    
+        (0018,0095) DS Pixel Bandwidth                      [     8 bytes] "32000.0"
+        (0018,9020) CS Magnetization Transfer               [     4 bytes] "NONE"
+        (0018,9022) CS Blood Signal Nulling                 [     2 bytes] "NO"
+        (0018,9028) CS Tagging                              [     4 bytes] "NONE"
+        (0018,9098) FD Transmitter Frequency                [     8 bytes] 63.87362670898437
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0018,9042) SQ MR Receive Coil Sequence             
+      (FFFE,E000) Item                                    
+        (0018,1250) SH Receive Coil Name                    [     4 bytes] "KNEE"
+        (0018,9041) LO Receive Coil Manufacturer Name       [    20 bytes] "Acme Medical Devices"
+        (0018,9043) CS Receive Coil Type                    [     6 bytes] "VOLUME"
+        (0018,9044) CS Quadrature Receive Coil              [     2 bytes] "NO"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0018,9049) SQ MR Transmit Coil Sequence            
+      (FFFE,E000) Item                                    
+        (0018,1251) SH Transmit Coil Name                   [     4 bytes] "KNEE"
+        (0018,9050) LO Transmit Coil Manufacturer Name      [    20 bytes] "Acme Medical Devices"
+        (0018,9051) CS Transmit Coil Type                   [     6 bytes] "VOLUME"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0018,9112) SQ MR Timing and Related Parameters Sequence  
+      (FFFE,E000) Item                                    
+        (0018,0080) DS Repetition Time                      [     8 bytes] "200.000"
+        (0018,0091) IS Echo Train Length                    [     2 bytes] "1"
+        (0018,1314) DS Flip Angle                           [     8 bytes] "90.0000"
+        (0018,9176) SQ Operating Mode Sequence              
+          (FFFE,E000) Item                                    
+            (0018,9177) CS Operating Mode Type                  [    12 bytes] "STATIC FIELD"
+            (0018,9178) CS Operating Mode                       [    10 bytes] "IEC_NORMAL"
+          (FFFE,E00D) Item Delimitation Item                  
+          (FFFE,E000) Item                                    
+            (0018,9177) CS Operating Mode Type                  [     2 bytes] "RF"
+            (0018,9178) CS Operating Mode                       [    10 bytes] "IEC_NORMAL"
+          (FFFE,E00D) Item Delimitation Item                  
+          (FFFE,E000) Item                                    
+            (0018,9177) CS Operating Mode Type                  [     8 bytes] "GRADIENT"
+            (0018,9178) CS Operating Mode                       [    10 bytes] "IEC_NORMAL"
+          (FFFE,E00D) Item Delimitation Item                  
+        (FFFE,E0DD) Sequence Delimitation Item              
+        (0018,9239) SQ Specific Absorption Rate Sequence    
+          (FFFE,E000) Item                                    
+            (0018,9179) CS Specific Absorption Rate Definition  [    14 bytes] "IEC_WHOLE_BODY"
+            (0018,9181) FD Specific Absorption Rate Value       [     8 bytes] 0.19900012016296384
+          (FFFE,E00D) Item Delimitation Item                  
+        (FFFE,E0DD) Sequence Delimitation Item              
+        (0018,9240) US RF Echo Train Length                 [     2 bytes] 1
+        (0018,9241) US Gradient Echo Train Length           [     2 bytes] 0
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0018,9114) SQ MR Echo Sequence                     
+      (FFFE,E000) Item                                    
+        (0018,9082) FD Effective Echo Time                  [     8 bytes] 24.00001525878906
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0018,9115) SQ MR Modifier Sequence                 
+      (FFFE,E000) Item                                    
+        (0018,9009) CS Inversion Recovery                   [     2 bytes] "NO"
+        (0018,9010) CS Flow Compensation                    [     4 bytes] "NONE"
+        (0018,9021) CS T2 Preparation                       [     2 bytes] "NO"
+        (0018,9026) CS Spectrally Selected Excitation       [     4 bytes] "NONE"
+        (0018,9027) CS Spatial Pre-saturation               [     4 bytes] "NONE"
+        (0018,9077) CS Parallel Acquisition                 [     2 bytes] "NO"
+        (0018,9081) CS Partial Fourier                      [     2 bytes] "NO"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0018,9119) SQ MR Averages Sequence                 
+      (FFFE,E000) Item                                    
+        (0018,0083) DS Number of Averages                   [     8 bytes] "2.00000"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0018,9125) SQ MR FOV/Geometry Sequence             
+      (FFFE,E000) Item                                    
+        (0018,0093) DS Percent Sampling                     [     8 bytes] "100.000"
+        (0018,0094) DS Percent Phase Field of View          [     8 bytes] "100.000"
+        (0018,1312) CS In-plane Phase Encoding Direction    [     4 bytes] "ROW"
+        (0018,9058) US MR Acquisition Frequency Encoding Steps  [     2 bytes] 192
+        (0018,9231) US MR Acquisition Phase Encoding Steps in-plane  [     2 bytes] 160
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0018,9226) SQ MR Image Frame Type Sequence         
+      (FFFE,E000) Item                                    
+        (0008,9007) CS Frame Type                           [    28 bytes] "ORIGINAL", "PRIMARY",  …
+        (0008,9205) CS Pixel Presentation                   [    10 bytes] "MONOCHROME"
+        (0008,9206) CS Volumetric Properties                [     6 bytes] "VOLUME"
+        (0008,9207) CS Volume Based Calculation Technique   [     4 bytes] "NONE"
+        (0008,9208) CS Complex Image Component              [    10 bytes] "MAGNITUDE"
+        (0008,9209) CS Acquisition Contrast                 [     2 bytes] "T1"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0020,9071) SQ Frame Anatomy Sequence               
+      (FFFE,E000) Item                                    
+        (0008,2218) SQ Anatomic Region Sequence             
+          (FFFE,E000) Item                                    
+            (0008,0100) SH Code Value                           [     8 bytes] "T-D9200"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SNM3"
+            (0008,0104) LO Code Meaning                         [     4 bytes] "Knee"
+          (FFFE,E00D) Item Delimitation Item                  
+        (FFFE,E0DD) Sequence Delimitation Item              
+        (0020,9072) CS Frame Laterality                     [     2 bytes] "R"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0020,9113) SQ Plane Position Sequence              
+      (FFFE,E000) Item                                    
+        (0020,0032) DS Image Position (Patient)             [    26 bytes] "-3.00000", "-80.0000", …
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0020,9116) SQ Plane Orientation Sequence           
+      (FFFE,E000) Item                                    
+        (0020,0037) DS Image Orientation (Patient)          [    48 bytes] "0.00000", "1.00000", " …
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9110) SQ Pixel Measures Sequence              
+      (FFFE,E000) Item                                    
+        (0018,0050) DS Slice Thickness                      [     8 bytes] "6.00000"
+        (0028,0030) DS Pixel Spacing                        [    18 bytes] "0.625000", "0.625000"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9145) SQ Pixel Value Transformation Sequence  
+      (FFFE,E000) Item                                    
+        (0028,1052) DS Rescale Intercept                    [     8 bytes] "0.00000"
+        (0028,1053) DS Rescale Slope                        [     8 bytes] "1.00000"
+        (0028,1054) LO Rescale Type                         [     2 bytes] "US"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+(FFFE,E0DD) Sequence Delimitation Item              
+(5200,9230) SQ Per-Frame Functional Groups Sequence  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:09:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:09:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 1
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 1
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1518.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2810.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:13:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:13:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 2
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 2
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1519.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2808.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:15:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:15:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 3
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 3
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1519.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2808.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:17:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:17:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 4
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 4
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1523.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2800.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:19:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:19:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 5
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 5
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1520.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2805.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:21:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:21:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 6
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 6
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1521.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2804.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:22:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:22:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 7
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 7
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1522.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2802.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:24:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:24:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 8
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 8
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1522.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2802.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:26:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:26:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 9
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 9
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1524.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2797.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:28:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:28:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 10
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 10
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1523.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2799.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:29:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:29:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 11
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 11
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1522.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2801.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:31:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:31:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 12
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 12
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1523.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2800.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:33:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:33:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 13
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 13
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1524.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2798.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:35:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:35:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 14
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 14
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1523.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2799.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:37:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:37:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 15
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 15
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1525.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2795.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:39:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:39:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 16
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 16
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1525.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2796.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:40:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:40:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 17
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 17
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1526.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2793.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:42:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:42:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 18
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 18
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1530.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2785.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+  (FFFE,E000) Item                                    
+    (0020,9111) SQ Frame Content Sequence               
+      (FFFE,E000) Item                                    
+        (0018,9074) DT Frame Acquisition DateTime           [    14 bytes] 2006-12-19T12:44:00
+        (0018,9151) DT Frame Reference DateTime             [    18 bytes] 2006-12-19T12:44:38.4
+        (0018,9220) FD Frame Acquisition Duration           [     8 bytes] 76800.06249999999
+        (0020,9056) SH Stack ID                             [     2 bytes] "1"
+        (0020,9057) UL In-Stack Position Number             [     4 bytes] 1
+        (0020,9128) UL Temporal Position Index              [     4 bytes] 19
+        (0020,9156) US Frame Acquisition Number             [     2 bytes] 1
+        (0020,9157) UL Dimension Index Values               [     4 bytes] 19
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+    (0028,9132) SQ Frame VOI LUT Sequence               
+      (FFFE,E000) Item                                    
+        (0028,1050) DS Window Center                        [     8 bytes] "1531.00"
+        (0028,1051) DS Window Width                         [     8 bytes] "2784.00"
+      (FFFE,E00D) Item Delimitation Item                  
+    (FFFE,E0DD) Sequence Delimitation Item              
+  (FFFE,E00D) Item Delimitation Item                  
+(FFFE,E0DD) Sequence Delimitation Item              
+(7FE0,0010) OW Pixel Data                           [2490368 bytes] [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …

@@ -1,0 +1,132 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    30 bytes] "1.2.840.100 … (RT Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    56 bytes] "1.2.246.352.62.1.5599711233535 …
+(0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    24 bytes] "1.2.246.352.70.2.1.160.3"
+(0002,0013) SH Implementation Version Name          [     8 bytes] "DCIE 2.2"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    38 bytes] "ORIGINAL", "PRIMARY", "PORTAL" …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2019-07-29
+(0008,0013) TM Instance Creation Time               [     6 bytes] 12:15:45
+(0008,0016) UI SOP Class UID                        [    30 bytes] "1.2.840.100 … (RT Image Storage)
+(0008,0018) UI SOP Instance UID                     [    56 bytes] "1.2.246.352.62.1.5599711233535 …
+(0008,0020) DA Study Date                           [     8 bytes] 2012-07-14
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2019-07-29
+(0008,0023) DA Content Date                         [     8 bytes] 2019-07-29
+(0008,0030) TM Study Time                           [    10 bytes] 13:42:23.11
+(0008,0032) TM Acquisition Time                     [    10 bytes] 12:01:56.727
+(0008,0033) TM Content Time                         [    10 bytes] 12:01:56.727
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     8 bytes] "RTIMAGE" (Radiotherapy Image)
+(0008,0064) CS Conversion Type                      [     2 bytes] "DI" (Digital Interface)
+(0008,0070) LO Manufacturer                         [    22 bytes] "Varian Medical Systems"
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1010) SH Station Name                         [    12 bytes] "TrueBeam1309"
+(0008,1030) LO Study Description                    [    18 bytes] "ARIA RadOnc Study"
+(0008,1070) PN Operators' Name                      [     8 bytes] "rwestra"
+(0008,1090) LO Manufacturer's Model Name            [    20 bytes] "Patient Verification"
+(0008,3010) UI Irradiation Event UID                [    58 bytes] "1.2.246.352.62.30.550407392393 …
+(0010,0010) PN Patient's Name                       [    30 bytes] "LUH Monthly QA^LUH Monthly QA"
+(0010,0020) LO Patient ID                           [     8 bytes] "PHY0019a"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0018,1000) LO Device Serial Number                 [     4 bytes] "1309"
+(0018,1020) LO Software Versions                    [     8 bytes] "2.22.5.0"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0020,000D) UI Study Instance UID                   [    46 bytes] "1.2.246.352.71.1.73698499.6199 …
+(0020,000E) UI Series Instance UID                  [    58 bytes] "1.2.246.352.62.2.5080359796910 …
+(0020,0010) SH Study ID                             [    16 bytes] "Rad-Light Field"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,0052) UI Frame of Reference UID               [    56 bytes] "1.2.246.352.62.3.5636631474271 …
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 768
+(0028,0011) US Columns                              [     2 bytes] 1024
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,1040) CS Pixel Intensity Relationship         [     4 bytes] "LIN" (Approximately proportional to X-Ray beam intensity)
+(0028,1041) SS Pixel Intensity Relationship Sign    [     2 bytes] 1
+(0028,1050) DS Window Center                        [    16 bytes] "0.10774013962825"
+(0028,1051) DS Window Width                         [    16 bytes] "0.21467775607873"
+(0028,1052) DS Rescale Intercept                    [     2 bytes] "0"
+(0028,1053) DS Rescale Slope                        [    16 bytes] "5.6120501942e-06"
+(0028,1054) LO Rescale Type                         [     2 bytes] "CU"
+(3002,0002) SH RT Image Label                       [     8 bytes] "MV_0_0a6"
+(3002,0004) ST RT Image Description                 [   248 bytes] "6x [MV], 600 [MU/min] \r\nMode …
+(3002,000A) CS Reported Values Origin               [     6 bytes] "ACTUAL"
+(3002,000C) CS RT Image Plane                       [     6 bytes] "NORMAL"
+(3002,000D) DS X-Ray Image Receptor Translation     [    50 bytes] "-0.0003296041284", "-0.0128886 …
+(3002,000E) DS X-Ray Image Receptor Angle           [     2 bytes] "0"
+(3002,0010) DS RT Image Orientation                 [    12 bytes] "1", "0", "0", "0", "-1", "0"
+(3002,0011) DS Image Plane Pixel Spacing            [    12 bytes] "0.392", "0.392"
+(3002,0012) DS RT Image Position                    [    16 bytes] "-200.508", "150.332"
+(3002,0020) SH Radiation Machine Name               [    12 bytes] "TrueBeam1309"
+(3002,0022) DS Radiation Machine SAD                [     4 bytes] "1000"
+(3002,0026) DS RT Image SID                         [    16 bytes] "1500.03301807881"
+(3002,0029) IS Fraction Number                      [     2 bytes] "0"
+(3002,0030) SQ Exposure Sequence
+  (FFFE,E000) Item
+    (0008,1160) IS Referenced Frame Number              [     2 bytes] "1"
+    (0018,0060) DS KVP                                  [     4 bytes] "6000"
+    (0018,1150) IS Exposure Time                        [     4 bytes] "5221"
+    (3002,0032) DS Meterset Exposure                    [    16 bytes] "50.001832004119"
+    (300A,00B6) SQ Beam Limiting Device Sequence
+      (FFFE,E000) Item
+        (300A,00B8) CS RT Beam Limiting Device Type         [     2 bytes] "X"
+        (300A,00BC) IS Number of Leaf/Jaw Pairs             [     2 bytes] "1"
+        (300A,011C) DS Leaf/Jaw Positions                   [    34 bytes] "-99.999998082999", "99 …
+      (FFFE,E00D) Item Delimitation Item
+      (FFFE,E000) Item
+        (300A,00B8) CS RT Beam Limiting Device Type         [     2 bytes] "Y"
+        (300A,00BC) IS Number of Leaf/Jaw Pairs             [     2 bytes] "1"
+        (300A,011C) DS Leaf/Jaw Positions                   [    34 bytes] "-100.00000503402", "99 …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (300A,00F0) IS Number of Blocks                     [     2 bytes] "0"
+    (300A,011E) DS Gantry Angle                         [    16 bytes] "0.0132679680691"
+    (300A,0120) DS Beam Limiting Device Angle           [    14 bytes] "359.999680072"
+    (300A,0122) DS Patient Support Angle                [    10 bytes] "0.04296875"
+    (300A,0128) DS Table Top Vertical Position          [    16 bytes] "-15.345091869516"
+    (300A,0129) DS Table Top Longitudinal Position      [    16 bytes] "193.518003822438"
+    (300A,012A) DS Table Top Lateral Position           [    16 bytes] "2.6934503777976"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(300A,00B3) CS Primary Dosimeter Unit               [     2 bytes] "MU"
+(300A,011E) DS Gantry Angle                         [    16 bytes] "0.0132679680691"
+(300A,0120) DS Beam Limiting Device Angle           [    14 bytes] "359.999680072"
+(300A,0122) DS Patient Support Angle                [    10 bytes] "0.04296875"
+(300A,0128) DS Table Top Vertical Position          [    16 bytes] "-15.345091869516"
+(300A,0129) DS Table Top Longitudinal Position      [    16 bytes] "193.518003822438"
+(300A,012A) DS Table Top Lateral Position           [    16 bytes] "2.6934503777976"
+(300A,012C) DS Isocenter Position                   [     6 bytes] "0", "0", "0"
+(300C,0002) SQ Referenced RT Plan Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    30 bytes] "1.2.840. … (RT Plan Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    52 bytes] "1.2.246.352.71.5.518672833 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(300C,0006) IS Referenced Beam Number               [     2 bytes] "3"
+(300C,0008) DS Start Cumulative Meterset Weight     [    16 bytes] "4.2730535563e-06"
+(300C,0009) DS End Cumulative Meterset Weight       [    16 bytes] "1.00004091313594"
+(300C,0022) IS Referenced Fraction Group Number     [     2 bytes] "1"
+(3253,0010) LO Private Creator                      [    34 bytes] "Varian Medical Systems VISION  …
+(3253,1000) UN XML stream.                          [   484 bytes] [3C 52 54 49 6D 61 67 65 45 78  …
+(3253,1001) UN Data length of the XML stream        [     2 bytes] [30 20]
+(3253,1002) UN Extended Interface Format tag        [    16 bytes] [49 6D 61 67 65 50 72 6F 63 65  …
+(3273,0010) LO Private Creator                      [    34 bytes] "Varian Medical Systems VISION  …
+(3273,1000) UN unknown_private_tag                  [     6 bytes] [30 5C 30 5C 30 20]
+(3273,1001) UN unknown_private_tag                  [     4 bytes] [48 46 53 20]
+(5000,0005) US Curve Dimensions                     [     2 bytes] 2
+(5000,0010) US Number of Points                     [     2 bytes] 4
+(5000,0020) CS Type of Data                         [     4 bytes] "ROI"
+(5000,0030) SH Axis Units                           [    10 bytes] "PIXL", "PIXL"
+(5000,0040) SH Axis Labels                          [    32 bytes] "Plan Field Edge", "Plan Field  …
+(5000,0103) US Data Value Representation            [     2 bytes] 3
+(5000,2500) LO Curve Label                          [    16 bytes] "Field Edge (6X 2"
+(5000,3000) UN Curve Data                           [    64 bytes] [17 2A 42 CB 22 2E 81 40 26 75  …
+(7FE0,0010) OW Pixel Data                           [1572864 bytes] [72 00 71 00 64 00 66 00 72 00 …

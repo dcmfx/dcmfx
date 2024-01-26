@@ -1,0 +1,453 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.1"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "ORIGINAL",
+      "PRIMARY",
+      "OTHER"
+    ],
+    "vr": "CS"
+  },
+  "00080012": {
+    "Value": [
+      "20040624"
+    ],
+    "vr": "DA"
+  },
+  "00080013": {
+    "Value": [
+      "020525"
+    ],
+    "vr": "TM"
+  },
+  "00080014": {
+    "Value": [
+      "1.3.6.1.4.1.5962.3"
+    ],
+    "vr": "UI"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.4"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.0.0.0.1196533885.18148.0.476"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20030505"
+    ],
+    "vr": "DA"
+  },
+  "00080021": {
+    "Value": [
+      "20030505"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "Value": [
+      "20030505"
+    ],
+    "vr": "DA"
+  },
+  "00080030": {
+    "Value": [
+      "050743"
+    ],
+    "vr": "TM"
+  },
+  "00080031": {
+    "Value": [
+      "050814"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "Value": [
+      "050829"
+    ],
+    "vr": "TM"
+  },
+  "00080050": {
+    "Value": [
+      "428"
+    ],
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "MR"
+    ],
+    "vr": "CS"
+  },
+  "00080070": {
+    "Value": [
+      "Philips Medical Systems, Inc."
+    ],
+    "vr": "LO"
+  },
+  "00080090": {
+    "vr": "PN"
+  },
+  "00080201": {
+    "Value": [
+      "+0000"
+    ],
+    "vr": "SH"
+  },
+  "00081030": {
+    "Value": [
+      "Carotids"
+    ],
+    "vr": "LO"
+  },
+  "0008103E": {
+    "Value": [
+      "FAST LOCALIZER"
+    ],
+    "vr": "LO"
+  },
+  "00081090": {
+    "Value": [
+      "Eclipse 1.5T"
+    ],
+    "vr": "LO"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "Doe^Peter"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "98890234"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "M"
+    ],
+    "vr": "CS"
+  },
+  "00101010": {
+    "Value": [
+      "045Y"
+    ],
+    "vr": "AS"
+  },
+  "00101030": {
+    "Value": [
+      81.6327
+    ],
+    "vr": "DS"
+  },
+  "00120062": {
+    "Value": [
+      "YES"
+    ],
+    "vr": "CS"
+  },
+  "00120063": {
+    "Value": [
+      "dcanon",
+      "no identifiers",
+      "keep descriptions",
+      "keep manufacturer",
+      "keep retired",
+      "keep private",
+      "no uids",
+      "keep pet demographics",
+      "keep dates",
+      "dcdtchg change dates"
+    ],
+    "vr": "LO"
+  },
+  "00180010": {
+    "vr": "LO"
+  },
+  "00180020": {
+    "Value": [
+      "GR"
+    ],
+    "vr": "CS"
+  },
+  "00180021": {
+    "Value": [
+      "SS"
+    ],
+    "vr": "CS"
+  },
+  "00180022": {
+    "vr": "CS"
+  },
+  "00180023": {
+    "vr": "CS"
+  },
+  "00180050": {
+    "Value": [
+      10.0
+    ],
+    "vr": "DS"
+  },
+  "00180080": {
+    "Value": [
+      16.0
+    ],
+    "vr": "DS"
+  },
+  "00180081": {
+    "Value": [
+      3.7
+    ],
+    "vr": "DS"
+  },
+  "00180083": {
+    "Value": [
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "00180084": {
+    "Value": [
+      63.6978
+    ],
+    "vr": "DS"
+  },
+  "00180087": {
+    "Value": [
+      1.5
+    ],
+    "vr": "DS"
+  },
+  "00180091": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00180094": {
+    "Value": [
+      100.0
+    ],
+    "vr": "DS"
+  },
+  "00181020": {
+    "Value": [
+      "VIA5.2"
+    ],
+    "vr": "LO"
+  },
+  "00181030": {
+    "Value": [
+      "FAST LOCALIZER"
+    ],
+    "vr": "LO"
+  },
+  "00181310": {
+    "Value": [
+      256,
+      0,
+      0,
+      256
+    ],
+    "vr": "US"
+  },
+  "00181314": {
+    "Value": [
+      20.0
+    ],
+    "vr": "DS"
+  },
+  "00185100": {
+    "Value": [
+      "HFS"
+    ],
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.0.0.0.1196533885.18148.0.427"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.0.0.0.1196533885.18148.0.475"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "428"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200012": {
+    "Value": [
+      2
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200032": {
+    "Value": [
+      0.0,
+      -175.0,
+      175.0
+    ],
+    "vr": "DS"
+  },
+  "00200037": {
+    "Value": [
+      0.0,
+      1.0,
+      -0.0,
+      -0.0,
+      0.0,
+      -1.0
+    ],
+    "vr": "DS"
+  },
+  "00200052": {
+    "Value": [
+      "1.3.6.1.4.1.5962.1.1.0.0.0.1196533885.18148.0.427"
+    ],
+    "vr": "UI"
+  },
+  "00200100": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200105": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200110": {
+    "Value": [
+      3116.0
+    ],
+    "vr": "DS"
+  },
+  "00201002": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00201040": {
+    "Value": [
+      "Carotids"
+    ],
+    "vr": "LO"
+  },
+  "00201041": {
+    "Value": [
+      0.0
+    ],
+    "vr": "DS"
+  },
+  "00280002": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "MONOCHROME2"
+    ],
+    "vr": "CS"
+  },
+  "00280010": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280030": {
+    "Value": [
+      1.367188,
+      1.367188
+    ],
+    "vr": "DS"
+  },
+  "00280100": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      16
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      15
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00281050": {
+    "Value": [
+      243.0
+    ],
+    "vr": "DS"
+  },
+  "00281051": {
+    "Value": [
+      798.0
+    ],
+    "vr": "DS"
+  },
+  "7FE00010": {
+    "InlineBinary": "EwI3AlMCWgJLAikC/wHgAekBGgJRAmsCXQI3Ag4CAwI2AkYCUQJbAlICIwLeAb0B3gEhAlQCXwJSAj0CIgIOAoICbQJaAlcCTwIsAvwB6QH+ASoCWAJsAl8CNwIFAucBjwJxAmECYAJOAiQC+QHsAf0BEwIhAi4COAItAggC8wGoAj8CEAIxAl4CSgIKAu0BBAIeAh4CFgIVAg0CAAIPAjkDXAK7AdEBRQKBAmcCNQIbAhsCJgIxAjACHAIJAhgCSAN7Ar8BrgEXAmkCVAITAvkBFAI8AlECTwI8Ah0CCwL+AoAC8wHZAQMCJwIUAgQCIQI9AloCXQJMAjQCGwIMArgCagIkAhECAQICAhsCHAIoAjQCNQI7Aj8COAIsAioCIAIeAhwCHwIfAiQCLgIzAi8CKwI2AkICRgJDAkECPgL/ASICGQIQAg4CGQIsAjgCMQIoAi4CPAJDAkcCTQJJArUB7QEcAiQCEgISAigCMwIoAhkCGQIlAjUCRQJPAkkCNgGyAQgCGwIWAiICLwInAhMCDQIaAioCPAJSAl4CTAIJAYgB2AHsAfABCwIsAjYCKAIcAiACMQJEAlUCWQJMAuAAaQHUAQsCJAI0AjUCKAIhAi0CPgJBAjwCOgJCAkkC8AB2Ad8BDAIVAh8CKwItAiUCIwIrAjICNQI5AkECRgI=",
+    "vr": "OW"
+  }
+}

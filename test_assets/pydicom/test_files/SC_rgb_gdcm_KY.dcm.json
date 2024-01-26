@@ -1,0 +1,310 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.4.91"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "SECONDARY",
+      "OTHER"
+    ],
+    "vr": "CS"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.7"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.826.0.1.3680043.2.1143.6875239556533580236016485668630680938"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20170101"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "vr": "DA"
+  },
+  "0008002A": {
+    "vr": "DT"
+  },
+  "00080030": {
+    "Value": [
+      "120000"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "OT"
+    ],
+    "vr": "CS"
+  },
+  "00080064": {
+    "Value": [
+      "SYN"
+    ],
+    "vr": "CS"
+  },
+  "00080090": {
+    "Value": [
+      {
+        "Alphabetic": "Moriarty^James"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00082111": {
+    "Value": [
+      "lossy conversion"
+    ],
+    "vr": "ST"
+  },
+  "00082112": {
+    "Value": [
+      {
+        "00081150": {
+          "Value": [
+            "1.2.840.10008.5.1.4.1.1.7"
+          ],
+          "vr": "UI"
+        },
+        "00081155": {
+          "Value": [
+            "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116"
+          ],
+          "vr": "UI"
+        },
+        "0040A170": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "121320"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "DCM"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Uncompressed predecessor"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00089215": {
+    "Value": [
+      {
+        "00080100": {
+          "Value": [
+            "113040"
+          ],
+          "vr": "SH"
+        },
+        "00080102": {
+          "Value": [
+            "DCM"
+          ],
+          "vr": "SH"
+        },
+        "00080104": {
+          "Value": [
+            "Lossy Compression"
+          ],
+          "vr": "LO"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "Lestrade^G"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "ID1"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "F"
+    ],
+    "vr": "CS"
+  },
+  "00101010": {
+    "Value": [
+      "024Y"
+    ],
+    "vr": "AS"
+  },
+  "00185100": {
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "1"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200020": {
+    "vr": "CS"
+  },
+  "00200060": {
+    "vr": "CS"
+  },
+  "00204000": {
+    "Value": [
+      "Test Image with 10 rows of (255,0,0), 10 rows of (255,128,128), 10 rows of (0,255,0), 10 rows of (128,255,128), 10 rows of (0,0,255), 10 rows of (128,128,255), 10 rows of (0,0,0), 10 rows of (64,64,64), 10 rows of (192,192,192), 10 rows of (255,255,255), uncompressed"
+    ],
+    "vr": "LT"
+  },
+  "00280002": {
+    "Value": [
+      3
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "RGB"
+    ],
+    "vr": "CS"
+  },
+  "00280006": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280010": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280030": {
+    "Value": [
+      1.0,
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "00280100": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      7
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280106": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280107": {
+    "Value": [
+      255
+    ],
+    "vr": "US"
+  },
+  "00282110": {
+    "Value": [
+      "01"
+    ],
+    "vr": "CS"
+  },
+  "00282112": {
+    "Value": [
+      23.6220472440945
+    ],
+    "vr": "DS"
+  },
+  "7FE00010": {
+    "InlineBinary": "/v8A4AAAAAD+/wDg9gQAAP9P/1EALwAAAAAAZAAAAGQAAAAAAAAAAAAAAGQAAABkAAAAAAAAAAAAAwcBAQcBAQcBAf9SAAwAAAABAAUEBAAB/1wAE0BASEhQSEhQSEhQSEhQSEhQ/2QAKAABQ3JlYXRlZCBieSBHRENNL09wZW5KUEVHIHZlcnNpb24gMi4w/5AACgAAAAAEcwAB/1MACQEABQQEAAH/XQAUAUBASEhQSEhQSEhQSEhQSEhQ/1MACQIABQQEAAH/XQAUAkBASEhQSEhQSEhQSEhQSEhQ/5PfeIAUOGh7R03xJLdzUB6jbq2/33hwEKRHXdGFWMx6RTj9rK/feIADfzUpiVPOq8r470SvpLnrofSGAAT3KSiB66PsCgAMYLoy+rfKllBvr8gsC27cJ0YlxsFqs4+n3kAMGigFWuFRHgF3L+necolkkhWV/vgV6lJzqa12BVWHV6feQgOD7Z3t780ilAQn0Dn/MqnNhqvlAACSpAqTnULGy3Noe6fePgwaKAUQenTzfIALR6CIQQ3nd61NU41hW28k75R097+j7FEABjFy7Nzaelfsf+JSBAmRvSAAK6nMVOrLkk/n+8ySpgNBdor3sce/KTe23/9/96GKgAAAAcegQG3I7roHqNtoPuA9RttdlgXDvGGSoAAAYSEfp96YVa2oLeGVJYJKyZEZeu9rMBorc2pSPwYZYO6NttuG1chsjDJUAAAAAAAUQEgAAAAAA/dWAC9eUbbbWz6gPUbaxaVTVfeNb1G20Dskf6PsSQAOyi/5MYObQBvaPpt5dcNkYtgHBSTbar0rAoI8rO73pCgxZDGNcbIwyVAAACpQ5JJJFsjlVVVVTxGt6jbcNmimjCQgBIxnoD1Gp96yhRBqJrV1nM5p1kxqyqVAfKYAAAAAAAUSl4Nm9pCX/IPEspQ/8yDaBMpNSzU3zjRoHrvYVLf0ZPh5G3XrvAgAACuG9GNif/9OdzjgbIwyVAD2LC1oYkJf/3+n3uifS4TvyCKAVfcp+YE9lNIdfwAAAADCCgwAAAwiPazdWwpgk9PUxhmSTrFjCLuqx0J77rXKAgMJB2C1DP8Qa9MToAAABlT9IW3dnJT2OC8n8eNuhsjDJUADaRRpERIPxeZGGSoAAUQD/lvQzHZ4GyMMlQogH6fe5rqUBu/tlLuuQ11j2uziPtyYAAAYSELtsAAAAGDzYg7fm5dpmRi0kDJOFJCUqDQGEXxfADcO6QAWu0vHxk41VAAAWu0vH/1/pa96MHpIQDepGGSoAAHsWDBZiQl7m9s8DZGGSoBRAP9CYpmOzwNkYZKhRAOn3nzFJuE7/3Zz5mnuLfWzKwfaLJEt6WAAAAAMJCRNrgAAAAAAMJCFXphIS/uMgAAAAwkIZG+EhL+4yAAAADCQf6fe3N/wSqMqJqMB8Dmg7KpdfPtTK0AAAAAMJB7/VwkJDqrYgAAAAAwkGBOcJCX7WIjCQlHfsAAABhIMqdYSEv2sRAAADCQiJg8JB7j6MJB5T4MJCX7R4AAABhIQTncJB7j6MJB5T4MJCX7R4AAABhIPp97c6bQITv7a6WgmYd+55Up2jS6SoAAAAGEg20XhISM7uhwAAAAAwkGBOcJCXt3oMJCXJf4AAABhIMqdYSEvbvQAAMJCI8IwkJe3egAAYSDUneEhL270AADCQgyOYSEvbvQAAMJBqTvCQl7d6AABhIP/2QA=",
+    "vr": "OB"
+  }
+}
