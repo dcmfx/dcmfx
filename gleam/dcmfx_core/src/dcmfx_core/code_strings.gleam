@@ -2,7 +2,7 @@ import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/registry
 
 /// Converts a `CodeString` value to a descriptive string if one is available.
-/// 
+///
 /// This is not an exhaustive list, but rather aims to add value when printing
 /// data sets by describing commonly seen and non-obvious `CodeString`s.
 ///

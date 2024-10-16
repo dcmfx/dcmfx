@@ -859,7 +859,7 @@ impl P10ReadContext {
   }
 
   /// Returns the transfer syntax that should be used to decode the current
-  /// data. This will always be the transfer syntax specified in the Film Meta
+  /// data. This will always be the transfer syntax specified in the File Meta
   /// Information, except in the case of 'Implicit VR Little Endian' being
   /// forced by an explicit VR of `UN` (Unknown) that has an undefined length.
   ///

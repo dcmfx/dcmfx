@@ -32,11 +32,11 @@ pub fn pad_start(s: String, desired_length: Int, pad_string: String) -> String {
 }
 
 /// Returns a string containing the specified number of spaces.
-/// 
+///
 /// This implementation is much faster than Gleam's native string.repeat() on
 /// the JavaScript target. This function can be removed once gleam_stdlib 0.41
 /// is released.
-/// 
+///
 @external(javascript, "../../dcmfx_core_ffi.mjs", "utils__spaces")
 pub fn spaces(n: Int) -> String {
   string.repeat(" ", n)
