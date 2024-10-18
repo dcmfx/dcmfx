@@ -3,7 +3,7 @@
 /// U+0020.
 ///
 pub fn trim_right_whitespace(s: &str) -> &str {
-  s.trim_end_matches(&[
+  s.trim_end_matches([
     '\u{0000}', '\u{0009}', '\u{000A}', '\u{000D}', '\u{0020}',
   ])
 }
