@@ -26,11 +26,12 @@
   ],
 
   "files.exclude": {
-    "**/build": true,
-    "**/target": true
+    "docs/.vitepress/cache": true,
+    "docs/.vitepress/dist": true,
+    "docs/node_modules": true,
+    "src/gleam/*/build": true,
+    "src/rust/target": true
   },
-
-  "coverage-gutters.coverageFileNames": ["rust/coverage/tests.lcov"],
 
   "debug.allowBreakpointsEverywhere": true
 }

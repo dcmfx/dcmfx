@@ -9,13 +9,6 @@ pub mod anonymize {
   pub use dcmfx_anonymize::*;
 }
 
-/// Decodes DICOM string data that uses a Specific Character Set into a native
-/// UTF-8 string.
-///
-pub mod character_set {
-  pub use dcmfx_character_set::*;
-}
-
 /// Provides core DICOM concepts including data sets, data elements, value
 /// representations, transfer syntaxes, and a registry of the data elements
 /// defined in DICOM Part 6.

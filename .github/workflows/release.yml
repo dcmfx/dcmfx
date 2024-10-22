@@ -11,8 +11,8 @@ permissions:
   issues: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+  group: release
+  cancel-in-progress: false
 
 jobs:
   check_semantic_release:
@@ -200,4 +200,50 @@ jobs:
           git config user.email "actions@github.com"
           git add Formula/dcmfx.rb
           git commit -m "chore: release v${{ needs.check_semantic_release.outputs.new_release_version }}"
+          git push
+
+  release_docs:
+    name: Release docs
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    environment: release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: dcmfx
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.10
+
+      - name: Install dependencies
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: dcmfx/docs
+
+      - name: Build with VitePress
+        working-directory: dcmfx/docs
+        run: npm run docs:build
+
+      - name: Checkout dcmfx.github.io
+        uses: actions/checkout@v4
+        with:
+          repository: dcmfx/dcmfx.github.io
+          path: dcmfx.github.io
+          token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
+
+      - name: Push docs to dcmfx.github.io repository
+        working-directory: dcmfx.github.io
+        run: |
+          rm -rf *.html *.json images
+          cp -r ../dcmfx/docs/.vitepress/dist/* .
+
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          git add .
+          git commit -m "chore: update docs"
           git push

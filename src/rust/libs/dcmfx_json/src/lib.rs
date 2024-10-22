@@ -18,12 +18,12 @@ where
 {
   fn to_json(
     &self,
-    config: Option<DicomJsonConfig>,
+    config: DicomJsonConfig,
   ) -> Result<String, JsonSerializeError>;
 
   fn to_json_stream(
     &self,
-    config: Option<DicomJsonConfig>,
+    config: DicomJsonConfig,
     stream: &mut dyn std::io::Write,
   ) -> Result<(), JsonSerializeError>;
 
@@ -35,7 +35,7 @@ impl DataSetJsonExtensions for DataSet {
   ///
   fn to_json(
     &self,
-    config: Option<DicomJsonConfig>,
+    config: DicomJsonConfig,
   ) -> Result<String, JsonSerializeError> {
     let mut cursor = std::io::Cursor::new(Vec::with_capacity(64 * 1024));
 
@@ -48,10 +48,10 @@ impl DataSetJsonExtensions for DataSet {
   ///
   fn to_json_stream(
     &self,
-    config: Option<DicomJsonConfig>,
+    config: DicomJsonConfig,
     stream: &mut dyn std::io::Write,
   ) -> Result<(), JsonSerializeError> {
-    let mut json_transform = P10JsonTransform::new(&config.unwrap_or_default());
+    let mut json_transform = P10JsonTransform::new(&config);
     let mut part_to_stream =
       |part: &P10Part| json_transform.add_part(part, stream);
 
@@ -89,9 +89,9 @@ mod tests {
   use super::*;
 
   // Tests are run with encapsulated pixel data allowed in the DICOM JSON data
-  const JSON_CONFIG: Option<DicomJsonConfig> = Some(DicomJsonConfig {
+  const JSON_CONFIG: DicomJsonConfig = DicomJsonConfig {
     store_encapsulated_pixel_data: true,
-  });
+  };
 
   #[test]
   fn data_set_to_json_test() {

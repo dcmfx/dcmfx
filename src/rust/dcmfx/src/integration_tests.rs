@@ -11,9 +11,9 @@ mod tests {
 
   // Integration tests are run with encapsulated pixel data allowed in the
   // DICOM JSON data
-  const JSON_CONFIG: Option<DicomJsonConfig> = Some(DicomJsonConfig {
+  const JSON_CONFIG: DicomJsonConfig = DicomJsonConfig {
     store_encapsulated_pixel_data: true,
-  });
+  };
 
   #[test]
   fn integration_tests() -> Result<(), ()> {

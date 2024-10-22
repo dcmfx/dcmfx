@@ -1,0 +1,13 @@
+{
+  "name": "dcmfx-docs",
+  "version": "0.0.0",
+  "license": "AGPLv3",
+  "devDependencies": {
+    "vitepress": "^1.4.1"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  }
+}

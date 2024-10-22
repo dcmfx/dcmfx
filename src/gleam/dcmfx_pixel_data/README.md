@@ -2,7 +2,7 @@
 
 Extracts frames of pixel data present in a data set.
 
-Part of the DCMfx project.
+Part of the [DCMfx](https://dcmfx.github.io) project.
 
 [![Package Version](https://img.shields.io/hexpm/v/dcmfx_pixel_data)](https://hex.pm/packages/dcmfx_pixel_data)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/dcmfx/)
@@ -10,7 +10,7 @@ Part of the DCMfx project.
 ![JavaScript Compatible](https://img.shields.io/badge/target-javascript-f3e155)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-API documentation is available [https://hexdocs.pm/dcmfx_pixel_data](here).
+API documentation is available [here](https://hexdocs.pm/dcmfx_pixel_data).
 
 ## License
 

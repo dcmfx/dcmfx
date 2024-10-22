@@ -2,16 +2,13 @@
 
 CLI tool that makes the capabilities of DCMfx available on the command line.
 
-Part of the DCMfx project.
+Part of the [DCMfx](https://dcmfx.github.io) project. See its website for
+further details and usage examples.
 
 [![Package Version](https://img.shields.io/hexpm/v/dcmfx_json)](https://hex.pm/packages/dcmfx_cli)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/dcmfx_cli/)
 ![Erlang Compatible](https://img.shields.io/badge/target-erlang-a90432)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-
-## Usage
-
-See [the documentation](/docs/cli.md) for details on using the DCMfx CLI tool.
 
 ## License
 
