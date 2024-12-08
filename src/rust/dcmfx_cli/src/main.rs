@@ -1,6 +1,7 @@
 //! Entry point for DCMfx's CLI tool.
 
 mod commands;
+mod utils;
 
 use clap::{Parser, Subcommand};
 

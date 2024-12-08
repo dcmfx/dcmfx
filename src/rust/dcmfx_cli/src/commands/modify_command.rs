@@ -118,7 +118,9 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
     Ok(_) => Ok(()),
     Err(e) => {
       // Delete any partially written file
-      let _ = std::fs::remove_file(&args.output_filename);
+      if args.output_filename != "-" {
+        let _ = std::fs::remove_file(&args.output_filename);
+      }
 
       e.print(&format!("modifying file \"{}\"", args.input_filename));
       Err(())
@@ -169,6 +171,20 @@ fn streaming_rewrite(
   output_transfer_syntax: Option<&TransferSyntax>,
   mut filter_context: Option<P10FilterTransform>,
 ) -> Result<(), P10Error> {
+  // Check that the input and output filenames don't point to the same
+  // underlying file. In-place modification isn't supported because of the
+  // stream-based implementation.
+  if input_filename != "-" && output_filename != "-" {
+    if let Ok(true) =
+      crate::utils::is_same_file(input_filename, output_filename)
+    {
+      return Err(P10Error::OtherError {
+        error_type: "Filename error".to_string(),
+        details: "Input and output files must be different".to_string(),
+      });
+    }
+  }
+
   // Open input stream
   let mut input_stream: Box<dyn Read> = match input_filename {
     "-" => Box::new(std::io::stdin()),

@@ -1,4 +1,5 @@
 import dcmfx_anonymize
+import dcmfx_cli/utils
 import dcmfx_core/data_element_tag
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
@@ -189,6 +190,17 @@ fn streaming_rewrite(
   output_transfer_syntax: Option(TransferSyntax),
   filter_context: Option(P10FilterTransform),
 ) -> Result(Nil, P10Error) {
+  // Check that the input and output filenames don't point to the same
+  // underlying file. In-place modification isn't supported because of the
+  // stream-based implementation.
+  use <- bool.guard(
+    utils.is_same_file(input_filename, output_filename) == Ok(True),
+    Error(p10_error.OtherError(
+      "Filename error",
+      "Input and output files must be different",
+    )),
+  )
+
   // Open input stream
   let input_stream =
     input_filename
