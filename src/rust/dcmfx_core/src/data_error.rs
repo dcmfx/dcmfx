@@ -123,7 +123,7 @@ impl DataError {
     Self(RawDataError::MultiplicityMismatch { path: None })
   }
 
-  /// Constructs a new 'VAlue invalid' data error.
+  /// Constructs a new 'Value invalid' data error.
   ///
   pub fn new_value_invalid(details: String) -> Self {
     Self(RawDataError::ValueInvalid {
