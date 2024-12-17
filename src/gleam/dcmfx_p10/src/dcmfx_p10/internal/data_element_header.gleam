@@ -40,6 +40,15 @@ pub type ValueLengthSize {
   ValueLengthU32
 }
 
+/// Returns the maximum supported value length in bytes.
+///
+pub fn value_length_size_max_length(size: ValueLengthSize) -> Int {
+  case size {
+    ValueLengthU16 -> 0xFFFF
+    ValueLengthU32 -> 0xFFFFFFFE
+  }
+}
+
 /// Returns the size of the value length for a VR stored in the DICOM P10
 /// format.
 ///

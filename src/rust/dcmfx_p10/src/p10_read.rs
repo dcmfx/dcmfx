@@ -1095,7 +1095,10 @@ impl P10ReadContext {
           // is emitted now. It was not emitted when it was read due to the
           // possibility of the Value and Value Length being altered above.
           if materialized_value_required {
-            if data.len() < 0xFFFFFFFF {
+            let max_length =
+              DataElementHeader::value_length_size(vr).max_length();
+
+            if data.len() <= max_length {
               parts.push(P10Part::DataElementHeader {
                 tag,
                 vr,
@@ -1104,8 +1107,12 @@ impl P10ReadContext {
             } else {
               return Err(P10Error::DataInvalid {
                 when: "Reading data element value bytes".to_string(),
-                details: "Value exceeds 2^32 - 2 bytes when converted to UTF-8"
-                  .to_string(),
+                details: format!(
+                  "Length of {} bytes exceeds the maximum of {} bytes after \
+                    conversion to UTF-8",
+                  data.len(),
+                  max_length
+                ),
                 path: self.path.clone(),
                 offset: self.stream.bytes_read(),
               });

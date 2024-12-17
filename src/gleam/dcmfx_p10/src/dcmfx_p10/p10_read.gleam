@@ -1250,7 +1250,12 @@ fn read_data_element_value_bytes_part(
           case materialized_value_required {
             True -> {
               let length = bit_array.byte_size(data)
-              case length < 0xFFFFFFFF {
+              let max_length =
+                vr
+                |> data_element_header.value_length_size
+                |> data_element_header.value_length_size_max_length
+
+              case length <= max_length {
                 True ->
                   Ok([
                     p10_part.DataElementHeader(tag, vr, length),
@@ -1259,7 +1264,11 @@ fn read_data_element_value_bytes_part(
                 False ->
                   Error(p10_error.DataInvalid(
                     "Reading data element value bytes",
-                    "Value exceeds 2^32 - 2 bytes when converted to UTF-8",
+                    "Length of "
+                      <> int.to_string(length)
+                      <> " bytes exceeds the maximum of "
+                      <> int.to_string(max_length)
+                      <> " bytes after conversion to UTF-8",
                     context.path,
                     byte_stream.bytes_read(context.stream),
                   ))
@@ -1344,7 +1353,7 @@ fn is_materialized_value_required(
 
   // Convert strings that are defined to use ISO-646/US-ASCII. In theory this
   // shouldn't be necessary as they should already be valid UTF-8, but DICOM
-  // P10 data has been observed that contains invalid ISO-646 data, hence 
+  // P10 data has been observed that contains invalid ISO-646 data, hence
   // these string values are sanitized by replacing invalid characters with a
   // question mark.
   use <- bool.guard(value_representation.is_string(vr), True)

@@ -34,6 +34,17 @@ pub enum ValueLengthSize {
   U32,
 }
 
+impl ValueLengthSize {
+  /// Returns the maximum supported value length in bytes.
+  ///
+  pub fn max_length(&self) -> usize {
+    match self {
+      Self::U16 => 0xFFFF,
+      Self::U32 => 0xFFFFFFFE,
+    }
+  }
+}
+
 impl DataElementHeader {
   /// Returns the size of the value length for a VR stored in the DICOM P10
   /// format.
