@@ -146,7 +146,6 @@ pub fn decode_bytes(
         [],
       )
   }
-  |> trim_codepoints_end
   |> list.reverse
   |> string.from_utf_codepoints
 }
@@ -310,20 +309,6 @@ fn update_code_element(
     }
 
     None -> Error(Nil)
-  }
-}
-
-/// Removes U+0000 and U+0020 characters from the end of a list of codepoints.
-///
-fn trim_codepoints_end(codepoints: List(UtfCodepoint)) -> List(UtfCodepoint) {
-  case codepoints {
-    [] -> []
-
-    [codepoint, ..rest] ->
-      case string.utf_codepoint_to_int(codepoint) {
-        0x00 | 0x20 -> trim_codepoints_end(rest)
-        _ -> codepoints
-      }
   }
 }
 

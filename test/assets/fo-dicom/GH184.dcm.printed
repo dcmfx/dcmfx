@@ -114,7 +114,7 @@
 (0009,105F) LO PET patient_id                       [    14 bytes] "SanRaffa162580"
 (0009,1060) SH PET compatible_version               [     6 bytes] "DSTM4"
 (0009,1061) SH PET software_version                 [     6 bytes] "26.14"
-(0009,1062) ST PET where_is_frame                   [    40 bytes] "/dos/BUBOXRAA/OILDJXLC/HHWMGLG …
+(0009,1062) ST PET where_is_frame                   [   256 bytes] "/dos/BUBOXRAA/OILDJXLC/HHWMGLG …
 (0009,1063) SL PET frame_size                       [     4 bytes] 9880176
 (0009,1064) SL PET file_exists                      [     4 bytes] 0
 (0009,1065) SL PET patient_entry                    [     4 bytes] 0

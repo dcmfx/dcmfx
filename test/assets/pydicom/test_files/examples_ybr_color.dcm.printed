@@ -31,7 +31,7 @@
 (0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
 (0010,0040) CS Patient's Sex                        [     0 bytes] ""
 (0010,1000) LO Other Patient IDs                    [     0 bytes] ""
-(0010,2160) SH Ethnic Group                         [     0 bytes] ""
+(0010,2160) SH Ethnic Group                         [     2 bytes] ""
 (0010,21B0) LT Additional Patient History           [     0 bytes] ""
 (0018,1020) LO Software Versions                    [    14 bytes] "51.80.108.010"
 (0018,1030) LO Protocol Name                        [     0 bytes] ""

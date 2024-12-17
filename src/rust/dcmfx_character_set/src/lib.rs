@@ -122,7 +122,7 @@ impl SpecificCharacterSet {
   /// replaced with the U+FFFD character: �.
   ///
   pub fn decode_bytes(&self, bytes: &[u8], string_type: StringType) -> String {
-    let mut s = match self.0.as_slice() {
+    match self.0.as_slice() {
       [CharacterSet::SingleByteWithoutExtensions {
         defined_term,
         decoder,
@@ -152,11 +152,7 @@ impl SpecificCharacterSet {
         string_type,
         self.default_code_elements(),
       ),
-    };
-
-    trim_codepoints_end(&mut s);
-
-    s
+    }
   }
 
   fn decode_iso_2022_bytes(
@@ -300,18 +296,6 @@ fn update_code_element<'a>(
   }
 }
 
-/// Removes U+0000 and U+0020 characters from the end of a string.
-///
-fn trim_codepoints_end(s: &mut String) {
-  while let Some(last_byte) = s.as_bytes().last() {
-    if *last_byte != 0x00 && *last_byte != 0x20 {
-      break;
-    }
-
-    s.pop();
-  }
-}
-
 /// Replaces all bytes greater than 0x7F with the value 0x3F, i.e. the question
 /// mark character. This can be used to ensure that only valid ISO 646/US-ASCII
 /// bytes are present.
@@ -426,7 +410,7 @@ mod tests {
         ],
         StringType::PersonName,
       ),
-      "قباني^لنزار"
+      "قباني^لنزار "
     );
 
     // Test decoding of ISO IR 126 bytes (ISO 8859-7, Latin/Greek)
@@ -692,7 +676,7 @@ mod tests {
         ],
         StringType::PersonName,
       ),
-      "김희중\\김희중"
+      "김희중\\김희중 "
     );
 
     // Test decoding using two different multi-byte character sets
@@ -740,7 +724,7 @@ mod tests {
         ],
         StringType::PersonName,
       ),
-      "Wang^XiaoDong=王^小東="
+      "Wang^XiaoDong=王^小東= "
     );
 
     // Test decoding of GB 18030 bytes
@@ -904,7 +888,7 @@ mod tests {
         ],
         StringType::PersonName,
       ),
-      "Zhang^XiaoDong=张^小东="
+      "Zhang^XiaoDong=张^小东= "
     );
 
     assert_eq!(

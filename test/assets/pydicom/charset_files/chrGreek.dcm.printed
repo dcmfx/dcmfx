@@ -19,7 +19,7 @@
 (0008,0070) LO Manufacturer                         [     0 bytes] ""
 (0008,0090) PN Referring Physician's Name           [     4 bytes] "^^^^"
 (0008,0201) SH Timezone Offset From UTC             [     6 bytes] "-0400"
-(0010,0010) PN Patient's Name                       [    18 bytes] "Διονυσιος"
+(0010,0010) PN Patient's Name                       [    20 bytes] "Διονυσιος"
 (0010,0020) LO Patient ID                           [     8 bytes] "SCSGREEK"
 (0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
 (0010,0040) CS Patient's Sex                        [     0 bytes] ""

@@ -1,4 +1,5 @@
 import dcmfx_core/data_element_tag.{type DataElementTag}
+import dcmfx_core/data_element_value
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_json
@@ -110,9 +111,44 @@ fn validate_dicom(dicom: String) -> Result(Nil, DicomValidationError) {
   let assert Ok(expected_json) =
     json.decode(expected_json_string, dynamic.dynamic)
 
+  // Clean up DICOMs that have string values that consist only of spaces as
+  // such values aren't preserved when going through a DICOM JSON rewrite
+  // cycle
+  let json_safe_data_set =
+    data_set
+    |> data_set.fold(data_set, fn(ds, tag, value) {
+      case data_element_value.get_string(value) {
+        Ok(s) ->
+          case string.trim(s) {
+            "" -> {
+              let assert Ok(ds) =
+                ds
+                |> data_set.insert_binary_value(
+                  tag,
+                  data_element_value.value_representation(value),
+                  <<>>,
+                )
+              ds
+            }
+            _ -> ds
+          }
+        Error(_) -> ds
+      }
+    })
+
   [
-    test_data_set_matches_expected_json(dicom, data_set, expected_json, False),
-    test_data_set_matches_expected_json(dicom, data_set, expected_json, True),
+    test_data_set_matches_expected_json(
+      dicom,
+      json_safe_data_set,
+      expected_json,
+      False,
+    ),
+    test_data_set_matches_expected_json(
+      dicom,
+      json_safe_data_set,
+      expected_json,
+      True,
+    ),
     test_dicom_json_rewrite_cycle(dicom, expected_json_string),
     test_dcmfx_p10_rewrite_cycle(dicom, data_set),
     test_jittered_read(dicom, data_set, fn() { 15 }),

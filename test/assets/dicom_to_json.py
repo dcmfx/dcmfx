@@ -56,10 +56,20 @@ def standardize_json_dict(dicom_json_dict, is_big_endian):
         elif vr == "OB or OW":
             value["vr"] = "UN"
 
-        # Convert empty CS/LO values to `None` as per the DICOM JSON spec
-        elif vr in ["CS", "LO"] and "Value" in value:
-            value["Value"] = [v.rstrip() for v in value["Value"]]
+        # Convert simple values
+        elif vr != "SQ" and "Value" in value:
+            # Strip strings
+            value["Value"] = [
+                (v.rstrip() if isinstance(v, str) else v)
+                for v in value["Value"]
+            ]
+            
+            # Turn empty strings into 'None'
             value["Value"] = [(None if v == "" else v) for v in value["Value"]]
+
+            # Remove empty Value arrays
+            if value["Value"] == []:
+                del value["Value"]
 
         # Byte swap big endian to little endian in inline binaries. This is what
         # dcm2json outputs, and DCMfx does the same thing, i.e. InlineBinary in

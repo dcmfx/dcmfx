@@ -3,7 +3,7 @@
 mod tests {
   const RNG_SEED: u64 = 1023;
 
-  use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path};
+  use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path, rc::Rc};
 
   use rand::rngs::SmallRng;
   use rand::{Rng, SeedableRng};
@@ -120,16 +120,33 @@ mod tests {
     let expected_json: serde_json::Value =
       serde_json::from_str(&expected_json_string).unwrap();
 
+    // Clean up DICOMs that have string values that consist only of spaces as
+    // such values aren't preserved when going through a DICOM JSON rewrite
+    // cycle
+    let mut json_safe_data_set = data_set.clone();
+    for tag in json_safe_data_set.tags() {
+      let value = json_safe_data_set.get_value(tag).unwrap();
+      if value.get_string().map(|e| e.trim_matches(' ')) == Ok("") {
+        json_safe_data_set
+          .insert_binary_value(
+            tag,
+            value.value_representation(),
+            Rc::new(Vec::new()),
+          )
+          .unwrap();
+      }
+    }
+
     test_data_set_matches_expected_print_output(dicom, &data_set)?;
     test_data_set_matches_expected_json_output(
       dicom,
-      &data_set,
+      &json_safe_data_set,
       &expected_json,
       false,
     )?;
     test_data_set_matches_expected_json_output(
       dicom,
-      &data_set,
+      &json_safe_data_set,
       &expected_json,
       true,
     )?;

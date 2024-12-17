@@ -118,7 +118,7 @@ pub fn decode_bytes_single_byte_without_extensions_test() {
     <<0xE2, 0xC8, 0xC7, 0xE6, 0xEA, 0x5E, 0xE4, 0xE6, 0xD2, 0xC7, 0xD1, 0x20>>,
     string_type.PersonName,
   )
-  |> should.equal("قباني^لنزار")
+  |> should.equal("قباني^لنزار ")
 
   // Test decoding of ISO IR 126 bytes (ISO 8859-7, Latin/Greek)
   decode_bytes(
@@ -322,7 +322,7 @@ pub fn decode_bytes_multi_byte_with_extensions_test() {
     >>,
     string_type.PersonName,
   )
-  |> should.equal("김희중\\김희중")
+  |> should.equal("김희중\\김희중 ")
 
   // Test decoding using two different multi-byte character sets
   decode_bytes(
@@ -362,7 +362,7 @@ pub fn decode_bytes_multi_byte_without_extensions_test() {
     >>,
     string_type.PersonName,
   )
-  |> should.equal("Wang^XiaoDong=王^小東=")
+  |> should.equal("Wang^XiaoDong=王^小東= ")
 
   // Test decoding of GB 18030 bytes
   decode_bytes(
@@ -506,7 +506,7 @@ pub fn decode_bytes_dicom_annex_examples_test() {
     >>,
     string_type.PersonName,
   )
-  |> should.equal("Zhang^XiaoDong=张^小东=")
+  |> should.equal("Zhang^XiaoDong=张^小东= ")
 
   decode_bytes(
     "\\ISO 2022 IR 58",

@@ -1170,19 +1170,23 @@ impl P10ReadContext {
       return true;
     }
 
-    // If the value is a string, and it isn't UTF-8 data that can be passed
-    // straight through, then materialize it so that it can be converted to
-    // UTF-8.
-    //
-    // In theory, strings that are defined to use ISO-646/US-ASCII don't need to
-    // be sanitized as they're already valid UTF-8, but DICOM P10 data has been
-    // observed that contains invalid ISO-646 data, hence they are sanitized by
-    // replacing invalid characters with a question mark.
-    vr.is_string()
-      && !{
-        vr.is_encoded_string()
-          && self.location.is_specific_character_set_utf8_compatible()
-      }
+    // If the value is an encoded string, and it isn't UTF-8 compatible data
+    // that can be passed straight through, then materialize it so that it can
+    // be converted to UTF-8.
+    if vr.is_encoded_string() {
+      return !self.location.is_specific_character_set_utf8_compatible();
+    }
+
+    // Convert strings that are defined to use ISO-646/US-ASCII. In theory this
+    // shouldn't be necessary as they should already be valid UTF-8, but DICOM
+    // P10 data has been observed that contains invalid ISO-646 data, hence
+    // these string values are sanitized by replacing invalid characters with a
+    // question mark.
+    if vr.is_string() {
+      return true;
+    }
+
+    false
   }
 
   fn process_materialized_data_element(

@@ -1334,18 +1334,22 @@ fn is_materialized_value_required(
   // If this is a clarifying data element then its data needs to be materialized
   use <- bool.guard(p10_location.is_clarifying_data_element(tag), True)
 
-  // If the value is a string, and it isn't UTF-8 data that can be passed
-  // straight through, then materialize it so that it can be converted to UTF-8.
-  //
-  // In theory, strings that are defined to use ISO-646/US-ASCII don't need to
-  // be sanitized as they're already valid UTF-8, but DICOM P10 data has been
-  // observed that contains invalid ISO-646 data, hence they are sanitized by
-  // replacing invalid characters with a question mark.
-  value_representation.is_string(vr)
-  && !{
-    value_representation.is_encoded_string(vr)
-    && p10_location.is_specific_character_set_utf8_compatible(context.location)
-  }
+  // If the value is an encoded string, and it isn't UTF-8 compatible data
+  // that can be passed straight through, then materialize it so that it can
+  // be converted to UTF-8.
+  use <- bool.guard(
+    value_representation.is_encoded_string(vr),
+    !p10_location.is_specific_character_set_utf8_compatible(context.location),
+  )
+
+  // Convert strings that are defined to use ISO-646/US-ASCII. In theory this
+  // shouldn't be necessary as they should already be valid UTF-8, but DICOM
+  // P10 data has been observed that contains invalid ISO-646 data, hence 
+  // these string values are sanitized by replacing invalid characters with a
+  // question mark.
+  use <- bool.guard(value_representation.is_string(vr), True)
+
+  False
 }
 
 fn process_materialized_data_element(
