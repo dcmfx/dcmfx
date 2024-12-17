@@ -85,40 +85,38 @@ pub fn file_meta_information(data_set: DataSet) -> DataSet {
     data_set
     |> dict.filter(fn(tag, _value) { tag.group == 2 })
 
-  // Exclude any data elements that don't hold a chunk of binary data, i.e.
-  // sequences or encapsulated pixel data, as they aren't allowed in File
-  // Meta Information
-  let file_meta_information =
-    file_meta_information
-    |> dict.filter(fn(_tag, value) {
-      result.is_ok(data_element_value.bytes(value))
-    })
-
   let file_meta_information = case
-    get_value(data_set, dictionary.sop_class_uid.tag)
+    get_value(data_set, dictionary.sop_class_uid.tag),
+    get_string(data_set, dictionary.sop_class_uid.tag)
   {
-    Ok(value) ->
+    Ok(value), Ok(_) ->
       dict.insert(
         file_meta_information,
         dictionary.media_storage_sop_class_uid.tag,
         value,
       )
-    Error(_) -> file_meta_information
+    _, _ -> file_meta_information
   }
 
   let file_meta_information = case
-    get_value(data_set, dictionary.sop_instance_uid.tag)
+    get_value(data_set, dictionary.sop_instance_uid.tag),
+    get_string(data_set, dictionary.sop_instance_uid.tag)
   {
-    Ok(value) ->
+    Ok(value), Ok(_) ->
       dict.insert(
         file_meta_information,
         dictionary.media_storage_sop_instance_uid.tag,
         value,
       )
-    Error(_) -> file_meta_information
+    _, _ -> file_meta_information
   }
 
+  // Exclude sequences and encapsulated pixel data, as they aren't allowed in
+  // File Meta Information
   file_meta_information
+  |> dict.filter(fn(_tag, value) {
+    result.is_ok(data_element_value.bytes(value))
+  })
 }
 
 /// Inserts a data element tag and value into a data set. If there is already a
