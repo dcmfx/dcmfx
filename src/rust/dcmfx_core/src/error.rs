@@ -1,5 +1,7 @@
 //! Defines a trait implemented by all error types in DCMfx.
 
+use std::io::Write;
+
 use owo_colors::{OwoColorize, Stream::Stdout};
 
 /// Error trait implemented by all error types in DCMfx.
@@ -13,6 +15,8 @@ pub trait DcmfxError {
   /// contextual information stored in the error.
   ///
   fn print(&self, task_description: &str) {
+    let _ = std::io::stdout().flush();
+
     eprintln!();
     eprintln!("{}", "-----".if_supports_color(Stdout, |text| text.red()));
 
