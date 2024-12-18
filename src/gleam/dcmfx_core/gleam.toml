@@ -12,7 +12,7 @@ path = "src/gleam/dcmfx_core"
 [dependencies]
 bigi = ">= 3.2.0 and < 4.0.0"
 envoy = ">= 1.0.1 and < 2.0.0"
-gleam_stdlib = ">= 0.46.0 and < 2.0.0"
+gleam_stdlib = ">= 0.48.0 and < 2.0.0"
 ieee_float = ">= 1.0.2 and < 2.0.0"
 term_size = ">= 1.0.1 and < 2.0.0"
 gleam_regexp = ">= 1.0.0 and < 2.0.0"
