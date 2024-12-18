@@ -601,7 +601,20 @@ impl P10ReadContext {
     // If the VR is UN (Unknown) then attempt to infer it
     let vr = match header.vr {
       Some(ValueRepresentation::Unknown) => {
-        Some(self.location.infer_vr_for_tag(header.tag))
+        Some(self.location.infer_vr_for_tag(header.tag).map_err(
+          |missing_tag| P10Error::DataInvalid {
+            when: format!(
+              "Inferring VR for data element '{}'",
+              dictionary::tag_with_name(header.tag, None)
+            ),
+            details: format!(
+              "The value for the '{}' data element is missing or invalid",
+              dictionary::tag_with_name(missing_tag, None)
+            ),
+            path: self.path.clone(),
+            offset: self.stream.bytes_read(),
+          },
+        )?)
       }
       vr => vr,
     };
@@ -976,13 +989,11 @@ impl P10ReadContext {
         match ValueRepresentation::from_bytes(vr_bytes) {
           Ok(vr) => Ok(vr),
 
-          // If the explicit VR is two spaces then treat it as implicit VR and
-          // attempt to infer the correct VR for the data element.
-          //
-          // Doing this is not part of the DICOM P10 spec, but such data has
-          // been observed in the wild.
+          // If the VR is two spaces then treat it as UN, and there will be an
+          // attempt to infer it in due course. This is not part of the DICOM
+          // P10 spec, but such data has been observed in the wild.
           _ => match vr_bytes {
-            [0x20, 0x20] => Ok(self.location.infer_vr_for_tag(tag)),
+            [0x20, 0x20] => Ok(ValueRepresentation::Unknown),
 
             _ => Err(P10Error::DataInvalid {
               when: "Reading data element VR".to_string(),

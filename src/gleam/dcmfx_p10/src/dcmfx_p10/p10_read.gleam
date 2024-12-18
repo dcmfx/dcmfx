@@ -678,9 +678,23 @@ fn read_data_element_header_part(
   // If the VR is UN (Unknown) then attempt to infer it
   let vr = case header.vr {
     Some(value_representation.Unknown) ->
-      Some(p10_location.infer_vr_for_tag(context.location, header.tag))
-    vr -> vr
+      p10_location.infer_vr_for_tag(context.location, header.tag)
+      |> result.map(Some)
+      |> result.map_error(fn(missing_tag) {
+        p10_error.DataInvalid(
+          "Inferring VR for data element '"
+            <> dictionary.tag_with_name(header.tag, None)
+            <> "'",
+          "The value for the '"
+            <> dictionary.tag_with_name(missing_tag, None)
+            <> "' data element is missing or invalid",
+          path: context.path,
+          offset: byte_stream.bytes_read(context.stream),
+        )
+      })
+    vr -> Ok(vr)
   }
+  use vr <- result.try(vr)
 
   case header.tag, vr, header.length {
     // If this is the start of a new sequence then add it to the location
@@ -1122,14 +1136,11 @@ fn read_explicit_vr_and_length(
         Ok(vr) -> Ok(vr)
 
         _ ->
-          // If the explicit VR is two spaces then treat it as implicit VR and
-          // attempt to infer the correct VR for the data element.
-          //
-          // Doing this is not part of the DICOM P10 spec, but such data has
-          // been observed in the wild.
+          // If the VR is two spaces then treat it as UN, and there will be an
+          // attempt to infer it in due course. This is not part of the DICOM
+          // P10 spec, but such data has been observed in the wild.
           case vr_bytes {
-            <<0x20, 0x20>> ->
-              Ok(p10_location.infer_vr_for_tag(context.location, tag))
+            <<0x20, 0x20>> -> Ok(value_representation.Unknown)
 
             _ ->
               Error(p10_error.DataInvalid(

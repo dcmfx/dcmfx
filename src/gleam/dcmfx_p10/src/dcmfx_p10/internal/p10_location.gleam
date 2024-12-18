@@ -477,21 +477,21 @@ pub fn decode_string_bytes(
   |> value_representation.pad_bytes_to_even_length(vr, _)
 }
 
-/// When reading a DICOM P10 that uses the 'Implicit VR Little Endian' transfer
-/// syntax, returns the VR for the data element, or `Unknown` if it can't be
-/// determined.
+/// When reading a DICOM P10 that uses the 'Implicit VR Little Endian'
+/// transfer syntax, returns the VR for the data element, or an error if it
+/// can't be determined.
 ///
 /// The vast majority of VRs can be determined by looking in the dictionary as
-/// they only have one valid VR. Data elements that can use different VRs
-/// depending on the context require additional logic, which isn't guaranteed
-/// to succeed.
-///
-/// If no VR can be determined then the `Unknown` VR is returned.
+/// the data element has only one valid VR. Data elements that can use more
+/// than one VR depending on the context require additional logic.
+/// 
+/// On error, the tag of the clarifying data element that was missing or
+/// invalid that caused the VR to not be able to be inferred is returned.
 ///
 pub fn infer_vr_for_tag(
   location: P10Location,
   tag: DataElementTag,
-) -> ValueRepresentation {
+) -> Result(ValueRepresentation, DataElementTag) {
   let clarifying_data_elements = active_clarifying_data_elements(location)
 
   let private_creator = private_creator_for_tag(clarifying_data_elements, tag)
@@ -502,13 +502,13 @@ pub fn infer_vr_for_tag(
   }
 
   case allowed_vrs {
-    [vr] -> vr
+    [vr] -> Ok(vr)
 
     // For '(7FE0,0010) Pixel Data', OB is not usable when in an implicit VR
     // transfer syntax. Ref: PS3.5 8.2.
     [value_representation.OtherByteString, value_representation.OtherWordString]
       if tag == dictionary.pixel_data.tag
-    -> value_representation.OtherWordString
+    -> Ok(value_representation.OtherWordString)
 
     // Use '(0028,0103) PixelRepresentation' to determine a US/SS VR on relevant
     // values
@@ -535,8 +535,9 @@ pub fn infer_vr_for_tag(
       || tag == dictionary.histogram_last_bin_value.tag
     ->
       case clarifying_data_elements.pixel_representation {
-        Some(1) -> value_representation.SignedShort
-        _ -> value_representation.UnsignedShort
+        Some(0) -> Ok(value_representation.UnsignedShort)
+        Some(1) -> Ok(value_representation.SignedShort)
+        _ -> Error(dictionary.pixel_representation.tag)
       }
 
     // Use '(003A,021A) WaveformBitsStored' to determine an OB/OW VR on relevant
@@ -546,9 +547,9 @@ pub fn infer_vr_for_tag(
       || tag == dictionary.channel_maximum_value.tag
     ->
       case clarifying_data_elements.waveform_bits_stored {
-        Some(16) -> value_representation.OtherWordString
-        Some(_) -> value_representation.OtherByteString
-        None -> value_representation.Unknown
+        Some(8) -> Ok(value_representation.OtherByteString)
+        Some(16) -> Ok(value_representation.OtherWordString)
+        _ -> Error(dictionary.waveform_bits_stored.tag)
       }
 
     // Use '(5400,1004) WaveformBitsAllocated' to determine an OB/OW VR on
@@ -558,9 +559,9 @@ pub fn infer_vr_for_tag(
       || tag == dictionary.waveform_data.tag
     ->
       case clarifying_data_elements.waveform_bits_allocated {
-        Some(16) -> value_representation.OtherWordString
-        Some(_) -> value_representation.OtherByteString
-        None -> value_representation.Unknown
+        Some(8) -> Ok(value_representation.OtherByteString)
+        Some(16) -> Ok(value_representation.OtherWordString)
+        _ -> Error(dictionary.waveform_bits_allocated.tag)
       }
 
     // The VR for '(0028,3006) LUTData' doesn't need to be determined because
@@ -571,16 +572,16 @@ pub fn infer_vr_for_tag(
     // expresses this, i.e. OB is not a valid VR for LUTData.
     [value_representation.UnsignedShort, value_representation.OtherWordString]
       if tag == dictionary.lut_data.tag
-    -> value_representation.OtherWordString
+    -> Ok(value_representation.OtherWordString)
 
     // The VR for '(60xx,3000) Overlay Data' doesn't need to be determined as
     // when the transfer syntax is 'Implicit VR Little Endian' it is always OW.
     // Ref: PS3.5 8.1.2.
     [value_representation.OtherByteString, value_representation.OtherWordString]
       if tag.group >= 0x6000 && tag.group <= 0x60FF && tag.element == 0x3000
-    -> value_representation.OtherWordString
+    -> Ok(value_representation.OtherWordString)
 
     // The VR couldn't be determined, so fall back to UN
-    _ -> value_representation.Unknown
+    _ -> Ok(value_representation.Unknown)
   }
 }

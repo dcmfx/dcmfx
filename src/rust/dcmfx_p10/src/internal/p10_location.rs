@@ -481,36 +481,39 @@ impl P10Location {
   }
 
   /// When reading a DICOM P10 that uses the 'Implicit VR Little Endian'
-  /// transfer syntax, returns the VR for the data element, or `Unknown` if it
+  /// transfer syntax, returns the VR for the data element, or an error if it
   /// can't be determined.
   ///
   /// The vast majority of VRs can be determined by looking in the dictionary as
-  /// they only have one valid VR. Data elements that can use different VRs
-  /// depending on the context require additional logic, which isn't guaranteed
-  /// to succeed.
+  /// the data element has only one valid VR. Data elements that can use more
+  /// than one VR depending on the context require additional logic.
   ///
-  /// If no VR can be determined then the `Unknown` VR is returned.
+  /// On error, the tag of the clarifying data element that was missing or
+  /// invalid that caused the VR to not be able to be inferred is returned.
   ///
-  pub fn infer_vr_for_tag(&self, tag: DataElementTag) -> ValueRepresentation {
+  pub fn infer_vr_for_tag(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<ValueRepresentation, DataElementTag> {
     let clarifying_data_elements = self.active_clarifying_data_elements();
 
     let private_creator = clarifying_data_elements.private_creator_for_tag(tag);
 
     let allowed_vrs =
       match dictionary::find(tag, private_creator.map(|x| x.as_str())) {
-        Ok(dictionary::Item { vrs, .. }) => vrs,
-        Err(()) => &[],
+        Ok(item) => item.vrs,
+        Err(_) => &[],
       };
 
     match allowed_vrs {
-      [vr] => *vr,
+      [vr] => Ok(*vr),
 
       // For '(7FE0,0010) Pixel Data', OB is not usable when in an implicit VR
       // transfer syntax. Ref: PS3.5 8.2.
       [ValueRepresentation::OtherByteString, ValueRepresentation::OtherWordString]
         if tag == dictionary::PIXEL_DATA.tag =>
       {
-        ValueRepresentation::OtherWordString
+        Ok(ValueRepresentation::OtherWordString)
       }
 
       // Use '(0028,0103) PixelRepresentation' to determine a US/SS VR on
@@ -541,8 +544,9 @@ impl P10Location {
           || tag == dictionary::HISTOGRAM_LAST_BIN_VALUE.tag =>
       {
         match clarifying_data_elements.pixel_representation {
-          Some(1) => ValueRepresentation::SignedShort,
-          _ => ValueRepresentation::UnsignedShort,
+          Some(0) => Ok(ValueRepresentation::UnsignedShort),
+          Some(1) => Ok(ValueRepresentation::SignedShort),
+          _ => Err(dictionary::PIXEL_REPRESENTATION.tag),
         }
       }
 
@@ -553,9 +557,9 @@ impl P10Location {
           || tag == dictionary::CHANNEL_MAXIMUM_VALUE.tag =>
       {
         match clarifying_data_elements.waveform_bits_stored {
-          Some(16) => ValueRepresentation::OtherWordString,
-          Some(_) => ValueRepresentation::OtherByteString,
-          None => ValueRepresentation::Unknown,
+          Some(8) => Ok(ValueRepresentation::OtherByteString),
+          Some(16) => Ok(ValueRepresentation::OtherWordString),
+          _ => Err(dictionary::WAVEFORM_BITS_STORED.tag),
         }
       }
 
@@ -566,9 +570,9 @@ impl P10Location {
           || tag == dictionary::WAVEFORM_DATA.tag =>
       {
         match clarifying_data_elements.waveform_bits_allocated {
-          Some(16) => ValueRepresentation::OtherWordString,
-          Some(_) => ValueRepresentation::OtherByteString,
-          None => ValueRepresentation::Unknown,
+          Some(8) => Ok(ValueRepresentation::OtherByteString),
+          Some(16) => Ok(ValueRepresentation::OtherWordString),
+          _ => Err(dictionary::WAVEFORM_BITS_ALLOCATED.tag),
         }
       }
 
@@ -581,7 +585,7 @@ impl P10Location {
       [ValueRepresentation::UnsignedShort, ValueRepresentation::OtherWordString]
         if tag == dictionary::LUT_DATA.tag =>
       {
-        ValueRepresentation::OtherWordString
+        Ok(ValueRepresentation::OtherWordString)
       }
 
       // The VR for '(60xx,3000) Overlay Data' doesn't need to be determined as
@@ -592,11 +596,11 @@ impl P10Location {
           && tag.group <= 0x60FF
           && tag.element == 0x3000 =>
       {
-        ValueRepresentation::OtherWordString
+        Ok(ValueRepresentation::OtherWordString)
       }
 
-      // The VR couldn't be determined, so fall back to UN
-      _ => ValueRepresentation::Unknown,
+      // The VR couldn't be determined
+      _ => Ok(ValueRepresentation::Unknown),
     }
   }
 }
