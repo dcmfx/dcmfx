@@ -3,10 +3,21 @@
 /// A data element tag that is defined by `group` and `element` values, each of
 /// which is a 16-bit unsigned integer.
 ///
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct DataElementTag {
   pub group: u16,
   pub element: u16,
+}
+
+impl std::fmt::Debug for DataElementTag {
+  /// Print a tag's group and element in hex when debug printing.
+  ///
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_struct("DataElementTag")
+      .field("group", &format_args!("{:#X}", self.group))
+      .field("element", &format_args!("{:#X}", self.element))
+      .finish()
+  }
 }
 
 impl std::fmt::Display for DataElementTag {
