@@ -42,8 +42,7 @@ pub fn run(args: &PrintArgs) -> Result<(), ()> {
   // output width is very large.
   context.set_config(&P10ReadConfig {
     max_part_size: 256 * 1024,
-    max_string_size: u32::MAX,
-    max_sequence_depth: u32::MAX,
+    ..P10ReadConfig::default()
   });
 
   // Apply any print option arguments

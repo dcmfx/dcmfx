@@ -23,6 +23,10 @@ pub fn to_string(tag: DataElementTag) -> String {
   <> ")"
 }
 
+/// A data element tag with a group and element set to zero.
+///
+pub const zero = DataElementTag(0, 0)
+
 /// Returns whether the tag is private, which is determined by its group number
 /// being odd.
 ///

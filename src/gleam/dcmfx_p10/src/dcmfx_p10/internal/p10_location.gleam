@@ -49,9 +49,16 @@ pub type P10Location =
 /// nested lists of items that can themselves contain sequences.
 ///
 pub opaque type LocationEntry {
-  RootDataSet(clarifying_data_elements: ClarifyingDataElements)
+  RootDataSet(
+    clarifying_data_elements: ClarifyingDataElements,
+    last_data_element_tag: DataElementTag,
+  )
   Sequence(is_implicit_vr: Bool, ends_at: Option(Int), item_count: Int)
-  Item(clarifying_data_elements: ClarifyingDataElements, ends_at: Option(Int))
+  Item(
+    clarifying_data_elements: ClarifyingDataElements,
+    last_data_element_tag: DataElementTag,
+    ends_at: Option(Int),
+  )
 }
 
 /// The data elements needed to determine VRs of some data elements when the
@@ -118,7 +125,42 @@ fn default_clarifying_data_elements() -> ClarifyingDataElements {
 /// Creates a new P10 location with an initial entry for the root data set.
 ///
 pub fn new() -> P10Location {
-  [RootDataSet(default_clarifying_data_elements())]
+  [RootDataSet(default_clarifying_data_elements(), data_element_tag.zero)]
+}
+
+/// Checks that the specified data element tag is greater than the previous one
+/// at the current P10 location. In DICOM P10 data, data elements in a data set
+/// and sequence item must appear in ascending order.
+/// 
+/// This is important to enforce when reading DICOM P10 data in a streaming
+/// fashion because lower numbered data elements are sometimes used in the
+/// interpretation of higher numbered data elements.
+///
+pub fn check_data_element_ordering(
+  location: P10Location,
+  tag: DataElementTag,
+) -> Result(P10Location, Nil) {
+  case location {
+    [RootDataSet(clarifying_data_elements:, last_data_element_tag:), ..rest] ->
+      case
+        data_element_tag.to_int(tag)
+        > data_element_tag.to_int(last_data_element_tag)
+      {
+        True -> Ok([RootDataSet(clarifying_data_elements, tag), ..rest])
+        False -> Error(Nil)
+      }
+
+    [Item(clarifying_data_elements:, last_data_element_tag:, ends_at:), ..rest] ->
+      case
+        data_element_tag.to_int(tag)
+        > data_element_tag.to_int(last_data_element_tag)
+      {
+        True -> Ok([Item(clarifying_data_elements, tag, ends_at), ..rest])
+        False -> Error(Nil)
+      }
+
+    _ -> Error(Nil)
+  }
 }
 
 /// Returns whether there is a sequence in the location that has forced the use
@@ -233,7 +275,11 @@ pub fn add_item(
     // for the new item
     [Sequence(is_implicit_vr, ends_at: sequence_ends_at, item_count:), ..rest] ->
       Ok([
-        Item(active_clarifying_data_elements(location), ends_at),
+        Item(
+          active_clarifying_data_elements(location),
+          data_element_tag.zero,
+          ends_at,
+        ),
         Sequence(is_implicit_vr, sequence_ends_at, item_count + 1),
         ..rest
       ])
@@ -263,7 +309,7 @@ fn active_clarifying_data_elements(
   location: P10Location,
 ) -> ClarifyingDataElements {
   case location {
-    [RootDataSet(clarifying_data_elements), ..]
+    [RootDataSet(clarifying_data_elements, ..), ..]
     | [Item(clarifying_data_elements, ..), ..] -> clarifying_data_elements
 
     [_, ..rest] -> active_clarifying_data_elements(rest)
@@ -426,13 +472,13 @@ fn map_clarifying_data_elements(
   map_fn: fn(ClarifyingDataElements) -> ClarifyingDataElements,
 ) -> P10Location {
   case location {
-    [RootDataSet(clarifying_data_elements), ..rest] -> [
-      RootDataSet(map_fn(clarifying_data_elements)),
+    [RootDataSet(clarifying_data_elements, last_data_element_tag), ..rest] -> [
+      RootDataSet(map_fn(clarifying_data_elements), last_data_element_tag),
       ..rest
     ]
 
-    [Item(clarifying_data_elements, ends_at), ..rest] -> [
-      Item(map_fn(clarifying_data_elements), ends_at),
+    [Item(clarifying_data_elements, last_data_element_tag, ends_at), ..rest] -> [
+      Item(map_fn(clarifying_data_elements), last_data_element_tag, ends_at),
       ..rest
     ]
 

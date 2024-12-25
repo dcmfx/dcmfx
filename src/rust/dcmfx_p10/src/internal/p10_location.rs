@@ -45,6 +45,7 @@ pub struct P10Location {
 enum LocationEntry {
   RootDataSet {
     clarifying_data_elements: ClarifyingDataElements,
+    last_data_element_tag: DataElementTag,
   },
   Sequence {
     is_implicit_vr: bool,
@@ -53,6 +54,7 @@ enum LocationEntry {
   },
   Item {
     clarifying_data_elements: ClarifyingDataElements,
+    last_data_element_tag: DataElementTag,
     ends_at: Option<u64>,
   },
 }
@@ -129,7 +131,37 @@ impl P10Location {
     Self {
       entries: vec![LocationEntry::RootDataSet {
         clarifying_data_elements: ClarifyingDataElements::default(),
+        last_data_element_tag: DataElementTag::ZERO,
       }],
+    }
+  }
+
+  /// Checks that the specified data element tag is greater than the previous
+  /// one at the current P10 location. In DICOM P10 data, data elements in a
+  /// data set and sequence item must appear in ascending order.
+  ///
+  /// This is important to enforce when reading DICOM P10 data in a streaming
+  /// fashion because lower numbered data elements are sometimes used in the
+  /// interpretation of higher numbered data elements.
+  ///
+  pub fn check_data_element_ordering(
+    &mut self,
+    tag: DataElementTag,
+  ) -> Result<(), ()> {
+    match self.entries.last_mut() {
+      Some(LocationEntry::RootDataSet {
+        last_data_element_tag,
+        ..
+      })
+      | Some(LocationEntry::Item {
+        last_data_element_tag,
+        ..
+      }) if tag > *last_data_element_tag => {
+        *last_data_element_tag = tag;
+        Ok(())
+      }
+
+      _ => Err(()),
     }
   }
 
@@ -276,6 +308,7 @@ impl P10Location {
           clarifying_data_elements: self
             .active_clarifying_data_elements()
             .clone(),
+          last_data_element_tag: DataElementTag::ZERO,
           ends_at,
         });
 
@@ -310,6 +343,7 @@ impl P10Location {
       match entry {
         LocationEntry::RootDataSet {
           clarifying_data_elements,
+          ..
         }
         | LocationEntry::Item {
           clarifying_data_elements,
@@ -333,6 +367,7 @@ impl P10Location {
       match entry {
         LocationEntry::RootDataSet {
           clarifying_data_elements,
+          ..
         }
         | LocationEntry::Item {
           clarifying_data_elements,

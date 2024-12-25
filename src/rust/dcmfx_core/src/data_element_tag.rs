@@ -42,6 +42,13 @@ impl DataElementTag {
     Self { group, element }
   }
 
+  /// A data element tag with a group and element set to zero.
+  ///
+  pub const ZERO: DataElementTag = DataElementTag {
+    group: 0,
+    element: 0,
+  };
+
   /// Returns whether the tag is private, which is determined by its group
   /// number being odd.
   ///

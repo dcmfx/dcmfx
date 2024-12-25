@@ -90,6 +90,23 @@ pub struct P10ReadConfig {
   /// meaningful maximum is enforced.
   ///
   pub max_sequence_depth: u32,
+
+  /// Whether to error if data elements are not in ascending order in the DICOM
+  /// P10 data. Such data is malformed but is still able to read, however doing
+  /// so can potentially lead to incorrect results. For example:
+  ///
+  /// 1. If the '(0008,0005) Specific Character Set' data element appears after
+  ///    data elements that use an encoded string VR, they will be decoded using
+  ///    the wrong character set.
+  ///
+  /// 2. If a '(gggg,00xx) Private Creator' data element appears after the data
+  ///    elements it defines the private creator for, those data elements will
+  ///    all be read with a VR of UN (when the transfer syntax is 'Implicit VR
+  ///    Little Endian').
+  ///
+  /// By default this requirement is enforced.
+  ///
+  pub require_ordered_data_elements: bool,
 }
 
 impl Default for P10ReadConfig {
@@ -98,6 +115,7 @@ impl Default for P10ReadConfig {
       max_part_size: 0xFFFFFFFE,
       max_string_size: 0xFFFFFFFE,
       max_sequence_depth: 10_000,
+      require_ordered_data_elements: true,
     }
   }
 }
@@ -821,6 +839,22 @@ impl P10ReadContext {
           bytes_remaining: length,
           emit_parts,
         };
+
+        // Check data elements appear in ascending order
+        if self.config.require_ordered_data_elements {
+          self
+            .location
+            .check_data_element_ordering(header.tag)
+            .map_err(|_| P10Error::DataInvalid {
+              when: "Reading data element header".to_string(),
+              details: format!(
+                "Data element '{}' is not in ascending order",
+                header
+              ),
+              path: self.path.clone(),
+              offset: self.stream.bytes_read(),
+            })?;
+        }
 
         // Add data element to the path
         self

@@ -36,6 +36,9 @@ Some test files were excluded. The reasons for these exclusions are listed here:
 - `pydicom/test_files/SC_rgb_jpeg.dcm`: excluded because DCMfx doesn't attempt
   to read invalid explicit VR data as implicit VR as an error recovery method.
 
+- `pydicom/palettes/winter.dcm`: excluded because DCMfx does not accept DICOM
+  P10 data containing data elements that are not in ascending order.
+
 - `fo-dicom/GH1301.dcm`: excluded because DCMfx converts invalid bytes in a Code
   String (`CS`) value to a `?` character, but `pydicom` interprets them as ISO
   8859-1 bytes.

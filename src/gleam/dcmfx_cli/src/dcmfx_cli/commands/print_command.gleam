@@ -62,11 +62,12 @@ pub fn run() {
   // output width is very large.
   let context =
     context
-    |> p10_read.with_config(p10_read.P10ReadConfig(
-      max_part_size: 256 * 1024,
-      max_string_size: 0xFFFFFFFF,
-      max_sequence_depth: 10_000,
-    ))
+    |> p10_read.with_config(
+      p10_read.P10ReadConfig(
+        ..p10_read.default_config(),
+        max_part_size: 256 * 1024,
+      ),
+    )
 
   // Construct print option arguments
   let print_options = DataSetPrintOptions(max_width:, styled:)

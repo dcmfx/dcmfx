@@ -95,12 +95,30 @@ import gleam/result
 ///
 /// By default the maximum sequence depth is set to ten thousand, i.e. no
 /// meaningful maximum is enforced.
+/// 
+/// ### `require_ordered_data_elements: Bool`
+/// 
+/// Whether to error if data elements are not in ascending order in the DICOM
+/// P10 data. Such data is malformed but is still able to read, however doing so
+/// can potentially lead to incorrect results. For example:
+///
+/// 1. If the '(0008,0005) Specific Character Set' data element appears after
+///    data elements that use an encoded string VR, they will be decoded using
+///    the wrong character set.
+///
+/// 2. If a '(gggg,00xx) Private Creator' data element appears after the data
+///    elements it defines the private creator for, those data elements will
+///    all be read with a VR of UN (when the transfer syntax is 'Implicit VR
+///    Little Endian').
+///
+/// By default this requirement is enforced.
 ///
 pub type P10ReadConfig {
   P10ReadConfig(
     max_part_size: Int,
     max_string_size: Int,
     max_sequence_depth: Int,
+    require_ordered_data_elements: Bool,
   )
 }
 
@@ -111,6 +129,7 @@ pub fn default_config() -> P10ReadConfig {
     max_part_size: 0xFFFFFFFE,
     max_string_size: 0xFFFFFFFE,
     max_sequence_depth: 10_000,
+    require_ordered_data_elements: True,
   )
 }
 
@@ -179,16 +198,13 @@ pub fn with_config(
 
   let config =
     P10ReadConfig(
-      max_part_size: max_part_size,
-      max_string_size: max_string_size,
-      max_sequence_depth: max_sequence_depth,
+      ..config,
+      max_part_size:,
+      max_string_size:,
+      max_sequence_depth:,
     )
 
-  P10ReadContext(
-    ..context,
-    stream: byte_stream.new(max_read_size),
-    config: config,
-  )
+  P10ReadContext(..context, config:, stream: byte_stream.new(max_read_size))
 }
 
 /// Sets the transfer syntax to use when reading DICOM P10 data that doesn't
@@ -964,6 +980,21 @@ fn read_data_element_header_part(
       let next_action =
         ReadDataElementValueBytes(header.tag, vr, length, length, emit_parts)
 
+      // Check data elements appear in ascending order
+      let new_location =
+        p10_location.check_data_element_ordering(context.location, header.tag)
+        |> result.map_error(fn(_) {
+          p10_error.DataInvalid(
+            "Reading data element header",
+            "Data element '"
+              <> data_element_header.to_string(header)
+              <> "' is not in ascending order",
+            context.path,
+            byte_stream.bytes_read(context.stream),
+          )
+        })
+      use new_location <- result.try(new_location)
+
       // Add data element to the path
       let new_path =
         data_set_path.add_data_element(context.path, tag)
@@ -984,6 +1015,7 @@ fn read_data_element_header_part(
           ..context,
           stream: new_stream,
           next_action: next_action,
+          location: new_location,
           path: new_path,
         )
 
