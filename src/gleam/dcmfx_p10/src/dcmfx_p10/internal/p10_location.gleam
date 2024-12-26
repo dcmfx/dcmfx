@@ -105,19 +105,8 @@ fn private_creator_for_tag(
 
 /// Returns the default/initial value for the clarifying data elements.
 ///
-/// Strictly speaking the default value for the specific character set should be
-/// the default character set: ISO 646. However, some DICOM P10 data has been
-/// seen in the wild that does not select a SpecificCharacterSet and assumes
-/// that ISO IR 100 (ISO 8859-1) is available by default. Given that this
-/// character set is compatible with ISO 646 it is safe to default to it instead
-/// in order to improve compatibility.
-///
-/// Note that if the DICOM P10 data explicitly selects "ISO_IR 6" then ISO 646
-/// will be active and this default fallback to ISO IR 100 will no longer be in
-/// effect.
-///
 fn default_clarifying_data_elements() -> ClarifyingDataElements {
-  let assert Ok(charset) = dcmfx_character_set.from_string("ISO_IR 100")
+  let assert Ok(charset) = dcmfx_character_set.from_string("ISO_IR 6")
 
   ClarifyingDataElements(charset, None, None, None, None, dict.new())
 }
