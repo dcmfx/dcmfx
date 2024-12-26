@@ -9,6 +9,7 @@ members = [
   "dcmfx_json",
   "dcmfx_p10",
   "dcmfx_pixel_data",
+  "dcmfx_fuzz"
 ]
 
 [workspace.package]
