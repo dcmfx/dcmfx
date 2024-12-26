@@ -1413,7 +1413,13 @@ fn process_materialized_data_element(
   // Decode string values using the relevant character set
   let value_bytes = case value_representation.is_string(vr) {
     True ->
-      case value_representation.is_encoded_string(vr) {
+      // Private Creator values must only contain characters from the Default
+      // Character Repertoire and so are sanitized against that character set.
+      // Ref: PS3.5 7.8.1.
+      case
+        value_representation.is_encoded_string(vr)
+        && !data_element_tag.is_private_creator(tag)
+      {
         True ->
           p10_location.decode_string_bytes(context.location, vr, value_bytes)
         False -> dcmfx_character_set.sanitize_default_charset_bytes(value_bytes)

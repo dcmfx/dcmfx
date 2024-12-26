@@ -1248,17 +1248,18 @@ impl P10ReadContext {
     mut value_bytes: Vec<u8>,
   ) -> Result<Vec<u8>, P10Error> {
     // Decode string values using the relevant character set
-    let mut value_bytes = if vr.is_string() {
-      if vr.is_encoded_string() {
+    if vr.is_string() {
+      // Private Creator values must only contain characters from the Default
+      // Character Repertoire and so are sanitized against that character set.
+      // Ref: PS3.5 7.8.1.
+      value_bytes = if vr.is_encoded_string() && !tag.is_private_creator() {
         self.location.decode_string_bytes(vr, &value_bytes)
       } else {
         dcmfx_character_set::sanitize_default_charset_bytes(&mut value_bytes);
 
         value_bytes
       }
-    } else {
-      value_bytes
-    };
+    }
 
     // Update the P10 location with the materialized value, this will only do
     // something when this is a clarifying data element
