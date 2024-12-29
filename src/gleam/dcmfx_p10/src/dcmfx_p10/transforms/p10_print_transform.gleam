@@ -30,8 +30,7 @@ pub type P10PrintTransform {
   )
 }
 
-/// Constructs a new DICOM P10 print transform with the specified print
-/// options.
+/// Constructs a new DICOM P10 print transform with the specified print options.
 ///
 pub fn new(print_options: DataSetPrintOptions) -> P10PrintTransform {
   P10PrintTransform(

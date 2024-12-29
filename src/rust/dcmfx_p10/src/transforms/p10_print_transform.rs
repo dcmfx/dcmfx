@@ -5,8 +5,8 @@ use dcmfx_core::{
 
 use crate::P10Part;
 
-/// Transform that converts a stream of DICOM P10 parts into printable text
-/// that describes the structure and content of the contained DICOM data.
+/// Transform that converts a stream of DICOM P10 parts into printable text that
+/// describes the structure and content of the contained DICOM data.
 ///
 /// This is used for printing data sets on the command line, and the output can
 /// be styled via [`DataSetPrintOptions`].

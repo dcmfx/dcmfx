@@ -823,7 +823,7 @@ fn read_data_element_header_part(
     | tag, Some(value_representation.OtherWordString), value_length.Undefined
       if tag == dictionary.pixel_data.tag
     -> {
-      let assert Some(vr) = vr
+      let Some(vr) = vr
       let part = p10_part.SequenceStart(tag, vr)
 
       let new_location =

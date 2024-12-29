@@ -223,11 +223,10 @@ pub fn write_part(
           p10_part.SequenceStart(tag:, ..) ->
             data_set_path.add_data_element(context.path, tag)
             |> result.map(fn(path) {
-              P10WriteContext(
-                ..context,
-                path:,
-                sequence_item_counts: [0, ..context.sequence_item_counts],
-              )
+              P10WriteContext(..context, path:, sequence_item_counts: [
+                0,
+                ..context.sequence_item_counts
+              ])
             })
 
           p10_part.SequenceItemStart | p10_part.PixelDataItem(..) -> {

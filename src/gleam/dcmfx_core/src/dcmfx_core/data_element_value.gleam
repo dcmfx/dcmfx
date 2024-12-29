@@ -1008,14 +1008,17 @@ pub fn get_strings(value: DataElementValue) -> Result(List(String), DataError) {
         data_error.new_value_invalid("String bytes are not valid UTF-8")
       })
       |> result.map(string.split(_, "\\"))
-      |> result.map(list.map(_, fn(s) {
-        case value_representation(value) {
-          value_representation.UniqueIdentifier -> utils.trim_ascii_end(s, 0x00)
-          value_representation.UnlimitedCharacters ->
-            utils.trim_ascii_end(s, 0x20)
-          _ -> utils.trim_ascii(s, 0x20)
-        }
-      }))
+      |> result.map(
+        list.map(_, fn(s) {
+          case value_representation(value) {
+            value_representation.UniqueIdentifier ->
+              utils.trim_ascii_end(s, 0x00)
+            value_representation.UnlimitedCharacters ->
+              utils.trim_ascii_end(s, 0x20)
+            _ -> utils.trim_ascii(s, 0x20)
+          }
+        }),
+      )
 
     _ -> Error(data_error.new_value_not_present())
   }

@@ -463,9 +463,11 @@ fn read_dicom_json_primitive_value(
         "Sequence value is invalid",
         path,
       ))
-      |> result.map(list.map(_, fn(json) {
-        convert_json_to_data_set(json, data_set_path.new())
-      }))
+      |> result.map(
+        list.map(_, fn(json) {
+          convert_json_to_data_set(json, data_set_path.new())
+        }),
+      )
       |> result.map(result.all)
       |> result.flatten
       |> result.map(data_element_value.new_sequence)
