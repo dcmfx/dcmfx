@@ -15,13 +15,15 @@ pub fn from_bytes(bytes: BitArray) -> Result(List(DataElementTag), DataError) {
   |> result.replace_error(data_error.new_value_invalid(
     "AttributeTag data length is not a multiple of 4",
   ))
-  |> result.map(list.map(_, fn(tag) {
-    let assert <<group:16-little-unsigned, element:16-little-unsigned>> = <<
-      tag:32-little,
-    >>
+  |> result.map(
+    list.map(_, fn(tag) {
+      let assert <<group:16-little-unsigned, element:16-little-unsigned>> = <<
+        tag:32-little,
+      >>
 
-    DataElementTag(group, element)
-  }))
+      DataElementTag(group, element)
+    }),
+  )
 }
 
 /// Converts data element tags into an `AttributeTag` value.

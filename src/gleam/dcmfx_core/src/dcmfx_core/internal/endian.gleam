@@ -3,7 +3,7 @@ import gleam/list
 
 /// Swaps the endianness of 16-bit values in a bit array.
 ///
-@external(javascript, "../../dcmfx_core_ffi.mjs", "endian__swap_16_bit")
+@external(javascript, "./endian_ffi.mjs", "swap_16_bit")
 pub fn swap_16_bit(bytes: BitArray, acc: List(BitArray)) -> BitArray {
   case bytes {
     <<
@@ -533,7 +533,7 @@ pub fn swap_16_bit(bytes: BitArray, acc: List(BitArray)) -> BitArray {
 
 /// Swaps the endianness of 32-bit values in a bit array.
 ///
-@external(javascript, "../../dcmfx_core_ffi.mjs", "endian__swap_32_bit")
+@external(javascript, "./endian_ffi.mjs", "swap_32_bit")
 pub fn swap_32_bit(bytes: BitArray, acc: List(BitArray)) -> BitArray {
   case bytes {
     <<
@@ -1063,7 +1063,7 @@ pub fn swap_32_bit(bytes: BitArray, acc: List(BitArray)) -> BitArray {
 
 /// Swaps the endianness of 64-bit values in a bit array.
 ///
-@external(javascript, "../../dcmfx_core_ffi.mjs", "endian__swap_64_bit")
+@external(javascript, "./endian_ffi.mjs", "swap_64_bit")
 pub fn swap_64_bit(bytes: BitArray, acc: List(BitArray)) -> BitArray {
   case bytes {
     <<

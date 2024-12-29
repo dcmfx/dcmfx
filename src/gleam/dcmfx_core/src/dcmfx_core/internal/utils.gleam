@@ -15,7 +15,7 @@ import gleam/string
 /// This function should only be used where the above discrepancy will not occur
 /// or does not matter and performance is more important.
 ///
-@external(javascript, "../../dcmfx_core_ffi.mjs", "utils__string_fast_length")
+@external(javascript, "./utils_ffi.mjs", "utils__string_fast_length")
 pub fn string_fast_length(s: String) -> Int {
   string.length(s)
 }
@@ -25,7 +25,7 @@ pub fn string_fast_length(s: String) -> Int {
 /// This implementation is faster than `string.pad_left()` on the JavaScript
 /// target, but is not grapheme aware.
 ///
-@external(javascript, "../../dcmfx_core_ffi.mjs", "utils__pad_start")
+@external(javascript, "./utils_ffi.mjs", "utils__pad_start")
 pub fn pad_start(s: String, desired_length: Int, pad_string: String) -> String {
   string.pad_start(s, desired_length, pad_string)
 }

@@ -1,24 +1,6 @@
-import { BitArray } from "../prelude.mjs";
+import { BitArray } from "../../../prelude.mjs";
 
-export function decimal_string__float_to_shortest_string(f) {
-  let a = f.toString();
-  if (a.indexOf(".") === -1) {
-    a += ".0";
-  }
-
-  if (a.length <= 16) {
-    return a;
-  }
-
-  const b = f.toExponential();
-  if (b.length < a.length) {
-    return b;
-  }
-
-  return a;
-}
-
-export function endian__swap_16_bit(bytes, _acc) {
+export function swap_16_bit(bytes, _acc) {
   const length = Math.floor(bytes.length / 2) * 2;
   const result = new BitArray(new Uint8Array(length));
 
@@ -30,7 +12,7 @@ export function endian__swap_16_bit(bytes, _acc) {
   return result;
 }
 
-export function endian__swap_32_bit(bytes, _acc) {
+export function swap_32_bit(bytes, _acc) {
   const length = Math.floor(bytes.length / 4) * 4;
   const result = new BitArray(new Uint8Array(length));
 
@@ -44,7 +26,7 @@ export function endian__swap_32_bit(bytes, _acc) {
   return result;
 }
 
-export function endian__swap_64_bit(bytes, _acc) {
+export function swap_64_bit(bytes, _acc) {
   const length = Math.floor(bytes.length / 8) * 8;
   const result = new BitArray(new Uint8Array(length));
 
@@ -60,12 +42,4 @@ export function endian__swap_64_bit(bytes, _acc) {
   }
 
   return result;
-}
-
-export function utils__pad_start(string, desired_length, pad_string) {
-  return string.padStart(desired_length, pad_string);
-}
-
-export function utils__string_fast_length(string) {
-  return string.length;
 }

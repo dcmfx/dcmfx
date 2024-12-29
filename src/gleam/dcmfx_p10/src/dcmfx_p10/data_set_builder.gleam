@@ -191,10 +191,10 @@ fn add_part_in_sequence(
     | p10_part.SequenceItemStart, [Sequence(..), ..]
     ->
       Ok(
-        DataSetBuilder(
-          ..builder,
-          location: [SequenceItem(data_set.new()), ..builder.location],
-        ),
+        DataSetBuilder(..builder, location: [
+          SequenceItem(data_set.new()),
+          ..builder.location
+        ]),
       )
 
     p10_part.SequenceDelimiter, [Sequence(tag, items), ..sequence_location] -> {

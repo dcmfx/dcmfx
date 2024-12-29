@@ -60,7 +60,7 @@ pub fn to_bytes(values: List(Float)) -> BitArray {
   |> bit_array_utils.pad_to_even_length(0x20)
 }
 
-@external(javascript, "../../dcmfx_core_ffi.mjs", "decimal_string__float_to_shortest_string")
+@external(javascript, "./decimal_string_ffi.mjs", "float_to_shortest_string")
 fn float_to_shortest_string(f: Float) -> String {
   float.to_string(f)
 }

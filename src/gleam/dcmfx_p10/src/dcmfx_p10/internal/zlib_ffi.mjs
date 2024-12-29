@@ -1,11 +1,11 @@
-import { Deflate, Inflate, constants } from "./pako.esm.mjs";
-import { BitArray, Ok, Error } from "../prelude.mjs";
-import { List } from "./gleam.mjs";
-import { Finish, Full, Sync, None } from "./dcmfx_p10/internal/zlib/flush_command.mjs";
+import { Deflate, Inflate, constants } from "./zlib/pako.esm.mjs";
+import { BitArray, Ok, Error } from "../../../prelude.mjs";
+import { List } from "../../gleam.mjs";
+import { Finish, Full, Sync, None } from "./zlib/flush_command.mjs";
 import {
   Continue,
   Finished,
-} from "./dcmfx_p10/internal/zlib/inflate_result.mjs";
+} from "./zlib/inflate_result.mjs";
 
 const Nil = undefined;
 
@@ -20,7 +20,7 @@ function onEnd(status) {
   this.msg = this.strm.msg;
 }
 
-export function deflateInit(
+export function deflate_init(
   stream,
   level,
   _method,
@@ -39,7 +39,7 @@ export function deflateInit(
   stream.deflate.onEnd = onEnd;
 }
 
-export function inflateInit(stream, window_bits) {
+export function inflate_init(stream, window_bits) {
   stream.inflate = new Inflate({
     windowBits: window_bits,
     chunkSize: 16 * 1024,
@@ -74,7 +74,7 @@ export function deflate(stream, data, flush) {
   return List.fromArray(bitArrays);
 }
 
-export function safeInflate(stream, input_bytes) {
+export function safe_inflate(stream, input_bytes) {
   // Bytes written after the inflate is complete are ignored. This matches the
   // behavior of Erlang's zlib module.
   if (!stream.inflate.ended) {

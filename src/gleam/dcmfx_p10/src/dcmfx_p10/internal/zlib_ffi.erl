@@ -1,4 +1,4 @@
--module(dcmfx_p10_ffi).
+-module(zlib_ffi).
 -export([zlib_safeInflate/2]).
 
 % Wraps zlib:safeInflate to return a valid Gleam Result() type and to turn all

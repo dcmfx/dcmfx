@@ -864,9 +864,10 @@ pub fn get_string(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_string)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns all of the string values for a data element in a data set. If the
@@ -880,9 +881,10 @@ pub fn get_strings(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_strings)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns the singular integer value for a data element in a data set. If the
@@ -893,9 +895,10 @@ pub fn get_int(data_set: DataSet, tag: DataElementTag) -> Result(Int, DataError)
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_int)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns all of the integer values for a data element in a data set. If the
@@ -909,9 +912,10 @@ pub fn get_ints(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_ints)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns the singular big integer value for a data element in a data set. If
@@ -925,9 +929,10 @@ pub fn get_big_int(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_big_int)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns all of the big integer values for a data element in a data set. If
@@ -941,9 +946,10 @@ pub fn get_big_ints(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_big_ints)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns the singular floating point value for a data element in a data set.
@@ -957,9 +963,10 @@ pub fn get_float(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_float)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns all of the floating point values for a data element in a data set.
@@ -973,9 +980,10 @@ pub fn get_floats(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_floats)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns the age value for a data element in a data set. If the data element
@@ -988,9 +996,10 @@ pub fn get_age(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_age)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns the date value for a data element in a data set. If the data element
@@ -1003,9 +1012,10 @@ pub fn get_date(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_date)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns the structured date/time value for a data element in a data set. If
@@ -1018,9 +1028,10 @@ pub fn get_date_time(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_date_time)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns the time value for a data element in a data set. If the data element
@@ -1033,9 +1044,10 @@ pub fn get_time(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_time)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns the singular person name value for a data element in a data set.
@@ -1049,9 +1061,10 @@ pub fn get_person_name(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_person_name)
-  |> result.map_error(
-    data_error.with_path(_, data_set_path.new_with_data_element(tag)),
-  )
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns all of the person name values for a data element in a data set. If

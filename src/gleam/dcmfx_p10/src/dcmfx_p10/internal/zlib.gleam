@@ -8,7 +8,7 @@ import dcmfx_p10/internal/zlib/inflate_result.{type InflateResult}
 pub type ZlibStream
 
 @external(erlang, "zlib", "open")
-@external(javascript, "../../pako_ffi.mjs", "open")
+@external(javascript, "./zlib_ffi.mjs", "open")
 pub fn open() -> ZlibStream
 
 pub type Zmethod {
@@ -23,7 +23,7 @@ pub type Zstrategy {
 }
 
 @external(erlang, "zlib", "deflateInit")
-@external(javascript, "../../pako_ffi.mjs", "deflateInit")
+@external(javascript, "./zlib_ffi.mjs", "deflate_init")
 pub fn deflate_init(
   stream: ZlibStream,
   level: Int,
@@ -34,19 +34,19 @@ pub fn deflate_init(
 ) -> Nil
 
 @external(erlang, "zlib", "inflateInit")
-@external(javascript, "../../pako_ffi.mjs", "inflateInit")
+@external(javascript, "./zlib_ffi.mjs", "inflate_init")
 pub fn inflate_init(stream: ZlibStream, window_bits: Int) -> Nil
 
 @external(erlang, "zlib", "deflate")
-@external(javascript, "../../pako_ffi.mjs", "deflate")
+@external(javascript, "./zlib_ffi.mjs", "deflate")
 pub fn deflate(
   stream: ZlibStream,
   data: BitArray,
   flush: FlushCommand,
 ) -> List(BitArray)
 
-@external(erlang, "dcmfx_p10_ffi", "zlib_safeInflate")
-@external(javascript, "../../pako_ffi.mjs", "safeInflate")
+@external(erlang, "zlib_ffi", "zlib_safeInflate")
+@external(javascript, "./zlib_ffi.mjs", "safe_inflate")
 pub fn safe_inflate(
   zlib_stream: ZlibStream,
   input_bytes: BitArray,
