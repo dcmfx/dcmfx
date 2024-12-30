@@ -690,8 +690,7 @@ fn do_to_lines(
         let context =
           items
           |> list.fold(context, fn(context, item) {
-            callback(
-              context,
+            let #(item_header, item_header_width) =
               data_set_print.format_data_element_prefix(
                 dictionary.item.tag,
                 dictionary.item.name,
@@ -699,7 +698,15 @@ fn do_to_lines(
                 Some(bit_array.byte_size(item)),
                 indent + 1,
                 print_options,
-              ).0,
+              )
+
+            let value_max_width =
+              int.max(print_options.max_width - item_header_width, 10)
+
+            callback(
+              context,
+              item_header
+                <> utils.inspect_bit_array(item, { value_max_width - 2 } / 3),
             )
           })
 

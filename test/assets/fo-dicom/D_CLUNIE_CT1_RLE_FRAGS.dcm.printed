@@ -268,9 +268,9 @@
 (0043,104D) FL Start scan to X-ray on delay         [     4 bytes] 0.0
 (0043,104E) FL Duration of X-ray on                 [     4 bytes] 10.60060977935791
 (7FE0,0010) OW Pixel Data
-  (FFFE,E000) Item                                    [     0 bytes]
-  (FFFE,E000) Item                                    [ 65536 bytes]
-  (FFFE,E000) Item                                    [ 65536 bytes]
-  (FFFE,E000) Item                                    [ 65536 bytes]
-  (FFFE,E000) Item                                    [ 51722 bytes]
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [ 65536 bytes] [02 00 00 00 40 00 00 00 BA …]
+  (FFFE,E000) Item                                    [ 65536 bytes] [CE EE 00 0C 02 1C 2E 2F 31 …]
+  (FFFE,E000) Item                                    [ 65536 bytes] [B9 BA BB C5 CA C5 C4 AD C0 …]
+  (FFFE,E000) Item                                    [ 51722 bytes] [15 13 30 28 29 2F 38 45 20 …]
 (FFFE,E0DD) Sequence Delimitation Item

@@ -1,6 +1,6 @@
 use std::io::IsTerminal;
 
-use crate::{dictionary, DataElementTag, DataSet, ValueRepresentation};
+use crate::{dictionary, utils, DataElementTag, DataSet, ValueRepresentation};
 
 /// Configurable options used when printing a data set to stdout.
 ///
@@ -135,17 +135,24 @@ pub fn data_set_to_lines(
       callback(header.to_string());
 
       for item in items {
-        callback(
-          format_data_element_prefix(
-            dictionary::ITEM.tag,
-            dictionary::ITEM.name,
-            None,
-            Some(item.len()),
-            indent + 1,
-            print_options,
-          )
-          .0,
+        let (item_header, item_header_width) = format_data_element_prefix(
+          dictionary::ITEM.tag,
+          dictionary::ITEM.name,
+          None,
+          Some(item.len()),
+          indent + 1,
+          print_options,
         );
+
+        let value_max_width = std::cmp::max(
+          print_options.max_width.saturating_sub(item_header_width),
+          10,
+        );
+
+        callback(format!(
+          "{item_header}{}",
+          utils::inspect_u8_slice(item, (value_max_width - 2) / 3)
+        ));
       }
 
       callback(
@@ -223,11 +230,7 @@ pub fn format_data_element_prefix(
   let has_length = length.is_some();
 
   let length = if let Some(length) = length {
-    let mut s = format!("[{length:6} bytes]");
-    if vr.is_some() {
-      s.push(' ');
-    }
-    s
+    format!("[{length:6} bytes] ")
   } else {
     "".to_string()
   };

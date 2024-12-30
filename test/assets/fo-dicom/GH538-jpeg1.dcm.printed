@@ -41,6 +41,6 @@
 (0028,2112) DS Lossy Image Compression Ratio        [     6 bytes] "11.184"
 (0028,2114) CS Lossy Image Compression Method       [    24 bytes] "ISO_10918_1", "ISO_10918_1"
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     4 bytes]
-  (FFFE,E000) Item                                    [ 74038 bytes]
+  (FFFE,E000) Item                                    [     4 bytes] [00 00 00 00]
+  (FFFE,E000) Item                                    [ 74038 bytes] [FF D8 FF E0 00 10 4A 46 49 …]
 (FFFE,E0DD) Sequence Delimitation Item

@@ -46,7 +46,7 @@
 (0028,0106) US Smallest Image Pixel Value           [     2 bytes] 0
 (0028,0107) US Largest Image Pixel Value            [     2 bytes] 65535
 (7FE0,0010) OW Pixel Data
-  (FFFE,E000) Item                                    [     8 bytes]
-  (FFFE,E000) Item                                    [  1264 bytes]
-  (FFFE,E000) Item                                    [  1264 bytes]
+  (FFFE,E000) Item                                    [     8 bytes] [00 00 00 00 F8 04 00 00]
+  (FFFE,E000) Item                                    [  1264 bytes] [06 00 00 00 40 00 00 00 08 …]
+  (FFFE,E000) Item                                    [  1264 bytes] [06 00 00 00 40 00 00 00 08 …]
 (FFFE,E0DD) Sequence Delimitation Item

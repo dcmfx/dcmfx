@@ -170,6 +170,6 @@
 (0051,1017) SH Unknown                              [     8 bytes] "SL 1.6i"
 (0051,1019) LO Unknown                              [     6 bytes] "A1/PFP"
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     0 bytes]
-  (FFFE,E000) Item                                    [ 23030 bytes]
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [ 23030 bytes] [FF D8 FF C3 00 0B 10 00 A2 …]
 (FFFE,E0DD) Sequence Delimitation Item

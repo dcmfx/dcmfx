@@ -85,6 +85,6 @@
 (6000,0100) US Overlay Bits Allocated               [     2 bytes] 1
 (6000,0102) US Overlay Bit Position                 [     2 bytes] 0
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     4 bytes]
-  (FFFE,E000) Item                                    [201678 bytes]
+  (FFFE,E000) Item                                    [     4 bytes] [00 00 00 00]
+  (FFFE,E000) Item                                    [201678 bytes] [FF D8 FF E0 00 0F 4C 4A 49 …]
 (FFFE,E0DD) Sequence Delimitation Item

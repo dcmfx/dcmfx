@@ -18,6 +18,6 @@
 (0028,0102) US High Bit                             [     2 bytes] 7
 (0028,0103) US Pixel Representation                 [     2 bytes] 0
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     4 bytes]
-  (FFFE,E000) Item                                    [262144 bytes]
+  (FFFE,E000) Item                                    [     4 bytes] [00 00 00 00]
+  (FFFE,E000) Item                                    [262144 bytes] [00 00 00 00 00 00 00 00 00 …]
 (FFFE,E0DD) Sequence Delimitation Item

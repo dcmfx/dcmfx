@@ -174,6 +174,6 @@
 (0054,0021) US Number of Detectors                  [     2 bytes] 1
 (0054,0400) SH Image ID                             [    12 bytes] "WHOLE BODY_E"
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     0 bytes]
-  (FFFE,E000) Item                                    [   250 bytes]
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [   250 bytes] [FF 4F FF 51 00 29 00 00 00 …]
 (FFFE,E0DD) Sequence Delimitation Item

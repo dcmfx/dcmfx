@@ -99,6 +99,6 @@
 (0028,2112) DS Lossy Image Compression Ratio        [    16 bytes] "338.687338501292"
 (0040,0009) SH Scheduled Procedure Step ID          [     4 bytes] "ANON"
 (7FE0,0010) OW Pixel Data
-  (FFFE,E000) Item                                    [     0 bytes]
-  (FFFE,E000) Item                                    [  1548 bytes]
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [  1548 bytes] [FF 4F FF 51 00 29 00 00 00 …]
 (FFFE,E0DD) Sequence Delimitation Item

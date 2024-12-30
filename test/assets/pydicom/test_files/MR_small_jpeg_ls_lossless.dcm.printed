@@ -77,6 +77,6 @@
 (0028,1050) DS Window Center                        [     4 bytes] "600"
 (0028,1051) DS Window Width                         [     4 bytes] "1600"
 (7FE0,0010) OW Pixel Data
-  (FFFE,E000) Item                                    [     0 bytes]
-  (FFFE,E000) Item                                    [  4430 bytes]
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [  4430 bytes] [FF D8 FF F7 00 0B 10 00 40 …]
 (FFFE,E0DD) Sequence Delimitation Item

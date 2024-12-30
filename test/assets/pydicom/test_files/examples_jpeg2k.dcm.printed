@@ -67,8 +67,8 @@
 (0028,0103) US Pixel Representation                 [     2 bytes] 0
 (0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     0 bytes]
-  (FFFE,E000) Item                                    [ 65536 bytes]
-  (FFFE,E000) Item                                    [ 65536 bytes]
-  (FFFE,E000) Item                                    [ 21222 bytes]
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [ 65536 bytes] [FF 4F FF 51 00 2F 00 00 00 …]
+  (FFFE,E000) Item                                    [ 65536 bytes] [38 C8 C8 92 3B EE B9 02 D4 …]
+  (FFFE,E000) Item                                    [ 21222 bytes] [76 C4 24 92 70 C5 91 A9 C3 …]
 (FFFE,E0DD) Sequence Delimitation Item

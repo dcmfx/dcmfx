@@ -675,6 +675,6 @@
 (2005,1450) SS Unknown                              [     2 bytes] 0
 (2050,0020) CS Presentation LUT Shape               [     8 bytes] "IDENTITY"
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     0 bytes]
-  (FFFE,E000) Item                                    [ 46276 bytes]
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [ 46276 bytes] [FF 4F FF 51 00 29 00 00 00 …]
 (FFFE,E0DD) Sequence Delimitation Item

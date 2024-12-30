@@ -71,8 +71,8 @@
 (50F1,1010) CS Film Output Format                   [     2 bytes] "10"
 (50F1,1020) CS Image Processing Modification Flag   [     2 bytes] "00"
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     4 bytes]
-  (FFFE,E000) Item                                    [1258044 bytes]
+  (FFFE,E000) Item                                    [     4 bytes] [00 00 00 00]
+  (FFFE,E000) Item                                    [1258044 bytes] [FF D8 FF C4 00 1E 00 01 01 …]
 (FFFE,E0DD) Sequence Delimitation Item
 (CB0D,0010) LO Private Creator                      [    22 bytes] "DOBCO Medical Systems"
 (CB0D,1001) SS unknown_private_tag                  [     2 bytes] 0

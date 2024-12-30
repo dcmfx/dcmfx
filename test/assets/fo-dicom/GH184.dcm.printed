@@ -332,6 +332,6 @@
 (0054,1323) DS Scatter Fraction Factor              [     8 bytes] "0.160688"
 (0054,1330) US Image Index                          [     2 bytes] 1
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     0 bytes]
-  (FFFE,E000) Item                                    [ 14392 bytes]
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [ 14392 bytes] [FF D8 FF E0 00 0F 4C 4A 49 …]
 (FFFE,E0DD) Sequence Delimitation Item

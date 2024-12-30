@@ -98,6 +98,6 @@
 (0028,1053) DS Rescale Slope                        [     2 bytes] "1"
 (0032,1033) LO Requesting Service                   [     0 bytes] ""
 (7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     4 bytes]
-  (FFFE,E000) Item                                    [132502 bytes]
+  (FFFE,E000) Item                                    [     4 bytes] [00 00 00 00]
+  (FFFE,E000) Item                                    [132502 bytes] [FF 4F FF 51 00 29 00 00 00 …]
 (FFFE,E0DD) Sequence Delimitation Item
