@@ -137,7 +137,7 @@ fn list_drop(from list: List(a), up_to n: Int) -> List(a) {
 
 /// Inspects a bit array in hexadecimal, e.g. `[1A 2B 3C 4D]`. If the number of
 /// bytes in the bit array exceeds `max_length` then not all bytes will be
-/// shown and a trailing ellipsis will be appended, e.g. `[1A 2B 3C 4D ...]`.
+/// shown and a trailing ellipsis will be appended, e.g. `[1A 2B 3C 4D …]`.
 ///
 pub fn inspect_bit_array(bits: BitArray, max_length: Int) -> String {
   let byte_count = int.min(max_length, bit_array.byte_size(bits))
@@ -148,7 +148,7 @@ pub fn inspect_bit_array(bits: BitArray, max_length: Int) -> String {
 
   let suffix = case byte_count == bit_array.byte_size(bits) {
     True -> "]"
-    False -> " ...]"
+    False -> " …]"
   }
 
   s <> suffix

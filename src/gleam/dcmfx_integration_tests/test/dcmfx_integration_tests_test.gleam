@@ -30,7 +30,7 @@ pub fn main() {
     |> list.sort(string.compare)
 
   // Validate each file
-  io.print("Validating " <> int.to_string(list.length(dicoms)) <> " files ... ")
+  io.print("Validating " <> int.to_string(list.length(dicoms)) <> " files … ")
   let validation_results =
     list.map(dicoms, fn(dicom) {
       dicom

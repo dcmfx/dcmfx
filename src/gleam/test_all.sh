@@ -6,7 +6,7 @@ set -e
 
 for dir in dcmfx_*; do
   echo ""
-  echo "Testing $dir ..."
+  echo "Testing $dir …"
 
   cd "$dir"
   gleam format --check

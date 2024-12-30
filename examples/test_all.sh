@@ -6,7 +6,7 @@ set -e
 
 for dir in */; do
   echo ""
-  echo "Testing $dir ..."
+  echo "Testing $dir …"
 
   cd "$dir"/gleam
   gleam format --check .

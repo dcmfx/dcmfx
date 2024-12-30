@@ -14,7 +14,7 @@ pub fn inspect_u8_slice(bytes: &[u8], max_length: usize) -> String {
   if byte_count == bytes.len() {
     format!("[{}]", s)
   } else {
-    format!("[{} ...]", s)
+    format!("[{} …]", s)
   }
 }
 
@@ -31,7 +31,7 @@ mod tests {
 
     assert_eq!(
       inspect_u8_slice(&[0xD1, 0x96, 0x33, 0x44], 3),
-      "[D1 96 33 ...]".to_string()
+      "[D1 96 33 …]".to_string()
     );
   }
 }

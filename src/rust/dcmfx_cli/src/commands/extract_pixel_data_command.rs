@@ -83,7 +83,7 @@ fn write_frame_data_files(
       file_extension_for_transfer_syntax(transfer_syntax)
     );
 
-    print!("Writing file \"{}\" ... ", filename);
+    print!("Writing file \"{}\" … ", filename);
     let _ = std::io::stdout().flush();
 
     let mut stream = File::create(filename)?;

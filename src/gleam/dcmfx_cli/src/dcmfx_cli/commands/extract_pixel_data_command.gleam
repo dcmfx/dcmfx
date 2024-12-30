@@ -89,7 +89,7 @@ fn write_frame_data_files(
       <> string.pad_start(int.to_string(index), 4, "0")
       <> dcmfx_pixel_data.file_extension_for_transfer_syntax(transfer_syntax)
 
-    io.print("Writing file \"" <> filename <> "\" ... ")
+    io.print("Writing file \"" <> filename <> "\" … ")
 
     use stream <- result.try(file_stream.open_write(filename))
     let write_result =
