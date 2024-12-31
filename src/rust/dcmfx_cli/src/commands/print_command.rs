@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 
 use clap::Args;
 
@@ -10,6 +10,10 @@ pub const ABOUT: &str = "Prints the content of a DICOM P10 file";
 
 #[derive(Args)]
 pub struct PrintArgs {
+  #[clap(
+    help = "The name of the file to print DICOM P10 content for. Specify '-' \
+      to read from stdin."
+  )]
   input_filename: String,
 
   #[arg(
@@ -68,20 +72,25 @@ fn perform_print(
   mut context: P10ReadContext,
   print_options: &DataSetPrintOptions,
 ) -> Result<(), P10Error> {
-  let mut file = match File::open(input_filename) {
-    Ok(file) => file,
-    Err(e) => {
-      return Err(P10Error::FileError {
-        when: "Opening file".to_string(),
-        details: e.to_string(),
-      })
-    }
+  // Open input stream
+  let mut input_stream: Box<dyn Read> = match input_filename {
+    "-" => Box::new(std::io::stdin()),
+    _ => match File::open(input_filename) {
+      Ok(file) => Box::new(file),
+      Err(e) => {
+        return Err(P10Error::FileError {
+          when: "Opening file".to_string(),
+          details: e.to_string(),
+        });
+      }
+    },
   };
 
   let mut p10_print_transform = P10PrintTransform::new(print_options);
 
   loop {
-    let parts = dcmfx::p10::read_parts_from_stream(&mut file, &mut context)?;
+    let parts =
+      dcmfx::p10::read_parts_from_stream(&mut input_stream, &mut context)?;
 
     for part in parts.iter() {
       match part {

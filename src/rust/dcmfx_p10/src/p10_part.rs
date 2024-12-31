@@ -118,9 +118,9 @@ impl std::fmt::Display for P10Part {
       ),
 
       P10Part::DataElementValueBytes {
-        vr: _vr,
         data,
         bytes_remaining,
+        ..
       } => format!(
         "DataElementValueBytes: {} bytes of data, {} bytes remaining",
         data.len(),
