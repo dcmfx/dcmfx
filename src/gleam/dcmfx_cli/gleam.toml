@@ -13,8 +13,8 @@ dcmfx_json = { path = "../dcmfx_json" }
 dcmfx_p10 = { path = "../dcmfx_p10" }
 dcmfx_pixel_data = { path = "../dcmfx_pixel_data" }
 file_streams = ">= 1.2.2 and < 2.0.0"
-gleam_stdlib = ">= 0.51.0 and < 2.0.0"
-glint = ">= 1.1.1 and < 2.0.0"
+gleam_stdlib = ">= 0.52.0 and < 2.0.0"
+glint = ">= 1.2.0 and < 2.0.0"
 simplifile = ">= 2.2.0 and < 3.0.0"
 snag = ">= 1.0.0 and < 2.0.0"
 term_size = ">= 1.0.1 and < 2.0.0"
