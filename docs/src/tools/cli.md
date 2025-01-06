@@ -5,14 +5,45 @@ line.
 
 ## Installation
 
-Download the latest version for your platform as a standalone binary
-[here](https://github.com/dcmfx/dcmfx/releases/latest), or install via
-[Homebrew](https://brew.sh) on macOS and Linux:
+Select your platform below to see its installation instructions.
+
+::: details Windows
+Download the latest version of `dcmfx.exe` for Windows [here](https://github.com/dcmfx/dcmfx/releases/latest).
+:::
+
+::: details macOS
+Install [Homebrew](https://brew.sh), then install DCMfx using the provided tap:
 
 ```sh
 brew tap dcmfx/tap
 brew install dcmfx
 ```
+:::
+
+::: details Linux
+Choose one of the following:
+
+1. Download the latest binary or package (`.deb` or `.rpm`)
+[here](https://github.com/dcmfx/dcmfx/releases/latest) and install it.
+
+2. For Ubuntu, Debian, Linux Mint, and other Debian-based distributions, an APT
+   repository is provided:
+
+   ```sh
+   echo "deb [trusted=yes] https://dcmfx.github.io/apt-repository stable main" | sudo tee /etc/apt/sources.list.d/dcmfx.list
+   sudo apt update
+   sudo apt install dcmfx
+   ```
+
+3. For Red Hat, Fedora, Amazon Linux, SUSE, and other RPM-based distributions, a
+   YUM repository is provided:
+
+   ```sh
+   echo -e "[dcmfx]\nname=DCMfx\nbaseurl=http://dcmfx.github.io/yum-repository\nenabled=1\ngpgcheck=0" | sudo tee /etc/yum.repos.d/dcmfx.repo
+   sudo yum makecache
+   sudo yum install dcmfx
+   ```
+:::
 
 ## Usage
 
@@ -21,7 +52,7 @@ After installation, run `dcmfx --help` to see the available commands:
 ```
 $ dcmfx --help
 
-DCMfx is a CLI app for working with DICOM and DICOM JSON
+DCMfx is a CLI tool for working with DICOM and DICOM JSON
 
 Usage: dcmfx [OPTIONS] <COMMAND>
 

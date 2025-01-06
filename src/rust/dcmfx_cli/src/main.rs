@@ -14,7 +14,7 @@ use commands::{
   name = "dcmfx",
   bin_name = "dcmfx",
   version = env!("CARGO_PKG_VERSION"),
-  about = "DCMfx is a CLI app for working with DICOM and DICOM JSON",
+  about = "DCMfx is a CLI tool for working with DICOM and DICOM JSON",
   max_term_width = 80
 )]
 struct Cli {

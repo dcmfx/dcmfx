@@ -34,6 +34,5 @@ plugins:
 
   - - "@semantic-release/github"
 
-    # Include all builds of the Rust DCMfx CLI as assets in the GitHub release
     - assets:
-        - path: "dcmfx-cli-*/*"
+        - path: "dcmfx-*/*"

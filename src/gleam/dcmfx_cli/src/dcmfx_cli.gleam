@@ -25,7 +25,7 @@ pub fn main() {
   glint.new()
   |> glint.with_name("dcmfx")
   |> glint.global_help(
-    "DCMfx is a CLI app for working with DICOM and DICOM JSON",
+    "DCMfx is a CLI tool for working with DICOM and DICOM JSON",
   )
   |> glint.with_max_output_width(80)
   |> glint.pretty_help(glint.default_pretty_help())

@@ -66,9 +66,11 @@ jobs:
           - runs-on: ubuntu-24.04
             target: aarch64-unknown-linux-musl
             use-cross: true
+            rust-flags: -C link-arg=-Wl,--build-id
           - runs-on: ubuntu-24.04
             target: x86_64-unknown-linux-musl
             use-cross: true
+            rust-flags: -C link-arg=-Wl,--build-id
           - runs-on: macos-14
             target: aarch64-apple-darwin
             use-cross: false
@@ -107,6 +109,8 @@ jobs:
 
       - name: Build release binary
         uses: clechasseur/rs-cargo@v2
+        env:
+          RUSTFLAGS: ${{ matrix.rust-flags }}
         with:
           working-directory: src/rust
           command: build
@@ -122,7 +126,7 @@ jobs:
             BINARY_SUFFIX=""
           fi
 
-          ARCHIVE="dcmfx-cli-v${{ needs.check_semantic_release.outputs.new_release_version }}-${{ matrix.target }}.tar.gz"
+          ARCHIVE="dcmfx-v${{ needs.check_semantic_release.outputs.new_release_version }}-${{ matrix.target }}.tar.gz"
           cp src/rust/target/${{ matrix.target }}/release/dcmfx_cli$BINARY_SUFFIX dcmfx$BINARY_SUFFIX
           tar -czvf "$ARCHIVE" dcmfx$BINARY_SUFFIX
 
@@ -132,10 +136,120 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dcmfx-cli-${{ matrix.target }}
+          name: dcmfx-${{ matrix.target }}
           path: |
             ${{ env.ARCHIVE }}
             ${{ env.ARCHIVE }}.sha256
+          if-no-files-found: error
+          retention-days: 1
+
+  build_linux_packages:
+    name: Build Linux packages
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+
+    needs:
+      - check_semantic_release
+      - build_rust_cli_tool
+
+    strategy:
+      matrix:
+        target:
+          - aarch64-unknown-linux-musl
+          - x86_64-unknown-linux-musl
+        include:
+          - architecture-deb: arm64
+            architecture-rpm: aarch64
+            target: aarch64-unknown-linux-musl
+          - architecture-deb: amd64
+            architecture-rpm: x86_64
+            target: x86_64-unknown-linux-musl
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dcmfx-${{ matrix.target }}
+
+      - name: Extract binary
+        run: tar xzf dcmfx-v${{ needs.check_semantic_release.outputs.new_release_version }}-${{ matrix.target }}.tar.gz
+
+      - name: Create .deb package structure
+        run: |
+          mkdir -p package/DEBIAN
+          mkdir -p package/usr/bin
+
+          echo "
+          Package:      dcmfx
+          Version:      ${{ needs.check_semantic_release.outputs.new_release_version }}
+          Architecture: ${{ matrix.architecture-deb }}
+          Section:      utils
+          Maintainer:   Richard Viney <richard.viney@gmail.com>
+          Description:  CLI tool for working with DICOM and DICOM JSON
+          Homepage:     https://dcmfx.github.io
+          " > package/DEBIAN/control
+
+          cp dcmfx package/usr/bin
+
+      - name: Build .deb package
+        run: |
+          DEB_PACKAGE="dcmfx_${{ needs.check_semantic_release.outputs.new_release_version }}_${{ matrix.architecture-deb }}.deb"
+
+          dpkg-deb --build package $DEB_PACKAGE
+          openssl dgst -r -sha256 -out "$DEB_PACKAGE".sha256 "$DEB_PACKAGE"
+
+          echo "DEB_PACKAGE=$DEB_PACKAGE" >> $GITHUB_ENV
+
+      - name: Create .rpm spec
+        run: |
+          echo "
+          Name:     dcmfx
+          Version:  ${{ needs.check_semantic_release.outputs.new_release_version }}
+          Release:  1%{?dist}
+          Summary:  CLI tool for working with DICOM and DICOM JSON
+          License:  AGPL-3.0-only
+          Packager: Richard Viney <richard.viney@gmail.com>
+          URL:      https://dcmfx.github.io
+
+          # Disable post-install stripping of binaries as it fails for the
+          # aarch64 RPM when built on an x86_64 GitHub Actions runner
+          %define __os_install_post %{nil}
+
+          %description
+          CLI tool for working with DICOM and DICOM JSON.
+
+          %prep
+
+          %build
+
+          %install
+          mkdir -p %{buildroot}/%{_bindir}
+          install -m 0755 %{name} %{buildroot}/%{_bindir}/%{name}
+
+          %files
+          %{_bindir}/%{name}
+          " > dcmfx.spec
+
+      - name: Build .rpm package
+        run: |
+          rpmbuild -bb --build-in-place --target ${{ matrix.architecture-rpm }} dcmfx.spec
+
+          RPM_PACKAGE="dcmfx-${{ needs.check_semantic_release.outputs.new_release_version }}-1.${{ matrix.architecture-rpm }}.rpm"
+
+          cp ~/rpmbuild/RPMS/${{ matrix.architecture-rpm }}/$RPM_PACKAGE $RPM_PACKAGE
+          openssl dgst -r -sha256 -out "$RPM_PACKAGE".sha256 "$RPM_PACKAGE"
+
+          echo "RPM_PACKAGE=$RPM_PACKAGE" >> $GITHUB_ENV
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dcmfx-linux-packages-${{ matrix.target }}
+          path: |
+            ${{ env.DEB_PACKAGE }}
+            ${{ env.DEB_PACKAGE }}.sha256
+            ${{ env.RPM_PACKAGE }}
+            ${{ env.RPM_PACKAGE }}.sha256
           if-no-files-found: error
           retention-days: 1
 
@@ -143,7 +257,10 @@ jobs:
     name: Release on GitHub
     timeout-minutes: 10
     runs-on: ubuntu-24.04
-    needs: build_rust_cli_tool
+
+    needs:
+      - build_rust_cli_tool
+      - build_linux_packages
 
     steps:
       - name: Checkout repository
@@ -164,10 +281,11 @@ jobs:
     name: Update Homebrew tap
     timeout-minutes: 10
     runs-on: ubuntu-24.04
+    environment: release
+
     needs:
       - check_semantic_release
       - release
-    environment: release
 
     steps:
       - name: Checkout code
@@ -183,10 +301,10 @@ jobs:
         run: |
           VERSION=${{ needs.check_semantic_release.outputs.new_release_version }}
 
-          read -r AARCH64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-cli-aarch64-unknown-linux-musl/dcmfx-cli-v$VERSION-aarch64-unknown-linux-musl.tar.gz.sha256)
-          read -r X86_64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-cli-x86_64-unknown-linux-musl/dcmfx-cli-v$VERSION-x86_64-unknown-linux-musl.tar.gz.sha256)
-          read -r AARCH64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-cli-aarch64-apple-darwin/dcmfx-cli-v$VERSION-aarch64-apple-darwin.tar.gz.sha256)
-          read -r X86_64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-cli-x86_64-apple-darwin/dcmfx-cli-v$VERSION-x86_64-apple-darwin.tar.gz.sha256)
+          read -r AARCH64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-aarch64-unknown-linux-musl/dcmfx-v$VERSION-aarch64-unknown-linux-musl.tar.gz.sha256)
+          read -r X86_64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-x86_64-unknown-linux-musl/dcmfx-v$VERSION-x86_64-unknown-linux-musl.tar.gz.sha256)
+          read -r AARCH64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-aarch64-apple-darwin/dcmfx-v$VERSION-aarch64-apple-darwin.tar.gz.sha256)
+          read -r X86_64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-x86_64-apple-darwin/dcmfx-v$VERSION-x86_64-apple-darwin.tar.gz.sha256)
 
           sed \
             -i \
@@ -199,11 +317,87 @@ jobs:
 
           cat Formula/dcmfx.rb
 
-      - name: Commit and push changes to Homebrew tap
+      - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add Formula/dcmfx.rb
+          git commit -m "chore: Release v${{ needs.check_semantic_release.outputs.new_release_version }}"
+          git push
+
+  update_apt_repository:
+    name: Update APT repository
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    environment: release
+
+    needs:
+      - check_semantic_release
+      - release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: dcmfx/apt-repository
+          token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dcmfx-linux-packages-*
+
+      - name: Update repository with latest packages
+        run: |
+          mkdir -p pool/main
+          find dcmfx-linux-packages-* -type f -name "*.deb" -exec cp {} pool/main \;
+
+          mkdir -p dists/stable/main/binary-{amd64,arm64}
+          apt-ftparchive generate -c=aptftp.conf aptgenerate.conf
+          apt-ftparchive release -c=aptftp.conf dists/stable > dists/stable/Release
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add pool dists
+          git commit -m "chore: Release v${{ needs.check_semantic_release.outputs.new_release_version }}"
+          git push
+
+  update_yum_repository:
+    name: Update YUM repository
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    environment: release
+
+    needs:
+      - check_semantic_release
+      - release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: dcmfx/yum-repository
+          token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dcmfx-linux-packages-*
+
+      - name: Update repository with latest packages
+        run: |
+          find dcmfx-linux-packages-* -type f -name "*.rpm" -exec cp {} . \;
+
+          sudo apt install createrepo-c
+          createrepo_c .
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add *.rpm repodata
           git commit -m "chore: Release v${{ needs.check_semantic_release.outputs.new_release_version }}"
           git push
 
