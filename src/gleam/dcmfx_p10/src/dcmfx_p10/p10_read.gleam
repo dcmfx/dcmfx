@@ -95,9 +95,9 @@ import gleam/result
 ///
 /// By default the maximum sequence depth is set to ten thousand, i.e. no
 /// meaningful maximum is enforced.
-/// 
+///
 /// ### `require_ordered_data_elements: Bool`
-/// 
+///
 /// Whether to error if data elements are not in ascending order in the DICOM
 /// P10 data. Such data is malformed but is still able to read, however doing so
 /// can potentially lead to incorrect results. For example:

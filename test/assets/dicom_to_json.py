@@ -63,7 +63,7 @@ def standardize_json_dict(dicom_json_dict, is_big_endian):
                 (v.rstrip() if isinstance(v, str) else v)
                 for v in value["Value"]
             ]
-            
+
             # Turn empty strings into 'None'
             value["Value"] = [(None if v == "" else v) for v in value["Value"]]
 

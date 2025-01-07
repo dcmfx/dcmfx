@@ -120,7 +120,7 @@ pub fn new() -> P10Location {
 /// Checks that the specified data element tag is greater than the previous one
 /// at the current P10 location. In DICOM P10 data, data elements in a data set
 /// and sequence item must appear in ascending order.
-/// 
+///
 /// This is important to enforce when reading DICOM P10 data in a streaming
 /// fashion because lower numbered data elements are sometimes used in the
 /// interpretation of higher numbered data elements.
@@ -519,7 +519,7 @@ pub fn decode_string_bytes(
 /// The vast majority of VRs can be determined by looking in the dictionary as
 /// the data element has only one valid VR. Data elements that can use more
 /// than one VR depending on the context require additional logic.
-/// 
+///
 /// On error, the tag of the clarifying data element that was missing or
 /// invalid that caused the VR to not be able to be inferred is returned.
 ///
