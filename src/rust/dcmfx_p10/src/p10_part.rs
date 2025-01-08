@@ -151,6 +151,21 @@ impl std::fmt::Display for P10Part {
   }
 }
 
+impl P10Part {
+  /// Returns whether this DICOM P10 part is part of the file header or File
+  /// Meta Information prior to the main data set, i.e. is it a
+  /// [`P10Part::FilePreambleAndDICMPrefix`] or [`P10Part::FileMetaInformation`]
+  /// part.
+  ///
+  pub fn is_header_part(&self) -> bool {
+    matches!(
+      self,
+      P10Part::FilePreambleAndDICMPrefix { .. }
+        | P10Part::FileMetaInformation { .. }
+    )
+  }
+}
+
 /// Converts all the data elements in a data set directly to DICOM P10 parts.
 /// Each part is returned via a callback.
 ///

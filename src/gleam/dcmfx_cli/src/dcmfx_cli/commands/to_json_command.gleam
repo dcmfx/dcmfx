@@ -54,7 +54,7 @@ pub fn run() {
   case perform_to_json(input_filename, output_filename, config) {
     Ok(Nil) -> Ok(Nil)
 
-    Error(JsonSerializeError(e)) -> {
+    Error(ToJsonSerializeError(e)) -> {
       json_error.print_serialize_error(
         e,
         "converting \"" <> input_filename <> "\" to JSON",
@@ -62,29 +62,29 @@ pub fn run() {
       Error(Nil)
     }
 
-    Error(JsonP10Error(e)) -> {
+    Error(ToJsonP10Error(e)) -> {
       p10_error.print(e, "converting \"" <> input_filename <> "\" to JSON")
       Error(Nil)
     }
   }
 }
 
-type JsonError {
-  JsonSerializeError(e: json_error.JsonSerializeError)
-  JsonP10Error(e: P10Error)
+type ToJsonError {
+  ToJsonSerializeError(e: json_error.JsonSerializeError)
+  ToJsonP10Error(e: P10Error)
 }
 
 fn perform_to_json(
   input_filename: String,
   output_filename: String,
   config: DicomJsonConfig,
-) -> Result(Nil, JsonError) {
+) -> Result(Nil, ToJsonError) {
   // Open input stream
   let input_stream =
     file_stream.open_read(input_filename)
     |> result.map_error(fn(e) {
       p10_error.FileStreamError("Opening input file", e)
-      |> JsonP10Error
+      |> ToJsonP10Error
     })
   use input_stream <- result.try(input_stream)
 
@@ -93,7 +93,7 @@ fn perform_to_json(
     file_stream.open_write(output_filename)
     |> result.map_error(fn(e) {
       p10_error.FileStreamError("Opening output file", e)
-      |> JsonP10Error
+      |> ToJsonP10Error
     })
   use output_stream <- result.try(output_stream)
 
@@ -115,7 +115,7 @@ fn perform_to_json_loop(
   output_stream: FileStream,
   context: P10ReadContext,
   json_transform: P10JsonTransform,
-) -> Result(Nil, JsonError) {
+) -> Result(Nil, ToJsonError) {
   // Read the next parts from the input
   case dcmfx_p10.read_parts_from_stream(input_stream, context) {
     Ok(#(parts, context)) -> {
@@ -130,11 +130,11 @@ fn perform_to_json_loop(
               |> file_stream.write_chars(s)
               |> result.map_error(fn(e) {
                 p10_error.FileStreamError("Writing output file", e)
-                |> JsonP10Error
+                |> ToJsonP10Error
               })
               |> result.replace(json_transform)
 
-            Error(e) -> Error(JsonSerializeError(e))
+            Error(e) -> Error(ToJsonSerializeError(e))
           }
         })
 
@@ -147,7 +147,7 @@ fn perform_to_json_loop(
               |> file_stream.sync
               |> result.map_error(fn(e) {
                 p10_error.FileStreamError("Writing output file", e)
-                |> JsonP10Error
+                |> ToJsonP10Error
               })
 
             False ->
@@ -164,6 +164,6 @@ fn perform_to_json_loop(
       }
     }
 
-    Error(e) -> Error(JsonP10Error(e))
+    Error(e) -> Error(ToJsonP10Error(e))
   }
 }

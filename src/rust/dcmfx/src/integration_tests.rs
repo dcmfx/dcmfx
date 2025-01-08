@@ -5,6 +5,8 @@ mod tests {
 
   use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path, rc::Rc};
 
+  use dcmfx_pixel_data::DataSetPixelDataExtensions;
+
   use rand::rngs::SmallRng;
   use rand::{Rng, SeedableRng};
   use walkdir::WalkDir;
@@ -87,6 +89,10 @@ mod tests {
           Err((dicom, DicomValidationError::JitteredReadMismatch)) => {
             eprintln!("Error: Jittered read of {:?} was different", dicom);
           }
+
+          Err((dicom, DicomValidationError::PixelDataReadError { error })) => {
+            error.print(&format!("reading pixel data from {:?}", dicom));
+          }
         }
       }
 
@@ -103,6 +109,7 @@ mod tests {
     RewriteMismatch,
     JitteredReadError { error: P10Error },
     JitteredReadMismatch,
+    PixelDataReadError { error: DataError },
   }
 
   /// Loads a DICOM file and checks that its JSON serialization by this library
@@ -160,6 +167,9 @@ mod tests {
     // Test a jittered read with chunk sizes ranging from 1 to 256 bytes
     let mut rng = SmallRng::seed_from_u64(RNG_SEED);
     test_jittered_read(dicom, &data_set, &mut || rng.gen_range(1..256))?;
+
+    // Test reading pixel data
+    test_read_pixel_data(&data_set)?;
 
     Ok(())
   }
@@ -369,5 +379,16 @@ mod tests {
     }
 
     Ok(())
+  }
+
+  /// Tests reading the frames of raw pixel data from a data set.
+  ///
+  fn test_read_pixel_data(
+    data_set: &DataSet,
+  ) -> Result<(), DicomValidationError> {
+    match data_set.get_pixel_data_raw_frames() {
+      Ok(_) => Ok(()),
+      Err(e) => Err(DicomValidationError::PixelDataReadError { error: e }),
+    }
   }
 }
