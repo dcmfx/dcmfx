@@ -13,6 +13,7 @@ for dir in */; do
   gleam run --target erlang
   gleam run --target javascript --runtime node
   gleam run --target javascript --runtime deno
+  gleam run --target javascript --runtime bun
 
   cd ../rust
   cargo fmt --check

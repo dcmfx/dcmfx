@@ -15,9 +15,7 @@ for dir in dcmfx_*; do
     gleam test --target erlang
     gleam test --target javascript --runtime node
     gleam test --target javascript --runtime deno
-
-    # The Bun JavaScript runtime will be supported once the crash described in
-    # https://github.com/oven-sh/bun/issues/13233 is fixed.
+    gleam test --target javascript --runtime bun
   fi
 
   cd ..
