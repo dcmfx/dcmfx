@@ -6,7 +6,7 @@ use owo_colors::{OwoColorize, Stream::Stdout};
 
 /// Error trait implemented by all error types in DCMfx.
 ///
-pub trait DcmfxError {
+pub trait DcmfxError: std::fmt::Debug {
   /// Returns lines of text that describe an error in a human-readable format.
   ///
   fn to_lines(&self, task_description: &str) -> Vec<String>;

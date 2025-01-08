@@ -1,7 +1,7 @@
 //! Defines the type used to describe errors that can occur when reading and
 //! writing DICOM P10 data.
 
-use dcmfx_core::DataSetPath;
+use dcmfx_core::{DataSetPath, DcmfxError};
 
 use crate::P10Part;
 
@@ -114,7 +114,7 @@ impl P10Error {
   }
 }
 
-impl dcmfx_core::DcmfxError for P10Error {
+impl DcmfxError for P10Error {
   /// Returns lines of text that describe a DICOM P10 error in a human-readable
   /// format.
   ///

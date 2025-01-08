@@ -1,4 +1,4 @@
-use dcmfx_core::{dictionary, DataError, DataSetPath};
+use dcmfx_core::{dictionary, DataError, DataSetPath, DcmfxError};
 use dcmfx_p10::P10Error;
 
 /// Occurs when an error is encountered converting to the DICOM JSON model.
@@ -24,10 +24,27 @@ pub enum JsonSerializeError {
 
 /// Occurs when an error is encountered converting from the DICOM JSON model.
 ///
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum JsonDeserializeError {
   /// The DICOM JSON data to be deserialized is invalid.
   JsonInvalid { details: String, path: DataSetPath },
+}
+
+impl PartialEq for JsonSerializeError {
+  fn eq(&self, other: &Self) -> bool {
+    match (self, other) {
+      (JsonSerializeError::DataError(a), JsonSerializeError::DataError(b)) => {
+        a == b
+      }
+      (JsonSerializeError::P10Error(a), JsonSerializeError::P10Error(b)) => {
+        a == b
+      }
+      (JsonSerializeError::IOError(a), JsonSerializeError::IOError(b)) => {
+        a.to_string() == b.to_string()
+      }
+      _ => false,
+    }
+  }
 }
 
 impl std::fmt::Display for JsonSerializeError {
@@ -55,7 +72,7 @@ impl std::fmt::Display for JsonDeserializeError {
   }
 }
 
-impl dcmfx_core::DcmfxError for JsonSerializeError {
+impl DcmfxError for JsonSerializeError {
   /// Returns lines of text that describe a DICOM JSON serialize error in a
   /// human-readable format.
   ///
@@ -72,7 +89,7 @@ impl dcmfx_core::DcmfxError for JsonSerializeError {
   }
 }
 
-impl dcmfx_core::DcmfxError for JsonDeserializeError {
+impl DcmfxError for JsonDeserializeError {
   /// Returns lines of text that describe a DICOM JSON deserialize error in a
   /// human-readable format.
   ///

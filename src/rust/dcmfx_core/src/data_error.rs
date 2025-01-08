@@ -1,7 +1,7 @@
 //! Provides the [`DataError`] type that describes the errors that can occur
 //! when working with data sets and elements.
 
-use crate::{dictionary, DataSetPath, ValueRepresentation};
+use crate::{dictionary, DataSetPath, DcmfxError, ValueRepresentation};
 
 /// An error that occurred when retrieving or creating data elements in data
 /// sets. An error can be one of the following types:
@@ -217,7 +217,7 @@ impl DataError {
   }
 }
 
-impl crate::DcmfxError for DataError {
+impl DcmfxError for DataError {
   /// Returns lines of text that describe a DICOM data error in a human-readable
   /// format.
   ///
