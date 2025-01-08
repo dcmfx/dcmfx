@@ -1,10 +1,11 @@
 # Design
 
-DCMfx's design is focused around streaming DICOM data, i.e. all operations are
-performed in a streaming fashion wherever possible, enabling fast operation
-while with extremely low memory usage regardless of DICOM or data set size.
+DCMfx's design is centered on streaming of DICOM data, meaning all operations
+are performed in a streaming fashion wherever possible, enabling fast execution
+with extremely low memory usage regardless of DICOM or data set size.
 
-Loading DICOM data sets completely into memory is also supported, if preferred.
+Loading DICOM data sets completely into memory is also supported and can be
+simpler for tasks where resource constraints are not a concern.
 
 ## Languages
 

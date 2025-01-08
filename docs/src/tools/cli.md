@@ -105,8 +105,8 @@ Options:
    ```
 
 5. Rewrite a DICOM P10 file. This will convert the specific character set to
-   UTF-8, change sequences and items to undefined length, and correct certain
-   invalid file errors:
+   UTF-8, change sequences and items to undefined length, and correct invalid
+   files where possible:
 
    ```sh
    dcmfx modify input.dcm output.dcm
@@ -131,7 +131,7 @@ Options:
 
    Conversion between other transfer syntaxes is not supported.
 
-7. Anonymize a DICOM P10 file to have all identifying data elements removed:
+7. Anonymize a DICOM P10 file to remove all identifying data elements:
 
    ```sh
    dcmfx modify input.dcm output.dcm --anonymize
