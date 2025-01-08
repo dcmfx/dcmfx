@@ -1,12 +1,5 @@
 [package]
 name = "dcmfx_fuzz"
-version.workspace = true
-license.workspace = true
-edition.workspace = true
-authors.workspace = true
-repository.workspace = true
-homepage.workspace = true
-keywords.workspace = true
 
 [dependencies]
 afl = "*"

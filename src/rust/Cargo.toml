@@ -8,9 +8,9 @@ members = [
   "dcmfx_core",
   "dcmfx_json",
   "dcmfx_p10",
-  "dcmfx_pixel_data",
-  "dcmfx_fuzz"
+  "dcmfx_pixel_data"
 ]
+exclude = ["dcmfx_fuzz"]
 
 [workspace.package]
 version = "0.0.0"
