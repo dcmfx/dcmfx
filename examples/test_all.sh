@@ -18,7 +18,7 @@ for dir in */; do
   cd ../rust
   cargo fmt --check
   cargo clippy -- --deny warnings
-  cargo run
+  cargo run --locked
 
   cd ../..
 done
