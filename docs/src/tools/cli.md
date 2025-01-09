@@ -7,6 +7,14 @@ line.
 
 Select your platform below to see its installation instructions.
 
+::: details Arch Linux
+[dcmfx](https://aur.archlinux.org/packages/dcmfx) is available as a package in the AUR.
+Install it with your preferred AUR helper (e.g. paru):
+```sh
+paru -S dcmfx
+```
+:::
+
 ::: details Windows
 Download the latest version of `dcmfx.exe` for Windows [here](https://github.com/dcmfx/dcmfx/releases/latest).
 :::
