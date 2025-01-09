@@ -401,6 +401,62 @@ jobs:
           git commit -m "chore: Release v${{ needs.check_semantic_release.outputs.new_release_version }}"
           git push
 
+  update_arch_user_repository:
+    name: Update Arch User Repository
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    environment: release
+
+    needs:
+      - check_semantic_release
+      - release
+
+    steps:
+      - name: Setup SSH key for the Arch User Repository (AUR)
+        run: |
+          echo "${{ secrets.ARCH_USER_REPOSITORY_SSH_KEY }}" > ~/aur_ssh.key
+          chmod 600 ~/aur_ssh.key
+          echo "GIT_SSH_COMMAND=ssh -i ~/aur_ssh.key -o StrictHostKeyChecking=no" >> $GITHUB_ENV
+
+      - name: Clone AUR repository for DCMfx
+        run: git clone ssh://aur@aur.archlinux.org/dcmfx.git
+
+      - name: Update PKGBUILD and .SRCINFO for new release
+        working-directory: dcmfx
+        run: |
+          VERSION=${{ needs.check_semantic_release.outputs.new_release_version }}
+
+          curl -L https://github.com/dcmfx/dcmfx/archive/v$VERSION.tar.gz -o dcmfx.tar.gz
+          ARCHIVE_SHA=$(openssl dgst -r -sha256 dcmfx.tar.gz | awk '{print $1}')
+
+          sed \
+            -i \
+            -e 's/pkgver=.*/pkgver='$VERSION'/' \
+            -e "s/sha256sums=.*/sha256sums=('$ARCHIVE_SHA')/" \
+            PKGBUILD
+
+          cat PKGBUILD
+
+          # It would be better to update .SRCINFO with makepkg --printsrcinfo,
+          # but the current version in APT crashes immediately when run
+          sed \
+            -i \
+            -e 's/pkgver = .*/pkgver = '$VERSION'/' \
+            -e "s/source = dcmfx-.*/source = dcmfx-$VERSION.tar.gz::https:\/\/github.com\/dcmfx\/dcmfx\/archive\/v$VERSION.tar.gz/" \
+            -e "s/sha256sums = .*/sha256sums = $ARCHIVE_SHA/" \
+            .SRCINFO
+
+          cat .SRCINFO
+
+      - name: Commit and push changes
+        working-directory: dcmfx
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add PKGBUILD .SRCINFO
+          git commit -m "chore: Release v${{ needs.check_semantic_release.outputs.new_release_version }}"
+          git push
+
   release_docs:
     name: Release docs
     timeout-minutes: 10

@@ -21,28 +21,40 @@ brew install dcmfx
 :::
 
 ::: details Linux
-Choose one of the following:
+- For Ubuntu, Debian, Linux Mint, and other Debian-based distributions, an APT
+  repository is provided:
 
-1. Download the latest binary or package (`.deb` or `.rpm`)
-[here](https://github.com/dcmfx/dcmfx/releases/latest) and install it.
+  ```sh
+  echo "deb [trusted=yes] https://dcmfx.github.io/apt-repository stable main" | sudo tee /etc/apt/sources.list.d/dcmfx.list
+  sudo apt update
+  sudo apt install dcmfx
+  ```
 
-2. For Ubuntu, Debian, Linux Mint, and other Debian-based distributions, an APT
-   repository is provided:
+---
 
-   ```sh
-   echo "deb [trusted=yes] https://dcmfx.github.io/apt-repository stable main" | sudo tee /etc/apt/sources.list.d/dcmfx.list
-   sudo apt update
-   sudo apt install dcmfx
-   ```
+- For Red Hat, Fedora, Amazon Linux, SUSE, and other RPM-based distributions, a
+  YUM repository is provided:
 
-3. For Red Hat, Fedora, Amazon Linux, SUSE, and other RPM-based distributions, a
-   YUM repository is provided:
+  ```sh
+  echo -e "[dcmfx]\nname=DCMfx\nbaseurl=http://dcmfx.github.io/yum-repository\nenabled=1\ngpgcheck=0" | sudo tee /etc/yum.repos.d/dcmfx.repo
+  sudo yum makecache
+  sudo yum install dcmfx
+  ```
 
-   ```sh
-   echo -e "[dcmfx]\nname=DCMfx\nbaseurl=http://dcmfx.github.io/yum-repository\nenabled=1\ngpgcheck=0" | sudo tee /etc/yum.repos.d/dcmfx.repo
-   sudo yum makecache
-   sudo yum install dcmfx
-   ```
+---
+
+- For Arch Linux, a [package](https://aur.archlinux.org/packages/dcmfx) is
+  provided in the Arch User Repository (AUR). Install it with your preferred
+  AUR helper (e.g. [paru](https://github.com/Morganamilo/paru)):
+
+  ```sh
+  paru -S dcmfx
+  ```
+
+---
+
+- Alternatively, download the latest binary or package
+[here](https://github.com/dcmfx/dcmfx/releases/latest) and install it manually.
 :::
 
 ## Usage
