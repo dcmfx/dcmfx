@@ -78,7 +78,7 @@ jobs:
 
       - name: Run tests
         working-directory: src/rust
-        run: cargo test
+        run: cargo test --frozen
 
   test_examples:
     name: Test examples

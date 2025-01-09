@@ -114,7 +114,7 @@ jobs:
         with:
           working-directory: src/rust
           command: build
-          args: --release --target ${{ matrix.target }} --package dcmfx_cli
+          args: --release --frozen --target ${{ matrix.target }} --package dcmfx_cli
           use-cross: ${{ matrix.use-cross }}
 
       - name: Package
