@@ -186,7 +186,7 @@ fn read_dicom_json_primitive_value(
       let mut bytes = Vec::with_capacity(
         strings
           .iter()
-          .map(|s| s.as_ref().map(|s| s.as_bytes().len()).unwrap_or(0) + 1)
+          .map(|s| s.as_ref().map(|s| s.len()).unwrap_or(0) + 1)
           .sum(),
       );
 
