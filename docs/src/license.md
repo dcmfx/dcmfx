@@ -7,7 +7,7 @@ the AGPLv3 or a compatible license. This includes making the source code of the
 combined work available under the same terms, and ensuring that users who
 interact with the software over a network can access the source code.
 
-Copyright © Dr Richard Viney, 2024.
+Copyright © Dr Richard Viney, 2024-2025.
 
 ---
 

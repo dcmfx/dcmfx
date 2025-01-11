@@ -18,7 +18,7 @@ export default defineConfig({
 
     footer: {
       copyright:
-        '<small>Copyright © 2024, <a href="mailto:richard.viney@gmail.com">Dr Richard Viney</a></small>',
+        '<small>Copyright © 2024-2025, <a href="mailto:richard.viney@gmail.com">Dr Richard Viney</a></small>',
     },
 
     search: {
