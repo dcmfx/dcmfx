@@ -273,6 +273,8 @@ impl DcmfxError for DataError {
   }
 }
 
+impl std::error::Error for DataError {}
+
 #[cfg(test)]
 mod tests {
   use super::*;

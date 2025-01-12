@@ -189,3 +189,5 @@ impl DcmfxError for P10Error {
     lines
   }
 }
+
+impl std::error::Error for P10Error {}

@@ -117,3 +117,6 @@ impl DcmfxError for JsonDeserializeError {
     }
   }
 }
+
+impl std::error::Error for JsonSerializeError {}
+impl std::error::Error for JsonDeserializeError {}
