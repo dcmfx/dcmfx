@@ -13,9 +13,14 @@ impl std::fmt::Debug for DataElementTag {
   /// Print a tag's group and element in hex when debug printing.
   ///
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    let hex_digits = self.to_hex_digits();
+
+    let group = std::str::from_utf8(&hex_digits[0..4]).unwrap();
+    let element = std::str::from_utf8(&hex_digits[4..8]).unwrap();
+
     f.debug_struct("DataElementTag")
-      .field("group", &format_args!("{:#X}", self.group))
-      .field("element", &format_args!("{:#X}", self.element))
+      .field("group", &format_args!("0x{}", group))
+      .field("element", &format_args!("0x{}", element))
       .finish()
   }
 }
@@ -26,12 +31,10 @@ impl std::fmt::Display for DataElementTag {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
     let hex_digits = self.to_hex_digits();
 
-    write!(
-      f,
-      "({},{})",
-      std::str::from_utf8(&hex_digits[0..4]).unwrap(),
-      std::str::from_utf8(&hex_digits[4..8]).unwrap()
-    )
+    let group = std::str::from_utf8(&hex_digits[0..4]).unwrap();
+    let element = std::str::from_utf8(&hex_digits[4..8]).unwrap();
+
+    write!(f, "({},{})", group, element)
   }
 }
 
@@ -117,6 +120,14 @@ impl DataElementTag {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn debug_format_test() {
+    assert_eq!(
+      format!("{:?}", DataElementTag::new(0x7FE0, 0x0010)),
+      "DataElementTag { group: 0x7FE0, element: 0x0010 }"
+    );
+  }
 
   #[test]
   fn is_private_test() {
