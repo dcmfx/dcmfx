@@ -32,13 +32,13 @@ pub fn add_parts_test() {
       [p10_part.End],
     ])
 
-  let #(_, final_parts) =
+  let #(final_parts, _) =
     input_parts
-    |> list.fold(#(tx, []), fn(in, input_part) {
-      let #(tx, final_parts) = in
-      let #(tx, new_parts) = p10_insert_transform.add_part(tx, input_part)
+    |> list.fold(#([], tx), fn(in, input_part) {
+      let #(final_parts, tx) = in
+      let #(new_parts, tx) = p10_insert_transform.add_part(tx, input_part)
 
-      #(tx, list.flatten([final_parts, new_parts]))
+      #(list.flatten([final_parts, new_parts]), tx)
     })
 
   final_parts

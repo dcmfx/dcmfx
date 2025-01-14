@@ -22,18 +22,18 @@ pub fn data_set_to_json(
 ) -> Result(String, JsonSerializeError) {
   let transform = p10_json_transform.new(config)
 
-  let context = #(transform, "")
+  let context = #("", transform)
 
   p10_write.data_set_to_parts(data_set, context, fn(context, part) {
-    let #(transform, json) = context
-    use #(transform, new_json) <- result.map(p10_json_transform.add_part(
+    let #(json, transform) = context
+    use #(new_json, transform) <- result.map(p10_json_transform.add_part(
       transform,
       part,
     ))
 
-    #(transform, json <> new_json)
+    #(json <> new_json, transform)
   })
-  |> result.map(pair.second)
+  |> result.map(pair.first)
 }
 
 /// Converts DICOM JSON data into a data set.

@@ -125,7 +125,7 @@ fn perform_to_json_loop(
         parts
         |> list.try_fold(json_transform, fn(json_transform, part) {
           case p10_json_transform.add_part(json_transform, part) {
-            Ok(#(json_transform, s)) ->
+            Ok(#(s, json_transform)) ->
               output_stream
               |> file_stream.write_chars(s)
               |> result.map_error(fn(e) {

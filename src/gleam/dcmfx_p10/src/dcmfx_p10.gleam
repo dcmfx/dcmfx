@@ -280,7 +280,7 @@ pub fn write_parts_to_stream(
     }),
   )
 
-  let #(context, p10_bytes) = p10_write.read_bytes(context)
+  let #(p10_bytes, context) = p10_write.read_bytes(context)
 
   use _ <- result.try(
     list.try_fold(p10_bytes, Nil, fn(_, bytes) {

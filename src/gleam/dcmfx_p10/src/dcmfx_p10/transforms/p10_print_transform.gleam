@@ -50,13 +50,13 @@ pub fn new(print_options: DataSetPrintOptions) -> P10PrintTransform {
 pub fn add_part(
   context: P10PrintTransform,
   part: P10Part,
-) -> #(P10PrintTransform, String) {
+) -> #(String, P10PrintTransform) {
   case part {
     p10_part.FileMetaInformation(data_set) -> #(
-      context,
       data_set.to_lines(data_set, context.print_options, "", fn(s, line) {
         s <> line <> "\n"
       }),
+      context,
     )
 
     p10_part.DataElementHeader(tag, vr, length) -> {
@@ -98,7 +98,7 @@ pub fn add_part(
           last_data_element_private_creator_tag:,
         )
 
-      #(new_context, s)
+      #(s, new_context)
     }
 
     p10_part.DataElementValueBytes(vr, data, ..)
@@ -145,7 +145,7 @@ pub fn add_part(
           private_creators:,
         )
 
-      #(new_context, s)
+      #(s, new_context)
     }
 
     p10_part.SequenceStart(tag, vr) -> {
@@ -163,7 +163,7 @@ pub fn add_part(
 
       let new_context = P10PrintTransform(..context, indent: context.indent + 1)
 
-      #(new_context, s <> "\n")
+      #(s <> "\n", new_context)
     }
 
     p10_part.SequenceDelimiter -> {
@@ -179,7 +179,7 @@ pub fn add_part(
 
       let new_context = P10PrintTransform(..context, indent: context.indent - 1)
 
-      #(new_context, s <> "\n")
+      #(s <> "\n", new_context)
     }
 
     p10_part.SequenceItemStart -> {
@@ -200,7 +200,7 @@ pub fn add_part(
           private_creators: [data_set.new(), ..context.private_creators],
         )
 
-      #(new_context, s <> "\n")
+      #(s <> "\n", new_context)
     }
 
     p10_part.SequenceItemDelimiter -> {
@@ -222,7 +222,7 @@ pub fn add_part(
             |> result.unwrap(context.private_creators),
         )
 
-      #(new_context, s <> "\n")
+      #(s <> "\n", new_context)
     }
 
     p10_part.PixelDataItem(length) -> {
@@ -250,9 +250,9 @@ pub fn add_part(
           ignore_data_element_value_bytes:,
         )
 
-      #(new_context, s)
+      #(s, new_context)
     }
 
-    _ -> #(context, "")
+    _ -> #("", context)
   }
 }

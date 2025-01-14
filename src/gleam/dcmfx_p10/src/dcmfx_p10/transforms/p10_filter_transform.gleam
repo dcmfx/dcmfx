@@ -85,7 +85,7 @@ pub fn data_set(context: P10FilterTransform) -> Result(DataSet, P10Error) {
 pub fn add_part(
   context: P10FilterTransform,
   part: P10Part,
-) -> #(P10FilterTransform, Bool) {
+) -> #(Bool, P10FilterTransform) {
   let #(filter_result, context) = case part {
     // If this is a new sequence or data element then run the predicate function
     // to see if it passes the filter, then add it to the location
@@ -165,5 +165,5 @@ pub fn add_part(
 
   let context = P10FilterTransform(..context, data_set_builder:)
 
-  #(context, filter_result)
+  #(filter_result, context)
 }

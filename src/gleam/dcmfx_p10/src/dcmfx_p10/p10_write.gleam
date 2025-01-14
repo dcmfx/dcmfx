@@ -107,10 +107,10 @@ pub fn with_config(
 ///
 pub fn read_bytes(
   context: P10WriteContext,
-) -> #(P10WriteContext, List(BitArray)) {
+) -> #(List(BitArray), P10WriteContext) {
   let p10_bytes = list.reverse(context.p10_bytes)
 
-  #(P10WriteContext(..context, p10_bytes: []), p10_bytes)
+  #(p10_bytes, P10WriteContext(..context, p10_bytes: []))
 }
 
 /// Writes a DICOM P10 part to a write context. On success an updated write
@@ -565,11 +565,11 @@ pub fn data_set_to_parts(
     part: P10Part,
   ) {
     case p10_filter_transform.add_part(context.1, part) {
-      #(filter_transform, False) ->
+      #(False, filter_transform) ->
         Ok(#(context.0, filter_transform, context.2))
 
-      #(filter_transform, True) -> {
-        let #(insert_transform, parts) =
+      #(True, filter_transform) -> {
+        let #(parts, insert_transform) =
           p10_insert_transform.add_part(context.2, part)
 
         use callback_context <- result.try(list.try_fold(
@@ -629,7 +629,7 @@ pub fn data_set_to_bytes(
     let #(context, write_context) = context
 
     use write_context <- result.try(write_part(write_context, part))
-    let #(write_context, bytes) = read_bytes(write_context)
+    let #(bytes, write_context) = read_bytes(write_context)
 
     use context <- result.map(list.try_fold(bytes, context, bytes_callback))
 

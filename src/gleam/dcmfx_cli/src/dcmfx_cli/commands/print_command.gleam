@@ -139,7 +139,7 @@ fn do_perform_print(
         p10_part.End -> p10_print_transform
 
         _ -> {
-          let #(p10_print_transform, s) =
+          let #(s, p10_print_transform) =
             p10_print_transform.add_part(p10_print_transform, part)
 
           io.print(s)

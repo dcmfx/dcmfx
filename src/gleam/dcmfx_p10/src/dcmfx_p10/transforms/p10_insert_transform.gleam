@@ -44,24 +44,24 @@ pub fn new(data_elements_to_insert: DataSet) -> P10InsertTransform {
 pub fn add_part(
   context: P10InsertTransform,
   part: P10Part,
-) -> #(P10InsertTransform, List(P10Part)) {
+) -> #(List(P10Part), P10InsertTransform) {
   // If there are no more data elements to be inserted then pass the part
   // straight through
-  use <- bool.guard(context.data_elements_to_insert == [], #(context, [part]))
+  use <- bool.guard(context.data_elements_to_insert == [], #([part], context))
 
   let is_at_root = p10_filter_transform.is_at_root(context.filter_transform)
 
   // Pass the part through the filter transform
-  let #(filter_transform, filter_result) =
+  let #(filter_result, filter_transform) =
     p10_filter_transform.add_part(context.filter_transform, part)
 
   let context = P10InsertTransform(..context, filter_transform:)
 
-  use <- bool.guard(!filter_result, #(context, []))
+  use <- bool.guard(!filter_result, #([], context))
 
   // Data element insertion is only supported in the root data set, so if the
   // stream is not at the root data set then there's nothing to do
-  use <- bool.guard(!is_at_root, #(context, [part]))
+  use <- bool.guard(!is_at_root, #([part], context))
 
   case part {
     // If this part is the start of a new data element, and there are data
@@ -74,7 +74,7 @@ pub fn add_part(
       let context = P10InsertTransform(..context, data_elements_to_insert:)
       let parts = [part, ..parts_to_insert] |> list.reverse
 
-      #(context, parts)
+      #(parts, context)
     }
 
     // If this part is the end of the P10 parts and there are still data
@@ -89,10 +89,10 @@ pub fn add_part(
       let context = P10InsertTransform(..context, data_elements_to_insert: [])
       let parts = [p10_part.End, ..parts] |> list.reverse
 
-      #(context, parts)
+      #(parts, context)
     }
 
-    _ -> #(context, [part])
+    _ -> #([part], context)
   }
 }
 

@@ -280,13 +280,13 @@ fn do_streaming_rewrite(
   ))
 
   // Pass parts through the filter if one is specified
-  let #(filter_context, parts) = case filter_context {
+  let #(parts, filter_context) = case filter_context {
     Some(filter_context) -> {
-      let #(filter_context, parts) =
+      let #(parts, filter_context) =
         parts
-        |> list.fold(#(filter_context, []), fn(in, part) {
-          let #(filter_context, final_parts) = in
-          let #(filter_context, filter_result) =
+        |> list.fold(#([], filter_context), fn(in, part) {
+          let #(final_parts, filter_context) = in
+          let #(filter_result, filter_context) =
             p10_filter_transform.add_part(filter_context, part)
 
           let final_parts = case filter_result {
@@ -294,13 +294,13 @@ fn do_streaming_rewrite(
             False -> final_parts
           }
 
-          #(filter_context, final_parts)
+          #(final_parts, filter_context)
         })
 
-      #(Some(filter_context), parts)
+      #(parts, Some(filter_context))
     }
 
-    None -> #(filter_context, parts)
+    None -> #(parts, filter_context)
   }
 
   // If converting the transfer syntax then update the transfer syntax in the
