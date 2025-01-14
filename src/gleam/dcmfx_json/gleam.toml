@@ -15,7 +15,7 @@ dcmfx_core = { path = "../dcmfx_core" }
 dcmfx_p10 = { path = "../dcmfx_p10" }
 gleam_json = ">= 2.3.0 and < 3.0.0"
 gleam_stdlib = ">= 0.52.0 and < 2.0.0"
-ieee_float = ">= 1.0.2 and < 2.0.0"
+ieee_float = ">= 1.1.0 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"
