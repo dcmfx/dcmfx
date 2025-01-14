@@ -139,41 +139,29 @@ mod tests {
 
   #[test]
   fn filter_tag_test() {
-    assert_eq!(
-      filter_tag(
-        dictionary::SPECIFIC_CHARACTER_SET.tag,
-        ValueRepresentation::CodeString,
-      ),
-      true
-    );
+    assert!(filter_tag(
+      dictionary::SPECIFIC_CHARACTER_SET.tag,
+      ValueRepresentation::CodeString,
+    ));
 
-    assert_eq!(
-      filter_tag(dictionary::UID.tag, ValueRepresentation::UniqueIdentifier),
-      false
-    );
+    assert!(!filter_tag(
+      dictionary::UID.tag,
+      ValueRepresentation::UniqueIdentifier
+    ));
 
-    assert_eq!(
-      filter_tag(
-        dictionary::STATION_AE_TITLE.tag,
-        ValueRepresentation::ApplicationEntity,
-      ),
-      false
-    );
+    assert!(!filter_tag(
+      dictionary::STATION_AE_TITLE.tag,
+      ValueRepresentation::ApplicationEntity,
+    ));
 
-    assert_eq!(
-      filter_tag(
-        DataElementTag::new(0x0009, 0x0002),
-        ValueRepresentation::CodeString,
-      ),
-      false
-    );
+    assert!(!filter_tag(
+      DataElementTag::new(0x0009, 0x0002),
+      ValueRepresentation::CodeString,
+    ));
 
-    assert_eq!(
-      filter_tag(
-        DataElementTag::new(0x0010, 0xABCD),
-        ValueRepresentation::PersonName,
-      ),
-      false
-    );
+    assert!(!filter_tag(
+      DataElementTag::new(0x0010, 0xABCD),
+      ValueRepresentation::PersonName,
+    ));
   }
 }

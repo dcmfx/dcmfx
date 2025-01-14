@@ -478,7 +478,7 @@ impl ValueRepresentation {
 mod tests {
   use super::*;
 
-  const ALL_VRS: [(ValueRepresentation, &'static str, &'static str); 34] = [
+  const ALL_VRS: [(ValueRepresentation, &str, &str); 34] = [
     (ValueRepresentation::AgeString, "AS", "AgeString"),
     (
       ValueRepresentation::ApplicationEntity,

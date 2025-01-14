@@ -103,8 +103,8 @@ mod tests {
   #[test]
   fn new_test() {
     for _ in 0..1000 {
-      assert_eq!(is_valid(&new("").unwrap()), true);
-      assert_eq!(is_valid(&new("1111.2222").unwrap()), true);
+      assert!(is_valid(&new("").unwrap()));
+      assert!(is_valid(&new("1111.2222").unwrap()));
     }
 
     assert!(is_valid(&new(("1".repeat(60)).as_str()).unwrap()));

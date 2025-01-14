@@ -2989,7 +2989,7 @@ mod tests {
   #[test]
   fn decode_next_codepoint_test() {
     for (bytes, expected_codepoint) in [
-      (vec![0xD7 as u8, 0xD4], '\u{81EA}'),
+      (vec![0xD7_u8, 0xD4], '\u{81EA}'),
       (vec![0xDB, 0xFA], '\u{57F4}'),
       (vec![0x82, 0x7F], '\u{FFFD}'),
       (vec![0xA8, 0xBC], '\u{E7C7}'),

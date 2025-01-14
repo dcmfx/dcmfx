@@ -590,10 +590,7 @@ mod tests {
             &[0x1B, 0x2D, 0x46, 0xED, *delimiter, 0xED],
             string_type,
           ),
-          format!(
-            "ν{}í",
-            char::from_u32(*delimiter as u32).unwrap().to_string()
-          )
+          format!("ν{}í", char::from_u32(*delimiter as u32).unwrap())
         );
       }
 
@@ -604,10 +601,7 @@ mod tests {
             &[0x1B, 0x2D, 0x46, 0xED, *non_delimiter, 0xED],
             string_type,
           ),
-          format!(
-            "ν{}ν",
-            char::from_u32(*non_delimiter as u32).unwrap().to_string()
-          )
+          format!("ν{}ν", char::from_u32(*non_delimiter as u32).unwrap())
         );
       }
     }
