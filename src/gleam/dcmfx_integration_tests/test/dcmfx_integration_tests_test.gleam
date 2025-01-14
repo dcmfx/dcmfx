@@ -137,13 +137,13 @@ fn validate_dicom(dicom: String) -> Result(Nil, DicomValidationError) {
     })
 
   [
-    test_data_set_matches_expected_json(
+    test_data_set_matches_expected_json_output(
       dicom,
       json_safe_data_set,
       expected_json,
       False,
     ),
-    test_data_set_matches_expected_json(
+    test_data_set_matches_expected_json_output(
       dicom,
       json_safe_data_set,
       expected_json,
@@ -161,7 +161,7 @@ fn validate_dicom(dicom: String) -> Result(Nil, DicomValidationError) {
 /// Tests that the JSON conversion of the data set matches the expected JSON
 /// content for the DICOM.
 ///
-fn test_data_set_matches_expected_json(
+fn test_data_set_matches_expected_json_output(
   dicom: String,
   data_set: DataSet,
   expected_json: Dynamic,

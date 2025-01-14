@@ -142,9 +142,9 @@ fn list_drop(from list: List(a), up_to n: Int) -> List(a) {
 pub fn inspect_bit_array(bits: BitArray, max_length: Int) -> String {
   let byte_count = int.min(max_length, bit_array.byte_size(bits))
 
-  let assert Ok(bits) = bit_array.slice(bits, 0, byte_count)
+  let assert Ok(sliced_bits) = bit_array.slice(bits, 0, byte_count)
 
-  let s = do_inspect_bit_array(bits, "[")
+  let s = do_inspect_bit_array(sliced_bits, "[")
 
   let suffix = case byte_count == bit_array.byte_size(bits) {
     True -> "]"
