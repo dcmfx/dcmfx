@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.12
+          node-version: 22.13
 
       - name: Semantic release dry run
         id: semantic-release
@@ -65,21 +65,21 @@ jobs:
         include:
           - runs-on: ubuntu-24.04
             target: aarch64-unknown-linux-musl
-            use-cross: true
+            cargo-tool: cross
             rust-flags: -C link-arg=-Wl,--build-id
           - runs-on: ubuntu-24.04
             target: x86_64-unknown-linux-musl
-            use-cross: true
+            cargo-tool: cross
             rust-flags: -C link-arg=-Wl,--build-id
           - runs-on: macos-14
             target: aarch64-apple-darwin
-            use-cross: false
+            cargo-tool: cargo
           - runs-on: macos-13
             target: x86_64-apple-darwin
-            use-cross: false
+            cargo-tool: cargo
           - runs-on: windows-2022
             target: x86_64-pc-windows-msvc
-            use-cross: false
+            cargo-tool: cargo
 
     runs-on: ${{ matrix.runs-on }}
 
@@ -93,7 +93,7 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.84.0
+          toolchain: 1.84
           target: ${{ matrix.target }}
 
       - name: Enable Rust dependency caching
@@ -112,14 +112,14 @@ jobs:
         run: cargo fetch --locked --target ${{ matrix.target }}
 
       - name: Build release binary
-        uses: clechasseur/rs-cargo@v2
+        uses: clechasseur/rs-cargo@v3
         env:
           RUSTFLAGS: ${{ matrix.rust-flags }}
         with:
           working-directory: src/rust
           command: build
           args: --release --frozen --target ${{ matrix.target }} --package dcmfx_cli
-          use-cross: ${{ matrix.use-cross }}
+          tool: ${{ matrix.cargo-tool }}
 
       - name: Package
         shell: bash
@@ -476,7 +476,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.12
+          node-version: 22.13
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
