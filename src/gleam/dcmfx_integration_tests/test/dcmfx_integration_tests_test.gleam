@@ -11,6 +11,7 @@ import dcmfx_p10/p10_read.{type P10ReadContext}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error
 import gleam/dynamic.{type Dynamic}
+import gleam/dynamic/decode
 import gleam/int
 import gleam/io
 import gleam/json
@@ -109,7 +110,7 @@ fn validate_dicom(dicom: String) -> Result(Nil, DicomValidationError) {
   use expected_json_string <- result.try(expected_json_string)
 
   let assert Ok(expected_json) =
-    json.decode(expected_json_string, dynamic.dynamic)
+    json.parse(expected_json_string, decode.dynamic)
 
   // Clean up DICOMs that have string values that consist only of spaces as
   // such values aren't preserved when going through a DICOM JSON rewrite
@@ -171,7 +172,7 @@ fn test_data_set_matches_expected_json_output(
   let config =
     DicomJsonConfig(store_encapsulated_pixel_data: True, pretty_print:)
   let assert Ok(data_set_json) = dcmfx_json.data_set_to_json(data_set, config)
-  let assert Ok(data_set_json) = json.decode(data_set_json, dynamic.dynamic)
+  let assert Ok(data_set_json) = json.parse(data_set_json, decode.dynamic)
 
   // Compare the actual JSON to the expected JSON
   case data_set_json == expected_json {
@@ -198,7 +199,7 @@ fn test_dicom_json_rewrite_cycle(
   expected_json_string: String,
 ) -> Result(Nil, DicomValidationError) {
   let assert Ok(original_json) =
-    json.decode(expected_json_string, dynamic.dynamic)
+    json.parse(expected_json_string, decode.dynamic)
 
   // Check the reverse by converting the expected JSON to a data set then back
   // to JSON and checking it matches the original. This tests the reading of
@@ -209,7 +210,7 @@ fn test_dicom_json_rewrite_cycle(
   let assert Ok(data_set_json_string) =
     dcmfx_json.data_set_to_json(data_set, config)
   let assert Ok(data_set_json) =
-    json.decode(data_set_json_string, dynamic.dynamic)
+    json.parse(data_set_json_string, decode.dynamic)
 
   // Compare the actual JSON to the expected JSON
   case original_json == data_set_json {

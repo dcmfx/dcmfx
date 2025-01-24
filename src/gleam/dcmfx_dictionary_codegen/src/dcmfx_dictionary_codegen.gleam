@@ -1,6 +1,6 @@
 import gleam/bool
 import gleam/dict.{type Dict}
-import gleam/dynamic.{field, string}
+import gleam/dynamic/decode
 import gleam/int
 import gleam/io
 import gleam/json
@@ -49,18 +49,27 @@ fn read_attributes_json() -> List(DictionaryItem) {
     simplifile.read("data/innolitics_attributes.json")
 
   // Decode the JSON content
-  let items_decoder =
-    dynamic.list(of: dynamic.decode5(
-      DictionaryItem,
-      field("tag", of: string),
-      field("name", of: string),
-      field("keyword", of: string),
-      field("valueRepresentation", of: string),
-      field("valueMultiplicity", of: string),
+  let items_decoder = {
+    use tag <- decode.field("tag", decode.string)
+    use name <- decode.field("name", decode.string)
+    use keyword <- decode.field("keyword", decode.string)
+    use value_representation <- decode.field(
+      "valueRepresentation",
+      decode.string,
+    )
+    use value_multiplicity <- decode.field("valueMultiplicity", decode.string)
+
+    decode.success(DictionaryItem(
+      tag:,
+      name:,
+      keyword:,
+      value_representation:,
+      value_multiplicity:,
     ))
+  }
 
   let assert Ok(dictionary_items) =
-    json.decode(from: attributes_json, using: items_decoder)
+    json.parse(from: attributes_json, using: decode.list(items_decoder))
 
   // Filter out items that have no name, keyword, or VR
   let dictionary_items =
@@ -153,13 +162,13 @@ fn read_private_tags_json() -> PrivateTags {
 
   // Decode the JSON content
   let private_tags_decoder =
-    dynamic.dict(
-      of: dynamic.string,
-      to: dynamic.dict(of: string, to: dynamic.list(of: dynamic.string)),
+    decode.dict(
+      decode.string,
+      decode.dict(decode.string, decode.list(decode.string)),
     )
 
   let assert Ok(private_tags) =
-    json.decode(from: json_data, using: private_tags_decoder)
+    json.parse(from: json_data, using: private_tags_decoder)
 
   private_tags
 }
@@ -811,18 +820,26 @@ fn read_uid_definitions_json() -> List(UidDefinition) {
   let assert Ok(uids_json) = simplifile.read("data/uids.json")
 
   // Decode the JSON content
-  let decoder =
-    dynamic.list(of: dynamic.decode6(
-      UidDefinition,
-      field("UID", of: string),
-      field("Name", of: string),
-      field("Type", of: string),
-      field("Info", of: string),
-      field("Retired", of: string),
-      field("Keyword", of: string),
-    ))
+  let uid_definition_decoder = {
+    use uid <- decode.field("UID", decode.string)
+    use name <- decode.field("Name", decode.string)
+    use uid_type <- decode.field("Type", decode.string)
+    use info <- decode.field("Info", decode.string)
+    use retired <- decode.field("Retired", decode.string)
+    use keyword <- decode.field("Keyword", decode.string)
 
-  let assert Ok(uid_definitions) = json.decode(from: uids_json, using: decoder)
+    decode.success(UidDefinition(
+      uid:,
+      name:,
+      uid_type:,
+      info:,
+      retired:,
+      keyword:,
+    ))
+  }
+
+  let assert Ok(uid_definitions) =
+    json.parse(from: uids_json, using: decode.list(uid_definition_decoder))
 
   uid_definitions
   |> list.sort(fn(a, b) { string.compare(a.uid, b.uid) })

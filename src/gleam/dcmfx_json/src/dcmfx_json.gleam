@@ -9,7 +9,7 @@ import dcmfx_json/json_config.{type DicomJsonConfig}
 import dcmfx_json/json_error.{type JsonDeserializeError, type JsonSerializeError}
 import dcmfx_json/transforms/p10_json_transform
 import dcmfx_p10/p10_write
-import gleam/dynamic
+import gleam/dynamic/decode
 import gleam/json
 import gleam/pair
 import gleam/result
@@ -42,7 +42,7 @@ pub fn json_to_data_set(
   data_set_json: String,
 ) -> Result(DataSet, JsonDeserializeError) {
   let data_set_json =
-    json.decode(data_set_json, dynamic.dynamic)
+    json.parse(data_set_json, decode.dynamic)
     |> result.replace_error(json_error.JsonInvalid(
       "Input is not valid JSON",
       path: data_set_path.new(),

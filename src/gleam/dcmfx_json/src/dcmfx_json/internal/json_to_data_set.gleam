@@ -14,7 +14,7 @@ import dcmfx_json/json_error.{type JsonDeserializeError}
 import gleam/bit_array
 import gleam/bool
 import gleam/dict.{type Dict}
-import gleam/dynamic.{type DecodeError, type Dynamic, DecodeError}
+import gleam/dynamic/decode.{type Dynamic}
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -26,11 +26,12 @@ import ieee_float.{type IEEEFloat}
 /// and also recursively when reading sequences.
 ///
 pub fn convert_json_to_data_set(
-  in: dynamic.Dynamic,
+  in: Dynamic,
   path: DataSetPath,
 ) -> Result(DataSet, JsonDeserializeError) {
   let raw_dict =
-    dynamic.dict(dynamic.string, dynamic.dynamic)(in)
+    in
+    |> decode.run(decode.dict(decode.string, decode.dynamic))
     |> result.replace_error(json_error.JsonInvalid(
       "Data set is not an object",
       path,
@@ -82,13 +83,14 @@ pub fn convert_json_to_data_set(
 /// value.
 ///
 fn convert_json_to_data_element(
-  in: dynamic.Dynamic,
+  in: Dynamic,
   tag: DataElementTag,
   transfer_syntax: Option(TransferSyntax),
   path: DataSetPath,
 ) -> Result(DataElementValue, JsonDeserializeError) {
   let raw_value =
-    dynamic.dict(dynamic.string, dynamic.dynamic)(in)
+    in
+    |> decode.run(decode.dict(decode.string, decode.dynamic))
     |> result.replace_error(json_error.JsonInvalid(
       "Data element is not an object",
       path,
@@ -155,7 +157,7 @@ fn read_dicom_json_vr(
   // Get the VR string value
   let vr_string =
     raw_vr
-    |> dynamic.string
+    |> decode.run(decode.string)
     |> result.replace_error(json_error.JsonInvalid("VR is not a string", path))
   use vr_string <- result.try(vr_string)
 
@@ -194,7 +196,7 @@ fn read_dicom_json_primitive_value(
     | value_representation.UniversalResourceIdentifier -> {
       let value =
         value
-        |> dynamic.list(of: dynamic.optional(dynamic.string))
+        |> decode.run(decode.list(decode.optional(decode.string)))
         |> result.map_error(fn(_) {
           json_error.JsonInvalid("String value is invalid", path)
         })
@@ -210,13 +212,13 @@ fn read_dicom_json_primitive_value(
 
     value_representation.DecimalString ->
       value
-      |> dynamic.list(of: dynamic.dynamic)
+      |> decode.run(decode.list(decode.dynamic))
       |> result.then(fn(lst) {
         list.map(lst, fn(i) {
-          case dynamic.float(i) {
+          case decode.run(i, decode.float) {
             Ok(i) -> Ok(i)
             Error(_) ->
-              case dynamic.int(i) {
+              case decode.run(i, decode.int) {
                 Ok(i) -> Ok(int.to_float(i))
                 Error(e) -> Error(e)
               }
@@ -234,7 +236,7 @@ fn read_dicom_json_primitive_value(
     value_representation.IntegerString -> {
       let ints =
         value
-        |> dynamic.list(of: dynamic.int)
+        |> decode.run(decode.list(decode.int))
         |> result.replace_error(json_error.JsonInvalid(
           "IntegerString value is invalid",
           path,
@@ -259,7 +261,7 @@ fn read_dicom_json_primitive_value(
     value_representation.SignedLong -> {
       let ints =
         value
-        |> dynamic.list(of: dynamic.int)
+        |> decode.run(decode.list(decode.int))
         |> result.replace_error(json_error.JsonInvalid(
           "SignedLong value is invalid",
           path,
@@ -283,7 +285,7 @@ fn read_dicom_json_primitive_value(
     value_representation.SignedShort | value_representation.UnsignedShort -> {
       let ints =
         value
-        |> dynamic.list(of: dynamic.int)
+        |> decode.run(decode.list(decode.int))
         |> result.replace_error(json_error.JsonInvalid(
           "Short value is invalid",
           path,
@@ -324,7 +326,7 @@ fn read_dicom_json_primitive_value(
     value_representation.SignedVeryLong | value_representation.UnsignedVeryLong -> {
       let values =
         value
-        |> dynamic.list(of: dynamic.dynamic)
+        |> decode.run(decode.list(decode.dynamic))
         |> result.replace_error(json_error.JsonInvalid(
           "Very long value is not a list",
           path,
@@ -336,10 +338,10 @@ fn read_dicom_json_primitive_value(
       let big_ints =
         values
         |> list.map(fn(i) {
-          case dynamic.int(i) {
+          case decode.run(i, decode.int) {
             Ok(i) -> Ok(bigi.from_int(i))
             Error(_) ->
-              case dynamic.string(i) {
+              case decode.run(i, decode.string) {
                 Ok(i) -> bigi.from_string(i)
                 Error(_) -> Error(Nil)
               }
@@ -370,7 +372,7 @@ fn read_dicom_json_primitive_value(
     value_representation.UnsignedLong -> {
       let ints =
         value
-        |> dynamic.list(of: dynamic.int)
+        |> decode.run(decode.list(decode.int))
         |> result.replace_error(json_error.JsonInvalid(
           "UnsignedLong value is invalid",
           path,
@@ -393,7 +395,7 @@ fn read_dicom_json_primitive_value(
     value_representation.FloatingPointDouble -> {
       let floats =
         value
-        |> dynamic.list(of: decode_ieee_float)
+        |> decode.run(decode.list(decode_ieee_float()))
         |> result.replace_error(json_error.JsonInvalid(
           "FloatingPointDouble value is invalid",
           path,
@@ -410,7 +412,7 @@ fn read_dicom_json_primitive_value(
     value_representation.FloatingPointSingle -> {
       let floats =
         value
-        |> dynamic.list(of: decode_ieee_float)
+        |> decode.run(decode.list(decode_ieee_float()))
         |> result.replace_error(json_error.JsonInvalid(
           "FloatingPointSingle value is invalid",
           path,
@@ -427,7 +429,7 @@ fn read_dicom_json_primitive_value(
     value_representation.AttributeTag -> {
       let tags =
         value
-        |> dynamic.list(of: dynamic.string)
+        |> decode.run(decode.list(decode.string))
         |> result.replace_error(json_error.JsonInvalid(
           "AttributeTag value is invalid",
           path,
@@ -458,7 +460,7 @@ fn read_dicom_json_primitive_value(
 
     value_representation.Sequence ->
       value
-      |> dynamic.list(of: dynamic.dynamic)
+      |> decode.run(decode.list(decode.dynamic))
       |> result.replace_error(json_error.JsonInvalid(
         "Sequence value is invalid",
         path,
@@ -486,29 +488,20 @@ fn read_dicom_json_primitive_value(
 /// natively support Infinity and NaN values, these are instead handled as
 /// strings.
 ///
-fn decode_ieee_float(f: Dynamic) -> Result(IEEEFloat, List(DecodeError)) {
-  case dynamic.float(f) {
-    Ok(f) -> Ok(ieee_float.finite(f))
-    Error(_) ->
-      case dynamic.int(f) {
-        Ok(f) -> Ok(ieee_float.finite(int.to_float(f)))
-        Error(_) -> {
-          use <- bool.guard(
-            f == dynamic.from("Infinity"),
-            Ok(ieee_float.positive_infinity()),
-          )
+fn decode_ieee_float() -> decode.Decoder(IEEEFloat) {
+  decode.one_of(decode.float |> decode.map(ieee_float.finite), or: [
+    decode.int |> decode.map(int.to_float) |> decode.map(ieee_float.finite),
+    {
+      use s <- decode.then(decode.string)
 
-          use <- bool.guard(
-            f == dynamic.from("-Infinity"),
-            Ok(ieee_float.negative_infinity()),
-          )
-
-          use <- bool.guard(f == dynamic.from("NaN"), Ok(ieee_float.nan()))
-
-          Error([DecodeError("Number", "Unknown", [])])
-        }
+      case s {
+        "Infinity" -> decode.success(ieee_float.positive_infinity())
+        "-Infinity" -> decode.success(ieee_float.negative_infinity())
+        "NaN" -> decode.success(ieee_float.nan())
+        _ -> decode.failure(ieee_float.finite(0.0), "Number")
       }
-  }
+    },
+  ])
 }
 
 type PersonNameVariants {
@@ -526,12 +519,24 @@ fn read_dicom_json_person_name_value(
   path: DataSetPath,
 ) -> Result(DataElementValue, JsonDeserializeError) {
   let person_name_variants =
-    dynamic.list(of: dynamic.decode3(
-      PersonNameVariants,
-      dynamic.optional_field("Alphabetic", of: dynamic.string),
-      dynamic.optional_field("Ideographic", of: dynamic.string),
-      dynamic.optional_field("Phonetic", of: dynamic.string),
-    ))(value)
+    value
+    |> decode.run(
+      decode.list({
+        use alphabetic <- decode.optional_field("Alphabetic", "", decode.string)
+        use ideographic <- decode.optional_field(
+          "Ideographic",
+          "",
+          decode.string,
+        )
+        use phonetic <- decode.optional_field("Phonetic", "", decode.string)
+
+        decode.success(PersonNameVariants(
+          alphabetic: Some(alphabetic),
+          ideographic: Some(ideographic),
+          phonetic: Some(phonetic),
+        ))
+      }),
+    )
     |> result.replace_error(json_error.JsonInvalid(
       "PersonName value is invalid",
       path,
@@ -566,7 +571,7 @@ fn read_dicom_json_inline_binary_value(
 ) -> Result(DataElementValue, JsonDeserializeError) {
   let inline_binary =
     inline_binary
-    |> dynamic.string
+    |> decode.run(decode.string)
     |> result.replace_error(json_error.JsonInvalid(
       "InlineBinary is not a string",
       path,
