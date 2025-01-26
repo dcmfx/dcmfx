@@ -153,4 +153,4 @@ jobs:
 
       - name: Build with VitePress
         working-directory: dcmfx/docs
-        run: npm run docs:build
+        run: npm run build
