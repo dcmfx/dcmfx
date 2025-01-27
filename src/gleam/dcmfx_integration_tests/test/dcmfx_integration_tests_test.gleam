@@ -1,5 +1,6 @@
 import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_element_value
+import dcmfx_core/data_error.{type DataError}
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_json
@@ -8,6 +9,7 @@ import dcmfx_p10
 import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext}
+import dcmfx_pixel_data
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error
 import gleam/dynamic.{type Dynamic}
@@ -72,6 +74,9 @@ pub fn main() {
 
           Error(#(dicom, JitteredReadMismatch)) ->
             io.println("Error: Jittered read of " <> dicom <> " was different")
+
+          Error(#(dicom, PixelDataReadError(error))) ->
+            data_error.print(error, "reading pixel data from " <> dicom)
         }
       })
 
@@ -91,6 +96,7 @@ type DicomValidationError {
   RewriteMismatch
   JitteredReadError(error: P10Error)
   JitteredReadMismatch
+  PixelDataReadError(error: DataError)
 }
 
 /// Loads a DICOM file and checks that its JSON serialization by this library
@@ -154,6 +160,7 @@ fn validate_dicom(dicom: String) -> Result(Nil, DicomValidationError) {
     test_dcmfx_p10_rewrite_cycle(dicom, data_set),
     test_jittered_read(dicom, data_set, fn() { 15 }),
     test_jittered_read(dicom, data_set, fn() { 1 + int.random(255) }),
+    test_read_pixel_data(data_set),
   ]
   |> result.all
   |> result.replace(Nil)
@@ -317,5 +324,14 @@ fn test_jittered_read_loop(
         Error(error) -> Error(JitteredReadError(error:))
       }
     }
+  }
+}
+
+/// Tests reading the frames of pixel data from a data set.
+///
+fn test_read_pixel_data(data_set: DataSet) -> Result(Nil, DicomValidationError) {
+  case dcmfx_pixel_data.get_pixel_data_frames(data_set) {
+    Ok(_) -> Ok(Nil)
+    Error(e) -> Error(PixelDataReadError(e))
   }
 }

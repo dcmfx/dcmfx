@@ -7,6 +7,7 @@ gleam = ">= 1.7.0"
 dcmfx_core = { path = "../dcmfx_core" }
 dcmfx_json = { path = "../dcmfx_json" }
 dcmfx_p10 = { path = "../dcmfx_p10" }
+dcmfx_pixel_data = { path = "../dcmfx_pixel_data" }
 gleam_json = ">= 2.3.0 and < 3.0.0"
 gleam_stdlib = ">= 0.53.0 and < 2.0.0"
 simplifile = ">= 2.2.0 and < 3.0.0"

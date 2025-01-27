@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 
 use clap::Args;
 
@@ -44,56 +44,94 @@ pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
 fn perform_extract_pixel_data(
   input_filename: &str,
   output_prefix: &str,
-) -> Result<(), P10Error> {
-  let data_set = match input_filename {
-    "-" => DataSet::read_p10_stream(&mut std::io::stdin()),
-    _ => DataSet::read_p10_file(input_filename),
-  }?;
+) -> Result<(), Box<dyn DcmfxError>> {
+  // Open input stream
+  let mut input_stream: Box<dyn Read> = match input_filename {
+    "-" => Box::new(std::io::stdin()),
+    _ => match File::open(input_filename) {
+      Ok(file) => Box::new(file),
+      Err(e) => {
+        return Err(Box::new(P10Error::FileError {
+          when: "Opening file".to_string(),
+          details: e.to_string(),
+        }));
+      }
+    },
+  };
 
-  let transfer_syntax = data_set
-    .get_transfer_syntax()
-    .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN);
+  // Create read context
+  let mut read_context = P10ReadContext::new();
+  read_context.set_config(&P10ReadConfig {
+    max_part_size: 1024 * 1024,
+    ..P10ReadConfig::default()
+  });
 
-  let (_vr, frames) =
-    data_set
-      .get_pixel_data()
-      .map_err(|e| P10Error::OtherError {
-        error_type: "Failed getting pixel data".to_string(),
-        details: format!("{:?}", e),
-      })?;
+  let mut pixel_data_filter = PixelDataFilter::new();
 
-  write_frame_data_files(&frames, output_prefix, transfer_syntax).map_err(|e| {
-    P10Error::FileError {
-      when: "Failed writing pixel data".to_string(),
-      details: e.to_string(),
+  let mut output_extension: &'static str = "";
+  let mut frame_number = 0;
+
+  loop {
+    // Read the next parts from the input stream
+    let parts =
+      dcmfx::p10::read_parts_from_stream(&mut input_stream, &mut read_context)
+        .map_err(|e| Box::new(e) as Box<dyn DcmfxError>)?;
+
+    for part in parts.iter() {
+      // Update output extension when the File Meta Information part is received
+      if let P10Part::FileMetaInformation { data_set } = part {
+        output_extension = file_extension_for_transfer_syntax(
+          data_set
+            .get_transfer_syntax()
+            .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN),
+        );
+      }
+
+      // Pass part through the pixel data filter
+      let frames = pixel_data_filter
+        .add_part(part)
+        .map_err(|e| Box::new(e) as Box<dyn DcmfxError>)?;
+
+      // Write frames
+      for frame in frames {
+        let filename =
+          format!("{}.{:04}{}", output_prefix, frame_number, output_extension);
+
+        write_frame(&filename, &frame).map_err(|e| {
+          Box::new(P10Error::FileError {
+            when: "Writing pixel data frame".to_string(),
+            details: e.to_string(),
+          }) as Box<dyn DcmfxError>
+        })?;
+
+        frame_number += 1;
+      }
+
+      if *part == P10Part::End {
+        return Ok(());
+      }
     }
-  })
+  }
 }
 
-fn write_frame_data_files(
-  frames: &[Vec<&[u8]>],
-  output_prefix: &str,
-  transfer_syntax: &TransferSyntax,
+/// Writes the data for a single frame of pixel data to a file.
+///
+fn write_frame(
+  filename: &str,
+  frame: &PixelDataFrame,
 ) -> Result<(), std::io::Error> {
-  for (index, frame) in frames.iter().enumerate() {
-    let filename = format!(
-      "{}.{:04}{}",
-      output_prefix,
-      index,
-      file_extension_for_transfer_syntax(transfer_syntax)
-    );
+  print!("Writing \"{}\", size: {} bytes … ", filename, frame.len());
 
-    print!("Writing file \"{}\" … ", filename);
-    let _ = std::io::stdout().flush();
+  let _ = std::io::stdout().flush();
 
-    let mut stream = File::create(filename)?;
-    for fragment in frame {
-      stream.write_all(fragment)?;
-    }
-    stream.flush()?;
-
-    println!("done");
+  let mut stream = File::create(filename)?;
+  for fragment in frame.fragments() {
+    stream.write_all(fragment)?;
   }
+
+  stream.flush()?;
+
+  println!("done");
 
   Ok(())
 }

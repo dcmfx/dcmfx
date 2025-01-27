@@ -601,8 +601,8 @@ fn read_dicom_json_inline_binary_value(
       ))
 
     False ->
-      // This value is not encapsulated pixel data, so construct a binary value
-      // directly from the bytes
+      // This value is native pixel data, so construct a binary value directly
+      // from the bytes
 
       case vr {
         value_representation.OtherByteString

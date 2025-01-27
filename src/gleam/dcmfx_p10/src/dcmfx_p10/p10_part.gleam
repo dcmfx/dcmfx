@@ -133,6 +133,17 @@ pub fn to_string(part: P10Part) -> String {
   }
 }
 
+/// Returns whether this DICOM P10 part is part of the file header or File Meta
+/// Information prior to the main data set, i.e. is it a
+/// `FilePreambleAndDICMPrefix` or `FileMetaInformation` part.
+///
+pub fn is_header_part(part: P10Part) -> Bool {
+  case part {
+    FilePreambleAndDICMPrefix(..) | FileMetaInformation(..) -> True
+    _ -> False
+  }
+}
+
 /// Converts all the data elements in a data set directly to DICOM P10 parts.
 /// Each part is returned via a callback.
 ///

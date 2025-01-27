@@ -6,7 +6,7 @@
 ![JavaScript Compatible](https://img.shields.io/badge/target-javascript-f3e155)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://dcmfx.github.io/license)
 
-Extracts frames of pixel data present in a DICOM data set.
+Extracts frames of pixel data from data sets and streams of DICOM P10 parts.
 
 This library is part of the [DCMfx](https://dcmfx.github.io) project.
 
