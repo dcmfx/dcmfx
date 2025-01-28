@@ -17,4 +17,4 @@ dcmfx_core = { path = "../dcmfx_core", version = "0.0.0" }
 dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0" }
 num-traits = "0.2.19"
 serde = { version = "1.0.217", features = ["serde_derive"]}
-serde_json = { version = "1.0.135", features = ["float_roundtrip"] }
+serde_json = { version = "1.0.138", features = ["float_roundtrip"] }

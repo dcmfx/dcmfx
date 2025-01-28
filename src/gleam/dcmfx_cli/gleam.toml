@@ -5,7 +5,7 @@ gleam = ">= 1.7.0"
 
 [dependencies]
 argv = ">= 1.0.2 and < 2.0.0"
-birl = ">= 1.7.1 and < 2.0.0"
+birl = ">= 1.8.0 and < 2.0.0"
 dcmfx_anonymize = { path = "../dcmfx_anonymize" }
 dcmfx_character_set = { path = "../dcmfx_character_set" }
 dcmfx_core = { path = "../dcmfx_core" }
@@ -16,7 +16,7 @@ file_streams = ">= 1.3.0 and < 2.0.0"
 gleam_stdlib = ">= 0.53.0 and < 2.0.0"
 glint = ">= 1.2.0 and < 2.0.0"
 simplifile = ">= 2.2.0 and < 3.0.0"
-snag = ">= 1.0.0 and < 2.0.0"
+snag = ">= 1.1.0 and < 2.0.0"
 term_size = ">= 1.0.1 and < 2.0.0"
 
 [dev-dependencies]

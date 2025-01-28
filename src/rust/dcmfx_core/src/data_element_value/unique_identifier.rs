@@ -55,9 +55,9 @@ pub fn new(prefix: &str) -> Result<String, ()> {
     return Err(());
   }
 
-  let mut rng = rand::thread_rng();
+  let mut rng = rand::rng();
   let mut random_character = |offset: u32, range: u32| -> char {
-    char::from_u32(rng.gen_range(offset..(offset + range))).unwrap()
+    char::from_u32(rng.random_range(offset..(offset + range))).unwrap()
   };
 
   // Start with a separator, if needed, and a non-zero character
