@@ -102,14 +102,15 @@ jobs:
           key: v1-${{ matrix.target }}
           workspaces: rust
 
-      - name: Set version number in Cargo.toml files
-        working-directory: src/rust
-        shell: bash
-        run: find . -name "Cargo.toml" -exec sed -i'' -E "s/version = \"0.0.0\"/version = \"${{ needs.check_semantic_release.outputs.new_release_version }}\"/" {} +
 
       - name: Fetch dependencies
         working-directory: src/rust
         run: cargo fetch --locked --target ${{ matrix.target }}
+
+      - name: Set version number in Cargo.toml files
+        working-directory: src/rust
+        shell: bash
+        run: find . -name "Cargo.toml" -exec sed -i'' -E "s/version = \"0.0.0\"/version = \"${{ needs.check_semantic_release.outputs.new_release_version }}\"/" {} +
 
       - name: Build release binary
         uses: clechasseur/rs-cargo@v3
@@ -118,7 +119,7 @@ jobs:
         with:
           working-directory: src/rust
           command: build
-          args: --release --frozen --target ${{ matrix.target }} --package dcmfx_cli
+          args: --release --offline --target ${{ matrix.target }} --package dcmfx_cli
           tool: ${{ matrix.cargo-tool }}
 
       - name: Package
@@ -137,7 +138,7 @@ jobs:
           openssl dgst -r -sha256 -out "$ARCHIVE".sha256 "$ARCHIVE"
           echo "ARCHIVE=$ARCHIVE" >> $GITHUB_ENV
 
-      - name: Upload build artifact
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dcmfx-${{ matrix.target }}
@@ -170,7 +171,7 @@ jobs:
             target: x86_64-unknown-linux-musl
 
     steps:
-      - name: Download build artifact
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: dcmfx-${{ matrix.target }}
@@ -245,7 +246,7 @@ jobs:
 
           echo "RPM_PACKAGE=$RPM_PACKAGE" >> $GITHUB_ENV
 
-      - name: Upload build artifact
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dcmfx-linux-packages-${{ matrix.target }}
