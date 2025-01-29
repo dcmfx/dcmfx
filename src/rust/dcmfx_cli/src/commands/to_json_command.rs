@@ -89,29 +89,30 @@ fn perform_to_json(
     },
   };
 
-  // Create P10 read context and set max part size to 256 KiB
+  // Create P10 read context and set max token size to 256 KiB
   let mut context = P10ReadContext::new();
   context.set_config(&P10ReadConfig {
-    max_part_size: 256 * 1024,
+    max_token_size: 256 * 1024,
     ..P10ReadConfig::default()
   });
 
-  // Create transform for converting P10 parts into bytes of JSON
+  // Create transform for converting P10 tokens into bytes of JSON
   let mut json_transform = P10JsonTransform::new(config);
 
   loop {
-    // Read the next parts from the input
-    let parts =
-      match dcmfx::p10::read_parts_from_stream(&mut input_stream, &mut context)
-      {
-        Ok(parts) => parts,
-        Err(e) => return Err(Box::new(e)),
-      };
+    // Read the next tokens from the input
+    let tokens = match dcmfx::p10::read_tokens_from_stream(
+      &mut input_stream,
+      &mut context,
+    ) {
+      Ok(tokens) => tokens,
+      Err(e) => return Err(Box::new(e)),
+    };
 
-    // Write the parts to the JSON transform, directing the resulting JSON to
+    // Write the tokens to the JSON transform, directing the resulting JSON to
     // the output stream
-    for part in parts.iter() {
-      match json_transform.add_part(part, &mut output_stream) {
+    for token in tokens.iter() {
+      match json_transform.add_token(token, &mut output_stream) {
         Ok(()) => (),
         Err(JsonSerializeError::IOError(e)) => {
           return Err(Box::new(P10Error::FileError {
@@ -122,8 +123,8 @@ fn perform_to_json(
         Err(e) => return Err(Box::new(e)),
       };
 
-      // When the end part has been written the conversion is complete
-      if *part == P10Part::End {
+      // When the end token has been written the conversion is complete
+      if *token == P10Token::End {
         return match output_stream.flush() {
           Ok(()) => Ok(()),
           Err(e) => Err(Box::new(P10Error::FileError {

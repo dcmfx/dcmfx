@@ -27,7 +27,7 @@ use std::collections::HashMap;
 use dcmfx_character_set::{self, SpecificCharacterSet, StringType};
 use dcmfx_core::{dictionary, utils, DataElementTag, ValueRepresentation};
 
-use crate::{internal::value_length::ValueLength, P10Error, P10Part};
+use crate::{internal::value_length::ValueLength, P10Error, P10Token};
 
 /// A P10 location is a list of location entries, with the current/most recently
 /// added one at the end of the vector.
@@ -172,26 +172,26 @@ impl P10Location {
     })
   }
 
-  /// Returns the next delimiter part for a location. This checks the `ends_at`
+  /// Returns the next delimiter token for a location. This checks the `ends_at`
   /// value of the entry at the head of the location to see if the bytes read
-  /// has met or exceeded it, and if it has then the relevant delimiter part is
+  /// has met or exceeded it, and if it has then the relevant delimiter token is
   /// returned.
   ///
-  /// This is part of the conversion of defined-length sequences and items to
+  /// This is token of the conversion of defined-length sequences and items to
   /// use undefined lengths.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn next_delimiter_part(
+  pub fn next_delimiter_token(
     &mut self,
     bytes_read: u64,
-  ) -> Result<P10Part, ()> {
+  ) -> Result<P10Token, ()> {
     match self.entries.last() {
       Some(LocationEntry::Sequence {
         ends_at: Some(ends_at),
         ..
       }) if *ends_at <= bytes_read => {
         self.entries.pop();
-        Ok(P10Part::SequenceDelimiter)
+        Ok(P10Token::SequenceDelimiter)
       }
 
       Some(LocationEntry::Item {
@@ -199,25 +199,25 @@ impl P10Location {
         ..
       }) if *ends_at <= bytes_read => {
         self.entries.pop();
-        Ok(P10Part::SequenceItemDelimiter)
+        Ok(P10Token::SequenceItemDelimiter)
       }
 
       _ => Err(()),
     }
   }
 
-  /// Returns all pending delimiter parts for a location, regardless of whether
+  /// Returns all pending delimiter tokens for a location, regardless of whether
   /// their `ends_at` offset has been reached.
   ///
-  pub fn pending_delimiter_parts(&self) -> Vec<P10Part> {
+  pub fn pending_delimiter_tokens(&self) -> Vec<P10Token> {
     self
       .entries
       .iter()
       .rev()
       .map(|entry| match entry {
-        LocationEntry::Sequence { .. } => P10Part::SequenceDelimiter,
-        LocationEntry::Item { .. } => P10Part::SequenceItemDelimiter,
-        LocationEntry::RootDataSet { .. } => P10Part::End,
+        LocationEntry::Sequence { .. } => P10Token::SequenceDelimiter,
+        LocationEntry::Item { .. } => P10Token::SequenceItemDelimiter,
+        LocationEntry::RootDataSet { .. } => P10Token::End,
       })
       .collect()
   }

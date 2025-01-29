@@ -30,7 +30,7 @@ where
 impl DataSetPixelDataExtensions for DataSet {
   fn get_pixel_data_frames(&self) -> Result<Vec<PixelDataFrame>, DataError> {
     // Create a new data set containing only the data elements needed by the
-    // pixel data filter. This avoids calling `DataSet::to_p10_parts()` on the
+    // pixel data filter. This avoids calling `DataSet::to_p10_tokens()` on the
     // whole data set.
     let mut ds = DataSet::new();
     for tag in [
@@ -48,8 +48,8 @@ impl DataSetPixelDataExtensions for DataSet {
     // emitted frames
     let mut pixel_data_filter = PixelDataFilter::new();
     let mut frames = vec![];
-    ds.to_p10_parts(&mut |part| {
-      frames.extend_from_slice(&pixel_data_filter.add_part(part)?);
+    ds.to_p10_tokens(&mut |token| {
+      frames.extend_from_slice(&pixel_data_filter.add_token(token)?);
       Ok(())
     })?;
 

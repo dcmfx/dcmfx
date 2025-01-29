@@ -11,7 +11,7 @@ import dcmfx_core/value_representation.{type ValueRepresentation}
 import dcmfx_json/json_config.{type DicomJsonConfig}
 import dcmfx_json/json_error.{type JsonSerializeError}
 import dcmfx_p10/p10_error
-import dcmfx_p10/p10_part.{type P10Part}
+import dcmfx_p10/p10_token.{type P10Token}
 import gleam/bit_array
 import gleam/bool
 import gleam/float
@@ -23,22 +23,23 @@ import gleam/result
 import gleam/string
 import ieee_float.{type IEEEFloat}
 
-/// Transform that converts a stream of DICOM P10 parts to the DICOM JSON model.
+/// Transform that converts a stream of DICOM P10 tokens to the DICOM JSON
+/// model.
 ///
 pub type P10JsonTransform {
   P10JsonTransform(
-    /// The DICOM JSON config to use when serializing the part stream to JSON.
+    /// The DICOM JSON config to use when serializing the token stream to JSON.
     config: DicomJsonConfig,
     /// Whether a comma needs to be inserted before the next JSON value.
     insert_comma: Bool,
     /// The data element that value bytes are currently being gathered for.
     current_data_element: #(DataElementTag, List(BitArray)),
-    /// Whether to ignore DataElementValueBytes parts when they're received.
+    /// Whether to ignore DataElementValueBytes tokens when they're received.
     /// This is used to stop certain data elements being included in the JSON.
     ignore_data_element_value_bytes: Bool,
-    /// Whether parts for encapsulated pixel data are currently being received.
+    /// Whether tokens for encapsulated pixel data are currently being received.
     in_encapsulated_pixel_data: Bool,
-    /// When multiple binary parts are being directly streamed as an
+    /// When multiple binary tokens are being directly streamed as an
     /// InlineBinary, there can be 0, 1, or 2 bytes left over from the previous
     /// chunk due to Base64 converting in three byte chunks. These leftover
     /// bytes are prepended to the next chunk of data when it arrives for Base64
@@ -53,7 +54,7 @@ pub type P10JsonTransform {
   )
 }
 
-/// Constructs a new P10 parts to DICOM JSON transform.
+/// Constructs a new P10 tokens to DICOM JSON transform.
 ///
 pub fn new(config: DicomJsonConfig) -> P10JsonTransform {
   P10JsonTransform(
@@ -68,38 +69,38 @@ pub fn new(config: DicomJsonConfig) -> P10JsonTransform {
   )
 }
 
-/// Adds the next DICOM P10 part to this JSON transform. Bytes of JSON data are
+/// Adds the next DICOM P10 token to this JSON transform. Bytes of JSON data are
 /// returned as they become available.
 ///
-/// If P10 parts are provided in an invalid order then an error may be returned,
-/// but this is not guaranteed for all invalid part orders, so in some cases the
-/// resulting JSON stream could be invalid when the incoming stream of P10 parts
-/// is malformed.
+/// If P10 tokens are provided in an invalid order then an error may be
+/// returned, but this is not guaranteed for all invalid token orders, so in
+/// some cases the resulting JSON stream could be invalid when the incoming
+/// stream of P10 tokens is malformed.
 ///
-pub fn add_part(
+pub fn add_token(
   transform: P10JsonTransform,
-  part: P10Part,
+  token: P10Token,
 ) -> Result(#(String, P10JsonTransform), JsonSerializeError) {
-  let part_stream_invalid_error = fn(_: a) {
-    p10_error.PartStreamInvalid(
-      when: "Adding part to JSON transform",
-      details: "The transform was not able to write this part",
-      part:,
+  let token_stream_invalid_error = fn(_: a) {
+    p10_error.TokenStreamInvalid(
+      when: "Adding token to JSON transform",
+      details: "The transform was not able to write this token",
+      token:,
     )
     |> json_error.P10Error
   }
 
-  case part {
-    p10_part.FilePreambleAndDICMPrefix(..) -> Ok(#("", transform))
-    p10_part.FileMetaInformation(data_set) -> Ok(begin(transform, data_set))
+  case token {
+    p10_token.FilePreambleAndDICMPrefix(..) -> Ok(#("", transform))
+    p10_token.FileMetaInformation(data_set) -> Ok(begin(transform, data_set))
 
-    p10_part.DataElementHeader(tag, vr, length) -> {
+    p10_token.DataElementHeader(tag, vr, length) -> {
       let #(json, transform) =
         write_data_element_header(transform, tag, vr, length)
 
       use path <- result.map(
         data_set_path.add_data_element(transform.data_set_path, tag)
-        |> result.map_error(part_stream_invalid_error),
+        |> result.map_error(token_stream_invalid_error),
       )
 
       let transform = P10JsonTransform(..transform, data_set_path: path)
@@ -107,7 +108,7 @@ pub fn add_part(
       #(json, transform)
     }
 
-    p10_part.DataElementValueBytes(vr, data, bytes_remaining) -> {
+    p10_token.DataElementValueBytes(vr, data, bytes_remaining) -> {
       use #(json, transform) <- result.try(write_data_element_value_bytes(
         transform,
         vr,
@@ -118,7 +119,7 @@ pub fn add_part(
       let transform = case bytes_remaining {
         0 -> {
           data_set_path.pop(transform.data_set_path)
-          |> result.map_error(part_stream_invalid_error)
+          |> result.map_error(token_stream_invalid_error)
           |> result.map(fn(path) {
             P10JsonTransform(..transform, data_set_path: path)
           })
@@ -131,7 +132,7 @@ pub fn add_part(
       #(json, transform)
     }
 
-    p10_part.SequenceStart(tag, vr) -> {
+    p10_token.SequenceStart(tag, vr) -> {
       use #(json, transform) <- result.try(write_sequence_start(
         transform,
         tag,
@@ -140,7 +141,7 @@ pub fn add_part(
 
       let path =
         data_set_path.add_data_element(transform.data_set_path, tag)
-        |> result.map_error(part_stream_invalid_error)
+        |> result.map_error(token_stream_invalid_error)
       use path <- result.map(path)
 
       let transform =
@@ -153,12 +154,12 @@ pub fn add_part(
       #(json, transform)
     }
 
-    p10_part.SequenceDelimiter -> {
+    p10_token.SequenceDelimiter -> {
       let #(json, transform) = write_sequence_end(transform)
 
       let path =
         data_set_path.pop(transform.data_set_path)
-        |> result.map_error(part_stream_invalid_error)
+        |> result.map_error(token_stream_invalid_error)
       use path <- result.try(path)
 
       let sequence_item_counts =
@@ -174,12 +175,12 @@ pub fn add_part(
       Ok(#(json, transform))
     }
 
-    p10_part.SequenceItemStart -> {
+    p10_token.SequenceItemStart -> {
       let path_and_item_counts = case transform.sequence_item_counts {
         [count, ..rest] ->
           transform.data_set_path
           |> data_set_path.add_sequence_item(count)
-          |> result.map_error(part_stream_invalid_error)
+          |> result.map_error(token_stream_invalid_error)
           |> result.map(fn(path) { #(path, [count + 1, ..rest]) })
 
         _ -> Ok(#(transform.data_set_path, transform.sequence_item_counts))
@@ -197,12 +198,12 @@ pub fn add_part(
       write_sequence_item_start(transform)
     }
 
-    p10_part.SequenceItemDelimiter -> {
+    p10_token.SequenceItemDelimiter -> {
       let #(json, transform) = write_sequence_item_end(transform)
 
       let path =
         data_set_path.pop(transform.data_set_path)
-        |> result.map_error(part_stream_invalid_error)
+        |> result.map_error(token_stream_invalid_error)
       use path <- result.try(path)
 
       let transform = P10JsonTransform(..transform, data_set_path: path)
@@ -210,12 +211,12 @@ pub fn add_part(
       Ok(#(json, transform))
     }
 
-    p10_part.PixelDataItem(length) -> {
+    p10_token.PixelDataItem(length) -> {
       let path_and_item_counts = case transform.sequence_item_counts {
         [count, ..rest] ->
           transform.data_set_path
           |> data_set_path.add_sequence_item(count)
-          |> result.map_error(part_stream_invalid_error)
+          |> result.map_error(token_stream_invalid_error)
           |> result.map(fn(path) { #(path, [count + 1, ..rest]) })
 
         _ -> Ok(#(transform.data_set_path, transform.sequence_item_counts))
@@ -233,7 +234,7 @@ pub fn add_part(
       write_encapsulated_pixel_data_item(transform, length)
     }
 
-    p10_part.End -> Ok(#(end(transform), transform))
+    p10_token.End -> Ok(#(end(transform), transform))
   }
 }
 

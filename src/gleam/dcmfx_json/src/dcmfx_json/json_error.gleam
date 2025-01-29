@@ -15,7 +15,7 @@ pub type JsonSerializeError {
   DataError(data_error: data_error.DataError)
 
   /// A P10 error that occurred during JSON serialization. The most common error
-  /// is `PartStreamInvalid`, indicating that the stream of parts was not
+  /// is `TokenStreamInvalid`, indicating that the stream of tokens was not
   /// well-formed.
   ///
   P10Error(p10_error: P10Error)

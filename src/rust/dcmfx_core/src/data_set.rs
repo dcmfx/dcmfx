@@ -265,9 +265,9 @@ impl DataSet {
   }
 
   /// Inserts a data element with integer values into a data set. The data
-  /// element being inserted must be referenced through its dictionary entry. This
-  /// method automatically determines the correct VR to use for the new data
-  /// element.
+  /// element being inserted must be referenced through its dictionary entry.
+  /// This method automatically determines the correct VR to use for the new
+  /// data element.
   ///
   pub fn insert_int_value(
     &mut self,
@@ -345,9 +345,9 @@ impl DataSet {
   }
 
   /// Inserts a data element with big integer values into a data set. The data
-  /// element being inserted must be referenced through its dictionary entry. This
-  /// method automatically determines the correct VR to use for the new data
-  /// element.
+  /// element being inserted must be referenced through its dictionary entry.
+  /// This method automatically determines the correct VR to use for the new
+  /// data element.
   ///
   pub fn insert_big_int_value(
     &mut self,
@@ -452,9 +452,9 @@ impl DataSet {
   }
 
   /// Inserts a data element with a string value into a data set. The data
-  /// element being inserted must be referenced through its dictionary entry. This
-  /// method automatically determines the correct VR to use for the new data
-  /// element.
+  /// element being inserted must be referenced through its dictionary entry.
+  /// This method automatically determines the correct VR to use for the new
+  /// data element.
   ///
   pub fn insert_string_value(
     &mut self,

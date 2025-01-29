@@ -1,4 +1,4 @@
-//! Provides a transform for converting a stream of DICOM [`P10Part`]s into a
+//! Provides a transform for converting a stream of DICOM [`P10Token`]s into a
 //! stream of DICOM JSON data.
 
 use core::str;
@@ -10,15 +10,16 @@ use dcmfx_core::{
   dictionary, DataElementTag, DataElementValue, DataError, DataSet,
   DataSetPath, ValueRepresentation,
 };
-use dcmfx_p10::{P10Error, P10Part};
+use dcmfx_p10::{P10Error, P10Token};
 
 use crate::json_error::JsonSerializeError;
 use crate::DicomJsonConfig;
 
-/// Transform that converts a stream of DICOM P10 parts to the DICOM JSON model.
+/// Transform that converts a stream of DICOM P10 tokens to the DICOM JSON
+/// model.
 ///
 pub struct P10JsonTransform {
-  /// The DICOM JSON config to use when serializing the part stream to JSON.
+  /// The DICOM JSON config to use when serializing the token stream to JSON.
   config: DicomJsonConfig,
 
   /// Whether a comma needs to be inserted before the next JSON value.
@@ -27,17 +28,18 @@ pub struct P10JsonTransform {
   /// The data element that value bytes are currently being gathered for.
   current_data_element: (DataElementTag, Vec<Rc<Vec<u8>>>),
 
-  /// Whether to ignore DataElementValueBytes parts when they're received. This
+  /// Whether to ignore DataElementValueBytes tokens when they're received. This
   /// is used to stop certain data elements being included in the JSON.
   ignore_data_element_value_bytes: bool,
 
-  /// Whether parts for encapsulated pixel data are currently being received.
+  /// Whether tokens for encapsulated pixel data are currently being received.
   in_encapsulated_pixel_data: bool,
 
-  /// When multiple binary parts are being directly streamed as an InlineBinary,
-  /// there can be 0, 1, or 2 bytes left over from the previous chunk due to
-  /// Base64 converting in three byte chunks. These leftover bytes are prepended
-  /// to the next chunk of data when it arrives for Base64 conversion.
+  /// When multiple binary tokens are being directly streamed as an
+  /// InlineBinary, there can be 0, 1, or 2 bytes left over from the previous
+  /// chunk due to Base64 converting in three byte chunks. These leftover bytes
+  /// are prepended to the next chunk of data when it arrives for Base64
+  /// conversion.
   pending_base64_input: Vec<u8>,
 
   /// The data set path to where JSON serialization is currently up to. This is
@@ -50,7 +52,7 @@ pub struct P10JsonTransform {
 }
 
 impl P10JsonTransform {
-  /// Constructs a new P10 parts to DICOM JSON transform.
+  /// Constructs a new P10 tokens to DICOM JSON transform.
   ///
   pub fn new(config: &DicomJsonConfig) -> Self {
     P10JsonTransform {
@@ -65,34 +67,34 @@ impl P10JsonTransform {
     }
   }
 
-  /// Adds the next DICOM P10 part to this JSON transform. Bytes of JSON data
+  /// Adds the next DICOM P10 token to this JSON transform. Bytes of JSON data
   /// are written to the provided `stream` as they become available.
   ///
-  /// If P10 parts are provided in an invalid order then an error may be
-  /// returned, but this is not guaranteed for all invalid part orders, so in
+  /// If P10 tokens are provided in an invalid order then an error may be
+  /// returned, but this is not guaranteed for all invalid token orders, so in
   /// some cases the resulting JSON stream could be invalid when the incoming
-  /// stream of P10 parts is malformed.
+  /// stream of P10 tokens is malformed.
   ///
-  pub fn add_part(
+  pub fn add_token(
     &mut self,
-    part: &P10Part,
+    token: &P10Token,
     stream: &mut dyn std::io::Write,
   ) -> Result<(), JsonSerializeError> {
-    let part_stream_invalid_error = || {
-      JsonSerializeError::P10Error(P10Error::PartStreamInvalid {
-        when: "Adding part to JSON transform".to_string(),
-        details: "The transform was not able to write this part".to_string(),
-        part: part.clone(),
+    let token_stream_invalid_error = || {
+      JsonSerializeError::P10Error(P10Error::TokenStreamInvalid {
+        when: "Adding token to JSON transform".to_string(),
+        details: "The transform was not able to write this token".to_string(),
+        token: token.clone(),
       })
     };
 
-    match part {
-      P10Part::FilePreambleAndDICMPrefix { .. } => Ok(()),
-      P10Part::FileMetaInformation { data_set } => self
+    match token {
+      P10Token::FilePreambleAndDICMPrefix { .. } => Ok(()),
+      P10Token::FileMetaInformation { data_set } => self
         .begin(data_set, stream)
         .map_err(JsonSerializeError::IOError),
 
-      P10Part::DataElementHeader { tag, vr, length } => {
+      P10Token::DataElementHeader { tag, vr, length } => {
         self
           .write_data_element_header(*tag, *vr, *length, stream)
           .map_err(JsonSerializeError::IOError)?;
@@ -100,10 +102,10 @@ impl P10JsonTransform {
         self
           .data_set_path
           .add_data_element(*tag)
-          .map_err(|_| part_stream_invalid_error())
+          .map_err(|_| token_stream_invalid_error())
       }
 
-      P10Part::DataElementValueBytes {
+      P10Token::DataElementValueBytes {
         vr,
         data,
         bytes_remaining,
@@ -119,13 +121,13 @@ impl P10JsonTransform {
           self
             .data_set_path
             .pop()
-            .map_err(|_| part_stream_invalid_error())?;
+            .map_err(|_| token_stream_invalid_error())?;
         }
 
         Ok(())
       }
 
-      P10Part::SequenceStart { tag, vr } => {
+      P10Token::SequenceStart { tag, vr } => {
         self.write_sequence_start(*tag, *vr, stream)?;
 
         self.sequence_item_counts.push(0);
@@ -133,10 +135,10 @@ impl P10JsonTransform {
         self
           .data_set_path
           .add_data_element(*tag)
-          .map_err(|_| part_stream_invalid_error())
+          .map_err(|_| token_stream_invalid_error())
       }
 
-      P10Part::SequenceDelimiter => {
+      P10Token::SequenceDelimiter => {
         self
           .write_sequence_end(stream)
           .map_err(JsonSerializeError::IOError)?;
@@ -146,16 +148,16 @@ impl P10JsonTransform {
         self
           .data_set_path
           .pop()
-          .map_err(|_| part_stream_invalid_error())
+          .map_err(|_| token_stream_invalid_error())
       }
 
-      P10Part::SequenceItemStart => {
+      P10Token::SequenceItemStart => {
         if let Some(sequence_item_count) = self.sequence_item_counts.last_mut()
         {
           self
             .data_set_path
             .add_sequence_item(*sequence_item_count)
-            .map_err(|_| part_stream_invalid_error())?;
+            .map_err(|_| token_stream_invalid_error())?;
 
           *sequence_item_count += 1;
         }
@@ -165,7 +167,7 @@ impl P10JsonTransform {
           .map_err(JsonSerializeError::IOError)
       }
 
-      P10Part::SequenceItemDelimiter => {
+      P10Token::SequenceItemDelimiter => {
         self
           .write_sequence_item_end(stream)
           .map_err(JsonSerializeError::IOError)?;
@@ -173,16 +175,16 @@ impl P10JsonTransform {
         self
           .data_set_path
           .pop()
-          .map_err(|_| part_stream_invalid_error())
+          .map_err(|_| token_stream_invalid_error())
       }
 
-      P10Part::PixelDataItem { length } => {
+      P10Token::PixelDataItem { length } => {
         if let Some(sequence_item_count) = self.sequence_item_counts.last_mut()
         {
           self
             .data_set_path
             .add_sequence_item(*sequence_item_count)
-            .map_err(|_| part_stream_invalid_error())?;
+            .map_err(|_| token_stream_invalid_error())?;
 
           *sequence_item_count += 1;
         }
@@ -190,7 +192,7 @@ impl P10JsonTransform {
         self.write_encapsulated_pixel_data_item(*length, stream)
       }
 
-      P10Part::End => self.end(stream).map_err(JsonSerializeError::IOError),
+      P10Token::End => self.end(stream).map_err(JsonSerializeError::IOError),
     }
   }
 

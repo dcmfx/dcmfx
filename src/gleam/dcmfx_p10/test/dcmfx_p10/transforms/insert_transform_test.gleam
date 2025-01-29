@@ -2,14 +2,14 @@ import dcmfx_core/data_element_tag.{type DataElementTag, DataElementTag}
 import dcmfx_core/data_element_value
 import dcmfx_core/data_set
 import dcmfx_core/value_representation
-import dcmfx_p10/p10_part
+import dcmfx_p10/p10_token
 import dcmfx_p10/transforms/p10_insert_transform
 import gleam/bit_array
 import gleam/int
 import gleam/list
 import gleeunit/should
 
-pub fn add_parts_test() {
+pub fn add_tokens_test() {
   let tx =
     [
       #(DataElementTag(0, 0), data_element_value.new_long_text("0")),
@@ -25,47 +25,47 @@ pub fn add_parts_test() {
     |> data_set.from_list
     |> p10_insert_transform.new
 
-  let input_parts =
+  let input_tokens =
     list.flatten([
-      parts_for_tag(DataElementTag(2, 0)),
-      parts_for_tag(DataElementTag(5, 0)),
-      [p10_part.End],
+      tokens_for_tag(DataElementTag(2, 0)),
+      tokens_for_tag(DataElementTag(5, 0)),
+      [p10_token.End],
     ])
 
-  let #(final_parts, _) =
-    input_parts
-    |> list.fold(#([], tx), fn(in, input_part) {
-      let #(final_parts, tx) = in
-      let #(new_parts, tx) = p10_insert_transform.add_part(tx, input_part)
+  let #(final_tokens, _) =
+    input_tokens
+    |> list.fold(#([], tx), fn(in, input_token) {
+      let #(final_tokens, tx) = in
+      let #(new_token, tx) = p10_insert_transform.add_token(tx, input_token)
 
-      #(list.flatten([final_parts, new_parts]), tx)
+      #(list.flatten([final_tokens, new_token]), tx)
     })
 
-  final_parts
+  final_tokens
   |> should.equal(
     list.flatten([
-      parts_for_tag(DataElementTag(0, 0)),
-      parts_for_tag(DataElementTag(1, 0)),
-      parts_for_tag(DataElementTag(2, 0)),
-      parts_for_tag(DataElementTag(3, 0)),
-      parts_for_tag(DataElementTag(4, 0)),
-      parts_for_tag(DataElementTag(5, 0)),
-      parts_for_tag(DataElementTag(6, 0)),
-      [p10_part.End],
+      tokens_for_tag(DataElementTag(0, 0)),
+      tokens_for_tag(DataElementTag(1, 0)),
+      tokens_for_tag(DataElementTag(2, 0)),
+      tokens_for_tag(DataElementTag(3, 0)),
+      tokens_for_tag(DataElementTag(4, 0)),
+      tokens_for_tag(DataElementTag(5, 0)),
+      tokens_for_tag(DataElementTag(6, 0)),
+      [p10_token.End],
     ]),
   )
 }
 
-fn parts_for_tag(tag: DataElementTag) {
+fn tokens_for_tag(tag: DataElementTag) {
   let value_bytes = { int.to_string(tag.group) <> " " } |> bit_array.from_string
 
   [
-    p10_part.DataElementHeader(
+    p10_token.DataElementHeader(
       tag,
       value_representation.LongText,
       bit_array.byte_size(value_bytes),
     ),
-    p10_part.DataElementValueBytes(
+    p10_token.DataElementValueBytes(
       value_representation.LongText,
       value_bytes,
       0,

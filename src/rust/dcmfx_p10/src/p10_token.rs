@@ -1,4 +1,4 @@
-//! Defines the various parts of a DICOM P10 that are read out of raw DICOM P10
+//! Defines the various tokens of a DICOM P10 that are read out of raw DICOM P10
 //! data by the `p10_read` module.
 
 use std::rc::Rc;
@@ -11,30 +11,30 @@ use crate::internal::{
   data_element_header::DataElementHeader, value_length::ValueLength,
 };
 
-/// A DICOM P10 part is the smallest piece of structured DICOM P10 data, and a
-/// stream of these parts is most commonly the result of progressive reading of
-/// raw DICOM P10 bytes, or from conversion of a data set into P10 parts for
+/// A DICOM P10 token is the smallest piece of structured DICOM P10 data, and a
+/// stream of these tokens is most commonly the result of progressive reading of
+/// raw DICOM P10 bytes, or from conversion of a data set into P10 tokens for
 /// transmission or serialization.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub enum P10Part {
+pub enum P10Token {
   /// The 128-byte File Preamble and the "DICM" prefix, which are present at the
   /// start of DICOM P10 data. The content of the File Preamble's bytes are
   /// application-defined, and in many cases are unused and set to zero.
   ///
   /// When reading DICOM P10 data that doesn't contain a File Preamble and
-  /// "DICM" prefix this part is emitted with all bytes set to zero.
+  /// "DICM" prefix this token is emitted with all bytes set to zero.
   FilePreambleAndDICMPrefix { preamble: Box<[u8; 128]> },
 
   /// The File Meta Information dataset for the DICOM P10.
   ///
   /// When reading DICOM P10 data that doesn't contain File Meta Information
-  /// this part is emitted with an empty data set.
+  /// this token is emitted with an empty data set.
   FileMetaInformation { data_set: DataSet },
 
-  /// The start of the next data element. This part will always be followed by
-  /// one or more [`P10Part::DataElementValueBytes`] parts containing the value
-  /// bytes for the data element.
+  /// The start of the next data element. This token will always be followed by
+  /// one or more [`P10Token::DataElementValueBytes`] tokens containing the
+  /// value bytes for the data element.
   DataElementHeader {
     tag: DataElementTag,
     vr: ValueRepresentation,
@@ -42,8 +42,8 @@ pub enum P10Part {
   },
 
   /// Raw data for the value of the current data element. Data element values
-  /// are split across multiple of these parts when their length exceeds the
-  /// maximum part size.
+  /// are split across multiple of these tokens when their length exceeds the
+  /// maximum token size.
   DataElementValueBytes {
     vr: ValueRepresentation,
     data: Rc<Vec<u8>>,
@@ -71,7 +71,7 @@ pub enum P10Part {
 
   /// The start of a new item in the current encapsulated pixel data sequence.
   /// The data for the item follows in one or more
-  /// [`P10Part::DataElementValueBytes`] parts.
+  /// [`P10Token::DataElementValueBytes`] tokens.
   PixelDataItem { length: u32 },
 
   /// The end of the DICOM P10 data has been reached with all provided data
@@ -79,16 +79,16 @@ pub enum P10Part {
   End,
 }
 
-impl std::fmt::Display for P10Part {
-  /// Converts a DICOM P10 part to a human-readable string.
+impl std::fmt::Display for P10Token {
+  /// Converts a DICOM P10 token to a human-readable string.
   ///
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
     let s = match self {
-      P10Part::FilePreambleAndDICMPrefix { .. } => {
+      P10Token::FilePreambleAndDICMPrefix { .. } => {
         "FilePreambleAndDICMPrefix".to_string()
       }
 
-      P10Part::FileMetaInformation { data_set } => {
+      P10Token::FileMetaInformation { data_set } => {
         format!(
           "FileMetaInformation: {}",
           data_set
@@ -109,7 +109,7 @@ impl std::fmt::Display for P10Part {
         )
       }
 
-      P10Part::DataElementHeader { tag, vr, length } => format!(
+      P10Token::DataElementHeader { tag, vr, length } => format!(
         "DataElementHeader: {}, name: {}, vr: {}, length: {} bytes",
         tag,
         dictionary::tag_name(*tag, None),
@@ -117,7 +117,7 @@ impl std::fmt::Display for P10Part {
         length
       ),
 
-      P10Part::DataElementValueBytes {
+      P10Token::DataElementValueBytes {
         data,
         bytes_remaining,
         ..
@@ -127,79 +127,79 @@ impl std::fmt::Display for P10Part {
         bytes_remaining
       ),
 
-      P10Part::SequenceStart { tag, vr } => format!(
+      P10Token::SequenceStart { tag, vr } => format!(
         "SequenceStart: {}, name: {}, vr: {}",
         tag,
         dictionary::tag_name(*tag, None),
         vr,
       ),
 
-      P10Part::SequenceDelimiter => "SequenceDelimiter".to_string(),
+      P10Token::SequenceDelimiter => "SequenceDelimiter".to_string(),
 
-      P10Part::SequenceItemStart => "SequenceItemStart".to_string(),
+      P10Token::SequenceItemStart => "SequenceItemStart".to_string(),
 
-      P10Part::SequenceItemDelimiter => "SequenceItemDelimiter".to_string(),
+      P10Token::SequenceItemDelimiter => "SequenceItemDelimiter".to_string(),
 
-      P10Part::PixelDataItem { length } => {
+      P10Token::PixelDataItem { length } => {
         format!("PixelDataItem: {} bytes", length)
       }
 
-      P10Part::End => "End".to_string(),
+      P10Token::End => "End".to_string(),
     };
 
     write!(f, "{}", s)
   }
 }
 
-impl P10Part {
-  /// Returns whether this DICOM P10 part is part of the file header or File
+impl P10Token {
+  /// Returns whether this DICOM P10 token is part of the file header or File
   /// Meta Information prior to the main data set, i.e. is it a
-  /// [`P10Part::FilePreambleAndDICMPrefix`] or [`P10Part::FileMetaInformation`]
-  /// part.
+  /// [`P10Token::FilePreambleAndDICMPrefix`] or [`P10Token::FileMetaInformation`]
+  /// token.
   ///
-  pub fn is_header_part(&self) -> bool {
+  pub fn is_header_token(&self) -> bool {
     matches!(
       self,
-      P10Part::FilePreambleAndDICMPrefix { .. }
-        | P10Part::FileMetaInformation { .. }
+      P10Token::FilePreambleAndDICMPrefix { .. }
+        | P10Token::FileMetaInformation { .. }
     )
   }
 }
 
-/// Converts all the data elements in a data set directly to DICOM P10 parts.
-/// Each part is returned via a callback.
+/// Converts all the data elements in a data set directly to DICOM P10 tokens.
+/// Each token is returned via a callback.
 ///
-pub fn data_elements_to_parts<E>(
+pub fn data_elements_to_tokens<E>(
   data_set: &DataSet,
-  part_callback: &mut impl FnMut(&P10Part) -> Result<(), E>,
+  token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
 ) -> Result<(), E> {
   for (tag, value) in data_set.iter() {
-    data_element_to_parts(*tag, value, part_callback)?;
+    data_element_to_tokens(*tag, value, token_callback)?;
   }
 
   Ok(())
 }
 
-/// Converts a DICOM data element to DICOM P10 parts. Each part is returned via
-/// a callback.
+/// Converts a DICOM data element to DICOM P10 tokens. Each token is returned
+/// via a callback.
 ///
-pub fn data_element_to_parts<E>(
+pub fn data_element_to_tokens<E>(
   tag: DataElementTag,
   value: &DataElementValue,
-  part_callback: &mut impl FnMut(&P10Part) -> Result<(), E>,
+  token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
 ) -> Result<(), E> {
   let vr = value.value_representation();
 
   // For values that have their bytes directly available write them out as-is
   if let Ok(bytes) = value.bytes() {
-    let header_part = P10Part::DataElementHeader {
+    let header_token = P10Token::DataElementHeader {
       tag,
       vr,
       length: bytes.len() as u32,
     };
-    part_callback(&header_part)?;
+    token_callback(&header_token)?;
 
-    part_callback(&P10Part::DataElementValueBytes {
+    token_callback(&P10Token::DataElementValueBytes {
       vr,
       data: bytes.clone(),
       bytes_remaining: 0,
@@ -211,25 +211,25 @@ pub fn data_element_to_parts<E>(
   // For encapsulated pixel data, write all of the items individually,
   // followed by a sequence delimiter
   if let Ok(items) = value.encapsulated_pixel_data() {
-    let header_part = P10Part::SequenceStart { tag, vr };
-    part_callback(&header_part)?;
+    let header_token = P10Token::SequenceStart { tag, vr };
+    token_callback(&header_token)?;
 
     for item in items {
       let length = item.len() as u32;
-      let item_header_part = P10Part::PixelDataItem { length };
+      let item_header_token = P10Token::PixelDataItem { length };
 
-      part_callback(&item_header_part)?;
+      token_callback(&item_header_token)?;
 
-      let value_bytes_part = P10Part::DataElementValueBytes {
+      let value_bytes_token = P10Token::DataElementValueBytes {
         vr,
         data: item.clone(),
         bytes_remaining: 0,
       };
-      part_callback(&value_bytes_part)?;
+      token_callback(&value_bytes_token)?;
     }
 
     // Write delimiter for the encapsulated pixel data sequence
-    part_callback(&P10Part::SequenceDelimiter)?;
+    token_callback(&P10Token::SequenceDelimiter)?;
 
     return Ok(());
   }
@@ -237,22 +237,22 @@ pub fn data_element_to_parts<E>(
   // For sequences, write the item data sets recursively, followed by a
   // sequence delimiter
   if let Ok(items) = value.sequence_items() {
-    let header_part = P10Part::SequenceStart { tag, vr };
-    part_callback(&header_part)?;
+    let header_token = P10Token::SequenceStart { tag, vr };
+    token_callback(&header_token)?;
 
     for item in items {
-      let item_start_part = P10Part::SequenceItemStart;
-      part_callback(&item_start_part)?;
+      let item_start_token = P10Token::SequenceItemStart;
+      token_callback(&item_start_token)?;
 
-      data_elements_to_parts(item, part_callback)?;
+      data_elements_to_tokens(item, token_callback)?;
 
       // Write delimiter for the item
-      let item_delimiter_part = P10Part::SequenceItemDelimiter;
-      part_callback(&item_delimiter_part)?;
+      let item_delimiter_token = P10Token::SequenceItemDelimiter;
+      token_callback(&item_delimiter_token)?;
     }
 
     // Write delimiter for the sequence
-    part_callback(&P10Part::SequenceDelimiter)?;
+    token_callback(&P10Token::SequenceDelimiter)?;
 
     return Ok(());
   }

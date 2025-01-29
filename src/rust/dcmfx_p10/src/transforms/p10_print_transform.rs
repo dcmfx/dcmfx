@@ -3,10 +3,10 @@ use dcmfx_core::{
   DataSetPrintOptions, ValueRepresentation,
 };
 
-use crate::P10Part;
+use crate::P10Token;
 
-/// Transform that converts a stream of DICOM P10 parts into printable text that
-/// describes the structure and content of the contained DICOM data.
+/// Transform that converts a stream of DICOM P10 tokens into printable text
+/// that describes the structure and content of the contained DICOM data.
 ///
 /// This is used for printing data sets on the command line, and the output can
 /// be styled via [`DataSetPrintOptions`].
@@ -41,12 +41,12 @@ impl P10PrintTransform {
     }
   }
 
-  /// Adds the next DICOM P10 part to be printed and returns the next piece of
+  /// Adds the next DICOM P10 token to be printed and returns the next piece of
   /// text output to be displayed.
   ///
-  pub fn add_part(&mut self, part: &P10Part) -> String {
-    match part {
-      P10Part::FileMetaInformation { data_set } => {
+  pub fn add_token(&mut self, token: &P10Token) -> String {
+    match token {
+      P10Token::FileMetaInformation { data_set } => {
         let mut s = "".to_string();
 
         data_set.to_lines(&self.print_options, &mut |line| {
@@ -57,7 +57,7 @@ impl P10PrintTransform {
         s
       }
 
-      P10Part::DataElementHeader { tag, vr, length } => {
+      P10Token::DataElementHeader { tag, vr, length } => {
         let (s, width) = data_set::print::format_data_element_prefix(
           *tag,
           self.private_creators.last().unwrap().tag_name(*tag),
@@ -73,7 +73,7 @@ impl P10PrintTransform {
         self.value_max_width =
           std::cmp::max(self.print_options.max_width.saturating_sub(width), 10);
 
-        // Use the next value bytes part to print a preview of the data
+        // Use the next value bytes token to print a preview of the data
         // element's value
         self.ignore_data_element_value_bytes = false;
 
@@ -88,12 +88,12 @@ impl P10PrintTransform {
         s
       }
 
-      P10Part::DataElementValueBytes { vr, data, .. }
+      P10Token::DataElementValueBytes { vr, data, .. }
         if !self.ignore_data_element_value_bytes =>
       {
         let value = DataElementValue::new_binary_unchecked(*vr, data.clone());
 
-        // Ignore any further value bytes parts now that the value has been
+        // Ignore any further value bytes tokens now that the value has been
         // printed
         self.ignore_data_element_value_bytes = true;
 
@@ -114,7 +114,7 @@ impl P10PrintTransform {
         )
       }
 
-      P10Part::SequenceStart { tag, vr } => {
+      P10Token::SequenceStart { tag, vr } => {
         let mut s = data_set::print::format_data_element_prefix(
           *tag,
           self.private_creators.last().unwrap().tag_name(*tag),
@@ -132,7 +132,7 @@ impl P10PrintTransform {
         s
       }
 
-      P10Part::SequenceDelimiter => {
+      P10Token::SequenceDelimiter => {
         self.indent -= 1;
 
         let mut s = data_set::print::format_data_element_prefix(
@@ -150,7 +150,7 @@ impl P10PrintTransform {
         s
       }
 
-      P10Part::SequenceItemStart => {
+      P10Token::SequenceItemStart => {
         let mut s = data_set::print::format_data_element_prefix(
           dictionary::ITEM.tag,
           dictionary::ITEM.name,
@@ -169,7 +169,7 @@ impl P10PrintTransform {
         s
       }
 
-      P10Part::SequenceItemDelimiter => {
+      P10Token::SequenceItemDelimiter => {
         self.indent -= 1;
         self.private_creators.pop();
 
@@ -187,7 +187,7 @@ impl P10PrintTransform {
         s
       }
 
-      P10Part::PixelDataItem { length } => {
+      P10Token::PixelDataItem { length } => {
         let (s, width) = data_set::print::format_data_element_prefix(
           dictionary::ITEM.tag,
           dictionary::ITEM.name,
@@ -201,7 +201,7 @@ impl P10PrintTransform {
         self.value_max_width =
           std::cmp::max(self.print_options.max_width.saturating_sub(width), 10);
 
-        // Use the next value bytes part to print a preview of the pixel data
+        // Use the next value bytes token to print a preview of the pixel data
         // item's value
         self.ignore_data_element_value_bytes = false;
 

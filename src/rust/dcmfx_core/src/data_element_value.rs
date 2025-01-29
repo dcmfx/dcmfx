@@ -2233,10 +2233,8 @@ mod tests {
     assert_eq!(
       DataElementValue::new_other_byte_string(vec![0u8; 128])
         .unwrap()
-        .to_string(tag, 80),
-      "[00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 \
-        00 00 00 …"
-        .to_string()
+        .to_string(tag, 50),
+      "[00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 …".to_string()
     );
 
     assert_eq!(

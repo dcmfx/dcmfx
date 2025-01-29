@@ -30,7 +30,7 @@ import dcmfx_core/internal/utils
 import dcmfx_core/value_representation.{type ValueRepresentation}
 import dcmfx_p10/internal/value_length.{type ValueLength}
 import dcmfx_p10/p10_error.{type P10Error}
-import dcmfx_p10/p10_part.{type P10Part}
+import dcmfx_p10/p10_token.{type P10Token}
 import gleam/bit_array
 import gleam/bool
 import gleam/dict.{type Dict}
@@ -166,45 +166,45 @@ pub fn is_implicit_vr_forced(location: P10Location) -> Bool {
   }
 }
 
-/// Returns the next delimiter part for a location. This checks the `ends_at`
+/// Returns the next delimiter token for a location. This checks the `ends_at`
 /// value of the entry at the head of the location to see if the bytes read has
-/// met or exceeded it, and if it has then the relevant delimiter part is
+/// met or exceeded it, and if it has then the relevant delimiter token is
 /// returned.
 ///
 /// This is part of the conversion of defined-length sequences and items to use
 /// undefined lengths.
 ///
-pub fn next_delimiter_part(
+pub fn next_delimiter_token(
   location: P10Location,
   bytes_read: Int,
-) -> Result(#(P10Part, P10Location), Nil) {
+) -> Result(#(P10Token, P10Location), Nil) {
   case location {
     [Sequence(ends_at: Some(ends_at), ..), ..rest] if ends_at <= bytes_read ->
-      Ok(#(p10_part.SequenceDelimiter, rest))
+      Ok(#(p10_token.SequenceDelimiter, rest))
 
     [Item(ends_at: Some(ends_at), ..), ..rest] if ends_at <= bytes_read ->
-      Ok(#(p10_part.SequenceItemDelimiter, rest))
+      Ok(#(p10_token.SequenceItemDelimiter, rest))
 
     _ -> Error(Nil)
   }
 }
 
-/// Returns all pending delimiter parts for a location, regardless of whether
+/// Returns all pending delimiter tokens for a location, regardless of whether
 /// their `ends_at` offset has been reached.
 ///
-pub fn pending_delimiter_parts(location: P10Location) -> List(P10Part) {
+pub fn pending_delimiter_tokens(location: P10Location) -> List(P10Token) {
   case location {
     [Sequence(..), ..rest] -> [
-      p10_part.SequenceDelimiter,
-      ..pending_delimiter_parts(rest)
+      p10_token.SequenceDelimiter,
+      ..pending_delimiter_tokens(rest)
     ]
 
     [Item(..), ..rest] -> [
-      p10_part.SequenceItemDelimiter,
-      ..pending_delimiter_parts(rest)
+      p10_token.SequenceItemDelimiter,
+      ..pending_delimiter_tokens(rest)
     ]
 
-    _ -> [p10_part.End]
+    _ -> [p10_token.End]
   }
 }
 

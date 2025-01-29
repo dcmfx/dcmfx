@@ -3,7 +3,7 @@
 
 use dcmfx_core::{DataSetPath, DcmfxError};
 
-use crate::P10Part;
+use crate::P10Token;
 
 /// An error that occurred when reading or writing DICOM P10 data.
 ///
@@ -25,11 +25,11 @@ pub enum P10Error {
   },
 
   /// This error occurs when a DICOM P10 read context requires more data to be
-  /// added to it before the next part can be read.
+  /// added to it before the next token can be read.
   DataRequired { when: String },
 
   /// This error occurs when a DICOM P10 read context reaches the end of its
-  /// data while reading the next part, and no more data is able to be added.
+  /// data while reading the next token, and no more data is able to be added.
   /// This means the provided data is malformed or truncated.
   DataEndedUnexpectedly {
     when: String,
@@ -38,8 +38,8 @@ pub enum P10Error {
   },
 
   /// This error occurs when a DICOM P10 read context is unable to read the next
-  /// DICOM P10 part because the supplied data is invalid, and also when a DICOM
-  /// P10 write context is unable to serialize a part written to it.
+  /// DICOM P10 token because the supplied data is invalid, and also when a
+  /// DICOM P10 write context is unable to serialize a token written to it.
   DataInvalid {
     when: String,
     details: String,
@@ -56,14 +56,14 @@ pub enum P10Error {
     offset: u64,
   },
 
-  /// This error occurs when a stream of [`P10Part`]s is being ingested and a
-  /// part is received that is invalid at the current location in the part
-  /// stream. E.g. a [`P10Part::DataElementValueBytes`] part that does not
-  /// follow a [`P10Part::DataElementHeader`].
-  PartStreamInvalid {
+  /// This error occurs when a stream of [`P10Token`]s is being ingested and a
+  /// token is received that is invalid at the current location in the token
+  /// stream. E.g. a [`P10Token::DataElementValueBytes`] token that does not
+  /// follow a [`P10Token::DataElementHeader`].
+  TokenStreamInvalid {
     when: String,
     details: String,
-    part: P10Part,
+    token: P10Token,
   },
 
   /// This error occurs when bytes are written to a DICOM P10 read context after
@@ -102,8 +102,8 @@ impl P10Error {
       }
       P10Error::DataInvalid { .. } => "Invalid data".to_string(),
       P10Error::MaximumExceeded { .. } => "Maximum exceeded".to_string(),
-      P10Error::PartStreamInvalid { .. } => {
-        "P10 part stream invalid".to_string()
+      P10Error::TokenStreamInvalid { .. } => {
+        "P10 token stream invalid".to_string()
       }
       P10Error::WriteAfterCompletion { .. } => {
         "Write after completion".to_string()
@@ -132,7 +132,7 @@ impl DcmfxError for P10Error {
       P10Error::DataRequired { when }
       | P10Error::DataEndedUnexpectedly { when, .. }
       | P10Error::DataInvalid { when, .. }
-      | P10Error::PartStreamInvalid { when, .. }
+      | P10Error::TokenStreamInvalid { when, .. }
       | P10Error::FileError { when, .. } => {
         lines.push(format!("  When: {}", when));
       }
@@ -159,9 +159,9 @@ impl DcmfxError for P10Error {
         lines.push(format!("  Details: {}", details));
       }
 
-      P10Error::PartStreamInvalid { details, part, .. } => {
+      P10Error::TokenStreamInvalid { details, token, .. } => {
         lines.push(format!("  Details: {}", details));
-        lines.push(format!("  Part: {}", part));
+        lines.push(format!("  Token: {}", token));
       }
 
       P10Error::DataInvalid { details, .. }

@@ -38,7 +38,8 @@ pub mod p10 {
   pub use dcmfx_p10::*;
 }
 
-/// Extracts frames of pixel data from data sets and streams of DICOM P10 parts.
+/// Extracts frames of pixel data from data sets and streams of DICOM P10
+/// tokens.
 ///
 /// This module is a re-export of the `dcmfx_pixel_data` crate.
 ///

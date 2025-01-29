@@ -8,7 +8,7 @@ mod json_error;
 mod transforms;
 
 use dcmfx_core::{DataSet, DataSetPath};
-use dcmfx_p10::{DataSetP10Extensions, P10Part};
+use dcmfx_p10::{DataSetP10Extensions, P10Token};
 
 pub use json_config::DicomJsonConfig;
 pub use json_error::{JsonDeserializeError, JsonSerializeError};
@@ -58,10 +58,10 @@ impl DataSetJsonExtensions for DataSet {
     stream: &mut dyn std::io::Write,
   ) -> Result<(), JsonSerializeError> {
     let mut json_transform = P10JsonTransform::new(&config);
-    let mut part_to_stream =
-      |part: &P10Part| json_transform.add_part(part, stream);
+    let mut token_to_stream =
+      |token: &P10Token| json_transform.add_token(token, stream);
 
-    self.to_p10_parts(&mut part_to_stream)?;
+    self.to_p10_tokens(&mut token_to_stream)?;
 
     stream.flush().map_err(JsonSerializeError::IOError)
   }

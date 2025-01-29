@@ -62,7 +62,7 @@ fn perform_extract_pixel_data(
   // Create read context
   let mut read_context = P10ReadContext::new();
   read_context.set_config(&P10ReadConfig {
-    max_part_size: 1024 * 1024,
+    max_token_size: 1024 * 1024,
     ..P10ReadConfig::default()
   });
 
@@ -72,14 +72,15 @@ fn perform_extract_pixel_data(
   let mut frame_number = 0;
 
   loop {
-    // Read the next parts from the input stream
-    let parts =
-      dcmfx::p10::read_parts_from_stream(&mut input_stream, &mut read_context)
+    // Read the next tokens from the input stream
+    let tokens =
+      dcmfx::p10::read_tokens_from_stream(&mut input_stream, &mut read_context)
         .map_err(|e| Box::new(e) as Box<dyn DcmfxError>)?;
 
-    for part in parts.iter() {
-      // Update output extension when the File Meta Information part is received
-      if let P10Part::FileMetaInformation { data_set } = part {
+    for token in tokens.iter() {
+      // Update output extension when the File Meta Information token is
+      // received
+      if let P10Token::FileMetaInformation { data_set } = token {
         output_extension = file_extension_for_transfer_syntax(
           data_set
             .get_transfer_syntax()
@@ -87,9 +88,9 @@ fn perform_extract_pixel_data(
         );
       }
 
-      // Pass part through the pixel data filter
+      // Pass token through the pixel data filter
       let frames = pixel_data_filter
-        .add_part(part)
+        .add_token(token)
         .map_err(|e| Box::new(e) as Box<dyn DcmfxError>)?;
 
       // Write frames
@@ -107,7 +108,7 @@ fn perform_extract_pixel_data(
         frame_number += 1;
       }
 
-      if *part == P10Part::End {
+      if *token == P10Token::End {
         return Ok(());
       }
     }

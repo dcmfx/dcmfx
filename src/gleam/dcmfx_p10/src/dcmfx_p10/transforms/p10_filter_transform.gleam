@@ -4,11 +4,12 @@ import dcmfx_core/dictionary
 import dcmfx_core/value_representation.{type ValueRepresentation}
 import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error.{type P10Error}
-import dcmfx_p10/p10_part.{type P10Part}
+import dcmfx_p10/p10_token.{type P10Token}
 import gleam/list
 import gleam/option.{type Option, None, Some}
 
-/// Transform that applies a data element filter to a stream of DICOM P10 parts.
+/// Transform that applies a data element filter to a stream of DICOM P10
+/// tokens.
 ///
 pub opaque type P10FilterTransform {
   P10FilterTransform(
@@ -25,9 +26,9 @@ pub type LocationEntry {
 type PredicateFunction =
   fn(DataElementTag, ValueRepresentation, List(LocationEntry)) -> Bool
 
-/// Creates a new filter transform for filtering a stream of DICOM P10 parts.
+/// Creates a new filter transform for filtering a stream of DICOM P10 tokens.
 ///
-/// The predicate function is called as parts are added to the context, and
+/// The predicate function is called as tokens are added to the context, and
 /// only those data elements that return `True` from the predicate function
 /// will pass through this filter transform.
 ///
@@ -79,17 +80,17 @@ pub fn data_set(context: P10FilterTransform) -> Result(DataSet, P10Error) {
   }
 }
 
-/// Adds the next part to the P10 filter transform and returns whether it should
-/// be included in the filtered part stream or not.
+/// Adds the next token to the P10 filter transform and returns whether it
+/// should be included in the filtered token stream.
 ///
-pub fn add_part(
+pub fn add_token(
   context: P10FilterTransform,
-  part: P10Part,
+  token: P10Token,
 ) -> #(Bool, P10FilterTransform) {
-  let #(filter_result, context) = case part {
+  let #(filter_result, context) = case token {
     // If this is a new sequence or data element then run the predicate function
     // to see if it passes the filter, then add it to the location
-    p10_part.SequenceStart(tag, vr) | p10_part.DataElementHeader(tag, vr, _) -> {
+    p10_token.SequenceStart(tag, vr) | p10_token.DataElementHeader(tag, vr, _) -> {
       // The predicate function is skipped if a parent has already been filtered
       // out
       let filter_result = case context.location {
@@ -107,7 +108,7 @@ pub fn add_part(
     }
 
     // If this is a new pixel data item then add it to the location
-    p10_part.PixelDataItem(_) -> {
+    p10_token.PixelDataItem(_) -> {
       let filter_result = case context.location {
         [LocationEntry(filter_result:, ..), ..] -> filter_result
         _ -> True
@@ -124,8 +125,8 @@ pub fn add_part(
     }
 
     // Detect the end of the entry at the head of the location and pop it off
-    p10_part.SequenceDelimiter
-    | p10_part.DataElementValueBytes(bytes_remaining: 0, ..) -> {
+    p10_token.SequenceDelimiter
+    | p10_token.DataElementValueBytes(bytes_remaining: 0, ..) -> {
       let filter_result = case context.location {
         [LocationEntry(filter_result:, ..), ..] -> filter_result
         _ -> True
@@ -139,23 +140,23 @@ pub fn add_part(
 
     _ ->
       case context.location {
-        // If parts are currently being filtered out then swallow this one
+        // If tokens are currently being filtered out then swallow this one
         [LocationEntry(_, False), ..] -> #(False, context)
 
-        // Otherwise this part passes through the filter
+        // Otherwise this token passes through the filter
         _ -> #(True, context)
       }
   }
 
-  // Pass the filtered parts through the data set builder if a data set of the
-  // retained parts is being constructed
+  // Pass the filtered tokens through the data set builder if a data set of the
+  // retained tokens is being constructed
   let data_set_builder = case filter_result {
     True ->
       case context.data_set_builder {
         Some(Ok(builder)) ->
-          case part {
-            p10_part.FileMetaInformation(..) -> Some(Ok(builder))
-            _ -> Some(data_set_builder.add_part(builder, part))
+          case token {
+            p10_token.FileMetaInformation(..) -> Some(Ok(builder))
+            _ -> Some(data_set_builder.add_token(builder, token))
           }
 
         a -> a

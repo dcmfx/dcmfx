@@ -2,7 +2,7 @@
 //// writing DICOM P10 data.
 
 import dcmfx_core/data_set_path.{type DataSetPath}
-import dcmfx_p10/p10_part.{type P10Part}
+import dcmfx_p10/p10_token.{type P10Token}
 import file_streams/file_stream_error
 import gleam/int
 import gleam/io
@@ -25,17 +25,17 @@ pub type P10Error {
   SpecificCharacterSetInvalid(specific_character_set: String, details: String)
 
   /// This error occurs when a DICOM P10 read context requires more data to be
-  /// added to it before the next part can be read.
+  /// added to it before the next token can be read.
   DataRequired(when: String)
 
   /// This error occurs when a DICOM P10 read context reaches the end of its
-  /// data while reading the next part, and no more data is able to be added.
+  /// data while reading the next token, and no more data is able to be added.
   /// This means the provided data is malformed or truncated.
   DataEndedUnexpectedly(when: String, path: DataSetPath, offset: Int)
 
   /// This error occurs when a DICOM P10 read context is unable to read the next
-  /// DICOM P10 part because the supplied data is invalid, and also when a DICOM
-  /// P10 write context is unable to serialize a part written to it.
+  /// DICOM P10 token because the supplied data is invalid, and also when a
+  /// DICOM P10 write context is unable to serialize a token written to it.
   DataInvalid(when: String, details: String, path: DataSetPath, offset: Int)
 
   /// This error occurs when one of the configured maximums for a DICOM P10 read
@@ -43,11 +43,11 @@ pub type P10Error {
   /// are used to control memory usage when reading.
   MaximumExceeded(details: String, path: DataSetPath, offset: Int)
 
-  /// This error occurs when a stream of `P10Part`s is being ingested and a part
-  /// is received that is invalid at the current location in the part stream.
-  /// E.g. a `DataElementValueBytes` part that does not follow a
+  /// This error occurs when a stream of `P10Token`s is being ingested and a
+  /// token is received that is invalid at the current location in the token
+  /// stream. E.g. a `DataElementValueBytes` token that does not follow a
   /// `DataElementHeader`.
-  PartStreamInvalid(when: String, details: String, part: P10Part)
+  TokenStreamInvalid(when: String, details: String, token: P10Token)
 
   /// This error occurs when bytes are written to a DICOM P10 read context after
   /// its final bytes have already been written.
@@ -83,7 +83,7 @@ pub fn name(error: P10Error) -> String {
     DataEndedUnexpectedly(..) -> "Unexpected end of data"
     DataInvalid(..) -> "Invalid data"
     MaximumExceeded(..) -> "Maximum exceeded"
-    PartStreamInvalid(..) -> "P10 part stream invalid"
+    TokenStreamInvalid(..) -> "P10 token stream invalid"
     WriteAfterCompletion(..) -> "Write after completion"
     FileStreamError(..) -> "File stream I/O failure"
     OtherError(error_type: error_type, ..) -> error_type
@@ -103,7 +103,7 @@ pub fn to_lines(error: P10Error, task_description: String) -> List(String) {
     DataRequired(when: when)
     | DataEndedUnexpectedly(when: when, ..)
     | DataInvalid(when: when, ..)
-    | PartStreamInvalid(when: when, ..)
+    | TokenStreamInvalid(when: when, ..)
     | FileStreamError(when: when, ..) -> ["  When: " <> when, ..lines]
     _ -> lines
   }
@@ -121,8 +121,8 @@ pub fn to_lines(error: P10Error, task_description: String) -> List(String) {
       ..lines
     ]
 
-    PartStreamInvalid(details: details, part: part, ..) -> [
-      "  Part: " <> p10_part.to_string(part),
+    TokenStreamInvalid(details:, token:, ..) -> [
+      "  Token: " <> p10_token.to_string(token),
       "  Details: " <> details,
       ..lines
     ]

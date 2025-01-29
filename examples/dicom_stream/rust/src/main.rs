@@ -12,13 +12,13 @@ pub fn main() -> Result<(), P10Error> {
     let mut write_context = P10WriteContext::new();
 
     loop {
-        let parts = dcmfx::p10::read_parts_from_stream(
+        let tokens = dcmfx::p10::read_tokens_from_stream(
             &mut input_stream,
             &mut read_context,
         )?;
 
-        let ended = dcmfx::p10::write_parts_to_stream(
-            &parts,
+        let ended = dcmfx::p10::write_tokens_to_stream(
+            &tokens,
             &mut output_stream,
             &mut write_context,
         )?;

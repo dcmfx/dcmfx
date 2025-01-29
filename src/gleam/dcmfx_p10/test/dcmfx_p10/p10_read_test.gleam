@@ -2,8 +2,8 @@ import dcmfx_core/data_element_value
 import dcmfx_core/data_set
 import dcmfx_core/dictionary
 import dcmfx_core/value_representation
-import dcmfx_p10/p10_part
 import dcmfx_p10/p10_read
+import dcmfx_p10/p10_token
 import gleam/bit_array
 import gleam/list
 import gleeunit/should
@@ -40,16 +40,16 @@ pub fn read_file_meta_information_test() {
       True,
     )
 
-  let assert Ok(#(parts, context)) = p10_read.read_parts(context)
+  let assert Ok(#(tokens, context)) = p10_read.read_tokens(context)
 
-  parts
-  |> should.equal([p10_part.FilePreambleAndDICMPrefix(preamble_bytes)])
+  tokens
+  |> should.equal([p10_token.FilePreambleAndDICMPrefix(preamble_bytes)])
 
-  let assert Ok(#(parts, context)) = p10_read.read_parts(context)
+  let assert Ok(#(tokens, context)) = p10_read.read_tokens(context)
 
-  parts
+  tokens
   |> should.equal([
-    p10_part.FileMetaInformation(
+    p10_token.FileMetaInformation(
       data_set.new()
       |> data_set.insert(
         dictionary.file_meta_information_version.tag,
@@ -68,8 +68,8 @@ pub fn read_file_meta_information_test() {
     ),
   ])
 
-  let assert Ok(#(parts, _)) = p10_read.read_parts(context)
+  let assert Ok(#(tokens, _)) = p10_read.read_tokens(context)
 
-  parts
-  |> should.equal([p10_part.End])
+  tokens
+  |> should.equal([p10_token.End])
 }

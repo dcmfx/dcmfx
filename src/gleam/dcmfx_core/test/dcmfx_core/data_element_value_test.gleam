@@ -560,10 +560,8 @@ pub fn to_string_test() {
   |> list.repeat(128)
   |> bit_array.concat
   |> data_element_value.new_other_byte_string
-  |> result.map(data_element_value.to_string(_, tag, 80))
-  |> should.equal(Ok(
-    "[00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 …",
-  ))
+  |> result.map(data_element_value.to_string(_, tag, 50))
+  |> should.equal(Ok("[00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 …"))
 
   [4000, -30_000]
   |> data_element_value.new_signed_short

@@ -41,11 +41,11 @@ pub struct PrintArgs {
 pub fn run(args: &PrintArgs) -> Result<(), ()> {
   let mut context = P10ReadContext::new();
 
-  // Set a small max part size to keep memory usage low. 256 KiB is also plenty
+  // Set a small max token size to keep memory usage low. 256 KiB is also plenty
   // of data to preview the content of data element values, even if the max
   // output width is very large.
   context.set_config(&P10ReadConfig {
-    max_part_size: 256 * 1024,
+    max_token_size: 256 * 1024,
     ..P10ReadConfig::default()
   });
 
@@ -89,17 +89,17 @@ fn perform_print(
   let mut p10_print_transform = P10PrintTransform::new(print_options);
 
   loop {
-    let parts =
-      dcmfx::p10::read_parts_from_stream(&mut input_stream, &mut context)?;
+    let tokens =
+      dcmfx::p10::read_tokens_from_stream(&mut input_stream, &mut context)?;
 
-    for part in parts.iter() {
-      match part {
-        P10Part::FilePreambleAndDICMPrefix { .. } => (),
+    for token in tokens.iter() {
+      match token {
+        P10Token::FilePreambleAndDICMPrefix { .. } => (),
 
-        P10Part::End => return Ok(()),
+        P10Token::End => return Ok(()),
 
         _ => {
-          let s = p10_print_transform.add_part(part);
+          let s = p10_print_transform.add_token(token);
 
           std::io::stdout().write(s.as_bytes()).map_err(|e| {
             P10Error::FileError {

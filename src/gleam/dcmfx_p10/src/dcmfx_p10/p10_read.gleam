@@ -1,15 +1,15 @@
-//// Converts incoming chunks of binary DICOM P10 data into DICOM P10 parts.
+//// Converts incoming chunks of binary DICOM P10 data into DICOM P10 tokens.
 ////
 //// This conversion is done in a streaming fashion, where chunks of incoming
-//// raw binary data are added to a read context, and DICOM P10 parts are then
-//// progressively made available as their data comes in. See the `P10Part` type
-//// for details on the different parts that are emitted.
+//// raw binary data are added to a read context, and DICOM P10 tokens are then
+//// progressively made available as their data comes in. See the `P10Token`
+//// type for details on the different tokens that are emitted.
 ////
 //// If DICOM P10 data already exists fully in memory it can be added to a new
-//// read context as one complete and final chunk, and then have its DICOM parts
-//// read out, i.e. there is no requirement to use a read context in a streaming
-//// fashion, and in either scenario a series of DICOM P10 parts will be made
-//// available by the read context.
+//// read context as one complete and final chunk, and then have its DICOM
+//// tokens read out, i.e. there is no requirement to use a read context in a
+//// streaming fashion, and in either scenario a series of DICOM P10 tokens will
+//// be made available by the read context.
 ////
 //// Additional configuration for controlling memory usage when reading DICOM
 //// P10 data is available via `P10ReadConfig`.
@@ -30,7 +30,7 @@ import dcmfx_p10/internal/data_element_header.{
 import dcmfx_p10/internal/p10_location.{type P10Location}
 import dcmfx_p10/internal/value_length
 import dcmfx_p10/p10_error.{type P10Error}
-import dcmfx_p10/p10_part.{type P10Part}
+import dcmfx_p10/p10_token.{type P10Token}
 import gleam/bit_array
 import gleam/bool
 import gleam/int
@@ -40,13 +40,13 @@ import gleam/result
 /// Configuration used when reading DICOM P10 data. The following config is
 /// available:
 ///
-/// ### `max_part_size: Int`
+/// ### `max_token_size: Int`
 ///
-/// The maximum size in bytes of a DICOM P10 part emitted by a read context.
+/// The maximum size in bytes of a DICOM P10 token emitted by a read context.
 /// This can be used to control memory usage during a streaming read, and must
 /// be a multiple of 8.
 ///
-/// The maximum part size is relevant to two specific parts:
+/// The maximum token size is relevant to two specific tokens:
 ///
 /// 1. `FileMetaInformation`, where it sets the maximum size in bytes of the
 ///    File Meta Information, as specified by the File Meta Information Group
@@ -57,11 +57,11 @@ import gleam/result
 ///    `data` (with the exception of non-UTF-8 string data, see
 ///    `with_max_string_size` for further details). Data element values with a
 ///    length exceeding this size will be split across multiple
-///    `DataElementValueBytes` parts.
+///    `DataElementValueBytes` tokens.
 ///
-/// By default there is no limit on the maximum part size, that is, each data
+/// By default there is no limit on the maximum token size, that is, each data
 /// element will have its value bytes emitted in exactly one
-/// `DataElementValueBytes` part.
+/// `DataElementValueBytes` token.
 ///
 /// ### `max_string_size: Int`
 ///
@@ -80,9 +80,9 @@ import gleam/result
 ///    non-UTF-8 string data larger that the maximum string size will result in
 ///    an error. Because of this, the maximum size should not be set too low.
 ///
-/// 2. The maximum string size can be set larger than the maximum part size to
+/// 2. The maximum string size can be set larger than the maximum token size to
 ///    allow more leniency in regard to the size of string data that can be
-///    parsed, while keeping part sizes smaller for other common cases such as
+///    parsed, while keeping token sizes smaller for other common cases such as
 ///    image data.
 ///
 /// By default there is no limit on the maximum string size.
@@ -115,7 +115,7 @@ import gleam/result
 ///
 pub type P10ReadConfig {
   P10ReadConfig(
-    max_part_size: Int,
+    max_token_size: Int,
     max_string_size: Int,
     max_sequence_depth: Int,
     require_ordered_data_elements: Bool,
@@ -126,7 +126,7 @@ pub type P10ReadConfig {
 ///
 pub fn default_config() -> P10ReadConfig {
   P10ReadConfig(
-    max_part_size: 0xFFFFFFFE,
+    max_token_size: 0xFFFFFFFE,
     max_string_size: 0xFFFFFFFE,
     max_sequence_depth: 10_000,
     require_ordered_data_elements: True,
@@ -135,10 +135,10 @@ pub fn default_config() -> P10ReadConfig {
 
 /// A read context holds the current state of an in-progress DICOM P10 read. Raw
 /// DICOM P10 data is added to a read context with `write_bytes`, and DICOM P10
-/// parts are then read out with `read_parts`.
+/// tokens are then read out with `read_tokens`.
 ///
-/// An updated read context is returned whenever data is added or parts are read
-/// out, and the updated read context must be used for subsequent calls.
+/// An updated read context is returned whenever data is added or tokens are
+/// read out, and the updated read context must be used for subsequent calls.
 ///
 pub opaque type P10ReadContext {
   P10ReadContext(
@@ -153,7 +153,7 @@ pub opaque type P10ReadContext {
 }
 
 /// The next action specifies what will be attempted to be read next from a read
-/// context by `read_parts`.
+/// context by `read_tokens`.
 ///
 type NextAction {
   ReadFilePreambleAndDICMPrefix
@@ -164,7 +164,7 @@ type NextAction {
     vr: ValueRepresentation,
     length: Int,
     bytes_remaining: Int,
-    emit_parts: Bool,
+    emit_tokens: Bool,
   )
   ReadPixelDataItem(vr: ValueRepresentation)
 }
@@ -189,17 +189,17 @@ pub fn with_config(
   context: P10ReadContext,
   config: P10ReadConfig,
 ) -> P10ReadContext {
-  // Round max part size to a multiple of 8
-  let max_part_size = { config.max_part_size / 8 } * 8
-  let max_string_size = int.max(config.max_string_size, max_part_size)
+  // Round max token size to a multiple of 8
+  let max_token_size = { config.max_token_size / 8 } * 8
+  let max_string_size = int.max(config.max_string_size, max_token_size)
   let max_sequence_depth = int.max(0, config.max_sequence_depth)
 
-  let max_read_size = int.max(config.max_string_size, config.max_part_size)
+  let max_read_size = int.max(config.max_string_size, config.max_token_size)
 
   let config =
     P10ReadConfig(
       ..config,
-      max_part_size:,
+      max_token_size:,
       max_string_size:,
       max_sequence_depth:,
     )
@@ -214,7 +214,7 @@ pub fn with_config(
 /// The default is 'Implicit VR Little Endian'.
 ///
 /// The fallback transfer syntax should be set prior to reading any DICOM P10
-/// parts from the read context.
+/// tokens from the read context.
 ///
 pub fn set_fallback_transfer_syntax(
   context: P10ReadContext,
@@ -235,7 +235,7 @@ pub fn transfer_syntax(context: P10ReadContext) -> TransferSyntax {
 }
 
 /// Writes raw DICOM P10 bytes to a read context that will be parsed into
-/// DICOM P10 parts by subsequent calls to `read_parts()`. If `done` is true
+/// DICOM P10 tokens by subsequent calls to `read_tokens()`. If `done` is true
 /// this indicates the end of the incoming DICOM P10 data to be parsed, after
 /// which any further calls to this function will error.
 ///
@@ -256,39 +256,39 @@ pub fn write_bytes(
   }
 }
 
-/// Reads the next DICOM P10 parts from a read context. On success, zero or more
-/// parts are returned and the function can be called again to read further
-/// parts.
+/// Reads the next DICOM P10 tokens from a read context. On success, zero or
+/// more tokens are returned and the function can be called again to read
+/// further tokens.
 ///
 /// On error, a value of `DataRequired` means the read context does not have
-/// enough data to return the next part, i.e. further calls to `write_bytes`
-/// are required before the next part is able to be read.
+/// enough data to return the next token, i.e. further calls to `write_bytes`
+/// are required before the next token is able to be read.
 ///
-pub fn read_parts(
+pub fn read_tokens(
   context: P10ReadContext,
-) -> Result(#(List(P10Part), P10ReadContext), P10Error) {
+) -> Result(#(List(P10Token), P10ReadContext), P10Error) {
   case context.next_action {
     ReadFilePreambleAndDICMPrefix ->
-      read_file_preamble_and_dicm_prefix_part(context)
+      read_file_preamble_and_dicm_prefix_token(context)
 
     ReadFileMetaInformation(starts_at) -> {
       use #(fmi_data_set, new_context) <- result.map(
-        read_file_meta_information_part(context, starts_at),
+        read_file_meta_information_token(context, starts_at),
       )
 
-      #([p10_part.FileMetaInformation(fmi_data_set)], new_context)
+      #([p10_token.FileMetaInformation(fmi_data_set)], new_context)
     }
 
     ReadDataElementHeader -> {
-      // If there is a delimiter part for a defined-length sequence or item
-      // that needs to be emitted then return that as the next part
-      let delimiter_part = next_delimiter_part(context)
-      use <- bool.guard(delimiter_part.0 != [], Ok(delimiter_part))
+      // If there is a delimiter token for a defined-length sequence or item
+      // that needs to be emitted then return that as the next token
+      let delimiter_token = next_delimiter_token(context)
+      use <- bool.guard(delimiter_token.0 != [], Ok(delimiter_token))
 
       // Detect the end of the DICOM data
       case byte_stream.is_fully_consumed(context.stream) {
         True -> {
-          // Return the parts required to end any active sequences and items.
+          // Return the tokens required to end any active sequences and items.
           //
           // This means there is no check that all items and sequences have been
           // ended as should occur in well-formed P10 data, i.e. P10 data can be
@@ -297,13 +297,13 @@ pub fn read_parts(
           // If there's a desire to error on truncated data then add a check
           // that `list.rest(context.location) == Ok([])`.
 
-          let parts = p10_location.pending_delimiter_parts(context.location)
+          let tokens = p10_location.pending_delimiter_tokens(context.location)
 
-          Ok(#(parts, context))
+          Ok(#(tokens, context))
         }
 
         // There is more data so start reading the next data element
-        False -> read_data_element_header_part(context)
+        False -> read_data_element_header_token(context)
       }
     }
 
@@ -312,40 +312,40 @@ pub fn read_parts(
       vr,
       value_length,
       bytes_remaining,
-      emit_parts,
+      emit_tokens,
     ) ->
-      read_data_element_value_bytes_part(
+      read_data_element_value_bytes_token(
         context,
         tag,
         vr,
         value_length,
         bytes_remaining,
-        emit_parts,
+        emit_tokens,
       )
 
-    ReadPixelDataItem(vr) -> read_pixel_data_item_part(context, vr)
+    ReadPixelDataItem(vr) -> read_pixel_data_item_token(context, vr)
   }
 }
 
-/// Checks whether there is a delimiter part that needs to be emitted, and if so
-/// then returns it.
+/// Checks whether there is a delimiter token that needs to be emitted, and if
+/// so then returns it.
 ///
-fn next_delimiter_part(
+fn next_delimiter_token(
   context: P10ReadContext,
-) -> #(List(P10Part), P10ReadContext) {
+) -> #(List(P10Token), P10ReadContext) {
   let bytes_read = byte_stream.bytes_read(context.stream)
 
-  case p10_location.next_delimiter_part(context.location, bytes_read) {
-    Ok(#(part, new_location)) -> {
+  case p10_location.next_delimiter_token(context.location, bytes_read) {
+    Ok(#(token, new_location)) -> {
       // Decrement the sequence depth if this is a sequence delimiter
-      let new_sequence_depth = case part {
-        p10_part.SequenceDelimiter -> context.sequence_depth - 1
+      let new_sequence_depth = case token {
+        p10_token.SequenceDelimiter -> context.sequence_depth - 1
         _ -> context.sequence_depth
       }
 
       // Update current path
-      let new_path = case part {
-        p10_part.SequenceDelimiter | p10_part.SequenceItemDelimiter -> {
+      let new_path = case token {
+        p10_token.SequenceDelimiter | p10_token.SequenceItemDelimiter -> {
           let assert Ok(path) = data_set_path.pop(context.path)
           path
         }
@@ -360,7 +360,7 @@ fn next_delimiter_part(
           sequence_depth: new_sequence_depth,
         )
 
-      #([part], new_context)
+      #([token], new_context)
     }
 
     Error(Nil) -> #([], context)
@@ -372,10 +372,10 @@ fn next_delimiter_part(
 /// assumed that the File Preamble is not present in the input, and a File
 /// Preamble containing all zero bytes is returned.
 ///
-fn read_file_preamble_and_dicm_prefix_part(
+fn read_file_preamble_and_dicm_prefix_token(
   context: P10ReadContext,
-) -> Result(#(List(P10Part), P10ReadContext), P10Error) {
-  let r = case byte_stream.peek(context.stream, 132) {
+) -> Result(#(List(P10Token), P10ReadContext), P10Error) {
+  let preamble_and_stream = case byte_stream.peek(context.stream, 132) {
     Ok(data) ->
       case data {
         <<preamble:bytes-size(128), "DICM">> -> {
@@ -394,9 +394,9 @@ fn read_file_preamble_and_dicm_prefix_part(
 
     Error(e) -> Error(map_byte_stream_error(context, e, "Reading file header"))
   }
-  use #(preamble, new_stream) <- result.try(r)
+  use #(preamble, new_stream) <- result.try(preamble_and_stream)
 
-  let part = p10_part.FilePreambleAndDICMPrefix(preamble)
+  let token = p10_token.FilePreambleAndDICMPrefix(preamble)
 
   let new_context =
     P10ReadContext(
@@ -405,16 +405,16 @@ fn read_file_preamble_and_dicm_prefix_part(
       next_action: ReadFileMetaInformation(byte_stream.bytes_read(new_stream)),
     )
 
-  Ok(#([part], new_context))
+  Ok(#([token], new_context))
 }
 
 /// Reads the File Meta Information into a data set and returns the relevant
-/// P10 part once complete. If there is a *'(0002,0000) File Meta Information
+/// P10 token once complete. If there is a *'(0002,0000) File Meta Information
 /// Group Length'* data element present then it is used to specify where the
 /// File Meta Information ends. If it is not present then data elements are
 /// read until one with a group other than 0x0002 is encountered.
 ///
-fn read_file_meta_information_part(
+fn read_file_meta_information_token(
   context: P10ReadContext,
   starts_at: Int,
 ) -> Result(#(DataSet, P10ReadContext), P10Error) {
@@ -445,7 +445,7 @@ fn read_file_meta_information_part(
   }
   use new_stream <- result.map(new_stream)
 
-  // Set the final transfer syntax in the File Meta Information part
+  // Set the final transfer syntax in the File Meta Information token
   let fmi_data_set = case
     new_context.transfer_syntax == transfer_syntax.implicit_vr_little_endian
   {
@@ -575,14 +575,14 @@ fn read_file_meta_information_data_set(
 
   let data_element_size = value_offset + value_length
 
-  // Check that the File Meta Information remains under the max part size
+  // Check that the File Meta Information remains under the max token size
   use <- bool.lazy_guard(
     data_set.total_byte_size(fmi_data_set) + data_element_size
-      > context.config.max_part_size,
+      > context.config.max_token_size,
     fn() {
       Error(p10_error.MaximumExceeded(
-        details: "File Meta Information exceeds the max part size of "
-          <> int.to_string(context.config.max_part_size)
+        details: "File Meta Information exceeds the max token size of "
+          <> int.to_string(context.config.max_token_size)
           <> " bytes",
         path: data_set_path.new_with_data_element(tag),
         offset: byte_stream.bytes_read(context.stream),
@@ -685,9 +685,9 @@ fn read_file_meta_information_data_set(
   )
 }
 
-fn read_data_element_header_part(
+fn read_data_element_header_token(
   context: P10ReadContext,
-) -> Result(#(List(P10Part), P10ReadContext), P10Error) {
+) -> Result(#(List(P10Token), P10ReadContext), P10Error) {
   // Read a data element header if bytes for one are available
   use #(header, new_stream) <- result.try(read_data_element_header(context))
 
@@ -717,7 +717,7 @@ fn read_data_element_header_part(
     tag, Some(value_representation.Sequence), _
     | tag, Some(value_representation.Unknown), value_length.Undefined
     -> {
-      let part = p10_part.SequenceStart(tag, value_representation.Sequence)
+      let token = p10_token.SequenceStart(tag, value_representation.Sequence)
 
       let ends_at = case header.length {
         value_length.Defined(length) ->
@@ -775,12 +775,12 @@ fn read_data_element_header_part(
           sequence_depth: context.sequence_depth + 1,
         )
 
-      Ok(#([part], new_context))
+      Ok(#([token], new_context))
     }
 
     // If this is the start of a new sequence item then add it to the location
     tag, None, _ if tag == dictionary.item.tag -> {
-      let part = p10_part.SequenceItemStart
+      let token = p10_token.SequenceItemStart
 
       let ends_at = case header.length {
         value_length.Defined(length) ->
@@ -814,7 +814,7 @@ fn read_data_element_header_part(
           location: new_location,
         )
 
-      Ok(#([part], new_context))
+      Ok(#([token], new_context))
     }
 
     // If this is an encapsulated pixel data sequence then add it to the current
@@ -824,7 +824,7 @@ fn read_data_element_header_part(
       if tag == dictionary.pixel_data.tag
     -> {
       let Some(vr) = vr
-      let part = p10_part.SequenceStart(tag, vr)
+      let token = p10_token.SequenceStart(tag, vr)
 
       let new_location =
         p10_location.add_sequence(context.location, tag, False, None)
@@ -850,7 +850,7 @@ fn read_data_element_header_part(
           path: new_path,
         )
 
-      Ok(#([part], new_context))
+      Ok(#([token], new_context))
     }
 
     // If this is a sequence delimitation item then remove the current sequence
@@ -858,7 +858,7 @@ fn read_data_element_header_part(
     tag, None, value_length.Defined(0)
       if tag == dictionary.sequence_delimitation_item.tag
     -> {
-      let #(parts, new_path, new_location, new_sequence_depth) = case
+      let #(tokens, new_path, new_location, new_sequence_depth) = case
         p10_location.end_sequence(context.location)
       {
         Ok(new_location) -> {
@@ -866,7 +866,7 @@ fn read_data_element_header_part(
           let new_sequence_depth = context.sequence_depth - 1
 
           #(
-            [p10_part.SequenceDelimiter],
+            [p10_token.SequenceDelimiter],
             new_path,
             new_location,
             new_sequence_depth,
@@ -895,7 +895,7 @@ fn read_data_element_header_part(
           sequence_depth: new_sequence_depth,
         )
 
-      Ok(#(parts, new_context))
+      Ok(#(tokens, new_context))
     }
 
     // If this is an item delimitation item then remove the latest item from the
@@ -903,7 +903,7 @@ fn read_data_element_header_part(
     tag, None, value_length.Defined(0)
       if tag == dictionary.item_delimitation_item.tag
     -> {
-      let part = p10_part.SequenceItemDelimiter
+      let token = p10_token.SequenceItemDelimiter
 
       let new_location =
         p10_location.end_item(context.location)
@@ -927,7 +927,7 @@ fn read_data_element_header_part(
           location: new_location,
         )
 
-      Ok(#([part], new_context))
+      Ok(#([token], new_context))
     }
 
     // For all other cases this is a standard data element that needs to have
@@ -960,25 +960,25 @@ fn read_data_element_header_part(
       use _ <- result.try(max_size_check_result)
 
       // Swallow the '(FFFC,FFFC) Data Set Trailing Padding' data element. No
-      // parts for it are emitted. Ref: PS3.10 7.2.
+      // tokens for it are emitted. Ref: PS3.10 7.2.
       // Also swallow group length tags that have an element of 0x0000.
       // Ref: PS3.5 7.2.
-      let emit_parts =
+      let emit_tokens =
         header.tag != dictionary.data_set_trailing_padding.tag
         && header.tag.element != 0x0000
 
       // If the whole value is being materialized then the DataElementHeader
-      // part is only emitted once all the data is available. This is necessary
+      // token is only emitted once all the data is available. This is necessary
       // because in the case of string values that are being converted to UTF-8
       // the length of the final string value following UTF-8 conversion is not
       // yet known.
-      let parts = case emit_parts && !materialized_value_required {
-        True -> [p10_part.DataElementHeader(header.tag, vr, length)]
+      let tokens = case emit_tokens && !materialized_value_required {
+        True -> [p10_token.DataElementHeader(header.tag, vr, length)]
         False -> []
       }
 
       let next_action =
-        ReadDataElementValueBytes(header.tag, vr, length, length, emit_parts)
+        ReadDataElementValueBytes(header.tag, vr, length, length, emit_tokens)
 
       // Check data elements appear in ascending order
       let new_location =
@@ -1019,7 +1019,7 @@ fn read_data_element_header_part(
           path: new_path,
         )
 
-      Ok(#(parts, new_context))
+      Ok(#(tokens, new_context))
     }
 
     _, _, _ ->
@@ -1247,23 +1247,23 @@ fn read_explicit_vr_and_length(
   }
 }
 
-fn read_data_element_value_bytes_part(
+fn read_data_element_value_bytes_token(
   context: P10ReadContext,
   tag: DataElementTag,
   vr: ValueRepresentation,
   value_length: Int,
   bytes_remaining: Int,
-  emit_parts: Bool,
-) -> Result(#(List(P10Part), P10ReadContext), P10Error) {
+  emit_tokens: Bool,
+) -> Result(#(List(P10Token), P10ReadContext), P10Error) {
   let materialized_value_required =
     is_materialized_value_required(context, tag, vr)
 
   // If this data element value is being fully materialized then it needs to be
   // read as a whole, so use its full length as the number of bytes to read.
-  // Otherwise, read up to the max part size.
+  // Otherwise, read up to the max token size.
   let bytes_to_read = case materialized_value_required {
     True -> value_length
-    False -> int.min(bytes_remaining, context.config.max_part_size)
+    False -> int.min(bytes_remaining, context.config.max_token_size)
   }
 
   case byte_stream.read(context.stream, bytes_to_read) {
@@ -1283,10 +1283,10 @@ fn read_data_element_value_bytes_part(
       }
       use #(data, new_location) <- result.try(materialized_value_result)
 
-      let parts = case emit_parts {
+      let tokens = case emit_tokens {
         True -> {
-          let value_bytes_part =
-            p10_part.DataElementValueBytes(vr, data, bytes_remaining)
+          let value_bytes_token =
+            p10_token.DataElementValueBytes(vr, data, bytes_remaining)
 
           // If this is a materialized value then the data element header for it
           // needs to be emitted, along with its final value bytes
@@ -1301,8 +1301,8 @@ fn read_data_element_value_bytes_part(
               case length <= max_length {
                 True ->
                   Ok([
-                    p10_part.DataElementHeader(tag, vr, length),
-                    value_bytes_part,
+                    p10_token.DataElementHeader(tag, vr, length),
+                    value_bytes_token,
                   ])
                 False ->
                   Error(p10_error.DataInvalid(
@@ -1317,13 +1317,13 @@ fn read_data_element_value_bytes_part(
                   ))
               }
             }
-            False -> Ok([value_bytes_part])
+            False -> Ok([value_bytes_token])
           }
         }
 
         False -> Ok([])
       }
-      use parts <- result.try(parts)
+      use tokens <- result.try(tokens)
 
       let next_action = case bytes_remaining {
         // This data element is complete, so the next action is either to read
@@ -1342,7 +1342,7 @@ fn read_data_element_value_bytes_part(
             vr,
             value_length,
             bytes_remaining,
-            emit_parts,
+            emit_tokens,
           )
       }
 
@@ -1363,7 +1363,7 @@ fn read_data_element_value_bytes_part(
           location: new_location,
         )
 
-      Ok(#(parts, new_context))
+      Ok(#(tokens, new_context))
     }
 
     Error(e) -> {
@@ -1438,10 +1438,10 @@ fn process_materialized_data_element(
   )
 }
 
-fn read_pixel_data_item_part(
+fn read_pixel_data_item_token(
   context: P10ReadContext,
   vr: ValueRepresentation,
-) -> Result(#(List(P10Part), P10ReadContext), P10Error) {
+) -> Result(#(List(P10Token), P10ReadContext), P10Error) {
   case read_data_element_header(context) {
     Ok(#(header, new_stream)) ->
       case header {
@@ -1449,7 +1449,7 @@ fn read_pixel_data_item_part(
         DataElementHeader(tag, None, value_length.Defined(length))
           if tag == dictionary.item.tag && length != 0xFFFFFFFF
         -> {
-          let part = p10_part.PixelDataItem(length)
+          let token = p10_token.PixelDataItem(length)
 
           let next_action =
             ReadDataElementValueBytes(
@@ -1475,13 +1475,13 @@ fn read_pixel_data_item_part(
               path: new_path,
             )
 
-          Ok(#([part], new_context))
+          Ok(#([token], new_context))
         }
 
         DataElementHeader(tag, None, value_length.Defined(0))
           if tag == dictionary.sequence_delimitation_item.tag
         -> {
-          let part = p10_part.SequenceDelimiter
+          let token = p10_token.SequenceDelimiter
 
           let new_location =
             p10_location.end_sequence(context.location)
@@ -1508,7 +1508,7 @@ fn read_pixel_data_item_part(
               path: new_path,
             )
 
-          Ok(#([part], new_context))
+          Ok(#([token], new_context))
         }
 
         _ ->

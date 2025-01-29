@@ -1,14 +1,14 @@
-//! Extracts frames of pixel data from a stream of DICOM P10 parts.
+//! Extracts frames of pixel data from a stream of DICOM P10 tokens.
 
 use byteorder::ByteOrder;
 use std::{collections::VecDeque, rc::Rc};
 
 use dcmfx_core::{dictionary, DataError, DataSet, ValueRepresentation};
-use dcmfx_p10::{P10FilterTransform, P10Part};
+use dcmfx_p10::{P10FilterTransform, P10Token};
 
 use crate::PixelDataFrame;
 
-/// This filter takes a stream of DICOM P10 parts and emits the frames of pixel
+/// This filter takes a stream of DICOM P10 tokens and emits the frames of pixel
 /// data it contains. Each frame is returned with no copying of pixel data,
 /// allowing for memory-efficient stream processing.
 ///
@@ -48,7 +48,7 @@ type OffsetTable = VecDeque<(u64, Option<u64>)>;
 
 impl PixelDataFilter {
   /// Creates a new P10 pixel data filter to extract frames of pixel data from a
-  /// stream of DICOM P10 parts.
+  /// stream of DICOM P10 tokens.
   ///
   pub fn new() -> Self {
     let details_filter = P10FilterTransform::new(
@@ -82,19 +82,19 @@ impl PixelDataFilter {
     }
   }
 
-  /// Adds the next DICOM P10 part, returning any frames of pixel data that are
+  /// Adds the next DICOM P10 token, returning any frames of pixel data that are
   /// now available.
   ///
-  pub fn add_part(
+  pub fn add_token(
     &mut self,
-    part: &P10Part,
+    token: &P10Token,
   ) -> Result<Vec<PixelDataFrame>, DataError> {
-    // Add the part into the details filter if it is still active
+    // Add the token into the details filter if it is still active
     if let Some(details_filter) = self.details_filter.as_mut() {
-      details_filter.add_part(part);
+      details_filter.add_token(token);
     }
 
-    if !part.is_header_part() && self.pixel_data_filter.add_part(part) {
+    if !token.is_header_token() && self.pixel_data_filter.add_token(token) {
       // If the result of the details filter hasn't yet been extracted into a
       // data set then do so now
       if let Some(details_filter) = self.details_filter.as_mut() {
@@ -102,19 +102,19 @@ impl PixelDataFilter {
         self.details_filter = None;
       }
 
-      self.process_next_pixel_data_part(part)
+      self.process_next_pixel_data_token(token)
     } else {
       Ok(vec![])
     }
   }
 
-  fn process_next_pixel_data_part(
+  fn process_next_pixel_data_token(
     &mut self,
-    part: &P10Part,
+    token: &P10Token,
   ) -> Result<Vec<PixelDataFrame>, DataError> {
-    match part {
+    match token {
       // The start of native pixel data
-      P10Part::DataElementHeader { length, .. } => {
+      P10Token::DataElementHeader { length, .. } => {
         self.is_encapsulated = false;
 
         // Check that the pixel data length divides evenly into the number of
@@ -137,13 +137,13 @@ impl PixelDataFilter {
       }
 
       // The start of encapsulated pixel data
-      P10Part::SequenceStart { .. } => {
+      P10Token::SequenceStart { .. } => {
         self.is_encapsulated = true;
         Ok(vec![])
       }
 
       // The end of the encapsulated pixel data
-      P10Part::SequenceDelimiter => {
+      P10Token::SequenceDelimiter => {
         let mut frames = vec![];
 
         // If there is any remaining pixel data then emit it as a final frame
@@ -168,12 +168,12 @@ impl PixelDataFilter {
 
       // The start of a new encapsulated pixel data item. The size of an item
       // header is 8 bytes, and this needs to be included in the current offset.
-      P10Part::PixelDataItem { .. } => {
+      P10Token::PixelDataItem { .. } => {
         self.pixel_data_write_offset += 8;
         Ok(vec![])
       }
 
-      P10Part::DataElementValueBytes {
+      P10Token::DataElementValueBytes {
         data,
         bytes_remaining,
         ..

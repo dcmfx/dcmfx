@@ -3,8 +3,8 @@
 
 pub mod data_set_builder;
 pub mod p10_error;
-pub mod p10_part;
 pub mod p10_read;
+pub mod p10_token;
 pub mod p10_write;
 pub mod transforms;
 pub mod uids;
@@ -19,8 +19,8 @@ use dcmfx_core::DataSet;
 
 pub use data_set_builder::DataSetBuilder;
 pub use p10_error::P10Error;
-pub use p10_part::P10Part;
 pub use p10_read::{P10ReadConfig, P10ReadContext};
+pub use p10_token::P10Token;
 pub use p10_write::{P10WriteConfig, P10WriteContext};
 pub use transforms::p10_filter_transform::P10FilterTransform;
 pub use transforms::p10_insert_transform::P10InsertTransform;
@@ -96,15 +96,15 @@ pub fn read_stream(
   let mut builder = Box::new(DataSetBuilder::new());
 
   loop {
-    // Read the next parts from the stream
-    let parts = match read_parts_from_stream(stream, &mut context) {
-      Ok(parts) => parts,
+    // Read the next tokens from the stream
+    let tokens = match read_tokens_from_stream(stream, &mut context) {
+      Ok(tokens) => tokens,
       Err(e) => return Err((e, builder)),
     };
 
-    // Add the new parts to the data set builder
-    for part in parts {
-      match builder.add_part(&part) {
+    // Add the new tokens to the data set builder
+    for token in tokens {
+      match builder.add_token(&token) {
         Ok(_) => (),
         Err(e) => return Err((e, builder)),
       };
@@ -117,21 +117,21 @@ pub fn read_stream(
   }
 }
 
-/// Reads the next DICOM P10 parts from a read stream. This repeatedly reads
+/// Reads the next DICOM P10 tokens from a read stream. This repeatedly reads
 /// bytes from the read stream in 256 KiB chunks until at least one DICOM P10
-/// part is made available by the read context or an error occurs.
+/// token is made available by the read context or an error occurs.
 ///
-pub fn read_parts_from_stream(
+pub fn read_tokens_from_stream(
   stream: &mut dyn std::io::Read,
   context: &mut P10ReadContext,
-) -> Result<Vec<P10Part>, P10Error> {
+) -> Result<Vec<P10Token>, P10Error> {
   loop {
-    match context.read_parts() {
-      Ok(parts) => {
-        if parts.is_empty() {
+    match context.read_tokens() {
+      Ok(tokens) => {
+        if tokens.is_empty() {
           continue;
         } else {
-          return Ok(parts);
+          return Ok(tokens);
         }
       }
 
@@ -177,12 +177,12 @@ pub fn read_bytes(
   };
 
   loop {
-    // Read the next parts from the context
-    match context.read_parts() {
-      Ok(parts) => {
-        // Add the new parts to the data set builder
-        for part in parts.iter() {
-          match builder.add_part(part) {
+    // Read the next tokens from the context
+    match context.read_tokens() {
+      Ok(tokens) => {
+        // Add the new tokens to the data set builder
+        for token in tokens.iter() {
+          match builder.add_token(token) {
             Ok(_) => (),
             Err(e) => return Err((e, builder)),
           };
@@ -246,17 +246,17 @@ pub fn write_stream(
   })
 }
 
-/// Writes the specified DICOM P10 parts to an output stream using the given
-/// write context. Returns whether a [`P10Part::End`] part was present in the
-/// parts.
+/// Writes the specified DICOM P10 tokens to an output stream using the given
+/// write context. Returns whether a [`P10Token::End`] token was present in the
+/// tokens.
 ///
-pub fn write_parts_to_stream(
-  parts: &[P10Part],
+pub fn write_tokens_to_stream(
+  tokens: &[P10Token],
   stream: &mut dyn std::io::Write,
   context: &mut P10WriteContext,
 ) -> Result<bool, P10Error> {
-  for part in parts.iter() {
-    context.write_part(part)?;
+  for token in tokens.iter() {
+    context.write_token(token)?;
   }
 
   let p10_bytes = context.read_bytes();
@@ -267,7 +267,7 @@ pub fn write_parts_to_stream(
     })?;
   }
 
-  if parts.last() == Some(&P10Part::End) {
+  if tokens.last() == Some(&P10Token::End) {
     stream.flush().map_err(|e| P10Error::FileError {
       when: "Writing to output stream".to_string(),
       details: e.to_string(),
@@ -314,12 +314,12 @@ where
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error>;
 
-  /// Converts a data set to DICOM P10 parts that are returned via the passed
+  /// Converts a data set to DICOM P10 tokens that are returned via the passed
   /// callback.
   ///
-  fn to_p10_parts<E>(
+  fn to_p10_tokens<E>(
     &self,
-    part_callback: &mut impl FnMut(&P10Part) -> Result<(), E>,
+    token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
   ) -> Result<(), E>;
 
   /// Converts a data set to DICOM P10 bytes that are returned via the passed
@@ -359,11 +359,11 @@ impl DataSetP10Extensions for DataSet {
     write_stream(stream, self, config)
   }
 
-  fn to_p10_parts<E>(
+  fn to_p10_tokens<E>(
     &self,
-    part_callback: &mut impl FnMut(&P10Part) -> Result<(), E>,
+    token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
   ) -> Result<(), E> {
-    p10_write::data_set_to_parts(self, part_callback)
+    p10_write::data_set_to_tokens(self, token_callback)
   }
 
   fn to_p10_bytes(

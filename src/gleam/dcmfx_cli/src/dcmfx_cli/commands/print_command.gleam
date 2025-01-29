@@ -2,8 +2,8 @@ import dcmfx_core/data_set
 import dcmfx_core/data_set_print.{type DataSetPrintOptions, DataSetPrintOptions}
 import dcmfx_p10
 import dcmfx_p10/p10_error.{type P10Error}
-import dcmfx_p10/p10_part
 import dcmfx_p10/p10_read.{type P10ReadContext}
+import dcmfx_p10/p10_token
 import dcmfx_p10/transforms/p10_print_transform.{type P10PrintTransform}
 import file_streams/file_stream.{type FileStream}
 import gleam/io
@@ -57,7 +57,7 @@ pub fn run() {
 
   let context = p10_read.new_read_context()
 
-  // Set a small max part size to keep memory usage low. 256 KiB is also plenty
+  // Set a small max token size to keep memory usage low. 256 KiB is also plenty
   // of data to preview the content of data element values, even if the max
   // output width is very large.
   let context =
@@ -65,7 +65,7 @@ pub fn run() {
     |> p10_read.with_config(
       p10_read.P10ReadConfig(
         ..p10_read.default_config(),
-        max_part_size: 256 * 1024,
+        max_token_size: 256 * 1024,
       ),
     )
 
@@ -99,7 +99,7 @@ fn perform_print(
 
   let p10_print_transform = p10_print_transform.new(print_options)
 
-  let print_parts_result =
+  let print_tokens_result =
     do_perform_print(input_stream, context, p10_print_transform, print_options)
 
   let close_result =
@@ -112,7 +112,7 @@ fn perform_print(
     })
   use _ <- result.try(close_result)
 
-  print_parts_result
+  print_tokens_result
 }
 
 fn do_perform_print(
@@ -121,26 +121,26 @@ fn do_perform_print(
   p10_print_transform: P10PrintTransform,
   print_options: DataSetPrintOptions,
 ) -> Result(Nil, P10Error) {
-  use #(parts, new_context) <- result.try(dcmfx_p10.read_parts_from_stream(
+  use #(tokens, new_context) <- result.try(dcmfx_p10.read_tokens_from_stream(
     input_stream,
     context,
   ))
 
   let p10_print_transform =
-    parts
-    |> list.fold(p10_print_transform, fn(p10_print_transform, part) {
-      case part {
-        p10_part.FilePreambleAndDICMPrefix(..) -> p10_print_transform
-        p10_part.FileMetaInformation(data_set) -> {
+    tokens
+    |> list.fold(p10_print_transform, fn(p10_print_transform, token) {
+      case token {
+        p10_token.FilePreambleAndDICMPrefix(..) -> p10_print_transform
+        p10_token.FileMetaInformation(data_set) -> {
           data_set.print_with_options(data_set, print_options)
           p10_print_transform
         }
 
-        p10_part.End -> p10_print_transform
+        p10_token.End -> p10_print_transform
 
         _ -> {
           let #(s, p10_print_transform) =
-            p10_print_transform.add_part(p10_print_transform, part)
+            p10_print_transform.add_token(p10_print_transform, token)
 
           io.print(s)
 
@@ -149,7 +149,7 @@ fn do_perform_print(
       }
     })
 
-  case list.contains(parts, p10_part.End) {
+  case list.contains(tokens, p10_token.End) {
     True -> Ok(Nil)
     False ->
       do_perform_print(

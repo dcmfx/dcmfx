@@ -1,14 +1,14 @@
-//! Converts incoming chunks of binary DICOM P10 data into DICOM P10 parts.
+//! Converts incoming chunks of binary DICOM P10 data into DICOM P10 tokens.
 //!
 //! This conversion is done in a streaming fashion, where chunks of incoming
-//! raw binary data are added to a read context, and DICOM P10 parts are then
-//! progressively made available as their data comes in. See the [`P10Part`]
-//! type for details on the different parts that are emitted.
+//! raw binary data are added to a read context, and DICOM P10 tokens are then
+//! progressively made available as their data comes in. See the [`P10Token`]
+//! type for details on the different tokens that are emitted.
 //!
 //! If DICOM P10 data already exists fully in memory it can be added to a new
-//! read context as one complete and final chunk, and then have its DICOM parts
+//! read context as one complete and final chunk, and then have its DICOM tokens
 //! read out, i.e. there is no requirement to use a read context in a streaming
-//! fashion, and in either scenario a series of DICOM P10 parts will be made
+//! fashion, and in either scenario a series of DICOM P10 tokens will be made
 //! available by the read context.
 //!
 //! Additional configuration for controlling memory usage when reading DICOM
@@ -28,34 +28,34 @@ use crate::internal::data_element_header::{
   DataElementHeader, ValueLengthSize,
 };
 use crate::internal::p10_location::{self, P10Location};
-use crate::{internal::value_length::ValueLength, P10Error, P10Part};
+use crate::{internal::value_length::ValueLength, P10Error, P10Token};
 
 /// Configuration used when reading DICOM P10 data.
 ///
 #[derive(Clone, Debug)]
 pub struct P10ReadConfig {
-  /// The maximum size in bytes of a DICOM P10 part emitted by a read context.
+  /// The maximum size in bytes of a DICOM P10 token emitted by a read context.
   /// This can be used to control memory usage during a streaming read, and must
   /// be a multiple of 8.
   ///
-  /// The maximum part size is relevant to two specific parts:
+  /// The maximum token size is relevant to two specific tokens:
   ///
-  /// 1. [`P10Part::FileMetaInformation`], where it sets the maximum size in
+  /// 1. [`P10Token::FileMetaInformation`], where it sets the maximum size in
   ///    bytes of the File Meta Information, as specified by the File Meta
   ///    Information Group Length value. If this size is exceeded an error will
   ///    occur when reading the DICOM P10 data.
   ///
-  /// 2. [`P10Part::DataElementValueBytes`], where it sets the maximum size in
+  /// 2. [`P10Token::DataElementValueBytes`], where it sets the maximum size in
   ///    bytes of its `data` (with the exception of non-UTF-8 string data, see
   ///    [`P10ReadConfig::max_string_size`] for further details). Data element
   ///    values with a length exceeding this size will be split across multiple
-  ///    [`P10Part::DataElementValueBytes`] parts.
+  ///    [`P10Token::DataElementValueBytes`] tokens.
   ///
-  /// By default there is no limit on the maximum part size, that is, each data
+  /// By default there is no limit on the maximum token size, that is, each data
   /// element will have its value bytes emitted in exactly one
-  /// [`P10Part::DataElementValueBytes`] part.
+  /// [`P10Token::DataElementValueBytes`] token.
   ///
-  pub max_part_size: u32,
+  pub max_token_size: u32,
 
   /// The maximum size in bytes of non-UTF-8 strings that can be read by a read
   /// context. This can be used to control memory usage during a streaming read.
@@ -73,10 +73,10 @@ pub struct P10ReadConfig {
   ///    in an error. Because of this, the maximum size should not be set too
   ///    low.
   ///
-  /// 2. The maximum string size can be set larger than the maximum part size to
-  ///    allow more leniency in regard to the size of string data that can be
-  ///    parsed, while keeping part sizes smaller for other common cases such as
-  ///    image data.
+  /// 2. The maximum string size can be set larger than the maximum token size
+  ///    to allow more leniency in regard to the size of string data that can be
+  ///    parsed, while keeping token sizes smaller for other common cases such
+  ///    as image data.
   ///
   /// By default there is no limit on the maximum string size.
   ///
@@ -112,7 +112,7 @@ pub struct P10ReadConfig {
 impl Default for P10ReadConfig {
   fn default() -> Self {
     Self {
-      max_part_size: 0xFFFFFFFE,
+      max_token_size: 0xFFFFFFFE,
       max_string_size: 0xFFFFFFFE,
       max_sequence_depth: 10_000,
       require_ordered_data_elements: true,
@@ -122,10 +122,10 @@ impl Default for P10ReadConfig {
 
 /// A read context holds the current state of an in-progress DICOM P10 read. Raw
 /// DICOM P10 data is added to a read context with [`Self::write_bytes`], and
-/// DICOM P10 parts are then read out with [`Self::read_parts`].
+/// DICOM P10 tokens are then read out with [`Self::read_tokens`].
 ///
-/// An updated read context is returned whenever data is added or parts are read
-/// out, and the updated read context must be used for subsequent calls.
+/// An updated read context is returned whenever data is added or tokens are
+/// read out, and the updated read context must be used for subsequent calls.
 ///
 #[derive(Debug)]
 pub struct P10ReadContext {
@@ -139,7 +139,7 @@ pub struct P10ReadContext {
 }
 
 /// The next action specifies what will be attempted to be read next from a read
-/// context by `read_parts`.
+/// context by `read_tokens`.
 ///
 #[derive(Debug)]
 #[allow(clippy::enum_variant_names)]
@@ -156,7 +156,7 @@ enum NextAction {
     vr: ValueRepresentation,
     length: u32,
     bytes_remaining: u32,
-    emit_parts: bool,
+    emit_tokens: bool,
   },
   ReadPixelDataItem {
     vr: ValueRepresentation,
@@ -181,12 +181,12 @@ impl P10ReadContext {
   /// Updates the config for a read context.
   ///
   pub fn set_config(&mut self, config: &P10ReadConfig) {
-    // Round max part size to a multiple of 8
-    let max_part_size = { config.max_part_size / 8 } * 8;
-    let max_string_size = std::cmp::max(config.max_string_size, max_part_size);
+    // Round max token size to a multiple of 8
+    let max_token_size = { config.max_token_size / 8 } * 8;
+    let max_string_size = std::cmp::max(config.max_string_size, max_token_size);
 
     self.config = P10ReadConfig {
-      max_part_size,
+      max_token_size,
       max_string_size,
       ..*config
     };
@@ -199,7 +199,7 @@ impl P10ReadContext {
   /// The default is 'Implicit VR Little Endian'.
   ///
   /// The fallback transfer syntax should be set prior to reading any DICOM P10
-  /// parts from the read context.
+  /// tokens from the read context.
   ///
   pub fn set_fallback_transfer_syntax(
     &mut self,
@@ -220,7 +220,7 @@ impl P10ReadContext {
   }
 
   /// Writes raw DICOM P10 bytes to a read context that will be parsed into
-  /// DICOM P10 parts by subsequent calls to [`Self::read_parts()`]. If `done`
+  /// DICOM P10 tokens by subsequent calls to [`Self::read_tokens()`]. If `done`
   /// is true this indicates the end of the incoming DICOM P10 data to be
   /// parsed, after which any further calls to this function will error.
   ///
@@ -238,36 +238,36 @@ impl P10ReadContext {
     }
   }
 
-  /// Reads the next DICOM P10 parts from a read context. On success, zero or
-  /// more parts are returned and the function can be called again to read
-  /// further parts.
+  /// Reads the next DICOM P10 tokens from a read context. On success, zero or
+  /// more tokens are returned and the function can be called again to read
+  /// further tokens.
   ///
   /// On error, a value of [`P10Error::DataRequired`] means the read context
-  /// does not have enough data to return the next part, i.e. further calls to
-  /// [`Self::write_bytes`] are required before the next part is able to be
+  /// does not have enough data to return the next token, i.e. further calls to
+  /// [`Self::write_bytes`] are required before the next token is able to be
   /// read.
   ///
-  pub fn read_parts(&mut self) -> Result<Vec<P10Part>, P10Error> {
+  pub fn read_tokens(&mut self) -> Result<Vec<P10Token>, P10Error> {
     match self.next_action {
       NextAction::ReadFilePreambleAndDICMPrefix => {
-        self.read_file_preamble_and_dicm_prefix_part()
+        self.read_file_preamble_and_dicm_prefix_token()
       }
 
       NextAction::ReadFileMetaInformation { .. } => {
-        self.read_file_meta_information_part()
+        self.read_file_meta_information_token()
       }
 
       NextAction::ReadDataElementHeader => {
-        // If there is a delimiter part for a defined-length sequence or item
-        // that needs to be emitted then return that as the next part
-        let delimiter_part = self.next_delimiter_part();
-        if !delimiter_part.is_empty() {
-          return Ok(delimiter_part);
+        // If there is a delimiter token for a defined-length sequence or item
+        // that needs to be emitted then return that as the next token
+        let delimiter_token = self.next_delimiter_token();
+        if !delimiter_token.is_empty() {
+          return Ok(delimiter_token);
         }
 
         // Detect the end of the DICOM data
         if self.stream.is_fully_consumed() {
-          // Return the parts required to end any active sequences and items.
+          // Return the tokens required to end any active sequences and items.
           //
           // This means there is no check that all items and sequences have been
           // ended as should occur in well-formed P10 data, i.e. P10 data can be
@@ -276,12 +276,12 @@ impl P10ReadContext {
           // If there's a desire to error on truncated data then add a check
           // that context.location has exactly one entry.
 
-          let parts = self.location.pending_delimiter_parts();
+          let tokens = self.location.pending_delimiter_tokens();
 
-          Ok(parts)
+          Ok(tokens)
         } else {
           // There is more data so start reading the next data element
-          self.read_data_element_header_part()
+          self.read_data_element_header_token()
         }
       }
 
@@ -290,42 +290,42 @@ impl P10ReadContext {
         vr,
         length,
         bytes_remaining,
-        emit_parts,
-      } => self.read_data_element_value_bytes_part(
+        emit_tokens,
+      } => self.read_data_element_value_bytes_token(
         tag,
         vr,
         length,
         bytes_remaining,
-        emit_parts,
+        emit_tokens,
       ),
 
       NextAction::ReadPixelDataItem { vr } => {
-        self.read_pixel_data_item_part(vr)
+        self.read_pixel_data_item_token(vr)
       }
     }
   }
 
-  /// Checks whether there is a delimiter part that needs to be emitted, and if
+  /// Checks whether there is a delimiter token that needs to be emitted, and if
   /// so then returns it.
   ///
-  fn next_delimiter_part(&mut self) -> Vec<P10Part> {
+  fn next_delimiter_token(&mut self) -> Vec<P10Token> {
     let bytes_read = self.stream.bytes_read();
 
-    match self.location.next_delimiter_part(bytes_read) {
-      Ok(part) => {
+    match self.location.next_delimiter_token(bytes_read) {
+      Ok(token) => {
         // Decrement the sequence depth if this is a sequence delimiter
-        if part == P10Part::SequenceDelimiter {
+        if token == P10Token::SequenceDelimiter {
           self.sequence_depth -= 1;
         }
 
         // Update current path
-        if part == P10Part::SequenceDelimiter
-          || part == P10Part::SequenceItemDelimiter
+        if token == P10Token::SequenceDelimiter
+          || token == P10Token::SequenceItemDelimiter
         {
           self.path.pop().unwrap();
         }
 
-        vec![part]
+        vec![token]
       }
 
       Err(()) => vec![],
@@ -337,9 +337,9 @@ impl P10ReadContext {
   /// assumed that the File Preamble is not present in the input, and a File
   /// Preamble containing all zero bytes is returned.
   ///
-  fn read_file_preamble_and_dicm_prefix_part(
+  fn read_file_preamble_and_dicm_prefix_token(
     &mut self,
-  ) -> Result<Vec<P10Part>, P10Error> {
+  ) -> Result<Vec<P10Token>, P10Error> {
     let preamble = match self.stream.peek(132) {
       Ok(data) => {
         if &data[128..132] == b"DICM" {
@@ -372,18 +372,18 @@ impl P10ReadContext {
       data_set: DataSet::new(),
     };
 
-    Ok(vec![P10Part::FilePreambleAndDICMPrefix { preamble }])
+    Ok(vec![P10Token::FilePreambleAndDICMPrefix { preamble }])
   }
 
   /// Reads the File Meta Information into a data set and returns the relevant
-  /// P10 part once complete. If there is a *'(0002,0000) File Meta Information
+  /// P10 token once complete. If there is a *'(0002,0000) File Meta Information
   /// Group Length'* data element present then it is used to specify where the
   /// File Meta Information ends. If it is not present then data elements are
   /// read until one with a group other than 0x0002 is encountered.
   ///
-  fn read_file_meta_information_part(
+  fn read_file_meta_information_token(
     &mut self,
-  ) -> Result<Vec<P10Part>, P10Error> {
+  ) -> Result<Vec<P10Token>, P10Error> {
     if let NextAction::ReadFileMetaInformation {
       starts_at,
       ends_at,
@@ -483,14 +483,14 @@ impl P10ReadContext {
 
         let data_element_size = value_offset + value_length;
 
-        // Check that the File Meta Information remains under the max part size
+        // Check that the File Meta Information remains under the max token size
         if fmi_data_set.total_byte_size() + data_element_size as u64
-          > self.config.max_part_size as u64
+          > self.config.max_token_size as u64
         {
           return Err(P10Error::MaximumExceeded {
             details: format!(
-              "File Meta Information exceeds the max part size of {} bytes",
-              self.config.max_part_size
+              "File Meta Information exceeds the max token size of {} bytes",
+              self.config.max_token_size
             ),
             path: DataSetPath::new_with_data_element(tag),
             offset: self.stream.bytes_read(),
@@ -588,7 +588,7 @@ impl P10ReadContext {
         }
       }
 
-      // Set the final transfer syntax in the File Meta Information part
+      // Set the final transfer syntax in the File Meta Information token
       if self.transfer_syntax != &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN {
         fmi_data_set
           .insert_string_value(
@@ -598,21 +598,21 @@ impl P10ReadContext {
           .unwrap();
       }
 
-      let part = P10Part::FileMetaInformation {
+      let token = P10Token::FileMetaInformation {
         data_set: std::mem::take(fmi_data_set),
       };
 
       self.next_action = NextAction::ReadDataElementHeader;
 
-      Ok(vec![part])
+      Ok(vec![token])
     } else {
       unreachable!();
     }
   }
 
-  fn read_data_element_header_part(
+  fn read_data_element_header_token(
     &mut self,
-  ) -> Result<Vec<P10Part>, P10Error> {
+  ) -> Result<Vec<P10Token>, P10Error> {
     // Read a data element header if bytes for one are available
     let header = self.read_data_element_header()?;
 
@@ -641,7 +641,7 @@ impl P10ReadContext {
       // If this is the start of a new sequence then add it to the location
       (tag, Some(ValueRepresentation::Sequence), _)
       | (tag, Some(ValueRepresentation::Unknown), ValueLength::Undefined) => {
-        let part = P10Part::SequenceStart {
+        let token = P10Token::SequenceStart {
           tag,
           vr: ValueRepresentation::Sequence,
         };
@@ -683,12 +683,12 @@ impl P10ReadContext {
 
         self.sequence_depth += 1;
 
-        Ok(vec![part])
+        Ok(vec![token])
       }
 
       // If this is the start of a new sequence item then add it to the location
       (tag, None, _) if tag == dictionary::ITEM.tag => {
-        let part = P10Part::SequenceItemStart;
+        let token = P10Token::SequenceItemStart;
 
         let ends_at = match header.length {
           ValueLength::Defined { length } => {
@@ -711,7 +711,7 @@ impl P10ReadContext {
         let item_count = self.location.sequence_item_count().unwrap_or(1);
         self.path.add_sequence_item(item_count - 1).unwrap();
 
-        Ok(vec![part])
+        Ok(vec![token])
       }
 
       // If this is an encapsulated pixel data sequence then add it to the
@@ -721,7 +721,7 @@ impl P10ReadContext {
           && (vr == ValueRepresentation::OtherByteString
             || vr == ValueRepresentation::OtherWordString) =>
       {
-        let part = P10Part::SequenceStart { tag, vr };
+        let token = P10Token::SequenceStart { tag, vr };
 
         self
           .location
@@ -737,7 +737,7 @@ impl P10ReadContext {
 
         self.next_action = NextAction::ReadPixelDataItem { vr };
 
-        Ok(vec![part])
+        Ok(vec![token])
       }
 
       // If this is a sequence delimitation item then remove the current
@@ -745,12 +745,12 @@ impl P10ReadContext {
       (tag, None, ValueLength::ZERO)
         if tag == dictionary::SEQUENCE_DELIMITATION_ITEM.tag =>
       {
-        let parts = match self.location.end_sequence() {
+        let tokens = match self.location.end_sequence() {
           Ok(()) => {
             self.path.pop().unwrap();
             self.sequence_depth -= 1;
 
-            vec![P10Part::SequenceDelimiter]
+            vec![P10Token::SequenceDelimiter]
           }
 
           // If a sequence delimiter occurs outside of a sequence then no error
@@ -761,7 +761,7 @@ impl P10ReadContext {
           Err(_) => vec![],
         };
 
-        Ok(parts)
+        Ok(tokens)
       }
 
       // If this is an item delimitation item then remove the latest item from
@@ -769,7 +769,7 @@ impl P10ReadContext {
       (tag, None, ValueLength::ZERO)
         if tag == dictionary::ITEM_DELIMITATION_ITEM.tag =>
       {
-        let part = P10Part::SequenceItemDelimiter;
+        let token = P10Token::SequenceItemDelimiter;
 
         self
           .location
@@ -783,7 +783,7 @@ impl P10ReadContext {
 
         self.path.pop().unwrap();
 
-        Ok(vec![part])
+        Ok(vec![token])
       }
 
       // For all other cases this is a standard data element that needs to have
@@ -810,20 +810,20 @@ impl P10ReadContext {
         }
 
         // Swallow the '(FFFC,FFFC) Data Set Trailing Padding' data element. No
-        // parts for it are emitted. Ref: PS3.10 7.2.
+        // tokens for it are emitted. Ref: PS3.10 7.2.
         // Also swallow group length tags that have an element of 0x0000.
         // Ref: PS3.5 7.2.
-        let emit_parts = header.tag
+        let emit_tokens = header.tag
           != dictionary::DATA_SET_TRAILING_PADDING.tag
           && header.tag.element != 0x0000;
 
         // If the whole value is being materialized then the DataElementHeader
-        // part is only emitted once all the data is available. This is
+        // token is only emitted once all the data is available. This is
         // necessary because in the case of string values that are being
         // converted to UTF-8 the length of the final string value following
         // UTF-8 conversion is not yet known.
-        let parts = if emit_parts && !materialized_value_required {
-          vec![P10Part::DataElementHeader {
+        let tokens = if emit_tokens && !materialized_value_required {
+          vec![P10Token::DataElementHeader {
             tag: header.tag,
             vr,
             length,
@@ -837,7 +837,7 @@ impl P10ReadContext {
           vr,
           length,
           bytes_remaining: length,
-          emit_parts,
+          emit_tokens,
         };
 
         // Check data elements appear in ascending order
@@ -870,7 +870,7 @@ impl P10ReadContext {
             offset: self.stream.bytes_read(),
           })?;
 
-        Ok(parts)
+        Ok(tokens)
       }
 
       (_, _, _) => Err(P10Error::DataInvalid {
@@ -1095,24 +1095,24 @@ impl P10ReadContext {
     }
   }
 
-  fn read_data_element_value_bytes_part(
+  fn read_data_element_value_bytes_token(
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
     value_length: u32,
     bytes_remaining: u32,
-    emit_parts: bool,
-  ) -> Result<Vec<P10Part>, P10Error> {
+    emit_tokens: bool,
+  ) -> Result<Vec<P10Token>, P10Error> {
     let materialized_value_required =
       self.is_materialized_value_required(tag, vr);
 
     // If this data element value is being fully materialized then it needs to
     // be read as a whole, so use its full length as the number of bytes to
-    // read. Otherwise, read up to the max part size.
+    // read. Otherwise, read up to the max token size.
     let bytes_to_read = if materialized_value_required {
       value_length
     } else {
-      std::cmp::min(bytes_remaining, self.config.max_part_size)
+      std::cmp::min(bytes_remaining, self.config.max_token_size)
     };
 
     match self.stream.read(bytes_to_read as usize) {
@@ -1133,9 +1133,9 @@ impl P10ReadContext {
 
         let data = Rc::new(data);
 
-        let mut parts = Vec::with_capacity(2);
+        let mut tokens = Vec::with_capacity(2);
 
-        if emit_parts {
+        if emit_tokens {
           // If this is a materialized value then the data element header for it
           // is emitted now. It was not emitted when it was read due to the
           // possibility of the Value and Value Length being altered above.
@@ -1144,7 +1144,7 @@ impl P10ReadContext {
               DataElementHeader::value_length_size(vr).max_length();
 
             if data.len() <= max_length {
-              parts.push(P10Part::DataElementHeader {
+              tokens.push(P10Token::DataElementHeader {
                 tag,
                 vr,
                 length: data.len() as u32,
@@ -1164,7 +1164,7 @@ impl P10ReadContext {
             }
           }
 
-          parts.push(P10Part::DataElementValueBytes {
+          tokens.push(P10Token::DataElementValueBytes {
             vr,
             data,
             bytes_remaining,
@@ -1187,7 +1187,7 @@ impl P10ReadContext {
             vr,
             length: value_length,
             bytes_remaining,
-            emit_parts,
+            emit_tokens,
           }
         };
 
@@ -1197,7 +1197,7 @@ impl P10ReadContext {
 
         self.next_action = next_action;
 
-        Ok(parts)
+        Ok(tokens)
       }
 
       Err(e) => {
@@ -1270,10 +1270,10 @@ impl P10ReadContext {
     Ok(value_bytes)
   }
 
-  fn read_pixel_data_item_part(
+  fn read_pixel_data_item_token(
     &mut self,
     vr: ValueRepresentation,
-  ) -> Result<Vec<P10Part>, P10Error> {
+  ) -> Result<Vec<P10Token>, P10Error> {
     match self.read_data_element_header() {
       Ok(header) => match header {
         // Pixel data items must have no VR and a defined length
@@ -1282,21 +1282,21 @@ impl P10ReadContext {
           vr: None,
           length: ValueLength::Defined { length },
         } if tag == dictionary::ITEM.tag => {
-          let part = P10Part::PixelDataItem { length };
+          let token = P10Token::PixelDataItem { length };
 
           self.next_action = NextAction::ReadDataElementValueBytes {
             tag: dictionary::ITEM.tag,
             vr,
             length,
             bytes_remaining: length,
-            emit_parts: true,
+            emit_tokens: true,
           };
 
           // Add item to the path
           let item_count = self.location.sequence_item_count().unwrap_or(1);
           self.path.add_sequence_item(item_count - 1).unwrap();
 
-          Ok(vec![part])
+          Ok(vec![token])
         }
 
         DataElementHeader {
@@ -1304,7 +1304,7 @@ impl P10ReadContext {
           vr: None,
           length: ValueLength::ZERO,
         } if tag == dictionary::SEQUENCE_DELIMITATION_ITEM.tag => {
-          let part = P10Part::SequenceDelimiter;
+          let token = P10Token::SequenceDelimiter;
 
           self.location.end_sequence().map_err(|details| {
             P10Error::DataInvalid {
@@ -1319,7 +1319,7 @@ impl P10ReadContext {
 
           self.next_action = NextAction::ReadDataElementHeader;
 
-          Ok(vec![part])
+          Ok(vec![token])
         }
 
         _ => Err(P10Error::DataInvalid {

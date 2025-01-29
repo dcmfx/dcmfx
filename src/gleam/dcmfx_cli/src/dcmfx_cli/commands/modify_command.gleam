@@ -6,8 +6,8 @@ import dcmfx_core/dictionary
 import dcmfx_core/transfer_syntax.{type TransferSyntax}
 import dcmfx_p10
 import dcmfx_p10/p10_error.{type P10Error}
-import dcmfx_p10/p10_part
 import dcmfx_p10/p10_read
+import dcmfx_p10/p10_token
 import dcmfx_p10/p10_write.{type P10WriteConfig, P10WriteConfig}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import file_streams/file_stream.{type FileStream}
@@ -180,7 +180,7 @@ fn parse_transfer_syntax_flag(
   }
 }
 
-/// Rewrites by streaming the parts of the DICOM P10 straight to the output
+/// Rewrites by streaming the tokens of the DICOM P10 straight to the output
 /// file.
 ///
 fn streaming_rewrite(
@@ -225,7 +225,7 @@ fn streaming_rewrite(
   let read_config =
     p10_read.P10ReadConfig(
       ..p10_read.default_config(),
-      max_part_size: 256 * 1024,
+      max_token_size: 256 * 1024,
     )
   let p10_read_context =
     p10_read.new_read_context() |> p10_read.with_config(read_config)
@@ -233,7 +233,7 @@ fn streaming_rewrite(
     p10_write.new_write_context()
     |> p10_write.with_config(write_config)
 
-  // Stream P10 parts from the input stream to the output stream
+  // Stream P10 tokens from the input stream to the output stream
   let rewrite_result =
     do_streaming_rewrite(
       input_stream,
@@ -273,63 +273,60 @@ fn do_streaming_rewrite(
   output_transfer_syntax: Option(TransferSyntax),
   filter_context: Option(P10FilterTransform),
 ) -> Result(Nil, P10Error) {
-  // Read the next P10 parts from the input stream
-  use #(parts, p10_read_context) <- result.try(dcmfx_p10.read_parts_from_stream(
-    input_stream,
-    p10_read_context,
-  ))
+  // Read the next P10 tokens from the input stream
+  use #(tokens, p10_read_context) <- result.try(
+    dcmfx_p10.read_tokens_from_stream(input_stream, p10_read_context),
+  )
 
-  // Pass parts through the filter if one is specified
-  let #(parts, filter_context) = case filter_context {
+  // Pass tokens through the filter if one is specified
+  let #(tokens, filter_context) = case filter_context {
     Some(filter_context) -> {
-      let #(parts, filter_context) =
-        parts
-        |> list.fold(#([], filter_context), fn(in, part) {
-          let #(final_parts, filter_context) = in
+      let #(tokens, filter_context) =
+        tokens
+        |> list.fold(#([], filter_context), fn(in, token) {
+          let #(final_tokens, filter_context) = in
           let #(filter_result, filter_context) =
-            p10_filter_transform.add_part(filter_context, part)
+            p10_filter_transform.add_token(filter_context, token)
 
-          let final_parts = case filter_result {
-            True -> list.append(final_parts, [part])
-            False -> final_parts
+          let final_tokens = case filter_result {
+            True -> list.append(final_tokens, [token])
+            False -> final_tokens
           }
 
-          #(final_parts, filter_context)
+          #(final_tokens, filter_context)
         })
 
-      #(parts, Some(filter_context))
+      #(tokens, Some(filter_context))
     }
 
-    None -> #(parts, filter_context)
+    None -> #(tokens, filter_context)
   }
 
   // If converting the transfer syntax then update the transfer syntax in the
-  // File Meta Information part
-  let parts =
-    parts
-    |> list.try_map(fn(part) {
-      case output_transfer_syntax, part {
-        Some(ts), p10_part.FileMetaInformation(file_meta_information) ->
+  // File Meta Information token
+  let tokens =
+    tokens
+    |> list.try_map(fn(token) {
+      case output_transfer_syntax, token {
+        Some(ts), p10_token.FileMetaInformation(file_meta_information) ->
           file_meta_information
           |> change_transfer_syntax(ts)
-          |> result.map(p10_part.FileMetaInformation)
+          |> result.map(p10_token.FileMetaInformation)
 
-        _, _ -> Ok(part)
+        _, _ -> Ok(token)
       }
     })
-  use parts <- result.try(parts)
+  use tokens <- result.try(tokens)
 
-  // Write parts to the output stream
-  use #(ended, p10_write_context) <- result.try(dcmfx_p10.write_parts_to_stream(
-    parts,
-    output_stream,
-    p10_write_context,
-  ))
+  // Write tokens to the output stream
+  use #(ended, p10_write_context) <- result.try(
+    dcmfx_p10.write_tokens_to_stream(tokens, output_stream, p10_write_context),
+  )
 
-  // Stop when the end part is received
+  // Stop when the end token is received
   use <- bool.guard(ended, Ok(Nil))
 
-  // Continue rewriting parts
+  // Continue rewriting tokens
   do_streaming_rewrite(
     input_stream,
     output_stream,

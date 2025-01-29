@@ -2,8 +2,8 @@ import dcmfx_core/data_error.{type DataError}
 import dcmfx_core/data_set
 import dcmfx_p10
 import dcmfx_p10/p10_error.{type P10Error}
-import dcmfx_p10/p10_part
 import dcmfx_p10/p10_read.{type P10ReadContext}
+import dcmfx_p10/p10_token
 import dcmfx_pixel_data
 import dcmfx_pixel_data/pixel_data_filter.{type PixelDataFilter}
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
@@ -76,7 +76,7 @@ fn perform_extract_pixel_data(
     |> p10_read.with_config(
       p10_read.P10ReadConfig(
         ..p10_read.default_config(),
-        max_part_size: 1024 * 1024,
+        max_token_size: 1024 * 1024,
       ),
     )
 
@@ -98,20 +98,20 @@ fn do_perform_extract_pixel_data(
   output_extension: String,
   frame_number: Int,
 ) -> Result(Nil, ExtractPixelDataError) {
-  // Read the next parts from the input stream
-  case dcmfx_p10.read_parts_from_stream(input_stream, read_context) {
-    Ok(#(parts, read_context)) -> {
+  // Read the next tokens from the input stream
+  case dcmfx_p10.read_tokens_from_stream(input_stream, read_context) {
+    Ok(#(tokens, read_context)) -> {
       let context = #(output_extension, pixel_data_filter, frame_number, False)
 
       let context =
-        list.try_fold(parts, context, fn(context, part) {
+        list.try_fold(tokens, context, fn(context, token) {
           let #(output_extension, pixel_data_filter, frame_number, ended) =
             context
 
-          // Update output extension when the File Meta Information part is
+          // Update output extension when the File Meta Information token is
           // received
-          let output_extension = case part {
-            p10_part.FileMetaInformation(data_set:) ->
+          let output_extension = case token {
+            p10_token.FileMetaInformation(data_set:) ->
               data_set
               |> data_set.get_transfer_syntax
               |> result.map(dcmfx_pixel_data.file_extension_for_transfer_syntax)
@@ -119,9 +119,9 @@ fn do_perform_extract_pixel_data(
             _ -> output_extension
           }
 
-          // Pass part through the pixel data filter
+          // Pass token through the pixel data filter
           case
-            pixel_data_filter.add_part(pixel_data_filter, part)
+            pixel_data_filter.add_token(pixel_data_filter, token)
             |> result.map_error(ExtractPixelDataDataError)
           {
             Ok(#(frames, pixel_data_filter)) -> {
@@ -147,7 +147,7 @@ fn do_perform_extract_pixel_data(
 
               case frame_number {
                 Ok(frame_number) -> {
-                  let ended = ended || part == p10_part.End
+                  let ended = ended || token == p10_token.End
                   Ok(#(output_extension, pixel_data_filter, frame_number, ended))
                 }
                 Error(e) -> Error(e)

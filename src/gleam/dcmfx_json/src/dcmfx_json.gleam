@@ -24,11 +24,11 @@ pub fn data_set_to_json(
 
   let context = #("", transform)
 
-  p10_write.data_set_to_parts(data_set, context, fn(context, part) {
+  p10_write.data_set_to_tokens(data_set, context, fn(context, token) {
     let #(json, transform) = context
-    use #(new_json, transform) <- result.map(p10_json_transform.add_part(
+    use #(new_json, transform) <- result.map(p10_json_transform.add_token(
       transform,
-      part,
+      token,
     ))
 
     #(json <> new_json, transform)

@@ -1,7 +1,7 @@
-//! A data set builder materializes a stream of DICOM P10 parts into an
+//! A data set builder materializes a stream of DICOM P10 tokens into an
 //! in-memory data set.
 //!
-//! Most commonly the stream of DICOM P10 parts originates from reading raw
+//! Most commonly the stream of DICOM P10 tokens originates from reading raw
 //! DICOM P10 data with the [`crate::p10_read`] module.
 
 use std::rc::Rc;
@@ -10,9 +10,9 @@ use dcmfx_core::{
   dictionary, DataElementTag, DataElementValue, DataSet, ValueRepresentation,
 };
 
-use crate::{P10Error, P10Part};
+use crate::{P10Error, P10Token};
 
-/// A data set builder that can be fed a stream of DICOM P10 parts and
+/// A data set builder that can be fed a stream of DICOM P10 tokens and
 /// materialize them into an in-memory data set.
 ///
 #[derive(Debug, PartialEq)]
@@ -46,8 +46,8 @@ enum BuilderLocation {
 }
 
 /// The pending data element is a data element for which a `DataElementHeader`
-/// part has been received, but one or more of its `DataElementValueBytes` parts
-/// are still pending.
+/// token has been received, but one or more of its `DataElementValueBytes`
+/// tokens are still pending.
 ///
 #[derive(Debug, PartialEq)]
 struct PendingDataElement {
@@ -63,7 +63,7 @@ impl Default for DataSetBuilder {
 }
 
 impl DataSetBuilder {
-  /// Creates a new data set builder that can be given DICOM P10 parts to be
+  /// Creates a new data set builder that can be given DICOM P10 tokens to be
   /// materialized into an in-memory DICOM data set.
   ///
   pub fn new() -> Self {
@@ -79,8 +79,8 @@ impl DataSetBuilder {
   }
 
   /// Returns whether the data set builder is complete, i.e. whether it has
-  /// received the final [`P10Part::End`] part signalling the end of the
-  /// incoming DICOM P10 parts.
+  /// received the final [`P10Token::End`] token signalling the end of the
+  /// incoming DICOM P10 tokens.
   ///
   pub fn is_complete(&self) -> bool {
     self.is_complete
@@ -101,7 +101,7 @@ impl DataSetBuilder {
   }
 
   /// Returns the final data set constructed by a data set builder from the
-  /// DICOM P10 parts it has been fed, or an error if it has not yet been fully
+  /// DICOM P10 tokens it has been fed, or an error if it has not yet been fully
   /// read.
   ///
   #[allow(clippy::result_unit_err)]
@@ -121,8 +121,8 @@ impl DataSetBuilder {
   }
 
   /// Takes a data set builder that isn't yet complete, e.g. because an error
-  /// was encountered reading the source of the P10 parts it was being built
-  /// from, and adds the necessary delimiter and end parts so that it is
+  /// was encountered reading the source of the P10 tokens it was being built
+  /// from, and adds the necessary delimiter and end tokens so that it is
   /// considered complete and can have its final data set read out.
   ///
   /// This allows a partially built data set to be retrieved in its current
@@ -140,81 +140,85 @@ impl DataSetBuilder {
       match location {
         BuilderLocation::Sequence { .. }
         | BuilderLocation::EncapsulatedPixelDataSequence { .. } => {
-          self.add_part(&P10Part::SequenceDelimiter).unwrap();
+          self.add_token(&P10Token::SequenceDelimiter).unwrap();
         }
 
         BuilderLocation::SequenceItem { .. } => {
-          self.add_part(&P10Part::SequenceItemDelimiter).unwrap();
+          self.add_token(&P10Token::SequenceItemDelimiter).unwrap();
         }
 
         BuilderLocation::RootDataSet { .. } => {
-          self.add_part(&P10Part::End).unwrap();
+          self.add_token(&P10Token::End).unwrap();
           return;
         }
       };
     }
   }
 
-  /// Adds a new DICOM P10 part to a data set builder. This function is
-  /// responsible for progressively constructing a data set from the parts
-  /// received, and also checks that the parts being received are in a valid
+  /// Adds a new DICOM P10 token to a data set builder. This function is
+  /// responsible for progressively constructing a data set from the tokens
+  /// received, and also checks that the tokens being received are in a valid
   /// order.
   ///
-  pub fn add_part(&mut self, part: &P10Part) -> Result<(), P10Error> {
+  pub fn add_token(&mut self, token: &P10Token) -> Result<(), P10Error> {
     if self.is_complete {
-      return Err(P10Error::PartStreamInvalid {
+      return Err(P10Error::TokenStreamInvalid {
         when: "Building data set".to_string(),
-        details: "Part received after the part stream has ended".to_string(),
-        part: part.clone(),
+        details: "Token received after the token stream has ended".to_string(),
+        token: token.clone(),
       });
     }
 
     // If there's a pending data element then it needs to be dealt with first as
-    // the incoming part must be a DataElementValueBytes
+    // the incoming token must be a DataElementValueBytes
     if self.pending_data_element.is_some() {
-      return self.add_part_in_pending_data_element(part);
+      return self.add_token_to_pending_data_element(token);
     }
 
-    match (part, self.location.last()) {
-      // Handle File Preamble part
-      (P10Part::FilePreambleAndDICMPrefix { preamble }, _) => {
+    match (token, self.location.last()) {
+      // Handle File Preamble token
+      (P10Token::FilePreambleAndDICMPrefix { preamble }, _) => {
         self.file_preamble = Some(preamble.clone());
         Ok(())
       }
 
-      // Handle File Meta Information part
-      (P10Part::FileMetaInformation { data_set }, _) => {
+      // Handle File Meta Information token
+      (P10Token::FileMetaInformation { data_set }, _) => {
         self.file_meta_information = Some(data_set.clone());
         Ok(())
       }
 
-      // If a sequence is being read then add this part to it
-      (part, Some(BuilderLocation::Sequence { .. })) => {
-        self.add_part_in_sequence(part)
+      // If a sequence is being read then add this token to it
+      (token, Some(BuilderLocation::Sequence { .. })) => {
+        self.add_token_to_sequence(token)
       }
 
-      // If an encapsulated pixel data sequence is being read then add this part
-      // to it
-      (part, Some(BuilderLocation::EncapsulatedPixelDataSequence { .. })) => {
-        self.add_part_in_encapsulated_pixel_data_sequence(part)
+      // If an encapsulated pixel data sequence is being read then add this
+      // token to it
+      (token, Some(BuilderLocation::EncapsulatedPixelDataSequence { .. })) => {
+        self.add_token_to_encapsulated_pixel_data_sequence(token)
       }
 
-      // Add this part to the current data set, which will be either the root
+      // Add this token to the current data set, which will be either the root
       // data set or an item in a sequence
-      (part, _) => self.add_part_in_data_set(part),
+      (token, _) => self.add_token_to_data_set(token),
     }
   }
 
-  /// Ingests the next part when the data set builder's current location
+  /// Ingests the next token when the data set builder's current location
   /// specifies a sequence.
   ///
-  fn add_part_in_sequence(&mut self, part: &P10Part) -> Result<(), P10Error> {
-    match (part, self.location.last()) {
+  fn add_token_to_sequence(
+    &mut self,
+    token: &P10Token,
+  ) -> Result<(), P10Error> {
+    match (token, self.location.last()) {
       (
-        P10Part::SequenceItemStart,
+        P10Token::SequenceItemStart,
         Some(BuilderLocation::RootDataSet { .. }),
       )
-      | (P10Part::SequenceItemStart, Some(BuilderLocation::Sequence { .. })) => {
+      | (P10Token::SequenceItemStart, Some(BuilderLocation::Sequence { .. })) =>
+      {
         self.location.push(BuilderLocation::SequenceItem {
           data_set: DataSet::new(),
         });
@@ -222,7 +226,7 @@ impl DataSetBuilder {
         Ok(())
       }
 
-      (P10Part::SequenceDelimiter, Some(BuilderLocation::Sequence { .. })) => {
+      (P10Token::SequenceDelimiter, Some(BuilderLocation::Sequence { .. })) => {
         if let Some(BuilderLocation::Sequence { tag, items }) =
           self.location.pop()
         {
@@ -233,19 +237,19 @@ impl DataSetBuilder {
         Ok(())
       }
 
-      (part, _) => self.unexpected_part_error(part),
+      (token, _) => self.unexpected_token_error(token),
     }
   }
 
-  /// Ingests the next part when the data set builder's current location
+  /// Ingests the next token when the data set builder's current location
   /// specifies an encapsulated pixel data sequence.
   ///
-  fn add_part_in_encapsulated_pixel_data_sequence(
+  fn add_token_to_encapsulated_pixel_data_sequence(
     &mut self,
-    part: &P10Part,
+    token: &P10Token,
   ) -> Result<(), P10Error> {
-    match (&part, self.location.last()) {
-      (P10Part::PixelDataItem { .. }, _) => {
+    match (&token, self.location.last()) {
+      (P10Token::PixelDataItem { .. }, _) => {
         self.pending_data_element = Some(PendingDataElement {
           tag: dictionary::ITEM.tag,
           vr: ValueRepresentation::OtherByteString,
@@ -256,7 +260,7 @@ impl DataSetBuilder {
       }
 
       (
-        P10Part::SequenceDelimiter,
+        P10Token::SequenceDelimiter,
         Some(BuilderLocation::EncapsulatedPixelDataSequence { .. }),
       ) => {
         if let Some(BuilderLocation::EncapsulatedPixelDataSequence {
@@ -273,19 +277,22 @@ impl DataSetBuilder {
         Ok(())
       }
 
-      _ => self.unexpected_part_error(part),
+      _ => self.unexpected_token_error(token),
     }
   }
 
-  /// Ingests the next part when the data set builder's current location is in
+  /// Ingests the next token when the data set builder's current location is in
   /// either the root data set or in an item that's part of a sequence.
   ///
-  fn add_part_in_data_set(&mut self, part: &P10Part) -> Result<(), P10Error> {
-    match part {
-      // If this part is the start of a new data element then create a new
+  fn add_token_to_data_set(
+    &mut self,
+    token: &P10Token,
+  ) -> Result<(), P10Error> {
+    match token {
+      // If this token is the start of a new data element then create a new
       // pending data element that will have its data filled in by subsequent
-      // DataElementValueBytes parts
-      P10Part::DataElementHeader { tag, vr, .. } => {
+      // DataElementValueBytes tokens
+      P10Token::DataElementHeader { tag, vr, .. } => {
         self.pending_data_element = Some(PendingDataElement {
           tag: *tag,
           vr: *vr,
@@ -295,9 +302,9 @@ impl DataSetBuilder {
         Ok(())
       }
 
-      // If this part indicates the start of a new sequence then update the
+      // If this token indicates the start of a new sequence then update the
       // current location accordingly
-      P10Part::SequenceStart { tag, vr } => {
+      P10Token::SequenceStart { tag, vr } => {
         let new_location = match vr {
           ValueRepresentation::OtherByteString
           | ValueRepresentation::OtherWordString => {
@@ -318,9 +325,9 @@ impl DataSetBuilder {
         Ok(())
       }
 
-      // If this part indicates the end of the current item then check that the
+      // If this token indicates the end of the current item then check that the
       // current location is in fact an item
-      P10Part::SequenceItemDelimiter => match self.location.as_slice() {
+      P10Token::SequenceItemDelimiter => match self.location.as_slice() {
         [.., BuilderLocation::Sequence { .. }, BuilderLocation::SequenceItem { .. }] =>
         {
           if let Some(BuilderLocation::SequenceItem { data_set }) =
@@ -336,45 +343,46 @@ impl DataSetBuilder {
           Ok(())
         }
 
-        _ => Err(P10Error::PartStreamInvalid {
+        _ => Err(P10Error::TokenStreamInvalid {
           when: "Building data set".to_string(),
-          details: "Received sequence item delimiter part outside of an item"
+          details: "Received sequence item delimiter token outside of an item"
             .to_string(),
-          part: part.clone(),
+          token: token.clone(),
         }),
       },
 
-      // If this part indicates the end of the DICOM P10 parts then mark the
+      // If this token indicates the end of the DICOM P10 tokens then mark the
       // builder as complete, so long as it's currently located in the root
       // data set
-      P10Part::End => match self.location.as_slice() {
+      P10Token::End => match self.location.as_slice() {
         [BuilderLocation::RootDataSet { .. }] => {
           self.is_complete = true;
 
           Ok(())
         }
 
-        _ => Err(P10Error::PartStreamInvalid {
+        _ => Err(P10Error::TokenStreamInvalid {
           when: "Building data set".to_string(),
-          details: "Received end part outside of the root data set".to_string(),
-          part: part.clone(),
+          details: "Received end token outside of the root data set"
+            .to_string(),
+          token: token.clone(),
         }),
       },
 
-      part => self.unexpected_part_error(part),
+      token => self.unexpected_token_error(token),
     }
   }
 
-  /// Ingests the next part when the data set builder has a pending data element
-  /// that is expecting value bytes parts containing its data.
+  /// Ingests the next token when the data set builder has a pending data
+  /// element that is expecting value bytes tokens containing its data.
   ///
-  fn add_part_in_pending_data_element(
+  fn add_token_to_pending_data_element(
     &mut self,
-    part: &P10Part,
+    token: &P10Token,
   ) -> Result<(), P10Error> {
-    match (part, self.pending_data_element.as_mut()) {
+    match (token, self.pending_data_element.as_mut()) {
       (
-        P10Part::DataElementValueBytes {
+        P10Token::DataElementValueBytes {
           data,
           bytes_remaining,
           ..
@@ -399,7 +407,7 @@ impl DataSetBuilder {
         Ok(())
       }
 
-      (part, _) => self.unexpected_part_error(part),
+      (token, _) => self.unexpected_token_error(token),
     }
   }
 
@@ -431,16 +439,16 @@ impl DataSetBuilder {
     };
   }
 
-  /// The error returned when an unexpected DICOM P10 part is received.
+  /// The error returned when an unexpected DICOM P10 token is received.
   ///
-  fn unexpected_part_error(&self, part: &P10Part) -> Result<(), P10Error> {
-    Err(P10Error::PartStreamInvalid {
+  fn unexpected_token_error(&self, token: &P10Token) -> Result<(), P10Error> {
+    Err(P10Error::TokenStreamInvalid {
       when: "Building data set".to_string(),
       details: format!(
-        "Received unexpected P10 part at location: {}",
+        "Received unexpected P10 token at location: {}",
         location_to_string(&self.location),
       ),
-      part: part.clone(),
+      token: token.clone(),
     })
   }
 }

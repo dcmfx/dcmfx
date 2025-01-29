@@ -4,8 +4,8 @@
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error.{type P10Error}
-import dcmfx_p10/p10_part.{type P10Part}
 import dcmfx_p10/p10_read.{type P10ReadContext}
+import dcmfx_p10/p10_token.{type P10Token}
 import dcmfx_p10/p10_write.{type P10WriteConfig, type P10WriteContext}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error
@@ -87,18 +87,18 @@ fn do_read_stream(
   context: P10ReadContext,
   builder: DataSetBuilder,
 ) -> Result(DataSet, #(P10Error, DataSetBuilder)) {
-  // Read the next parts from the stream
-  let parts_and_context =
-    read_parts_from_stream(stream, context)
+  // Read the next tokens from the stream
+  let tokens_and_context =
+    read_tokens_from_stream(stream, context)
     |> result.map_error(fn(e) { #(e, builder) })
 
-  case parts_and_context {
-    Ok(#(parts, context)) -> {
-      // Add the new parts to the data set builder
+  case tokens_and_context {
+    Ok(#(tokens, context)) -> {
+      // Add the new tokens to the data set builder
       let builder =
-        parts
-        |> list.try_fold(builder, fn(builder, part) {
-          data_set_builder.add_part(builder, part)
+        tokens
+        |> list.try_fold(builder, fn(builder, token) {
+          data_set_builder.add_token(builder, token)
           |> result.map_error(fn(e) { #(e, builder) })
         })
 
@@ -119,18 +119,18 @@ fn do_read_stream(
   }
 }
 
-/// Reads the next DICOM P10 parts from a read stream. This repeatedly reads
+/// Reads the next DICOM P10 tokens from a read stream. This repeatedly reads
 /// bytes from the read stream in 256 KiB chunks until at least one DICOM P10
-/// part is made available by the read context or an error occurs.
+/// token is made available by the read context or an error occurs.
 ///
-pub fn read_parts_from_stream(
+pub fn read_tokens_from_stream(
   stream: FileStream,
   context: P10ReadContext,
-) -> Result(#(List(P10Part), P10ReadContext), P10Error) {
-  case p10_read.read_parts(context) {
-    Ok(#([], context)) -> read_parts_from_stream(stream, context)
+) -> Result(#(List(P10Token), P10ReadContext), P10Error) {
+  case p10_read.read_tokens(context) {
+    Ok(#([], context)) -> read_tokens_from_stream(stream, context)
 
-    Ok(#(parts, context)) -> Ok(#(parts, context))
+    Ok(#(tokens, context)) -> Ok(#(tokens, context))
 
     // If the read context needs more data then read bytes from the stream,
     // write them to the read context, and try again
@@ -138,13 +138,13 @@ pub fn read_parts_from_stream(
       case file_stream.read_bytes(stream, 64 * 1024) {
         Ok(data) ->
           case p10_read.write_bytes(context, data, False) {
-            Ok(context) -> read_parts_from_stream(stream, context)
+            Ok(context) -> read_tokens_from_stream(stream, context)
             Error(e) -> Error(e)
           }
 
         Error(file_stream_error.Eof) ->
           case p10_read.write_bytes(context, <<>>, True) {
-            Ok(context) -> read_parts_from_stream(stream, context)
+            Ok(context) -> read_tokens_from_stream(stream, context)
             Error(e) -> Error(e)
           }
 
@@ -174,14 +174,14 @@ fn do_read_bytes(
   context: P10ReadContext,
   builder: DataSetBuilder,
 ) -> Result(DataSet, #(P10Error, DataSetBuilder)) {
-  // Read the next parts from the read context
-  case p10_read.read_parts(context) {
-    Ok(#(parts, context)) -> {
-      // Add the new part to the data set builder
+  // Read the next tokens from the read context
+  case p10_read.read_tokens(context) {
+    Ok(#(tokens, context)) -> {
+      // Add the new token to the data set builder
       let new_builder =
-        parts
-        |> list.try_fold(builder, fn(builder, part) {
-          data_set_builder.add_part(builder, part)
+        tokens
+        |> list.try_fold(builder, fn(builder, token) {
+          data_set_builder.add_token(builder, token)
         })
 
       case new_builder {
@@ -265,18 +265,18 @@ pub fn write_bytes(
   })
 }
 
-/// Writes the specified DICOM P10 parts to an output stream using the given
-/// write context. Returns whether a `p10_part.End` part was present in the
-/// parts.
+/// Writes the specified DICOM P10 tokens to an output stream using the given
+/// write context. Returns whether a `p10_token.End` token was present in the
+/// tokens.
 ///
-pub fn write_parts_to_stream(
-  parts: List(P10Part),
+pub fn write_tokens_to_stream(
+  tokens: List(P10Token),
   stream: FileStream,
   context: P10WriteContext,
 ) -> Result(#(Bool, P10WriteContext), P10Error) {
   use context <- result.try(
-    list.try_fold(parts, context, fn(context, part) {
-      p10_write.write_part(context, part)
+    list.try_fold(tokens, context, fn(context, token) {
+      p10_write.write_token(context, token)
     }),
   )
 
@@ -291,8 +291,8 @@ pub fn write_parts_to_stream(
     }),
   )
 
-  case list.last(parts) {
-    Ok(p10_part.End) ->
+  case list.last(tokens) {
+    Ok(p10_token.End) ->
       file_stream.sync(stream)
       |> result.map_error(fn(e) {
         p10_error.FileStreamError("Writing to stdout", e)

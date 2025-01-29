@@ -347,10 +347,10 @@ mod tests {
     let mut data_set_builder = DataSetBuilder::new();
 
     while !data_set_builder.is_complete() {
-      match context.read_parts() {
-        Ok(parts) => {
-          for part in parts {
-            data_set_builder.add_part(&part).unwrap()
+      match context.read_tokens() {
+        Ok(tokens) => {
+          for token in tokens {
+            data_set_builder.add_token(&token).unwrap()
           }
         }
 

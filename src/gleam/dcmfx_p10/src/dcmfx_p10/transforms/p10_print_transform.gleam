@@ -4,13 +4,13 @@ import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/data_set_print.{type DataSetPrintOptions}
 import dcmfx_core/dictionary
 import dcmfx_core/value_representation
-import dcmfx_p10/p10_part.{type P10Part}
+import dcmfx_p10/p10_token.{type P10Token}
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 
-/// Transform that converts a stream of DICOM P10 parts into printable text
+/// Transform that converts a stream of DICOM P10 tokens into printable text
 /// that describes the structure and content of the contained DICOM data.
 ///
 /// This is used for printing data sets on the command line, and the output can
@@ -44,22 +44,22 @@ pub fn new(print_options: DataSetPrintOptions) -> P10PrintTransform {
   )
 }
 
-/// Adds the next DICOM P10 part to be printed and returns the next piece of
+/// Adds the next DICOM P10 token to be printed and returns the next piece of
 /// text output to be displayed.
 ///
-pub fn add_part(
+pub fn add_token(
   context: P10PrintTransform,
-  part: P10Part,
+  token: P10Token,
 ) -> #(String, P10PrintTransform) {
-  case part {
-    p10_part.FileMetaInformation(data_set) -> #(
+  case token {
+    p10_token.FileMetaInformation(data_set) -> #(
       data_set.to_lines(data_set, context.print_options, "", fn(s, line) {
         s <> line <> "\n"
       }),
       context,
     )
 
-    p10_part.DataElementHeader(tag, vr, length) -> {
+    p10_token.DataElementHeader(tag, vr, length) -> {
       let assert Ok(private_creators) = list.first(context.private_creators)
 
       let #(s, width) =
@@ -75,7 +75,7 @@ pub fn add_part(
       // Calculate the width remaining for previewing the value
       let value_max_width = int.max(context.print_options.max_width - width, 10)
 
-      // Use the next value bytes part to print a preview of the data element's
+      // Use the next value bytes token to print a preview of the data element's
       // value
       let ignore_data_element_value_bytes = False
 
@@ -101,12 +101,12 @@ pub fn add_part(
       #(s, new_context)
     }
 
-    p10_part.DataElementValueBytes(vr, data, ..)
+    p10_token.DataElementValueBytes(vr, data, ..)
       if !context.ignore_data_element_value_bytes
     -> {
       let value = data_element_value.new_binary_unchecked(vr, data)
 
-      // Ignore any further value bytes parts now that the value has been
+      // Ignore any further value bytes tokens now that the value has been
       // printed
       let ignore_data_element_value_bytes = True
 
@@ -148,7 +148,7 @@ pub fn add_part(
       #(s, new_context)
     }
 
-    p10_part.SequenceStart(tag, vr) -> {
+    p10_token.SequenceStart(tag, vr) -> {
       let assert Ok(private_creators) = list.first(context.private_creators)
 
       let s =
@@ -166,7 +166,7 @@ pub fn add_part(
       #(s <> "\n", new_context)
     }
 
-    p10_part.SequenceDelimiter -> {
+    p10_token.SequenceDelimiter -> {
       let s =
         data_set_print.format_data_element_prefix(
           dictionary.sequence_delimitation_item.tag,
@@ -182,7 +182,7 @@ pub fn add_part(
       #(s <> "\n", new_context)
     }
 
-    p10_part.SequenceItemStart -> {
+    p10_token.SequenceItemStart -> {
       let s =
         data_set_print.format_data_element_prefix(
           dictionary.item.tag,
@@ -203,7 +203,7 @@ pub fn add_part(
       #(s <> "\n", new_context)
     }
 
-    p10_part.SequenceItemDelimiter -> {
+    p10_token.SequenceItemDelimiter -> {
       let s =
         data_set_print.format_data_element_prefix(
           dictionary.item_delimitation_item.tag,
@@ -225,7 +225,7 @@ pub fn add_part(
       #(s <> "\n", new_context)
     }
 
-    p10_part.PixelDataItem(length) -> {
+    p10_token.PixelDataItem(length) -> {
       let #(s, width) =
         data_set_print.format_data_element_prefix(
           dictionary.item.tag,
@@ -239,7 +239,7 @@ pub fn add_part(
       // Calculate the width remaining for previewing the value
       let value_max_width = int.max(context.print_options.max_width - width, 10)
 
-      // Use the next value bytes part to print a preview of the pixel data
+      // Use the next value bytes token to print a preview of the pixel data
       // item's value
       let ignore_data_element_value_bytes = False
 

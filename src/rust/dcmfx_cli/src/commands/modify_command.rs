@@ -161,7 +161,7 @@ fn parse_transfer_syntax_flag(
   }
 }
 
-/// Rewrites by streaming the parts of the DICOM P10 straight to the output
+/// Rewrites by streaming the tokens of the DICOM P10 straight to the output
 /// file.
 ///
 fn streaming_rewrite(
@@ -214,51 +214,51 @@ fn streaming_rewrite(
   // Create read and write contexts
   let mut p10_read_context = P10ReadContext::new();
   p10_read_context.set_config(&P10ReadConfig {
-    max_part_size: 256 * 1024,
+    max_token_size: 256 * 1024,
     ..P10ReadConfig::default()
   });
   let mut p10_write_context = P10WriteContext::new();
   p10_write_context.set_config(&write_config);
 
-  // Stream P10 parts from the input stream to the output stream
+  // Stream P10 tokens from the input stream to the output stream
   loop {
-    // Read the next P10 parts from the input stream
-    let parts = dcmfx::p10::read_parts_from_stream(
+    // Read the next P10 tokens from the input stream
+    let tokens = dcmfx::p10::read_tokens_from_stream(
       &mut input_stream,
       &mut p10_read_context,
     )?;
 
-    // Pass parts through the filter if one is specified
-    let mut parts = if let Some(filter_context) = filter_context.as_mut() {
-      parts
+    // Pass tokens through the filter if one is specified
+    let mut tokens = if let Some(filter_context) = filter_context.as_mut() {
+      tokens
         .into_iter()
-        .filter(|part| filter_context.add_part(part))
+        .filter(|token| filter_context.add_token(token))
         .collect()
     } else {
-      parts
+      tokens
     };
 
     // If converting the transfer syntax then update the transfer syntax in the
-    // File Meta Information part
+    // File Meta Information token
     if let Some(ts) = output_transfer_syntax {
-      for part in parts.iter_mut() {
-        if let P10Part::FileMetaInformation {
+      for token in tokens.iter_mut() {
+        if let P10Token::FileMetaInformation {
           data_set: ref mut fmi,
-        } = part
+        } = token
         {
           change_transfer_syntax(fmi, ts)?;
         }
       }
     }
 
-    // Write parts to the output stream
-    let ended = dcmfx::p10::write_parts_to_stream(
-      &parts,
+    // Write tokens to the output stream
+    let ended = dcmfx::p10::write_tokens_to_stream(
+      &tokens,
       &mut output_stream,
       &mut p10_write_context,
     )?;
 
-    // Stop when the end part is received
+    // Stop when the end token is received
     if ended {
       break;
     }

@@ -10,7 +10,7 @@ pub enum JsonSerializeError {
   DataError(DataError),
 
   /// A P10 error that occurred during JSON serialization. The most common error
-  /// is [`P10Error::PartStreamInvalid`], indicating that the stream of parts
+  /// is [`P10Error::TokenStreamInvalid`], indicating that the stream of tokens
   /// was not well-formed.
   ///
   P10Error(P10Error),

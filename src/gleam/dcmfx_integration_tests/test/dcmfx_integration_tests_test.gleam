@@ -297,12 +297,12 @@ fn test_jittered_read_loop(
     True -> Ok(builder)
 
     False -> {
-      case p10_read.read_parts(context) {
-        Ok(#(parts, context)) -> {
+      case p10_read.read_tokens(context) {
+        Ok(#(tokens, context)) -> {
           let assert Ok(builder) =
-            parts
-            |> list.try_fold(builder, fn(builder, part) {
-              data_set_builder.add_part(builder, part)
+            tokens
+            |> list.try_fold(builder, fn(builder, token) {
+              data_set_builder.add_token(builder, token)
             })
 
           test_jittered_read_loop(file, context, builder, next_chunk_size)

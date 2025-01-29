@@ -1,8 +1,9 @@
 use dcmfx_core::{dictionary, DataElementTag, DataSet, ValueRepresentation};
 
-use crate::{DataSetBuilder, P10Error, P10Part};
+use crate::{DataSetBuilder, P10Error, P10Token};
 
-/// Transform that applies a data element filter to a stream of DICOM P10 parts.
+/// Transform that applies a data element filter to a stream of DICOM P10
+/// tokens.
 ///
 pub struct P10FilterTransform {
   predicate: Box<PredicateFunction>,
@@ -20,9 +21,9 @@ type PredicateFunction =
   dyn FnMut(DataElementTag, ValueRepresentation, &[LocationEntry]) -> bool;
 
 impl P10FilterTransform {
-  /// Creates a new filter transform for filtering a stream of DICOM P10 parts.
+  /// Creates a new filter transform for filtering a stream of DICOM P10 tokens.
   ///
-  /// The predicate function is called as parts are added to the context, and
+  /// The predicate function is called as tokens are added to the context, and
   /// only those data elements that return `true` from the predicate function
   /// will pass through this filter transform.
   ///
@@ -68,15 +69,15 @@ impl P10FilterTransform {
     }
   }
 
-  /// Adds the next part to the P10 filter transform and returns whether it
-  /// should be included in the filtered part stream or not.
+  /// Adds the next token to the P10 filter transform and returns whether it
+  /// should be included in the filtered token stream.
   ///
-  pub fn add_part(&mut self, part: &P10Part) -> bool {
-    let filter_result = match part {
+  pub fn add_token(&mut self, token: &P10Token) -> bool {
+    let filter_result = match token {
       // If this is a new sequence or data element then run the predicate
       // function to see if it passes the filter, then add it to the location
-      P10Part::SequenceStart { tag, vr }
-      | P10Part::DataElementHeader { tag, vr, .. } => {
+      P10Token::SequenceStart { tag, vr }
+      | P10Token::DataElementHeader { tag, vr, .. } => {
         // The predicate function is skipped if a parent has already been
         // filtered out
         let filter_result = match self.location.as_slice() {
@@ -98,7 +99,7 @@ impl P10FilterTransform {
       }
 
       // If this is a new pixel data item then add it to the location
-      P10Part::PixelDataItem { .. } => {
+      P10Token::PixelDataItem { .. } => {
         let filter_result = match self.location.last() {
           Some(LocationEntry { filter_result, .. }) => *filter_result,
           None => true,
@@ -113,8 +114,8 @@ impl P10FilterTransform {
       }
 
       // Detect the end of the entry at the head of the location and pop it off
-      P10Part::SequenceDelimiter
-      | P10Part::DataElementValueBytes {
+      P10Token::SequenceDelimiter
+      | P10Token::DataElementValueBytes {
         bytes_remaining: 0, ..
       } => {
         let filter_result = match self.location.last() {
@@ -129,23 +130,23 @@ impl P10FilterTransform {
 
       _ => {
         match self.location.last() {
-          // If parts are currently being filtered out then swallow this one
+          // If tokens are currently being filtered out then swallow this one
           Some(LocationEntry { filter_result, .. }) => *filter_result,
 
-          // Otherwise this part passes through the filter
+          // Otherwise this token passes through the filter
           None => true,
         }
       }
     };
 
-    // Pass filtered parts through the data set builder if a data set of the
-    // retained parts is being constructed
+    // Pass filtered tokens through the data set builder if a data set of the
+    // retained tokens is being constructed
     if filter_result {
       if let Some(Ok(builder)) = self.data_set_builder.as_mut() {
-        match part {
-          P10Part::FileMetaInformation { .. } => (),
+        match token {
+          P10Token::FileMetaInformation { .. } => (),
           _ => {
-            if let Err(e) = builder.add_part(part) {
+            if let Err(e) = builder.add_token(token) {
               self.data_set_builder = Some(Err(e));
             }
           }

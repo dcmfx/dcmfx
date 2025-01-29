@@ -1,4 +1,4 @@
-//// Extracts frames of pixel data from a stream of DICOM P10 parts.
+//// Extracts frames of pixel data from a stream of DICOM P10 tokens.
 
 import bigi
 import dcmfx_core/data_error.{type DataError}
@@ -6,7 +6,7 @@ import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_core/internal/bit_array_utils
 import dcmfx_core/value_representation
-import dcmfx_p10/p10_part.{type P10Part}
+import dcmfx_p10/p10_token.{type P10Token}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
 import gleam/bit_array
@@ -17,7 +17,7 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 
-/// This filter takes a stream of DICOM P10 parts and emits the frames of pixel
+/// This filter takes a stream of DICOM P10 tokens and emits the frames of pixel
 /// data it contains. Each frame is returned with no copying of pixel data,
 /// allowing for memory-efficient stream processing.
 ///
@@ -50,7 +50,7 @@ type OffsetTable =
   List(#(Int, Option(Int)))
 
 /// Creates a new P10 pixel data filter to extract frames of pixel data from a
-/// stream of DICOM P10 parts.
+/// stream of DICOM P10 tokens.
 ///
 pub fn new() -> PixelDataFilter {
   let details_filter =
@@ -88,30 +88,30 @@ pub fn new() -> PixelDataFilter {
   )
 }
 
-/// Adds the next DICOM P10 part, returning any frames of pixel data that are
+/// Adds the next DICOM P10 token, returning any frames of pixel data that are
 /// now available.
 ///
-pub fn add_part(
+pub fn add_token(
   filter: PixelDataFilter,
-  part: P10Part,
+  token: P10Token,
 ) -> Result(#(List(PixelDataFrame), PixelDataFilter), DataError) {
-  // Add the part into the details filter if it is still active
+  // Add the token into the details filter if it is still active
   let details_filter = case filter.details_filter {
     Some(details_filter) ->
-      Some(p10_filter_transform.add_part(details_filter, part).1)
+      Some(p10_filter_transform.add_token(details_filter, token).1)
     None -> None
   }
 
   let filter = PixelDataFilter(..filter, details_filter:)
 
-  use <- bool.guard(p10_part.is_header_part(part), Ok(#([], filter)))
+  use <- bool.guard(p10_token.is_header_token(token), Ok(#([], filter)))
 
-  let #(is_pixel_data_part, pixel_data_filter) =
-    p10_filter_transform.add_part(filter.pixel_data_filter, part)
+  let #(is_pixel_data_token, pixel_data_filter) =
+    p10_filter_transform.add_token(filter.pixel_data_filter, token)
 
   let filter = PixelDataFilter(..filter, pixel_data_filter:)
 
-  use <- bool.guard(!is_pixel_data_part, Ok(#([], filter)))
+  use <- bool.guard(!is_pixel_data_token, Ok(#([], filter)))
 
   // If the result of the details filter hasn't yet been extracted into a data
   // set then do so now
@@ -127,16 +127,16 @@ pub fn add_part(
     None -> filter
   }
 
-  process_next_pixel_data_part(filter, part)
+  process_next_pixel_data_token(filter, token)
 }
 
-fn process_next_pixel_data_part(
+fn process_next_pixel_data_token(
   filter: PixelDataFilter,
-  part: P10Part,
+  token: P10Token,
 ) -> Result(#(List(PixelDataFrame), PixelDataFilter), DataError) {
-  case part {
+  case token {
     // The start of native pixel data
-    p10_part.DataElementHeader(length:, ..) -> {
+    p10_token.DataElementHeader(length:, ..) -> {
       // Check that the pixel data length divides evenly into the number of
       // frames
       use number_of_frames <- result.try(get_number_of_frames(filter))
@@ -166,14 +166,14 @@ fn process_next_pixel_data_part(
     }
 
     // The start of encapsulated pixel data
-    p10_part.SequenceStart(..) -> {
+    p10_token.SequenceStart(..) -> {
       let filter = PixelDataFilter(..filter, is_encapsulated: True)
 
       Ok(#([], filter))
     }
 
     // The end of the encapsulated pixel data
-    p10_part.SequenceDelimiter -> {
+    p10_token.SequenceDelimiter -> {
       // If there is any remaining pixel data then emit it as a final frame
       let frames = case filter.pixel_data |> deque.is_empty() {
         True -> Ok([])
@@ -207,7 +207,7 @@ fn process_next_pixel_data_part(
 
     // The start of a new encapsulated pixel data item. The size of an item
     // header is 8 bytes, and this needs to be included in the current offset.
-    p10_part.PixelDataItem(..) -> {
+    p10_token.PixelDataItem(..) -> {
       let filter =
         PixelDataFilter(
           ..filter,
@@ -217,7 +217,7 @@ fn process_next_pixel_data_part(
       Ok(#([], filter))
     }
 
-    p10_part.DataElementValueBytes(data:, bytes_remaining:, ..) -> {
+    p10_token.DataElementValueBytes(data:, bytes_remaining:, ..) -> {
       let pixel_data = filter.pixel_data |> deque.push_back(data)
       let pixel_data_write_offset =
         filter.pixel_data_write_offset + bit_array.byte_size(data)
@@ -328,7 +328,7 @@ fn get_pending_native_frame(
           let assert Ok(fragment) = bit_array.slice(chunk, 0, length)
           let frame = frame |> pixel_data_frame.push_fragment(fragment)
 
-          // Put the unused part of the chunk back on so it can be used by the
+          // Put the unused token of the chunk back on so it can be used by the
           // next frame
           let assert Ok(chunk) =
             bit_array.slice(chunk, length, chunk_length - length)
