@@ -793,9 +793,13 @@ impl P10JsonTransform {
       | ValueRepresentation::SignedShort
       | ValueRepresentation::UnsignedLong
       | ValueRepresentation::UnsignedShort
-      | ValueRepresentation::IntegerString => {
-        Ok(value.get_ints()?.iter().map(|i| i.to_string()).collect())
-      }
+      | ValueRepresentation::IntegerString => Ok(
+        value
+          .get_ints::<i64>()?
+          .iter()
+          .map(|i| i.to_string())
+          .collect(),
+      ),
 
       // Binary signed/unsigned big integer value representations
       ValueRepresentation::SignedVeryLong

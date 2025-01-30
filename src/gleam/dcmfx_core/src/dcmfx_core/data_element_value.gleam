@@ -1047,22 +1047,22 @@ pub fn get_ints(value: DataElementValue) -> Result(List(Int), DataError) {
 
     BinaryValue(value_representation.SignedLong, bytes) ->
       bit_array_utils.to_int32_list(bytes)
-      |> result.replace_error(data_error.new_value_invalid("Invalid Int32 list"))
+      |> result.replace_error(data_error.new_value_invalid("Invalid Int32 data"))
 
     BinaryValue(value_representation.SignedShort, bytes) ->
       bit_array_utils.to_int16_list(bytes)
-      |> result.replace_error(data_error.new_value_invalid("Invalid Int16 list"))
+      |> result.replace_error(data_error.new_value_invalid("Invalid Int16 data"))
 
     BinaryValue(value_representation.UnsignedLong, bytes) ->
       bit_array_utils.to_uint32_list(bytes)
       |> result.replace_error(data_error.new_value_invalid(
-        "Invalid Uint32 list",
+        "Invalid Uint32 data",
       ))
 
     BinaryValue(value_representation.UnsignedShort, bytes) ->
       bit_array_utils.to_uint16_list(bytes)
       |> result.replace_error(data_error.new_value_invalid(
-        "Invalid Uint16 list",
+        "Invalid Uint16 data",
       ))
 
     // Use the lookup table descriptor value's VR to determine how to interpret
@@ -1111,13 +1111,13 @@ pub fn get_big_ints(value: DataElementValue) -> Result(List(BigInt), DataError) 
   case value {
     BinaryValue(value_representation.SignedVeryLong, bytes) ->
       bit_array_utils.to_int64_list(bytes)
-      |> result.replace_error(data_error.new_value_invalid("Invalid Int64 list"))
+      |> result.replace_error(data_error.new_value_invalid("Invalid Int64 data"))
 
     BinaryValue(value_representation.UnsignedVeryLong, bytes) ->
       bytes
       |> bit_array_utils.to_uint64_list
       |> result.replace_error(data_error.new_value_invalid(
-        "Invalid Uint64 list",
+        "Invalid Uint64 data",
       ))
 
     _ -> Error(data_error.new_value_not_present())
@@ -1151,14 +1151,14 @@ pub fn get_floats(value: DataElementValue) -> Result(List(IEEEFloat), DataError)
     | BinaryValue(value_representation.OtherDoubleString, bytes) ->
       bit_array_utils.to_float64_list(bytes)
       |> result.replace_error(data_error.new_value_invalid(
-        "Invalid Float64 list",
+        "Invalid Float64 data",
       ))
 
     BinaryValue(value_representation.FloatingPointSingle, bytes)
     | BinaryValue(value_representation.OtherFloatString, bytes) ->
       bit_array_utils.to_float32_list(bytes)
       |> result.replace_error(data_error.new_value_invalid(
-        "Invalid Float32 list",
+        "Invalid Float32 data",
       ))
 
     _ -> Error(data_error.new_value_not_present())

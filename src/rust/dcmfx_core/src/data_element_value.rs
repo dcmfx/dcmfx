@@ -232,7 +232,7 @@ impl DataElementValue {
         ValueRepresentation::SignedLong
         | ValueRepresentation::SignedShort
         | ValueRepresentation::UnsignedLong
-        | ValueRepresentation::UnsignedShort => match self.get_ints() {
+        | ValueRepresentation::UnsignedShort => match self.get_ints::<i64>() {
           Ok(ints) => Ok((
             ints
               .iter()
@@ -947,7 +947,9 @@ impl DataElementValue {
   /// supported for value representations that contain integer data and when
   /// exactly one integer is present.
   ///
-  pub fn get_int(&self) -> Result<i64, DataError> {
+  pub fn get_int<T: num_traits::PrimInt + TryFrom<i64>>(
+    &self,
+  ) -> Result<T, DataError> {
     let ints = self.get_ints()?;
 
     match ints.as_slice() {
@@ -959,17 +961,41 @@ impl DataElementValue {
   /// Returns the integers contained in a data element value. This is only
   /// supported for value representations that contain integer data.
   ///
-  pub fn get_ints(&self) -> Result<Vec<i64>, DataError> {
+  pub fn get_ints<T: num_traits::PrimInt + TryFrom<i64>>(
+    &self,
+  ) -> Result<Vec<T>, DataError> {
+    // Converts an integer value to the target integer type, erroring if the
+    // conversion is out of bounds
+    fn convert_int<
+      U: num_traits::PrimInt + Into<i64> + std::fmt::Display,
+      T: num_traits::PrimInt + TryFrom<i64>,
+    >(
+      i: U,
+    ) -> Result<T, DataError> {
+      match T::try_from(i.into()) {
+        Ok(i) => Ok(i),
+        Err(_) => Err(DataError::new_value_invalid(format!(
+          "Value '{}' is out of range for the target integer type '{}'",
+          i,
+          std::any::type_name::<T>()
+        ))),
+      }
+    }
+
     match &self.0 {
       RawDataElementValue::BinaryValue {
         vr: ValueRepresentation::IntegerString,
         bytes,
-      } => Ok(
-        integer_string::from_bytes(bytes)?
-          .iter()
-          .map(|i| *i as i64)
-          .collect::<Vec<i64>>(),
-      ),
+      } => {
+        let ints = integer_string::from_bytes(bytes)?;
+
+        let mut values = Vec::<T>::with_capacity(ints.len());
+        for value in ints {
+          values.push(convert_int(value)?);
+        }
+
+        Ok(values)
+      }
 
       RawDataElementValue::BinaryValue {
         vr: ValueRepresentation::SignedLong,
@@ -977,13 +1003,14 @@ impl DataElementValue {
       } => {
         if bytes.len() % 4 != 0 {
           return Err(DataError::new_value_invalid(
-            "Invalid Int32 list".to_string(),
+            "Invalid Int32 data".to_string(),
           ));
         }
 
-        let mut values = Vec::with_capacity(bytes.len() / 4);
+        let mut values = Vec::<T>::with_capacity(bytes.len() / 4);
         for i32_bytes in bytes.chunks_exact(4) {
-          values.push(byteorder::LittleEndian::read_i32(i32_bytes) as i64);
+          values
+            .push(convert_int(byteorder::LittleEndian::read_i32(i32_bytes))?);
         }
 
         Ok(values)
@@ -995,13 +1022,14 @@ impl DataElementValue {
       } => {
         if bytes.len() % 2 != 0 {
           return Err(DataError::new_value_invalid(
-            "Invalid Int16 list".to_string(),
+            "Invalid Int16 data".to_string(),
           ));
         }
 
-        let mut values = Vec::with_capacity(bytes.len() / 2);
+        let mut values = Vec::<T>::with_capacity(bytes.len() / 2);
         for i16_bytes in bytes.chunks_exact(2) {
-          values.push(byteorder::LittleEndian::read_i16(i16_bytes) as i64);
+          values
+            .push(convert_int(byteorder::LittleEndian::read_i16(i16_bytes))?);
         }
 
         Ok(values)
@@ -1013,13 +1041,14 @@ impl DataElementValue {
       } => {
         if bytes.len() % 4 != 0 {
           return Err(DataError::new_value_invalid(
-            "Invalid Uint32 list".to_string(),
+            "Invalid Uint32 data".to_string(),
           ));
         }
 
         let mut values = Vec::with_capacity(bytes.len() / 4);
         for u32_bytes in bytes.chunks_exact(4) {
-          values.push(byteorder::LittleEndian::read_u32(u32_bytes) as i64);
+          values
+            .push(convert_int(byteorder::LittleEndian::read_u32(u32_bytes))?);
         }
 
         Ok(values)
@@ -1031,13 +1060,14 @@ impl DataElementValue {
       } => {
         if bytes.len() % 2 != 0 {
           return Err(DataError::new_value_invalid(
-            "Invalid Uint16 list".to_string(),
+            "Invalid Uint16 data".to_string(),
           ));
         }
 
-        let mut values = Vec::with_capacity(bytes.len() / 2);
+        let mut values = Vec::<T>::with_capacity(bytes.len() / 2);
         for u16_bytes in bytes.chunks_exact(2) {
-          values.push(byteorder::LittleEndian::read_u16(u16_bytes) as i64);
+          values
+            .push(convert_int(byteorder::LittleEndian::read_u16(u16_bytes))?);
         }
 
         Ok(values)
@@ -1051,16 +1081,16 @@ impl DataElementValue {
             || *vr == ValueRepresentation::UnsignedShort)
         {
           let entry_count =
-            byteorder::LittleEndian::read_u16(&bytes[0..2]) as i64;
+            convert_int(byteorder::LittleEndian::read_u16(&bytes[0..2]))?;
 
           let first_input_value = if *vr == ValueRepresentation::SignedShort {
-            byteorder::LittleEndian::read_i16(&bytes[2..4]) as i64
+            convert_int(byteorder::LittleEndian::read_i16(&bytes[2..4]))?
           } else {
-            byteorder::LittleEndian::read_u16(&bytes[2..4]) as i64
+            convert_int(byteorder::LittleEndian::read_u16(&bytes[2..4]))?
           };
 
           let bits_per_entry =
-            byteorder::LittleEndian::read_u16(&bytes[4..6]) as i64;
+            convert_int(byteorder::LittleEndian::read_u16(&bytes[4..6]))?;
 
           Ok(vec![entry_count, first_input_value, bits_per_entry])
         } else {
@@ -1098,7 +1128,7 @@ impl DataElementValue {
       } => {
         if bytes.len() % 8 != 0 {
           return Err(DataError::new_value_invalid(
-            "Invalid Int64 list".to_string(),
+            "Invalid Int64 data".to_string(),
           ));
         }
 
@@ -1116,7 +1146,7 @@ impl DataElementValue {
       } => {
         if bytes.len() % 8 != 0 {
           return Err(DataError::new_value_invalid(
-            "Invalid Uint64 list".to_string(),
+            "Invalid Uint64 data".to_string(),
           ));
         }
 
@@ -1162,7 +1192,7 @@ impl DataElementValue {
       {
         if bytes.len() % 8 != 0 {
           return Err(DataError::new_value_invalid(
-            "Invalid Float64 list".to_string(),
+            "Invalid Float64 data".to_string(),
           ));
         }
 
@@ -1180,7 +1210,7 @@ impl DataElementValue {
       {
         if bytes.len() % 4 != 0 {
           return Err(DataError::new_value_invalid(
-            "Invalid Float32 list".to_string(),
+            "Invalid Float32 data".to_string(),
           ));
         }
 
@@ -1639,14 +1669,14 @@ mod tests {
     assert_eq!(
       DataElementValue::new_unsigned_long(&[123, 456])
         .unwrap()
-        .get_int(),
+        .get_int::<i32>(),
       Err(DataError::new_multiplicity_mismatch())
     );
 
     assert_eq!(
       DataElementValue::new_long_text("123".to_string())
         .unwrap()
-        .get_int(),
+        .get_int::<i32>(),
       Err(DataError::new_value_not_present())
     );
   }
@@ -1674,9 +1704,9 @@ mod tests {
         ValueRepresentation::SignedLong,
         Rc::new(vec![0])
       )
-      .get_ints(),
+      .get_ints::<i32>(),
       Err(DataError::new_value_invalid(
-        "Invalid Int32 list".to_string(),
+        "Invalid Int32 data".to_string(),
       ))
     );
 
@@ -1692,9 +1722,9 @@ mod tests {
         ValueRepresentation::SignedShort,
         Rc::new(vec![0])
       )
-      .get_ints(),
+      .get_ints::<i16>(),
       Err(DataError::new_value_invalid(
-        "Invalid Int16 list".to_string(),
+        "Invalid Int16 data".to_string(),
       ))
     );
 
@@ -1710,9 +1740,9 @@ mod tests {
         ValueRepresentation::UnsignedLong,
         Rc::new(vec![0])
       )
-      .get_ints(),
+      .get_ints::<u32>(),
       Err(DataError::new_value_invalid(
-        "Invalid Uint32 list".to_string(),
+        "Invalid Uint32 data".to_string(),
       ))
     );
 
@@ -1728,9 +1758,9 @@ mod tests {
         ValueRepresentation::UnsignedShort,
         Rc::new(vec![0]),
       )
-      .get_ints(),
+      .get_ints::<u16>(),
       Err(DataError::new_value_invalid(
-        "Invalid Uint16 list".to_string(),
+        "Invalid Uint16 data".to_string(),
       ))
     );
 
@@ -1757,7 +1787,7 @@ mod tests {
         ValueRepresentation::OtherWordString,
         Rc::new(vec![0, 0, 0, 0, 0, 0])
       )
-      .get_ints(),
+      .get_ints::<i32>(),
       Err(DataError::new_value_invalid(
         "Invalid lookup table descriptor".to_string(),
       ))
@@ -1768,7 +1798,7 @@ mod tests {
         ValueRepresentation::UnsignedShort,
         Rc::new(vec![0, 0, 0, 0])
       )
-      .get_ints(),
+      .get_ints::<i32>(),
       Err(DataError::new_value_invalid(
         "Invalid lookup table descriptor".to_string(),
       ))
@@ -1777,14 +1807,14 @@ mod tests {
     assert_eq!(
       DataElementValue::new_floating_point_single(&[123.0])
         .unwrap()
-        .get_ints(),
+        .get_ints::<i32>(),
       Err(DataError::new_value_not_present())
     );
 
     assert_eq!(
       DataElementValue::new_long_text("123".to_string())
         .unwrap()
-        .get_ints(),
+        .get_ints::<i32>(),
       Err(DataError::new_value_not_present())
     );
   }
@@ -1836,7 +1866,7 @@ mod tests {
       )
       .get_big_ints(),
       Err(DataError::new_value_invalid(
-        "Invalid Int64 list".to_string(),
+        "Invalid Int64 data".to_string(),
       ))
     );
 
@@ -1854,7 +1884,7 @@ mod tests {
       )
       .get_big_ints(),
       Err(DataError::new_value_invalid(
-        "Invalid Uint64 list".to_string(),
+        "Invalid Uint64 data".to_string(),
       ))
     );
 
@@ -1945,7 +1975,7 @@ mod tests {
       )
       .get_floats(),
       Err(DataError::new_value_invalid(
-        "Invalid Float64 list".to_string(),
+        "Invalid Float64 data".to_string(),
       ))
     );
 
@@ -1970,7 +2000,7 @@ mod tests {
       )
       .get_floats(),
       Err(DataError::new_value_invalid(
-        "Invalid Float32 list".to_string(),
+        "Invalid Float32 data".to_string(),
       ))
     );
 

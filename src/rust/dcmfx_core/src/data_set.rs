@@ -724,7 +724,10 @@ impl DataSet {
   /// the data element with the specified tag does not hold exactly one integer
   /// value then an error is returned.
   ///
-  pub fn get_int(&self, tag: DataElementTag) -> Result<i64, DataError> {
+  pub fn get_int<T: num_traits::PrimInt + TryFrom<i64>>(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<T, DataError> {
     self
       .get_value(tag)?
       .get_int()

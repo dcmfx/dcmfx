@@ -202,7 +202,7 @@ pub fn get_ints_test() {
   value_representation.SignedLong
   |> data_element_value.new_binary_unchecked(<<0>>)
   |> data_element_value.get_ints
-  |> should.equal(Error(data_error.new_value_invalid("Invalid Int32 list")))
+  |> should.equal(Error(data_error.new_value_invalid("Invalid Int32 data")))
 
   [-{ 0x8000 }, 0x7FFF]
   |> data_element_value.new_signed_short
@@ -212,7 +212,7 @@ pub fn get_ints_test() {
   value_representation.SignedShort
   |> data_element_value.new_binary_unchecked(<<0>>)
   |> data_element_value.get_ints
-  |> should.equal(Error(data_error.new_value_invalid("Invalid Int16 list")))
+  |> should.equal(Error(data_error.new_value_invalid("Invalid Int16 data")))
 
   [0, 0xFFFFFFFF]
   |> data_element_value.new_unsigned_long
@@ -222,7 +222,7 @@ pub fn get_ints_test() {
   value_representation.UnsignedLong
   |> data_element_value.new_binary_unchecked(<<0>>)
   |> data_element_value.get_ints
-  |> should.equal(Error(data_error.new_value_invalid("Invalid Uint32 list")))
+  |> should.equal(Error(data_error.new_value_invalid("Invalid Uint32 data")))
 
   [0, 0xFFFF]
   |> data_element_value.new_unsigned_short
@@ -232,7 +232,7 @@ pub fn get_ints_test() {
   value_representation.UnsignedShort
   |> data_element_value.new_binary_unchecked(<<0>>)
   |> data_element_value.get_ints
-  |> should.equal(Error(data_error.new_value_invalid("Invalid Uint16 list")))
+  |> should.equal(Error(data_error.new_value_invalid("Invalid Uint16 data")))
 
   value_representation.SignedShort
   |> data_element_value.new_lookup_table_descriptor_unchecked(<<
@@ -312,7 +312,7 @@ pub fn get_big_ints_test() {
   value_representation.SignedVeryLong
   |> data_element_value.new_binary_unchecked(<<0>>)
   |> data_element_value.get_big_ints
-  |> should.equal(Error(data_error.new_value_invalid("Invalid Int64 list")))
+  |> should.equal(Error(data_error.new_value_invalid("Invalid Int64 data")))
 
   let assert Ok(i) = bigi.from_string("18446744073709551615")
   [bigi.zero(), i]
@@ -323,7 +323,7 @@ pub fn get_big_ints_test() {
   value_representation.UnsignedVeryLong
   |> data_element_value.new_binary_unchecked(<<0>>)
   |> data_element_value.get_big_ints
-  |> should.equal(Error(data_error.new_value_invalid("Invalid Uint64 list")))
+  |> should.equal(Error(data_error.new_value_invalid("Invalid Uint64 data")))
 
   [ieee_float.finite(123.0)]
   |> data_element_value.new_floating_point_single
@@ -387,7 +387,7 @@ pub fn get_floats_test() {
   value_representation.FloatingPointDouble
   |> data_element_value.new_binary_unchecked(<<0, 0, 0, 0>>)
   |> data_element_value.get_floats
-  |> should.equal(Error(data_error.new_value_invalid("Invalid Float64 list")))
+  |> should.equal(Error(data_error.new_value_invalid("Invalid Float64 data")))
 
   [ieee_float.finite(1.0), ieee_float.finite(2.0)]
   |> data_element_value.new_floating_point_single
@@ -402,7 +402,7 @@ pub fn get_floats_test() {
   value_representation.FloatingPointSingle
   |> data_element_value.new_binary_unchecked(<<0, 0>>)
   |> data_element_value.get_floats
-  |> should.equal(Error(data_error.new_value_invalid("Invalid Float32 list")))
+  |> should.equal(Error(data_error.new_value_invalid("Invalid Float32 data")))
 
   "1.2"
   |> data_element_value.new_long_text

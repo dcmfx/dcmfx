@@ -208,14 +208,6 @@ impl PixelDataFilter {
     let number_of_frames =
       self.details.get_int(dictionary::NUMBER_OF_FRAMES.tag)?;
 
-    let number_of_frames = TryInto::<usize>::try_into(number_of_frames)
-      .map_err(|_| {
-        DataError::new_value_invalid(format!(
-          "Invalid number of frames value: {}",
-          number_of_frames
-        ))
-      })?;
-
     Ok(number_of_frames)
   }
 
