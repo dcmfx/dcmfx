@@ -165,7 +165,7 @@ mod tests {
 
     // Test a jittered read with chunk sizes ranging from 1 to 256 bytes
     let mut rng = SmallRng::seed_from_u64(RNG_SEED);
-    test_jittered_read(dicom, &data_set, &mut || rng.random_range(1..256))?;
+    test_jittered_read(dicom, &data_set, &mut || rng.gen_range(1..256))?;
 
     // Test reading pixel data
     test_read_pixel_data(&data_set)?;
