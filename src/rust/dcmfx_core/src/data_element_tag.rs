@@ -3,7 +3,7 @@
 /// A data element tag that is defined by `group` and `element` values, each of
 /// which is a 16-bit unsigned integer.
 ///
-#[derive(Copy, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct DataElementTag {
   pub group: u16,
   pub element: u16,

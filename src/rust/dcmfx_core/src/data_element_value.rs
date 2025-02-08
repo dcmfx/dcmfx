@@ -55,10 +55,10 @@ pub mod unique_identifier;
 ///
 /// Ref: PS3.5 6.2.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DataElementValue(RawDataElementValue);
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 #[allow(clippy::enum_variant_names)]
 enum RawDataElementValue {
   BinaryValue {
@@ -1073,26 +1073,46 @@ impl DataElementValue {
         Ok(values)
       }
 
-      // Use the lookup table descriptor value's VR to determine how to
-      // interpret the second 16-bit integer it contains.
+      RawDataElementValue::LookupTableDescriptorValue { .. } => {
+        let (entry_count, first_input_value, bits_per_entry) =
+          self.get_lookup_table_descriptor()?;
+
+        Ok(vec![
+          convert_int(entry_count)?,
+          convert_int(first_input_value)?,
+          convert_int(bits_per_entry)?,
+        ])
+      }
+
+      _ => Err(DataError::new_value_not_present()),
+    }
+  }
+
+  /// Returns the three integers contained in a lookup table descriptor data
+  /// element value.
+  ///
+  pub fn get_lookup_table_descriptor(
+    &self,
+  ) -> Result<(u16, i32, u16), DataError> {
+    match &self.0 {
       RawDataElementValue::LookupTableDescriptorValue { vr, bytes } => {
         if bytes.len() == 6
           && (*vr == ValueRepresentation::SignedShort
             || *vr == ValueRepresentation::UnsignedShort)
         {
-          let entry_count =
-            convert_int(byteorder::LittleEndian::read_u16(&bytes[0..2]))?;
+          let entry_count = byteorder::LittleEndian::read_u16(&bytes[0..2]);
 
+          // Use the lookup table descriptor value's VR to determine how to
+          // interpret the second 16-bit integer it contains
           let first_input_value = if *vr == ValueRepresentation::SignedShort {
-            convert_int(byteorder::LittleEndian::read_i16(&bytes[2..4]))?
+            byteorder::LittleEndian::read_i16(&bytes[2..4]) as i32
           } else {
-            convert_int(byteorder::LittleEndian::read_u16(&bytes[2..4]))?
+            byteorder::LittleEndian::read_u16(&bytes[2..4]) as i32
           };
 
-          let bits_per_entry =
-            convert_int(byteorder::LittleEndian::read_u16(&bytes[4..6]))?;
+          let bits_per_entry = byteorder::LittleEndian::read_u16(&bytes[4..6]);
 
-          Ok(vec![entry_count, first_input_value, bits_per_entry])
+          Ok((entry_count, first_input_value, bits_per_entry))
         } else {
           Err(DataError::new_value_invalid(
             "Invalid lookup table descriptor".to_string(),

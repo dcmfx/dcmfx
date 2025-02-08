@@ -738,10 +738,27 @@ impl DataSet {
   /// data element with the specified tag is not of a type that supports
   /// multiple integer values then an error is returned.
   ///
-  pub fn get_ints(&self, tag: DataElementTag) -> Result<Vec<i64>, DataError> {
+  pub fn get_ints<T: num_traits::PrimInt + TryFrom<i64>>(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<Vec<T>, DataError> {
     self
       .get_value(tag)?
       .get_ints()
+      .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
+  }
+
+  /// Returns the lookup table descriptor value for a data element in a data
+  /// set. If the data element with the specified tab does not hold a lookup
+  /// table descriptor then an error is returned.
+  ///
+  pub fn get_lookup_table_descriptor(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<(u16, i32, u16), DataError> {
+    self
+      .get_value(tag)?
+      .get_lookup_table_descriptor()
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
   }
 

@@ -918,6 +918,23 @@ pub fn get_ints(
   ))
 }
 
+/// Returns the lookup table descriptor value for a data element in a data set.
+/// If the data element with the specified tab does not hold a lookup table
+/// descriptor then an error is returned.
+///
+pub fn get_lookup_table_descriptor(
+  data_set: DataSet,
+  tag: DataElementTag,
+) -> Result(#(Int, Int, Int), DataError) {
+  data_set
+  |> get_value(tag)
+  |> result.then(data_element_value.get_lookup_table_descriptor)
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
+}
+
 /// Returns the singular big integer value for a data element in a data set. If
 /// the data element with the specified tag does not hold exactly one big
 /// integer value then an error is returned.

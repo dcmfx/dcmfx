@@ -1065,9 +1065,28 @@ pub fn get_ints(value: DataElementValue) -> Result(List(Int), DataError) {
         "Invalid Uint16 data",
       ))
 
-    // Use the lookup table descriptor value's VR to determine how to interpret
-    // the second 16-bit integer it contains.
+    LookupTableDescriptorValue(..) -> {
+      use #(entry_count, first_input_value, bits_per_entry) <- result.map(
+        get_lookup_table_descriptor(value),
+      )
+
+      [entry_count, first_input_value, bits_per_entry]
+    }
+
+    _ -> Error(data_error.new_value_not_present())
+  }
+}
+
+/// Returns the three integers contained in a lookup table descriptor data
+/// element value.
+///
+pub fn get_lookup_table_descriptor(
+  value: DataElementValue,
+) -> Result(#(Int, Int, Int), DataError) {
+  case value {
     LookupTableDescriptorValue(vr, bytes) ->
+      // Use the lookup table descriptor value's VR to determine how to
+      // interpret the second 16-bit integer it contains
       case vr, bytes {
         value_representation.SignedShort,
           <<
@@ -1081,7 +1100,7 @@ pub fn get_ints(value: DataElementValue) -> Result(List(Int), DataError) {
             first_input_value:16-unsigned-little,
             bits_per_entry:16-unsigned-little,
           >>
-        -> Ok([entry_count, first_input_value, bits_per_entry])
+        -> Ok(#(entry_count, first_input_value, bits_per_entry))
 
         _, _ ->
           Error(data_error.new_value_invalid("Invalid lookup table descriptor"))
