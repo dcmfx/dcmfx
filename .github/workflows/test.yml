@@ -26,7 +26,7 @@ jobs:
         uses: erlef/setup-beam@v1
         with:
           otp-version: 27.2
-          gleam-version: 1.7.0
+          gleam-version: 1.8.0
           version-type: strict
 
       - name: Setup Node.js
@@ -97,7 +97,7 @@ jobs:
         uses: erlef/setup-beam@v1
         with:
           otp-version: 27.2
-          gleam-version: 1.7.0
+          gleam-version: 1.8.0
           version-type: strict
 
       - name: Setup Rust
