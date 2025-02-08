@@ -873,6 +873,20 @@ impl DataSet {
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
   }
 
+  /// Returns the sequence items for a data element in a data set. If the data
+  /// element with the specified tag is not a sequence then an error is
+  /// returned.
+  ///
+  pub fn get_sequence_items(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<&[DataSet], DataError> {
+    self
+      .get_value(tag)?
+      .sequence_items()
+      .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
+  }
+
   /// Looks up the *'(0002,0010) Transfer Syntax UID'* data element in this data
   /// set, and if present, attempts to convert it to a known transfer syntax
   /// definition.

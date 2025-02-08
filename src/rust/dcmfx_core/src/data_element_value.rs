@@ -824,7 +824,7 @@ impl DataElementValue {
   /// For data element values that hold a sequence, returns a reference to the
   /// sequence's items.
   ///
-  pub fn sequence_items(&self) -> Result<&Vec<DataSet>, DataError> {
+  pub fn sequence_items(&self) -> Result<&[DataSet], DataError> {
     match &self.0 {
       RawDataElementValue::SequenceValue { items } => Ok(items),
       _ => Err(DataError::new_value_not_present()),

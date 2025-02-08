@@ -1078,6 +1078,27 @@ pub fn get_person_names(
   data_set
   |> get_value(tag)
   |> result.then(data_element_value.get_person_names)
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
+}
+
+/// Returns the sequence items for a data element in a data set. If the data
+/// element with the specified tag is not a sequence then an error is
+/// returned.
+///
+pub fn get_sequence_items(
+  data_set: DataSet,
+  tag: DataElementTag,
+) -> Result(List(DataSet), DataError) {
+  data_set
+  |> get_value(tag)
+  |> result.then(data_element_value.sequence_items)
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Looks up the *'(0002,0010) Transfer Syntax UID'* data element in a data set,
