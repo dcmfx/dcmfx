@@ -898,6 +898,19 @@ pub fn bytes(value: DataElementValue) -> Result(BitArray, DataError) {
   }
 }
 
+/// For data element values that hold binary data, returns that data if its
+/// value representation is one of the specified allowed VRs.
+///
+pub fn vr_bytes(
+  value: DataElementValue,
+  allowed_vrs: List(ValueRepresentation),
+) -> Result(BitArray, DataError) {
+  case list.contains(allowed_vrs, value_representation(value)) {
+    True -> bytes(value)
+    False -> Error(data_error.new_value_not_present())
+  }
+}
+
 /// For data element values that hold encapsulated pixel data, returns a
 /// reference to the encapsulated items.
 ///

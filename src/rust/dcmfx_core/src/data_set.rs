@@ -680,20 +680,27 @@ impl DataSet {
   pub fn get_value_bytes(
     &self,
     tag: DataElementTag,
-    vr: ValueRepresentation,
   ) -> Result<&Rc<Vec<u8>>, DataError> {
-    let value = self.get_value(tag)?;
+    self
+      .get_value(tag)?
+      .bytes()
+      .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
+  }
 
-    if value.value_representation() == vr {
-      value
-        .bytes()
-        .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
-    } else {
-      Err(
-        DataError::new_value_not_present()
-          .with_path(&DataSetPath::new_with_data_element(tag)),
-      )
-    }
+  /// Returns the raw value bytes for the specified tag in a data set and also
+  /// checks that its value representation is one of the specified allowed VRs.
+  ///
+  /// See [`DataElementValue::vr_bytes()`].
+  ///
+  pub fn get_value_vr_bytes(
+    &self,
+    tag: DataElementTag,
+    allowed_vrs: &[ValueRepresentation],
+  ) -> Result<&Rc<Vec<u8>>, DataError> {
+    self
+      .get_value(tag)?
+      .vr_bytes(allowed_vrs)
+      .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
   }
 
   /// Returns the singular string value for a data element in a data set. If the
@@ -1104,6 +1111,3 @@ fn invalid_insert_error<T>(item: &dictionary::Item) -> Result<T, DataError> {
     ))),
   }
 }
-
-#[cfg(test)]
-mod tests {}

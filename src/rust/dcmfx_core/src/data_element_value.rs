@@ -807,6 +807,20 @@ impl DataElementValue {
     }
   }
 
+  /// For data element values that hold binary data, returns that data if its
+  /// value representation is one of the specified allowed VRs.
+  ///
+  pub fn vr_bytes(
+    &self,
+    allowed_vrs: &[ValueRepresentation],
+  ) -> Result<&Rc<Vec<u8>>, DataError> {
+    if allowed_vrs.contains(&self.value_representation()) {
+      self.bytes()
+    } else {
+      Err(DataError::new_value_not_present())
+    }
+  }
+
   /// For data element values that hold encapsulated pixel data, returns a
   /// reference to the encapsulated items.
   ///

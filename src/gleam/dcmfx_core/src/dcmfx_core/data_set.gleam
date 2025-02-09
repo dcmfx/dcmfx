@@ -842,25 +842,33 @@ pub fn get_data_set_at_path(
 pub fn get_value_bytes(
   data_set: DataSet,
   tag: DataElementTag,
-  vr: ValueRepresentation,
 ) -> Result(BitArray, DataError) {
-  let value = data_set |> get_value(tag)
-  use value <- result.try(value)
+  data_set
+  |> get_value(tag)
+  |> result.then(data_element_value.bytes)
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
+}
 
-  case data_element_value.value_representation(value) == vr {
-    True ->
-      data_element_value.bytes(value)
-      |> result.map_error(fn(_) {
-        data_error.new_value_not_present()
-        |> data_error.with_path(data_set_path.new_with_data_element(tag))
-        |> Error
-      })
-      |> result.replace_error(data_error.new_value_not_present())
-    False ->
-      data_error.new_value_not_present()
-      |> data_error.with_path(data_set_path.new_with_data_element(tag))
-      |> Error
-  }
+/// Returns the raw value bytes for the specified tag in a data set and also
+/// checks that its value representation is one of the specified allowed VRs.
+///
+/// See `data_element_value.vr_bytes()`.
+///
+pub fn get_value_vr_bytes(
+  data_set: DataSet,
+  tag: DataElementTag,
+  allowed_vrs: List(ValueRepresentation),
+) -> Result(BitArray, DataError) {
+  data_set
+  |> get_value(tag)
+  |> result.then(data_element_value.vr_bytes(_, allowed_vrs))
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
 }
 
 /// Returns the singular string value for a data element in a data set. If the
