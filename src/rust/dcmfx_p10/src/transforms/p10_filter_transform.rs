@@ -114,7 +114,7 @@ impl P10FilterTransform {
       }
 
       // Detect the end of the entry at the head of the location and pop it off
-      P10Token::SequenceDelimiter
+      P10Token::SequenceDelimiter { .. }
       | P10Token::DataElementValueBytes {
         bytes_remaining: 0, ..
       } => {

@@ -120,8 +120,10 @@ pub fn force_end(builder: DataSetBuilder) -> DataSetBuilder {
   let builder = DataSetBuilder(..builder, pending_data_element: None)
 
   let token = case builder.location {
-    [Sequence(..), ..] | [EncapsulatedPixelDataSequence(..), ..] ->
-      p10_token.SequenceDelimiter
+    [Sequence(tag:, ..), ..] -> p10_token.SequenceDelimiter(tag)
+
+    [EncapsulatedPixelDataSequence(..), ..] ->
+      p10_token.SequenceDelimiter(dictionary.pixel_data.tag)
 
     [SequenceItem(..), ..] -> p10_token.SequenceItemDelimiter
 
@@ -197,7 +199,8 @@ fn add_token_to_sequence(
         ]),
       )
 
-    p10_token.SequenceDelimiter, [Sequence(tag, items), ..sequence_location] -> {
+    p10_token.SequenceDelimiter(..), [Sequence(tag, items), ..sequence_location]
+    -> {
       let sequence =
         items
         |> list.reverse
@@ -238,7 +241,7 @@ fn add_token_to_encapsulated_pixel_data_sequence(
       )
       |> Ok
 
-    p10_token.SequenceDelimiter,
+    p10_token.SequenceDelimiter(..),
       [EncapsulatedPixelDataSequence(vr, items), ..sequence_location]
     -> {
       let assert Ok(value) =
@@ -338,7 +341,11 @@ fn add_token_to_pending_data_element(
   token: P10Token,
 ) -> Result(DataSetBuilder, P10Error) {
   case token, builder.pending_data_element {
-    p10_token.DataElementValueBytes(_, data, bytes_remaining),
+    p10_token.DataElementValueBytes(
+      data:,
+      bytes_remaining:,
+      ..,
+    ),
       Some(pending_data_element)
     -> {
       let tag = pending_data_element.tag

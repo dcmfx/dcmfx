@@ -314,12 +314,12 @@ impl P10ReadContext {
     match self.location.next_delimiter_token(bytes_read) {
       Ok(token) => {
         // Decrement the sequence depth if this is a sequence delimiter
-        if token == P10Token::SequenceDelimiter {
+        if matches!(token, P10Token::SequenceDelimiter { .. }) {
           self.sequence_depth -= 1;
         }
 
         // Update current path
-        if token == P10Token::SequenceDelimiter
+        if matches!(token, P10Token::SequenceDelimiter { .. })
           || token == P10Token::SequenceItemDelimiter
         {
           self.path.pop().unwrap();
@@ -741,11 +741,11 @@ impl P10ReadContext {
         if tag == dictionary::SEQUENCE_DELIMITATION_ITEM.tag =>
       {
         let tokens = match self.location.end_sequence() {
-          Ok(()) => {
+          Ok(tag) => {
             self.path.pop().unwrap();
             self.sequence_depth -= 1;
 
-            vec![P10Token::SequenceDelimiter]
+            vec![P10Token::SequenceDelimiter { tag }]
           }
 
           // If a sequence delimiter occurs outside of a sequence then no error
@@ -1160,6 +1160,7 @@ impl P10ReadContext {
           }
 
           tokens.push(P10Token::DataElementValueBytes {
+            tag,
             vr,
             data,
             bytes_remaining,
@@ -1299,7 +1300,9 @@ impl P10ReadContext {
           vr: None,
           length: ValueLength::ZERO,
         } if tag == dictionary::SEQUENCE_DELIMITATION_ITEM.tag => {
-          let token = P10Token::SequenceDelimiter;
+          let token = P10Token::SequenceDelimiter {
+            tag: dictionary::PIXEL_DATA.tag,
+          };
 
           self.location.end_sequence().map_err(|details| {
             P10Error::DataInvalid {

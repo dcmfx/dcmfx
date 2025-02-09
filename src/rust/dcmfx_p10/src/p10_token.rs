@@ -45,6 +45,7 @@ pub enum P10Token {
   /// are split across multiple of these tokens when their length exceeds the
   /// maximum token size.
   DataElementValueBytes {
+    tag: DataElementTag,
     vr: ValueRepresentation,
     data: Rc<Vec<u8>>,
     bytes_remaining: u32,
@@ -61,7 +62,7 @@ pub enum P10Token {
   },
 
   /// The end of the current sequence.
-  SequenceDelimiter,
+  SequenceDelimiter { tag: DataElementTag },
 
   /// The start of a new item in the current sequence.
   SequenceItemStart,
@@ -134,7 +135,7 @@ impl std::fmt::Display for P10Token {
         vr,
       ),
 
-      P10Token::SequenceDelimiter => "SequenceDelimiter".to_string(),
+      P10Token::SequenceDelimiter { .. } => "SequenceDelimiter".to_string(),
 
       P10Token::SequenceItemStart => "SequenceItemStart".to_string(),
 
@@ -200,6 +201,7 @@ pub fn data_element_to_tokens<E>(
     token_callback(&header_token)?;
 
     token_callback(&P10Token::DataElementValueBytes {
+      tag,
       vr,
       data: bytes.clone(),
       bytes_remaining: 0,
@@ -221,6 +223,7 @@ pub fn data_element_to_tokens<E>(
       token_callback(&item_header_token)?;
 
       let value_bytes_token = P10Token::DataElementValueBytes {
+        tag: dictionary::ITEM.tag,
         vr,
         data: item.clone(),
         bytes_remaining: 0,
@@ -229,7 +232,7 @@ pub fn data_element_to_tokens<E>(
     }
 
     // Write delimiter for the encapsulated pixel data sequence
-    token_callback(&P10Token::SequenceDelimiter)?;
+    token_callback(&P10Token::SequenceDelimiter { tag })?;
 
     return Ok(());
   }
@@ -252,7 +255,7 @@ pub fn data_element_to_tokens<E>(
     }
 
     // Write delimiter for the sequence
-    token_callback(&P10Token::SequenceDelimiter)?;
+    token_callback(&P10Token::SequenceDelimiter { tag })?;
 
     return Ok(());
   }

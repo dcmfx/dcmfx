@@ -109,6 +109,7 @@ impl P10JsonTransform {
         vr,
         data,
         bytes_remaining,
+        ..
       } => {
         self.write_data_element_value_bytes(
           *vr,
@@ -138,7 +139,7 @@ impl P10JsonTransform {
           .map_err(|_| token_stream_invalid_error())
       }
 
-      P10Token::SequenceDelimiter => {
+      P10Token::SequenceDelimiter { .. } => {
         self
           .write_sequence_end(stream)
           .map_err(JsonSerializeError::IOError)?;

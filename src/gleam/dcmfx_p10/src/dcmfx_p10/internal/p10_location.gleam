@@ -53,7 +53,12 @@ pub opaque type LocationEntry {
     clarifying_data_elements: ClarifyingDataElements,
     last_data_element_tag: DataElementTag,
   )
-  Sequence(is_implicit_vr: Bool, ends_at: Option(Int), item_count: Int)
+  Sequence(
+    tag: DataElementTag,
+    is_implicit_vr: Bool,
+    ends_at: Option(Int),
+    item_count: Int,
+  )
   Item(
     clarifying_data_elements: ClarifyingDataElements,
     last_data_element_tag: DataElementTag,
@@ -179,8 +184,9 @@ pub fn next_delimiter_token(
   bytes_read: Int,
 ) -> Result(#(P10Token, P10Location), Nil) {
   case location {
-    [Sequence(ends_at: Some(ends_at), ..), ..rest] if ends_at <= bytes_read ->
-      Ok(#(p10_token.SequenceDelimiter, rest))
+    [Sequence(tag, ends_at: Some(ends_at), ..), ..rest]
+      if ends_at <= bytes_read
+    -> Ok(#(p10_token.SequenceDelimiter(tag), rest))
 
     [Item(ends_at: Some(ends_at), ..), ..rest] if ends_at <= bytes_read ->
       Ok(#(p10_token.SequenceItemDelimiter, rest))
@@ -194,8 +200,8 @@ pub fn next_delimiter_token(
 ///
 pub fn pending_delimiter_tokens(location: P10Location) -> List(P10Token) {
   case location {
-    [Sequence(..), ..rest] -> [
-      p10_token.SequenceDelimiter,
+    [Sequence(tag:, ..), ..rest] -> [
+      p10_token.SequenceDelimiter(tag:),
       ..pending_delimiter_tokens(rest)
     ]
 
@@ -218,7 +224,7 @@ pub fn add_sequence(
 ) -> Result(P10Location, String) {
   case location {
     [RootDataSet(..)] | [Item(..), ..] ->
-      Ok([Sequence(is_implicit_vr, ends_at, 0), ..location])
+      Ok([Sequence(tag, is_implicit_vr, ends_at, 0), ..location])
 
     _ -> {
       let private_creator =
@@ -235,9 +241,11 @@ pub fn add_sequence(
 
 /// Ends the current sequence for a P10 location.
 ///
-pub fn end_sequence(location: P10Location) -> Result(P10Location, String) {
+pub fn end_sequence(
+  location: P10Location,
+) -> Result(#(DataElementTag, P10Location), String) {
   case location {
-    [Sequence(..), ..rest] -> Ok(rest)
+    [Sequence(tag:, ..), ..rest] -> Ok(#(tag, rest))
 
     _ -> Error("Sequence delimiter encountered outside of a sequence")
   }
@@ -262,14 +270,17 @@ pub fn add_item(
   case location {
     // Carry across the current clarifying data elements as the initial state
     // for the new item
-    [Sequence(is_implicit_vr, ends_at: sequence_ends_at, item_count:), ..rest] ->
+    [
+      Sequence(tag, is_implicit_vr, ends_at: sequence_ends_at, item_count:),
+      ..rest
+    ] ->
       Ok([
         Item(
           active_clarifying_data_elements(location),
           data_element_tag.zero,
           ends_at,
         ),
-        Sequence(is_implicit_vr, sequence_ends_at, item_count + 1),
+        Sequence(tag, is_implicit_vr, sequence_ends_at, item_count + 1),
         ..rest
       ])
 

@@ -125,7 +125,7 @@ pub fn add_token(
     }
 
     // Detect the end of the entry at the head of the location and pop it off
-    p10_token.SequenceDelimiter
+    p10_token.SequenceDelimiter(..)
     | p10_token.DataElementValueBytes(bytes_remaining: 0, ..) -> {
       let filter_result = case context.location {
         [LocationEntry(filter_result:, ..), ..] -> filter_result

@@ -264,7 +264,7 @@ pub fn write_token(
             data_set_path.pop(context.path)
             |> result.map(fn(path) { P10WriteContext(..context, path:) })
 
-          p10_token.SequenceDelimiter -> {
+          p10_token.SequenceDelimiter(..) -> {
             let assert Ok(sequence_item_counts) =
               list.rest(context.sequence_item_counts)
 
@@ -400,7 +400,7 @@ fn token_to_bytes(
       |> data_element_header_to_bytes(transfer_syntax.endianness, context)
     }
 
-    p10_token.DataElementValueBytes(vr, data, _) ->
+    p10_token.DataElementValueBytes(vr:, data:, ..) ->
       case transfer_syntax.endianness {
         LittleEndian -> data
         BigEndian -> value_representation.swap_endianness(vr, data)
@@ -417,7 +417,7 @@ fn token_to_bytes(
       |> data_element_header_to_bytes(transfer_syntax.endianness, context)
     }
 
-    p10_token.SequenceDelimiter ->
+    p10_token.SequenceDelimiter(..) ->
       DataElementHeader(
         dictionary.sequence_delimitation_item.tag,
         None,

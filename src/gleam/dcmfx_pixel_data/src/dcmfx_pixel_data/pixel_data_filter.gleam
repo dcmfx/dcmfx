@@ -173,7 +173,7 @@ fn process_next_pixel_data_token(
     }
 
     // The end of the encapsulated pixel data
-    p10_token.SequenceDelimiter -> {
+    p10_token.SequenceDelimiter(..) -> {
       // If there is any remaining pixel data then emit it as a final frame
       let frames = case filter.pixel_data |> deque.is_empty() {
         True -> Ok([])
@@ -561,11 +561,10 @@ fn read_extended_offset_table(
   // Get the value of the '(0x7FE0,0001) Extended Offset Table' data
   // element
   let extended_offset_table =
-    data_set.get_value_bytes(
-      filter.details,
-      dictionary.extended_offset_table.tag,
+    filter.details
+    |> data_set.get_value_vr_bytes(dictionary.extended_offset_table.tag, [
       value_representation.OtherVeryLongString,
-    )
+    ])
     |> result.then(fn(bytes) {
       bit_array_utils.to_uint64_list(bytes)
       |> result.replace_error(data_error.new_value_invalid(
@@ -587,9 +586,9 @@ fn read_extended_offset_table(
   // element
   let extended_offset_table_lengths =
     filter.details
-    |> data_set.get_value_bytes(
+    |> data_set.get_value_vr_bytes(
       dictionary.extended_offset_table_lengths.tag,
-      value_representation.OtherVeryLongString,
+      [value_representation.OtherVeryLongString],
     )
     |> result.then(fn(bytes) {
       bit_array_utils.to_uint64_list(bytes)

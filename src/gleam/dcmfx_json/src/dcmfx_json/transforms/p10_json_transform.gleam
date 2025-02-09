@@ -108,7 +108,7 @@ pub fn add_token(
       #(json, transform)
     }
 
-    p10_token.DataElementValueBytes(vr, data, bytes_remaining) -> {
+    p10_token.DataElementValueBytes(vr:, data:, bytes_remaining:, ..) -> {
       use #(json, transform) <- result.try(write_data_element_value_bytes(
         transform,
         vr,
@@ -154,7 +154,7 @@ pub fn add_token(
       #(json, transform)
     }
 
-    p10_token.SequenceDelimiter -> {
+    p10_token.SequenceDelimiter(..) -> {
       let #(json, transform) = write_sequence_end(transform)
 
       let path =

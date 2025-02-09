@@ -132,7 +132,7 @@ impl P10PrintTransform {
         s
       }
 
-      P10Token::SequenceDelimiter => {
+      P10Token::SequenceDelimiter { .. } => {
         self.indent -= 1;
 
         let mut s = data_set::print::format_data_element_prefix(

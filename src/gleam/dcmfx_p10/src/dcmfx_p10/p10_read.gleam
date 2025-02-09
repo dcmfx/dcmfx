@@ -339,13 +339,13 @@ fn next_delimiter_token(
     Ok(#(token, new_location)) -> {
       // Decrement the sequence depth if this is a sequence delimiter
       let new_sequence_depth = case token {
-        p10_token.SequenceDelimiter -> context.sequence_depth - 1
+        p10_token.SequenceDelimiter(..) -> context.sequence_depth - 1
         _ -> context.sequence_depth
       }
 
       // Update current path
       let new_path = case token {
-        p10_token.SequenceDelimiter | p10_token.SequenceItemDelimiter -> {
+        p10_token.SequenceDelimiter(..) | p10_token.SequenceItemDelimiter -> {
           let assert Ok(path) = data_set_path.pop(context.path)
           path
         }
@@ -861,12 +861,12 @@ fn read_data_element_header_token(
       let #(tokens, new_path, new_location, new_sequence_depth) = case
         p10_location.end_sequence(context.location)
       {
-        Ok(new_location) -> {
+        Ok(#(tag, new_location)) -> {
           let assert Ok(new_path) = data_set_path.pop(context.path)
           let new_sequence_depth = context.sequence_depth - 1
 
           #(
-            [p10_token.SequenceDelimiter],
+            [p10_token.SequenceDelimiter(tag:)],
             new_path,
             new_location,
             new_sequence_depth,
@@ -1286,7 +1286,7 @@ fn read_data_element_value_bytes_token(
       let tokens = case emit_tokens {
         True -> {
           let value_bytes_token =
-            p10_token.DataElementValueBytes(vr, data, bytes_remaining)
+            p10_token.DataElementValueBytes(tag, vr, data, bytes_remaining)
 
           // If this is a materialized value then the data element header for it
           // needs to be emitted, along with its final value bytes
@@ -1481,7 +1481,8 @@ fn read_pixel_data_item_token(
         DataElementHeader(tag, None, value_length.Defined(0))
           if tag == dictionary.sequence_delimitation_item.tag
         -> {
-          let token = p10_token.SequenceDelimiter
+          let token =
+            p10_token.SequenceDelimiter(tag: dictionary.pixel_data.tag)
 
           let new_location =
             p10_location.end_sequence(context.location)
@@ -1493,7 +1494,7 @@ fn read_pixel_data_item_token(
                 byte_stream.bytes_read(context.stream),
               )
             })
-          use new_location <- result.try(new_location)
+          use #(_, new_location) <- result.try(new_location)
 
           let assert Ok(new_path) = data_set_path.pop(context.path)
 

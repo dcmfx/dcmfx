@@ -66,6 +66,7 @@ fn tokens_for_tag(tag: DataElementTag) {
       bit_array.byte_size(value_bytes),
     ),
     p10_token.DataElementValueBytes(
+      tag,
       value_representation.LongText,
       value_bytes,
       0,

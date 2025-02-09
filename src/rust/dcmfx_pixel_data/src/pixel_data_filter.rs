@@ -143,7 +143,7 @@ impl PixelDataFilter {
       }
 
       // The end of the encapsulated pixel data
-      P10Token::SequenceDelimiter => {
+      P10Token::SequenceDelimiter { .. } => {
         let mut frames = vec![];
 
         // If there is any remaining pixel data then emit it as a final frame
@@ -410,9 +410,9 @@ impl PixelDataFilter {
 
     // Get the value of the '(0x7FE0,0001) Extended Offset Table' data
     // element
-    let extended_offset_table_bytes = self.details.get_value_bytes(
+    let extended_offset_table_bytes = self.details.get_value_vr_bytes(
       dictionary::EXTENDED_OFFSET_TABLE.tag,
-      ValueRepresentation::OtherVeryLongString,
+      &[ValueRepresentation::OtherVeryLongString],
     )?;
 
     if extended_offset_table_bytes.len() % 8 != 0 {
@@ -444,9 +444,9 @@ impl PixelDataFilter {
 
     // Get the value of the '(0x7FE0,0002) Extended Offset Table Lengths' data
     // element
-    let extended_offset_table_lengths_bytes = self.details.get_value_bytes(
+    let extended_offset_table_lengths_bytes = self.details.get_value_vr_bytes(
       dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag,
-      ValueRepresentation::OtherVeryLongString,
+      &[ValueRepresentation::OtherVeryLongString],
     )?;
 
     if extended_offset_table_lengths_bytes.len() % 8 != 0 {

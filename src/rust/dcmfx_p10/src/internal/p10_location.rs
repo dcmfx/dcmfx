@@ -48,6 +48,7 @@ enum LocationEntry {
     last_data_element_tag: DataElementTag,
   },
   Sequence {
+    tag: DataElementTag,
     is_implicit_vr: bool,
     ends_at: Option<u64>,
     item_count: usize,
@@ -187,11 +188,13 @@ impl P10Location {
   ) -> Result<P10Token, ()> {
     match self.entries.last() {
       Some(LocationEntry::Sequence {
+        tag,
         ends_at: Some(ends_at),
         ..
       }) if *ends_at <= bytes_read => {
+        let tag = *tag;
         self.entries.pop();
-        Ok(P10Token::SequenceDelimiter)
+        Ok(P10Token::SequenceDelimiter { tag })
       }
 
       Some(LocationEntry::Item {
@@ -215,7 +218,9 @@ impl P10Location {
       .iter()
       .rev()
       .map(|entry| match entry {
-        LocationEntry::Sequence { .. } => P10Token::SequenceDelimiter,
+        LocationEntry::Sequence { tag, .. } => {
+          P10Token::SequenceDelimiter { tag: *tag }
+        }
         LocationEntry::Item { .. } => P10Token::SequenceItemDelimiter,
         LocationEntry::RootDataSet { .. } => P10Token::End,
       })
@@ -234,6 +239,7 @@ impl P10Location {
       Some(LocationEntry::RootDataSet { .. })
       | Some(LocationEntry::Item { .. }) => {
         self.entries.push(LocationEntry::Sequence {
+          tag,
           is_implicit_vr,
           ends_at,
           item_count: 0,
@@ -258,11 +264,12 @@ impl P10Location {
 
   /// Ends the current sequence for a P10 location.
   ///
-  pub fn end_sequence(&mut self) -> Result<(), String> {
+  pub fn end_sequence(&mut self) -> Result<DataElementTag, String> {
     match self.entries.last() {
-      Some(LocationEntry::Sequence { .. }) => {
+      Some(LocationEntry::Sequence { tag, .. }) => {
+        let tag = *tag;
         self.entries.pop();
-        Ok(())
+        Ok(tag)
       }
 
       _ => {

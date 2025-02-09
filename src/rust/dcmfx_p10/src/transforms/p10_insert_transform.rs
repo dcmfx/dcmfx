@@ -191,6 +191,7 @@ mod tests {
         length: value_bytes.len() as u32,
       },
       P10Token::DataElementValueBytes {
+        tag,
         vr: ValueRepresentation::LongText,
         data: Rc::new(value_bytes),
         bytes_remaining: 0,

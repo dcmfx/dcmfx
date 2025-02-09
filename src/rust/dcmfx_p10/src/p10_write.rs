@@ -26,7 +26,7 @@ const ZLIB_DEFLATE_CHUNK_SIZE: usize = 64 * 1024;
 
 /// Configuration used when writing DICOM P10 data.
 ///
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct P10WriteConfig {
   /// The zlib compression level to use when the transfer syntax being used is
   /// deflated. There are only three deflated transfer syntaxes: 'Deflated
@@ -226,7 +226,7 @@ impl P10WriteContext {
           }
           | P10Token::SequenceItemDelimiter => self.path.pop(),
 
-          P10Token::SequenceDelimiter => {
+          P10Token::SequenceDelimiter { .. } => {
             self.sequence_item_counts.pop();
             self.path.pop()
           }
@@ -393,7 +393,7 @@ impl P10WriteContext {
         )
       }
 
-      P10Token::SequenceDelimiter => self.data_element_header_to_bytes(
+      P10Token::SequenceDelimiter { .. } => self.data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::SEQUENCE_DELIMITATION_ITEM.tag,
           vr: None,

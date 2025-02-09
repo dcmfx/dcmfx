@@ -44,6 +44,7 @@ pub type P10Token {
   /// are split across multiple of these tokens when their length exceeds the
   /// maximum token size.
   DataElementValueBytes(
+    tag: DataElementTag,
     vr: ValueRepresentation,
     data: BitArray,
     bytes_remaining: Int,
@@ -56,7 +57,7 @@ pub type P10Token {
   SequenceStart(tag: DataElementTag, vr: ValueRepresentation)
 
   /// The end of the current sequence.
-  SequenceDelimiter
+  SequenceDelimiter(tag: DataElementTag)
 
   /// The start of a new item in the current sequence.
   SequenceItemStart
@@ -105,7 +106,7 @@ pub fn to_string(token: P10Token) -> String {
       <> int.to_string(length)
       <> " bytes"
 
-    DataElementValueBytes(_vr, data, bytes_remaining) ->
+    DataElementValueBytes(data:, bytes_remaining:, ..) ->
       "DataElementValueBytes: "
       <> int.to_string(bit_array.byte_size(data))
       <> " bytes of data, "
@@ -120,7 +121,7 @@ pub fn to_string(token: P10Token) -> String {
       <> ", vr: "
       <> value_representation.to_string(vr)
 
-    SequenceDelimiter -> "SequenceDelimiter"
+    SequenceDelimiter(..) -> "SequenceDelimiter"
 
     SequenceItemStart -> "SequenceItemStart"
 
@@ -175,7 +176,7 @@ pub fn data_element_to_tokens(
       let header_token = DataElementHeader(tag, vr, bit_array.byte_size(bytes))
       use context <- result.try(token_callback(context, header_token))
 
-      DataElementValueBytes(vr, bytes, bytes_remaining: 0)
+      DataElementValueBytes(tag, vr, bytes, bytes_remaining: 0)
       |> token_callback(context, _)
     }
 
@@ -195,13 +196,14 @@ pub fn data_element_to_tokens(
               let context = token_callback(context, item_header_token)
               use context <- result.try(context)
 
-              let value_bytes_token = DataElementValueBytes(vr, item, 0)
+              let value_bytes_token =
+                DataElementValueBytes(dictionary.item.tag, vr, item, 0)
               token_callback(context, value_bytes_token)
             })
           use context <- result.try(context)
 
           // Write delimiter for the encapsulated pixel data sequence
-          token_callback(context, SequenceDelimiter)
+          token_callback(context, SequenceDelimiter(tag))
         }
 
         Error(_) -> {
@@ -233,7 +235,7 @@ pub fn data_element_to_tokens(
           use context <- result.try(context)
 
           // Write delimiter for the sequence
-          token_callback(context, SequenceDelimiter)
+          token_callback(context, SequenceDelimiter(tag))
         }
       }
   }

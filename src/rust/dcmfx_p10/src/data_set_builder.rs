@@ -138,9 +138,16 @@ impl DataSetBuilder {
 
     while let Some(location) = self.location.last() {
       match location {
-        BuilderLocation::Sequence { .. }
-        | BuilderLocation::EncapsulatedPixelDataSequence { .. } => {
-          self.add_token(&P10Token::SequenceDelimiter).unwrap();
+        BuilderLocation::Sequence { tag, .. } => self
+          .add_token(&P10Token::SequenceDelimiter { tag: *tag })
+          .unwrap(),
+
+        BuilderLocation::EncapsulatedPixelDataSequence { .. } => {
+          self
+            .add_token(&P10Token::SequenceDelimiter {
+              tag: dictionary::PIXEL_DATA.tag,
+            })
+            .unwrap();
         }
 
         BuilderLocation::SequenceItem { .. } => {
@@ -226,7 +233,10 @@ impl DataSetBuilder {
         Ok(())
       }
 
-      (P10Token::SequenceDelimiter, Some(BuilderLocation::Sequence { .. })) => {
+      (
+        P10Token::SequenceDelimiter { .. },
+        Some(BuilderLocation::Sequence { .. }),
+      ) => {
         if let Some(BuilderLocation::Sequence { tag, items }) =
           self.location.pop()
         {
@@ -260,7 +270,7 @@ impl DataSetBuilder {
       }
 
       (
-        P10Token::SequenceDelimiter,
+        P10Token::SequenceDelimiter { .. },
         Some(BuilderLocation::EncapsulatedPixelDataSequence { .. }),
       ) => {
         if let Some(BuilderLocation::EncapsulatedPixelDataSequence {

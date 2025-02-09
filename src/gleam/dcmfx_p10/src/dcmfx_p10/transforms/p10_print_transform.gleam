@@ -101,7 +101,7 @@ pub fn add_token(
       #(s, new_context)
     }
 
-    p10_token.DataElementValueBytes(vr, data, ..)
+    p10_token.DataElementValueBytes(vr:, data:, ..)
       if !context.ignore_data_element_value_bytes
     -> {
       let value = data_element_value.new_binary_unchecked(vr, data)
@@ -166,7 +166,7 @@ pub fn add_token(
       #(s <> "\n", new_context)
     }
 
-    p10_token.SequenceDelimiter -> {
+    p10_token.SequenceDelimiter(..) -> {
       let s =
         data_set_print.format_data_element_prefix(
           dictionary.sequence_delimitation_item.tag,
