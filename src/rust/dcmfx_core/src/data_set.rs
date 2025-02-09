@@ -536,10 +536,11 @@ impl DataSet {
     }
   }
 
-  /// Deletes a data element from a data set.
+  /// Deletes a data element from a data set. Returns the deleted data element
+  /// value, if any.
   ///
-  pub fn delete(&mut self, tag: DataElementTag) {
-    self.0.remove(&tag);
+  pub fn delete(&mut self, tag: DataElementTag) -> Option<DataElementValue> {
+    self.0.remove(&tag)
   }
 
   /// Returns the tags in a data set, sorted by group and element.

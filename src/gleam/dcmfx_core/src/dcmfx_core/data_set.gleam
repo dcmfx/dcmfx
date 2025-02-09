@@ -23,7 +23,7 @@ import gleam/dict.{type Dict}
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option.{type Option, None, Some}
 import gleam/order
 import gleam/result
 import gleam/string
@@ -452,10 +452,20 @@ pub fn from_list(
 }
 
 /// Creates a new data set with all the data elements in the given data set
-/// except for the specified tag.
+/// except for the specified tag. Also returns the deleted data element value,
+/// if any.
 ///
-pub fn delete(data_set: DataSet, tag: DataElementTag) -> DataSet {
-  dict.delete(data_set, tag)
+pub fn delete(
+  data_set: DataSet,
+  tag: DataElementTag,
+) -> #(Option(DataElementValue), DataSet) {
+  let deleted_value =
+    dict.get(data_set, tag)
+    |> option.from_result
+
+  let data_set = dict.delete(data_set, tag)
+
+  #(deleted_value, data_set)
 }
 
 /// Returns the tags in a data set, sorted by group and element.
