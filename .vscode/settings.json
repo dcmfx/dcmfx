@@ -11,14 +11,14 @@
   },
 
   "rust-analyzer.linkedProjects": [
-    "src/rust/Cargo.toml",
-    "examples/data_set_anonymize/rust/Cargo.toml",
+    "examples/dicom_anonymize/rust/Cargo.toml",
     "examples/dicom_json_read/rust/Cargo.toml",
     "examples/dicom_json_write/rust/Cargo.toml",
     "examples/dicom_read/rust/Cargo.toml",
+    "examples/dicom_read_pixel_data/rust/Cargo.toml",
     "examples/dicom_stream/rust/Cargo.toml",
     "examples/dicom_write/rust/Cargo.toml",
-    "examples/pixel_data_read/rust/Cargo.toml"
+    "src/rust/Cargo.toml"
   ],
 
   "cSpell.enabledFileTypes": { "gleam": true },

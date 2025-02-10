@@ -57,13 +57,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "data_set_anonymize"
-version = "0.0.0"
-dependencies = [
- "dcmfx",
-]
-
-[[package]]
 name = "dcmfx"
 version = "0.0.0"
 dependencies = [
@@ -130,6 +123,13 @@ dependencies = [
  "byteorder",
  "dcmfx_core",
  "dcmfx_p10",
+]
+
+[[package]]
+name = "dicom_read_pixel_data"
+version = "0.0.0"
+dependencies = [
+ "dcmfx",
 ]
 
 [[package]]

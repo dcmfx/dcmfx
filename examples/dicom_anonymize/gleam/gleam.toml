@@ -1,4 +1,4 @@
-name = "data_set_anonymize"
+name = "dicom_anonymize"
 
 [dependencies]
 dcmfx_anonymize = { path = "../../../src/gleam/dcmfx_anonymize" }

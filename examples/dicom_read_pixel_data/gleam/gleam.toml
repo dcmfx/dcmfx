@@ -1,4 +1,4 @@
-name = "pixel_data_read"
+name = "dicom_read_pixel_data"
 
 [dependencies]
 dcmfx_core = { path = "../../../src/gleam/dcmfx_core" }

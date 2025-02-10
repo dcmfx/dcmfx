@@ -126,6 +126,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dicom_anonymize"
+version = "0.0.0"
+dependencies = [
+ "dcmfx",
+]
+
+[[package]]
 name = "errno"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -229,13 +236,6 @@ checksum = "fb37767f6569cd834a413442455e0f066d0d522de8630436e2a1761d9726ba56"
 dependencies = [
  "supports-color 2.1.0",
  "supports-color 3.0.2",
-]
-
-[[package]]
-name = "pixel_data_read"
-version = "0.0.0"
-dependencies = [
- "dcmfx",
 ]
 
 [[package]]

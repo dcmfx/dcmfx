@@ -4,7 +4,7 @@
 
 set -e
 
-for dir in */; do
+for dir in dicom_*/; do
   echo ""
   echo "Testing $dir …"
 
