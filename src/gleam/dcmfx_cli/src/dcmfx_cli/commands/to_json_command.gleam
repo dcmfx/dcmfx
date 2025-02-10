@@ -54,16 +54,15 @@ pub fn run() {
   case perform_to_json(input_filename, output_filename, config) {
     Ok(Nil) -> Ok(Nil)
 
-    Error(ToJsonSerializeError(e)) -> {
-      json_error.print_serialize_error(
-        e,
-        "converting \"" <> input_filename <> "\" to JSON",
-      )
-      Error(Nil)
-    }
+    Error(e) -> {
+      let task_description = "converting \"" <> input_filename <> "\" to JSON"
 
-    Error(ToJsonP10Error(e)) -> {
-      p10_error.print(e, "converting \"" <> input_filename <> "\" to JSON")
+      case e {
+        ToJsonSerializeError(e) ->
+          json_error.print_serialize_error(e, task_description)
+        ToJsonP10Error(e) -> p10_error.print(e, task_description)
+      }
+
       Error(Nil)
     }
   }

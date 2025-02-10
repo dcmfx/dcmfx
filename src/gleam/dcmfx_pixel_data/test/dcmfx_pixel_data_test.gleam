@@ -4,10 +4,10 @@ import dcmfx_core/data_set
 import dcmfx_core/dictionary
 import dcmfx_core/value_representation
 import dcmfx_pixel_data
+import dcmfx_pixel_data/pixel_data_filter
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
 import gleam/bit_array
 import gleam/list
-import gleam/result
 import gleam/string
 import gleeunit
 import gleeunit/should
@@ -80,9 +80,11 @@ pub fn read_native_multi_frame_malformed() {
   )
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
-    Error(data_error.new_value_invalid(
-      "Multi-frame pixel data of length 4 does not divide evenly into 3 frames",
-    )),
+    Error(
+      pixel_data_filter.DataError(data_error.new_value_invalid(
+        "Multi-frame pixel data of length 4 does not divide evenly into 3 frames",
+      )),
+    ),
   )
 }
 
@@ -102,9 +104,12 @@ pub fn read_encapsulated_multiple_fragments_into_single_frame_test() {
 }
 
 pub fn read_encapsulated_multiple_fragments_into_multiple_frames_test() {
-  data_set_with_three_fragments()
-  |> data_set.insert_int_value(dictionary.number_of_frames, [3])
-  |> result.then(dcmfx_pixel_data.get_pixel_data_frames)
+  let assert Ok(data_set) =
+    data_set_with_three_fragments()
+    |> data_set.insert_int_value(dictionary.number_of_frames, [3])
+
+  data_set
+  |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
     Ok([
       frame_with_fragments([string.repeat("1", 0x4C6) |> bit_array.from_string]),

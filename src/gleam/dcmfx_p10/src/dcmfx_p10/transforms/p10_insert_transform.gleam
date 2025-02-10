@@ -25,12 +25,9 @@ pub fn new(data_elements_to_insert: DataSet) -> P10InsertTransform {
   // to be inserted. This ensures there are no duplicate data elements in the
   // resulting token stream.
   let filter_transform =
-    p10_filter_transform.new(
-      fn(tag, _vr, location) {
-        location != [] || !list.contains(tags_to_insert, tag)
-      },
-      False,
-    )
+    p10_filter_transform.new(fn(tag, _vr, location) {
+      location != [] || !list.contains(tags_to_insert, tag)
+    })
 
   P10InsertTransform(
     data_elements_to_insert: data_set.to_list(data_elements_to_insert),

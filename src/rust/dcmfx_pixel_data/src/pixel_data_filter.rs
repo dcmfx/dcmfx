@@ -3,8 +3,13 @@
 use byteorder::ByteOrder;
 use std::{collections::VecDeque, rc::Rc};
 
-use dcmfx_core::{dictionary, DataError, DataSet, ValueRepresentation};
-use dcmfx_p10::{P10FilterTransform, P10Token};
+use dcmfx_core::{
+  dictionary, DataElementValue, DataError, DataSet, ValueRepresentation,
+};
+use dcmfx_p10::{
+  P10CustomTypeTransform, P10CustomTypeTransformError, P10Error,
+  P10FilterTransform, P10Token,
+};
 
 use crate::PixelDataFrame;
 
@@ -19,9 +24,8 @@ use crate::PixelDataFrame;
 pub struct PixelDataFilter {
   is_encapsulated: bool,
 
-  // Filter used to extract the value of data elements needed
-  details_filter: Option<P10FilterTransform>,
-  details: DataSet,
+  // Extracts the value of relevant data elements from the stream
+  details: P10CustomTypeTransform<PixelDataFilterDetails>,
 
   // Filter used to extract only the '(7FE0,0010) Pixel Data' data element
   pixel_data_filter: P10FilterTransform,
@@ -46,33 +50,77 @@ pub struct PixelDataFilter {
 
 type OffsetTable = VecDeque<(u64, Option<u64>)>;
 
+#[derive(Clone, Debug, PartialEq)]
+struct PixelDataFilterDetails {
+  number_of_frames: Option<DataElementValue>,
+  extended_offset_table: Option<DataElementValue>,
+  extended_offset_table_lengths: Option<DataElementValue>,
+}
+
+impl PixelDataFilterDetails {
+  fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
+    Ok(Self {
+      number_of_frames: data_set
+        .get_value(dictionary::NUMBER_OF_FRAMES.tag)
+        .ok()
+        .cloned(),
+      extended_offset_table: data_set
+        .get_value(dictionary::EXTENDED_OFFSET_TABLE.tag)
+        .ok()
+        .cloned(),
+      extended_offset_table_lengths: data_set
+        .get_value(dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag)
+        .ok()
+        .cloned(),
+    })
+  }
+}
+
+/// An error that occurred in the process of extract frames of pixel data from
+/// a stream of DICOM P10 tokens.
+///
+#[derive(Clone, Debug, PartialEq)]
+pub enum PixelDataFilterError {
+  /// An error that occurred when adding a P10 token. This can happen when the
+  /// stream of DICOM P10 tokens is invalid.
+  P10Error(P10Error),
+
+  /// An error that occurred when reading the data from the data elements in the
+  /// stream of DICOM P10 tokens.
+  DataError(DataError),
+}
+
+impl std::fmt::Display for PixelDataFilterError {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    match self {
+      Self::DataError(e) => e.fmt(f),
+      Self::P10Error(e) => e.fmt(f),
+    }
+  }
+}
+
 impl PixelDataFilter {
   /// Creates a new P10 pixel data filter to extract frames of pixel data from a
   /// stream of DICOM P10 tokens.
   ///
   pub fn new() -> Self {
-    let details_filter = P10FilterTransform::new(
-      Box::new(|tag, vr, location| {
-        (tag == dictionary::NUMBER_OF_FRAMES.tag
-          || tag == dictionary::EXTENDED_OFFSET_TABLE.tag
-          || tag == dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag)
-          && vr != ValueRepresentation::Sequence
-          && location.is_empty()
-      }),
-      true,
+    let details_filter = P10CustomTypeTransform::<PixelDataFilterDetails>::new(
+      &[
+        dictionary::NUMBER_OF_FRAMES.tag,
+        dictionary::EXTENDED_OFFSET_TABLE.tag,
+        dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag,
+      ],
+      PixelDataFilterDetails::from_data_set,
     );
 
-    let pixel_data_filter = P10FilterTransform::new(
-      Box::new(|tag, _, location| {
+    let pixel_data_filter =
+      P10FilterTransform::new(Box::new(|tag, _, location| {
         tag == dictionary::PIXEL_DATA.tag && location.is_empty()
-      }),
-      false,
-    );
+      }));
 
     Self {
       is_encapsulated: false,
-      details_filter: Some(details_filter),
-      details: DataSet::new(),
+      details: details_filter,
       pixel_data_filter,
       native_pixel_data_frame_size: 0,
       pixel_data: VecDeque::new(),
@@ -88,21 +136,22 @@ impl PixelDataFilter {
   pub fn add_token(
     &mut self,
     token: &P10Token,
-  ) -> Result<Vec<PixelDataFrame>, DataError> {
-    // Add the token into the details filter if it is still active
-    if let Some(details_filter) = self.details_filter.as_mut() {
-      details_filter.add_token(token);
-    }
+  ) -> Result<Vec<PixelDataFrame>, PixelDataFilterError> {
+    // Add the token into the details filter
+    match self.details.add_token(token) {
+      Ok(()) => (),
+      Err(P10CustomTypeTransformError::P10Error(e)) => {
+        return Err(PixelDataFilterError::P10Error(e));
+      }
+      Err(P10CustomTypeTransformError::DataError(e)) => {
+        return Err(PixelDataFilterError::DataError(e));
+      }
+    };
 
     if !token.is_header_token() && self.pixel_data_filter.add_token(token) {
-      // If the result of the details filter hasn't yet been extracted into a
-      // data set then do so now
-      if let Some(details_filter) = self.details_filter.as_mut() {
-        self.details = details_filter.data_set().unwrap_or(DataSet::new());
-        self.details_filter = None;
-      }
-
-      self.process_next_pixel_data_token(token)
+      self
+        .process_next_pixel_data_token(token)
+        .map_err(PixelDataFilterError::DataError)
     } else {
       Ok(vec![])
     }
@@ -124,7 +173,7 @@ impl PixelDataFilter {
         if *length as usize % number_of_frames != 0 {
           return Err(DataError::new_value_invalid(format!(
             "Multi-frame pixel data of length {} bytes does not divide evenly \
-            into {} frames",
+             into {} frames",
             *length, number_of_frames
           )));
         }
@@ -201,14 +250,14 @@ impl PixelDataFilter {
   /// Returns the value for '(0028,0008) Number of Frames' data element.
   ///
   fn get_number_of_frames(&self) -> Result<usize, DataError> {
-    if !self.details.has(dictionary::NUMBER_OF_FRAMES.tag) {
-      return Ok(1);
+    match self.details.get_output() {
+      Some(details) => match &details.number_of_frames {
+        Some(value) => Ok(value.get_int::<usize>()?),
+        None => Ok(1),
+      },
+
+      None => Ok(1),
     }
-
-    let number_of_frames =
-      self.details.get_int(dictionary::NUMBER_OF_FRAMES.tag)?;
-
-    Ok(number_of_frames)
   }
 
   /// Consumes native pixel data for as many frames as possible and returns
@@ -404,83 +453,85 @@ impl PixelDataFilter {
   fn read_extended_offset_table(
     &self,
   ) -> Result<Option<OffsetTable>, DataError> {
-    if !self.details.has(dictionary::EXTENDED_OFFSET_TABLE.tag) {
-      return Ok(None);
+    match self.details.get_output() {
+      Some(PixelDataFilterDetails {
+        extended_offset_table: Some(extended_offset_table),
+        extended_offset_table_lengths: Some(extended_offset_table_lengths),
+        ..
+      }) => {
+        // Get the value of the '(0x7FE0,0001) Extended Offset Table' data
+        // element
+        let extended_offset_table_bytes = extended_offset_table
+          .vr_bytes(&[ValueRepresentation::OtherVeryLongString])?;
+
+        if extended_offset_table_bytes.len() % 8 != 0 {
+          return Err(DataError::new_value_invalid(
+            "Extended Offset Table has invalid size".to_string(),
+          ));
+        }
+
+        let mut extended_offset_table =
+          vec![0u64; extended_offset_table_bytes.len() / 8];
+        byteorder::LittleEndian::read_u64_into(
+          extended_offset_table_bytes.as_slice(),
+          extended_offset_table.as_mut_slice(),
+        );
+
+        // Check that the first offset is zero
+        if *extended_offset_table.first().unwrap_or(&0) != 0 {
+          return Err(DataError::new_value_invalid(
+            "Extended Offset Table first value must be zero".to_string(),
+          ));
+        }
+
+        // Check that the offsets are sorted
+        if !extended_offset_table.is_sorted() {
+          return Err(DataError::new_value_invalid(
+            "Extended Offset Table values are not sorted".to_string(),
+          ));
+        }
+
+        // Get the value of the '(0x7FE0,0002) Extended Offset Table Lengths'
+        // data element
+        let extended_offset_table_lengths_bytes = extended_offset_table_lengths
+          .vr_bytes(&[ValueRepresentation::OtherVeryLongString])?;
+
+        if extended_offset_table_lengths_bytes.len() % 8 != 0 {
+          return Err(DataError::new_value_invalid(
+            "Extended Offset Table Lengths has invalid size".to_string(),
+          ));
+        }
+
+        let mut extended_offset_table_lengths =
+          vec![0u64; extended_offset_table_lengths_bytes.len() / 8];
+        byteorder::LittleEndian::read_u64_into(
+          extended_offset_table_lengths_bytes.as_slice(),
+          extended_offset_table_lengths.as_mut_slice(),
+        );
+
+        // Check the two are of the same length
+        if extended_offset_table.len() != extended_offset_table_lengths.len() {
+          return Err(DataError::new_value_invalid(
+            "Extended Offset Table and Lengths don't have the same number of \
+          items"
+              .to_string(),
+          ));
+        }
+
+        // Return the offset table
+        let mut entries = VecDeque::with_capacity(extended_offset_table.len());
+        for i in 0..extended_offset_table.len() {
+          entries.push_back((
+            extended_offset_table[i],
+            Some(extended_offset_table_lengths[i]),
+          ));
+        }
+
+        Ok(Some(entries))
+      }
+
+      _ => Ok(None),
     }
-
-    // Get the value of the '(0x7FE0,0001) Extended Offset Table' data
-    // element
-    let extended_offset_table_bytes = self.details.get_value_vr_bytes(
-      dictionary::EXTENDED_OFFSET_TABLE.tag,
-      &[ValueRepresentation::OtherVeryLongString],
-    )?;
-
-    if extended_offset_table_bytes.len() % 8 != 0 {
-      return Err(DataError::new_value_invalid(
-        "Extended Offset Table has invalid size".to_string(),
-      ));
-    }
-
-    let mut extended_offset_table =
-      vec![0u64; extended_offset_table_bytes.len() / 8];
-    byteorder::LittleEndian::read_u64_into(
-      extended_offset_table_bytes.as_slice(),
-      extended_offset_table.as_mut_slice(),
-    );
-
-    // Check that the first offset is zero
-    if *extended_offset_table.first().unwrap_or(&0) != 0 {
-      return Err(DataError::new_value_invalid(
-        "Extended Offset Table first value must be zero".to_string(),
-      ));
-    }
-
-    // Check that the offsets are sorted
-    if !extended_offset_table.is_sorted() {
-      return Err(DataError::new_value_invalid(
-        "Extended Offset Table values are not sorted".to_string(),
-      ));
-    }
-
-    // Get the value of the '(0x7FE0,0002) Extended Offset Table Lengths' data
-    // element
-    let extended_offset_table_lengths_bytes = self.details.get_value_vr_bytes(
-      dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag,
-      &[ValueRepresentation::OtherVeryLongString],
-    )?;
-
-    if extended_offset_table_lengths_bytes.len() % 8 != 0 {
-      return Err(DataError::new_value_invalid(
-        "Extended Offset Table Lengths has invalid size".to_string(),
-      ));
-    }
-
-    let mut extended_offset_table_lengths =
-      vec![0u64; extended_offset_table_lengths_bytes.len() / 8];
-    byteorder::LittleEndian::read_u64_into(
-      extended_offset_table_lengths_bytes.as_slice(),
-      extended_offset_table_lengths.as_mut_slice(),
-    );
-
-    // Check the two are of the same length
-    if extended_offset_table.len() != extended_offset_table_lengths.len() {
-      return Err(DataError::new_value_invalid(
-        "Extended Offset Table and Lengths don't have the same number of \
-         items"
-          .to_string(),
-      ));
-    }
-
-    // Return the offset table
-    let mut entries = VecDeque::with_capacity(extended_offset_table.len());
-    for i in 0..extended_offset_table.len() {
-      entries.push_back((
-        extended_offset_table[i],
-        Some(extended_offset_table_lengths[i]),
-      ));
-    }
-
-    Ok(Some(entries))
   }
 
   fn apply_length_to_frame(

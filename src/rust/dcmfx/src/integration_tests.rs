@@ -89,7 +89,21 @@ mod tests {
             eprintln!("Error: Jittered read of {:?} was different", dicom);
           }
 
-          Err((dicom, DicomValidationError::PixelDataReadError { error })) => {
+          Err((
+            dicom,
+            DicomValidationError::PixelDataReadError {
+              error: PixelDataFilterError::DataError(error),
+            },
+          )) => {
+            error.print(&format!("reading pixel data from {:?}", dicom));
+          }
+
+          Err((
+            dicom,
+            DicomValidationError::PixelDataReadError {
+              error: PixelDataFilterError::P10Error(error),
+            },
+          )) => {
             error.print(&format!("reading pixel data from {:?}", dicom));
           }
         }
@@ -108,7 +122,7 @@ mod tests {
     RewriteMismatch,
     JitteredReadError { error: P10Error },
     JitteredReadMismatch,
-    PixelDataReadError { error: DataError },
+    PixelDataReadError { error: PixelDataFilterError },
   }
 
   /// Loads a DICOM file and checks that its JSON serialization by this library

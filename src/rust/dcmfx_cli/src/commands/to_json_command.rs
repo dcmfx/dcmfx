@@ -50,24 +50,36 @@ pub fn run(args: &ToJsonArgs) -> Result<(), ()> {
   match perform_to_json(&args.input_filename, &args.output_filename, &config) {
     Ok(()) => Ok(()),
     Err(e) => {
-      e.print(&format!("converting \"{}\" to JSON", args.input_filename));
+      let task_description =
+        &format!("converting \"{}\" to JSON", args.input_filename);
+
+      match e {
+        ToJsonError::SerializeError(e) => e.print(task_description),
+        ToJsonError::P10Error(e) => e.print(task_description),
+      }
+
       Err(())
     }
   }
+}
+
+enum ToJsonError {
+  SerializeError(JsonSerializeError),
+  P10Error(P10Error),
 }
 
 fn perform_to_json(
   input_filename: &str,
   output_filename: &str,
   config: &DicomJsonConfig,
-) -> Result<(), Box<dyn DcmfxError>> {
+) -> Result<(), ToJsonError> {
   // Open input stream
   let mut input_stream: Box<dyn Read> = match input_filename {
     "-" => Box::new(std::io::stdin()),
     _ => match File::open(input_filename) {
       Ok(file) => Box::new(file),
       Err(e) => {
-        return Err(Box::new(P10Error::FileError {
+        return Err(ToJsonError::P10Error(P10Error::FileError {
           when: "Opening input file".to_string(),
           details: e.to_string(),
         }));
@@ -81,7 +93,7 @@ fn perform_to_json(
     _ => match File::create(output_filename) {
       Ok(file) => Box::new(file),
       Err(e) => {
-        return Err(Box::new(P10Error::FileError {
+        return Err(ToJsonError::P10Error(P10Error::FileError {
           when: "Opening output file".to_string(),
           details: e.to_string(),
         }));
@@ -106,7 +118,7 @@ fn perform_to_json(
       &mut context,
     ) {
       Ok(tokens) => tokens,
-      Err(e) => return Err(Box::new(e)),
+      Err(e) => return Err(ToJsonError::P10Error(e)),
     };
 
     // Write the tokens to the JSON transform, directing the resulting JSON to
@@ -115,19 +127,19 @@ fn perform_to_json(
       match json_transform.add_token(token, &mut output_stream) {
         Ok(()) => (),
         Err(JsonSerializeError::IOError(e)) => {
-          return Err(Box::new(P10Error::FileError {
+          return Err(ToJsonError::P10Error(P10Error::FileError {
             when: "Writing output file".to_string(),
             details: e.to_string(),
           }));
         }
-        Err(e) => return Err(Box::new(e)),
+        Err(e) => return Err(ToJsonError::SerializeError(e)),
       };
 
       // When the end token has been written the conversion is complete
       if *token == P10Token::End {
         return match output_stream.flush() {
           Ok(()) => Ok(()),
-          Err(e) => Err(Box::new(P10Error::FileError {
+          Err(e) => Err(ToJsonError::P10Error(P10Error::FileError {
             when: "Writing output file".to_string(),
             details: e.to_string(),
           })),

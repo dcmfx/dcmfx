@@ -16,7 +16,7 @@ import gleam/result
 /// This is used for printing data sets on the command line, and the output can
 /// be styled via `DataSetPrintOptions`.
 ///
-pub type P10PrintTransform {
+pub opaque type P10PrintTransform {
   P10PrintTransform(
     print_options: DataSetPrintOptions,
     indent: Int,

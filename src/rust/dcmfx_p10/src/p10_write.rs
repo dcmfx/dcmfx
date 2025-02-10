@@ -531,10 +531,10 @@ pub fn data_set_to_tokens<E>(
 ) -> Result<(), E> {
   // Create filter transform that removes File Meta Information data elements
   // from the data set's token stream
-  let mut remove_fmi_transform = P10FilterTransform::new(
-    Box::new(|tag: DataElementTag, _, _| tag.group != 2),
-    false,
-  );
+  let mut remove_fmi_transform =
+    P10FilterTransform::new(Box::new(|tag: DataElementTag, _, _| {
+      tag.group != 2
+    }));
 
   // Create insert transform to add the '(0008,0005) SpecificCharacterSet' data
   // element into the data set's token stream, specifying UTF-8 (ISO_IR 192)

@@ -1,12 +1,17 @@
 //// Extracts frames of pixel data from a stream of DICOM P10 tokens.
 
 import bigi
-import dcmfx_core/data_error.{type DataError}
+import dcmfx_core/data_element_value.{type DataElementValue}
+import dcmfx_core/data_error
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_core/internal/bit_array_utils
 import dcmfx_core/value_representation
+import dcmfx_p10/p10_error
 import dcmfx_p10/p10_token.{type P10Token}
+import dcmfx_p10/transforms/p10_custom_type_transform.{
+  type P10CustomTypeTransform,
+}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
 import gleam/bit_array
@@ -25,12 +30,11 @@ import gleam/result
 /// native pixel data where the size of each frame is not a whole number of
 /// bytes.
 ///
-pub type PixelDataFilter {
+pub opaque type PixelDataFilter {
   PixelDataFilter(
     is_encapsulated: Bool,
-    // Filter used to extract the value of data elements needed
-    details_filter: Option(P10FilterTransform),
-    details: DataSet,
+    // Extracts the value of relevant data elements from the stream
+    details: P10CustomTypeTransform(PixelDataFilterDetails),
     // Filter used to extract only the '(7FE0,0010) Pixel Data' data element
     pixel_data_filter: P10FilterTransform,
     // When reading native pixel data, the size of a single frame in bytes
@@ -49,36 +53,65 @@ pub type PixelDataFilter {
 type OffsetTable =
   List(#(Int, Option(Int)))
 
+type PixelDataFilterDetails {
+  PixelDataFilterDetails(
+    number_of_frames: Option(DataElementValue),
+    extended_offset_table: Option(DataElementValue),
+    extended_offset_table_lengths: Option(DataElementValue),
+  )
+}
+
+fn pixel_data_filter_details_from_data_set(
+  data_set: DataSet,
+) -> Result(PixelDataFilterDetails, data_error.DataError) {
+  Ok(PixelDataFilterDetails(
+    number_of_frames: data_set.delete(data_set, dictionary.number_of_frames.tag).0,
+    extended_offset_table: data_set.delete(
+      data_set,
+      dictionary.extended_offset_table.tag,
+    ).0,
+    extended_offset_table_lengths: data_set.delete(
+      data_set,
+      dictionary.extended_offset_table_lengths.tag,
+    ).0,
+  ))
+}
+
+/// An error that occurred in the process of extract frames of pixel data from
+/// a stream of DICOM P10 tokens.
+///
+pub type PixelDataFilterError {
+  /// An error that occurred when adding a P10 token. This can happen when the
+  /// stream of DICOM P10 tokens is invalid.
+  P10Error(p10_error.P10Error)
+
+  /// An error that occurred when reading the data from the data elements in the
+  /// stream of DICOM P10 tokens.
+  DataError(data_error.DataError)
+}
+
 /// Creates a new P10 pixel data filter to extract frames of pixel data from a
 /// stream of DICOM P10 tokens.
 ///
 pub fn new() -> PixelDataFilter {
-  let details_filter =
-    p10_filter_transform.new(
-      fn(tag, vr, location) {
-        {
-          tag == dictionary.number_of_frames.tag
-          || tag == dictionary.extended_offset_table.tag
-          || tag == dictionary.extended_offset_table_lengths.tag
-        }
-        && vr != value_representation.Sequence
-        && location == []
-      },
-      True,
+  let details =
+    p10_custom_type_transform.new(
+      [
+        dictionary.number_of_frames.tag,
+        dictionary.extended_offset_table.tag,
+        dictionary.extended_offset_table_lengths.tag,
+      ],
+      pixel_data_filter_details_from_data_set,
     )
 
   let pixel_data_filter =
-    p10_filter_transform.new(
-      fn(tag, _, location) {
-        tag == dictionary.pixel_data.tag && location == []
-      },
-      False,
-    )
+    p10_filter_transform.new(fn(tag, _, location) {
+      tag == dictionary.pixel_data.tag && location == []
+    })
 
   PixelDataFilter(
     is_encapsulated: False,
-    details_filter: Some(details_filter),
-    details: data_set.new(),
+    details:,
     pixel_data_filter:,
     native_pixel_data_frame_size: 0,
     pixel_data: deque.new(),
@@ -94,15 +127,19 @@ pub fn new() -> PixelDataFilter {
 pub fn add_token(
   filter: PixelDataFilter,
   token: P10Token,
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), DataError) {
+) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
   // Add the token into the details filter if it is still active
-  let details_filter = case filter.details_filter {
-    Some(details_filter) ->
-      Some(p10_filter_transform.add_token(details_filter, token).1)
-    None -> None
-  }
+  let details =
+    p10_custom_type_transform.add_token(filter.details, token)
+    |> result.map_error(fn(e) {
+      case e {
+        p10_custom_type_transform.DataError(e) -> DataError(e)
+        p10_custom_type_transform.P10Error(e) -> P10Error(e)
+      }
+    })
+  use details <- result.try(details)
 
-  let filter = PixelDataFilter(..filter, details_filter:)
+  let filter = PixelDataFilter(..filter, details:)
 
   use <- bool.guard(p10_token.is_header_token(token), Ok(#([], filter)))
 
@@ -113,27 +150,13 @@ pub fn add_token(
 
   use <- bool.guard(!is_pixel_data_token, Ok(#([], filter)))
 
-  // If the result of the details filter hasn't yet been extracted into a data
-  // set then do so now
-  let filter = case filter.details_filter {
-    Some(details_filter) -> {
-      let details =
-        details_filter
-        |> p10_filter_transform.data_set
-        |> result.unwrap(data_set.new())
-
-      PixelDataFilter(..filter, details_filter: None, details:)
-    }
-    None -> filter
-  }
-
   process_next_pixel_data_token(filter, token)
 }
 
 fn process_next_pixel_data_token(
   filter: PixelDataFilter,
   token: P10Token,
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), DataError) {
+) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
   case token {
     // The start of native pixel data
     p10_token.DataElementHeader(length:, ..) -> {
@@ -143,13 +166,15 @@ fn process_next_pixel_data_token(
 
       use <- bool.guard(
         length % number_of_frames != 0,
-        Error(data_error.new_value_invalid(
-          "Multi-frame pixel data of length "
-          <> int.to_string(length)
-          <> " bytes does not divide evenly into "
-          <> int.to_string(number_of_frames)
-          <> " frames",
-        )),
+        Error(
+          DataError(data_error.new_value_invalid(
+            "Multi-frame pixel data of length "
+            <> int.to_string(length)
+            <> " bytes does not divide evenly into "
+            <> int.to_string(number_of_frames)
+            <> " frames",
+          )),
+        ),
       )
 
       // Store the size of native pixel data frames
@@ -246,25 +271,31 @@ fn process_next_pixel_data_token(
 
 /// Returns the value for '(0028,0008) Number of Frames' data element.
 ///
-fn get_number_of_frames(filter: PixelDataFilter) -> Result(Int, DataError) {
-  use <- bool.guard(
-    !data_set.has(filter.details, dictionary.number_of_frames.tag),
-    Ok(1),
-  )
+fn get_number_of_frames(
+  filter: PixelDataFilter,
+) -> Result(Int, PixelDataFilterError) {
+  case p10_custom_type_transform.get_output(filter.details) {
+    Some(PixelDataFilterDetails(number_of_frames: Some(number_of_frames), ..)) -> {
+      let number_of_frames =
+        data_element_value.get_int(number_of_frames)
+        |> result.map_error(DataError)
+      use number_of_frames <- result.try(number_of_frames)
 
-  let number_of_frames =
-    filter.details
-    |> data_set.get_int(dictionary.number_of_frames.tag)
-  use number_of_frames <- result.try(number_of_frames)
+      use <- bool.guard(
+        number_of_frames < 0,
+        Error(
+          DataError(data_error.new_value_invalid(
+            "Invalid number of frames value: "
+            <> int.to_string(number_of_frames),
+          )),
+        ),
+      )
 
-  use <- bool.guard(
-    number_of_frames < 0,
-    Error(data_error.new_value_invalid(
-      "Invalid number of frames value: " <> int.to_string(number_of_frames),
-    )),
-  )
+      Ok(number_of_frames)
+    }
 
-  Ok(number_of_frames)
+    _ -> Ok(1)
+  }
 }
 
 /// Consumes the native pixel data for as many frames as possible and returns
@@ -273,7 +304,7 @@ fn get_number_of_frames(filter: PixelDataFilter) -> Result(Int, DataError) {
 fn get_pending_native_frames(
   filter: PixelDataFilter,
   frames: List(PixelDataFrame),
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), DataError) {
+) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
   case
     filter.pixel_data_write_offset - filter.pixel_data_read_offset
     < filter.native_pixel_data_frame_size
@@ -355,7 +386,7 @@ fn get_pending_native_frame(
 ///
 fn get_pending_encapsulated_frames(
   filter: PixelDataFilter,
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), DataError) {
+) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
   case filter.offset_table {
     // If the Basic Offset Table hasn't been read yet, read it now that the
     // first pixel data item is complete
@@ -419,7 +450,7 @@ fn get_pending_encapsulated_frames_using_offset_table(
   filter: PixelDataFilter,
   offset_table: OffsetTable,
   frames: List(PixelDataFrame),
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), DataError) {
+) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
   case offset_table {
     [#(_, frame_length), #(offset, _), ..] -> {
       use <- bool.guard(
@@ -437,9 +468,11 @@ fn get_pending_encapsulated_frames_using_offset_table(
       // Check that the frame ended exactly on the expected offset
       use <- bool.guard(
         filter.pixel_data_read_offset != offset,
-        Error(data_error.new_value_invalid(
-          "Pixel data offset table is malformed",
-        )),
+        Error(
+          DataError(data_error.new_value_invalid(
+            "Pixel data offset table is malformed",
+          )),
+        ),
       )
 
       // If this frame has a length specified then validate and apply it
@@ -485,7 +518,9 @@ fn get_pending_encapsulated_frame(
   }
 }
 
-fn read_offset_table(filter: PixelDataFilter) -> Result(OffsetTable, DataError) {
+fn read_offset_table(
+  filter: PixelDataFilter,
+) -> Result(OffsetTable, PixelDataFilterError) {
   use basic_offset_table <- result.try(read_basic_offset_table(filter))
   use extended_offset_table <- result.try(read_extended_offset_table(filter))
 
@@ -497,10 +532,12 @@ fn read_offset_table(filter: PixelDataFilter) -> Result(OffsetTable, DataError) 
       // Validate that the Extended Offset Table is empty. Ref: PS3.5 A.4.
       use <- bool.guard(
         option.is_some(extended_offset_table),
-        Error(data_error.new_value_invalid(
-          "Extended Offset Table must be absent when there is a Basic Offset "
-          <> "Table",
-        )),
+        Error(
+          DataError(data_error.new_value_invalid(
+            "Extended Offset Table must be absent when there is a Basic Offset "
+            <> "Table",
+          )),
+        ),
       )
 
       Ok(basic_offset_table)
@@ -510,7 +547,7 @@ fn read_offset_table(filter: PixelDataFilter) -> Result(OffsetTable, DataError) 
 
 fn read_basic_offset_table(
   filter: PixelDataFilter,
-) -> Result(OffsetTable, DataError) {
+) -> Result(OffsetTable, PixelDataFilterError) {
   // Read Basic Offset Table data into a buffer
   let offset_table_data =
     filter.pixel_data
@@ -523,26 +560,30 @@ fn read_basic_offset_table(
   let offsets =
     bit_array_utils.to_uint32_list(offset_table_data)
     |> result.map_error(fn(_) {
-      data_error.new_value_invalid(
+      DataError(data_error.new_value_invalid(
         "Basic Offset Table length is not a multiple of 4",
-      )
+      ))
     })
   use offsets <- result.try(offsets)
 
   // Check that the first offset is zero. Ref: PS3.5 A.4.
   use <- bool.guard(
     list.first(offsets) != Ok(0),
-    Error(data_error.new_value_invalid(
-      "Basic Offset Table first value must be zero",
-    )),
+    Error(
+      DataError(data_error.new_value_invalid(
+        "Basic Offset Table first value must be zero",
+      )),
+    ),
   )
 
   // Check that the offsets are sorted
   use <- bool.guard(
     !is_list_sorted(offsets),
-    Error(data_error.new_value_invalid(
-      "Basic Offset Table values are not sorted",
-    )),
+    Error(
+      DataError(data_error.new_value_invalid(
+        "Basic Offset Table values are not sorted",
+      )),
+    ),
   )
 
   offsets
@@ -552,100 +593,120 @@ fn read_basic_offset_table(
 
 fn read_extended_offset_table(
   filter: PixelDataFilter,
-) -> Result(Option(OffsetTable), DataError) {
-  use <- bool.guard(
-    !data_set.has(filter.details, dictionary.extended_offset_table.tag),
-    Ok(None),
-  )
+) -> Result(Option(OffsetTable), PixelDataFilterError) {
+  case p10_custom_type_transform.get_output(filter.details) {
+    Some(PixelDataFilterDetails(
+      extended_offset_table: Some(extended_offset_table),
+      extended_offset_table_lengths: Some(extended_offset_table_lengths),
+      ..,
+    )) -> {
+      // Get the value of the '(0x7FE0,0001) Extended Offset Table' data
+      // element
+      let extended_offset_table =
+        extended_offset_table
+        |> data_element_value.vr_bytes([
+          value_representation.OtherVeryLongString,
+        ])
+        |> result.then(fn(bytes) {
+          bit_array_utils.to_uint64_list(bytes)
+          |> result.replace_error(data_error.new_value_invalid(
+            "Extended Offset Table has invalid size",
+          ))
+        })
+        |> result.map_error(DataError)
+      use extended_offset_table <- result.try(extended_offset_table)
 
-  // Get the value of the '(0x7FE0,0001) Extended Offset Table' data
-  // element
-  let extended_offset_table =
-    filter.details
-    |> data_set.get_value_vr_bytes(dictionary.extended_offset_table.tag, [
-      value_representation.OtherVeryLongString,
-    ])
-    |> result.then(fn(bytes) {
-      bit_array_utils.to_uint64_list(bytes)
-      |> result.replace_error(data_error.new_value_invalid(
-        "Extended Offset Table has invalid size",
-      ))
-    })
-  use extended_offset_table <- result.try(extended_offset_table)
+      let extended_offset_table =
+        extended_offset_table
+        |> list.map(bigi.to_int)
+        |> result.all
+        |> result.replace_error(
+          DataError(data_error.new_value_invalid(
+            "Extended Offset Table has a value greater than 2^53 - 1",
+          )),
+        )
+      use extended_offset_table <- result.try(extended_offset_table)
 
-  let extended_offset_table =
-    extended_offset_table
-    |> list.map(bigi.to_int)
-    |> result.all
-    |> result.replace_error(data_error.new_value_invalid(
-      "Extended Offset Table has a value greater than 2^53 - 1",
-    ))
-  use extended_offset_table <- result.try(extended_offset_table)
+      // Get the value of the '(0x7FE0,0002) Extended Offset Table Lengths' data
+      // element
+      let extended_offset_table_lengths =
+        extended_offset_table_lengths
+        |> data_element_value.vr_bytes([
+          value_representation.OtherVeryLongString,
+        ])
+        |> result.then(fn(bytes) {
+          bit_array_utils.to_uint64_list(bytes)
+          |> result.replace_error(data_error.new_value_invalid(
+            "Extended Offset Table Lengths has invalid size",
+          ))
+        })
+        |> result.map_error(DataError)
+      use extended_offset_table_lengths <- result.try(
+        extended_offset_table_lengths,
+      )
 
-  // Get the value of the '(0x7FE0,0002) Extended Offset Table Lengths' data
-  // element
-  let extended_offset_table_lengths =
-    filter.details
-    |> data_set.get_value_vr_bytes(
-      dictionary.extended_offset_table_lengths.tag,
-      [value_representation.OtherVeryLongString],
-    )
-    |> result.then(fn(bytes) {
-      bit_array_utils.to_uint64_list(bytes)
-      |> result.replace_error(data_error.new_value_invalid(
-        "Extended Offset Table Lengths has invalid size",
-      ))
-    })
-  use extended_offset_table_lengths <- result.try(extended_offset_table_lengths)
+      let extended_offset_table_lengths =
+        extended_offset_table_lengths
+        |> list.map(bigi.to_int)
+        |> result.all
+        |> result.replace_error(
+          DataError(data_error.new_value_invalid(
+            "Extended Offset Table Lengths has a value greater than 2^53 - 1",
+          )),
+        )
+      use extended_offset_table_lengths <- result.try(
+        extended_offset_table_lengths,
+      )
 
-  let extended_offset_table_lengths =
-    extended_offset_table_lengths
-    |> list.map(bigi.to_int)
-    |> result.all
-    |> result.replace_error(data_error.new_value_invalid(
-      "Extended Offset Table Lengths has a value greater than 2^53 - 1",
-    ))
-  use extended_offset_table_lengths <- result.try(extended_offset_table_lengths)
+      // Check the two are of the same length
+      use <- bool.guard(
+        list.length(extended_offset_table)
+          != list.length(extended_offset_table_lengths),
+        Error(
+          DataError(data_error.new_value_invalid(
+            "Extended Offset Table and Lengths don't have the same number of items",
+          )),
+        ),
+      )
 
-  // Check the two are of the same length
-  use <- bool.guard(
-    list.length(extended_offset_table)
-      != list.length(extended_offset_table_lengths),
-    Error(data_error.new_value_invalid(
-      "Extended Offset Table and Lengths don't have the same number of items",
-    )),
-  )
+      // Check that the first offset is zero
+      use <- bool.guard(
+        list.first(extended_offset_table) |> result.unwrap(0) != 0,
+        Error(
+          DataError(data_error.new_value_invalid(
+            "Extended Offset Table first value must be zero",
+          )),
+        ),
+      )
 
-  // Check that the first offset is zero
-  use <- bool.guard(
-    list.first(extended_offset_table) |> result.unwrap(0) != 0,
-    Error(data_error.new_value_invalid(
-      "Extended Offset Table first value must be zero",
-    )),
-  )
+      // Check that the offsets are sorted
+      use <- bool.guard(
+        !is_list_sorted(extended_offset_table),
+        Error(
+          DataError(data_error.new_value_invalid(
+            "Extended Offset Table values are not sorted",
+          )),
+        ),
+      )
 
-  // Check that the offsets are sorted
-  use <- bool.guard(
-    !is_list_sorted(extended_offset_table),
-    Error(data_error.new_value_invalid(
-      "Extended Offset Table values are not sorted",
-    )),
-  )
+      // Return the offset table
+      list.map2(
+        extended_offset_table,
+        extended_offset_table_lengths,
+        fn(offset, length) { #(offset, Some(length)) },
+      )
+      |> Some
+      |> Ok
+    }
 
-  // Return the offset table
-  list.map2(
-    extended_offset_table,
-    extended_offset_table_lengths,
-    fn(offset, length) { #(offset, Some(length)) },
-  )
-  |> Some
-  |> Ok
+    _ -> Ok(None)
+  }
 }
 
 fn apply_length_to_frame(
   frame: PixelDataFrame,
   frame_length: Int,
-) -> Result(PixelDataFrame, DataError) {
+) -> Result(PixelDataFrame, PixelDataFilterError) {
   case pixel_data_frame.length(frame) {
     len if len == frame_length -> Ok(frame)
 
@@ -653,13 +714,15 @@ fn apply_length_to_frame(
       Ok(pixel_data_frame.drop_end_bytes(frame, len - frame_length))
 
     _ ->
-      Error(data_error.new_value_invalid(
+      data_error.new_value_invalid(
         "Extended Offset Table Length value '"
         <> int.to_string(frame_length)
         <> "' is invalid for frame of length '"
         <> int.to_string(pixel_data_frame.length(frame))
         <> "'",
-      ))
+      )
+      |> DataError
+      |> Error
   }
 }
 

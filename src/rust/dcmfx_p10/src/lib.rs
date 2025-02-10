@@ -22,6 +22,9 @@ pub use p10_error::P10Error;
 pub use p10_read::{P10ReadConfig, P10ReadContext};
 pub use p10_token::P10Token;
 pub use p10_write::{P10WriteConfig, P10WriteContext};
+pub use transforms::p10_custom_type_transform::{
+  P10CustomTypeTransform, P10CustomTypeTransformError,
+};
 pub use transforms::p10_filter_transform::P10FilterTransform;
 pub use transforms::p10_insert_transform::P10InsertTransform;
 pub use transforms::p10_print_transform::P10PrintTransform;

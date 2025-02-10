@@ -547,7 +547,7 @@ pub fn data_set_to_tokens(
   // Create filter transform that removes File Meta Information data elements
   // from the data set's token stream
   let remove_fmi_transform =
-    p10_filter_transform.new(fn(tag, _, _) { tag.group != 2 }, False)
+    p10_filter_transform.new(fn(tag, _, _) { tag.group != 2 })
 
   // Create insert transform to add the '(0008,0005) SpecificCharacterSet' data
   // element into the data set's token stream, specifying UTF-8 (ISO_IR 192)

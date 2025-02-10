@@ -1,6 +1,6 @@
 import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_element_value
-import dcmfx_core/data_error.{type DataError}
+import dcmfx_core/data_error
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_json
@@ -10,6 +10,7 @@ import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext}
 import dcmfx_pixel_data
+import dcmfx_pixel_data/pixel_data_filter.{type PixelDataFilterError}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error
 import gleam/dynamic.{type Dynamic}
@@ -75,8 +76,11 @@ pub fn main() {
           Error(#(dicom, JitteredReadMismatch)) ->
             io.println("Error: Jittered read of " <> dicom <> " was different")
 
-          Error(#(dicom, PixelDataReadError(error))) ->
+          Error(#(dicom, PixelDataReadError(pixel_data_filter.DataError(error)))) ->
             data_error.print(error, "reading pixel data from " <> dicom)
+
+          Error(#(dicom, PixelDataReadError(pixel_data_filter.P10Error(error)))) ->
+            p10_error.print(error, "reading pixel data from " <> dicom)
         }
       })
 
@@ -96,7 +100,7 @@ type DicomValidationError {
   RewriteMismatch
   JitteredReadError(error: P10Error)
   JitteredReadMismatch
-  PixelDataReadError(error: DataError)
+  PixelDataReadError(error: PixelDataFilterError)
 }
 
 /// Loads a DICOM file and checks that its JSON serialization by this library

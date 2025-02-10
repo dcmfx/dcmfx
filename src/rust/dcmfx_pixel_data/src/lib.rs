@@ -3,12 +3,10 @@
 mod pixel_data_filter;
 mod pixel_data_frame;
 
-pub use pixel_data_filter::PixelDataFilter;
+pub use pixel_data_filter::{PixelDataFilter, PixelDataFilterError};
 pub use pixel_data_frame::PixelDataFrame;
 
-use dcmfx_core::{
-  dictionary, transfer_syntax, DataError, DataSet, TransferSyntax,
-};
+use dcmfx_core::{dictionary, transfer_syntax, DataSet, TransferSyntax};
 use dcmfx_p10::DataSetP10Extensions;
 
 /// Adds functions to [`DataSet`] for accessing its pixel data.
@@ -24,11 +22,15 @@ where
   /// Offset Table'*, and *'(7FE0,0002) Extended Offset Table Lengths'* data
   /// elements are used when present and relevant.
   ///
-  fn get_pixel_data_frames(&self) -> Result<Vec<PixelDataFrame>, DataError>;
+  fn get_pixel_data_frames(
+    &self,
+  ) -> Result<Vec<PixelDataFrame>, PixelDataFilterError>;
 }
 
 impl DataSetPixelDataExtensions for DataSet {
-  fn get_pixel_data_frames(&self) -> Result<Vec<PixelDataFrame>, DataError> {
+  fn get_pixel_data_frames(
+    &self,
+  ) -> Result<Vec<PixelDataFrame>, PixelDataFilterError> {
     // Create a new data set containing only the data elements needed by the
     // pixel data filter. This avoids calling `DataSet::to_p10_tokens()` on the
     // whole data set.

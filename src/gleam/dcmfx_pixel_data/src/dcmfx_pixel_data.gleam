@@ -1,11 +1,10 @@
 //// Extracts frames of pixel data present in a data set.
 
-import dcmfx_core/data_error.{type DataError}
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_core/transfer_syntax.{type TransferSyntax}
 import dcmfx_p10/p10_write
-import dcmfx_pixel_data/pixel_data_filter
+import dcmfx_pixel_data/pixel_data_filter.{type PixelDataFilterError}
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
 import gleam/list
 import gleam/pair
@@ -20,7 +19,7 @@ import gleam/result
 ///
 pub fn get_pixel_data_frames(
   data_set: DataSet,
-) -> Result(List(PixelDataFrame), DataError) {
+) -> Result(List(PixelDataFrame), PixelDataFilterError) {
   // Create a new data set containing only the data elements needed by the pixel
   // data filter. This avoids calling `data_elements_to_tokens()` on the
   // whole data set.

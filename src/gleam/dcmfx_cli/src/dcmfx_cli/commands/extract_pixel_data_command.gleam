@@ -5,7 +5,9 @@ import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext}
 import dcmfx_p10/p10_token
 import dcmfx_pixel_data
-import dcmfx_pixel_data/pixel_data_filter.{type PixelDataFilter}
+import dcmfx_pixel_data/pixel_data_filter.{
+  type PixelDataFilter, type PixelDataFilterError,
+}
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error.{type FileStreamError}
@@ -29,11 +31,6 @@ fn output_prefix_flag() {
   )
 }
 
-pub type ExtractPixelDataError {
-  ExtractPixelDataDataError(e: DataError)
-  ExtractPixelDataP10Error(e: P10Error)
-}
-
 pub fn run() {
   use <- glint.command_help(command_help())
   use input_filename <- glint.named_arg("input-filename")
@@ -49,8 +46,8 @@ pub fn run() {
       let task = "reading file \"" <> input_filename <> "\""
 
       case e {
-        ExtractPixelDataDataError(e) -> data_error.print(e, task)
-        ExtractPixelDataP10Error(e) -> p10_error.print(e, task)
+        pixel_data_filter.DataError(e) -> data_error.print(e, task)
+        pixel_data_filter.P10Error(e) -> p10_error.print(e, task)
       }
 
       Error(Nil)
@@ -61,12 +58,12 @@ pub fn run() {
 fn perform_extract_pixel_data(
   input_filename: String,
   output_prefix: String,
-) -> Result(Nil, ExtractPixelDataError) {
+) -> Result(Nil, PixelDataFilterError) {
   // Open input stream
   let input_stream =
     file_stream.open_read(input_filename)
     |> result.map_error(fn(e) {
-      ExtractPixelDataP10Error(p10_error.FileStreamError("Opening file", e))
+      pixel_data_filter.P10Error(p10_error.FileStreamError("Opening file", e))
     })
   use input_stream <- result.try(input_stream)
 
@@ -97,7 +94,7 @@ fn do_perform_extract_pixel_data(
   output_prefix: String,
   output_extension: String,
   frame_number: Int,
-) -> Result(Nil, ExtractPixelDataError) {
+) -> Result(Nil, PixelDataFilterError) {
   // Read the next tokens from the input stream
   case dcmfx_p10.read_tokens_from_stream(input_stream, read_context) {
     Ok(#(tokens, read_context)) -> {
@@ -120,10 +117,7 @@ fn do_perform_extract_pixel_data(
           }
 
           // Pass token through the pixel data filter
-          case
-            pixel_data_filter.add_token(pixel_data_filter, token)
-            |> result.map_error(ExtractPixelDataDataError)
-          {
+          case pixel_data_filter.add_token(pixel_data_filter, token) {
             Ok(#(frames, pixel_data_filter)) -> {
               // Write frames
               let frame_number =
@@ -139,7 +133,7 @@ fn do_perform_extract_pixel_data(
                   |> result.replace(frame_number + 1)
                 })
                 |> result.map_error(fn(e) {
-                  ExtractPixelDataP10Error(p10_error.FileStreamError(
+                  pixel_data_filter.P10Error(p10_error.FileStreamError(
                     "Writing pixel data frame",
                     e,
                   ))
@@ -175,7 +169,7 @@ fn do_perform_extract_pixel_data(
       }
     }
 
-    Error(e) -> Error(ExtractPixelDataP10Error(e))
+    Error(e) -> Error(pixel_data_filter.P10Error(e))
   }
 }
 

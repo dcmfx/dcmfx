@@ -34,7 +34,12 @@ pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
   match perform_extract_pixel_data(&args.input_filename, output_prefix) {
     Ok(_) => Ok(()),
 
-    Err(e) => {
+    Err(PixelDataFilterError::DataError(e)) => {
+      e.print(&format!("reading file \"{}\"", args.input_filename));
+      Err(())
+    }
+
+    Err(PixelDataFilterError::P10Error(e)) => {
       e.print(&format!("reading file \"{}\"", args.input_filename));
       Err(())
     }
@@ -44,14 +49,14 @@ pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
 fn perform_extract_pixel_data(
   input_filename: &str,
   output_prefix: &str,
-) -> Result<(), Box<dyn DcmfxError>> {
+) -> Result<(), PixelDataFilterError> {
   // Open input stream
   let mut input_stream: Box<dyn Read> = match input_filename {
     "-" => Box::new(std::io::stdin()),
     _ => match File::open(input_filename) {
       Ok(file) => Box::new(file),
       Err(e) => {
-        return Err(Box::new(P10Error::FileError {
+        return Err(PixelDataFilterError::P10Error(P10Error::FileError {
           when: "Opening file".to_string(),
           details: e.to_string(),
         }));
@@ -75,7 +80,7 @@ fn perform_extract_pixel_data(
     // Read the next tokens from the input stream
     let tokens =
       dcmfx::p10::read_tokens_from_stream(&mut input_stream, &mut read_context)
-        .map_err(|e| Box::new(e) as Box<dyn DcmfxError>)?;
+        .map_err(PixelDataFilterError::P10Error)?;
 
     for token in tokens.iter() {
       // Update output extension when the File Meta Information token is
@@ -89,9 +94,7 @@ fn perform_extract_pixel_data(
       }
 
       // Pass token through the pixel data filter
-      let frames = pixel_data_filter
-        .add_token(token)
-        .map_err(|e| Box::new(e) as Box<dyn DcmfxError>)?;
+      let frames = pixel_data_filter.add_token(token)?;
 
       // Write frames
       for frame in frames {
@@ -99,10 +102,10 @@ fn perform_extract_pixel_data(
           format!("{}.{:04}{}", output_prefix, frame_number, output_extension);
 
         write_frame(&filename, &frame).map_err(|e| {
-          Box::new(P10Error::FileError {
+          PixelDataFilterError::P10Error(P10Error::FileError {
             when: "Writing pixel data frame".to_string(),
             details: e.to_string(),
-          }) as Box<dyn DcmfxError>
+          })
         })?;
 
         frame_number += 1;

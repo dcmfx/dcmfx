@@ -3,6 +3,7 @@
 import dcmfx_core/internal/utils
 import gleam/bool
 import gleam/int
+import gleam/order
 import gleam/result
 import gleam/string
 
@@ -48,6 +49,12 @@ pub fn is_private_creator(tag: DataElementTag) -> Bool {
 ///
 pub fn to_int(tag: DataElementTag) -> Int {
   tag.group * 65_536 + tag.element
+}
+
+/// Compares two data element tags.
+///
+pub fn compare(lhs: DataElementTag, rhs: DataElementTag) -> order.Order {
+  int.compare(to_int(lhs), to_int(rhs))
 }
 
 /// Formats a data element tag as `"$GROUP$ELEMENT"`, e.g.`"00080020"`.
