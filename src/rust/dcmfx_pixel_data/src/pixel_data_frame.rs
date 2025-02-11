@@ -1,8 +1,14 @@
+//! Defines a single frame of pixel data in its raw form.
+//!
+//! The data will be native, RLE encoded, or using an encapsulated transfer
+//! syntax, but the details of how it is encoded are not a concern of
+//! [`PixelDataFrame`].
+
 use std::ops::Range;
 use std::rc::Rc;
 
-/// A single frame of pixel data. This is made up of a one or more slices into
-/// reference-counted `Vec<u8>` data, which avoids copying of data.
+/// A single frame of pixel data in its raw form. It is made up of a one or more
+/// slices into reference-counted `Vec<u8>` data, which avoids copying of data.
 ///
 /// If required, use [`PixelDataFrame::to_bytes()`] to get the frame's data in a
 /// single contiguous buffer.

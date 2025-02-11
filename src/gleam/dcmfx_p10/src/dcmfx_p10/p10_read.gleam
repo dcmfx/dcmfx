@@ -102,7 +102,7 @@ import gleam/result
 /// P10 data. Such data is malformed but is still able to read, however doing so
 /// can potentially lead to incorrect results. For example:
 ///
-/// 1. If the '(0008,0005) Specific Character Set' data element appears after
+/// 1. If the *'(0008,0005) Specific Character Set'* data element appears after
 ///    data elements that use an encoded string VR, they will be decoded using
 ///    the wrong character set.
 ///

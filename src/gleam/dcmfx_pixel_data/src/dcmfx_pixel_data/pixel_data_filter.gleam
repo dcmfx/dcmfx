@@ -269,7 +269,7 @@ fn process_next_pixel_data_token(
   }
 }
 
-/// Returns the value for '(0028,0008) Number of Frames' data element.
+/// Returns the value for *'(0028,0008) Number of Frames'* data element.
 ///
 fn get_number_of_frames(
   filter: PixelDataFilter,

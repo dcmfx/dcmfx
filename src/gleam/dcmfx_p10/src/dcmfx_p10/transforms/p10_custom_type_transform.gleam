@@ -11,13 +11,13 @@ import gleam/order
 import gleam/result
 
 /// Transforms a stream of DICOM P10 tokens into a custom type. This is done by:
-/// 
+///
 /// 1. Specifying the tags of the data elements needed to create the custom
 ///    type.
 /// 2. Extracting the specified data elements from the incoming DICOM P10 token
 ///    stream into a data set.
 /// 3. Passing the data set to a function that creates the custom type.
-/// 
+///
 /// The result is then accessed using `get_output()` which returns `None` if the
 /// target is not yet available or was unable to be created.
 ///

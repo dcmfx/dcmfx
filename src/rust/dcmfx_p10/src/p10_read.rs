@@ -95,9 +95,9 @@ pub struct P10ReadConfig {
   /// P10 data. Such data is malformed but is still able to read, however doing
   /// so can potentially lead to incorrect results. For example:
   ///
-  /// 1. If the '(0008,0005) Specific Character Set' data element appears after
-  ///    data elements that use an encoded string VR, they will be decoded using
-  ///    the wrong character set.
+  /// 1. If the *'(0008,0005) Specific Character Set'* data element appears
+  ///    after data elements that use an encoded string VR, they will be decoded
+  ///    using the wrong character set.
   ///
   /// 2. If a '(gggg,00xx) Private Creator' data element appears after the data
   ///    elements it defines the private creator for, those data elements will
