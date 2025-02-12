@@ -58,9 +58,15 @@ def standardize_json_dict(dicom_json_dict, is_big_endian):
 
         # Convert simple values
         elif vr != "SQ" and "Value" in value:
+            def rstrip_string_value(s):
+                if vr == "ST" or vr == "UT":
+                    return s.rstrip(' ')
+
+                return s.rstrip()
+
             # Strip strings
             value["Value"] = [
-                (v.rstrip() if isinstance(v, str) else v)
+                (rstrip_string_value(v) if isinstance(v, str) else v)
                 for v in value["Value"]
             ]
 
