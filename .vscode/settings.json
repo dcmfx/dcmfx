@@ -32,15 +32,23 @@
     "codepoints",
     "concat",
     "deque",
-    "DICOM",
+    "dicom",
+    "dicoms",
     "endianness",
     "dcmfx",
     "gleeunit",
+    "hounsfield",
     "ints",
+    "lut",
+    "luts",
     "println",
+    "rngs",
+    "rposition",
+    "seedable",
     "signedness",
     "simplifile",
     "submatches",
-    "uids"
+    "uids",
+    "walkdir"
   ]
 }
