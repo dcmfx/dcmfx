@@ -173,6 +173,44 @@ impl P10Location {
     })
   }
 
+  /// Swaps endianness of the value bytes for a given data element tag and VR.
+  ///
+  /// This function handles the unusual behavior of pixel data and waveform data
+  /// that has a VR of OW but a bits allocated value of 32 or 64. This is a
+  /// special case for endian swapping because it is actually storing 32/64-bit
+  /// words, not the 16-bit ones indicated by the VR.
+  ///
+  pub fn swap_endianness(
+    &self,
+    tag: DataElementTag,
+    vr: ValueRepresentation,
+    data: &mut [u8],
+  ) {
+    let vr = if vr == ValueRepresentation::OtherWordString {
+      let bits_allocated = if tag == dictionary::PIXEL_DATA.tag {
+        self.active_clarifying_data_elements().bits_allocated
+      } else if tag == dictionary::WAVEFORM_DATA.tag {
+        self
+          .active_clarifying_data_elements()
+          .waveform_bits_allocated
+      } else {
+        None
+      };
+
+      if bits_allocated == Some(32) {
+        ValueRepresentation::UnsignedLong
+      } else if bits_allocated == Some(64) {
+        ValueRepresentation::UnsignedVeryLong
+      } else {
+        vr
+      }
+    } else {
+      vr
+    };
+
+    vr.swap_endianness(data);
+  }
+
   /// Returns the next delimiter token for a location. This checks the `ends_at`
   /// value of the entry at the head of the location to see if the bytes read
   /// has met or exceeded it, and if it has then the relevant delimiter token is
@@ -293,11 +331,13 @@ impl P10Location {
     &mut self,
     ends_at: Option<u64>,
     length: ValueLength,
-  ) -> Result<(), String> {
+  ) -> Result<usize, String> {
     match self.entries.last_mut() {
       // Carry across the current clarifying data elements as the initial state
       // for the new item
       Some(LocationEntry::Sequence { item_count, .. }) => {
+        let index = *item_count;
+
         *item_count += 1;
 
         self.entries.push(LocationEntry::Item {
@@ -308,12 +348,11 @@ impl P10Location {
           ends_at,
         });
 
-        Ok(())
+        Ok(index)
       }
 
       _ => Err(format!(
-        "Item encountered outside of a sequence, length: {} bytes",
-        length
+        "Item encountered outside of a sequence, length: {length}",
       )),
     }
   }

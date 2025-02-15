@@ -26,10 +26,7 @@ def dicom_to_json(file):
     is_big_endian = False
     if "TransferSyntaxUID" in data_set.file_meta:
         transfer_syntax_uid = data_set.file_meta.TransferSyntaxUID
-        dicom_json_dict["00020010"] = {
-            "vr": "UI",
-            "Value": [transfer_syntax_uid]
-        }
+        dicom_json_dict["00020010"] = {"vr": "UI", "Value": [transfer_syntax_uid]}
 
         is_big_endian = transfer_syntax_uid == "1.2.840.10008.1.2.2"
 
@@ -58,9 +55,10 @@ def standardize_json_dict(dicom_json_dict, is_big_endian):
 
         # Convert simple values
         elif vr != "SQ" and "Value" in value:
+
             def rstrip_string_value(s):
                 if vr == "ST" or vr == "UT":
-                    return s.rstrip(' ')
+                    return s.rstrip(" ")
 
                 return s.rstrip()
 
@@ -87,11 +85,22 @@ def standardize_json_dict(dicom_json_dict, is_big_endian):
         ):
             item_size = {"OW": 2, "OD": 8, "OF": 4, "OL": 4, "OV": 8}[vr]
 
+            # Recognize 32/64-bit pixel data that uses the OW VR
+            if (
+                tag == "7FE00010"
+                and vr == "OW"
+                and (
+                    getattr(data_set, "BitsAllocated") == 32
+                    or getattr(data_set, "BitsAllocated") == 64
+                )
+            ):
+                item_size = 4
+
             bytes = base64.b64decode(value["InlineBinary"])
 
             # Iterate over the bytearray in chunks of `item_size`
             swapped = bytearray()
-            for i in range(0, len(bytes), 2):
+            for i in range(0, len(bytes), item_size):
                 item = bytes[i : i + item_size]
                 swapped.extend(item[::-1])
 

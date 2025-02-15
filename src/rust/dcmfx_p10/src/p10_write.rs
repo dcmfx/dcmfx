@@ -11,6 +11,7 @@ use dcmfx_core::{
   DataElementValue, DataSet, TransferSyntax,
 };
 
+use crate::internal::p10_location::P10Location;
 use crate::{
   internal::{
     data_element_header::{DataElementHeader, ValueLengthSize},
@@ -60,8 +61,8 @@ pub struct P10WriteContext {
   is_ended: bool,
   transfer_syntax: &'static TransferSyntax,
   zlib_stream: Option<flate2::Compress>,
+  location: P10Location,
   path: DataSetPath,
-  sequence_item_counts: Vec<usize>,
 }
 
 impl P10WriteContext {
@@ -75,8 +76,8 @@ impl P10WriteContext {
       is_ended: false,
       transfer_syntax: &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
       zlib_stream: None,
+      location: P10Location::new(),
       path: DataSetPath::new(),
-      sequence_item_counts: vec![],
     }
   }
 
@@ -189,55 +190,71 @@ impl P10WriteContext {
       }
 
       _ => {
-        // Update the current path
+        let map_to_p10_token_stream_error =
+          |details: String| P10Error::TokenStreamInvalid {
+            when: "Writing token to context".to_string(),
+            details,
+            token: token.clone(),
+          };
+
+        // Update the current location
         match token {
           P10Token::DataElementHeader { tag, .. } => {
             self.path.add_data_element(*tag)
           }
 
-          P10Token::SequenceStart { tag, .. } => {
-            self.sequence_item_counts.push(0);
-            self.path.add_data_element(*tag)
-          }
+          P10Token::SequenceStart { tag, .. } => self
+            .location
+            .add_sequence(*tag, false, None)
+            .and_then(|_| self.path.add_data_element(*tag)),
 
-          P10Token::SequenceItemStart | P10Token::PixelDataItem { .. } => {
-            let index = self.sequence_item_counts.last_mut().unwrap();
-
-            *index += 1;
-            self.path.add_sequence_item(*index - 1)
-          }
+          P10Token::SequenceItemStart | P10Token::PixelDataItem { .. } => self
+            .location
+            .add_item(None, ValueLength::Undefined)
+            .and_then(|index| self.path.add_sequence_item(index)),
 
           _ => Ok(()),
         }
-        .map_err(|_| P10Error::TokenStreamInvalid {
-          when: "Writing token to context".to_string(),
-          details: "The data set path is not in a valid state for this token"
-            .to_string(),
-          token: token.clone(),
-        })?;
+        .map_err(map_to_p10_token_stream_error)?;
 
         // Convert token to bytes
         let token_bytes = self.token_to_bytes(token)?;
 
-        // Update the current path
+        // Update the current location
         match token {
           P10Token::DataElementValueBytes {
-            bytes_remaining: 0, ..
+            tag,
+            vr,
+            bytes_remaining: 0,
+            data,
+          } => {
+            if *tag == dictionary::BITS_ALLOCATED.tag
+              || *tag == dictionary::WAVEFORM_BITS_ALLOCATED.tag
+            {
+              let mut data = (**data).clone();
+              self
+                .location
+                .add_clarifying_data_element(*tag, *vr, &mut data)?;
+            }
+
+            if *tag == dictionary::ITEM.tag {
+              self.location.end_item().and_then(|_| self.path.pop())
+            } else {
+              self.path.pop()
+            }
           }
-          | P10Token::SequenceItemDelimiter => self.path.pop(),
+
+          P10Token::SequenceItemDelimiter => {
+            self.location.end_item().and_then(|_| self.path.pop())
+          }
 
           P10Token::SequenceDelimiter { .. } => {
-            self.sequence_item_counts.pop();
-            self.path.pop()
+            self.location.end_sequence().and_then(|_| self.path.pop())
           }
 
           _ => Ok(()),
         }
-        .map_err(|_| P10Error::TokenStreamInvalid {
-          when: "Writing token to context".to_string(),
-          details: "The data set path is empty".to_string(),
-          token: token.clone(),
-        })?;
+        .map_err(map_to_p10_token_stream_error)?;
 
         // If a zlib stream is active then pass the P10 bytes through it
         if let Some(zlib_stream) = self.zlib_stream.as_mut() {
@@ -365,13 +382,14 @@ impl P10WriteContext {
         )
       }
 
-      P10Token::DataElementValueBytes { vr, data, .. } => {
+      P10Token::DataElementValueBytes { tag, vr, data, .. } => {
         if self.transfer_syntax.endianness.is_big() {
-          // To swap endianness the data needs to be cloned as it can't be swapped
-          // in place
-          let mut data_vec = (**data).clone();
-          vr.swap_endianness(&mut data_vec);
-          Ok(Rc::new(data_vec))
+          // To swap endianness the data needs to be cloned as it can't be
+          // swapped in place
+          let mut data = (**data).clone();
+          self.location.swap_endianness(*tag, *vr, &mut data);
+
+          Ok(Rc::new(data))
         } else {
           Ok(data.clone())
         }

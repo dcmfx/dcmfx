@@ -13,6 +13,7 @@ import dcmfx_core/value_representation
 import dcmfx_p10/internal/data_element_header.{
   type DataElementHeader, DataElementHeader,
 }
+import dcmfx_p10/internal/p10_location.{type P10Location}
 import dcmfx_p10/internal/value_length
 import dcmfx_p10/internal/zlib.{type ZlibStream}
 import dcmfx_p10/internal/zlib/flush_command
@@ -26,6 +27,7 @@ import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/pair
 import gleam/result
 
 /// Configuration used when writing DICOM P10 data. The following config is
@@ -65,8 +67,8 @@ pub opaque type P10WriteContext {
     is_ended: Bool,
     transfer_syntax: TransferSyntax,
     zlib_stream: Option(ZlibStream),
+    location: P10Location,
     path: DataSetPath,
-    sequence_item_counts: List(Int),
   )
 }
 
@@ -80,8 +82,8 @@ pub fn new_write_context() -> P10WriteContext {
     is_ended: False,
     transfer_syntax: transfer_syntax.implicit_vr_little_endian,
     zlib_stream: None,
+    location: p10_location.new(),
     path: data_set_path.new(),
-    sequence_item_counts: [],
   )
 }
 
@@ -214,76 +216,118 @@ pub fn write_token(
       }
 
     _ -> {
-      // Update the current path
+      let map_to_p10_token_stream_error = result.map_error(_, fn(details) {
+        p10_error.TokenStreamInvalid(
+          when: "Writing token to context",
+          details:,
+          token:,
+        )
+      })
+
+      // Update the current location
       let context =
         case token {
-          p10_token.DataElementHeader(tag:, ..) ->
-            data_set_path.add_data_element(context.path, tag)
-            |> result.map(fn(path) { P10WriteContext(..context, path:) })
+          p10_token.DataElementHeader(tag:, ..) -> {
+            let path = data_set_path.add_data_element(context.path, tag)
+            use path <- result.try(path)
 
-          p10_token.SequenceStart(tag:, ..) ->
-            data_set_path.add_data_element(context.path, tag)
-            |> result.map(fn(path) {
-              P10WriteContext(..context, path:, sequence_item_counts: [
-                0,
-                ..context.sequence_item_counts
-              ])
-            })
+            Ok(P10WriteContext(..context, path:))
+          }
+
+          p10_token.SequenceStart(tag:, ..) -> {
+            let location =
+              context.location
+              |> p10_location.add_sequence(tag, False, None)
+            use location <- result.try(location)
+
+            let path = data_set_path.add_data_element(context.path, tag)
+            use path <- result.try(path)
+
+            Ok(P10WriteContext(..context, location:, path:))
+          }
 
           p10_token.SequenceItemStart | p10_token.PixelDataItem(..) -> {
-            let assert [count, ..rest] = context.sequence_item_counts
+            let location =
+              context.location
+              |> p10_location.add_item(None, value_length.Undefined)
+            use #(item_index, location) <- result.try(location)
 
-            data_set_path.add_sequence_item(context.path, count)
-            |> result.map(fn(path) {
-              let sequence_item_counts = [count + 1, ..rest]
+            let path = data_set_path.add_sequence_item(context.path, item_index)
+            use path <- result.try(path)
 
-              P10WriteContext(..context, path:, sequence_item_counts:)
-            })
+            Ok(P10WriteContext(..context, location:, path:))
           }
 
           _ -> Ok(context)
         }
-        |> result.map_error(fn(_) {
-          p10_error.TokenStreamInvalid(
-            when: "Writing token to context",
-            details: "The data set path is not in a valid state for this token",
-            token:,
-          )
-        })
+        |> map_to_p10_token_stream_error
 
       use context <- result.try(context)
 
       // Convert token to bytes
       use token_bytes <- result.try(token_to_bytes(token, context))
 
-      // Update the current path
-      let context =
-        case token {
-          p10_token.DataElementValueBytes(bytes_remaining: 0, ..)
-          | p10_token.SequenceItemDelimiter ->
-            data_set_path.pop(context.path)
-            |> result.map(fn(path) { P10WriteContext(..context, path:) })
+      // Update the current location
+      let context = case token {
+        p10_token.DataElementValueBytes(tag:, vr:, bytes_remaining: 0, data:) -> {
+          let is_pixel_or_waveform_data =
+            tag == dictionary.bits_allocated.tag
+            || tag == dictionary.waveform_bits_allocated.tag
 
-          p10_token.SequenceDelimiter(..) -> {
-            let assert Ok(sequence_item_counts) =
-              list.rest(context.sequence_item_counts)
-
-            data_set_path.pop(context.path)
-            |> result.map(fn(path) {
-              P10WriteContext(..context, path:, sequence_item_counts:)
-            })
+          let location = case is_pixel_or_waveform_data {
+            True ->
+              p10_location.add_clarifying_data_element(
+                context.location,
+                tag,
+                vr,
+                data,
+              )
+              |> result.map(pair.second)
+            False -> Ok(context.location)
           }
+          use location <- result.try(location)
 
-          _ -> Ok(context)
+          {
+            let location = case tag == dictionary.item.tag {
+              True -> p10_location.end_item(location)
+              False -> Ok(location)
+            }
+            use location <- result.try(location)
+
+            let path = data_set_path.pop(context.path)
+            use path <- result.try(path)
+
+            Ok(P10WriteContext(..context, location:, path:))
+          }
+          |> map_to_p10_token_stream_error
         }
-        |> result.map_error(fn(_) {
-          p10_error.TokenStreamInvalid(
-            when: "Writing token to context",
-            details: "The data set path is empty",
-            token:,
-          )
-        })
 
+        p10_token.SequenceItemDelimiter ->
+          {
+            let location = p10_location.end_item(context.location)
+            use location <- result.try(location)
+
+            let path = data_set_path.pop(context.path)
+            use path <- result.try(path)
+
+            Ok(P10WriteContext(..context, location:, path:))
+          }
+          |> map_to_p10_token_stream_error
+
+        p10_token.SequenceDelimiter(..) ->
+          {
+            let location = p10_location.end_sequence(context.location)
+            use #(_, location) <- result.try(location)
+
+            let path = data_set_path.pop(context.path)
+            use path <- result.try(path)
+
+            Ok(P10WriteContext(..context, location:, path:))
+          }
+          |> map_to_p10_token_stream_error
+
+        _ -> Ok(context)
+      }
       use context <- result.map(context)
 
       // If a zlib stream is active then pass the P10 bytes through it
@@ -400,10 +444,11 @@ fn token_to_bytes(
       |> data_element_header_to_bytes(transfer_syntax.endianness, context)
     }
 
-    p10_token.DataElementValueBytes(vr:, data:, ..) ->
+    p10_token.DataElementValueBytes(tag:, vr:, data:, ..) ->
       case transfer_syntax.endianness {
         LittleEndian -> data
-        BigEndian -> value_representation.swap_endianness(vr, data)
+        BigEndian ->
+          p10_location.swap_endianness(context.location, tag, vr, data)
       }
       |> Ok
 

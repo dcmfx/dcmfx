@@ -126,10 +126,10 @@ pub fn add_sequence_item(
 
 /// Removes the last entry in a data set path.
 ///
-pub fn pop(path: DataSetPath) -> Result(DataSetPath, Nil) {
+pub fn pop(path: DataSetPath) -> Result(DataSetPath, String) {
   case path.entries {
     [_, ..rest] -> Ok(DataSetPath(rest))
-    _ -> Error(Nil)
+    _ -> Error("Data set path is empty")
   }
 }
 

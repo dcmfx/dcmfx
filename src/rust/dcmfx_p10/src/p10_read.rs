@@ -692,7 +692,7 @@ impl P10ReadContext {
           ValueLength::Undefined => None,
         };
 
-        self
+        let item_index = self
           .location
           .add_item(ends_at, header.length)
           .map_err(|details| P10Error::DataInvalid {
@@ -703,8 +703,7 @@ impl P10ReadContext {
           })?;
 
         // Add item to the path
-        let item_count = self.location.sequence_item_count().unwrap_or(1);
-        self.path.add_sequence_item(item_count - 1).unwrap();
+        self.path.add_sequence_item(item_index).unwrap();
 
         Ok(vec![token])
       }
@@ -1115,7 +1114,7 @@ impl P10ReadContext {
         // Data element values are always returned in little endian, so if this
         // is a big endian transfer syntax then convert to little endian
         if self.active_transfer_syntax().endianness.is_big() {
-          vr.swap_endianness(&mut data);
+          self.location.swap_endianness(tag, vr, &mut data);
         }
 
         let bytes_remaining = bytes_remaining - bytes_to_read;

@@ -798,20 +798,18 @@ fn read_data_element_header_token(
             byte_stream.bytes_read(context.stream),
           )
         })
-      use new_location <- result.try(new_location)
+      use #(item_count, new_location) <- result.try(new_location)
 
       // Add item to the path
-      let item_count =
-        p10_location.sequence_item_count(new_location) |> result.unwrap(1)
       let assert Ok(new_path) =
-        data_set_path.add_sequence_item(context.path, item_count - 1)
+        data_set_path.add_sequence_item(context.path, item_count)
 
       let new_context =
         P10ReadContext(
           ..context,
           stream: new_stream,
-          path: new_path,
           location: new_location,
+          path: new_path,
         )
 
       Ok(#([token], new_context))
@@ -1272,7 +1270,8 @@ fn read_data_element_value_bytes_token(
       // a big endian transfer syntax then convert to little endian
       let data = case active_transfer_syntax(context).endianness {
         LittleEndian -> data
-        BigEndian -> value_representation.swap_endianness(vr, data)
+        BigEndian ->
+          p10_location.swap_endianness(context.location, tag, vr, data)
       }
 
       let bytes_remaining = bytes_remaining - bytes_to_read

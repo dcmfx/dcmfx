@@ -171,6 +171,47 @@ pub fn is_implicit_vr_forced(location: P10Location) -> Bool {
   }
 }
 
+/// Returns the value of *'(0x0028,0x0100) Bits Allocated'* if present.
+///
+pub fn bits_allocated(location: P10Location) -> Option(Int) {
+  active_clarifying_data_elements(location).bits_allocated
+}
+
+/// Swaps endianness of the value bytes for a given data element tag and VR.
+/// 
+/// This function handles the unusual behavior of pixel data and waveform data
+/// that has a VR of OW but a bits allocated value of 32 or 64. This is a
+/// special case for endian swapping because it is actually storing 32/64-bit
+/// words, not the 16-bit ones indicated by the VR.
+///
+pub fn swap_endianness(
+  location: P10Location,
+  tag: DataElementTag,
+  vr: ValueRepresentation,
+  data: BitArray,
+) -> BitArray {
+  let vr = case vr {
+    value_representation.OtherWordString -> {
+      let bits_allocated = case tag {
+        tag if tag == dictionary.pixel_data.tag ->
+          active_clarifying_data_elements(location).bits_allocated
+        tag if tag == dictionary.waveform_data.tag ->
+          active_clarifying_data_elements(location).waveform_bits_allocated
+        _ -> None
+      }
+
+      case bits_allocated {
+        Some(32) -> value_representation.UnsignedLong
+        Some(64) -> value_representation.UnsignedVeryLong
+        _ -> vr
+      }
+    }
+    _ -> vr
+  }
+
+  value_representation.swap_endianness(vr, data)
+}
+
 /// Returns the next delimiter token for a location. This checks the `ends_at`
 /// value of the entry at the head of the location to see if the bytes read has
 /// met or exceeded it, and if it has then the relevant delimiter token is
@@ -266,15 +307,15 @@ pub fn add_item(
   location: P10Location,
   ends_at: Option(Int),
   length: ValueLength,
-) -> Result(P10Location, String) {
+) -> Result(#(Int, P10Location), String) {
   case location {
     // Carry across the current clarifying data elements as the initial state
     // for the new item
     [
       Sequence(tag, is_implicit_vr, ends_at: sequence_ends_at, item_count:),
       ..rest
-    ] ->
-      Ok([
+    ] -> {
+      let entries = [
         Item(
           active_clarifying_data_elements(location),
           data_element_tag.zero,
@@ -282,13 +323,15 @@ pub fn add_item(
         ),
         Sequence(tag, is_implicit_vr, sequence_ends_at, item_count + 1),
         ..rest
-      ])
+      ]
+
+      Ok(#(item_count, entries))
+    }
 
     _ ->
       Error(
         "Item encountered outside of a sequence, length: "
-        <> value_length.to_string(length)
-        <> " bytes",
+        <> value_length.to_string(length),
       )
   }
 }

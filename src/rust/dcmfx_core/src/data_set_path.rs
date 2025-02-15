@@ -118,9 +118,9 @@ impl DataSetPath {
   /// Removes the last entry in a data set path.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn pop(&mut self) -> Result<(), ()> {
+  pub fn pop(&mut self) -> Result<(), String> {
     if self.0.is_empty() {
-      Err(())
+      Err("Data set path is empty".to_string())
     } else {
       self.0.pop();
       Ok(())
