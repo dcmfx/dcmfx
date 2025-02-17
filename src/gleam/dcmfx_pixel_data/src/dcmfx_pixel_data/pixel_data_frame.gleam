@@ -14,14 +14,21 @@ import gleam/list
 /// If required, use `to_bytes()` to get the frame's data in a single bit array.
 ///
 pub opaque type PixelDataFrame {
-  PixelDataFrame(fragments: List(BitArray), length: Int)
+  PixelDataFrame(frame_index: Int, fragments: List(BitArray), length: Int)
 }
 
 /// Creates a new empty frame of pixel data.
 ///
 @internal
-pub fn new() -> PixelDataFrame {
-  PixelDataFrame(fragments: [], length: 0)
+pub fn new(frame_index: Int) -> PixelDataFrame {
+  PixelDataFrame(frame_index:, fragments: [], length: 0)
+}
+
+/// Returns the index of this frame, i.e. 0 for the first frame in its DICOM
+/// data set, 1 for the second frame, etc.
+///
+pub fn index(frame: PixelDataFrame) -> Int {
+  frame.frame_index
 }
 
 /// Adds the next fragment of pixel data to this frame.
@@ -29,6 +36,7 @@ pub fn new() -> PixelDataFrame {
 @internal
 pub fn push_fragment(frame: PixelDataFrame, data: BitArray) -> PixelDataFrame {
   PixelDataFrame(
+    frame_index: frame.frame_index,
     fragments: [data, ..frame.fragments],
     length: frame.length + bit_array.byte_size(data),
   )
@@ -81,11 +89,15 @@ fn do_drop_end_bytes(
               let assert Ok(new_fragment) =
                 bit_array.slice(fragment, 0, fragment_length)
 
-              PixelDataFrame([new_fragment, ..fragments], target_length)
+              PixelDataFrame(
+                frame.frame_index,
+                [new_fragment, ..fragments],
+                target_length,
+              )
             }
 
             False ->
-              PixelDataFrame(fragments, length)
+              PixelDataFrame(frame.frame_index, fragments, length)
               |> do_drop_end_bytes(target_length)
           }
         }

@@ -1,13 +1,28 @@
 //! Access pixel data in a DICOM data set.
 
+mod luts;
+mod pixel_data_definition;
 mod pixel_data_filter;
 mod pixel_data_frame;
+mod pixel_data_native;
+mod pixel_data_reader;
 
+pub use luts::{LookupTable, ModalityLut, VoiLut, VoiLutFunction, VoiWindow};
+pub use pixel_data_definition::{
+  BitsAllocated, PhotometricInterpretation, PixelDataDefinition,
+  PixelRepresentation, PlanarConfiguration, SamplesPerPixel,
+};
 pub use pixel_data_filter::{PixelDataFilter, PixelDataFilterError};
 pub use pixel_data_frame::PixelDataFrame;
+pub use pixel_data_native::{iter_pixels_color, iter_pixels_grayscale};
+pub use pixel_data_reader::PixelDataReader;
 
 use dcmfx_core::{dictionary, transfer_syntax, DataSet, TransferSyntax};
 use dcmfx_p10::DataSetP10Extensions;
+
+/// An RGB color where each component is in the range 0-1.
+///
+pub type RgbColor = (f64, f64, f64);
 
 /// Adds functions to [`DataSet`] for accessing its pixel data.
 ///
@@ -343,7 +358,7 @@ mod tests {
   }
 
   fn frame_with_fragments(fragments: &[&[u8]]) -> PixelDataFrame {
-    let mut frame = PixelDataFrame::new();
+    let mut frame = PixelDataFrame::new(0);
 
     for fragment in fragments.iter() {
       frame.push_fragment(Rc::new(fragment.to_vec()), 0..fragment.len());

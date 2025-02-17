@@ -5,7 +5,7 @@ each frame of pixel data.
 
 :::tabs key:code-example
 == Gleam
-<<< @/../../examples/dicom_read_pixel_data/rust/src/main.rs
+<<< @/../../examples/dicom_read_pixel_data/gleam/src/dicom_read_pixel_data.gleam
 == Rust
 <<< @/../../examples/dicom_read_pixel_data/rust/src/main.rs
 :::

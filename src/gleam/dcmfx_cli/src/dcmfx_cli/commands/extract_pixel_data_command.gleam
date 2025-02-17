@@ -27,7 +27,8 @@ fn output_prefix_flag() {
   glint.string_flag("output-prefix")
   |> glint.flag_help(
     "The prefix for output image files. It is suffixed with a 4-digit frame "
-    <> "number. By default, the output prefix is the input filename.",
+    <> "number and an appropriate file extension. By default, the output "
+    <> "prefix is the input filename.",
   )
 }
 
@@ -179,13 +180,7 @@ fn write_frame(
   filename: String,
   frame: PixelDataFrame,
 ) -> Result(Nil, FileStreamError) {
-  io.print(
-    "Writing \""
-    <> filename
-    <> "\", size: "
-    <> int.to_string(pixel_data_frame.length(frame))
-    <> " bytes … ",
-  )
+  io.println("Writing \"" <> filename <> "\" …")
 
   use stream <- result.try(file_stream.open_write(filename))
 
@@ -200,5 +195,5 @@ fn write_frame(
 
   [write_result, close_result]
   |> result.all
-  |> result.map(fn(_) { io.println("done") })
+  |> result.replace(Nil)
 }

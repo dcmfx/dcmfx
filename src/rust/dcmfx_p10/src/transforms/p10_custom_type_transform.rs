@@ -116,4 +116,12 @@ impl<T> P10CustomTypeTransform<T> {
   pub fn get_output(&self) -> &Option<T> {
     &self.target
   }
+
+  /// Returns the custom type created by this transform. This is set once all
+  /// the required data elements have been gathered from the stream of DICOM P10
+  /// tokens and successfully constructed into the custom type.
+  ///
+  pub fn get_output_mut(&mut self) -> &mut Option<T> {
+    &mut self.target
+  }
 }

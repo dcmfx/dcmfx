@@ -46,6 +46,8 @@ pub struct PixelDataFilter {
   // either the Basic Offset Table stored in the first pixel data item, or from
   // an Extended Offset Table.
   offset_table: Option<OffsetTable>,
+
+  next_frame_index: usize,
 }
 
 type OffsetTable = VecDeque<(u64, Option<u64>)>;
@@ -127,6 +129,7 @@ impl PixelDataFilter {
       pixel_data_write_offset: 0,
       pixel_data_read_offset: 0,
       offset_table: None,
+      next_frame_index: 0,
     }
   }
 
@@ -170,17 +173,19 @@ impl PixelDataFilter {
         // frames
         let number_of_frames = self.get_number_of_frames()?;
 
-        if *length as usize % number_of_frames != 0 {
-          return Err(DataError::new_value_invalid(format!(
-            "Multi-frame pixel data of length {} bytes does not divide evenly \
-             into {} frames",
-            *length, number_of_frames
-          )));
-        }
+        if number_of_frames > 0 {
+          if *length as usize % number_of_frames != 0 {
+            return Err(DataError::new_value_invalid(format!(
+              "Multi-frame pixel data of length {} bytes does not divide evenly \
+              into {} frames",
+              *length, number_of_frames
+            )));
+          }
 
-        // Store the size of native pixel data frames
-        self.native_pixel_data_frame_size =
-          (*length as usize) / number_of_frames;
+          // Store the size of native pixel data frames
+          self.native_pixel_data_frame_size =
+            (*length as usize) / number_of_frames;
+        }
 
         Ok(vec![])
       }
@@ -197,7 +202,7 @@ impl PixelDataFilter {
 
         // If there is any remaining pixel data then emit it as a final frame
         if !self.pixel_data.is_empty() {
-          let mut frame = PixelDataFrame::new();
+          let mut frame = PixelDataFrame::new(self.next_frame_index);
           for item in self.pixel_data.iter() {
             frame.push_fragment(item.0.clone(), 0..item.0.len());
           }
@@ -273,7 +278,8 @@ impl PixelDataFilter {
     while self.pixel_data_read_offset + frame_size as u64
       <= self.pixel_data_write_offset
     {
-      let mut frame = PixelDataFrame::new();
+      let mut frame = PixelDataFrame::new(self.next_frame_index);
+      self.next_frame_index += 1;
 
       while frame.len() < frame_size {
         let (chunk, chunk_offset) = self.pixel_data.pop_front().unwrap();
@@ -333,7 +339,9 @@ impl PixelDataFilter {
           // If the offset table is empty and there is more than one frame
           // then each pixel data item is treated as a single frame
           if self.get_number_of_frames()? > 1 {
-            let mut frame = PixelDataFrame::new();
+            let mut frame = PixelDataFrame::new(self.next_frame_index);
+            self.next_frame_index += 1;
+
             for (chunk, _) in self.pixel_data.iter() {
               frame.push_fragment(chunk.clone(), 0..chunk.len());
             }
@@ -349,7 +357,8 @@ impl PixelDataFilter {
             if self.pixel_data_write_offset < offset {
               break;
             }
-            let mut frame = PixelDataFrame::new();
+            let mut frame = PixelDataFrame::new(self.next_frame_index);
+            self.next_frame_index += 1;
 
             while self.pixel_data_read_offset < offset {
               if let Some((chunk, _)) = self.pixel_data.pop_front() {

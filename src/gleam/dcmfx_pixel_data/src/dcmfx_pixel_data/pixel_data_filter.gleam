@@ -47,6 +47,7 @@ pub opaque type PixelDataFilter {
     // either the Basic Offset Table stored in the first pixel data item, or
     // from an Extended Offset Table.
     offset_table: Option(OffsetTable),
+    next_frame_index: Int,
   )
 }
 
@@ -118,6 +119,7 @@ pub fn new() -> PixelDataFilter {
     pixel_data_write_offset: 0,
     pixel_data_read_offset: 0,
     offset_table: None,
+    next_frame_index: 0,
   )
 }
 
@@ -165,7 +167,7 @@ fn process_next_pixel_data_token(
       use number_of_frames <- result.try(get_number_of_frames(filter))
 
       use <- bool.guard(
-        length % number_of_frames != 0,
+        number_of_frames != 0 && length % number_of_frames != 0,
         Error(
           DataError(data_error.new_value_invalid(
             "Multi-frame pixel data of length "
@@ -178,7 +180,10 @@ fn process_next_pixel_data_token(
       )
 
       // Store the size of native pixel data frames
-      let native_pixel_data_frame_size = length / number_of_frames
+      let native_pixel_data_frame_size = case number_of_frames == 0 {
+        True -> 0
+        False -> length / number_of_frames
+      }
 
       let filter =
         PixelDataFilter(
@@ -204,10 +209,17 @@ fn process_next_pixel_data_token(
         True -> Ok([])
 
         False -> {
+          let frame_index = filter.next_frame_index
+          let filter =
+            PixelDataFilter(..filter, next_frame_index: frame_index + 1)
+
           let frame =
             filter.pixel_data
             |> deque.to_list
-            |> list.fold(pixel_data_frame.new(), pixel_data_frame.push_fragment)
+            |> list.fold(
+              pixel_data_frame.new(frame_index),
+              pixel_data_frame.push_fragment,
+            )
 
           // If the frame has a length specified then apply it
           let frame = case filter.offset_table {
@@ -312,8 +324,11 @@ fn get_pending_native_frames(
     True -> Ok(#(list.reverse(frames), filter))
 
     False -> {
+      let frame_index = filter.next_frame_index
+      let filter = PixelDataFilter(..filter, next_frame_index: frame_index + 1)
+
       let #(frame, filter) =
-        get_pending_native_frame(filter, pixel_data_frame.new())
+        get_pending_native_frame(filter, pixel_data_frame.new(frame_index))
       get_pending_native_frames(filter, [frame, ..frames])
     }
   }
@@ -414,12 +429,19 @@ fn get_pending_encapsulated_frames(
           // then each pixel data item is treated as a single frame
           case number_of_frames > 1 {
             True -> {
+              let frame_index = filter.next_frame_index
+              let filter =
+                PixelDataFilter(..filter, next_frame_index: frame_index + 1)
+
               let frame =
                 filter.pixel_data
                 |> deque.to_list
-                |> list.fold(pixel_data_frame.new(), fn(frame, chunk) {
-                  pixel_data_frame.push_fragment(frame, chunk)
-                })
+                |> list.fold(
+                  pixel_data_frame.new(frame_index),
+                  fn(frame, chunk) {
+                    pixel_data_frame.push_fragment(frame, chunk)
+                  },
+                )
 
               let filter =
                 PixelDataFilter(
@@ -458,8 +480,15 @@ fn get_pending_encapsulated_frames_using_offset_table(
         Ok(#(frames, filter)),
       )
 
+      let frame_index = filter.next_frame_index
+      let filter = PixelDataFilter(..filter, next_frame_index: frame_index + 1)
+
       let #(frame, filter) =
-        get_pending_encapsulated_frame(filter, pixel_data_frame.new(), offset)
+        get_pending_encapsulated_frame(
+          filter,
+          pixel_data_frame.new(frame_index),
+          offset,
+        )
 
       let assert Ok(offset_table) = list.rest(offset_table)
 

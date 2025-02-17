@@ -91,20 +91,29 @@ mod tests {
 
           Err((
             dicom,
-            DicomValidationError::PixelDataReadError {
-              error: PixelDataFilterError::DataError(error),
-            },
+            DicomValidationError::PixelDataFilterError { error },
           )) => {
-            error.print(&format!("reading pixel data from {:?}", dicom));
+            let task_description =
+              format!("reading pixel data from {:?}", dicom);
+
+            match error {
+              PixelDataFilterError::DataError(error) => {
+                error.print(&task_description)
+              }
+              PixelDataFilterError::P10Error(error) => {
+                error.print(&task_description)
+              }
+            }
           }
 
           Err((
             dicom,
-            DicomValidationError::PixelDataReadError {
-              error: PixelDataFilterError::P10Error(error),
-            },
+            DicomValidationError::PixelDataReadError { details },
           )) => {
-            error.print(&format!("reading pixel data from {:?}", dicom));
+            eprintln!(
+              "Error: Pixel data read of {:?}, details: {}",
+              dicom, details
+            );
           }
         }
       }
@@ -122,7 +131,8 @@ mod tests {
     RewriteMismatch,
     JitteredReadError { error: P10Error },
     JitteredReadMismatch,
-    PixelDataReadError { error: PixelDataFilterError },
+    PixelDataFilterError { error: PixelDataFilterError },
+    PixelDataReadError { details: String },
   }
 
   /// Loads a DICOM file and checks that its JSON serialization by this library
@@ -182,7 +192,7 @@ mod tests {
     test_jittered_read(dicom, &data_set, &mut || rng.gen_range(1..256))?;
 
     // Test reading pixel data
-    test_read_pixel_data(&data_set)?;
+    test_pixel_data_read(dicom, &data_set)?;
 
     Ok(())
   }
@@ -396,12 +406,116 @@ mod tests {
 
   /// Tests reading the frames of pixel data from a data set.
   ///
-  fn test_read_pixel_data(
+  fn test_pixel_data_read(
+    dicom: &Path,
     data_set: &DataSet,
   ) -> Result<(), DicomValidationError> {
-    match data_set.get_pixel_data_frames() {
-      Ok(_) => Ok(()),
-      Err(e) => Err(DicomValidationError::PixelDataReadError { error: e }),
+    // If there is no pixel data then there's nothing to test
+    if !data_set.has(dictionary::PIXEL_DATA.tag)
+      || !data_set.has(dictionary::SAMPLES_PER_PIXEL.tag)
+    {
+      return Ok(());
     }
+
+    // If the pixel data is empty then there's nothing to test
+    let pixel_data = data_set.get_value(dictionary::PIXEL_DATA.tag).unwrap();
+    match pixel_data.bytes() {
+      Ok(data) => {
+        if data.is_empty() {
+          return Ok(());
+        }
+      }
+
+      // Skip if there is no native pixel data
+      Err(_) => return Ok(()),
+    }
+
+    // Read the .pixel_array.json file
+    let pixel_array_file =
+      format!("{}.pixel_array.json", dicom.to_string_lossy());
+    let expected_pixel_data_json =
+      std::fs::read_to_string(pixel_array_file).unwrap();
+
+    // Read the raw frames of pixel data
+    let frames = data_set
+      .get_pixel_data_frames()
+      .map_err(|e| DicomValidationError::PixelDataFilterError { error: e })?;
+
+    // Check the expected number of frames are present
+    let expected_frames: Vec<serde_json::Value> =
+      serde_json::from_str(&expected_pixel_data_json).unwrap();
+    if frames.len() != expected_frames.len() {
+      return Err(DicomValidationError::PixelDataReadError {
+        details: format!(
+          "Expected {} frames but found {} frames",
+          expected_frames.len(),
+          frames.len()
+        ),
+      });
+    }
+
+    // Create a pixel data reader for the data set
+    let pixel_data_reader = PixelDataReader::from_data_set(data_set).unwrap();
+
+    for (mut frame, expected_frame) in
+      frames.into_iter().zip(expected_frames.into_iter())
+    {
+      let frame_index = frame.index();
+
+      if pixel_data_reader.definition.is_grayscale() {
+        let pixels = iter_pixels_grayscale(
+          pixel_data_reader.definition.clone(),
+          frame.combine_fragments(),
+        )
+        .unwrap();
+
+        let expected_pixels =
+          serde_json::from_value::<Vec<Vec<i64>>>(expected_frame)
+            .unwrap()
+            .into_iter()
+            .flatten();
+
+        for (index, (a, b)) in pixels.zip(expected_pixels).enumerate() {
+          if a != b {
+            return Err(DicomValidationError::PixelDataReadError {
+              details: format!(
+                "Pixel data of frame {} is incorrect at index {}, expected {} \
+                 but got {}",
+                frame_index, index, b, a
+              ),
+            });
+          }
+        }
+      } else {
+        let pixels = iter_pixels_color(
+          pixel_data_reader.definition.clone(),
+          frame.combine_fragments(),
+        )
+        .unwrap();
+
+        let expected_pixels =
+          serde_json::from_value::<Vec<Vec<[f64; 3]>>>(expected_frame)
+            .unwrap()
+            .into_iter()
+            .flatten();
+
+        for (index, (a, b)) in pixels.zip(expected_pixels).enumerate() {
+          if (a.0 - b[0]).abs() > 0.005
+            || (a.1 - b[1]).abs() > 0.005
+            || (a.2 - b[2]).abs() > 0.005
+          {
+            return Err(DicomValidationError::PixelDataReadError {
+              details: format!(
+                "Pixel data of frame {} is incorrect at index {}, expected \
+                 {:?} but got {:?}",
+                frame_index, index, b, a
+              ),
+            });
+          }
+        }
+      }
+    }
+
+    Ok(())
   }
 }

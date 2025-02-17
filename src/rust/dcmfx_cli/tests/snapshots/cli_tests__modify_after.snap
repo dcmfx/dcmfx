@@ -1,0 +1,45 @@
+---
+source: dcmfx_cli/tests/cli_tests.rs
+expression: output
+---
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    50 bytes] "1.2.840.11 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Big Endian)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    12 bytes] "DCMfx 0.0.0"
+(0002,0016) AE Source Application Entity Title      [    12 bytes] "CTN_STORAGE"
+(0008,0008) CS Image Type                           [    20 bytes] "DERIVED",  …
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0008,0018) UI SOP Instance UID                     [    50 bytes] "1.2.840.11 …
+(0008,0020) DA Study Date                           [    10 bytes] "1993.04.30"
+(0008,0021) DA Series Date                          [    10 bytes] "1993.04.30"
+(0008,0023) DA Content Date                         [    10 bytes] "1993.04.30"
+(0008,0030) TM Study Time                           [     8 bytes] "11:27:24"
+(0008,0031) TM Series Time                          [     8 bytes] "11:27:24"
+(0008,0033) TM Content Time                         [     8 bytes] "11:27:24"
+(0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+(0008,0064) CS Conversion Type                      [     4 bytes] "WSD" (Workstation)
+(0008,0070) LO Manufacturer                         [    18 bytes] "GE MEDICAL …
+(0008,1090) LO Manufacturer's Model Name            [    12 bytes] "GENESIS_ZE …
+(0018,1020) LO Software Versions                    [     2 bytes] "03"
+(0020,000D) UI Study Instance UID                   [    48 bytes] "1.2.840.11 …
+(0020,000E) UI Series Instance UID                  [    48 bytes] "1.2.840.11 …
+(0020,0011) IS Series Number                        [     4 bytes] "365"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 1
+(0028,0106) SS Smallest Image Pixel Value           [     2 bytes] 0
+(0028,0120) SS Pixel Padding Value                  [     2 bytes] 0
+(0028,1050) DS Window Center                        [     4 bytes] "1024"
+(0028,1051) DS Window Width                         [     4 bytes] "4095"
+(0028,1052) DS Rescale Intercept                    [     6 bytes] "-1024"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0028,1054) LO Rescale Type                         [     2 bytes] "US"
+(7FE0,0010) OW Pixel Data                           [524288 bytes] [F0 0F F0 0 …

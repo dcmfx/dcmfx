@@ -39,7 +39,7 @@ pub fn read_native_single_frame_test() {
   data_set.new()
   |> data_set.insert(dictionary.pixel_data.tag, pixel_data)
   |> dcmfx_pixel_data.get_pixel_data_frames
-  |> should.equal(Ok([frame_with_fragments([<<1, 2, 3, 4>>])]))
+  |> should.equal(Ok([frame_with_fragments(0, [<<1, 2, 3, 4>>])]))
 }
 
 pub fn read_native_multi_frame_test() {
@@ -59,7 +59,10 @@ pub fn read_native_multi_frame_test() {
   )
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
-    Ok([frame_with_fragments([<<1, 2>>]), frame_with_fragments([<<3, 4>>])]),
+    Ok([
+      frame_with_fragments(0, [<<1, 2>>]),
+      frame_with_fragments(1, [<<3, 4>>]),
+    ]),
   )
 }
 
@@ -94,7 +97,7 @@ pub fn read_encapsulated_multiple_fragments_into_single_frame_test() {
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
     Ok([
-      frame_with_fragments([
+      frame_with_fragments(0, [
         string.repeat("1", 0x4C6) |> bit_array.from_string,
         string.repeat("2", 0x24A) |> bit_array.from_string,
         string.repeat("3", 0x628) |> bit_array.from_string,
@@ -112,9 +115,15 @@ pub fn read_encapsulated_multiple_fragments_into_multiple_frames_test() {
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
     Ok([
-      frame_with_fragments([string.repeat("1", 0x4C6) |> bit_array.from_string]),
-      frame_with_fragments([string.repeat("2", 0x24A) |> bit_array.from_string]),
-      frame_with_fragments([string.repeat("3", 0x628) |> bit_array.from_string]),
+      frame_with_fragments(0, [
+        string.repeat("1", 0x4C6) |> bit_array.from_string,
+      ]),
+      frame_with_fragments(1, [
+        string.repeat("2", 0x24A) |> bit_array.from_string,
+      ]),
+      frame_with_fragments(2, [
+        string.repeat("3", 0x628) |> bit_array.from_string,
+      ]),
     ]),
   )
 }
@@ -137,11 +146,13 @@ pub fn read_encapsulated_using_basic_offset_table_test() {
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
     Ok([
-      frame_with_fragments([
+      frame_with_fragments(0, [
         string.repeat("1", 0x2C8) |> bit_array.from_string,
         string.repeat("2", 0x36E) |> bit_array.from_string,
       ]),
-      frame_with_fragments([string.repeat("3", 0xBC8) |> bit_array.from_string]),
+      frame_with_fragments(1, [
+        string.repeat("3", 0xBC8) |> bit_array.from_string,
+      ]),
     ]),
   )
 }
@@ -168,15 +179,25 @@ pub fn read_encapsulated_using_extended_offset_table_test() {
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
     Ok([
-      frame_with_fragments([string.repeat("1", 0x4C6) |> bit_array.from_string]),
-      frame_with_fragments([string.repeat("2", 0x24A) |> bit_array.from_string]),
-      frame_with_fragments([string.repeat("3", 0x627) |> bit_array.from_string]),
+      frame_with_fragments(0, [
+        string.repeat("1", 0x4C6) |> bit_array.from_string,
+      ]),
+      frame_with_fragments(1, [
+        string.repeat("2", 0x24A) |> bit_array.from_string,
+      ]),
+      frame_with_fragments(2, [
+        string.repeat("3", 0x627) |> bit_array.from_string,
+      ]),
     ]),
   )
 }
 
-fn frame_with_fragments(fragments: List(BitArray)) -> PixelDataFrame {
-  list.fold(fragments, pixel_data_frame.new(), pixel_data_frame.push_fragment)
+fn frame_with_fragments(index: Int, fragments: List(BitArray)) -> PixelDataFrame {
+  list.fold(
+    fragments,
+    pixel_data_frame.new(index),
+    pixel_data_frame.push_fragment,
+  )
 }
 
 fn data_set_with_three_fragments() {

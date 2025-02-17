@@ -2,7 +2,7 @@
 
 use std::io::Write;
 
-use owo_colors::{OwoColorize, Stream::Stdout};
+use owo_colors::{OwoColorize, Stream::Stderr};
 
 /// Error trait implemented by all error types in DCMfx.
 ///
@@ -15,15 +15,21 @@ pub trait DcmfxError: std::error::Error {
   /// contextual information stored in the error.
   ///
   fn print(&self, task_description: &str) {
-    let _ = std::io::stdout().flush();
-
-    eprintln!();
-    eprintln!("{}", "-----".if_supports_color(Stdout, |text| text.red()));
-
-    for line in self.to_lines(task_description) {
-      eprintln!("{}", line.if_supports_color(Stdout, |text| text.red()));
-    }
-
-    eprintln!();
+    print_error_lines(&self.to_lines(task_description));
   }
+}
+
+/// Prints lines of error information to stderr.
+///
+pub fn print_error_lines(lines: &[String]) {
+  let _ = std::io::stderr().flush();
+
+  eprintln!();
+  eprintln!("{}", "-----".if_supports_color(Stderr, |text| text.red()));
+
+  for line in lines {
+    eprintln!("{}", line.if_supports_color(Stderr, |text| text.red()));
+  }
+
+  eprintln!();
 }

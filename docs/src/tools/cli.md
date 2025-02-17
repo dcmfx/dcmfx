@@ -110,10 +110,18 @@ Options:
    dcmfx to-dcm input.json output.dcm
    ```
 
-4. Extract pixel data from a DICOM P10 file to image files:
+4. Extract pixel data from a DICOM P10 file to one image file per frame:
 
    ```sh
    dcmfx extract-pixel-data input.dcm
+   ```
+
+   Native pixel data can also be decoded and converted to a PNG (or JPEG) file
+   per frame:
+
+   ```sh
+   dcmfx extract-pixel-data input.dcm --format png 
+   dcmfx extract-pixel-data input.dcm --format jpg --quality 70
    ```
 
 5. Rewrite a DICOM P10 file. This will convert the specific character set to
@@ -172,5 +180,5 @@ all commands are also supported by the Gleam version of the CLI, which can be
 run with `gleam run` in `/src/gleam/dcmfx_cli`.
 
 The Gleam CLI is primarily used when working on the Gleam implementation of
-DCMfx. The Rust CLI is recommended for regular use as it is faster, has a few
+DCMfx. The Rust CLI is recommended for regular use as it is faster, has some
 additional features, and is a single standalone binary.

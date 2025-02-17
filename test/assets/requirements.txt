@@ -1,2 +1,3 @@
+numpy==2.2.3
 pydicom==3.0.1
 simplejson==3.19.3

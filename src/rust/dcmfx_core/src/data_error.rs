@@ -37,6 +37,11 @@ use crate::{dictionary, DataSetPath, DcmfxError, ValueRepresentation};
 ///    constraint, e.g. the minimum or maximum length for the value
 ///    representation wasn't respected.
 ///
+/// 6. **Value unsupported**.
+///
+///    When creating, reading, or parsing a value, the value itself is valid but
+///    is supported by this library.
+///
 #[derive(Clone, Debug, PartialEq)]
 pub struct DataError(RawDataError);
 
@@ -58,6 +63,10 @@ enum RawDataError {
   ValueLengthInvalid {
     vr: ValueRepresentation,
     length: usize,
+    details: String,
+    path: Option<DataSetPath>,
+  },
+  ValueUnsupported {
     details: String,
     path: Option<DataSetPath>,
   },
@@ -95,6 +104,9 @@ impl std::fmt::Display for DataError {
           optional_path_to_string(path),
           details
         )
+      }
+      RawDataError::ValueUnsupported { details, .. } => {
+        format!("Value unsupported, details: {details}",)
       }
     };
 
@@ -147,6 +159,15 @@ impl DataError {
     })
   }
 
+  /// Constructs a new 'Value not supported' data error.
+  ///
+  pub fn new_value_unsupported(details: String) -> Self {
+    Self(RawDataError::ValueUnsupported {
+      details,
+      path: None,
+    })
+  }
+
   /// Returns the data set path for a data error.
   ///
   pub fn path(&self) -> Option<&DataSetPath> {
@@ -155,7 +176,8 @@ impl DataError {
       RawDataError::ValueNotPresent { path }
       | RawDataError::MultiplicityMismatch { path }
       | RawDataError::ValueInvalid { path, .. }
-      | RawDataError::ValueLengthInvalid { path, .. } => path.as_ref(),
+      | RawDataError::ValueLengthInvalid { path, .. }
+      | RawDataError::ValueUnsupported { path, .. } => path.as_ref(),
     }
   }
 
@@ -201,6 +223,12 @@ impl DataError {
         details,
         path: Some(path.clone()),
       }),
+      RawDataError::ValueUnsupported { details, .. } => {
+        Self(RawDataError::ValueUnsupported {
+          details,
+          path: Some(path.clone()),
+        })
+      }
     }
   }
 
@@ -213,6 +241,7 @@ impl DataError {
       RawDataError::MultiplicityMismatch { .. } => "Multiplicity mismatch",
       RawDataError::ValueInvalid { .. } => "Invalid value",
       RawDataError::ValueLengthInvalid { .. } => "Invalid value length",
+      RawDataError::ValueUnsupported { .. } => "Unsupported value",
     }
   }
 }
@@ -265,6 +294,9 @@ impl DcmfxError for DataError {
         lines.push(format!("  VR: {}", vr));
         lines.push(format!("  Length: {} bytes", length));
         lines.push(format!("  Details: {}", details));
+      }
+      RawDataError::ValueUnsupported { details, .. } => {
+        lines.push(format!("  Details: {}", details))
       }
       _ => (),
     };

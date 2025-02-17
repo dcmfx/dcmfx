@@ -44,7 +44,7 @@ pub fn to_lines_test() {
   |> should.equal(
     "DICOM data error testing
 
-  Error: Value is invalid
+  Error: Invalid value
   Details: 123",
   )
 
@@ -60,7 +60,7 @@ pub fn to_lines_test() {
   |> should.equal(
     "DICOM data error testing
 
-  Error: Value length is invalid
+  Error: Invalid value length
   VR: AS
   Length: 5 bytes
   Details: Test 123",

@@ -15,6 +15,7 @@ use std::rc::Rc;
 ///
 #[derive(Clone, Debug)]
 pub struct PixelDataFrame {
+  frame_index: usize,
   fragments: Vec<(Rc<Vec<u8>>, Range<usize>)>,
   length: usize,
 }
@@ -22,11 +23,19 @@ pub struct PixelDataFrame {
 impl PixelDataFrame {
   /// Creates a new empty frame of pixel data.
   ///
-  pub(crate) fn new() -> Self {
+  pub(crate) fn new(frame_index: usize) -> Self {
     PixelDataFrame {
+      frame_index,
       fragments: vec![],
       length: 0,
     }
+  }
+
+  /// Returns the index of this frame, i.e. 0 for the first frame in its DICOM
+  /// data set, 1 for the second frame, etc.
+  ///
+  pub fn index(&self) -> usize {
+    self.frame_index
   }
 
   /// Adds the next fragment of pixel data to this frame.
@@ -124,6 +133,21 @@ impl PixelDataFrame {
 
     Rc::new(buffer)
   }
+
+  /// If this frame of pixel data contains more than one fragment, combines them
+  /// into one fragment. Returns the slice of the first (and only) fragment that
+  /// contains all the pixel data for this frame.
+  ///
+  pub fn combine_fragments(&mut self) -> &[u8] {
+    if self.fragments.len() > 1 {
+      let buffer = self.to_bytes();
+      let buffer_len = buffer.len();
+
+      self.fragments = vec![(buffer, 0..buffer_len)];
+    }
+
+    self.fragments()[0]
+  }
 }
 
 impl PartialEq for PixelDataFrame {
@@ -138,7 +162,7 @@ mod tests {
 
   #[test]
   fn single_fragment_test() {
-    let mut frame = PixelDataFrame::new();
+    let mut frame = PixelDataFrame::new(0);
 
     frame.push_fragment(Rc::new(vec![0, 1, 2, 3]), 0..3);
 
@@ -149,7 +173,7 @@ mod tests {
 
   #[test]
   fn multiple_fragments_test() {
-    let mut frame = PixelDataFrame::new();
+    let mut frame = PixelDataFrame::new(0);
 
     frame.push_fragment(Rc::new(vec![0, 1, 2, 3]), 0..2);
     frame.push_fragment(Rc::new(vec![4, 5, 6, 7]), 1..3);
@@ -162,20 +186,20 @@ mod tests {
 
   #[test]
   fn drop_end_bytes_test() {
-    let mut frame = PixelDataFrame::new();
+    let mut frame = PixelDataFrame::new(0);
     frame.push_fragment(Rc::new(vec![0, 1, 2, 3, 4]), 0..5);
 
     frame.drop_end_bytes(2);
     assert_eq!(frame.to_bytes(), Rc::new(vec![0, 1, 2]));
 
-    let mut frame = PixelDataFrame::new();
+    let mut frame = PixelDataFrame::new(0);
     frame.push_fragment(Rc::new(vec![0, 0, 1, 1]), 1..3);
     frame.push_fragment(Rc::new(vec![2, 3]), 0..2);
 
     frame.drop_end_bytes(1);
     assert_eq!(frame.to_bytes(), Rc::new(vec![0, 1, 2]));
 
-    let mut frame = PixelDataFrame::new();
+    let mut frame = PixelDataFrame::new(0);
     frame.push_fragment(Rc::new(vec![0, 1]), 0..2);
     frame.push_fragment(Rc::new(vec![2, 3]), 0..2);
     frame.push_fragment(Rc::new(vec![4, 5]), 0..2);

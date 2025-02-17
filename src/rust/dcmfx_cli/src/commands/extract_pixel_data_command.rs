@@ -1,7 +1,9 @@
 use std::fs::File;
 use std::io::{Read, Write};
 
-use clap::Args;
+use clap::{Args, ValueEnum};
+use image::codecs::jpeg::JpegEncoder;
+use image::{ImageError, ImageFormat};
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
@@ -22,41 +24,110 @@ pub struct ExtractPixelDataArgs {
     long,
     short,
     help = "The prefix for output image files. It is suffixed with a 4-digit \
-      frame number. By default, the output prefix is the input filename."
+      frame number and an appropriate file extension. By default, the output \
+      prefix is the input filename."
   )]
   output_prefix: Option<String>,
+
+  #[arg(
+    long,
+    short,
+    value_enum,
+    help = "The output image format. 'raw' causes the pixel data for each \
+      frame to be written without alteration. For native pixel data, 'png' or \
+      'jpg' causes the pixel data to be converted to a PNG or JPG image prior \
+      to being written out.",
+    default_value_t = OutputFormat::Raw
+  )]
+  format: OutputFormat,
+
+  #[arg(
+    long,
+    short = 'q',
+    help = "When the output image format is 'jpg', specifies the quality level \
+      in the range 0-100.",
+    default_value_t = 85
+  )]
+  output_quality: u8,
+
+  #[arg(
+    long,
+    short,
+    num_args=2..=2,
+    value_parser = clap::value_parser!(f64),
+    value_names = ["WINDOW_CENTER", "WINDOW_WIDTH"],
+    help = "When the input DICOM is grayscale and the output image format is \
+      'jpg' or 'png', specifies the VOI window center and width to use instead \
+      of the VOI LUT defined in the input DICOM."
+  )]
+  voi_window: Option<Vec<f64>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
+enum OutputFormat {
+  Raw,
+  Png,
+  Jpg,
 }
 
 pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
   let output_prefix =
     args.output_prefix.as_ref().unwrap_or(&args.input_filename);
 
-  match perform_extract_pixel_data(&args.input_filename, output_prefix) {
+  match perform_extract_pixel_data(
+    &args.input_filename,
+    output_prefix,
+    args.format,
+    args.output_quality,
+    &args.voi_window,
+  ) {
     Ok(_) => Ok(()),
 
-    Err(PixelDataFilterError::DataError(e)) => {
-      e.print(&format!("reading file \"{}\"", args.input_filename));
-      Err(())
-    }
+    Err(e) => {
+      let task_description =
+        format!("reading file \"{}\"", args.input_filename);
 
-    Err(PixelDataFilterError::P10Error(e)) => {
-      e.print(&format!("reading file \"{}\"", args.input_filename));
+      match e {
+        ExtractPixelDataError::DataError(e) => e.print(&task_description),
+        ExtractPixelDataError::P10Error(e) => e.print(&task_description),
+        ExtractPixelDataError::ImageError(e) => {
+          let lines = vec![
+            format!("DICOM image error {}", task_description),
+            "".to_string(),
+            format!("  Error: {}", e),
+          ];
+
+          dcmfx::core::error::print_error_lines(&lines);
+        }
+      }
+
       Err(())
     }
   }
 }
 
+#[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
+enum ExtractPixelDataError {
+  P10Error(P10Error),
+  DataError(DataError),
+  ImageError(ImageError),
+}
+
 fn perform_extract_pixel_data(
   input_filename: &str,
   output_prefix: &str,
-) -> Result<(), PixelDataFilterError> {
+  output_format: OutputFormat,
+  output_quality: u8,
+  voi_window_override: &Option<Vec<f64>>,
+) -> Result<(), ExtractPixelDataError> {
   // Open input stream
   let mut input_stream: Box<dyn Read> = match input_filename {
     "-" => Box::new(std::io::stdin()),
     _ => match File::open(input_filename) {
       Ok(file) => Box::new(file),
       Err(e) => {
-        return Err(PixelDataFilterError::P10Error(P10Error::FileError {
+        return Err(ExtractPixelDataError::P10Error(P10Error::FileError {
           when: "Opening file".to_string(),
           details: e.to_string(),
         }));
@@ -73,42 +144,71 @@ fn perform_extract_pixel_data(
 
   let mut pixel_data_filter = PixelDataFilter::new();
 
-  let mut output_extension: &'static str = "";
-  let mut frame_number = 0;
+  let mut pixel_data_reader = P10CustomTypeTransform::<PixelDataReader>::new(
+    &PixelDataReader::DATA_ELEMENT_TAGS,
+    PixelDataReader::from_data_set,
+  );
+
+  let mut output_extension = match output_format {
+    OutputFormat::Raw => "",
+    OutputFormat::Png => ".png",
+    OutputFormat::Jpg => ".jpg",
+  };
 
   loop {
     // Read the next tokens from the input stream
     let tokens =
       dcmfx::p10::read_tokens_from_stream(&mut input_stream, &mut read_context)
-        .map_err(PixelDataFilterError::P10Error)?;
+        .map_err(ExtractPixelDataError::P10Error)?;
 
     for token in tokens.iter() {
-      // Update output extension when the File Meta Information token is
-      // received
-      if let P10Token::FileMetaInformation { data_set } = token {
-        output_extension = file_extension_for_transfer_syntax(
-          data_set
-            .get_transfer_syntax()
-            .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN),
-        );
+      if output_format == OutputFormat::Raw {
+        // Update output extension when the File Meta Information token is
+        // received
+        if let P10Token::FileMetaInformation { data_set } = token {
+          output_extension = file_extension_for_transfer_syntax(
+            data_set
+              .get_transfer_syntax()
+              .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN),
+          );
+        }
       }
 
+      // Pass token through the pixel data definition filter
+      match pixel_data_reader.add_token(token) {
+        Ok(()) => (),
+        Err(P10CustomTypeTransformError::DataError(e)) => {
+          return Err(ExtractPixelDataError::DataError(e));
+        }
+        Err(P10CustomTypeTransformError::P10Error(e)) => {
+          return Err(ExtractPixelDataError::P10Error(e));
+        }
+      };
+
       // Pass token through the pixel data filter
-      let frames = pixel_data_filter.add_token(token)?;
-
-      // Write frames
-      for frame in frames {
-        let filename =
-          format!("{}.{:04}{}", output_prefix, frame_number, output_extension);
-
-        write_frame(&filename, &frame).map_err(|e| {
-          PixelDataFilterError::P10Error(P10Error::FileError {
-            when: "Writing pixel data frame".to_string(),
-            details: e.to_string(),
-          })
+      let mut frames =
+        pixel_data_filter.add_token(token).map_err(|e| match e {
+          PixelDataFilterError::DataError(e) => {
+            ExtractPixelDataError::DataError(e)
+          }
+          PixelDataFilterError::P10Error(e) => {
+            ExtractPixelDataError::P10Error(e)
+          }
         })?;
 
-        frame_number += 1;
+      // Write frames
+      for frame in frames.iter_mut() {
+        let filename =
+          format!("{}.{:04}{}", output_prefix, frame.index(), output_extension);
+
+        write_frame(
+          &filename,
+          frame,
+          output_format,
+          output_quality,
+          pixel_data_reader.get_output_mut(),
+          voi_window_override,
+        )?;
       }
 
       if *token == P10Token::End {
@@ -122,20 +222,73 @@ fn perform_extract_pixel_data(
 ///
 fn write_frame(
   filename: &str,
+  frame: &mut PixelDataFrame,
+  output_format: OutputFormat,
+  output_quality: u8,
+  pixel_data_reader: &mut Option<PixelDataReader>,
+  voi_window_override: &Option<Vec<f64>>,
+) -> Result<(), ExtractPixelDataError> {
+  println!("Writing \"{filename}\" …");
+
+  if output_format == OutputFormat::Raw {
+    write_fragments(filename, frame).map_err(|e| {
+      ExtractPixelDataError::P10Error(P10Error::FileError {
+        when: "Writing pixel data frame".to_string(),
+        details: e.to_string(),
+      })
+    })?;
+  } else {
+    match pixel_data_reader {
+      Some(pixel_data_reader) => {
+        // Apply the VOI override if it's set
+        if let Some(voi_window_override) = voi_window_override {
+          pixel_data_reader.voi_lut = VoiLut {
+            luts: vec![],
+            windows: vec![VoiWindow::new(
+              voi_window_override[0],
+              voi_window_override[1],
+              "".to_string(),
+              VoiLutFunction::LinearExact,
+            )],
+          };
+        }
+
+        let img = pixel_data_reader
+          .decode_frame(frame)
+          .map_err(ExtractPixelDataError::DataError)?;
+
+        let mut output_file =
+          File::create(filename).expect("Failed to create output file");
+
+        if output_format == OutputFormat::Png {
+          img
+            .write_to(&mut output_file, ImageFormat::Png)
+            .map_err(ExtractPixelDataError::ImageError)?;
+        } else {
+          JpegEncoder::new_with_quality(&mut output_file, output_quality)
+            .encode_image(&img)
+            .map_err(ExtractPixelDataError::ImageError)?;
+        }
+      }
+
+      None => unreachable!(),
+    }
+  }
+
+  Ok(())
+}
+
+/// Writes the data for a single frame of pixel data to a file.
+///
+fn write_fragments(
+  filename: &str,
   frame: &PixelDataFrame,
 ) -> Result<(), std::io::Error> {
-  print!("Writing \"{}\", size: {} bytes … ", filename, frame.len());
-
-  let _ = std::io::stdout().flush();
-
   let mut stream = File::create(filename)?;
+
   for fragment in frame.fragments() {
     stream.write_all(fragment)?;
   }
 
-  stream.flush()?;
-
-  println!("done");
-
-  Ok(())
+  stream.flush()
 }
