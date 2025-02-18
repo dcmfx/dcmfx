@@ -87,20 +87,20 @@ impl PixelDataReader {
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<RgbImage, DataError> {
-    if self.transfer_syntax.is_encapsulated {
-      return Err(DataError::new_value_unsupported(
-        "Reading encapsulated pixel data is not supported".to_string(),
-      ));
-    }
-
-    let width = self.definition.columns;
-    let height = self.definition.rows;
-
-    let mut pixels = Vec::with_capacity(width as usize * height as usize * 3);
-
-    let data = frame.combine_fragments();
-
     if self.definition.is_grayscale() {
+      if self.transfer_syntax.is_encapsulated {
+        return Err(DataError::new_value_unsupported(
+          "Reading encapsulated pixel data is not supported".to_string(),
+        ));
+      }
+
+      let width = self.definition.columns;
+      let height = self.definition.rows;
+
+      let mut pixels = Vec::with_capacity(width as usize * height as usize * 3);
+
+      let data = frame.combine_fragments();
+
       let pixel_iterator =
         iter_pixels_grayscale(self.definition.clone(), data)?;
       let monochrome1_conversion_offset = self.monochrome1_conversion_offset();
@@ -122,15 +122,11 @@ impl PixelDataReader {
         pixels.push(x);
         pixels.push(x);
       }
-    } else {
-      for pixel in iter_pixels_color(self.definition.clone(), data)? {
-        pixels.push((pixel.0 * 255.0).clamp(0.0, 255.0) as u8);
-        pixels.push((pixel.1 * 255.0).clamp(0.0, 255.0) as u8);
-        pixels.push((pixel.2 * 255.0).clamp(0.0, 255.0) as u8);
-      }
-    }
 
-    Ok(RgbImage::from_raw(width as u32, height as u32, pixels).unwrap())
+      Ok(RgbImage::from_raw(width as u32, height as u32, pixels).unwrap())
+    } else {
+      self.decode_color_frame(frame)
+    }
   }
 
   /// Decodes a frame of grayscale pixel data to a [`GrayImage`], applying the
@@ -197,24 +193,36 @@ impl PixelDataReader {
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<RgbImage, DataError> {
-    if self.transfer_syntax.is_encapsulated {
-      return Err(DataError::new_value_unsupported(
-        "Reading encapsulated pixel data is not supported".to_string(),
-      ));
-    }
-
     let width = self.definition.columns;
     let height = self.definition.rows;
 
-    let mut pixels = Vec::with_capacity(width as usize * height as usize * 3);
-
     let data = frame.combine_fragments();
-    for pixel in iter_pixels_color(self.definition.clone(), data)? {
-      pixels.push((pixel.0 * 255.0).clamp(0.0, 255.0) as u8);
-      pixels.push((pixel.1 * 255.0).clamp(0.0, 255.0) as u8);
-      pixels.push((pixel.2 * 255.0).clamp(0.0, 255.0) as u8);
-    }
 
-    Ok(RgbImage::from_raw(width as u32, height as u32, pixels).unwrap())
+    if self.transfer_syntax.is_encapsulated {
+      if self.transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT {
+        let img =
+          image::load_from_memory_with_format(data, image::ImageFormat::Jpeg)
+            .map_err(|_| {
+            DataError::new_value_invalid("Invalid JPG pixel data".to_string())
+          })?;
+
+        Ok(img.to_rgb8())
+      } else {
+        Err(DataError::new_value_unsupported(format!(
+          "Reading transfer syntax '{}' is not supported",
+          self.transfer_syntax.name
+        )))
+      }
+    } else {
+      let mut pixels = Vec::with_capacity(width as usize * height as usize * 3);
+
+      for pixel in iter_pixels_color(self.definition.clone(), data)? {
+        pixels.push((pixel.0 * 255.0).clamp(0.0, 255.0) as u8);
+        pixels.push((pixel.1 * 255.0).clamp(0.0, 255.0) as u8);
+        pixels.push((pixel.2 * 255.0).clamp(0.0, 255.0) as u8);
+      }
+
+      Ok(RgbImage::from_raw(width as u32, height as u32, pixels).unwrap())
+    }
   }
 }
