@@ -191,9 +191,9 @@ impl LookupTable {
           // Evaluate the linear segment
           let step = (y1 - y0) as f64 / length as f64;
           for i in 0..length {
-            lut.push(
-              (y0 as f64 + (i + 1) as f64 * step).clamp(0.0, 65535.0) as u16
-            );
+            let f = y0 as f64 + (i + 1) as f64 * step;
+
+            lut.push(f.round().clamp(u16::MIN as f64, u16::MAX as f64) as u16);
           }
         }
 
@@ -273,6 +273,52 @@ mod tests {
     assert_eq!(lut.first_input_value, -1);
     assert_eq!(lut.data, vec![1, 2, 3, 4]);
     assert_eq!(lut.explanation, Some("test".to_string()));
+  }
+
+  #[test]
+  fn create_from_data_set_with_segmented_lut() {
+    let mut ds = DataSet::new();
+    ds.insert(
+      dictionary::LUT_DESCRIPTOR.tag,
+      DataElementValue::new_lookup_table_descriptor_unchecked(
+        ValueRepresentation::SignedShort,
+        Rc::new(vec![0, 1, 0, 0, 16, 0]),
+      ),
+    );
+    ds.insert(
+      dictionary::SEGMENTED_RED_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
+      DataElementValue::new_unsigned_short(&[0, 1, 0, 1, 127, 0, 1, 128, 254])
+        .unwrap(),
+    );
+
+    let lut = LookupTable::from_data_set(
+      &ds,
+      dictionary::LUT_DESCRIPTOR.tag,
+      dictionary::LUT_DATA.tag,
+      Some(dictionary::SEGMENTED_RED_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag),
+      None,
+    )
+    .unwrap();
+
+    assert_eq!(
+      lut.data,
+      vec![
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26,
+        28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62,
+        64, 65, 67, 69, 71, 73, 75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97,
+        99, 101, 103, 105, 107, 109, 111, 113, 115, 117, 119, 121, 123, 125,
+        127, 129, 131, 133, 135, 137, 139, 141, 143, 145, 147, 149, 151, 153,
+        155, 157, 159, 161, 163, 165, 167, 169, 171, 173, 175, 177, 179, 181,
+        183, 185, 187, 189, 191, 192, 194, 196, 198, 200, 202, 204, 206, 208,
+        210, 212, 214, 216, 218, 220, 222, 224, 226, 228, 230, 232, 234, 236,
+        238, 240, 242, 244, 246, 248, 250, 252, 254,
+      ]
+    );
   }
 
   #[test]

@@ -7,7 +7,10 @@ mod pixel_data_frame;
 mod pixel_data_native;
 mod pixel_data_reader;
 
-pub use luts::{LookupTable, ModalityLut, VoiLut, VoiLutFunction, VoiWindow};
+pub use luts::{
+  ColorPalette, LookupTable, ModalityLut, StandardColorPalette, VoiLut,
+  VoiLutFunction, VoiWindow,
+};
 pub use pixel_data_definition::{
   BitsAllocated, PhotometricInterpretation, PixelDataDefinition,
   PixelRepresentation, PlanarConfiguration, SamplesPerPixel,

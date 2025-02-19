@@ -43,12 +43,12 @@ pub struct ExtractPixelDataArgs {
 
   #[arg(
     long,
-    short = 'q',
+    short,
     help = "When the output image format is 'jpg', specifies the quality level \
       in the range 0-100.",
     default_value_t = 85
   )]
-  output_quality: u8,
+  quality: u8,
 
   #[arg(
     long,
@@ -61,6 +61,15 @@ pub struct ExtractPixelDataArgs {
       of the VOI LUT defined in the input DICOM."
   )]
   voi_window: Option<Vec<f64>>,
+
+  #[arg(
+    long,
+    short,
+    value_enum,
+    help = "When the output image format is 'jpg' or 'png' and the input DICOM \
+      is grayscale, specifies the well-known color palette to apply."
+  )]
+  color_palette: Option<StandardColorPaletteArg>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
@@ -68,6 +77,36 @@ enum OutputFormat {
   Raw,
   Png,
   Jpg,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
+enum StandardColorPaletteArg {
+  HotIron,
+  Pet,
+  HotMetalBlue,
+  Pet20Step,
+  Spring,
+  Summer,
+  Fall,
+  Winter,
+}
+
+impl StandardColorPaletteArg {
+  fn color_palette(&self) -> &'static ColorPalette {
+    match self {
+      StandardColorPaletteArg::HotIron => StandardColorPalette::HotIron,
+      StandardColorPaletteArg::Pet => StandardColorPalette::Pet,
+      StandardColorPaletteArg::HotMetalBlue => {
+        StandardColorPalette::HotMetalBlue
+      }
+      StandardColorPaletteArg::Pet20Step => StandardColorPalette::Pet20Step,
+      StandardColorPaletteArg::Spring => StandardColorPalette::Spring,
+      StandardColorPaletteArg::Summer => StandardColorPalette::Summer,
+      StandardColorPaletteArg::Fall => StandardColorPalette::Fall,
+      StandardColorPaletteArg::Winter => StandardColorPalette::Winter,
+    }
+    .color_palette()
+  }
 }
 
 pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
@@ -78,8 +117,9 @@ pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
     &args.input_filename,
     output_prefix,
     args.format,
-    args.output_quality,
+    args.quality,
     &args.voi_window,
+    args.color_palette.map(|e| e.color_palette()),
   ) {
     Ok(_) => Ok(()),
 
@@ -117,9 +157,10 @@ enum ExtractPixelDataError {
 fn perform_extract_pixel_data(
   input_filename: &str,
   output_prefix: &str,
-  output_format: OutputFormat,
-  output_quality: u8,
+  format: OutputFormat,
+  quality: u8,
   voi_window_override: &Option<Vec<f64>>,
+  color_palette: Option<&ColorPalette>,
 ) -> Result<(), ExtractPixelDataError> {
   // Open input stream
   let mut input_stream: Box<dyn Read> = match input_filename {
@@ -149,7 +190,7 @@ fn perform_extract_pixel_data(
     PixelDataReader::from_data_set,
   );
 
-  let mut output_extension = match output_format {
+  let mut output_extension = match format {
     OutputFormat::Raw => "",
     OutputFormat::Png => ".png",
     OutputFormat::Jpg => ".jpg",
@@ -162,7 +203,7 @@ fn perform_extract_pixel_data(
         .map_err(ExtractPixelDataError::P10Error)?;
 
     for token in tokens.iter() {
-      if output_format == OutputFormat::Raw {
+      if format == OutputFormat::Raw {
         // Update output extension when the File Meta Information token is
         // received
         if let P10Token::FileMetaInformation { data_set } = token {
@@ -204,10 +245,11 @@ fn perform_extract_pixel_data(
         write_frame(
           &filename,
           frame,
-          output_format,
-          output_quality,
+          format,
+          quality,
           pixel_data_reader.get_output_mut(),
           voi_window_override,
+          color_palette,
         )?;
       }
 
@@ -223,14 +265,15 @@ fn perform_extract_pixel_data(
 fn write_frame(
   filename: &str,
   frame: &mut PixelDataFrame,
-  output_format: OutputFormat,
-  output_quality: u8,
+  format: OutputFormat,
+  quality: u8,
   pixel_data_reader: &mut Option<PixelDataReader>,
   voi_window_override: &Option<Vec<f64>>,
+  color_palette: Option<&ColorPalette>,
 ) -> Result<(), ExtractPixelDataError> {
   println!("Writing \"{filename}\" …");
 
-  if output_format == OutputFormat::Raw {
+  if format == OutputFormat::Raw {
     write_fragments(filename, frame).map_err(|e| {
       ExtractPixelDataError::P10Error(P10Error::FileError {
         when: "Writing pixel data frame".to_string(),
@@ -254,18 +297,18 @@ fn write_frame(
         }
 
         let img = pixel_data_reader
-          .decode_frame(frame)
+          .decode_frame(frame, color_palette)
           .map_err(ExtractPixelDataError::DataError)?;
 
         let mut output_file =
           File::create(filename).expect("Failed to create output file");
 
-        if output_format == OutputFormat::Png {
+        if format == OutputFormat::Png {
           img
             .write_to(&mut output_file, ImageFormat::Png)
             .map_err(ExtractPixelDataError::ImageError)?;
         } else {
-          JpegEncoder::new_with_quality(&mut output_file, output_quality)
+          JpegEncoder::new_with_quality(&mut output_file, quality)
             .encode_image(&img)
             .map_err(ExtractPixelDataError::ImageError)?;
         }

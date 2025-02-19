@@ -7,8 +7,8 @@ use dcmfx_core::{
 
 use crate::{
   pixel_data_native::{iter_pixels_color, iter_pixels_grayscale},
-  ModalityLut, PhotometricInterpretation, PixelDataDefinition, PixelDataFrame,
-  VoiLut,
+  ColorPalette, ModalityLut, PhotometricInterpretation, PixelDataDefinition,
+  PixelDataFrame, VoiLut,
 };
 
 /// Defines a pixel data reader that can take a [`PixelDataFrame`] and decode it
@@ -83,9 +83,14 @@ impl PixelDataReader {
   /// and VOI LUT to grayscale pixels. Grayscale images are automatically
   /// expanded to RGB.
   ///
+  /// A color palette can optionally be applied to grayscale images. The
+  /// well-known color palettes defined in PS3.6 B.1 are provided in
+  /// [`crate::luts::standard_color_palettes`].
+  ///
   pub fn decode_frame(
     &self,
     frame: &mut PixelDataFrame,
+    color_palette: Option<&ColorPalette>,
   ) -> Result<RgbImage, DataError> {
     if self.definition.is_grayscale() {
       if self.transfer_syntax.is_encapsulated {
@@ -118,9 +123,13 @@ impl PixelDataReader {
         // Convert to u8
         let x = (x * 255.0).clamp(0.0, 255.0) as u8;
 
-        pixels.push(x);
-        pixels.push(x);
-        pixels.push(x);
+        if let Some(color_palette) = color_palette {
+          pixels.extend_from_slice(&color_palette.lookup(x));
+        } else {
+          pixels.push(x);
+          pixels.push(x);
+          pixels.push(x);
+        }
       }
 
       Ok(RgbImage::from_raw(width as u32, height as u32, pixels).unwrap())
@@ -199,19 +208,23 @@ impl PixelDataReader {
     let data = frame.combine_fragments();
 
     if self.transfer_syntax.is_encapsulated {
-      if self.transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT {
-        let img =
-          image::load_from_memory_with_format(data, image::ImageFormat::Jpeg)
-            .map_err(|_| {
-            DataError::new_value_invalid("Invalid JPG pixel data".to_string())
-          })?;
+      match self.transfer_syntax {
+        &transfer_syntax::JPEG_BASELINE_8BIT => {
+          let img =
+            image::load_from_memory_with_format(data, image::ImageFormat::Jpeg)
+              .map_err(|_| {
+                DataError::new_value_invalid(
+                  "Invalid JPG pixel data".to_string(),
+                )
+              })?;
 
-        Ok(img.to_rgb8())
-      } else {
-        Err(DataError::new_value_unsupported(format!(
+          Ok(img.to_rgb8())
+        }
+
+        _ => Err(DataError::new_value_unsupported(format!(
           "Reading transfer syntax '{}' is not supported",
           self.transfer_syntax.name
-        )))
+        ))),
       }
     } else {
       let mut pixels = Vec::with_capacity(width as usize * height as usize * 3);
