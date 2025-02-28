@@ -4,8 +4,8 @@ use base64::prelude::*;
 use byteorder::ByteOrder;
 
 use dcmfx_core::{
-  dictionary, DataElementTag, DataElementValue, DataSet, DataSetPath,
-  TransferSyntax, ValueRepresentation,
+  DataElementTag, DataElementValue, DataSet, DataSetPath, TransferSyntax,
+  ValueRepresentation, dictionary,
 };
 
 use crate::json_error::JsonDeserializeError;
@@ -37,7 +37,7 @@ pub fn convert_json_to_data_set(
         return Err(JsonDeserializeError::JsonInvalid {
           details: format!("Invalid data set tag: {}", raw_tag),
           path: path.clone(),
-        })
+        });
       }
     };
 

@@ -4,8 +4,6 @@
 
 use crate::internal::gb_18030;
 use crate::internal::iso_8859_1;
-use crate::internal::iso_8859_11;
-use crate::internal::iso_8859_15;
 use crate::internal::iso_8859_2;
 use crate::internal::iso_8859_3;
 use crate::internal::iso_8859_4;
@@ -14,6 +12,8 @@ use crate::internal::iso_8859_6;
 use crate::internal::iso_8859_7;
 use crate::internal::iso_8859_8;
 use crate::internal::iso_8859_9;
+use crate::internal::iso_8859_11;
+use crate::internal::iso_8859_15;
 use crate::internal::iso_ir_6;
 use crate::internal::jis_x_0201;
 use crate::internal::jis_x_0208;

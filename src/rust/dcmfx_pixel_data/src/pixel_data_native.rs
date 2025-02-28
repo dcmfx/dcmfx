@@ -1,12 +1,12 @@
 use dcmfx_core::DataError;
 
 use crate::{
+  PixelDataDefinition, RgbColor,
   luts::LookupTable,
   pixel_data_definition::{
     BitsAllocated, PhotometricInterpretation, PlanarConfiguration,
     SamplesPerPixel,
   },
-  PixelDataDefinition, RgbColor,
 };
 
 /// Creates an iterator for the pixels of native grayscale pixel data that uses

@@ -1,4 +1,4 @@
-use dcmfx_core::{dictionary, DataElementTag, DataError, DataSet, DataSetPath};
+use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath, dictionary};
 
 use crate::luts::lookup_table::LookupTable;
 

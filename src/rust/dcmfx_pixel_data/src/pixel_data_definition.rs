@@ -1,6 +1,6 @@
 //! Specifies values of data elements relevant to parsing pixel data.
 
-use dcmfx_core::{dictionary, DataElementTag, DataError, DataSet, DataSetPath};
+use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath, dictionary};
 
 use crate::LookupTable;
 

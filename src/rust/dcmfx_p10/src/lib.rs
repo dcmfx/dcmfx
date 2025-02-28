@@ -154,7 +154,7 @@ pub fn read_tokens_from_stream(
             return Err(P10Error::FileError {
               when: "Reading from stream".to_string(),
               details: e.to_string(),
-            })
+            });
           }
         }
       }

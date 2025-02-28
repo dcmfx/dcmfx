@@ -1,4 +1,4 @@
-use dcmfx_core::{dictionary, DataElementTag, ValueRepresentation};
+use dcmfx_core::{DataElementTag, ValueRepresentation, dictionary};
 
 use crate::internal::value_length::ValueLength;
 

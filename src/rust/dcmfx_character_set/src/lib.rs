@@ -123,11 +123,13 @@ impl SpecificCharacterSet {
   ///
   pub fn decode_bytes(&self, bytes: &[u8], string_type: StringType) -> String {
     match self.0.as_slice() {
-      [CharacterSet::SingleByteWithoutExtensions {
-        defined_term,
-        decoder,
-        ..
-      }] => {
+      [
+        CharacterSet::SingleByteWithoutExtensions {
+          defined_term,
+          decoder,
+          ..
+        },
+      ] => {
         // When using the ISO_IR 13 character set to decode bytes that support
         // multiplicity, use a variant of JIS X 0201 that allows the backslash
         // character
@@ -222,17 +224,23 @@ impl SpecificCharacterSet {
   ///
   fn default_code_elements(&self) -> CodeElementPair {
     match self.0.as_slice() {
-      [CharacterSet::SingleByteWithExtensions {
-        code_element_g0,
-        code_element_g1,
-        ..
-      }, ..] => (Some(*code_element_g0), *code_element_g1),
+      [
+        CharacterSet::SingleByteWithExtensions {
+          code_element_g0,
+          code_element_g1,
+          ..
+        },
+        ..,
+      ] => (Some(*code_element_g0), *code_element_g1),
 
-      [CharacterSet::MultiByteWithExtensions {
-        code_element_g0,
-        code_element_g1,
-        ..
-      }, ..] => (*code_element_g0, *code_element_g1),
+      [
+        CharacterSet::MultiByteWithExtensions {
+          code_element_g0,
+          code_element_g1,
+          ..
+        },
+        ..,
+      ] => (*code_element_g0, *code_element_g1),
 
       _ => (None, None), // grcov-excl-line
     }

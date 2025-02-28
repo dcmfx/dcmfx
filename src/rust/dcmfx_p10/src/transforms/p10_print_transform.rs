@@ -1,6 +1,6 @@
 use dcmfx_core::{
-  data_set, dictionary, DataElementTag, DataElementValue, DataSet,
-  DataSetPrintOptions, ValueRepresentation,
+  DataElementTag, DataElementValue, DataSet, DataSetPrintOptions,
+  ValueRepresentation, data_set, dictionary,
 };
 
 use crate::P10Token;

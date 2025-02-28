@@ -1,7 +1,7 @@
 //! Anonymization of data sets by removing data elements that identify the
 //! patient, or potentially contribute to identification of the patient.
 
-use dcmfx_core::{dictionary, DataElementTag, DataSet, ValueRepresentation};
+use dcmfx_core::{DataElementTag, DataSet, ValueRepresentation, dictionary};
 
 /// A list of data elements that identify the patient, or potentially contribute
 /// to identification of the patient, and that should be removed during

@@ -7,7 +7,7 @@
 use std::rc::Rc;
 
 use dcmfx_core::{
-  dictionary, DataElementTag, DataElementValue, DataSet, ValueRepresentation,
+  DataElementTag, DataElementValue, DataSet, ValueRepresentation, dictionary,
 };
 
 use crate::{P10Error, P10Token};
@@ -338,8 +338,11 @@ impl DataSetBuilder {
       // If this token indicates the end of the current item then check that the
       // current location is in fact an item
       P10Token::SequenceItemDelimiter => match self.location.as_slice() {
-        [.., BuilderLocation::Sequence { .. }, BuilderLocation::SequenceItem { .. }] =>
-        {
+        [
+          ..,
+          BuilderLocation::Sequence { .. },
+          BuilderLocation::SequenceItem { .. },
+        ] => {
           if let Some(BuilderLocation::SequenceItem { data_set }) =
             self.location.pop()
           {
@@ -431,15 +434,18 @@ impl DataSetBuilder {
   ) {
     match (self.location.as_mut_slice(), value.bytes()) {
       // Insert new data element into the root data set or current sequence item
-      ([BuilderLocation::RootDataSet { ref mut data_set }], _)
-      | ([.., BuilderLocation::SequenceItem { ref mut data_set }], _) => {
+      ([BuilderLocation::RootDataSet { data_set }], _)
+      | ([.., BuilderLocation::SequenceItem { data_set }], _) => {
         data_set.insert(tag, value);
       }
 
       // Insert new data element into the current encapsulated pixel data
       // sequence
       (
-        [.., BuilderLocation::EncapsulatedPixelDataSequence { items, .. }],
+        [
+          ..,
+          BuilderLocation::EncapsulatedPixelDataSequence { items, .. },
+        ],
         Ok(bytes),
       ) => items.push(bytes.clone()),
 

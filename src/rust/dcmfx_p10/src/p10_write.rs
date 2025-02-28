@@ -7,17 +7,18 @@ use byteorder::ByteOrder;
 
 use dcmfx_core::DataSetPath;
 use dcmfx_core::{
-  dictionary, transfer_syntax, transfer_syntax::Endianness, DataElementTag,
-  DataElementValue, DataSet, TransferSyntax,
+  DataElementTag, DataElementValue, DataSet, TransferSyntax, dictionary,
+  transfer_syntax, transfer_syntax::Endianness,
 };
 
 use crate::internal::p10_location::P10Location;
 use crate::{
+  P10Error, P10FilterTransform, P10InsertTransform, P10Token,
   internal::{
     data_element_header::{DataElementHeader, ValueLengthSize},
     value_length::ValueLength,
   },
-  p10_token, uids, P10Error, P10FilterTransform, P10InsertTransform, P10Token,
+  p10_token, uids,
 };
 
 /// Data is compressed into chunks of this size when writing deflated transfer
@@ -116,7 +117,7 @@ impl P10WriteContext {
       // transfer syntax value that should be put onto the write context, and
       // start a zlib compressor if the transfer syntax is deflated
       P10Token::FileMetaInformation {
-        data_set: ref file_meta_information,
+        data_set: file_meta_information,
       } => {
         // Read the transfer syntax UID
         let transfer_syntax_uid = file_meta_information

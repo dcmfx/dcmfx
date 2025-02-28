@@ -239,10 +239,7 @@ fn streaming_rewrite(
     // File Meta Information token
     if let Some(ts) = output_transfer_syntax {
       for token in tokens.iter_mut() {
-        if let P10Token::FileMetaInformation {
-          data_set: ref mut fmi,
-        } = token
-        {
+        if let P10Token::FileMetaInformation { data_set: fmi } = token {
           change_transfer_syntax(fmi, ts)?;
         }
       }

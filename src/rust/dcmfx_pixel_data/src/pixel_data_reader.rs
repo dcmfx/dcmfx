@@ -1,14 +1,14 @@
 use image::{GrayImage, RgbImage};
 
 use dcmfx_core::{
-  dictionary, transfer_syntax, DataElementTag, DataError, DataSet,
-  TransferSyntax,
+  DataElementTag, DataError, DataSet, TransferSyntax, dictionary,
+  transfer_syntax,
 };
 
 use crate::{
-  pixel_data_native::{iter_pixels_color, iter_pixels_grayscale},
   ColorPalette, ModalityLut, PhotometricInterpretation, PixelDataDefinition,
   PixelDataFrame, VoiLut,
+  pixel_data_native::{iter_pixels_color, iter_pixels_grayscale},
 };
 
 /// Defines a pixel data reader that can take a [`PixelDataFrame`] and decode it

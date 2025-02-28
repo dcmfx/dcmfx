@@ -19,8 +19,8 @@ use std::rc::Rc;
 use byteorder::ByteOrder;
 
 use dcmfx_core::{
-  dictionary, transfer_syntax, DataElementTag, DataElementValue, DataSet,
-  DataSetPath, TransferSyntax, ValueRepresentation,
+  DataElementTag, DataElementValue, DataSet, DataSetPath, TransferSyntax,
+  ValueRepresentation, dictionary, transfer_syntax,
 };
 
 use crate::internal::byte_stream::{ByteStream, ByteStreamError};
@@ -28,7 +28,7 @@ use crate::internal::data_element_header::{
   DataElementHeader, ValueLengthSize,
 };
 use crate::internal::p10_location::{self, P10Location};
-use crate::{internal::value_length::ValueLength, P10Error, P10Token};
+use crate::{P10Error, P10Token, internal::value_length::ValueLength};
 
 /// Configuration used when reading DICOM P10 data.
 ///
@@ -528,7 +528,7 @@ impl P10ReadContext {
                   ),
                   path: DataSetPath::new_with_data_element(tag),
                   offset: self.stream.bytes_read(),
-                })
+                });
               }
             }
           }
@@ -578,7 +578,7 @@ impl P10ReadContext {
               details: "Zlib data is invalid".to_string(),
               path: DataSetPath::new(),
               offset: self.stream.bytes_read(),
-            })
+            });
           }
         }
       }

@@ -1,4 +1,4 @@
-use dcmfx_core::{dictionary, DataElementTag, ValueRepresentation};
+use dcmfx_core::{DataElementTag, ValueRepresentation, dictionary};
 
 use crate::P10Token;
 
@@ -53,10 +53,13 @@ impl P10FilterTransform {
         // filtered out
         let filter_result = match self.location.as_slice() {
           []
-          | [.., LocationEntry {
-            filter_result: true,
-            ..
-          }] => (self.predicate)(*tag, *vr, &self.location),
+          | [
+            ..,
+            LocationEntry {
+              filter_result: true,
+              ..
+            },
+          ] => (self.predicate)(*tag, *vr, &self.location),
 
           _ => false,
         };

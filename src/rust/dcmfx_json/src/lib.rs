@@ -86,8 +86,8 @@ mod tests {
   use std::rc::Rc;
 
   use dcmfx_core::{
-    dictionary, transfer_syntax, DataElementTag, DataElementValue,
-    PersonNameComponents, StructuredPersonName, ValueRepresentation,
+    DataElementTag, DataElementValue, PersonNameComponents,
+    StructuredPersonName, ValueRepresentation, dictionary, transfer_syntax,
   };
 
   use super::*;
@@ -125,8 +125,8 @@ mod tests {
   /// Returns pairs of data sets and their corresponding DICOM JSON string.
   /// These are used to test conversion both to and from DICOM JSON.
   ///
-  fn test_data_sets(
-  ) -> Vec<(Vec<(DataElementTag, DataElementValue)>, serde_json::Value)> {
+  fn test_data_sets()
+  -> Vec<(Vec<(DataElementTag, DataElementValue)>, serde_json::Value)> {
     vec![
       (
         vec![

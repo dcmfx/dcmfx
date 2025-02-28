@@ -25,9 +25,9 @@
 use std::collections::HashMap;
 
 use dcmfx_character_set::{self, SpecificCharacterSet, StringType};
-use dcmfx_core::{dictionary, utils, DataElementTag, ValueRepresentation};
+use dcmfx_core::{DataElementTag, ValueRepresentation, dictionary, utils};
 
-use crate::{internal::value_length::ValueLength, P10Error, P10Token};
+use crate::{P10Error, P10Token, internal::value_length::ValueLength};
 
 /// A P10 location is a list of location entries, with the current/most recently
 /// added one at the end of the vector.
@@ -580,38 +580,40 @@ impl P10Location {
 
       // For '(7FE0,0010) Pixel Data', OB is not usable when in an implicit VR
       // transfer syntax. Ref: PS3.5 8.2.
-      [ValueRepresentation::OtherByteString, ValueRepresentation::OtherWordString]
-        if tag == dictionary::PIXEL_DATA.tag =>
-      {
+      [
+        ValueRepresentation::OtherByteString,
+        ValueRepresentation::OtherWordString,
+      ] if tag == dictionary::PIXEL_DATA.tag => {
         Ok(ValueRepresentation::OtherWordString)
       }
 
       // Use '(0028,0103) PixelRepresentation' to determine a US/SS VR on
       // relevant values
-      [ValueRepresentation::UnsignedShort, ValueRepresentation::SignedShort]
-        if tag == dictionary::ZERO_VELOCITY_PIXEL_VALUE.tag
-          || tag == dictionary::MAPPED_PIXEL_VALUE.tag
-          || tag == dictionary::SMALLEST_VALID_PIXEL_VALUE.tag
-          || tag == dictionary::LARGEST_VALID_PIXEL_VALUE.tag
-          || tag == dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag
-          || tag == dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag
-          || tag == dictionary::SMALLEST_PIXEL_VALUE_IN_SERIES.tag
-          || tag == dictionary::LARGEST_PIXEL_VALUE_IN_SERIES.tag
-          || tag == dictionary::SMALLEST_IMAGE_PIXEL_VALUE_IN_PLANE.tag
-          || tag == dictionary::LARGEST_IMAGE_PIXEL_VALUE_IN_PLANE.tag
-          || tag == dictionary::PIXEL_PADDING_VALUE.tag
-          || tag == dictionary::PIXEL_PADDING_RANGE_LIMIT.tag
-          || tag
-            == dictionary::RED_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag
-          || tag
-            == dictionary::GREEN_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag
-          || tag
-            == dictionary::BLUE_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag
-          || tag == dictionary::LUT_DESCRIPTOR.tag
-          || tag == dictionary::REAL_WORLD_VALUE_LAST_VALUE_MAPPED.tag
-          || tag == dictionary::REAL_WORLD_VALUE_FIRST_VALUE_MAPPED.tag
-          || tag == dictionary::HISTOGRAM_FIRST_BIN_VALUE.tag
-          || tag == dictionary::HISTOGRAM_LAST_BIN_VALUE.tag =>
+      [
+        ValueRepresentation::UnsignedShort,
+        ValueRepresentation::SignedShort,
+      ] if tag == dictionary::ZERO_VELOCITY_PIXEL_VALUE.tag
+        || tag == dictionary::MAPPED_PIXEL_VALUE.tag
+        || tag == dictionary::SMALLEST_VALID_PIXEL_VALUE.tag
+        || tag == dictionary::LARGEST_VALID_PIXEL_VALUE.tag
+        || tag == dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag
+        || tag == dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag
+        || tag == dictionary::SMALLEST_PIXEL_VALUE_IN_SERIES.tag
+        || tag == dictionary::LARGEST_PIXEL_VALUE_IN_SERIES.tag
+        || tag == dictionary::SMALLEST_IMAGE_PIXEL_VALUE_IN_PLANE.tag
+        || tag == dictionary::LARGEST_IMAGE_PIXEL_VALUE_IN_PLANE.tag
+        || tag == dictionary::PIXEL_PADDING_VALUE.tag
+        || tag == dictionary::PIXEL_PADDING_RANGE_LIMIT.tag
+        || tag == dictionary::RED_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag
+        || tag
+          == dictionary::GREEN_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag
+        || tag
+          == dictionary::BLUE_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag
+        || tag == dictionary::LUT_DESCRIPTOR.tag
+        || tag == dictionary::REAL_WORLD_VALUE_LAST_VALUE_MAPPED.tag
+        || tag == dictionary::REAL_WORLD_VALUE_FIRST_VALUE_MAPPED.tag
+        || tag == dictionary::HISTOGRAM_FIRST_BIN_VALUE.tag
+        || tag == dictionary::HISTOGRAM_LAST_BIN_VALUE.tag =>
       {
         match clarifying_data_elements.pixel_representation {
           Some(0) => Ok(ValueRepresentation::UnsignedShort),
@@ -622,9 +624,11 @@ impl P10Location {
 
       // Use '(003A,021A) WaveformBitsStored' to determine an OB/OW VR on
       // relevant values
-      [ValueRepresentation::OtherByteString, ValueRepresentation::OtherWordString]
-        if tag == dictionary::CHANNEL_MINIMUM_VALUE.tag
-          || tag == dictionary::CHANNEL_MAXIMUM_VALUE.tag =>
+      [
+        ValueRepresentation::OtherByteString,
+        ValueRepresentation::OtherWordString,
+      ] if tag == dictionary::CHANNEL_MINIMUM_VALUE.tag
+        || tag == dictionary::CHANNEL_MAXIMUM_VALUE.tag =>
       {
         match clarifying_data_elements.waveform_bits_stored {
           Some(8) => Ok(ValueRepresentation::OtherByteString),
@@ -635,9 +639,11 @@ impl P10Location {
 
       // Use '(5400,1004) WaveformBitsAllocated' to determine an OB/OW VR on
       // relevant values
-      [ValueRepresentation::OtherByteString, ValueRepresentation::OtherWordString]
-        if tag == dictionary::WAVEFORM_PADDING_VALUE.tag
-          || tag == dictionary::WAVEFORM_DATA.tag =>
+      [
+        ValueRepresentation::OtherByteString,
+        ValueRepresentation::OtherWordString,
+      ] if tag == dictionary::WAVEFORM_PADDING_VALUE.tag
+        || tag == dictionary::WAVEFORM_DATA.tag =>
       {
         match clarifying_data_elements.waveform_bits_allocated {
           Some(8) => Ok(ValueRepresentation::OtherByteString),
@@ -652,19 +658,22 @@ impl P10Location {
       // case of the LUT containing tightly packed 8-bit data, which is allowed
       // by the spec (Ref: PS3.3 C.11.1.1.1), even though there is no VR that
       // correctly expresses this, i.e. OB is not a valid VR for LUTData.
-      [ValueRepresentation::UnsignedShort, ValueRepresentation::OtherWordString]
-        if tag == dictionary::LUT_DATA.tag =>
-      {
+      [
+        ValueRepresentation::UnsignedShort,
+        ValueRepresentation::OtherWordString,
+      ] if tag == dictionary::LUT_DATA.tag => {
         Ok(ValueRepresentation::OtherWordString)
       }
 
       // The VR for '(60xx,3000) Overlay Data' doesn't need to be determined as
       // when the transfer syntax is 'Implicit VR Little Endian' it is always
       // OW. Ref: PS3.5 8.1.2.
-      [ValueRepresentation::OtherByteString, ValueRepresentation::OtherWordString]
-        if tag.group >= 0x6000
-          && tag.group <= 0x60FF
-          && tag.element == 0x3000 =>
+      [
+        ValueRepresentation::OtherByteString,
+        ValueRepresentation::OtherWordString,
+      ] if tag.group >= 0x6000
+        && tag.group <= 0x60FF
+        && tag.element == 0x3000 =>
       {
         Ok(ValueRepresentation::OtherWordString)
       }

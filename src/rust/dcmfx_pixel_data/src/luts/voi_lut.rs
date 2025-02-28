@@ -1,4 +1,4 @@
-use dcmfx_core::{dictionary, DataElementTag, DataError, DataSet};
+use dcmfx_core::{DataElementTag, DataError, DataSet, dictionary};
 
 use crate::luts::{LookupTable, VoiWindow};
 

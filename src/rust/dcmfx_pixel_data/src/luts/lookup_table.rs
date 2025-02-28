@@ -182,7 +182,7 @@ impl LookupTable {
             None => {
               return Err(DataError::new_value_invalid(
                 "Linear segment Y1 value is missing".to_string(),
-              ))
+              ));
             }
           };
 
@@ -241,7 +241,7 @@ impl LookupTable {
 mod tests {
   use super::*;
 
-  use dcmfx_core::{dictionary, DataElementValue, ValueRepresentation};
+  use dcmfx_core::{DataElementValue, ValueRepresentation, dictionary};
   use std::rc::Rc;
 
   #[test]

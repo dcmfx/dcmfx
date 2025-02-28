@@ -4,7 +4,7 @@ use byteorder::ByteOrder;
 use std::{collections::VecDeque, rc::Rc};
 
 use dcmfx_core::{
-  dictionary, DataElementValue, DataError, DataSet, ValueRepresentation,
+  DataElementValue, DataError, DataSet, ValueRepresentation, dictionary,
 };
 use dcmfx_p10::{
   P10CustomTypeTransform, P10CustomTypeTransformError, P10Error,

@@ -1,7 +1,7 @@
 //! A path in a data set that specifies the precise location of a specific data
 //! element or sequence item.
 
-use crate::{dictionary, DataElementTag};
+use crate::{DataElementTag, dictionary};
 
 /// A path in a data set that specifies the precise location of a specific data
 /// element or sequence item. Entries in a data set path are separated by a

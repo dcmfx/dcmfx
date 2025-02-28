@@ -1,6 +1,6 @@
 use dcmfx_core::{DataElementTag, DataElementValue, DataSet};
 
-use crate::{p10_token, P10FilterTransform, P10Token};
+use crate::{P10FilterTransform, P10Token, p10_token};
 
 /// Transform that inserts data elements into a stream of DICOM P10 tokens.
 ///

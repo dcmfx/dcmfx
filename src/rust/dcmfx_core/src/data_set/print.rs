@@ -1,6 +1,6 @@
 use std::io::IsTerminal;
 
-use crate::{dictionary, utils, DataElementTag, DataSet, ValueRepresentation};
+use crate::{DataElementTag, DataSet, ValueRepresentation, dictionary, utils};
 
 /// Configurable options used when printing a data set to stdout.
 ///

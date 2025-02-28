@@ -20,7 +20,7 @@ pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_native::{iter_pixels_color, iter_pixels_grayscale};
 pub use pixel_data_reader::PixelDataReader;
 
-use dcmfx_core::{dictionary, transfer_syntax, DataSet, TransferSyntax};
+use dcmfx_core::{DataSet, TransferSyntax, dictionary, transfer_syntax};
 use dcmfx_p10::DataSetP10Extensions;
 
 /// An RGB color where each component is in the range 0-1.
@@ -156,7 +156,7 @@ mod tests {
   use std::rc::Rc;
 
   use super::*;
-  use dcmfx_core::{dictionary, DataElementValue, ValueRepresentation};
+  use dcmfx_core::{DataElementValue, ValueRepresentation, dictionary};
 
   #[test]
   fn read_native_empty_frame() {

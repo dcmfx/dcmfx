@@ -61369,7 +61369,10 @@ fn find_private(
         tag,
         name: "Filter Parameter for Phase Correction",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(4) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(4),
+        },
       }),
       (0x00, 0x21, _, 0x58) => Ok(Item {
         tag,
@@ -61477,7 +61480,10 @@ fn find_private(
         tag,
         name: "Filter Parameter for Raw Data",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(4) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(4),
+        },
       }),
       (0x00, 0x19, _, 0xa0) => Ok(Item {
         tag,
@@ -61681,7 +61687,10 @@ fn find_private(
         tag,
         name: "Saturation Readout Vector Sagittal Component",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(5) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(5),
+        },
       }),
       (0x00, 0x21, _, 0x80) => Ok(Item {
         tag,
@@ -61777,7 +61786,10 @@ fn find_private(
         tag,
         name: "Normalization Filter Parameter for Image Data",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(4) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(4),
+        },
       }),
       (0x00, 0x21, _, 0x96) => Ok(Item {
         tag,
@@ -61831,13 +61843,19 @@ fn find_private(
         tag,
         name: "Filter Parameter for Image Data",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(4) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(4),
+        },
       }),
       (0x00, 0x19, _, 0x91) => Ok(Item {
         tag,
         name: "Saturation Phase Encoding Vector Sagittal Compo...",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(5) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(5),
+        },
       }),
       _ => Err(()),
     },
@@ -61858,7 +61876,10 @@ fn find_private(
         tag,
         name: "Orientation Vector",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 9, max: Some(9) },
+        multiplicity: ValueMultiplicity {
+          min: 9,
+          max: Some(9),
+        },
       }),
       (0x70, 0x0d, _, 0x03) => Ok(Item {
         tag,
@@ -64102,7 +64123,10 @@ fn find_private(
         tag,
         name: "",
         vrs: &[ValueRepresentation::SignedLong],
-        multiplicity: ValueMultiplicity { min: 28, max: Some(28) },
+        multiplicity: ValueMultiplicity {
+          min: 28,
+          max: Some(28),
+        },
       }),
       (0x70, 0x79, _, 0x5a) => Ok(Item {
         tag,
@@ -64288,7 +64312,10 @@ fn find_private(
         tag,
         name: "",
         vrs: &[ValueRepresentation::UnsignedShort],
-        multiplicity: ValueMultiplicity { min: 12, max: Some(12) },
+        multiplicity: ValueMultiplicity {
+          min: 12,
+          max: Some(12),
+        },
       }),
       (0x70, 0x79, _, 0x2b) => Ok(Item {
         tag,
@@ -64384,7 +64411,10 @@ fn find_private(
         tag,
         name: "",
         vrs: &[ValueRepresentation::SignedShort],
-        multiplicity: ValueMultiplicity { min: 18, max: Some(18) },
+        multiplicity: ValueMultiplicity {
+          min: 18,
+          max: Some(18),
+        },
       }),
       (0x70, 0x79, _, 0x25) => Ok(Item {
         tag,
@@ -64468,7 +64498,10 @@ fn find_private(
         tag,
         name: "",
         vrs: &[ValueRepresentation::SignedLong],
-        multiplicity: ValueMultiplicity { min: 35, max: Some(35) },
+        multiplicity: ValueMultiplicity {
+          min: 35,
+          max: Some(35),
+        },
       }),
       (0x70, 0x79, _, 0x3c) => Ok(Item {
         tag,
@@ -64624,49 +64657,54 @@ fn find_private(
         tag,
         name: "",
         vrs: &[ValueRepresentation::UnsignedShort],
-        multiplicity: ValueMultiplicity { min: 10, max: Some(10) },
+        multiplicity: ValueMultiplicity {
+          min: 10,
+          max: Some(10),
+        },
       }),
       _ => Err(()),
     },
-    "http://www.gemedicalsystems.com/it_solutions/orthoview/2.1" => match (g0, g1, e0, e1) {
-      (0x31, 0x17, _, 0x10) => Ok(Item {
-        tag,
-        name: "OrthoView Session Date/Time",
-        vrs: &[ValueRepresentation::DateTime],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x17, _, 0x20) => Ok(Item {
-        tag,
-        name: "OrthoView Session Creator",
-        vrs: &[ValueRepresentation::PersonName],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x17, _, 0x30) => Ok(Item {
-        tag,
-        name: "OrthoView Session Completion Flag",
-        vrs: &[ValueRepresentation::CodeString],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x17, _, 0x40) => Ok(Item {
-        tag,
-        name: "OrthoView File Sequence",
-        vrs: &[ValueRepresentation::Sequence],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x17, _, 0x50) => Ok(Item {
-        tag,
-        name: "OrthoView File Name",
-        vrs: &[ValueRepresentation::ShortText],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x17, _, 0x60) => Ok(Item {
-        tag,
-        name: "OrthoView File Content",
-        vrs: &[ValueRepresentation::OtherByteString],
-        multiplicity: VM_1,
-      }),
-      _ => Err(()),
-    },
+    "http://www.gemedicalsystems.com/it_solutions/orthoview/2.1" => {
+      match (g0, g1, e0, e1) {
+        (0x31, 0x17, _, 0x10) => Ok(Item {
+          tag,
+          name: "OrthoView Session Date/Time",
+          vrs: &[ValueRepresentation::DateTime],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x17, _, 0x20) => Ok(Item {
+          tag,
+          name: "OrthoView Session Creator",
+          vrs: &[ValueRepresentation::PersonName],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x17, _, 0x30) => Ok(Item {
+          tag,
+          name: "OrthoView Session Completion Flag",
+          vrs: &[ValueRepresentation::CodeString],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x17, _, 0x40) => Ok(Item {
+          tag,
+          name: "OrthoView File Sequence",
+          vrs: &[ValueRepresentation::Sequence],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x17, _, 0x50) => Ok(Item {
+          tag,
+          name: "OrthoView File Name",
+          vrs: &[ValueRepresentation::ShortText],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x17, _, 0x60) => Ok(Item {
+          tag,
+          name: "OrthoView File Content",
+          vrs: &[ValueRepresentation::OtherByteString],
+          multiplicity: VM_1,
+        }),
+        _ => Err(()),
+      }
+    }
     "AMI StudyExtensions_01" => match (g0, g1, e0, e1) {
       (0x31, 0x11, _, 0x01) => Ok(Item {
         tag,
@@ -65210,7 +65248,8 @@ fn find_private(
       }),
       _ => Err(()),
     },
-    "SCHICK TECHNOLOGIES - Image Security Creator ID" => match (g0, g1, e0, e1) {
+    "SCHICK TECHNOLOGIES - Image Security Creator ID" => match (g0, g1, e0, e1)
+    {
       (0x00, 0x29, _, 0x01) => Ok(Item {
         tag,
         name: "Image Checksum",
@@ -69844,7 +69883,10 @@ fn find_private(
         tag,
         name: "Large Data File Name",
         vrs: &[ValueRepresentation::CodeString],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(8) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(8),
+        },
       }),
       (0x70, 0x05, _, 0x18) => Ok(Item {
         tag,
@@ -71962,7 +72004,10 @@ fn find_private(
         tag,
         name: "Transform Rotation Matrix",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 9, max: Some(9) },
+        multiplicity: ValueMultiplicity {
+          min: 9,
+          max: Some(9),
+        },
       }),
       (0x00, 0x47, _, 0x93) => Ok(Item {
         tag,
@@ -71980,7 +72025,10 @@ fn find_private(
         tag,
         name: "Volume Registration Transform Rotation Matrix",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 9, max: Some(9) },
+        multiplicity: ValueMultiplicity {
+          min: 9,
+          max: Some(9),
+        },
       }),
       (0x00, 0x47, _, 0xb2) => Ok(Item {
         tag,
@@ -72220,7 +72268,10 @@ fn find_private(
         tag,
         name: "Volume Slice To RAS Rotation Matrix",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 9, max: Some(9) },
+        multiplicity: ValueMultiplicity {
+          min: 9,
+          max: Some(9),
+        },
       }),
       (0x00, 0x47, _, 0xd5) => Ok(Item {
         tag,
@@ -72268,7 +72319,10 @@ fn find_private(
         tag,
         name: "Volume Base Line",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 9, max: Some(9) },
+        multiplicity: ValueMultiplicity {
+          min: 9,
+          max: Some(9),
+        },
       }),
       _ => Err(()),
     },
@@ -72574,7 +72628,10 @@ fn find_private(
         tag,
         name: "Osteo Contour Buffer",
         vrs: &[ValueRepresentation::UnsignedShort],
-        multiplicity: ValueMultiplicity { min: 256, max: Some(256) },
+        multiplicity: ValueMultiplicity {
+          min: 256,
+          max: Some(256),
+        },
       }),
       _ => Err(()),
     },
@@ -77818,7 +77875,10 @@ fn find_private(
         tag,
         name: "A_Coefficients",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 8, max: Some(8) },
+        multiplicity: ValueMultiplicity {
+          min: 8,
+          max: Some(8),
+        },
       }),
       (0x00, 0x45, _, 0x62) => Ok(Item {
         tag,
@@ -78308,27 +78368,29 @@ fn find_private(
       }),
       _ => Err(()),
     },
-    "Applicare/Centricity Radiology Web/Version 1.0" => match (g0, g1, e0, e1) {
-      (0x41, 0x09, _, 0x01) => Ok(Item {
-        tag,
-        name: "Mammography Laterality",
-        vrs: &[ValueRepresentation::ShortString],
-        multiplicity: VM_1,
-      }),
-      (0x41, 0x09, _, 0x02) => Ok(Item {
-        tag,
-        name: "Mammography View Name",
-        vrs: &[ValueRepresentation::ShortString],
-        multiplicity: VM_1,
-      }),
-      (0x41, 0x09, _, 0x03) => Ok(Item {
-        tag,
-        name: "Mammography View Modifier",
-        vrs: &[ValueRepresentation::ShortString],
-        multiplicity: VM_1,
-      }),
-      _ => Err(()),
-    },
+    "Applicare/Centricity Radiology Web/Version 1.0" => {
+      match (g0, g1, e0, e1) {
+        (0x41, 0x09, _, 0x01) => Ok(Item {
+          tag,
+          name: "Mammography Laterality",
+          vrs: &[ValueRepresentation::ShortString],
+          multiplicity: VM_1,
+        }),
+        (0x41, 0x09, _, 0x02) => Ok(Item {
+          tag,
+          name: "Mammography View Name",
+          vrs: &[ValueRepresentation::ShortString],
+          multiplicity: VM_1,
+        }),
+        (0x41, 0x09, _, 0x03) => Ok(Item {
+          tag,
+          name: "Mammography View Modifier",
+          vrs: &[ValueRepresentation::ShortString],
+          multiplicity: VM_1,
+        }),
+        _ => Err(()),
+      }
+    }
     "Philips Imaging DD 073" => match (g0, g1, e0, e1) {
       (0x40, 0x07, _, 0x48) => Ok(Item {
         tag,
@@ -79260,7 +79322,10 @@ fn find_private(
       (0x70, 0x19, _, 0x80) => Ok(Item {
         tag,
         name: "Original image data on area of original LR mark",
-        vrs: &[ValueRepresentation::OtherByteString, ValueRepresentation::OtherWordString],
+        vrs: &[
+          ValueRepresentation::OtherByteString,
+          ValueRepresentation::OtherWordString,
+        ],
         multiplicity: VM_1,
       }),
       (0x70, 0x19, _, 0x81) => Ok(Item {
@@ -80671,7 +80736,10 @@ fn find_private(
         tag,
         name: "Saturation Readout Vector Coronal Component",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(5) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(5),
+        },
       }),
       (0x00, 0x19, _, 0x70) => Ok(Item {
         tag,
@@ -80725,7 +80793,10 @@ fn find_private(
         tag,
         name: "Saturation Phase Encoding Vector Coronal Component",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(5) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(5),
+        },
       }),
       _ => Err(()),
     },
@@ -85202,45 +85273,47 @@ fn find_private(
       }),
       _ => Err(()),
     },
-    "http://www.gemedicalsystems.com/it_solutions/bamwallthickness/1.0" => match (g0, g1, e0, e1) {
-      (0x31, 0x19, _, 0x10) => Ok(Item {
-        tag,
-        name: "BAM WallThickness Session Date/Time",
-        vrs: &[ValueRepresentation::DateTime],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x19, _, 0x20) => Ok(Item {
-        tag,
-        name: "BAM WallThickness Session Creator",
-        vrs: &[ValueRepresentation::PersonName],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x19, _, 0x30) => Ok(Item {
-        tag,
-        name: "BAM WallThickness Session Completion Flag",
-        vrs: &[ValueRepresentation::CodeString],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x19, _, 0x40) => Ok(Item {
-        tag,
-        name: "BAM WallThickness File Sequence",
-        vrs: &[ValueRepresentation::Sequence],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x19, _, 0x50) => Ok(Item {
-        tag,
-        name: "BAM WallThickness File Name",
-        vrs: &[ValueRepresentation::ShortText],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x19, _, 0x60) => Ok(Item {
-        tag,
-        name: "BAM WallThickness File Content",
-        vrs: &[ValueRepresentation::OtherByteString],
-        multiplicity: VM_1,
-      }),
-      _ => Err(()),
-    },
+    "http://www.gemedicalsystems.com/it_solutions/bamwallthickness/1.0" => {
+      match (g0, g1, e0, e1) {
+        (0x31, 0x19, _, 0x10) => Ok(Item {
+          tag,
+          name: "BAM WallThickness Session Date/Time",
+          vrs: &[ValueRepresentation::DateTime],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x19, _, 0x20) => Ok(Item {
+          tag,
+          name: "BAM WallThickness Session Creator",
+          vrs: &[ValueRepresentation::PersonName],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x19, _, 0x30) => Ok(Item {
+          tag,
+          name: "BAM WallThickness Session Completion Flag",
+          vrs: &[ValueRepresentation::CodeString],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x19, _, 0x40) => Ok(Item {
+          tag,
+          name: "BAM WallThickness File Sequence",
+          vrs: &[ValueRepresentation::Sequence],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x19, _, 0x50) => Ok(Item {
+          tag,
+          name: "BAM WallThickness File Name",
+          vrs: &[ValueRepresentation::ShortText],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x19, _, 0x60) => Ok(Item {
+          tag,
+          name: "BAM WallThickness File Content",
+          vrs: &[ValueRepresentation::OtherByteString],
+          multiplicity: VM_1,
+        }),
+        _ => Err(()),
+      }
+    }
     "GEMS_VXTLSTATE_001" => match (g0, g1, e0, e1) {
       (0x00, 0x57, _, 0x20) => Ok(Item {
         tag,
@@ -97450,25 +97523,37 @@ fn find_private(
         tag,
         name: "xCoordinate Region of Interest",
         vrs: &[ValueRepresentation::UnsignedShort],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(5) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(5),
+        },
       }),
       (0x00, 0x21, _, 0x21) => Ok(Item {
         tag,
         name: "yCoordinate Region of Interest",
         vrs: &[ValueRepresentation::UnsignedShort],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(5) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(5),
+        },
       }),
       (0x00, 0x21, _, 0x22) => Ok(Item {
         tag,
         name: "Width Region of Interest",
         vrs: &[ValueRepresentation::UnsignedShort],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(5) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(5),
+        },
       }),
       (0x00, 0x21, _, 0x23) => Ok(Item {
         tag,
         name: "Height Region of Interest",
         vrs: &[ValueRepresentation::UnsignedShort],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(5) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(5),
+        },
       }),
       _ => Err(()),
     },
@@ -98237,7 +98322,8 @@ fn find_private(
       }),
       _ => Err(()),
     },
-    "SIEMENS MED OCS CBT PROJECTION GANTRY POSITIONS" => match (g0, g1, e0, e1) {
+    "SIEMENS MED OCS CBT PROJECTION GANTRY POSITIONS" => match (g0, g1, e0, e1)
+    {
       (0x00, 0x39, _, 0x86) => Ok(Item {
         tag,
         name: "Gantry Positions",
@@ -98417,15 +98503,17 @@ fn find_private(
       }),
       _ => Err(()),
     },
-    "SIEMENS MED OCS FP Alignment Calibration Date / Time" => match (g0, g1, e0, e1) {
-      (0x00, 0x39, _, 0x95) => Ok(Item {
-        tag,
-        name: "Flat Panel Alignment last calibration Date and Time",
-        vrs: &[ValueRepresentation::DateTime],
-        multiplicity: VM_1,
-      }),
-      _ => Err(()),
-    },
+    "SIEMENS MED OCS FP Alignment Calibration Date / Time" => {
+      match (g0, g1, e0, e1) {
+        (0x00, 0x39, _, 0x95) => Ok(Item {
+          tag,
+          name: "Flat Panel Alignment last calibration Date and Time",
+          vrs: &[ValueRepresentation::DateTime],
+          multiplicity: VM_1,
+        }),
+        _ => Err(()),
+      }
+    }
     "SCHICK TECHNOLOGIES - Viewset Creator ID" => match (g0, g1, e0, e1) {
       (0x00, 0x09, _, 0x01) => Ok(Item {
         tag,
@@ -99979,7 +100067,10 @@ fn find_private(
         tag,
         name: "EVE",
         vrs: &[ValueRepresentation::UnsignedShort],
-        multiplicity: ValueMultiplicity { min: 8, max: Some(8) },
+        multiplicity: ValueMultiplicity {
+          min: 8,
+          max: Some(8),
+        },
       }),
       (0x00, 0x21, _, 0x18) => Ok(Item {
         tag,
@@ -100147,7 +100238,10 @@ fn find_private(
         tag,
         name: "Unknown",
         vrs: &[ValueRepresentation::SignedShort],
-        multiplicity: ValueMultiplicity { min: 1, max: Some(3) },
+        multiplicity: ValueMultiplicity {
+          min: 1,
+          max: Some(3),
+        },
       }),
       (0x00, 0x21, _, 0x14) => Ok(Item {
         tag,
@@ -103555,7 +103649,10 @@ fn find_private(
         tag,
         name: "Workflow Control Flags",
         vrs: &[ValueRepresentation::LongString],
-        multiplicity: ValueMultiplicity { min: 8, max: Some(8) },
+        multiplicity: ValueMultiplicity {
+          min: 8,
+          max: Some(8),
+        },
       }),
       (0x00, 0x29, _, 0x51) => Ok(Item {
         tag,
@@ -104807,21 +104904,23 @@ fn find_private(
       }),
       _ => Err(()),
     },
-    "ObjectModel (ID, Version, Place, PlaceDescription)" => match (g0, g1, e0, e1) {
-      (0x81, 0x01, _, 0x00) => Ok(Item {
-        tag,
-        name: "ID",
-        vrs: &[ValueRepresentation::LongString],
-        multiplicity: VM_1,
-      }),
-      (0x81, 0x01, _, 0x10) => Ok(Item {
-        tag,
-        name: "Version",
-        vrs: &[ValueRepresentation::LongString],
-        multiplicity: VM_1,
-      }),
-      _ => Err(()),
-    },
+    "ObjectModel (ID, Version, Place, PlaceDescription)" => {
+      match (g0, g1, e0, e1) {
+        (0x81, 0x01, _, 0x00) => Ok(Item {
+          tag,
+          name: "ID",
+          vrs: &[ValueRepresentation::LongString],
+          multiplicity: VM_1,
+        }),
+        (0x81, 0x01, _, 0x10) => Ok(Item {
+          tag,
+          name: "Version",
+          vrs: &[ValueRepresentation::LongString],
+          multiplicity: VM_1,
+        }),
+        _ => Err(()),
+      }
+    }
     "Siemens: Thorax/Multix FD Lab Settings" => match (g0, g1, e0, e1) {
       (0x00, 0x19, _, 0x00) => Ok(Item {
         tag,
@@ -106861,7 +106960,10 @@ fn find_private(
         tag,
         name: "Orthogonal Clipping Planes",
         vrs: &[ValueRepresentation::FloatingPointSingle],
-        multiplicity: ValueMultiplicity { min: 24, max: Some(24) },
+        multiplicity: ValueMultiplicity {
+          min: 24,
+          max: Some(24),
+        },
       }),
       (0x00, 0x47, _, 0xe9) => Ok(Item {
         tag,
@@ -107006,21 +107108,23 @@ fn find_private(
       }),
       _ => Err(()),
     },
-    "Applicare/Centricity Radiology Web/Version 2.0" => match (g0, g1, e0, e1) {
-      (0x41, 0x11, _, 0x01) => Ok(Item {
-        tag,
-        name: "Secondary Spine Label",
-        vrs: &[ValueRepresentation::CodeString],
-        multiplicity: VM_1,
-      }),
-      (0x41, 0x11, _, 0x02) => Ok(Item {
-        tag,
-        name: "Additional tags for Presentation State",
-        vrs: &[ValueRepresentation::IntegerString],
-        multiplicity: VM_1,
-      }),
-      _ => Err(()),
-    },
+    "Applicare/Centricity Radiology Web/Version 2.0" => {
+      match (g0, g1, e0, e1) {
+        (0x41, 0x11, _, 0x01) => Ok(Item {
+          tag,
+          name: "Secondary Spine Label",
+          vrs: &[ValueRepresentation::CodeString],
+          multiplicity: VM_1,
+        }),
+        (0x41, 0x11, _, 0x02) => Ok(Item {
+          tag,
+          name: "Additional tags for Presentation State",
+          vrs: &[ValueRepresentation::IntegerString],
+          multiplicity: VM_1,
+        }),
+        _ => Err(()),
+      }
+    }
     "SIEMENS MED SMS USG ANTARES" => match (g0, g1, e0, e1) {
       (0x00, 0x19, _, 0x46) => Ok(Item {
         tag,
@@ -107353,7 +107457,10 @@ fn find_private(
         tag,
         name: "Key-stone Co-ordinates",
         vrs: &[ValueRepresentation::IntegerString],
-        multiplicity: ValueMultiplicity { min: 24, max: Some(24) },
+        multiplicity: ValueMultiplicity {
+          min: 24,
+          max: Some(24),
+        },
       }),
       (0x00, 0x11, _, 0x16) => Ok(Item {
         tag,
@@ -107371,7 +107478,10 @@ fn find_private(
         tag,
         name: "Sub-image Collimator Vertices",
         vrs: &[ValueRepresentation::IntegerString],
-        multiplicity: ValueMultiplicity { min: 24, max: Some(24) },
+        multiplicity: ValueMultiplicity {
+          min: 24,
+          max: Some(24),
+        },
       }),
       (0x00, 0x11, _, 0x08) => Ok(Item {
         tag,
@@ -107461,7 +107571,10 @@ fn find_private(
         tag,
         name: "Adjusted Field of View",
         vrs: &[ValueRepresentation::IntegerString],
-        multiplicity: ValueMultiplicity { min: 8, max: Some(8) },
+        multiplicity: ValueMultiplicity {
+          min: 8,
+          max: Some(8),
+        },
       }),
       (0x00, 0x11, _, 0x28) => Ok(Item {
         tag,
@@ -107479,7 +107592,10 @@ fn find_private(
         tag,
         name: "Detected Field of View",
         vrs: &[ValueRepresentation::IntegerString],
-        multiplicity: ValueMultiplicity { min: 8, max: Some(8) },
+        multiplicity: ValueMultiplicity {
+          min: 8,
+          max: Some(8),
+        },
       }),
       (0x00, 0x11, _, 0x35) => Ok(Item {
         tag,
@@ -107608,7 +107724,10 @@ fn find_private(
         tag,
         name: "RpeakTimeStamps",
         vrs: &[ValueRepresentation::FloatingPointSingle],
-        multiplicity: ValueMultiplicity { min: 256, max: Some(256) },
+        multiplicity: ValueMultiplicity {
+          min: 256,
+          max: Some(256),
+        },
       }),
       _ => Err(()),
     },
@@ -109054,7 +109173,10 @@ fn find_private(
         tag,
         name: "User data 25...User data 48 {User48=Effective Resolution for spiral}",
         vrs: &[ValueRepresentation::FloatingPointSingle],
-        multiplicity: ValueMultiplicity { min: 24, max: Some(24) },
+        multiplicity: ValueMultiplicity {
+          min: 24,
+          max: Some(24),
+        },
       }),
       (0x00, 0x43, _, 0x19) => Ok(Item {
         tag,
@@ -109180,7 +109302,10 @@ fn find_private(
         tag,
         name: "Slop_int_10...slop_int_17",
         vrs: &[ValueRepresentation::IntegerString],
-        multiplicity: ValueMultiplicity { min: 8, max: Some(8) },
+        multiplicity: ValueMultiplicity {
+          min: 8,
+          max: Some(8),
+        },
       }),
       (0x20, 0x01, _, 0x14) => Ok(Item {
         tag,
@@ -109606,7 +109731,10 @@ fn find_private(
         tag,
         name: "Scanner Table Entry (single gradient coil systems only)/Scanner Table Entry + Gradient Coil Selected",
         vrs: &[ValueRepresentation::DecimalString],
-        multiplicity: ValueMultiplicity { min: 3, max: Some(4) },
+        multiplicity: ValueMultiplicity {
+          min: 3,
+          max: Some(4),
+        },
       }),
       (0x00, 0x43, _, 0x79) => Ok(Item {
         tag,
@@ -109846,7 +109974,10 @@ fn find_private(
         tag,
         name: "Image Filtering Parameters",
         vrs: &[ValueRepresentation::LongString],
-        multiplicity: ValueMultiplicity { min: 8, max: Some(8) },
+        multiplicity: ValueMultiplicity {
+          min: 8,
+          max: Some(8),
+        },
       }),
       (0x00, 0x43, _, 0x2f) => Ok(Item {
         tag,
@@ -110003,27 +110134,29 @@ fn find_private(
       }),
       _ => Err(()),
     },
-    "http://www.gemedicalsystems.com/it_solutions/rad_pacs/" => match (g0, g1, e0, e1) {
-      (0x31, 0x15, _, 0x01) => Ok(Item {
-        tag,
-        name: "Reference to pacs study",
-        vrs: &[ValueRepresentation::UnlimitedText],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x15, _, 0x02) => Ok(Item {
-        tag,
-        name: "Reference to pacs image",
-        vrs: &[ValueRepresentation::UnlimitedText],
-        multiplicity: VM_1,
-      }),
-      (0x31, 0x15, _, 0x03) => Ok(Item {
-        tag,
-        name: "Pacs examnotes flag",
-        vrs: &[ValueRepresentation::CodeString],
-        multiplicity: VM_1,
-      }),
-      _ => Err(()),
-    },
+    "http://www.gemedicalsystems.com/it_solutions/rad_pacs/" => {
+      match (g0, g1, e0, e1) {
+        (0x31, 0x15, _, 0x01) => Ok(Item {
+          tag,
+          name: "Reference to pacs study",
+          vrs: &[ValueRepresentation::UnlimitedText],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x15, _, 0x02) => Ok(Item {
+          tag,
+          name: "Reference to pacs image",
+          vrs: &[ValueRepresentation::UnlimitedText],
+          multiplicity: VM_1,
+        }),
+        (0x31, 0x15, _, 0x03) => Ok(Item {
+          tag,
+          name: "Pacs examnotes flag",
+          vrs: &[ValueRepresentation::CodeString],
+          multiplicity: VM_1,
+        }),
+        _ => Err(()),
+      }
+    }
     "Vital Images SW 3.4" => match (g0, g1, e0, e1) {
       (0x56, 0x53, _, 0x10) => Ok(Item {
         tag,
@@ -110213,67 +110346,141 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.1.1" => Ok("Verification SOP Class"),
     "1.2.840.10008.1.2" => Ok("Implicit VR Little Endian"),
     "1.2.840.10008.1.2.1" => Ok("Explicit VR Little Endian"),
-    "1.2.840.10008.1.2.1.98" => Ok("Encapsulated Uncompressed Explicit VR Little Endian"),
+    "1.2.840.10008.1.2.1.98" => {
+      Ok("Encapsulated Uncompressed Explicit VR Little Endian")
+    }
     "1.2.840.10008.1.2.1.99" => Ok("Deflated Explicit VR Little Endian"),
     "1.2.840.10008.1.2.2" => Ok("Explicit VR Big Endian"),
     "1.2.840.10008.1.2.4.100" => Ok("MPEG2 Main Profile / Main Level"),
-    "1.2.840.10008.1.2.4.100.1" => Ok("Fragmentable MPEG2 Main Profile / Main Level"),
+    "1.2.840.10008.1.2.4.100.1" => {
+      Ok("Fragmentable MPEG2 Main Profile / Main Level")
+    }
     "1.2.840.10008.1.2.4.101" => Ok("MPEG2 Main Profile / High Level"),
-    "1.2.840.10008.1.2.4.101.1" => Ok("Fragmentable MPEG2 Main Profile / High Level"),
-    "1.2.840.10008.1.2.4.102" => Ok("MPEG-4 AVC/H.264 High Profile / Level 4.1"),
-    "1.2.840.10008.1.2.4.102.1" => Ok("Fragmentable MPEG-4 AVC/H.264 High Profile / Level 4.1"),
-    "1.2.840.10008.1.2.4.103" => Ok("MPEG-4 AVC/H.264 BD-compatible High Profile / Level 4.1"),
-    "1.2.840.10008.1.2.4.103.1" => Ok("Fragmentable MPEG-4 AVC/H.264 BD-compatible High Profile / Level 4.1"),
-    "1.2.840.10008.1.2.4.104" => Ok("MPEG-4 AVC/H.264 High Profile / Level 4.2 For 2D Video"),
-    "1.2.840.10008.1.2.4.104.1" => Ok("Fragmentable MPEG-4 AVC/H.264 High Profile / Level 4.2 For 2D Video"),
-    "1.2.840.10008.1.2.4.105" => Ok("MPEG-4 AVC/H.264 High Profile / Level 4.2 For 3D Video"),
-    "1.2.840.10008.1.2.4.105.1" => Ok("Fragmentable MPEG-4 AVC/H.264 High Profile / Level 4.2 For 3D Video"),
-    "1.2.840.10008.1.2.4.106" => Ok("MPEG-4 AVC/H.264 Stereo High Profile / Level 4.2"),
-    "1.2.840.10008.1.2.4.106.1" => Ok("Fragmentable MPEG-4 AVC/H.264 Stereo High Profile / Level 4.2"),
+    "1.2.840.10008.1.2.4.101.1" => {
+      Ok("Fragmentable MPEG2 Main Profile / High Level")
+    }
+    "1.2.840.10008.1.2.4.102" => {
+      Ok("MPEG-4 AVC/H.264 High Profile / Level 4.1")
+    }
+    "1.2.840.10008.1.2.4.102.1" => {
+      Ok("Fragmentable MPEG-4 AVC/H.264 High Profile / Level 4.1")
+    }
+    "1.2.840.10008.1.2.4.103" => {
+      Ok("MPEG-4 AVC/H.264 BD-compatible High Profile / Level 4.1")
+    }
+    "1.2.840.10008.1.2.4.103.1" => {
+      Ok("Fragmentable MPEG-4 AVC/H.264 BD-compatible High Profile / Level 4.1")
+    }
+    "1.2.840.10008.1.2.4.104" => {
+      Ok("MPEG-4 AVC/H.264 High Profile / Level 4.2 For 2D Video")
+    }
+    "1.2.840.10008.1.2.4.104.1" => {
+      Ok("Fragmentable MPEG-4 AVC/H.264 High Profile / Level 4.2 For 2D Video")
+    }
+    "1.2.840.10008.1.2.4.105" => {
+      Ok("MPEG-4 AVC/H.264 High Profile / Level 4.2 For 3D Video")
+    }
+    "1.2.840.10008.1.2.4.105.1" => {
+      Ok("Fragmentable MPEG-4 AVC/H.264 High Profile / Level 4.2 For 3D Video")
+    }
+    "1.2.840.10008.1.2.4.106" => {
+      Ok("MPEG-4 AVC/H.264 Stereo High Profile / Level 4.2")
+    }
+    "1.2.840.10008.1.2.4.106.1" => {
+      Ok("Fragmentable MPEG-4 AVC/H.264 Stereo High Profile / Level 4.2")
+    }
     "1.2.840.10008.1.2.4.107" => Ok("HEVC/H.265 Main Profile / Level 5.1"),
     "1.2.840.10008.1.2.4.108" => Ok("HEVC/H.265 Main 10 Profile / Level 5.1"),
-    "1.2.840.10008.1.2.4.201" => Ok("High-Throughput JPEG 2000 Image Compression (Lossless Only)"),
-    "1.2.840.10008.1.2.4.202" => Ok("High-Throughput JPEG 2000 with RPCL Options Image Compression (Lossless Only)"),
-    "1.2.840.10008.1.2.4.203" => Ok("High-Throughput JPEG 2000 Image Compression"),
+    "1.2.840.10008.1.2.4.201" => {
+      Ok("High-Throughput JPEG 2000 Image Compression (Lossless Only)")
+    }
+    "1.2.840.10008.1.2.4.202" => Ok(
+      "High-Throughput JPEG 2000 with RPCL Options Image Compression (Lossless Only)",
+    ),
+    "1.2.840.10008.1.2.4.203" => {
+      Ok("High-Throughput JPEG 2000 Image Compression")
+    }
     "1.2.840.10008.1.2.4.204" => Ok("JPIP HTJ2K Referenced"),
     "1.2.840.10008.1.2.4.205" => Ok("JPIP HTJ2K Referenced Deflate"),
     "1.2.840.10008.1.2.4.50" => Ok("JPEG Baseline (Process 1)"),
     "1.2.840.10008.1.2.4.51" => Ok("JPEG Extended (Process 2 and 4)"),
     "1.2.840.10008.1.2.4.52" => Ok("JPEG Extended (Process 3 and 5)"),
-    "1.2.840.10008.1.2.4.53" => Ok("JPEG Spectral Selection, Non-Hierarchical (Process 6 and 8)"),
-    "1.2.840.10008.1.2.4.54" => Ok("JPEG Spectral Selection, Non-Hierarchical (Process 7 and 9)"),
-    "1.2.840.10008.1.2.4.55" => Ok("JPEG Full Progression, Non-Hierarchical (Process 10 and 12)"),
-    "1.2.840.10008.1.2.4.56" => Ok("JPEG Full Progression, Non-Hierarchical (Process 11 and 13)"),
-    "1.2.840.10008.1.2.4.57" => Ok("JPEG Lossless, Non-Hierarchical (Process 14)"),
-    "1.2.840.10008.1.2.4.58" => Ok("JPEG Lossless, Non-Hierarchical (Process 15)"),
-    "1.2.840.10008.1.2.4.59" => Ok("JPEG Extended, Hierarchical (Process 16 and 18)"),
-    "1.2.840.10008.1.2.4.60" => Ok("JPEG Extended, Hierarchical (Process 17 and 19)"),
-    "1.2.840.10008.1.2.4.61" => Ok("JPEG Spectral Selection, Hierarchical (Process 20 and 22)"),
-    "1.2.840.10008.1.2.4.62" => Ok("JPEG Spectral Selection, Hierarchical (Process 21 and 23)"),
-    "1.2.840.10008.1.2.4.63" => Ok("JPEG Full Progression, Hierarchical (Process 24 and 26)"),
-    "1.2.840.10008.1.2.4.64" => Ok("JPEG Full Progression, Hierarchical (Process 25 and 27)"),
+    "1.2.840.10008.1.2.4.53" => {
+      Ok("JPEG Spectral Selection, Non-Hierarchical (Process 6 and 8)")
+    }
+    "1.2.840.10008.1.2.4.54" => {
+      Ok("JPEG Spectral Selection, Non-Hierarchical (Process 7 and 9)")
+    }
+    "1.2.840.10008.1.2.4.55" => {
+      Ok("JPEG Full Progression, Non-Hierarchical (Process 10 and 12)")
+    }
+    "1.2.840.10008.1.2.4.56" => {
+      Ok("JPEG Full Progression, Non-Hierarchical (Process 11 and 13)")
+    }
+    "1.2.840.10008.1.2.4.57" => {
+      Ok("JPEG Lossless, Non-Hierarchical (Process 14)")
+    }
+    "1.2.840.10008.1.2.4.58" => {
+      Ok("JPEG Lossless, Non-Hierarchical (Process 15)")
+    }
+    "1.2.840.10008.1.2.4.59" => {
+      Ok("JPEG Extended, Hierarchical (Process 16 and 18)")
+    }
+    "1.2.840.10008.1.2.4.60" => {
+      Ok("JPEG Extended, Hierarchical (Process 17 and 19)")
+    }
+    "1.2.840.10008.1.2.4.61" => {
+      Ok("JPEG Spectral Selection, Hierarchical (Process 20 and 22)")
+    }
+    "1.2.840.10008.1.2.4.62" => {
+      Ok("JPEG Spectral Selection, Hierarchical (Process 21 and 23)")
+    }
+    "1.2.840.10008.1.2.4.63" => {
+      Ok("JPEG Full Progression, Hierarchical (Process 24 and 26)")
+    }
+    "1.2.840.10008.1.2.4.64" => {
+      Ok("JPEG Full Progression, Hierarchical (Process 25 and 27)")
+    }
     "1.2.840.10008.1.2.4.65" => Ok("JPEG Lossless, Hierarchical (Process 28)"),
     "1.2.840.10008.1.2.4.66" => Ok("JPEG Lossless, Hierarchical (Process 29)"),
-    "1.2.840.10008.1.2.4.70" => Ok("JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1])"),
+    "1.2.840.10008.1.2.4.70" => Ok(
+      "JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1])",
+    ),
     "1.2.840.10008.1.2.4.80" => Ok("JPEG-LS Lossless Image Compression"),
-    "1.2.840.10008.1.2.4.81" => Ok("JPEG-LS Lossy (Near-Lossless) Image Compression"),
-    "1.2.840.10008.1.2.4.90" => Ok("JPEG 2000 Image Compression (Lossless Only)"),
+    "1.2.840.10008.1.2.4.81" => {
+      Ok("JPEG-LS Lossy (Near-Lossless) Image Compression")
+    }
+    "1.2.840.10008.1.2.4.90" => {
+      Ok("JPEG 2000 Image Compression (Lossless Only)")
+    }
     "1.2.840.10008.1.2.4.91" => Ok("JPEG 2000 Image Compression"),
-    "1.2.840.10008.1.2.4.92" => Ok("JPEG 2000 Part 2 Multi-component Image Compression (Lossless Only)"),
-    "1.2.840.10008.1.2.4.93" => Ok("JPEG 2000 Part 2 Multi-component Image Compression"),
+    "1.2.840.10008.1.2.4.92" => {
+      Ok("JPEG 2000 Part 2 Multi-component Image Compression (Lossless Only)")
+    }
+    "1.2.840.10008.1.2.4.93" => {
+      Ok("JPEG 2000 Part 2 Multi-component Image Compression")
+    }
     "1.2.840.10008.1.2.4.94" => Ok("JPIP Referenced"),
     "1.2.840.10008.1.2.4.95" => Ok("JPIP Referenced Deflate"),
     "1.2.840.10008.1.2.5" => Ok("RLE Lossless"),
     "1.2.840.10008.1.2.6.1" => Ok("RFC 2557 MIME encapsulation"),
     "1.2.840.10008.1.2.6.2" => Ok("XML Encoding"),
-    "1.2.840.10008.1.2.7.1" => Ok("SMPTE ST 2110-20 Uncompressed Progressive Active Video"),
-    "1.2.840.10008.1.2.7.2" => Ok("SMPTE ST 2110-20 Uncompressed Interlaced Active Video"),
+    "1.2.840.10008.1.2.7.1" => {
+      Ok("SMPTE ST 2110-20 Uncompressed Progressive Active Video")
+    }
+    "1.2.840.10008.1.2.7.2" => {
+      Ok("SMPTE ST 2110-20 Uncompressed Interlaced Active Video")
+    }
     "1.2.840.10008.1.2.7.3" => Ok("SMPTE ST 2110-30 PCM Digital Audio"),
     "1.2.840.10008.1.20" => Ok("Papyrus 3 Implicit VR Little Endian"),
     "1.2.840.10008.1.20.1" => Ok("Storage Commitment Push Model SOP Class"),
-    "1.2.840.10008.1.20.1.1" => Ok("Storage Commitment Push Model SOP Instance"),
+    "1.2.840.10008.1.20.1.1" => {
+      Ok("Storage Commitment Push Model SOP Instance")
+    }
     "1.2.840.10008.1.20.2" => Ok("Storage Commitment Pull Model SOP Class"),
-    "1.2.840.10008.1.20.2.1" => Ok("Storage Commitment Pull Model SOP Instance"),
+    "1.2.840.10008.1.20.2.1" => {
+      Ok("Storage Commitment Pull Model SOP Instance")
+    }
     "1.2.840.10008.1.3.10" => Ok("Media Storage Directory Storage"),
     "1.2.840.10008.1.4.1.1" => Ok("Talairach Brain Atlas Frame of Reference"),
     "1.2.840.10008.1.4.1.10" => Ok("SPM2 GRAY Frame of Reference"),
@@ -110295,9 +110502,15 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.1.4.1.9" => Ok("SPM2 SPECT Frame of Reference"),
     "1.2.840.10008.1.4.2.1" => Ok("ICBM 452 T1 Frame of Reference"),
     "1.2.840.10008.1.4.2.2" => Ok("ICBM Single Subject MRI Frame of Reference"),
-    "1.2.840.10008.1.4.3.1" => Ok("IEC 61217 Fixed Coordinate System Frame of Reference"),
-    "1.2.840.10008.1.4.3.2" => Ok("Standard Robotic-Arm Coordinate System Frame of Reference"),
-    "1.2.840.10008.1.4.3.3" => Ok("IEC 61217 Table Top Coordinate System Frame of Reference"),
+    "1.2.840.10008.1.4.3.1" => {
+      Ok("IEC 61217 Fixed Coordinate System Frame of Reference")
+    }
+    "1.2.840.10008.1.4.3.2" => {
+      Ok("Standard Robotic-Arm Coordinate System Frame of Reference")
+    }
+    "1.2.840.10008.1.4.3.3" => {
+      Ok("IEC 61217 Table Top Coordinate System Frame of Reference")
+    }
     "1.2.840.10008.1.4.4.1" => Ok("SRI24 Frame of Reference"),
     "1.2.840.10008.1.4.5.1" => Ok("Colin27 Frame of Reference"),
     "1.2.840.10008.1.4.6.1" => Ok("LPBA40/AIR Frame of Reference"),
@@ -110306,7 +110519,9 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.1.40" => Ok("Procedural Event Logging SOP Class"),
     "1.2.840.10008.1.40.1" => Ok("Procedural Event Logging SOP Instance"),
     "1.2.840.10008.1.42" => Ok("Substance Administration Logging SOP Class"),
-    "1.2.840.10008.1.42.1" => Ok("Substance Administration Logging SOP Instance"),
+    "1.2.840.10008.1.42.1" => {
+      Ok("Substance Administration Logging SOP Instance")
+    }
     "1.2.840.10008.1.5.1" => Ok("Hot Iron Color Palette SOP Instance"),
     "1.2.840.10008.1.5.2" => Ok("PET Color Palette SOP Instance"),
     "1.2.840.10008.1.5.3" => Ok("Hot Metal Blue Color Palette SOP Instance"),
@@ -110316,10 +110531,16 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.1.5.7" => Ok("Fall Color Palette SOP Instance"),
     "1.2.840.10008.1.5.8" => Ok("Winter Color Palette SOP Instance"),
     "1.2.840.10008.1.9" => Ok("Basic Study Content Notification SOP Class"),
-    "1.2.840.10008.10.1" => Ok("Video Endoscopic Image Real-Time Communication"),
-    "1.2.840.10008.10.2" => Ok("Video Photographic Image Real-Time Communication"),
+    "1.2.840.10008.10.1" => {
+      Ok("Video Endoscopic Image Real-Time Communication")
+    }
+    "1.2.840.10008.10.2" => {
+      Ok("Video Photographic Image Real-Time Communication")
+    }
     "1.2.840.10008.10.3" => Ok("Audio Waveform Real-Time Communication"),
-    "1.2.840.10008.10.4" => Ok("Rendition Selection Document Real-Time Communication"),
+    "1.2.840.10008.10.4" => {
+      Ok("Rendition Selection Document Real-Time Communication")
+    }
     "1.2.840.10008.15.0.3.1" => Ok("dicomDeviceName"),
     "1.2.840.10008.15.0.3.10" => Ok("dicomAssociationInitiator"),
     "1.2.840.10008.15.0.3.11" => Ok("dicomAssociationAcceptor"),
@@ -110361,44 +110582,72 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.15.0.4.8" => Ok("dicomTransferCapability"),
     "1.2.840.10008.15.1.1" => Ok("Universal Coordinated Time"),
     "1.2.840.10008.2.16.10" => Ok("Dublin Core"),
-    "1.2.840.10008.2.16.11" => Ok("New York University Melanoma Clinical Cooperative Group"),
-    "1.2.840.10008.2.16.12" => Ok("Mayo Clinic Non-radiological Images Specific Body Structure Anatomical Surface Region Guide"),
+    "1.2.840.10008.2.16.11" => {
+      Ok("New York University Melanoma Clinical Cooperative Group")
+    }
+    "1.2.840.10008.2.16.12" => Ok(
+      "Mayo Clinic Non-radiological Images Specific Body Structure Anatomical Surface Region Guide",
+    ),
     "1.2.840.10008.2.16.13" => Ok("Image Biomarker Standardisation Initiative"),
     "1.2.840.10008.2.16.14" => Ok("Radiomics Ontology"),
     "1.2.840.10008.2.16.15" => Ok("RadElement"),
     "1.2.840.10008.2.16.16" => Ok("ICD-11"),
-    "1.2.840.10008.2.16.17" => Ok("Unified numbering system (UNS) for metals and alloys"),
+    "1.2.840.10008.2.16.17" => {
+      Ok("Unified numbering system (UNS) for metals and alloys")
+    }
     "1.2.840.10008.2.16.18" => Ok("Research Resource Identification"),
     "1.2.840.10008.2.16.4" => Ok("DICOM Controlled Terminology"),
     "1.2.840.10008.2.16.5" => Ok("Adult Mouse Anatomy Ontology"),
     "1.2.840.10008.2.16.6" => Ok("Uberon Ontology"),
-    "1.2.840.10008.2.16.7" => Ok("Integrated Taxonomic Information System (ITIS) Taxonomic Serial Number (TSN)"),
+    "1.2.840.10008.2.16.7" => Ok(
+      "Integrated Taxonomic Information System (ITIS) Taxonomic Serial Number (TSN)",
+    ),
     "1.2.840.10008.2.16.8" => Ok("Mouse Genome Initiative (MGI)"),
     "1.2.840.10008.2.16.9" => Ok("PubChem Compound CID"),
     "1.2.840.10008.2.6.1" => Ok("DICOM UID Registry"),
     "1.2.840.10008.3.1.1.1" => Ok("DICOM Application Context Name"),
     "1.2.840.10008.3.1.2.1.1" => Ok("Detached Patient Management SOP Class"),
-    "1.2.840.10008.3.1.2.1.4" => Ok("Detached Patient Management Meta SOP Class"),
+    "1.2.840.10008.3.1.2.1.4" => {
+      Ok("Detached Patient Management Meta SOP Class")
+    }
     "1.2.840.10008.3.1.2.2.1" => Ok("Detached Visit Management SOP Class"),
     "1.2.840.10008.3.1.2.3.1" => Ok("Detached Study Management SOP Class"),
     "1.2.840.10008.3.1.2.3.2" => Ok("Study Component Management SOP Class"),
-    "1.2.840.10008.3.1.2.3.3" => Ok("Modality Performed Procedure Step SOP Class"),
-    "1.2.840.10008.3.1.2.3.4" => Ok("Modality Performed Procedure Step Retrieve SOP Class"),
-    "1.2.840.10008.3.1.2.3.5" => Ok("Modality Performed Procedure Step Notification SOP Class"),
+    "1.2.840.10008.3.1.2.3.3" => {
+      Ok("Modality Performed Procedure Step SOP Class")
+    }
+    "1.2.840.10008.3.1.2.3.4" => {
+      Ok("Modality Performed Procedure Step Retrieve SOP Class")
+    }
+    "1.2.840.10008.3.1.2.3.5" => {
+      Ok("Modality Performed Procedure Step Notification SOP Class")
+    }
     "1.2.840.10008.3.1.2.5.1" => Ok("Detached Results Management SOP Class"),
-    "1.2.840.10008.3.1.2.5.4" => Ok("Detached Results Management Meta SOP Class"),
+    "1.2.840.10008.3.1.2.5.4" => {
+      Ok("Detached Results Management Meta SOP Class")
+    }
     "1.2.840.10008.3.1.2.5.5" => Ok("Detached Study Management Meta SOP Class"),
-    "1.2.840.10008.3.1.2.6.1" => Ok("Detached Interpretation Management SOP Class"),
+    "1.2.840.10008.3.1.2.6.1" => {
+      Ok("Detached Interpretation Management SOP Class")
+    }
     "1.2.840.10008.4.2" => Ok("Storage Service Class"),
     "1.2.840.10008.5.1.1.1" => Ok("Basic Film Session SOP Class"),
     "1.2.840.10008.5.1.1.14" => Ok("Print Job SOP Class"),
     "1.2.840.10008.5.1.1.15" => Ok("Basic Annotation Box SOP Class"),
     "1.2.840.10008.5.1.1.16" => Ok("Printer SOP Class"),
-    "1.2.840.10008.5.1.1.16.376" => Ok("Printer Configuration Retrieval SOP Class"),
+    "1.2.840.10008.5.1.1.16.376" => {
+      Ok("Printer Configuration Retrieval SOP Class")
+    }
     "1.2.840.10008.5.1.1.17" => Ok("Printer SOP Instance"),
-    "1.2.840.10008.5.1.1.17.376" => Ok("Printer Configuration Retrieval SOP Instance"),
-    "1.2.840.10008.5.1.1.18" => Ok("Basic Color Print Management Meta SOP Class"),
-    "1.2.840.10008.5.1.1.18.1" => Ok("Referenced Color Print Management Meta SOP Class"),
+    "1.2.840.10008.5.1.1.17.376" => {
+      Ok("Printer Configuration Retrieval SOP Instance")
+    }
+    "1.2.840.10008.5.1.1.18" => {
+      Ok("Basic Color Print Management Meta SOP Class")
+    }
+    "1.2.840.10008.5.1.1.18.1" => {
+      Ok("Referenced Color Print Management Meta SOP Class")
+    }
     "1.2.840.10008.5.1.1.2" => Ok("Basic Film Box SOP Class"),
     "1.2.840.10008.5.1.1.22" => Ok("VOI LUT Box SOP Class"),
     "1.2.840.10008.5.1.1.23" => Ok("Presentation LUT SOP Class"),
@@ -110407,25 +110656,45 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.5.1.1.25" => Ok("Print Queue SOP Instance"),
     "1.2.840.10008.5.1.1.26" => Ok("Print Queue Management SOP Class"),
     "1.2.840.10008.5.1.1.27" => Ok("Stored Print Storage SOP Class"),
-    "1.2.840.10008.5.1.1.29" => Ok("Hardcopy Grayscale Image Storage SOP Class"),
+    "1.2.840.10008.5.1.1.29" => {
+      Ok("Hardcopy Grayscale Image Storage SOP Class")
+    }
     "1.2.840.10008.5.1.1.30" => Ok("Hardcopy Color Image Storage SOP Class"),
     "1.2.840.10008.5.1.1.31" => Ok("Pull Print Request SOP Class"),
-    "1.2.840.10008.5.1.1.32" => Ok("Pull Stored Print Management Meta SOP Class"),
+    "1.2.840.10008.5.1.1.32" => {
+      Ok("Pull Stored Print Management Meta SOP Class")
+    }
     "1.2.840.10008.5.1.1.33" => Ok("Media Creation Management SOP Class UID"),
     "1.2.840.10008.5.1.1.4" => Ok("Basic Grayscale Image Box SOP Class"),
     "1.2.840.10008.5.1.1.4.1" => Ok("Basic Color Image Box SOP Class"),
     "1.2.840.10008.5.1.1.4.2" => Ok("Referenced Image Box SOP Class"),
     "1.2.840.10008.5.1.1.40" => Ok("Display System SOP Class"),
     "1.2.840.10008.5.1.1.40.1" => Ok("Display System SOP Instance"),
-    "1.2.840.10008.5.1.1.9" => Ok("Basic Grayscale Print Management Meta SOP Class"),
-    "1.2.840.10008.5.1.1.9.1" => Ok("Referenced Grayscale Print Management Meta SOP Class"),
+    "1.2.840.10008.5.1.1.9" => {
+      Ok("Basic Grayscale Print Management Meta SOP Class")
+    }
+    "1.2.840.10008.5.1.1.9.1" => {
+      Ok("Referenced Grayscale Print Management Meta SOP Class")
+    }
     "1.2.840.10008.5.1.4.1.1.1" => Ok("Computed Radiography Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.1.1" => Ok("Digital X-Ray Image Storage - For Presentation"),
-    "1.2.840.10008.5.1.4.1.1.1.1.1" => Ok("Digital X-Ray Image Storage - For Processing"),
-    "1.2.840.10008.5.1.4.1.1.1.2" => Ok("Digital Mammography X-Ray Image Storage - For Presentation"),
-    "1.2.840.10008.5.1.4.1.1.1.2.1" => Ok("Digital Mammography X-Ray Image Storage - For Processing"),
-    "1.2.840.10008.5.1.4.1.1.1.3" => Ok("Digital Intra-Oral X-Ray Image Storage - For Presentation"),
-    "1.2.840.10008.5.1.4.1.1.1.3.1" => Ok("Digital Intra-Oral X-Ray Image Storage - For Processing"),
+    "1.2.840.10008.5.1.4.1.1.1.1" => {
+      Ok("Digital X-Ray Image Storage - For Presentation")
+    }
+    "1.2.840.10008.5.1.4.1.1.1.1.1" => {
+      Ok("Digital X-Ray Image Storage - For Processing")
+    }
+    "1.2.840.10008.5.1.4.1.1.1.2" => {
+      Ok("Digital Mammography X-Ray Image Storage - For Presentation")
+    }
+    "1.2.840.10008.5.1.4.1.1.1.2.1" => {
+      Ok("Digital Mammography X-Ray Image Storage - For Processing")
+    }
+    "1.2.840.10008.5.1.4.1.1.1.3" => {
+      Ok("Digital Intra-Oral X-Ray Image Storage - For Presentation")
+    }
+    "1.2.840.10008.5.1.4.1.1.1.3.1" => {
+      Ok("Digital Intra-Oral X-Ray Image Storage - For Processing")
+    }
     "1.2.840.10008.5.1.4.1.1.10" => Ok("Standalone Modality LUT Storage"),
     "1.2.840.10008.5.1.4.1.1.104.1" => Ok("Encapsulated PDF Storage"),
     "1.2.840.10008.5.1.4.1.1.104.2" => Ok("Encapsulated CDA Storage"),
@@ -110433,48 +110702,110 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.5.1.4.1.1.104.4" => Ok("Encapsulated OBJ Storage"),
     "1.2.840.10008.5.1.4.1.1.104.5" => Ok("Encapsulated MTL Storage"),
     "1.2.840.10008.5.1.4.1.1.11" => Ok("Standalone VOI LUT Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.1" => Ok("Grayscale Softcopy Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.10" => Ok("Segmented Volume Rendering Volumetric Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.11" => Ok("Multiple Volume Rendering Volumetric Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.12" => Ok("Variable Modality LUT Softcopy Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.2" => Ok("Color Softcopy Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.3" => Ok("Pseudo-Color Softcopy Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.4" => Ok("Blending Softcopy Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.5" => Ok("XA/XRF Grayscale Softcopy Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.6" => Ok("Grayscale Planar MPR Volumetric Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.7" => Ok("Compositing Planar MPR Volumetric Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.8" => Ok("Advanced Blending Presentation State Storage"),
-    "1.2.840.10008.5.1.4.1.1.11.9" => Ok("Volume Rendering Volumetric Presentation State Storage"),
+    "1.2.840.10008.5.1.4.1.1.11.1" => {
+      Ok("Grayscale Softcopy Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.10" => {
+      Ok("Segmented Volume Rendering Volumetric Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.11" => {
+      Ok("Multiple Volume Rendering Volumetric Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.12" => {
+      Ok("Variable Modality LUT Softcopy Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.2" => {
+      Ok("Color Softcopy Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.3" => {
+      Ok("Pseudo-Color Softcopy Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.4" => {
+      Ok("Blending Softcopy Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.5" => {
+      Ok("XA/XRF Grayscale Softcopy Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.6" => {
+      Ok("Grayscale Planar MPR Volumetric Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.7" => {
+      Ok("Compositing Planar MPR Volumetric Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.8" => {
+      Ok("Advanced Blending Presentation State Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.11.9" => {
+      Ok("Volume Rendering Volumetric Presentation State Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.12.1" => Ok("X-Ray Angiographic Image Storage"),
     "1.2.840.10008.5.1.4.1.1.12.1.1" => Ok("Enhanced XA Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.12.2" => Ok("X-Ray Radiofluoroscopic Image Storage"),
+    "1.2.840.10008.5.1.4.1.1.12.2" => {
+      Ok("X-Ray Radiofluoroscopic Image Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.12.2.1" => Ok("Enhanced XRF Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.12.3" => Ok("X-Ray Angiographic Bi-Plane Image Storage"),
+    "1.2.840.10008.5.1.4.1.1.12.3" => {
+      Ok("X-Ray Angiographic Bi-Plane Image Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.12.77" => Ok(""),
-    "1.2.840.10008.5.1.4.1.1.128" => Ok("Positron Emission Tomography Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.128.1" => Ok("Legacy Converted Enhanced PET Image Storage"),
+    "1.2.840.10008.5.1.4.1.1.128" => {
+      Ok("Positron Emission Tomography Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.128.1" => {
+      Ok("Legacy Converted Enhanced PET Image Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.129" => Ok("Standalone PET Curve Storage"),
-    "1.2.840.10008.5.1.4.1.1.13.1.1" => Ok("X-Ray 3D Angiographic Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.13.1.2" => Ok("X-Ray 3D Craniofacial Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.13.1.3" => Ok("Breast Tomosynthesis Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.13.1.4" => Ok("Breast Projection X-Ray Image Storage - For Presentation"),
-    "1.2.840.10008.5.1.4.1.1.13.1.5" => Ok("Breast Projection X-Ray Image Storage - For Processing"),
+    "1.2.840.10008.5.1.4.1.1.13.1.1" => {
+      Ok("X-Ray 3D Angiographic Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.13.1.2" => {
+      Ok("X-Ray 3D Craniofacial Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.13.1.3" => {
+      Ok("Breast Tomosynthesis Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.13.1.4" => {
+      Ok("Breast Projection X-Ray Image Storage - For Presentation")
+    }
+    "1.2.840.10008.5.1.4.1.1.13.1.5" => {
+      Ok("Breast Projection X-Ray Image Storage - For Processing")
+    }
     "1.2.840.10008.5.1.4.1.1.130" => Ok("Enhanced PET Image Storage"),
     "1.2.840.10008.5.1.4.1.1.131" => Ok("Basic Structured Display Storage"),
-    "1.2.840.10008.5.1.4.1.1.14.1" => Ok("Intravascular Optical Coherence Tomography Image Storage - For Presentation"),
-    "1.2.840.10008.5.1.4.1.1.14.2" => Ok("Intravascular Optical Coherence Tomography Image Storage - For Processing"),
+    "1.2.840.10008.5.1.4.1.1.14.1" => Ok(
+      "Intravascular Optical Coherence Tomography Image Storage - For Presentation",
+    ),
+    "1.2.840.10008.5.1.4.1.1.14.2" => Ok(
+      "Intravascular Optical Coherence Tomography Image Storage - For Processing",
+    ),
     "1.2.840.10008.5.1.4.1.1.2" => Ok("CT Image Storage"),
     "1.2.840.10008.5.1.4.1.1.2.1" => Ok("Enhanced CT Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.2.2" => Ok("Legacy Converted Enhanced CT Image Storage"),
+    "1.2.840.10008.5.1.4.1.1.2.2" => {
+      Ok("Legacy Converted Enhanced CT Image Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.20" => Ok("Nuclear Medicine Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.200.1" => Ok("CT Defined Procedure Protocol Storage"),
-    "1.2.840.10008.5.1.4.1.1.200.2" => Ok("CT Performed Procedure Protocol Storage"),
+    "1.2.840.10008.5.1.4.1.1.200.1" => {
+      Ok("CT Defined Procedure Protocol Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.200.2" => {
+      Ok("CT Performed Procedure Protocol Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.200.3" => Ok("Protocol Approval Storage"),
-    "1.2.840.10008.5.1.4.1.1.200.4" => Ok("Protocol Approval Information Model - FIND"),
-    "1.2.840.10008.5.1.4.1.1.200.5" => Ok("Protocol Approval Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.1.1.200.6" => Ok("Protocol Approval Information Model - GET"),
-    "1.2.840.10008.5.1.4.1.1.200.7" => Ok("XA Defined Procedure Protocol Storage"),
-    "1.2.840.10008.5.1.4.1.1.200.8" => Ok("XA Performed Procedure Protocol Storage"),
+    "1.2.840.10008.5.1.4.1.1.200.4" => {
+      Ok("Protocol Approval Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.1.1.200.5" => {
+      Ok("Protocol Approval Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.1.1.200.6" => {
+      Ok("Protocol Approval Information Model - GET")
+    }
+    "1.2.840.10008.5.1.4.1.1.200.7" => {
+      Ok("XA Defined Procedure Protocol Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.200.8" => {
+      Ok("XA Performed Procedure Protocol Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.201.1" => Ok("Inventory Storage"),
     "1.2.840.10008.5.1.4.1.1.201.1.1" => Ok("Storage Management SOP Instance"),
     "1.2.840.10008.5.1.4.1.1.201.2" => Ok("Inventory - FIND"),
@@ -110489,51 +110820,83 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.5.1.4.1.1.4.1" => Ok("Enhanced MR Image Storage"),
     "1.2.840.10008.5.1.4.1.1.4.2" => Ok("MR Spectroscopy Storage"),
     "1.2.840.10008.5.1.4.1.1.4.3" => Ok("Enhanced MR Color Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.4.4" => Ok("Legacy Converted Enhanced MR Image Storage"),
+    "1.2.840.10008.5.1.4.1.1.4.4" => {
+      Ok("Legacy Converted Enhanced MR Image Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.40" => Ok(""),
     "1.2.840.10008.5.1.4.1.1.481.1" => Ok("RT Image Storage"),
     "1.2.840.10008.5.1.4.1.1.481.10" => Ok("RT Physician Intent Storage"),
     "1.2.840.10008.5.1.4.1.1.481.11" => Ok("RT Segment Annotation Storage"),
     "1.2.840.10008.5.1.4.1.1.481.12" => Ok("RT Radiation Set Storage"),
-    "1.2.840.10008.5.1.4.1.1.481.13" => Ok("C-Arm Photon-Electron Radiation Storage"),
+    "1.2.840.10008.5.1.4.1.1.481.13" => {
+      Ok("C-Arm Photon-Electron Radiation Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.481.14" => Ok("Tomotherapeutic Radiation Storage"),
     "1.2.840.10008.5.1.4.1.1.481.15" => Ok("Robotic-Arm Radiation Storage"),
     "1.2.840.10008.5.1.4.1.1.481.16" => Ok("RT Radiation Record Set Storage"),
-    "1.2.840.10008.5.1.4.1.1.481.17" => Ok("RT Radiation Salvage Record Storage"),
-    "1.2.840.10008.5.1.4.1.1.481.18" => Ok("Tomotherapeutic Radiation Record Storage"),
-    "1.2.840.10008.5.1.4.1.1.481.19" => Ok("C-Arm Photon-Electron Radiation Record Storage"),
+    "1.2.840.10008.5.1.4.1.1.481.17" => {
+      Ok("RT Radiation Salvage Record Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.481.18" => {
+      Ok("Tomotherapeutic Radiation Record Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.481.19" => {
+      Ok("C-Arm Photon-Electron Radiation Record Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.481.2" => Ok("RT Dose Storage"),
     "1.2.840.10008.5.1.4.1.1.481.20" => Ok("Robotic Radiation Record Storage"),
-    "1.2.840.10008.5.1.4.1.1.481.21" => Ok("RT Radiation Set Delivery Instruction Storage"),
+    "1.2.840.10008.5.1.4.1.1.481.21" => {
+      Ok("RT Radiation Set Delivery Instruction Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.481.22" => Ok("RT Treatment Preparation Storage"),
     "1.2.840.10008.5.1.4.1.1.481.23" => Ok("Enhanced RT Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.481.24" => Ok("Enhanced Continuous RT Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.481.25" => Ok("RT Patient Position Acquisition Instruction Storage"),
+    "1.2.840.10008.5.1.4.1.1.481.24" => {
+      Ok("Enhanced Continuous RT Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.481.25" => {
+      Ok("RT Patient Position Acquisition Instruction Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.481.3" => Ok("RT Structure Set Storage"),
     "1.2.840.10008.5.1.4.1.1.481.4" => Ok("RT Beams Treatment Record Storage"),
     "1.2.840.10008.5.1.4.1.1.481.5" => Ok("RT Plan Storage"),
     "1.2.840.10008.5.1.4.1.1.481.6" => Ok("RT Brachy Treatment Record Storage"),
-    "1.2.840.10008.5.1.4.1.1.481.7" => Ok("RT Treatment Summary Record Storage"),
+    "1.2.840.10008.5.1.4.1.1.481.7" => {
+      Ok("RT Treatment Summary Record Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.481.8" => Ok("RT Ion Plan Storage"),
-    "1.2.840.10008.5.1.4.1.1.481.9" => Ok("RT Ion Beams Treatment Record Storage"),
+    "1.2.840.10008.5.1.4.1.1.481.9" => {
+      Ok("RT Ion Beams Treatment Record Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.5" => Ok("Nuclear Medicine Image Storage"),
     "1.2.840.10008.5.1.4.1.1.501.1" => Ok("DICOS CT Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.501.2.1" => Ok("DICOS Digital X-Ray Image Storage - For Presentation"),
-    "1.2.840.10008.5.1.4.1.1.501.2.2" => Ok("DICOS Digital X-Ray Image Storage - For Processing"),
-    "1.2.840.10008.5.1.4.1.1.501.3" => Ok("DICOS Threat Detection Report Storage"),
+    "1.2.840.10008.5.1.4.1.1.501.2.1" => {
+      Ok("DICOS Digital X-Ray Image Storage - For Presentation")
+    }
+    "1.2.840.10008.5.1.4.1.1.501.2.2" => {
+      Ok("DICOS Digital X-Ray Image Storage - For Processing")
+    }
+    "1.2.840.10008.5.1.4.1.1.501.3" => {
+      Ok("DICOS Threat Detection Report Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.501.4" => Ok("DICOS 2D AIT Storage"),
     "1.2.840.10008.5.1.4.1.1.501.5" => Ok("DICOS 3D AIT Storage"),
-    "1.2.840.10008.5.1.4.1.1.501.6" => Ok("DICOS Quadrupole Resonance (QR) Storage"),
+    "1.2.840.10008.5.1.4.1.1.501.6" => {
+      Ok("DICOS Quadrupole Resonance (QR) Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.6" => Ok("Ultrasound Image Storage"),
     "1.2.840.10008.5.1.4.1.1.6.1" => Ok("Ultrasound Image Storage"),
     "1.2.840.10008.5.1.4.1.1.6.2" => Ok("Enhanced US Volume Storage"),
     "1.2.840.10008.5.1.4.1.1.6.3" => Ok("Photoacoustic Image Storage"),
     "1.2.840.10008.5.1.4.1.1.601.1" => Ok("Eddy Current Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.601.2" => Ok("Eddy Current Multi-frame Image Storage"),
+    "1.2.840.10008.5.1.4.1.1.601.2" => {
+      Ok("Eddy Current Multi-frame Image Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.66" => Ok("Raw Data Storage"),
     "1.2.840.10008.5.1.4.1.1.66.1" => Ok("Spatial Registration Storage"),
     "1.2.840.10008.5.1.4.1.1.66.2" => Ok("Spatial Fiducials Storage"),
-    "1.2.840.10008.5.1.4.1.1.66.3" => Ok("Deformable Spatial Registration Storage"),
+    "1.2.840.10008.5.1.4.1.1.66.3" => {
+      Ok("Deformable Spatial Registration Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.66.4" => Ok("Segmentation Storage"),
     "1.2.840.10008.5.1.4.1.1.66.5" => Ok("Surface Segmentation Storage"),
     "1.2.840.10008.5.1.4.1.1.66.6" => Ok("Tractography Results Storage"),
@@ -110541,42 +110904,90 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.5.1.4.1.1.68.1" => Ok("Surface Scan Mesh Storage"),
     "1.2.840.10008.5.1.4.1.1.68.2" => Ok("Surface Scan Point Cloud Storage"),
     "1.2.840.10008.5.1.4.1.1.7" => Ok("Secondary Capture Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.7.1" => Ok("Multi-frame Single Bit Secondary Capture Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.7.2" => Ok("Multi-frame Grayscale Byte Secondary Capture Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.7.3" => Ok("Multi-frame Grayscale Word Secondary Capture Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.7.4" => Ok("Multi-frame True Color Secondary Capture Image Storage"),
+    "1.2.840.10008.5.1.4.1.1.7.1" => {
+      Ok("Multi-frame Single Bit Secondary Capture Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.7.2" => {
+      Ok("Multi-frame Grayscale Byte Secondary Capture Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.7.3" => {
+      Ok("Multi-frame Grayscale Word Secondary Capture Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.7.4" => {
+      Ok("Multi-frame True Color Secondary Capture Image Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.77.1" => Ok("VL Image Storage - Trial"),
     "1.2.840.10008.5.1.4.1.1.77.1.1" => Ok("VL Endoscopic Image Storage"),
     "1.2.840.10008.5.1.4.1.1.77.1.1.1" => Ok("Video Endoscopic Image Storage"),
     "1.2.840.10008.5.1.4.1.1.77.1.2" => Ok("VL Microscopic Image Storage"),
     "1.2.840.10008.5.1.4.1.1.77.1.2.1" => Ok("Video Microscopic Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.3" => Ok("VL Slide-Coordinates Microscopic Image Storage"),
+    "1.2.840.10008.5.1.4.1.1.77.1.3" => {
+      Ok("VL Slide-Coordinates Microscopic Image Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.77.1.4" => Ok("VL Photographic Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.4.1" => Ok("Video Photographic Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.5.1" => Ok("Ophthalmic Photography 8 Bit Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.5.2" => Ok("Ophthalmic Photography 16 Bit Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.5.3" => Ok("Stereometric Relationship Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.5.4" => Ok("Ophthalmic Tomography Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.5.5" => Ok("Wide Field Ophthalmic Photography Stereographic Projection Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.5.6" => Ok("Wide Field Ophthalmic Photography 3D Coordinates Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.5.7" => Ok("Ophthalmic Optical Coherence Tomography En Face Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.5.8" => Ok("Ophthalmic Optical Coherence Tomography B-scan Volume Analysis Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.6" => Ok("VL Whole Slide Microscopy Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.7" => Ok("Dermoscopic Photography Image Storage"),
+    "1.2.840.10008.5.1.4.1.1.77.1.4.1" => {
+      Ok("Video Photographic Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.77.1.5.1" => {
+      Ok("Ophthalmic Photography 8 Bit Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.77.1.5.2" => {
+      Ok("Ophthalmic Photography 16 Bit Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.77.1.5.3" => {
+      Ok("Stereometric Relationship Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.77.1.5.4" => {
+      Ok("Ophthalmic Tomography Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.77.1.5.5" => Ok(
+      "Wide Field Ophthalmic Photography Stereographic Projection Image Storage",
+    ),
+    "1.2.840.10008.5.1.4.1.1.77.1.5.6" => {
+      Ok("Wide Field Ophthalmic Photography 3D Coordinates Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.77.1.5.7" => {
+      Ok("Ophthalmic Optical Coherence Tomography En Face Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.77.1.5.8" => Ok(
+      "Ophthalmic Optical Coherence Tomography B-scan Volume Analysis Storage",
+    ),
+    "1.2.840.10008.5.1.4.1.1.77.1.6" => {
+      Ok("VL Whole Slide Microscopy Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.77.1.7" => {
+      Ok("Dermoscopic Photography Image Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.77.1.8" => Ok("Confocal Microscopy Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.1.9" => Ok("Confocal Microscopy Tiled Pyramidal Image Storage"),
-    "1.2.840.10008.5.1.4.1.1.77.2" => Ok("VL Multi-frame Image Storage - Trial"),
+    "1.2.840.10008.5.1.4.1.1.77.1.9" => {
+      Ok("Confocal Microscopy Tiled Pyramidal Image Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.77.2" => {
+      Ok("VL Multi-frame Image Storage - Trial")
+    }
     "1.2.840.10008.5.1.4.1.1.78.1" => Ok("Lensometry Measurements Storage"),
     "1.2.840.10008.5.1.4.1.1.78.2" => Ok("Autorefraction Measurements Storage"),
     "1.2.840.10008.5.1.4.1.1.78.3" => Ok("Keratometry Measurements Storage"),
-    "1.2.840.10008.5.1.4.1.1.78.4" => Ok("Subjective Refraction Measurements Storage"),
+    "1.2.840.10008.5.1.4.1.1.78.4" => {
+      Ok("Subjective Refraction Measurements Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.78.5" => Ok("Visual Acuity Measurements Storage"),
-    "1.2.840.10008.5.1.4.1.1.78.6" => Ok("Spectacle Prescription Report Storage"),
-    "1.2.840.10008.5.1.4.1.1.78.7" => Ok("Ophthalmic Axial Measurements Storage"),
-    "1.2.840.10008.5.1.4.1.1.78.8" => Ok("Intraocular Lens Calculations Storage"),
-    "1.2.840.10008.5.1.4.1.1.79.1" => Ok("Macular Grid Thickness and Volume Report Storage"),
+    "1.2.840.10008.5.1.4.1.1.78.6" => {
+      Ok("Spectacle Prescription Report Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.78.7" => {
+      Ok("Ophthalmic Axial Measurements Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.78.8" => {
+      Ok("Intraocular Lens Calculations Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.79.1" => {
+      Ok("Macular Grid Thickness and Volume Report Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.8" => Ok("Standalone Overlay Storage"),
-    "1.2.840.10008.5.1.4.1.1.80.1" => Ok("Ophthalmic Visual Field Static Perimetry Measurements Storage"),
+    "1.2.840.10008.5.1.4.1.1.80.1" => {
+      Ok("Ophthalmic Visual Field Static Perimetry Measurements Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.81.1" => Ok("Ophthalmic Thickness Map Storage"),
     "1.2.840.10008.5.1.4.1.1.82.1" => Ok("Corneal Topography Map Storage"),
     "1.2.840.10008.5.1.4.1.1.88.1" => Ok("Text SR Storage - Trial"),
@@ -110590,104 +111001,234 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.5.1.4.1.1.88.4" => Ok("Comprehensive SR Storage - Trial"),
     "1.2.840.10008.5.1.4.1.1.88.40" => Ok("Procedure Log Storage"),
     "1.2.840.10008.5.1.4.1.1.88.50" => Ok("Mammography CAD SR Storage"),
-    "1.2.840.10008.5.1.4.1.1.88.59" => Ok("Key Object Selection Document Storage"),
+    "1.2.840.10008.5.1.4.1.1.88.59" => {
+      Ok("Key Object Selection Document Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.88.65" => Ok("Chest CAD SR Storage"),
     "1.2.840.10008.5.1.4.1.1.88.67" => Ok("X-Ray Radiation Dose SR Storage"),
-    "1.2.840.10008.5.1.4.1.1.88.68" => Ok("Radiopharmaceutical Radiation Dose SR Storage"),
+    "1.2.840.10008.5.1.4.1.1.88.68" => {
+      Ok("Radiopharmaceutical Radiation Dose SR Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.88.69" => Ok("Colon CAD SR Storage"),
     "1.2.840.10008.5.1.4.1.1.88.70" => Ok("Implantation Plan SR Storage"),
     "1.2.840.10008.5.1.4.1.1.88.71" => Ok("Acquisition Context SR Storage"),
     "1.2.840.10008.5.1.4.1.1.88.72" => Ok("Simplified Adult Echo SR Storage"),
     "1.2.840.10008.5.1.4.1.1.88.73" => Ok("Patient Radiation Dose SR Storage"),
-    "1.2.840.10008.5.1.4.1.1.88.74" => Ok("Planned Imaging Agent Administration SR Storage"),
-    "1.2.840.10008.5.1.4.1.1.88.75" => Ok("Performed Imaging Agent Administration SR Storage"),
-    "1.2.840.10008.5.1.4.1.1.88.76" => Ok("Enhanced X-Ray Radiation Dose SR Storage"),
+    "1.2.840.10008.5.1.4.1.1.88.74" => {
+      Ok("Planned Imaging Agent Administration SR Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.88.75" => {
+      Ok("Performed Imaging Agent Administration SR Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.88.76" => {
+      Ok("Enhanced X-Ray Radiation Dose SR Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.9" => Ok("Standalone Curve Storage"),
     "1.2.840.10008.5.1.4.1.1.9.1" => Ok("Waveform Storage - Trial"),
     "1.2.840.10008.5.1.4.1.1.9.1.1" => Ok("12-lead ECG Waveform Storage"),
     "1.2.840.10008.5.1.4.1.1.9.1.2" => Ok("General ECG Waveform Storage"),
     "1.2.840.10008.5.1.4.1.1.9.1.3" => Ok("Ambulatory ECG Waveform Storage"),
-    "1.2.840.10008.5.1.4.1.1.9.1.4" => Ok("General 32-bit ECG Waveform Storage"),
+    "1.2.840.10008.5.1.4.1.1.9.1.4" => {
+      Ok("General 32-bit ECG Waveform Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.9.2.1" => Ok("Hemodynamic Waveform Storage"),
-    "1.2.840.10008.5.1.4.1.1.9.3.1" => Ok("Cardiac Electrophysiology Waveform Storage"),
+    "1.2.840.10008.5.1.4.1.1.9.3.1" => {
+      Ok("Cardiac Electrophysiology Waveform Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.9.4.1" => Ok("Basic Voice Audio Waveform Storage"),
     "1.2.840.10008.5.1.4.1.1.9.4.2" => Ok("General Audio Waveform Storage"),
     "1.2.840.10008.5.1.4.1.1.9.5.1" => Ok("Arterial Pulse Waveform Storage"),
     "1.2.840.10008.5.1.4.1.1.9.6.1" => Ok("Respiratory Waveform Storage"),
-    "1.2.840.10008.5.1.4.1.1.9.6.2" => Ok("Multi-channel Respiratory Waveform Storage"),
-    "1.2.840.10008.5.1.4.1.1.9.7.1" => Ok("Routine Scalp Electroencephalogram Waveform Storage"),
+    "1.2.840.10008.5.1.4.1.1.9.6.2" => {
+      Ok("Multi-channel Respiratory Waveform Storage")
+    }
+    "1.2.840.10008.5.1.4.1.1.9.7.1" => {
+      Ok("Routine Scalp Electroencephalogram Waveform Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.9.7.2" => Ok("Electromyogram Waveform Storage"),
     "1.2.840.10008.5.1.4.1.1.9.7.3" => Ok("Electrooculogram Waveform Storage"),
-    "1.2.840.10008.5.1.4.1.1.9.7.4" => Ok("Sleep Electroencephalogram Waveform Storage"),
+    "1.2.840.10008.5.1.4.1.1.9.7.4" => {
+      Ok("Sleep Electroencephalogram Waveform Storage")
+    }
     "1.2.840.10008.5.1.4.1.1.9.8.1" => Ok("Body Position Waveform Storage"),
     "1.2.840.10008.5.1.4.1.1.90.1" => Ok("Content Assessment Results Storage"),
-    "1.2.840.10008.5.1.4.1.1.91.1" => Ok("Microscopy Bulk Simple Annotations Storage"),
-    "1.2.840.10008.5.1.4.1.2.1.1" => Ok("Patient Root Query/Retrieve Information Model - FIND"),
-    "1.2.840.10008.5.1.4.1.2.1.2" => Ok("Patient Root Query/Retrieve Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.1.2.1.3" => Ok("Patient Root Query/Retrieve Information Model - GET"),
-    "1.2.840.10008.5.1.4.1.2.2.1" => Ok("Study Root Query/Retrieve Information Model - FIND"),
-    "1.2.840.10008.5.1.4.1.2.2.2" => Ok("Study Root Query/Retrieve Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.1.2.2.3" => Ok("Study Root Query/Retrieve Information Model - GET"),
-    "1.2.840.10008.5.1.4.1.2.3.1" => Ok("Patient/Study Only Query/Retrieve Information Model - FIND"),
-    "1.2.840.10008.5.1.4.1.2.3.2" => Ok("Patient/Study Only Query/Retrieve Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.1.2.3.3" => Ok("Patient/Study Only Query/Retrieve Information Model - GET"),
-    "1.2.840.10008.5.1.4.1.2.4.2" => Ok("Composite Instance Root Retrieve - MOVE"),
-    "1.2.840.10008.5.1.4.1.2.4.3" => Ok("Composite Instance Root Retrieve - GET"),
-    "1.2.840.10008.5.1.4.1.2.5.3" => Ok("Composite Instance Retrieve Without Bulk Data - GET"),
-    "1.2.840.10008.5.1.4.20.1" => Ok("Defined Procedure Protocol Information Model - FIND"),
-    "1.2.840.10008.5.1.4.20.2" => Ok("Defined Procedure Protocol Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.20.3" => Ok("Defined Procedure Protocol Information Model - GET"),
-    "1.2.840.10008.5.1.4.31" => Ok("Modality Worklist Information Model - FIND"),
-    "1.2.840.10008.5.1.4.32" => Ok("General Purpose Worklist Management Meta SOP Class"),
-    "1.2.840.10008.5.1.4.32.1" => Ok("General Purpose Worklist Information Model - FIND"),
-    "1.2.840.10008.5.1.4.32.2" => Ok("General Purpose Scheduled Procedure Step SOP Class"),
-    "1.2.840.10008.5.1.4.32.3" => Ok("General Purpose Performed Procedure Step SOP Class"),
-    "1.2.840.10008.5.1.4.33" => Ok("Instance Availability Notification SOP Class"),
-    "1.2.840.10008.5.1.4.34.1" => Ok("RT Beams Delivery Instruction Storage - Trial"),
-    "1.2.840.10008.5.1.4.34.10" => Ok("RT Brachy Application Setup Delivery Instruction Storage"),
-    "1.2.840.10008.5.1.4.34.2" => Ok("RT Conventional Machine Verification - Trial"),
+    "1.2.840.10008.5.1.4.1.1.91.1" => {
+      Ok("Microscopy Bulk Simple Annotations Storage")
+    }
+    "1.2.840.10008.5.1.4.1.2.1.1" => {
+      Ok("Patient Root Query/Retrieve Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.1.2.1.2" => {
+      Ok("Patient Root Query/Retrieve Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.1.2.1.3" => {
+      Ok("Patient Root Query/Retrieve Information Model - GET")
+    }
+    "1.2.840.10008.5.1.4.1.2.2.1" => {
+      Ok("Study Root Query/Retrieve Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.1.2.2.2" => {
+      Ok("Study Root Query/Retrieve Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.1.2.2.3" => {
+      Ok("Study Root Query/Retrieve Information Model - GET")
+    }
+    "1.2.840.10008.5.1.4.1.2.3.1" => {
+      Ok("Patient/Study Only Query/Retrieve Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.1.2.3.2" => {
+      Ok("Patient/Study Only Query/Retrieve Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.1.2.3.3" => {
+      Ok("Patient/Study Only Query/Retrieve Information Model - GET")
+    }
+    "1.2.840.10008.5.1.4.1.2.4.2" => {
+      Ok("Composite Instance Root Retrieve - MOVE")
+    }
+    "1.2.840.10008.5.1.4.1.2.4.3" => {
+      Ok("Composite Instance Root Retrieve - GET")
+    }
+    "1.2.840.10008.5.1.4.1.2.5.3" => {
+      Ok("Composite Instance Retrieve Without Bulk Data - GET")
+    }
+    "1.2.840.10008.5.1.4.20.1" => {
+      Ok("Defined Procedure Protocol Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.20.2" => {
+      Ok("Defined Procedure Protocol Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.20.3" => {
+      Ok("Defined Procedure Protocol Information Model - GET")
+    }
+    "1.2.840.10008.5.1.4.31" => {
+      Ok("Modality Worklist Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.32" => {
+      Ok("General Purpose Worklist Management Meta SOP Class")
+    }
+    "1.2.840.10008.5.1.4.32.1" => {
+      Ok("General Purpose Worklist Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.32.2" => {
+      Ok("General Purpose Scheduled Procedure Step SOP Class")
+    }
+    "1.2.840.10008.5.1.4.32.3" => {
+      Ok("General Purpose Performed Procedure Step SOP Class")
+    }
+    "1.2.840.10008.5.1.4.33" => {
+      Ok("Instance Availability Notification SOP Class")
+    }
+    "1.2.840.10008.5.1.4.34.1" => {
+      Ok("RT Beams Delivery Instruction Storage - Trial")
+    }
+    "1.2.840.10008.5.1.4.34.10" => {
+      Ok("RT Brachy Application Setup Delivery Instruction Storage")
+    }
+    "1.2.840.10008.5.1.4.34.2" => {
+      Ok("RT Conventional Machine Verification - Trial")
+    }
     "1.2.840.10008.5.1.4.34.3" => Ok("RT Ion Machine Verification - Trial"),
-    "1.2.840.10008.5.1.4.34.4" => Ok("Unified Worklist and Procedure Step Service Class - Trial"),
-    "1.2.840.10008.5.1.4.34.4.1" => Ok("Unified Procedure Step - Push SOP Class - Trial"),
-    "1.2.840.10008.5.1.4.34.4.2" => Ok("Unified Procedure Step - Watch SOP Class - Trial"),
-    "1.2.840.10008.5.1.4.34.4.3" => Ok("Unified Procedure Step - Pull SOP Class - Trial"),
-    "1.2.840.10008.5.1.4.34.4.4" => Ok("Unified Procedure Step - Event SOP Class - Trial"),
+    "1.2.840.10008.5.1.4.34.4" => {
+      Ok("Unified Worklist and Procedure Step Service Class - Trial")
+    }
+    "1.2.840.10008.5.1.4.34.4.1" => {
+      Ok("Unified Procedure Step - Push SOP Class - Trial")
+    }
+    "1.2.840.10008.5.1.4.34.4.2" => {
+      Ok("Unified Procedure Step - Watch SOP Class - Trial")
+    }
+    "1.2.840.10008.5.1.4.34.4.3" => {
+      Ok("Unified Procedure Step - Pull SOP Class - Trial")
+    }
+    "1.2.840.10008.5.1.4.34.4.4" => {
+      Ok("Unified Procedure Step - Event SOP Class - Trial")
+    }
     "1.2.840.10008.5.1.4.34.5" => Ok("UPS Global Subscription SOP Instance"),
-    "1.2.840.10008.5.1.4.34.5.1" => Ok("UPS Filtered Global Subscription SOP Instance"),
-    "1.2.840.10008.5.1.4.34.6" => Ok("Unified Worklist and Procedure Step Service Class"),
-    "1.2.840.10008.5.1.4.34.6.1" => Ok("Unified Procedure Step - Push SOP Class"),
-    "1.2.840.10008.5.1.4.34.6.2" => Ok("Unified Procedure Step - Watch SOP Class"),
-    "1.2.840.10008.5.1.4.34.6.3" => Ok("Unified Procedure Step - Pull SOP Class"),
-    "1.2.840.10008.5.1.4.34.6.4" => Ok("Unified Procedure Step - Event SOP Class"),
-    "1.2.840.10008.5.1.4.34.6.5" => Ok("Unified Procedure Step - Query SOP Class"),
+    "1.2.840.10008.5.1.4.34.5.1" => {
+      Ok("UPS Filtered Global Subscription SOP Instance")
+    }
+    "1.2.840.10008.5.1.4.34.6" => {
+      Ok("Unified Worklist and Procedure Step Service Class")
+    }
+    "1.2.840.10008.5.1.4.34.6.1" => {
+      Ok("Unified Procedure Step - Push SOP Class")
+    }
+    "1.2.840.10008.5.1.4.34.6.2" => {
+      Ok("Unified Procedure Step - Watch SOP Class")
+    }
+    "1.2.840.10008.5.1.4.34.6.3" => {
+      Ok("Unified Procedure Step - Pull SOP Class")
+    }
+    "1.2.840.10008.5.1.4.34.6.4" => {
+      Ok("Unified Procedure Step - Event SOP Class")
+    }
+    "1.2.840.10008.5.1.4.34.6.5" => {
+      Ok("Unified Procedure Step - Query SOP Class")
+    }
     "1.2.840.10008.5.1.4.34.7" => Ok("RT Beams Delivery Instruction Storage"),
     "1.2.840.10008.5.1.4.34.8" => Ok("RT Conventional Machine Verification"),
     "1.2.840.10008.5.1.4.34.9" => Ok("RT Ion Machine Verification"),
-    "1.2.840.10008.5.1.4.37.1" => Ok("General Relevant Patient Information Query"),
-    "1.2.840.10008.5.1.4.37.2" => Ok("Breast Imaging Relevant Patient Information Query"),
-    "1.2.840.10008.5.1.4.37.3" => Ok("Cardiac Relevant Patient Information Query"),
+    "1.2.840.10008.5.1.4.37.1" => {
+      Ok("General Relevant Patient Information Query")
+    }
+    "1.2.840.10008.5.1.4.37.2" => {
+      Ok("Breast Imaging Relevant Patient Information Query")
+    }
+    "1.2.840.10008.5.1.4.37.3" => {
+      Ok("Cardiac Relevant Patient Information Query")
+    }
     "1.2.840.10008.5.1.4.38.1" => Ok("Hanging Protocol Storage"),
-    "1.2.840.10008.5.1.4.38.2" => Ok("Hanging Protocol Information Model - FIND"),
-    "1.2.840.10008.5.1.4.38.3" => Ok("Hanging Protocol Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.38.4" => Ok("Hanging Protocol Information Model - GET"),
+    "1.2.840.10008.5.1.4.38.2" => {
+      Ok("Hanging Protocol Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.38.3" => {
+      Ok("Hanging Protocol Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.38.4" => {
+      Ok("Hanging Protocol Information Model - GET")
+    }
     "1.2.840.10008.5.1.4.39.1" => Ok("Color Palette Storage"),
-    "1.2.840.10008.5.1.4.39.2" => Ok("Color Palette Query/Retrieve Information Model - FIND"),
-    "1.2.840.10008.5.1.4.39.3" => Ok("Color Palette Query/Retrieve Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.39.4" => Ok("Color Palette Query/Retrieve Information Model - GET"),
+    "1.2.840.10008.5.1.4.39.2" => {
+      Ok("Color Palette Query/Retrieve Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.39.3" => {
+      Ok("Color Palette Query/Retrieve Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.39.4" => {
+      Ok("Color Palette Query/Retrieve Information Model - GET")
+    }
     "1.2.840.10008.5.1.4.41" => Ok("Product Characteristics Query SOP Class"),
     "1.2.840.10008.5.1.4.42" => Ok("Substance Approval Query SOP Class"),
     "1.2.840.10008.5.1.4.43.1" => Ok("Generic Implant Template Storage"),
-    "1.2.840.10008.5.1.4.43.2" => Ok("Generic Implant Template Information Model - FIND"),
-    "1.2.840.10008.5.1.4.43.3" => Ok("Generic Implant Template Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.43.4" => Ok("Generic Implant Template Information Model - GET"),
+    "1.2.840.10008.5.1.4.43.2" => {
+      Ok("Generic Implant Template Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.43.3" => {
+      Ok("Generic Implant Template Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.43.4" => {
+      Ok("Generic Implant Template Information Model - GET")
+    }
     "1.2.840.10008.5.1.4.44.1" => Ok("Implant Assembly Template Storage"),
-    "1.2.840.10008.5.1.4.44.2" => Ok("Implant Assembly Template Information Model - FIND"),
-    "1.2.840.10008.5.1.4.44.3" => Ok("Implant Assembly Template Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.44.4" => Ok("Implant Assembly Template Information Model - GET"),
+    "1.2.840.10008.5.1.4.44.2" => {
+      Ok("Implant Assembly Template Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.44.3" => {
+      Ok("Implant Assembly Template Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.44.4" => {
+      Ok("Implant Assembly Template Information Model - GET")
+    }
     "1.2.840.10008.5.1.4.45.1" => Ok("Implant Template Group Storage"),
-    "1.2.840.10008.5.1.4.45.2" => Ok("Implant Template Group Information Model - FIND"),
-    "1.2.840.10008.5.1.4.45.3" => Ok("Implant Template Group Information Model - MOVE"),
-    "1.2.840.10008.5.1.4.45.4" => Ok("Implant Template Group Information Model - GET"),
+    "1.2.840.10008.5.1.4.45.2" => {
+      Ok("Implant Template Group Information Model - FIND")
+    }
+    "1.2.840.10008.5.1.4.45.3" => {
+      Ok("Implant Template Group Information Model - MOVE")
+    }
+    "1.2.840.10008.5.1.4.45.4" => {
+      Ok("Implant Template Group Information Model - GET")
+    }
     "1.2.840.10008.7.1.1" => Ok("Native DICOM Model"),
     "1.2.840.10008.7.1.2" => Ok("Abstract Multi-Dimensional Image Model"),
     "1.2.840.10008.8.1.1" => Ok("DICOM Content Mapping Resource"),

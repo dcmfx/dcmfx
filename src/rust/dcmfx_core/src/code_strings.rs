@@ -1,6 +1,6 @@
 //! Converts DICOM Code String (CS) values to a human-readable description.
 
-use crate::{dictionary::*, DataElementTag};
+use crate::{DataElementTag, dictionary::*};
 
 /// Converts a `CodeString` value to a descriptive string if one is available.
 ///

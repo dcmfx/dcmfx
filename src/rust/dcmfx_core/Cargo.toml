@@ -1,7 +1,6 @@
 [package]
 name = "dcmfx_core"
 description = "DCMfx core library"
-rust-version = "1.80"
 
 repository.workspace = true
 edition.workspace = true

@@ -1,4 +1,4 @@
-use dcmfx_core::{dictionary, DataError, DataSet, DataSetPath};
+use dcmfx_core::{DataError, DataSet, DataSetPath, dictionary};
 
 /// Describes a single VOI LUT windowing function that can be applied in order
 /// to visualize pixel data.

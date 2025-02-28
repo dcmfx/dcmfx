@@ -392,7 +392,7 @@ mod tests {
         }
 
         Err(error) => {
-          return Err(DicomValidationError::JitteredReadError { error })
+          return Err(DicomValidationError::JitteredReadError { error });
         }
       }
     }

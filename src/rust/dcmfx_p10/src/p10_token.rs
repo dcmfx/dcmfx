@@ -4,7 +4,7 @@
 use std::rc::Rc;
 
 use dcmfx_core::{
-  dictionary, DataElementTag, DataElementValue, DataSet, ValueRepresentation,
+  DataElementTag, DataElementValue, DataSet, ValueRepresentation, dictionary,
 };
 
 use crate::internal::{

@@ -11,8 +11,8 @@ use crate::data_element_value::{
 };
 use crate::data_set_path::DataSetPathEntry;
 use crate::{
-  dictionary, DataElementTag, DataElementValue, DataError, DataSetPath,
-  DataSetPrintOptions, TransferSyntax, ValueRepresentation,
+  DataElementTag, DataElementValue, DataError, DataSetPath,
+  DataSetPrintOptions, TransferSyntax, ValueRepresentation, dictionary,
 };
 
 /// A DICOM data set that is a mapping of data element tags to data element

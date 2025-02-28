@@ -8,9 +8,9 @@ use byteorder::ByteOrder;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
-  code_strings, dictionary, utils, value_representation, DataElementTag,
-  DataError, DataSet, StructuredAge, StructuredDate, StructuredDateTime,
-  StructuredTime, ValueRepresentation,
+  DataElementTag, DataError, DataSet, StructuredAge, StructuredDate,
+  StructuredDateTime, StructuredTime, ValueRepresentation, code_strings,
+  dictionary, utils, value_representation,
 };
 
 pub mod age_string;

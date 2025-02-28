@@ -7,13 +7,13 @@ use std::{io::Write, rc::Rc};
 use base64::prelude::*;
 
 use dcmfx_core::{
-  dictionary, DataElementTag, DataElementValue, DataError, DataSet,
-  DataSetPath, ValueRepresentation,
+  DataElementTag, DataElementValue, DataError, DataSet, DataSetPath,
+  ValueRepresentation, dictionary,
 };
 use dcmfx_p10::{P10Error, P10Token};
 
-use crate::json_error::JsonSerializeError;
 use crate::DicomJsonConfig;
+use crate::json_error::JsonSerializeError;
 
 /// Transform that converts a stream of DICOM P10 tokens to the DICOM JSON
 /// model.

@@ -1,4 +1,4 @@
-use dcmfx_core::{dictionary, DataError, DataSetPath, DcmfxError};
+use dcmfx_core::{DataError, DataSetPath, DcmfxError, dictionary};
 use dcmfx_p10::P10Error;
 
 /// Occurs when an error is encountered converting to the DICOM JSON model.
