@@ -37,6 +37,7 @@ import gleam/dict.{type Dict}
 import gleam/int
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/string
 
 /// A P10 location is a list of location entries, with the current/most recently
 /// added one at the head of the list.
@@ -419,8 +420,11 @@ fn update_specific_character_set_clarifying_data_element(
   let charset =
     specific_character_set
     |> dcmfx_character_set.from_string
-    |> result.map_error(fn(error) {
-      p10_error.SpecificCharacterSetInvalid(specific_character_set, error)
+    |> result.map_error(fn(_) {
+      p10_error.SpecificCharacterSetInvalid(
+        string.slice(specific_character_set, 0, 100),
+        "",
+      )
     })
   use charset <- result.try(charset)
 

@@ -115,11 +115,15 @@ pub fn to_lines(error: P10Error, task_description: String) -> List(String) {
       ..lines
     ]
 
-    SpecificCharacterSetInvalid(charset, details) -> [
-      "  Details: " <> details,
-      "  Specific character set: " <> charset,
-      ..lines
-    ]
+    SpecificCharacterSetInvalid(charset, details) ->
+      list.flatten([
+        case details {
+          "" -> []
+          _ -> ["  Details: " <> details]
+        },
+        ["  Specific character set: " <> charset],
+        lines,
+      ])
 
     TokenStreamInvalid(details:, token:, ..) -> [
       "  Token: " <> p10_token.to_string(token),

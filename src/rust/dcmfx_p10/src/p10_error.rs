@@ -156,7 +156,10 @@ impl DcmfxError for P10Error {
           "  Specific character set: {}",
           specific_character_set
         ));
-        lines.push(format!("  Details: {}", details));
+
+        if !details.is_empty() {
+          lines.push(format!("  Details: {}", details));
+        }
       }
 
       P10Error::TokenStreamInvalid { details, token, .. } => {
