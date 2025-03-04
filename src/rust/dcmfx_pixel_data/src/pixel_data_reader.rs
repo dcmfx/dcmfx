@@ -144,6 +144,10 @@ impl PixelDataReader {
         decode::jpeg::decode_single_channel(&self.definition, data)
       }
 
+      &JPEG_LOSSLESS_NON_HIERARCHICAL | &JPEG_LOSSLESS_NON_HIERARCHICAL_SV1 => {
+        decode::jpeg_decoder::decode_single_channel(&self.definition, data)
+      }
+
       &JPEG_2K
       | &JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K
@@ -174,7 +178,6 @@ impl PixelDataReader {
     };
     if voi_lut.is_empty() {
       if let Some(voi_window) = image.fallback_voi_window() {
-        dbg!(&voi_window);
         fallback_voi_lut.windows.push(voi_window);
         voi_lut = &fallback_voi_lut;
       }
@@ -222,6 +225,10 @@ impl PixelDataReader {
       }
 
       &JPEG_BASELINE_8BIT => decode::jpeg::decode_color(&self.definition, data),
+
+      &JPEG_LOSSLESS_NON_HIERARCHICAL | &JPEG_LOSSLESS_NON_HIERARCHICAL_SV1 => {
+        decode::jpeg_decoder::decode_color(&self.definition, data)
+      }
 
       &JPEG_2K
       | &JPEG_2K_LOSSLESS_ONLY

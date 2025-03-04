@@ -51,8 +51,8 @@ impl VoiWindow {
       || centers.len() != functions.len()
     {
       return Err(DataError::new_value_invalid(
-        "There is not the same number of VOI window widths, centers, and \
-            explanations"
+        "The number of VOI window widths, centers, and explanations is \
+         inconsistent"
           .to_string(),
       ));
     }

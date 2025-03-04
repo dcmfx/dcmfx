@@ -247,6 +247,42 @@ fn dicom_jpeg_ls_color_to_png() {
   assert_image_snapshot!(output_file, "dicom_jpeg_ls_color_to_png.png");
 }
 
+#[test]
+fn dicom_jpeg_lossless_12bit_to_jpg() {
+  let dicom_file = "../../../test/assets/fo-dicom/IM-0001-0001-0001.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("extract-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{output_file}\" …\n"));
+
+  assert_image_snapshot!(output_file, "dicom_jpeg_lossless_12bit_to_jpg.jpg");
+}
+
+#[test]
+fn dicom_jpeg_lossless_color_to_jpg() {
+  let dicom_file = "../../../test/assets/fo-dicom/GH538-jpeg14sv1.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("extract-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{output_file}\" …\n"));
+
+  assert_image_snapshot!(output_file, "dicom_jpeg_lossless_color_to_jpg.jpg");
+}
+
 fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   path1: P,
   snapshot: &str,

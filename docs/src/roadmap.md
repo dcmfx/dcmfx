@@ -3,13 +3,11 @@
 DCMfx has no formal roadmap, but future additions are likely to include the
 following:
 
-- Reading pixel data for the following transfer syntaxes:
+- Read pixel data that uses the 'JPEG Extended (Process 2 & 4)' transfer syntax
 
-  - JPEG Extended (Process 2 & 4)
-  - JPEG Lossless, Non-Hierarchical (Process 14)
-  - JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1])
+- Transcode between a wider range of transfer syntaxes
 
-- Conversion and encoding of encapsulated pixel data and transfer syntaxes.
+- Overlay rendering
 
 - DIMSE networking
 
