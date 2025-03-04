@@ -430,7 +430,7 @@ mod tests {
 
     // Test decoding of frames doesn't panic
     for frame in frames.iter_mut() {
-      let _ = pixel_data_reader.decode_frame(frame, None);
+      let _ = pixel_data_reader.read_frame(frame, None);
     }
 
     // Check that a .pixel_array.json file exists

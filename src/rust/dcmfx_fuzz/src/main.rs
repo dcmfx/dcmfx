@@ -34,7 +34,7 @@ fn main() {
       if let Ok(frames) = frames {
         if let Ok(reader) = PixelDataReader::from_data_set(&data_set) {
           for mut frame in frames {
-            let _ = reader.decode_frame(&mut frame);
+            let _ = reader.read_frame(&mut frame);
           }
         }
       }

@@ -100,8 +100,10 @@ impl PixelDataDefinition {
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2
       | PhotometricInterpretation::PaletteColor { .. }
-      | PhotometricInterpretation::Rgb { .. }
-      | PhotometricInterpretation::YbrFull { .. } => {
+      | PhotometricInterpretation::Rgb
+      | PhotometricInterpretation::YbrFull
+      | PhotometricInterpretation::YbrIct
+      | PhotometricInterpretation::YbrRct => {
         usize::from(self.samples_per_pixel) * usize::from(self.bits_allocated)
       }
 
@@ -125,9 +127,11 @@ impl PixelDataDefinition {
       | PhotometricInterpretation::Monochrome2 => true,
 
       PhotometricInterpretation::PaletteColor { .. }
-      | PhotometricInterpretation::Rgb { .. }
-      | PhotometricInterpretation::YbrFull { .. }
-      | PhotometricInterpretation::YbrFull422 { .. } => false,
+      | PhotometricInterpretation::Rgb
+      | PhotometricInterpretation::YbrFull
+      | PhotometricInterpretation::YbrFull422
+      | PhotometricInterpretation::YbrIct
+      | PhotometricInterpretation::YbrRct => false,
     }
   }
 
@@ -237,6 +241,22 @@ pub enum PhotometricInterpretation {
   /// CR values are sampled horizontally at half the Y rate and as a result
   /// there are half as many CB and CR values as Y values.
   YbrFull422,
+
+  /// Irreversible Color Transformation.
+  ///
+  /// Pixel data represent a color image described by one luminance (Y) and two
+  /// chrominance planes (CB and CR). This photometric interpretation may be
+  /// used only when samples per pixel is three and the planar configuration is
+  /// 0.
+  YbrIct,
+
+  /// Reversible Color Transformation.
+  ///
+  /// Pixel data represent a color image described by one luminance (Y) and two
+  /// chrominance planes (CB and CR). This photometric interpretation may be
+  /// used only when samples per pixel is three and the planar configuration is
+  /// 0.
+  YbrRct,
 }
 
 impl PhotometricInterpretation {
@@ -282,19 +302,16 @@ impl PhotometricInterpretation {
       "YBR_FULL" => Ok(Self::YbrFull),
       "YBR_FULL_422" => Ok(Self::YbrFull422),
 
-      value
-        if value == "YBR_PARTIAL_420"
-          || value == "YBR_ICT"
-          || value == "YBR_RCT" =>
-      {
-        Err(
-          DataError::new_value_invalid(format!(
-            "Photometric interpretation '{}' is not supported",
-            value
-          ))
-          .with_path(&DataSetPath::new_with_data_element(tag)),
+      "YBR_PARTIAL_420" => Err(
+        DataError::new_value_invalid(
+          "Photometric interpretation 'YBR_PARTIAL_420' is not supported"
+            .to_string(),
         )
-      }
+        .with_path(&DataSetPath::new_with_data_element(tag)),
+      ),
+
+      "YBR_ICT" => Ok(Self::YbrIct),
+      "YBR_RCT" => Ok(Self::YbrRct),
 
       value
         if value == "HSV"
@@ -328,10 +345,12 @@ impl PhotometricInterpretation {
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2
       | PhotometricInterpretation::PaletteColor { .. }
-      | PhotometricInterpretation::Rgb { .. } => false,
+      | PhotometricInterpretation::Rgb => false,
 
-      PhotometricInterpretation::YbrFull { .. }
-      | PhotometricInterpretation::YbrFull422 { .. } => true,
+      PhotometricInterpretation::YbrFull
+      | PhotometricInterpretation::YbrFull422
+      | PhotometricInterpretation::YbrIct
+      | PhotometricInterpretation::YbrRct => true,
     }
   }
 }
@@ -345,6 +364,8 @@ impl std::fmt::Display for PhotometricInterpretation {
       PhotometricInterpretation::Rgb => "Rgb",
       PhotometricInterpretation::YbrFull => "YbrFull",
       PhotometricInterpretation::YbrFull422 => "YbrFull422",
+      PhotometricInterpretation::YbrIct => "YbrIct",
+      PhotometricInterpretation::YbrRct => "YbrRct",
     };
 
     write!(f, "{}", s)

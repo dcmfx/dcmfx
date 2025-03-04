@@ -15,3 +15,4 @@ byteorder = "1.5.0"
 dcmfx_core = { path = "../dcmfx_core", version = "0.0.0" }
 dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0" }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+jpeg2k = "0.9.1"

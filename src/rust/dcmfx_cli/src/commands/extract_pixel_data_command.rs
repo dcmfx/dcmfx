@@ -297,7 +297,7 @@ fn write_frame(
         }
 
         let img = pixel_data_reader
-          .decode_frame(frame, color_palette)
+          .read_frame(frame, color_palette)
           .map_err(ExtractPixelDataError::DataError)?;
 
         let mut output_file =

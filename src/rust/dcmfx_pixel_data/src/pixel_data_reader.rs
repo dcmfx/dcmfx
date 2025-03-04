@@ -86,13 +86,13 @@ impl PixelDataReader {
   /// well-known color palettes defined in PS3.6 B.1 are provided in
   /// [`crate::luts::color_palettes`].
   ///
-  pub fn decode_frame(
+  pub fn read_frame(
     &self,
     frame: &mut PixelDataFrame,
     color_palette: Option<&ColorPalette>,
   ) -> Result<RgbImage, DataError> {
     if self.definition.is_grayscale() {
-      let image = self.decode_single_channel_frame(frame)?;
+      let image = self.read_single_channel_frame(frame)?;
 
       let mut pixels = Vec::with_capacity(
         image.width() as usize * image.height() as usize * 3,
@@ -112,29 +112,40 @@ impl PixelDataReader {
 
       Ok(RgbImage::from_raw(image.width(), image.height(), pixels).unwrap())
     } else {
-      self.decode_color_frame(frame)
+      self.read_color_frame(frame)
     }
   }
 
-  /// Decodes a frame of grayscale pixel data to a [`GrayImage`], applying the
+  /// Reads a frame of grayscale pixel data to a [`GrayImage`], applying the
   /// Modality LUT and VOI LUT.
   ///
-  pub fn decode_single_channel_frame(
+  pub fn read_single_channel_frame(
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<GrayImage, DataError> {
     let data = frame.combine_fragments();
 
+    use transfer_syntax::*;
+
     let mut image = match self.transfer_syntax {
-      &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
-      | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
-      | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-      | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
+      &IMPLICIT_VR_LITTLE_ENDIAN
+      | &EXPLICIT_VR_LITTLE_ENDIAN
+      | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+      | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+      | &EXPLICIT_VR_BIG_ENDIAN => {
         decode::native::decode_single_channel(&self.definition, data)
       }
 
-      &transfer_syntax::RLE_LOSSLESS => {
+      &RLE_LOSSLESS => {
         decode::rle_lossless::decode_single_channel(&self.definition, data)
+      }
+
+      &JPEG_2K
+      | &JPEG_2K_LOSSLESS_ONLY
+      | &HIGH_THROUGHPUT_JPEG_2K
+      | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
+      | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
+        decode::openjpeg::decode_single_channel(&self.definition, data)
       }
 
       _ => Err(DataError::new_value_unsupported(format!(
@@ -155,6 +166,7 @@ impl PixelDataReader {
     };
     if voi_lut.is_empty() {
       if let Some(voi_window) = image.fallback_voi_window() {
+        dbg!(&voi_window);
         fallback_voi_lut.windows.push(voi_window);
         voi_lut = &fallback_voi_lut;
       }
@@ -163,27 +175,45 @@ impl PixelDataReader {
     Ok(image.to_gray_image(&self.modality_lut, voi_lut))
   }
 
-  /// Decodes a frame of color pixel data to an [`RgbImage`].
+  /// Reads a frame of color pixel data to an [`RgbImage`].
   ///
-  pub fn decode_color_frame(
+  pub fn read_color_frame(
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<RgbImage, DataError> {
     let data = frame.combine_fragments();
 
-    let mut image = match self.transfer_syntax {
-      &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
-      | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
-      | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-      | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
-        decode::native::decode_color(&self.definition, data)
+    use transfer_syntax::*;
+
+    let image = match self.transfer_syntax {
+      &IMPLICIT_VR_LITTLE_ENDIAN
+      | &EXPLICIT_VR_LITTLE_ENDIAN
+      | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+      | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+      | &EXPLICIT_VR_BIG_ENDIAN => {
+        let mut img = decode::native::decode_color(&self.definition, data)?;
+
+        // Convert YBR to RGB
+        if self.definition.photometric_interpretation.is_ybr() {
+          img.convert_ybr_to_rgb(&self.definition);
+        }
+
+        Ok(img)
       }
 
-      &transfer_syntax::RLE_LOSSLESS => {
-        decode::rle_lossless::decode_color(&self.definition, data)
+      &RLE_LOSSLESS => {
+        let mut img =
+          decode::rle_lossless::decode_color(&self.definition, data)?;
+
+        // Convert YBR to RGB
+        if self.definition.photometric_interpretation.is_ybr() {
+          img.convert_ybr_to_rgb(&self.definition);
+        }
+
+        Ok(img)
       }
 
-      &transfer_syntax::JPEG_BASELINE_8BIT => {
+      &JPEG_BASELINE_8BIT => {
         let img =
           image::load_from_memory_with_format(data, image::ImageFormat::Jpeg)
             .map_err(|_| {
@@ -193,16 +223,19 @@ impl PixelDataReader {
         return Ok(img.to_rgb8());
       }
 
+      &JPEG_2K
+      | &JPEG_2K_LOSSLESS_ONLY
+      | &HIGH_THROUGHPUT_JPEG_2K
+      | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
+      | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
+        decode::openjpeg::decode_color(&self.definition, data)
+      }
+
       _ => Err(DataError::new_value_unsupported(format!(
         "Reading transfer syntax '{}' is not supported",
         self.transfer_syntax.name
       ))),
     }?;
-
-    // Convert YBR to RGB
-    if self.definition.photometric_interpretation.is_ybr() {
-      image.convert_ybr_to_rgb(&self.definition);
-    }
 
     Ok(image.to_rgb_u8_image(&self.definition))
   }
