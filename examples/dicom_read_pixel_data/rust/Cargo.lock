@@ -165,6 +165,7 @@ name = "dicom_read_pixel_data"
 version = "0.0.0"
 dependencies = [
  "dcmfx",
+ "image",
 ]
 
 [[package]]

@@ -116,7 +116,7 @@ impl PixelDataReader {
     }
   }
 
-  /// Reads a frame of grayscale pixel data to a [`GrayImage`], applying the
+  /// Reads a frame of grayscale pixel data into a [`GrayImage`], applying the
   /// Modality LUT and VOI LUT.
   ///
   pub fn read_single_channel_frame(
@@ -175,7 +175,7 @@ impl PixelDataReader {
     Ok(image.to_gray_image(&self.modality_lut, voi_lut))
   }
 
-  /// Reads a frame of color pixel data to an [`RgbImage`].
+  /// Reads a frame of color pixel data into an [`RgbImage`].
   ///
   pub fn read_color_frame(
     &self,
@@ -193,7 +193,7 @@ impl PixelDataReader {
       | &EXPLICIT_VR_BIG_ENDIAN => {
         let mut img = decode::native::decode_color(&self.definition, data)?;
 
-        // Convert YBR to RGB
+        // Convert YBR to RGB if needed
         if self.definition.photometric_interpretation.is_ybr() {
           img.convert_ybr_to_rgb(&self.definition);
         }
@@ -205,7 +205,7 @@ impl PixelDataReader {
         let mut img =
           decode::rle_lossless::decode_color(&self.definition, data)?;
 
-        // Convert YBR to RGB
+        // Convert YBR to RGB if needed
         if self.definition.photometric_interpretation.is_ybr() {
           img.convert_ybr_to_rgb(&self.definition);
         }
@@ -213,15 +213,7 @@ impl PixelDataReader {
         Ok(img)
       }
 
-      &JPEG_BASELINE_8BIT => {
-        let img =
-          image::load_from_memory_with_format(data, image::ImageFormat::Jpeg)
-            .map_err(|_| {
-            DataError::new_value_invalid("Invalid JPG pixel data".to_string())
-          })?;
-
-        return Ok(img.to_rgb8());
-      }
+      &JPEG_BASELINE_8BIT => decode::jpeg::decode_color(&self.definition, data),
 
       &JPEG_2K
       | &JPEG_2K_LOSSLESS_ONLY

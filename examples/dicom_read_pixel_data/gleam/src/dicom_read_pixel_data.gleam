@@ -14,7 +14,11 @@ pub fn main() {
   frames
   |> list.each(fn(frame) {
     io.println(
-      "Frame with size: " <> int.to_string(pixel_data_frame.length(frame)),
+      "Frame "
+      <> int.to_string(pixel_data_frame.index(frame))
+      <> " has size "
+      <> int.to_string(pixel_data_frame.length(frame))
+      <> " bytes",
     )
   })
 }

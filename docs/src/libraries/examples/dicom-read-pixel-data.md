@@ -1,7 +1,8 @@
 # Example: Read DICOM Pixel Data
 
 The following code reads a DICOM P10 file and then prints the size in bytes of
-each frame of pixel data.
+each frame of pixel data. The Rust version also writes each frame of pixel data
+to a PNG file.
 
 :::tabs key:code-example
 == Gleam

@@ -4,3 +4,4 @@ edition = "2024"
 
 [dependencies]
 dcmfx = { path = "../../../src/rust/dcmfx" }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }

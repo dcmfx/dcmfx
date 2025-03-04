@@ -300,15 +300,16 @@ fn write_frame(
           .read_frame(frame, color_palette)
           .map_err(ExtractPixelDataError::DataError)?;
 
-        let mut output_file =
+        let output_file =
           File::create(filename).expect("Failed to create output file");
+        let mut output_writer = std::io::BufWriter::new(output_file);
 
         if format == OutputFormat::Png {
           img
-            .write_to(&mut output_file, ImageFormat::Png)
+            .write_to(&mut output_writer, ImageFormat::Png)
             .map_err(ExtractPixelDataError::ImageError)?;
         } else {
-          JpegEncoder::new_with_quality(&mut output_file, quality)
+          JpegEncoder::new_with_quality(&mut output_writer, quality)
             .encode_image(&img)
             .map_err(ExtractPixelDataError::ImageError)?;
         }
