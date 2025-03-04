@@ -17,8 +17,8 @@ The internal libraries that make up DCMfx are:
   DICOM JSON Model to allow for the storage of encapsulated pixel data.
 
 - **`dcmfx_pixel_data` / `dcmfx::pixel_data`**. Extracts frames of pixel data
-  from a DICOM data set or a stream of DICOM P10 data. The Rust version of the
-  library also supports decoding of native pixel data.
+  from a DICOM data set and streams of DICOM P10 data. The Rust version also
+  supports decoding pixel data.
 
 - **`dcmfx_anonymize` / `dcmfx::anonymize`**. Anonymizes the data elements in a
   DICOM data set or stream of DICOM P10 data.

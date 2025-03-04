@@ -411,35 +411,38 @@ mod tests {
     data_set: &DataSet,
   ) -> Result<(), DicomValidationError> {
     // If there is no pixel data then there's nothing to test
-    if !data_set.has(dictionary::PIXEL_DATA.tag)
-      || !data_set.has(dictionary::SAMPLES_PER_PIXEL.tag)
-    {
+    if !data_set.has(dictionary::PIXEL_DATA.tag) {
       return Ok(());
     }
 
-    // If the pixel data is empty then there's nothing to test
-    let pixel_data = data_set.get_value(dictionary::PIXEL_DATA.tag).unwrap();
-    match pixel_data.bytes() {
-      Ok(data) => {
-        if data.is_empty() {
-          return Ok(());
-        }
-      }
-
-      // Skip if there is no native pixel data
+    // Create a pixel data reader for the data set. If this fails then either
+    // the DICOM has no pixel data or the pixel data it has isn't supported
+    // for reading, so skip further tests.
+    let pixel_data_reader = match PixelDataReader::from_data_set(data_set) {
+      Ok(reader) => reader,
       Err(_) => return Ok(()),
+    };
+
+    // Read the raw frames of pixel data
+    let mut frames = data_set
+      .get_pixel_data_frames()
+      .map_err(|e| DicomValidationError::PixelDataFilterError { error: e })?;
+
+    // Test decoding of frames doesn't panic
+    for frame in frames.iter_mut() {
+      let _ = pixel_data_reader.decode_frame(frame, None);
+    }
+
+    // Check that a .pixel_array.json file exists
+    let pixel_array_file =
+      format!("{}.pixel_array.json", dicom.to_string_lossy());
+    if !Path::new(&pixel_array_file).exists() {
+      return Ok(());
     }
 
     // Read the .pixel_array.json file
-    let pixel_array_file =
-      format!("{}.pixel_array.json", dicom.to_string_lossy());
     let expected_pixel_data_json =
       std::fs::read_to_string(pixel_array_file).unwrap();
-
-    // Read the raw frames of pixel data
-    let frames = data_set
-      .get_pixel_data_frames()
-      .map_err(|e| DicomValidationError::PixelDataFilterError { error: e })?;
 
     // Check the expected number of frames are present
     let expected_frames: Vec<serde_json::Value> =
@@ -454,20 +457,40 @@ mod tests {
       });
     }
 
-    // Create a pixel data reader for the data set
-    let pixel_data_reader = PixelDataReader::from_data_set(data_set).unwrap();
-
     for (mut frame, expected_frame) in
       frames.into_iter().zip(expected_frames.into_iter())
     {
       let frame_index = frame.index();
+      let data = frame.combine_fragments();
 
       if pixel_data_reader.definition.is_grayscale() {
-        let pixels = iter_pixels_grayscale(
-          pixel_data_reader.definition.clone(),
-          frame.combine_fragments(),
-        )
-        .unwrap();
+        let image = match data_set
+          .get_transfer_syntax()
+          .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
+        {
+          &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
+          | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
+          | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+          | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
+            dcmfx_pixel_data::decode::native::decode_single_channel(
+              &pixel_data_reader.definition,
+              data,
+            )
+            .unwrap()
+          }
+
+          &transfer_syntax::RLE_LOSSLESS => {
+            dcmfx_pixel_data::decode::rle_lossless::decode_single_channel(
+              &pixel_data_reader.definition,
+              data,
+            )
+            .unwrap()
+          }
+
+          _ => return Ok(()),
+        };
+
+        let pixels = image.to_i64_pixels();
 
         let expected_pixels =
           serde_json::from_value::<Vec<Vec<i64>>>(expected_frame)
@@ -475,7 +498,9 @@ mod tests {
             .into_iter()
             .flatten();
 
-        for (index, (a, b)) in pixels.zip(expected_pixels).enumerate() {
+        for (index, (a, b)) in
+          pixels.into_iter().zip(expected_pixels).enumerate()
+        {
           if a != b {
             return Err(DicomValidationError::PixelDataReadError {
               details: format!(
@@ -487,11 +512,40 @@ mod tests {
           }
         }
       } else {
-        let pixels = iter_pixels_color(
-          pixel_data_reader.definition.clone(),
-          frame.combine_fragments(),
-        )
-        .unwrap();
+        let mut image = match data_set
+          .get_transfer_syntax()
+          .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
+        {
+          &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
+          | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
+          | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+          | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
+            dcmfx_pixel_data::decode::native::decode_color(
+              &pixel_data_reader.definition,
+              data,
+            )
+            .unwrap()
+          }
+
+          &transfer_syntax::RLE_LOSSLESS => {
+            dcmfx_pixel_data::decode::rle_lossless::decode_color(
+              &pixel_data_reader.definition,
+              data,
+            )
+            .unwrap()
+          }
+
+          _ => return Ok(()),
+        };
+
+        // Convert YBR to RGB
+        if pixel_data_reader
+          .definition
+          .photometric_interpretation
+          .is_ybr()
+        {
+          image.convert_ybr_to_rgb(&pixel_data_reader.definition);
+        }
 
         let expected_pixels =
           serde_json::from_value::<Vec<Vec<[f64; 3]>>>(expected_frame)
@@ -499,16 +553,21 @@ mod tests {
             .into_iter()
             .flatten();
 
-        for (index, (a, b)) in pixels.zip(expected_pixels).enumerate() {
-          if (a.0 - b[0]).abs() > 0.005
-            || (a.1 - b[1]).abs() > 0.005
-            || (a.2 - b[2]).abs() > 0.005
+        for (index, (a, b)) in image
+          .to_rgb_f32_image(&pixel_data_reader.definition)
+          .pixels()
+          .zip(expected_pixels)
+          .enumerate()
+        {
+          if (a.0[0] - b[0] as f32).abs() > 0.005
+            || (a.0[1] - b[1] as f32).abs() > 0.005
+            || (a.0[2] - b[2] as f32).abs() > 0.005
           {
             return Err(DicomValidationError::PixelDataReadError {
               details: format!(
                 "Pixel data of frame {} is incorrect at index {}, expected \
                  {:?} but got {:?}",
-                frame_index, index, b, a
+                frame_index, index, b, a.0
               ),
             });
           }

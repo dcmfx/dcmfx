@@ -1,7 +1,5 @@
 use image::{GrayImage, RgbImage};
 
-use crate::RgbColor;
-
 /// Defines a color palette that converts a grayscale value to a color.
 ///
 #[derive(Clone, Debug, PartialEq)]
@@ -21,14 +19,14 @@ impl ColorPalette {
   /// Looks up a normalized grayscale value in this color palette and returns a
   /// normalized RGB color.
   ///
-  pub fn lookup_normalized(&self, grayscale_value: f64) -> RgbColor {
+  pub fn lookup_normalized(&self, grayscale_value: f32) -> [f32; 3] {
     let index = (grayscale_value * 255.0).clamp(0.0, 255.0) as usize * 3;
 
-    (
-      self.data[index] as f64 / 255.0,
-      self.data[index + 1] as f64 / 255.0,
-      self.data[index + 2] as f64 / 255.0,
-    )
+    [
+      self.data[index] as f32 / 255.0,
+      self.data[index + 1] as f32 / 255.0,
+      self.data[index + 2] as f32 / 255.0,
+    ]
   }
 
   /// Applies this color palette to a `GrayImage` to produce an `RgbImage`.

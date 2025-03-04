@@ -11,13 +11,13 @@ use dcmfx_core::{DataError, DataSet, DataSetPath, dictionary};
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct VoiWindow {
-  center: f64,
-  width: f64,
+  center: f32,
+  width: f32,
   explanation: String,
   function: VoiLutFunction,
 
-  half_width: f64,
-  one_over_width: f64,
+  half_width: f32,
+  one_over_width: f32,
 }
 
 impl VoiWindow {
@@ -60,8 +60,8 @@ impl VoiWindow {
     let mut windows = vec![];
 
     for i in 0..centers.len() {
-      let center = centers[i];
-      let width = widths[i];
+      let center = centers[i] as f32;
+      let width = widths[i] as f32;
       let explanation = explanations[i].to_string();
       let function = VoiLutFunction::from_string(functions[i])?;
 
@@ -74,8 +74,8 @@ impl VoiWindow {
   /// Creates a new [`VoiWindow`] from the given values.
   ///
   pub fn new(
-    center: f64,
-    width: f64,
+    center: f32,
+    width: f32,
     explanation: String,
     function: VoiLutFunction,
   ) -> VoiWindow {
@@ -115,7 +115,7 @@ impl VoiWindow {
 
   /// Applies this VOI window to an input value, into an output range of 0-1.
   ///
-  pub fn compute(&self, x: f64) -> f64 {
+  pub fn compute(&self, x: f32) -> f32 {
     let x = x - self.center;
 
     match self.function {
@@ -124,7 +124,7 @@ impl VoiWindow {
       }
 
       VoiLutFunction::Sigmoid => {
-        1.0 / (1.0 + f64::exp(-4.0 * x * self.one_over_width))
+        1.0 / (1.0 + f32::exp(-4.0 * x * self.one_over_width))
       }
     }
   }
@@ -212,9 +212,9 @@ mod tests {
     let window =
       VoiWindow::new(2000.0, 1000.0, "".to_string(), VoiLutFunction::Sigmoid);
 
-    assert_eq!(window.compute(1500.0), 0.11920292202211755);
-    assert_eq!(window.compute(2500.0), 0.8807970779778823);
-    assert_eq!(window.compute(1800.0), 0.31002551887238755);
+    assert_eq!(window.compute(1500.0), 0.11920292);
+    assert_eq!(window.compute(2500.0), 0.880797);
+    assert_eq!(window.compute(1800.0), 0.3100255);
 
     assert_eq!(window.compute(1000000000.0), 1.0);
   }

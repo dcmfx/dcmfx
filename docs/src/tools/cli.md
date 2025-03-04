@@ -116,12 +116,19 @@ Options:
    dcmfx extract-pixel-data input.dcm
    ```
 
-   Native pixel data can also be decoded and converted to a PNG (or JPEG) file
-   per frame:
+   Pixel data can also be decoded and converted to a PNG (or JPEG) file per
+   frame:
 
    ```sh
-   dcmfx extract-pixel-data input.dcm --format png 
+   dcmfx extract-pixel-data input.dcm --format png
    dcmfx extract-pixel-data input.dcm --format jpg --quality 70
+   ```
+
+   Single channel data can also specify a VOI window center and width and/or a
+   well-known color palette:
+
+   ```sh
+   dcmfx extract-pixel-data input.dcm --format png --voi-window 500 2000 --color-palette hot-iron
    ```
 
 5. Rewrite a DICOM P10 file. This will convert the specific character set to
@@ -151,7 +158,7 @@ Options:
 
    Conversion between other transfer syntaxes is not supported.
 
-7. Anonymize a DICOM P10 file to remove all identifying data elements:
+7. Anonymize a DICOM P10 file by removing all identifying data elements:
 
    ```sh
    dcmfx modify input.dcm output.dcm --anonymize
@@ -180,5 +187,5 @@ all commands are also supported by the Gleam version of the CLI, which can be
 run with `gleam run` in `/src/gleam/dcmfx_cli`.
 
 The Gleam CLI is primarily used when working on the Gleam implementation of
-DCMfx. The Rust CLI is recommended for regular use as it is faster, has some
-additional features, and is a single standalone binary.
+DCMfx. The Rust CLI is recommended for regular use as it is faster, has more
+features, and is a single standalone binary.

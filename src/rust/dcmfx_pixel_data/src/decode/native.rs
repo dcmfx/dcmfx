@@ -1,0 +1,717 @@
+use image::ImageBuffer;
+
+use dcmfx_core::DataError;
+
+use crate::{
+  PixelDataDefinition, PixelRepresentation, SingleChannelImage,
+  color_image::ColorImage,
+  pixel_data_definition::{
+    BitsAllocated, PhotometricInterpretation, PlanarConfiguration,
+    SamplesPerPixel,
+  },
+};
+
+/// Decodes stored values for native single channel pixel data that uses the
+/// [`PhotometricInterpretation::Monochrome1`] or
+/// [`PhotometricInterpretation::Monochrome2`] photometric interpretations.
+///
+pub fn decode_single_channel(
+  definition: &PixelDataDefinition,
+  data: &[u8],
+) -> Result<SingleChannelImage, DataError> {
+  // Check that there is one sample per pixel
+  if definition.samples_per_pixel != SamplesPerPixel::One {
+    return Err(DataError::new_value_invalid(
+      "Samples per pixel is not one for grayscale pixel data".to_string(),
+    ));
+  }
+
+  validate_data_length(definition, data)?;
+
+  let width = definition.columns as u32;
+  let height = definition.rows as u32;
+  let pixel_count = definition.pixel_count();
+
+  match definition.photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2 => {
+      match (definition.pixel_representation, definition.bits_allocated) {
+        (PixelRepresentation::Signed, BitsAllocated::One) => {
+          let mut pixels = vec![0i8; pixel_count];
+
+          for i in 0..pixel_count {
+            pixels[i] = -(((data[i / 8] >> (i % 8)) & 1) as i8);
+          }
+
+          Ok(SingleChannelImage::Int8(
+            ImageBuffer::from_raw(width, height, pixels).unwrap(),
+          ))
+        }
+
+        (PixelRepresentation::Unsigned, BitsAllocated::One) => {
+          let mut pixels = vec![0u8; pixel_count];
+
+          for i in 0..pixel_count {
+            pixels[i] = (data[i / 8] >> (i % 8)) & 1;
+          }
+
+          Ok(SingleChannelImage::Uint8(
+            ImageBuffer::from_raw(width, height, pixels).unwrap(),
+          ))
+        }
+
+        (PixelRepresentation::Signed, BitsAllocated::Eight) => {
+          let mut pixels = vec![0i8; pixel_count];
+
+          for i in 0..pixel_count {
+            pixels[i] = i8::from_le_bytes([data[i]]);
+          }
+
+          Ok(SingleChannelImage::Int8(
+            ImageBuffer::from_raw(width, height, pixels).unwrap(),
+          ))
+        }
+
+        (PixelRepresentation::Unsigned, BitsAllocated::Eight) => {
+          Ok(SingleChannelImage::Uint8(
+            ImageBuffer::from_raw(width, height, data.to_vec()).unwrap(),
+          ))
+        }
+
+        (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
+          let mut pixels = vec![0i16; pixel_count];
+
+          for i in 0..pixel_count {
+            pixels[i] = i16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
+          }
+
+          Ok(SingleChannelImage::Int16(
+            ImageBuffer::from_raw(width, height, pixels).unwrap(),
+          ))
+        }
+
+        (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
+          let mut pixels = vec![0u16; pixel_count];
+
+          for i in 0..pixel_count {
+            pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
+          }
+
+          Ok(SingleChannelImage::Uint16(
+            ImageBuffer::from_raw(width, height, pixels).unwrap(),
+          ))
+        }
+
+        (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
+          let mut pixels = vec![0i32; pixel_count];
+
+          for i in 0..pixel_count {
+            pixels[i] = i32::from_le_bytes([
+              data[i * 4],
+              data[i * 4 + 1],
+              data[i * 4 + 2],
+              data[i * 4 + 3],
+            ]);
+          }
+
+          Ok(SingleChannelImage::Int32(
+            ImageBuffer::from_raw(width, height, pixels).unwrap(),
+          ))
+        }
+
+        (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
+          let mut pixels = vec![0u32; pixel_count];
+
+          for i in 0..pixel_count {
+            pixels[i] = u32::from_le_bytes([
+              data[i * 4],
+              data[i * 4 + 1],
+              data[i * 4 + 2],
+              data[i * 4 + 3],
+            ]);
+          }
+
+          Ok(SingleChannelImage::Uint32(
+            ImageBuffer::from_raw(width, height, pixels).unwrap(),
+          ))
+        }
+      }
+    }
+
+    _ => Err(DataError::new_value_invalid(format!(
+      "Photometric interpretation '{}' is invalid for grayscale pixel data \
+       when samples per pixel is one",
+      definition.photometric_interpretation
+    ))),
+  }
+}
+
+/// Decodes native color pixel data that uses the
+/// [`PhotometricInterpretation::Rgb`], [`PhotometricInterpretation::YbrFull`],
+/// [`PhotometricInterpretation::YbrFull422`], or
+/// [`PhotometricInterpretation::PaletteColor`] photometric interpretations.
+///
+pub fn decode_color(
+  definition: &PixelDataDefinition,
+  data: &[u8],
+) -> Result<ColorImage, DataError> {
+  validate_data_length(definition, data)?;
+
+  if definition.pixel_representation.is_signed() {
+    return Err(DataError::new_value_invalid(
+      "Color pixel data must not be signed".to_string(),
+    ));
+  }
+
+  let width = definition.columns as u32;
+  let height = definition.rows as u32;
+  let pixel_count = definition.pixel_count();
+
+  match definition.samples_per_pixel {
+    SamplesPerPixel::One => match (
+      &definition.photometric_interpretation,
+      definition.bits_allocated,
+    ) {
+      (
+        PhotometricInterpretation::PaletteColor { rgb_luts },
+        BitsAllocated::Eight,
+      ) => {
+        let (red_lut, green_lut, blue_lut) = rgb_luts;
+
+        let mut pixels = vec![0u16; pixel_count * 3];
+
+        for i in 0..pixel_count {
+          let index = data[i] as i64;
+
+          pixels[i * 3] = red_lut.lookup(index);
+          pixels[i * 3 + 1] = green_lut.lookup(index);
+          pixels[i * 3 + 2] = blue_lut.lookup(index);
+        }
+
+        Ok(ColorImage::Uint16(
+          ImageBuffer::from_raw(width, height, pixels).unwrap(),
+        ))
+      }
+
+      (
+        PhotometricInterpretation::PaletteColor { rgb_luts },
+        BitsAllocated::Sixteen,
+      ) => {
+        let mut pixels = vec![0u16; pixel_count * 3];
+
+        for i in 0..pixel_count {
+          let index = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]) as i64;
+
+          pixels[i * 3] = rgb_luts.0.lookup(index);
+          pixels[i * 3 + 1] = rgb_luts.1.lookup(index);
+          pixels[i * 3 + 2] = rgb_luts.2.lookup(index);
+        }
+
+        Ok(ColorImage::Uint16(
+          ImageBuffer::from_raw(width, height, pixels).unwrap(),
+        ))
+      }
+
+      (photometric_interpretation, bits_allocated) => {
+        Err(DataError::new_value_invalid(format!(
+          "Photometric interpretation '{}' is invalid for color pixel data \
+           when samples per pixel is one and bits allocated is '{}'",
+          photometric_interpretation,
+          usize::from(bits_allocated)
+        )))
+      }
+    },
+
+    SamplesPerPixel::Three {
+      planar_configuration,
+    } => match definition.photometric_interpretation {
+      PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull => {
+        match (planar_configuration, definition.bits_allocated) {
+          (_, BitsAllocated::One) => Err(DataError::new_value_invalid(
+            "Bits allocated value '1' is not supported for color data"
+              .to_string(),
+          )),
+
+          (PlanarConfiguration::Interleaved, BitsAllocated::Eight) => {
+            let pixels = data[..(pixel_count * 3)].to_vec();
+
+            Ok(ColorImage::Uint8(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
+            let mut pixels = vec![0u16; pixel_count * 3];
+
+            for i in 0..(pixel_count * 3) {
+              pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2] + 1]);
+            }
+
+            Ok(ColorImage::Uint16(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
+            let mut pixels = vec![0u32; pixel_count * 3];
+
+            for i in 0..(pixel_count * 3) {
+              pixels[i] = u32::from_le_bytes([
+                data[i * 4],
+                data[i * 4] + 1,
+                data[i * 4] + 2,
+                data[i * 4] + 3,
+              ]);
+            }
+
+            Ok(ColorImage::Uint32(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Separate, BitsAllocated::Eight) => {
+            let mut pixels = vec![0u8; pixel_count * 3];
+
+            for i in 0..pixel_count {
+              pixels[i * 3] = data[i];
+              pixels[i * 3 + 1] = data[pixel_count + i];
+              pixels[i * 3 + 2] = data[pixel_count * 2 + i];
+            }
+
+            Ok(ColorImage::Uint8(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Separate, BitsAllocated::Sixteen) => {
+            let mut pixels = vec![0u16; pixel_count * 3];
+
+            for i in 0..pixel_count {
+              pixels[i * 3] =
+                u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
+
+              pixels[i * 3 + 1] = u16::from_le_bytes([
+                data[(pixel_count + i) * 2],
+                data[(pixel_count + i) * 2 + 1],
+              ]);
+
+              pixels[i * 3 + 2] = u16::from_le_bytes([
+                data[(pixel_count * 2 + i) * 2],
+                data[(pixel_count * 2 + i) * 2 + 1],
+              ]);
+            }
+
+            Ok(ColorImage::Uint16(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Separate, BitsAllocated::ThirtyTwo) => {
+            let mut pixels = vec![0u32; pixel_count * 3];
+
+            for i in 0..pixel_count {
+              pixels[i * 3] = u32::from_le_bytes([
+                data[i * 4],
+                data[i * 4 + 1],
+                data[i * 4 + 2],
+                data[i * 4 + 3],
+              ]);
+
+              pixels[i * 3 + 1] = u32::from_le_bytes([
+                data[(pixel_count + i) * 4],
+                data[(pixel_count + i) * 4 + 1],
+                data[(pixel_count + i) * 4 + 2],
+                data[(pixel_count + i) * 4 + 3],
+              ]);
+
+              pixels[i * 3 + 2] = u32::from_le_bytes([
+                data[(pixel_count * 2 + i) * 4],
+                data[(pixel_count * 2 + i) * 4 + 1],
+                data[(pixel_count * 2 + i) * 4 + 2],
+                data[(pixel_count * 2 + i) * 4 + 3],
+              ]);
+            }
+
+            Ok(ColorImage::Uint32(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+        }
+      }
+
+      PhotometricInterpretation::YbrFull422 => {
+        if definition.columns % 2 == 1 {
+          return Err(DataError::new_value_invalid(
+            "YBR_FULL_222 pixel data width is odd".to_string(),
+          ));
+        }
+
+        match (planar_configuration, definition.bits_allocated) {
+          (_, BitsAllocated::One) => Err(DataError::new_value_invalid(
+            "Bits allocated value '1' is not supported for color data"
+              .to_string(),
+          )),
+
+          (PlanarConfiguration::Interleaved, BitsAllocated::Eight) => {
+            let mut pixels = vec![0u8; pixel_count * 3];
+
+            for i in 0..(pixel_count / 2) {
+              let y0 = data[i * 4];
+              let y1 = data[i * 4 + 1];
+              let b = data[i * 4 + 2];
+              let r = data[i * 4 + 3];
+
+              pixels[i * 6] = y0;
+              pixels[i * 6 + 1] = b;
+              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 3] = y1;
+              pixels[i * 6 + 4] = b;
+              pixels[i * 6 + 5] = r;
+            }
+
+            Ok(ColorImage::Uint8(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
+            let mut pixels = vec![0u16; pixel_count * 3];
+
+            for i in 0..(pixel_count / 2) {
+              let y0 = u16::from_le_bytes([data[i * 8], data[i * 8 + 1]]);
+              let y1 = u16::from_le_bytes([data[i * 8 + 2], data[i * 8 + 3]]);
+              let b = u16::from_le_bytes([data[i * 8 + 4], data[i * 8 + 5]]);
+              let r = u16::from_le_bytes([data[i * 8 + 6], data[i * 8 + 7]]);
+
+              pixels[i * 6] = y0;
+              pixels[i * 6 + 1] = b;
+              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 3] = y1;
+              pixels[i * 6 + 4] = b;
+              pixels[i * 6 + 5] = r;
+            }
+
+            Ok(ColorImage::Uint16(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
+            let mut pixels = vec![0u32; pixel_count * 3];
+
+            for i in 0..(pixel_count / 2) {
+              let y0 = u32::from_le_bytes([
+                data[i * 16],
+                data[i * 16 + 1],
+                data[i * 16 + 2],
+                data[i * 16 + 3],
+              ]);
+              let y1 = u32::from_le_bytes([
+                data[i * 16 + 4],
+                data[i * 16 + 5],
+                data[i * 16 + 6],
+                data[i * 16 + 7],
+              ]);
+              let b = u32::from_le_bytes([
+                data[i * 16 + 8],
+                data[i * 16 + 9],
+                data[i * 16 + 10],
+                data[i * 16 + 11],
+              ]);
+              let r = u32::from_le_bytes([
+                data[i * 16 + 12],
+                data[i * 16 + 13],
+                data[i * 16 + 14],
+                data[i * 16 + 15],
+              ]);
+
+              pixels[i * 6] = y0;
+              pixels[i * 6 + 1] = b;
+              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 3] = y1;
+              pixels[i * 6 + 4] = b;
+              pixels[i * 6 + 5] = r;
+            }
+
+            Ok(ColorImage::Uint32(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Separate, BitsAllocated::Eight) => {
+            let mut pixels = vec![0u8; pixel_count * 3];
+
+            for i in 0..(pixel_count / 2) {
+              let y0 = data[i * 2];
+              let y1 = data[i * 2 + 1];
+              let b = data[pixel_count + i];
+              let r = data[pixel_count + pixel_count / 2 + i];
+
+              pixels[i * 6] = y0;
+              pixels[i * 6 + 1] = b;
+              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 3] = y1;
+              pixels[i * 6 + 4] = b;
+              pixels[i * 6 + 5] = r;
+            }
+
+            Ok(ColorImage::Uint8(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Separate, BitsAllocated::Sixteen) => {
+            let mut pixels = vec![0u16; pixel_count * 3];
+
+            for i in 0..(pixel_count / 2) {
+              let y0 = u16::from_le_bytes([data[i * 4], data[i * 4 + 1]]);
+              let y1 = u16::from_le_bytes([data[i * 4 + 2], data[i * 4 + 3]]);
+              let b = u16::from_le_bytes([
+                data[(pixel_count + i) * 2],
+                data[(pixel_count + i) * 2 + 1],
+              ]);
+              let r = u16::from_le_bytes([
+                data[(pixel_count + pixel_count / 2 + i) * 2],
+                data[(pixel_count + pixel_count / 2 + i) * 2 + 1],
+              ]);
+
+              pixels[i * 6] = y0;
+              pixels[i * 6 + 1] = b;
+              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 3] = y1;
+              pixels[i * 6 + 4] = b;
+              pixels[i * 6 + 5] = r;
+            }
+
+            Ok(ColorImage::Uint16(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+
+          (PlanarConfiguration::Separate, BitsAllocated::ThirtyTwo) => {
+            let mut pixels = vec![0u32; pixel_count * 3];
+
+            for i in 0..(pixel_count / 2) {
+              let y0 = u32::from_le_bytes([
+                data[i * 8],
+                data[i * 8 + 1],
+                data[i * 8 + 2],
+                data[i * 8 + 3],
+              ]);
+              let y1 = u32::from_le_bytes([
+                data[i * 8 + 4],
+                data[i * 8 + 5],
+                data[i * 8 + 6],
+                data[i * 8 + 7],
+              ]);
+              let b = u32::from_le_bytes([
+                data[(pixel_count + i) * 4],
+                data[(pixel_count + i) * 4 + 1],
+                data[(pixel_count + i) * 4 + 2],
+                data[(pixel_count + i) * 4 + 3],
+              ]);
+              let r = u32::from_le_bytes([
+                data[(pixel_count + pixel_count / 2 + i) * 4],
+                data[(pixel_count + pixel_count / 2 + i) * 4 + 1],
+                data[(pixel_count + pixel_count / 2 + i) * 4 + 2],
+                data[(pixel_count + pixel_count / 2 + i) * 4 + 3],
+              ]);
+
+              pixels[i * 6] = y0;
+              pixels[i * 6 + 1] = b;
+              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 3] = y1;
+              pixels[i * 6 + 4] = b;
+              pixels[i * 6 + 5] = r;
+            }
+
+            Ok(ColorImage::Uint32(
+              ImageBuffer::from_raw(width, height, pixels).unwrap(),
+            ))
+          }
+        }
+      }
+
+      _ => Err(DataError::new_value_invalid(format!(
+        "Photometric interpretation '{}' is invalid for color pixel data \
+           when samples per pixel is three",
+        definition.photometric_interpretation
+      ))),
+    },
+  }
+}
+
+/// Validates the length of the supplied pixel data.
+///
+fn validate_data_length(
+  definition: &PixelDataDefinition,
+  data: &[u8],
+) -> Result<(), DataError> {
+  let expected_size_in_bits =
+    definition.pixel_count() * definition.pixel_size_in_bits();
+
+  // Validate that the provided data is of the expected size
+  if data.len() * 8 < expected_size_in_bits {
+    return Err(DataError::new_value_invalid(format!(
+      "Pixel data has incorrect length, expected {} bits but found {} bits",
+      expected_size_in_bits,
+      data.len() * 8,
+    )));
+  }
+
+  Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+  use image::{Luma, Rgb};
+
+  use super::*;
+  use crate::PixelRepresentation;
+
+  #[test]
+  fn decode_monochrome_16bit_unsigned() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::One,
+      photometric_interpretation: PhotometricInterpretation::Monochrome2,
+      rows: 2,
+      columns: 2,
+      bits_allocated: BitsAllocated::Eight,
+      bits_stored: 8,
+      high_bit: 7,
+      pixel_representation: PixelRepresentation::Unsigned,
+    };
+
+    let data = [0, 1, 2, 3];
+
+    assert_eq!(
+      decode_single_channel(&definition, &data).unwrap(),
+      SingleChannelImage::Uint8(
+        ImageBuffer::<Luma<u8>, Vec<u8>>::from_raw(2, 2, vec![0, 1, 2, 3])
+          .unwrap()
+      )
+    );
+  }
+
+  #[test]
+  fn decode_rgb_8bit_interleaved() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::Three {
+        planar_configuration: PlanarConfiguration::Interleaved,
+      },
+      photometric_interpretation: PhotometricInterpretation::Rgb,
+      rows: 2,
+      columns: 2,
+      bits_allocated: BitsAllocated::Eight,
+      bits_stored: 8,
+      high_bit: 7,
+      pixel_representation: PixelRepresentation::Unsigned,
+    };
+
+    let data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+    assert_eq!(
+      decode_color(&definition, &data).unwrap(),
+      ColorImage::Uint8(
+        ImageBuffer::<Rgb<u8>, Vec<u8>>::from_raw(
+          2,
+          2,
+          vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        )
+        .unwrap()
+      )
+    );
+  }
+
+  #[test]
+  fn decode_rgb_16bit_separate() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::Three {
+        planar_configuration: PlanarConfiguration::Separate,
+      },
+      photometric_interpretation: PhotometricInterpretation::Rgb,
+      rows: 2,
+      columns: 2,
+      bits_allocated: BitsAllocated::Sixteen,
+      bits_stored: 16,
+      high_bit: 15,
+      pixel_representation: PixelRepresentation::Unsigned,
+    };
+
+    let data = vec![
+      0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0, 11, 0,
+    ];
+
+    assert_eq!(
+      decode_color(&definition, &data).unwrap(),
+      ColorImage::Uint16(
+        ImageBuffer::<Rgb<u16>, Vec<u16>>::from_raw(
+          2,
+          2,
+          vec![0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11,]
+        )
+        .unwrap()
+      )
+    );
+  }
+
+  #[test]
+  fn decode_ybr_full_8bit() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::Three {
+        planar_configuration: PlanarConfiguration::Interleaved,
+      },
+      photometric_interpretation: PhotometricInterpretation::YbrFull,
+      rows: 2,
+      columns: 2,
+      bits_allocated: BitsAllocated::Eight,
+      bits_stored: 8,
+      high_bit: 7,
+      pixel_representation: PixelRepresentation::Unsigned,
+    };
+
+    let data = [142, 122, 111, 148, 118, 122, 101, 123, 127, 116, 133, 142];
+
+    assert_eq!(
+      decode_color(&definition, &data).unwrap(),
+      ColorImage::Uint8(
+        ImageBuffer::<Rgb<u8>, Vec<u8>>::from_raw(
+          2,
+          2,
+          vec![142, 122, 111, 148, 118, 122, 101, 123, 127, 116, 133, 142]
+        )
+        .unwrap()
+      )
+    );
+  }
+
+  #[test]
+  fn decode_ybr_full_422_8bit() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::Three {
+        planar_configuration: PlanarConfiguration::Interleaved,
+      },
+      photometric_interpretation: PhotometricInterpretation::YbrFull422,
+      rows: 2,
+      columns: 2,
+      bits_allocated: BitsAllocated::Eight,
+      bits_stored: 8,
+      high_bit: 7,
+      pixel_representation: PixelRepresentation::Unsigned,
+    };
+
+    let data = [142, 122, 111, 148, 118, 122, 101, 123];
+
+    assert_eq!(
+      decode_color(&definition, &data).unwrap(),
+      ColorImage::Uint8(
+        ImageBuffer::<Rgb<u8>, Vec<u8>>::from_raw(
+          2,
+          2,
+          vec![142, 111, 148, 122, 111, 148, 118, 101, 123, 122, 101, 123]
+        )
+        .unwrap()
+      )
+    );
+  }
+}

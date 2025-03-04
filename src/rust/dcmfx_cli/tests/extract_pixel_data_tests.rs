@@ -50,6 +50,46 @@ fn dicom_ybr_to_png() {
 }
 
 #[test]
+fn dicom_rle_to_jpg() {
+  let dicom_file = "../../../test/assets/pydicom/test_files/MR_small_RLE.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("extract-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("jpg")
+    .arg("--voi-window")
+    .arg("1136")
+    .arg("2018")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{output_file}\" …\n"));
+
+  assert_image_snapshot!(output_file, "dicom_rle_to_jpg.jpg");
+}
+
+#[test]
+fn dicom_rle_color_to_png() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/SC_rgb_rle_32bit.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("extract-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{output_file}\" …\n"));
+
+  assert_image_snapshot!(output_file, "dicom_rle_color_to_png.png");
+}
+
+#[test]
 fn dicom_to_jpg_with_custom_window() {
   let dicom_file = "../../../test/assets/fo-dicom/GH177_D_CLUNIE_CT1_IVRLE_BigEndian_ELE_undefinded_length.dcm";
   let output_file = format!("{}.0000.jpg", dicom_file);
@@ -71,6 +111,25 @@ fn dicom_to_jpg_with_custom_window() {
 }
 
 #[test]
+fn dicom_without_voi_to_png() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/rtdose_expb_1frame.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("extract-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{output_file}\" …\n"));
+
+  assert_image_snapshot!(output_file, "dicom_without_voi_to_png.png");
+}
+
+#[test]
 fn dicom_jpg_to_png() {
   let dicom_file = "../../../test/assets/fo-dicom/GH538-jpeg1.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
@@ -86,6 +145,24 @@ fn dicom_jpg_to_png() {
     .stdout(format!("Writing \"{output_file}\" …\n"));
 
   assert_image_snapshot!(output_file, "dicom_jpg_to_png.png");
+}
+
+#[test]
+fn dicom_palette_color_to_png() {
+  let dicom_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("extract-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{output_file}\" …\n"));
+
+  assert_image_snapshot!(output_file, "dicom_palette_color_to_png.png");
 }
 
 fn image_matches_snapshot<P: AsRef<std::path::Path>>(

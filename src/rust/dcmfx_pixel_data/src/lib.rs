@@ -1,12 +1,15 @@
 //! Access pixel data in a DICOM data set.
 
+mod color_image;
+pub mod decode;
 mod luts;
 mod pixel_data_definition;
 mod pixel_data_filter;
 mod pixel_data_frame;
-mod pixel_data_native;
 mod pixel_data_reader;
+mod single_channel_image;
 
+pub use color_image::ColorImage;
 pub use luts::{
   ColorPalette, LookupTable, ModalityLut, StandardColorPalette, VoiLut,
   VoiLutFunction, VoiWindow,
@@ -17,15 +20,11 @@ pub use pixel_data_definition::{
 };
 pub use pixel_data_filter::{PixelDataFilter, PixelDataFilterError};
 pub use pixel_data_frame::PixelDataFrame;
-pub use pixel_data_native::{iter_pixels_color, iter_pixels_grayscale};
 pub use pixel_data_reader::PixelDataReader;
+pub use single_channel_image::SingleChannelImage;
 
 use dcmfx_core::{DataSet, TransferSyntax, dictionary, transfer_syntax};
 use dcmfx_p10::DataSetP10Extensions;
-
-/// An RGB color where each component is in the range 0-1.
-///
-pub type RgbColor = (f64, f64, f64);
 
 /// Adds functions to [`DataSet`] for accessing its pixel data.
 ///

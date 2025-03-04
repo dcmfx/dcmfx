@@ -8,7 +8,7 @@ Most files were sourced from the test suites used by other DICOM
 implementations, specifically `pydicom` and `fo-dicom`. A small number came from
 other publicly available sources.
 
-Known-correct JSON is generated with `pydicom` using the `dicom_to_json.py`
+Known-correct JSON is generated with `pydicom` using the `dicoms_to_json.py`
 script. Note that in some cases issues in `pydicom` cause its JSON output to be
 different to DCMfx, and this is corrected for by this script.
 

@@ -14,8 +14,8 @@ keywords.workspace = true
 [dependencies]
 clap = { version = "4.5.27", features = ["derive", "wrap_help"] }
 dcmfx = { path = "../dcmfx", version = "0.0.0" }
-flate2 = { version = "1.0.35", features = ["zlib-ng"], default-features = false }
-image = "0.25.5"
+flate2 = { version = "1.0.35", default-features = false, features = ["zlib-ng"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 same-file = "1.0.6"
 
 [target.'cfg(not(windows))'.dependencies]

@@ -24,7 +24,7 @@ pub struct LookupTable {
   data: Vec<u16>,
 
   /// Scale factor that converts a lookup table value into the range 0-1.
-  normalization_scale: f64,
+  pub normalization_scale: f32,
 }
 
 impl LookupTable {
@@ -105,7 +105,7 @@ impl LookupTable {
     };
 
     // Scale factor that converts a lookup table value into the range 0-1
-    let normalization_scale = 1.0 / (((1 << bits_per_entry) - 1) as f64);
+    let normalization_scale = 1.0 / (((1 << bits_per_entry) - 1) as f32);
 
     Ok(Self {
       first_input_value,
@@ -189,11 +189,11 @@ impl LookupTable {
           offset += 1;
 
           // Evaluate the linear segment
-          let step = (y1 - y0) as f64 / length as f64;
+          let step = (y1 - y0) as f32 / length as f32;
           for i in 0..length {
-            let f = y0 as f64 + (i + 1) as f64 * step;
+            let f = y0 as f32 + (i + 1) as f32 * step;
 
-            lut.push(f.round().clamp(u16::MIN as f64, u16::MAX as f64) as u16);
+            lut.push(f.round().clamp(u16::MIN as f32, u16::MAX as f32) as u16);
           }
         }
 
@@ -232,8 +232,8 @@ impl LookupTable {
   /// Looks up a value in this lookup table and normalizes the result into the
   /// 0-1 range.
   ///
-  pub fn lookup_normalized(&self, stored_value: i64) -> f64 {
-    self.lookup(stored_value) as f64 * self.normalization_scale
+  pub fn lookup_normalized(&self, stored_value: i64) -> f32 {
+    self.lookup(stored_value) as f32 * self.normalization_scale
   }
 }
 

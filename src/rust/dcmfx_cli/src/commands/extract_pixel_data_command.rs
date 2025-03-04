@@ -54,13 +54,13 @@ pub struct ExtractPixelDataArgs {
     long,
     short,
     num_args=2..=2,
-    value_parser = clap::value_parser!(f64),
+    value_parser = clap::value_parser!(f32),
     value_names = ["WINDOW_CENTER", "WINDOW_WIDTH"],
     help = "When the input DICOM is grayscale and the output image format is \
       'jpg' or 'png', specifies the VOI window center and width to use instead \
       of the VOI LUT defined in the input DICOM."
   )]
-  voi_window: Option<Vec<f64>>,
+  voi_window: Option<Vec<f32>>,
 
   #[arg(
     long,
@@ -159,7 +159,7 @@ fn perform_extract_pixel_data(
   output_prefix: &str,
   format: OutputFormat,
   quality: u8,
-  voi_window_override: &Option<Vec<f64>>,
+  voi_window_override: &Option<Vec<f32>>,
   color_palette: Option<&ColorPalette>,
 ) -> Result<(), ExtractPixelDataError> {
   // Open input stream
@@ -268,7 +268,7 @@ fn write_frame(
   format: OutputFormat,
   quality: u8,
   pixel_data_reader: &mut Option<PixelDataReader>,
-  voi_window_override: &Option<Vec<f64>>,
+  voi_window_override: &Option<Vec<f32>>,
   color_palette: Option<&ColorPalette>,
 ) -> Result<(), ExtractPixelDataError> {
   println!("Writing \"{filename}\" …");

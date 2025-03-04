@@ -60,6 +60,13 @@ impl VoiLut {
     Ok(Self { luts, windows })
   }
 
+  /// Returns if this VOI LUT specifies either a grayscale LUT or a VOI window.
+  /// Empty VOI LUTs return values unchanged from [`Self::apply()`].
+  ///
+  pub fn is_empty(&self) -> bool {
+    self.luts.is_empty() && self.windows.is_empty()
+  }
+
   /// Returns the grayscale LUTs specified in this VOI LUT, if any.
   ///
   pub fn luts(&self) -> &[LookupTable] {
@@ -77,7 +84,7 @@ impl VoiLut {
   /// specified then the first one is used. If there are no grayscale LUTs and
   /// no windows then the input value is returned unaltered.
   ///
-  pub fn apply(&self, x: f64) -> f64 {
+  pub fn apply(&self, x: f32) -> f32 {
     if let Some(lut) = self.luts.first() {
       lut.lookup_normalized(x as i64)
     } else if let Some(window) = self.windows.first() {

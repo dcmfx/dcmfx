@@ -6,9 +6,8 @@ use dcmfx_core::{
 };
 
 use crate::{
-  ColorPalette, ModalityLut, PhotometricInterpretation, PixelDataDefinition,
-  PixelDataFrame, VoiLut,
-  pixel_data_native::{iter_pixels_color, iter_pixels_grayscale},
+  ColorPalette, ModalityLut, PixelDataDefinition, PixelDataFrame, VoiLut,
+  decode,
 };
 
 /// Defines a pixel data reader that can take a [`PixelDataFrame`] and decode it
@@ -85,7 +84,7 @@ impl PixelDataReader {
   ///
   /// A color palette can optionally be applied to grayscale images. The
   /// well-known color palettes defined in PS3.6 B.1 are provided in
-  /// [`crate::luts::standard_color_palettes`].
+  /// [`crate::luts::color_palettes`].
   ///
   pub fn decode_frame(
     &self,
@@ -93,46 +92,25 @@ impl PixelDataReader {
     color_palette: Option<&ColorPalette>,
   ) -> Result<RgbImage, DataError> {
     if self.definition.is_grayscale() {
-      if self.transfer_syntax.is_encapsulated {
-        return Err(DataError::new_value_unsupported(
-          "Reading encapsulated pixel data is not supported".to_string(),
-        ));
-      }
+      let image = self.decode_single_channel_frame(frame)?;
 
-      let width = self.definition.columns;
-      let height = self.definition.rows;
+      let mut pixels = Vec::with_capacity(
+        image.width() as usize * image.height() as usize * 3,
+      );
 
-      let mut pixels = Vec::with_capacity(width as usize * height as usize * 3);
-
-      let data = frame.combine_fragments();
-
-      let pixel_iterator =
-        iter_pixels_grayscale(self.definition.clone(), data)?;
-      let monochrome1_conversion_offset = self.monochrome1_conversion_offset();
-
-      for mut pixel in pixel_iterator {
-        // Invert Monochrome1 data if needed
-        if let Some(offset) = monochrome1_conversion_offset.as_ref() {
-          pixel = offset - pixel;
+      if let Some(color_palette) = color_palette {
+        for pixel in image.pixels() {
+          pixels.extend_from_slice(&color_palette.lookup(pixel.0[0]));
         }
-
-        // Apply LUTs
-        let x = self.modality_lut.apply(pixel);
-        let x = self.voi_lut.apply(x);
-
-        // Convert to u8
-        let x = (x * 255.0).clamp(0.0, 255.0) as u8;
-
-        if let Some(color_palette) = color_palette {
-          pixels.extend_from_slice(&color_palette.lookup(x));
-        } else {
-          pixels.push(x);
-          pixels.push(x);
-          pixels.push(x);
+      } else {
+        for pixel in image.pixels() {
+          pixels.push(pixel.0[0]);
+          pixels.push(pixel.0[0]);
+          pixels.push(pixel.0[0]);
         }
       }
 
-      Ok(RgbImage::from_raw(width as u32, height as u32, pixels).unwrap())
+      Ok(RgbImage::from_raw(image.width(), image.height(), pixels).unwrap())
     } else {
       self.decode_color_frame(frame)
     }
@@ -141,59 +119,48 @@ impl PixelDataReader {
   /// Decodes a frame of grayscale pixel data to a [`GrayImage`], applying the
   /// Modality LUT and VOI LUT.
   ///
-  pub fn decode_grayscale_frame(
+  pub fn decode_single_channel_frame(
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<GrayImage, DataError> {
-    if self.transfer_syntax.is_encapsulated {
-      return Err(DataError::new_value_unsupported(
-        "Reading encapsulated pixel data is not supported".to_string(),
-      ));
-    }
-
-    let width = self.definition.columns as u32;
-    let height = self.definition.rows as u32;
-
-    let mut pixels = Vec::with_capacity(width as usize * height as usize);
-
     let data = frame.combine_fragments();
-    let pixel_iterator = iter_pixels_grayscale(self.definition.clone(), data)?;
-    let monochrome1_conversion_offset = self.monochrome1_conversion_offset();
 
-    for mut pixel in pixel_iterator {
-      // Invert Monochrome1 data if needed
-      if let Some(offset) = monochrome1_conversion_offset.as_ref() {
-        pixel = offset - pixel;
+    let mut image = match self.transfer_syntax {
+      &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
+      | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
+      | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+      | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
+        decode::native::decode_single_channel(&self.definition, data)
       }
 
-      // Apply LUTs
-      let x = self.modality_lut.apply(pixel);
-      let x = self.voi_lut.apply(x);
-
-      // Convert to u8
-      let x = (x * 255.0).clamp(0.0, 255.0) as u8;
-
-      pixels.push(x);
-    }
-
-    Ok(GrayImage::from_raw(width, height, pixels).unwrap())
-  }
-
-  /// For Monochrome1 pixel data, returns the offset to add after negating the
-  /// stored pixel value in order to convert to Monochrome2.
-  ///
-  fn monochrome1_conversion_offset(&self) -> Option<i64> {
-    if self.definition.photometric_interpretation
-      == PhotometricInterpretation::Monochrome1
-    {
-      if self.definition.pixel_representation.is_signed() {
-        Some(-1)
-      } else {
-        Some((1i64 << self.definition.bits_stored) - 1)
+      &transfer_syntax::RLE_LOSSLESS => {
+        decode::rle_lossless::decode_single_channel(&self.definition, data)
       }
-    } else {
-      None
+
+      _ => Err(DataError::new_value_unsupported(format!(
+        "The transfer syntax '{}' is not supported for grayscale decode",
+        self.transfer_syntax.name,
+      ))),
+    }?;
+
+    image.invert_monochrome1_data(&self.definition);
+
+    let mut voi_lut = &self.voi_lut;
+
+    // If the VOI LUT is empty then fall back to using a VOI window that covers
+    // the entire range of values in the image
+    let mut fallback_voi_lut = VoiLut {
+      luts: vec![],
+      windows: vec![],
+    };
+    if voi_lut.is_empty() {
+      if let Some(voi_window) = image.fallback_voi_window() {
+        fallback_voi_lut.windows.push(voi_window);
+        voi_lut = &fallback_voi_lut;
+      }
     }
+
+    Ok(image.to_gray_image(&self.modality_lut, voi_lut))
   }
 
   /// Decodes a frame of color pixel data to an [`RgbImage`].
@@ -202,40 +169,41 @@ impl PixelDataReader {
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<RgbImage, DataError> {
-    let width = self.definition.columns;
-    let height = self.definition.rows;
-
     let data = frame.combine_fragments();
 
-    if self.transfer_syntax.is_encapsulated {
-      match self.transfer_syntax {
-        &transfer_syntax::JPEG_BASELINE_8BIT => {
-          let img =
-            image::load_from_memory_with_format(data, image::ImageFormat::Jpeg)
-              .map_err(|_| {
-                DataError::new_value_invalid(
-                  "Invalid JPG pixel data".to_string(),
-                )
-              })?;
-
-          Ok(img.to_rgb8())
-        }
-
-        _ => Err(DataError::new_value_unsupported(format!(
-          "Reading transfer syntax '{}' is not supported",
-          self.transfer_syntax.name
-        ))),
-      }
-    } else {
-      let mut pixels = Vec::with_capacity(width as usize * height as usize * 3);
-
-      for pixel in iter_pixels_color(self.definition.clone(), data)? {
-        pixels.push((pixel.0 * 255.0).clamp(0.0, 255.0) as u8);
-        pixels.push((pixel.1 * 255.0).clamp(0.0, 255.0) as u8);
-        pixels.push((pixel.2 * 255.0).clamp(0.0, 255.0) as u8);
+    let mut image = match self.transfer_syntax {
+      &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
+      | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
+      | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+      | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
+        decode::native::decode_color(&self.definition, data)
       }
 
-      Ok(RgbImage::from_raw(width as u32, height as u32, pixels).unwrap())
+      &transfer_syntax::RLE_LOSSLESS => {
+        decode::rle_lossless::decode_color(&self.definition, data)
+      }
+
+      &transfer_syntax::JPEG_BASELINE_8BIT => {
+        let img =
+          image::load_from_memory_with_format(data, image::ImageFormat::Jpeg)
+            .map_err(|_| {
+            DataError::new_value_invalid("Invalid JPG pixel data".to_string())
+          })?;
+
+        return Ok(img.to_rgb8());
+      }
+
+      _ => Err(DataError::new_value_unsupported(format!(
+        "Reading transfer syntax '{}' is not supported",
+        self.transfer_syntax.name
+      ))),
+    }?;
+
+    // Convert YBR to RGB
+    if self.definition.photometric_interpretation.is_ybr() {
+      image.convert_ybr_to_rgb(&self.definition);
     }
+
+    Ok(image.to_rgb_u8_image(&self.definition))
   }
 }

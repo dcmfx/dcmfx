@@ -16,8 +16,8 @@ pub enum ModalityLut {
   },
 
   Rescale {
-    rescale_intercept: f64,
-    rescale_slope: f64,
+    rescale_intercept: f32,
+    rescale_slope: f32,
     rescale_type: ModalityLutOutputType,
   },
 }
@@ -91,8 +91,9 @@ impl ModalityLut {
   ///
   fn from_rescale(data_set: &DataSet) -> Result<Self, DataError> {
     let rescale_intercept =
-      data_set.get_float(dictionary::RESCALE_INTERCEPT.tag)?;
-    let rescale_slope = data_set.get_float(dictionary::RESCALE_SLOPE.tag)?;
+      data_set.get_float(dictionary::RESCALE_INTERCEPT.tag)? as f32;
+    let rescale_slope =
+      data_set.get_float(dictionary::RESCALE_SLOPE.tag)? as f32;
 
     let rescale_type = if data_set.has(dictionary::RESCALE_TYPE.tag) {
       ModalityLutOutputType::from_string(
@@ -121,15 +122,15 @@ impl ModalityLut {
   /// Looks up a stored value in this Modality LUT and returns the result. The
   /// type of the resulting value is given by [`Self::output_type()`].
   ///
-  pub fn apply(&self, stored_value: i64) -> f64 {
+  pub fn apply(&self, stored_value: i64) -> f32 {
     match self {
-      Self::LookupTable { lut, .. } => lut.lookup(stored_value) as f64,
+      Self::LookupTable { lut, .. } => lut.lookup(stored_value) as f32,
 
       Self::Rescale {
         rescale_intercept,
         rescale_slope,
         ..
-      } => rescale_intercept + rescale_slope * (stored_value as f64),
+      } => rescale_intercept + rescale_slope * (stored_value as f32),
     }
   }
 }

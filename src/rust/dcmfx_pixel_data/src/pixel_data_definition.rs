@@ -63,6 +63,24 @@ impl PixelDataDefinition {
     let bits_stored = data_set.get_int::<u16>(dictionary::BITS_STORED.tag)?;
     let high_bit = data_set.get_int::<u16>(dictionary::HIGH_BIT.tag)?;
 
+    // Check that the number of bits stored does not exceed the number of bits
+    // allocated
+    if bits_stored == 0 || bits_stored as usize > usize::from(bits_allocated) {
+      return Err(DataError::new_value_invalid(format!(
+        "Bits stored '{}' is invalid for bits allocated '{}'",
+        bits_stored,
+        usize::from(bits_allocated),
+      )));
+    }
+
+    // Check that the high bit is one less than the bits stored
+    if high_bit as usize + 1 != bits_stored as usize {
+      return Err(DataError::new_value_invalid(format!(
+        "High bit '{}' is not one less than the bits stored '{}'",
+        high_bit, bits_stored
+      )));
+    }
+
     Ok(PixelDataDefinition {
       samples_per_pixel,
       photometric_interpretation,
@@ -315,6 +333,21 @@ impl PhotometricInterpretation {
       PhotometricInterpretation::YbrFull { .. }
       | PhotometricInterpretation::YbrFull422 { .. } => true,
     }
+  }
+}
+
+impl std::fmt::Display for PhotometricInterpretation {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    let s = match self {
+      PhotometricInterpretation::Monochrome1 => "Monochrome1",
+      PhotometricInterpretation::Monochrome2 => "Monochrome2",
+      PhotometricInterpretation::PaletteColor { .. } => "PaletteColor",
+      PhotometricInterpretation::Rgb => "Rgb",
+      PhotometricInterpretation::YbrFull => "YbrFull",
+      PhotometricInterpretation::YbrFull422 => "YbrFull422",
+    };
+
+    write!(f, "{}", s)
   }
 }
 
