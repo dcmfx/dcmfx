@@ -206,6 +206,47 @@ fn dicom_jpeg_2000_color_to_png() {
   assert_image_snapshot!(output_file, "dicom_jpeg_2000_color_to_png.png");
 }
 
+#[test]
+fn dicom_jpeg_ls_single_channel_to_png() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("extract-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{output_file}\" …\n"));
+
+  assert_image_snapshot!(
+    output_file,
+    "dicom_jpeg_ls_single_channel_to_png.png"
+  );
+}
+
+#[test]
+fn dicom_jpeg_ls_color_to_png() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/SC_rgb_jls_lossy_sample.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("extract-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{output_file}\" …\n"));
+
+  assert_image_snapshot!(output_file, "dicom_jpeg_ls_color_to_png.png");
+}
+
 fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   path1: P,
   snapshot: &str,

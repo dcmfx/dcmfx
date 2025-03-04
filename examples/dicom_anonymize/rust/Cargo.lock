@@ -81,6 +81,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "charls"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5cfce68c5a4d3a0cb6e10161ea837fac38b71d577bec73a5ca170ced7f11bec9"
+dependencies = [
+ "charls-sys",
+]
+
+[[package]]
+name = "charls-sys"
+version = "2.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63d9445022ff0c7b9016e7035bb5291bdbf6eacc993b25d1378844c0f0a7c82f"
+dependencies = [
+ "cmake",
+]
+
+[[package]]
+name = "cmake"
+version = "0.1.54"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7caa3f9de89ddbe2c607f4101924c5abec803763ae9534e4f4d7d8f84aa81f0"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "crc32fast"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -154,6 +181,7 @@ name = "dcmfx_pixel_data"
 version = "0.0.0"
 dependencies = [
  "byteorder",
+ "charls",
  "dcmfx_core",
  "dcmfx_p10",
  "image",

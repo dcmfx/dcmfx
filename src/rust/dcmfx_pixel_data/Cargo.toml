@@ -12,6 +12,7 @@ keywords.workspace = true
 
 [dependencies]
 byteorder = "1.5.0"
+charls = { version = "0.4.0", features = ["static"] }
 dcmfx_core = { path = "../dcmfx_core", version = "0.0.0" }
 dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0" }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }

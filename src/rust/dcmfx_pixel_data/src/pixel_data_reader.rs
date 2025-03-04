@@ -140,12 +140,20 @@ impl PixelDataReader {
         decode::rle_lossless::decode_single_channel(&self.definition, data)
       }
 
+      &JPEG_BASELINE_8BIT => {
+        decode::jpeg::decode_single_channel(&self.definition, data)
+      }
+
       &JPEG_2K
       | &JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K
       | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
         decode::openjpeg::decode_single_channel(&self.definition, data)
+      }
+
+      &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
+        decode::charls::decode_single_channel(&self.definition, data)
       }
 
       _ => Err(DataError::new_value_unsupported(format!(
@@ -221,6 +229,10 @@ impl PixelDataReader {
       | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
         decode::openjpeg::decode_color(&self.definition, data)
+      }
+
+      &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
+        decode::charls::decode_color(&self.definition, data)
       }
 
       _ => Err(DataError::new_value_unsupported(format!(
