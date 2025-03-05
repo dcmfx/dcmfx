@@ -466,7 +466,7 @@ dependencies = [
  "dcmfx_core",
  "dcmfx_p10",
  "image",
- "jpeg-decoder",
+ "jpeg-decoder 0.3.1 (git+https://github.com/richard-viney/jpeg-decoder.git?branch=fix-panic-in-invalid-prediction-shift)",
  "jpeg2k",
 ]
 
@@ -728,6 +728,11 @@ name = "jpeg-decoder"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5d4a7da358eff58addd2877a45865158f0d78c911d43a5784ceb7bbf52833b0"
+
+[[package]]
+name = "jpeg-decoder"
+version = "0.3.1"
+source = "git+https://github.com/richard-viney/jpeg-decoder.git?branch=fix-panic-in-invalid-prediction-shift#9c138ff62ce14d1a1417a31e932858b2a5db2c72"
 dependencies = [
  "rayon",
 ]
@@ -1437,7 +1442,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba1310fcea54c6a9a4fd1aad794ecc02c31682f6bfbecdf460bf19533eed1e3e"
 dependencies = [
  "flate2",
- "jpeg-decoder",
+ "jpeg-decoder 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "weezl",
 ]
 
