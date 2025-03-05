@@ -139,6 +139,10 @@ impl PixelDataFrame {
   /// contains all the pixel data for this frame.
   ///
   pub fn combine_fragments(&mut self) -> &[u8] {
+    if self.fragments.is_empty() {
+      self.fragments = vec![(Rc::new(vec![]), 0..0)];
+    }
+
     if self.fragments.len() > 1 {
       let buffer = self.to_bytes();
       let buffer_len = buffer.len();
