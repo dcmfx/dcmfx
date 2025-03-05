@@ -47,7 +47,7 @@ pub opaque type DataError {
   )
 
   /// When creating, reading, or parsing a value, the value itself is valid but
-  /// is supported by this library.
+  /// is not supported by this library.
   ValueUnsupported(details: String, path: Option(DataSetPath))
 }
 

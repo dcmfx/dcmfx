@@ -40,7 +40,7 @@ use crate::{DataSetPath, DcmfxError, ValueRepresentation, dictionary};
 /// 6. **Value unsupported**.
 ///
 ///    When creating, reading, or parsing a value, the value itself is valid but
-///    is supported by this library.
+///    is not supported by this library.
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct DataError(RawDataError);
