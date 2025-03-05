@@ -153,7 +153,7 @@ impl PixelDataReader {
       | &HIGH_THROUGHPUT_JPEG_2K
       | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
-        decode::openjpeg::decode_single_channel(&self.definition, data)
+        decode::jpeg2k::decode_single_channel(&self.definition, data)
       }
 
       &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
@@ -161,7 +161,7 @@ impl PixelDataReader {
       }
 
       _ => Err(DataError::new_value_unsupported(format!(
-        "The transfer syntax '{}' is not supported for grayscale decode",
+        "Transfer syntax '{}' is not supported",
         self.transfer_syntax.name,
       ))),
     }?;
@@ -235,7 +235,7 @@ impl PixelDataReader {
       | &HIGH_THROUGHPUT_JPEG_2K
       | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
-        decode::openjpeg::decode_color(&self.definition, data)
+        decode::jpeg2k::decode_color(&self.definition, data)
       }
 
       &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
@@ -243,7 +243,7 @@ impl PixelDataReader {
       }
 
       _ => Err(DataError::new_value_unsupported(format!(
-        "Reading transfer syntax '{}' is not supported",
+        "Transfer syntax '{}' is not supported",
         self.transfer_syntax.name
       ))),
     }?;

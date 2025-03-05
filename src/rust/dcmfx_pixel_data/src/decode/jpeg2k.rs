@@ -4,7 +4,7 @@ use jpeg2k::*;
 use crate::{ColorImage, PixelDataDefinition, SingleChannelImage};
 use dcmfx_core::DataError;
 
-/// Decodes single channel pixel data using OpenJPEG.
+/// Decodes single channel pixel data using jpeg2k.
 ///
 pub fn decode_single_channel(
   definition: &PixelDataDefinition,
@@ -27,7 +27,7 @@ pub fn decode_single_channel(
   }
 }
 
-/// Decodes color pixel data using OpenJPEG.
+/// Decodes color pixel data using jpeg2k.
 ///
 pub fn decode_color(
   definition: &PixelDataDefinition,
