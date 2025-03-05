@@ -84,6 +84,35 @@ jobs:
         working-directory: src/rust
         run: cargo test --frozen
 
+  test_dcmfx_rust_wasm_build:
+    name: Test DCMfx Rust WASM build
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.85
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+
+      - name: Enable Rust dependency caching
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/rust
+
+      - name: Fetch dependencies
+        working-directory: src/rust
+        run: cargo fetch --locked
+
+      - name: Build for WASM target
+        working-directory: src/rust
+        run: cargo build --target wasm32-unknown-unknown --frozen --package dcmfx
+
   test_examples:
     name: Test examples
     timeout-minutes: 10
