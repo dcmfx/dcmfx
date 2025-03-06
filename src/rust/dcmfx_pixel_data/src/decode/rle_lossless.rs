@@ -6,6 +6,7 @@ use dcmfx_core::DataError;
 use crate::{
   BitsAllocated, PixelDataDefinition, PixelRepresentation, SingleChannelImage,
   color_image::ColorImage,
+  decode::ybr_to_rgb,
   pixel_data_definition::{PhotometricInterpretation, SamplesPerPixel},
 };
 
@@ -182,6 +183,10 @@ pub fn decode_color(
             pixels[i * 3 + 2] = blue_segment[i];
           }
 
+          if definition.photometric_interpretation.is_ybr() {
+            ybr_to_rgb::convert_u8(&mut pixels, definition);
+          }
+
           Ok(ColorImage::Uint8(
             ImageBuffer::from_raw(width, height, pixels).unwrap(),
           ))
@@ -207,6 +212,10 @@ pub fn decode_color(
               u16::from_le_bytes([green_segment_1[i], green_segment_0[i]]);
             pixels[i * 3 + 2] =
               u16::from_le_bytes([blue_segment_1[i], blue_segment_0[i]]);
+          }
+
+          if definition.photometric_interpretation.is_ybr() {
+            ybr_to_rgb::convert_u16(&mut pixels, definition);
           }
 
           Ok(ColorImage::Uint16(
@@ -254,6 +263,10 @@ pub fn decode_color(
             ]);
           }
 
+          if definition.photometric_interpretation.is_ybr() {
+            ybr_to_rgb::convert_u32(&mut pixels, definition);
+          }
+
           Ok(ColorImage::Uint32(
             ImageBuffer::from_raw(width, height, pixels).unwrap(),
           ))
@@ -261,10 +274,10 @@ pub fn decode_color(
 
         _ => Err(DataError::new_value_invalid(format!(
           "Photometric interpretation '{}' is invalid for RLE Lossless color \
-             pixel data when samples per pixel is one and bits allocated is \
-             '{}'",
+           pixel data when bits allocated is {} and there are {} segments",
           definition.photometric_interpretation,
-          usize::from(definition.bits_allocated)
+          usize::from(definition.bits_allocated),
+          segments.len(),
         ))),
       }
     }

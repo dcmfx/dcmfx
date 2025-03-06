@@ -5,6 +5,7 @@ use dcmfx_core::DataError;
 use crate::{
   PixelDataDefinition, PixelRepresentation, SingleChannelImage,
   color_image::ColorImage,
+  decode::ybr_to_rgb,
   pixel_data_definition::{
     BitsAllocated, PhotometricInterpretation, PlanarConfiguration,
     SamplesPerPixel,
@@ -233,7 +234,11 @@ pub fn decode_color(
           )),
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Eight) => {
-            let pixels = data[..(pixel_count * 3)].to_vec();
+            let mut pixels = data[..(pixel_count * 3)].to_vec();
+
+            if definition.photometric_interpretation.is_ybr() {
+              ybr_to_rgb::convert_u8(&mut pixels, definition);
+            }
 
             Ok(ColorImage::Uint8(
               ImageBuffer::from_raw(width, height, pixels).unwrap(),
@@ -245,6 +250,10 @@ pub fn decode_color(
 
             for i in 0..(pixel_count * 3) {
               pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2] + 1]);
+            }
+
+            if definition.photometric_interpretation.is_ybr() {
+              ybr_to_rgb::convert_u16(&mut pixels, definition);
             }
 
             Ok(ColorImage::Uint16(
@@ -264,6 +273,10 @@ pub fn decode_color(
               ]);
             }
 
+            if definition.photometric_interpretation.is_ybr() {
+              ybr_to_rgb::convert_u32(&mut pixels, definition);
+            }
+
             Ok(ColorImage::Uint32(
               ImageBuffer::from_raw(width, height, pixels).unwrap(),
             ))
@@ -276,6 +289,10 @@ pub fn decode_color(
               pixels[i * 3] = data[i];
               pixels[i * 3 + 1] = data[pixel_count + i];
               pixels[i * 3 + 2] = data[pixel_count * 2 + i];
+            }
+
+            if definition.photometric_interpretation.is_ybr() {
+              ybr_to_rgb::convert_u8(&mut pixels, definition);
             }
 
             Ok(ColorImage::Uint8(
@@ -299,6 +316,10 @@ pub fn decode_color(
                 data[(pixel_count * 2 + i) * 2],
                 data[(pixel_count * 2 + i) * 2 + 1],
               ]);
+            }
+
+            if definition.photometric_interpretation.is_ybr() {
+              ybr_to_rgb::convert_u16(&mut pixels, definition);
             }
 
             Ok(ColorImage::Uint16(
@@ -330,6 +351,10 @@ pub fn decode_color(
                 data[(pixel_count * 2 + i) * 4 + 2],
                 data[(pixel_count * 2 + i) * 4 + 3],
               ]);
+            }
+
+            if definition.photometric_interpretation.is_ybr() {
+              ybr_to_rgb::convert_u32(&mut pixels, definition);
             }
 
             Ok(ColorImage::Uint32(
@@ -369,6 +394,8 @@ pub fn decode_color(
               pixels[i * 6 + 5] = r;
             }
 
+            ybr_to_rgb::convert_u8(&mut pixels, definition);
+
             Ok(ColorImage::Uint8(
               ImageBuffer::from_raw(width, height, pixels).unwrap(),
             ))
@@ -390,6 +417,8 @@ pub fn decode_color(
               pixels[i * 6 + 4] = b;
               pixels[i * 6 + 5] = r;
             }
+
+            ybr_to_rgb::convert_u16(&mut pixels, definition);
 
             Ok(ColorImage::Uint16(
               ImageBuffer::from_raw(width, height, pixels).unwrap(),
@@ -433,6 +462,8 @@ pub fn decode_color(
               pixels[i * 6 + 5] = r;
             }
 
+            ybr_to_rgb::convert_u32(&mut pixels, definition);
+
             Ok(ColorImage::Uint32(
               ImageBuffer::from_raw(width, height, pixels).unwrap(),
             ))
@@ -454,6 +485,8 @@ pub fn decode_color(
               pixels[i * 6 + 4] = b;
               pixels[i * 6 + 5] = r;
             }
+
+            ybr_to_rgb::convert_u8(&mut pixels, definition);
 
             Ok(ColorImage::Uint8(
               ImageBuffer::from_raw(width, height, pixels).unwrap(),
@@ -482,6 +515,8 @@ pub fn decode_color(
               pixels[i * 6 + 4] = b;
               pixels[i * 6 + 5] = r;
             }
+
+            ybr_to_rgb::convert_u16(&mut pixels, definition);
 
             Ok(ColorImage::Uint16(
               ImageBuffer::from_raw(width, height, pixels).unwrap(),
@@ -524,6 +559,8 @@ pub fn decode_color(
               pixels[i * 6 + 4] = b;
               pixels[i * 6 + 5] = r;
             }
+
+            ybr_to_rgb::convert_u32(&mut pixels, definition);
 
             Ok(ColorImage::Uint32(
               ImageBuffer::from_raw(width, height, pixels).unwrap(),
@@ -678,7 +715,7 @@ mod tests {
         ImageBuffer::<Rgb<u8>, Vec<u8>>::from_raw(
           2,
           2,
-          vec![142, 122, 111, 148, 118, 122, 101, 123, 127, 116, 133, 142]
+          vec![118, 155, 132, 140, 155, 131, 100, 102, 93, 136, 103, 125]
         )
         .unwrap()
       )
@@ -708,7 +745,7 @@ mod tests {
         ImageBuffer::<Rgb<u8>, Vec<u8>>::from_raw(
           2,
           2,
-          vec![142, 111, 148, 122, 111, 148, 118, 101, 123, 122, 101, 123]
+          vec![170, 133, 112, 150, 113, 92, 111, 130, 71, 115, 134, 75]
         )
         .unwrap()
       )

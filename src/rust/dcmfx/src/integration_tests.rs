@@ -461,34 +461,15 @@ mod tests {
       frames.into_iter().zip(expected_frames.into_iter())
     {
       let frame_index = frame.index();
-      let data = frame.combine_fragments();
 
       if pixel_data_reader.definition.is_grayscale() {
-        let image = match data_set
-          .get_transfer_syntax()
-          .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
-        {
-          &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
-          | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
-          | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-          | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
-            dcmfx_pixel_data::decode::native::decode_single_channel(
-              &pixel_data_reader.definition,
-              data,
-            )
-            .unwrap()
-          }
+        let mut image = pixel_data_reader
+          .read_single_channel_frame(&mut frame)
+          .map_err(|e| DicomValidationError::PixelDataFilterError {
+            error: PixelDataFilterError::DataError(e),
+          })?;
 
-          &transfer_syntax::RLE_LOSSLESS => {
-            dcmfx_pixel_data::decode::rle_lossless::decode_single_channel(
-              &pixel_data_reader.definition,
-              data,
-            )
-            .unwrap()
-          }
-
-          _ => return Ok(()),
-        };
+        image.invert_monochrome1_data(&pixel_data_reader.definition);
 
         let pixels = image.to_i64_pixels();
 
@@ -512,40 +493,12 @@ mod tests {
           }
         }
       } else {
-        let mut image = match data_set
-          .get_transfer_syntax()
-          .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
-        {
-          &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
-          | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
-          | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-          | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
-            dcmfx_pixel_data::decode::native::decode_color(
-              &pixel_data_reader.definition,
-              data,
-            )
-            .unwrap()
-          }
-
-          &transfer_syntax::RLE_LOSSLESS => {
-            dcmfx_pixel_data::decode::rle_lossless::decode_color(
-              &pixel_data_reader.definition,
-              data,
-            )
-            .unwrap()
-          }
-
-          _ => return Ok(()),
-        };
-
-        // Convert YBR to RGB
-        if pixel_data_reader
-          .definition
-          .photometric_interpretation
-          .is_ybr()
-        {
-          image.convert_ybr_to_rgb(&pixel_data_reader.definition);
-        }
+        let image =
+          pixel_data_reader
+            .read_color_frame(&mut frame)
+            .map_err(|e| DicomValidationError::PixelDataFilterError {
+              error: PixelDataFilterError::DataError(e),
+            })?;
 
         let expected_pixels =
           serde_json::from_value::<Vec<Vec<[f64; 3]>>>(expected_frame)

@@ -389,7 +389,7 @@ impl P10JsonTransform {
 
     // If this data element value is not an inline binary and has no data then
     // there's nothing to do
-    if data.len() == 0 && bytes_remaining == 0 {
+    if data.is_empty() && bytes_remaining == 0 {
       return Ok(());
     }
 

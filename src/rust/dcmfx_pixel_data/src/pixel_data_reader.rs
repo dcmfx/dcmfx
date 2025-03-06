@@ -1,4 +1,4 @@
-use image::{GrayImage, RgbImage};
+use image::RgbImage;
 
 use dcmfx_core::{
   DataElementTag, DataError, DataSet, TransferSyntax, dictionary,
@@ -6,8 +6,8 @@ use dcmfx_core::{
 };
 
 use crate::{
-  ColorPalette, ModalityLut, PixelDataDefinition, PixelDataFrame, VoiLut,
-  decode,
+  ColorImage, ColorPalette, ModalityLut, PixelDataDefinition, PixelDataFrame,
+  SingleChannelImage, VoiLut, decode,
 };
 
 /// Defines a pixel data reader that can take a [`PixelDataFrame`] and decode it
@@ -78,11 +78,11 @@ impl PixelDataReader {
     })
   }
 
-  /// Decodes a frame of pixel data to an RGB image, applying the Modality LUT
-  /// and VOI LUT to grayscale pixels. Grayscale images are automatically
-  /// expanded to RGB.
+  /// Decodes a frame of pixel data to an RGB 8-bit image. The Modality LUT and
+  /// VOI LUT are applied to single channel images, and resulting grayscale
+  /// values are then expanded to RGB.
   ///
-  /// A color palette can optionally be applied to grayscale images. The
+  /// Grayscale values can optionally be visualized using a color palette. The
   /// well-known color palettes defined in PS3.6 B.1 are provided in
   /// [`crate::luts::color_palettes`].
   ///
@@ -93,6 +93,23 @@ impl PixelDataReader {
   ) -> Result<RgbImage, DataError> {
     if self.definition.is_grayscale() {
       let image = self.read_single_channel_frame(frame)?;
+
+      let mut voi_lut = &self.voi_lut;
+
+      // If the VOI LUT is empty then fall back to using a VOI window that
+      // covers the entire range of values in the image
+      let mut fallback_voi_lut = VoiLut {
+        luts: vec![],
+        windows: vec![],
+      };
+      if voi_lut.is_empty() {
+        if let Some(voi_window) = image.fallback_voi_window() {
+          fallback_voi_lut.windows.push(voi_window);
+          voi_lut = &fallback_voi_lut;
+        }
+      }
+
+      let image = image.to_gray_image(&self.modality_lut, voi_lut);
 
       let mut pixels = Vec::with_capacity(
         image.width() as usize * image.height() as usize * 3,
@@ -112,17 +129,22 @@ impl PixelDataReader {
 
       Ok(RgbImage::from_raw(image.width(), image.height(), pixels).unwrap())
     } else {
-      self.read_color_frame(frame)
+      Ok(
+        self
+          .read_color_frame(frame)?
+          .to_rgb_u8_image(&self.definition),
+      )
     }
   }
 
-  /// Reads a frame of grayscale pixel data into a [`GrayImage`], applying the
-  /// Modality LUT and VOI LUT.
+  /// Reads a frame of single channel pixel data into a [`SingleChannelImage`].
+  /// The returned image needs to have the Modality LUT and VOI LUT applied in
+  /// order to reach final grayscale display values.
   ///
   pub fn read_single_channel_frame(
     &self,
     frame: &mut PixelDataFrame,
-  ) -> Result<GrayImage, DataError> {
+  ) -> Result<SingleChannelImage, DataError> {
     let data = frame.combine_fragments();
 
     use transfer_syntax::*;
@@ -170,60 +192,30 @@ impl PixelDataReader {
 
     image.invert_monochrome1_data(&self.definition);
 
-    let mut voi_lut = &self.voi_lut;
-
-    // If the VOI LUT is empty then fall back to using a VOI window that covers
-    // the entire range of values in the image
-    let mut fallback_voi_lut = VoiLut {
-      luts: vec![],
-      windows: vec![],
-    };
-    if voi_lut.is_empty() {
-      if let Some(voi_window) = image.fallback_voi_window() {
-        fallback_voi_lut.windows.push(voi_window);
-        voi_lut = &fallback_voi_lut;
-      }
-    }
-
-    Ok(image.to_gray_image(&self.modality_lut, voi_lut))
+    Ok(image)
   }
 
-  /// Reads a frame of color pixel data into an [`RgbImage`].
+  /// Reads a frame of color pixel data into a [`ColorImage`].
   ///
   pub fn read_color_frame(
     &self,
     frame: &mut PixelDataFrame,
-  ) -> Result<RgbImage, DataError> {
+  ) -> Result<ColorImage, DataError> {
     let data = frame.combine_fragments();
 
     use transfer_syntax::*;
 
-    let image = match self.transfer_syntax {
+    match self.transfer_syntax {
       &IMPLICIT_VR_LITTLE_ENDIAN
       | &EXPLICIT_VR_LITTLE_ENDIAN
       | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
       | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
       | &EXPLICIT_VR_BIG_ENDIAN => {
-        let mut img = decode::native::decode_color(&self.definition, data)?;
-
-        // Convert YBR to RGB if needed
-        if self.definition.photometric_interpretation.is_ybr() {
-          img.convert_ybr_to_rgb(&self.definition);
-        }
-
-        Ok(img)
+        decode::native::decode_color(&self.definition, data)
       }
 
       &RLE_LOSSLESS => {
-        let mut img =
-          decode::rle_lossless::decode_color(&self.definition, data)?;
-
-        // Convert YBR to RGB if needed
-        if self.definition.photometric_interpretation.is_ybr() {
-          img.convert_ybr_to_rgb(&self.definition);
-        }
-
-        Ok(img)
+        decode::rle_lossless::decode_color(&self.definition, data)
       }
 
       &JPEG_BASELINE_8BIT => decode::jpeg::decode_color(&self.definition, data),
@@ -250,8 +242,6 @@ impl PixelDataReader {
         "Transfer syntax '{}' is not supported",
         self.transfer_syntax.name
       ))),
-    }?;
-
-    Ok(image.to_rgb_u8_image(&self.definition))
+    }
   }
 }

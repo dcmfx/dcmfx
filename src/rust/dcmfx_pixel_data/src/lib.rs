@@ -1,7 +1,9 @@
 //! Access pixel data in a DICOM data set.
 
+use image::RgbImage;
+
 mod color_image;
-pub mod decode;
+mod decode;
 mod luts;
 mod pixel_data_definition;
 mod pixel_data_filter;
@@ -23,7 +25,9 @@ pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_reader::PixelDataReader;
 pub use single_channel_image::SingleChannelImage;
 
-use dcmfx_core::{DataSet, TransferSyntax, dictionary, transfer_syntax};
+use dcmfx_core::{
+  DataError, DataSet, TransferSyntax, dictionary, transfer_syntax,
+};
 use dcmfx_p10::DataSetP10Extensions;
 
 /// Adds functions to [`DataSet`] for accessing its pixel data.
@@ -32,7 +36,7 @@ pub trait DataSetPixelDataExtensions
 where
   Self: Sized,
 {
-  /// Returns the frames of pixel data present in a data set.
+  /// Returns the frames of pixel data in this data set in their raw form.
   ///
   /// The *'(7FE0,0010) Pixel Data'* data element must be present in the data
   /// set, and the *'(0028,0008) Number of Frames'*, *'(7FE0,0001) Extended
@@ -42,6 +46,42 @@ where
   fn get_pixel_data_frames(
     &self,
   ) -> Result<Vec<PixelDataFrame>, PixelDataFilterError>;
+
+  /// Returns the frames of pixel data in this data set as fully resolved RGB8
+  /// images. Output image data may have been subjected to a lossy conversion to
+  /// 8-bit depth.
+  ///
+  /// For grayscale frames, any Modality LUT and VOI LUT present in the data set
+  /// are applied to reach a final grayscale value, which is duplicated across
+  /// the RGB components.
+  ///
+  /// Grayscale values can optionally be visualized using a color palette. The
+  /// well-known color palettes defined in PS3.6 B.1 are provided in
+  /// [`crate::luts::color_palettes`].
+  ///
+  fn get_pixel_data_images(
+    &self,
+    color_palette: Option<&ColorPalette>,
+  ) -> Result<Vec<RgbImage>, PixelDataFilterError>;
+
+  /// Returns the frames of pixel data in this data set as
+  /// [`SingleChannelImage`]s.
+  ///
+  /// This will only succeed when the pixel data is single channel. Returned
+  /// images needs to have the Modality LUT and VOI LUT applied in order to
+  /// reach final grayscale display values.
+  ///
+  fn get_pixel_data_single_channel_images(
+    &self,
+  ) -> Result<Vec<SingleChannelImage>, PixelDataFilterError>;
+
+  /// Returns the frames of pixel data in this data set as [`ColorImage`]s.
+  ///
+  /// This will only succeed when the pixel data has three channels.
+  ///
+  fn get_pixel_data_color_images(
+    &self,
+  ) -> Result<Vec<ColorImage>, PixelDataFilterError>;
 }
 
 impl DataSetPixelDataExtensions for DataSet {
@@ -74,6 +114,50 @@ impl DataSetPixelDataExtensions for DataSet {
 
     Ok(frames)
   }
+
+  fn get_pixel_data_images(
+    &self,
+    color_palette: Option<&ColorPalette>,
+  ) -> Result<Vec<RgbImage>, PixelDataFilterError> {
+    get_pixel_data(self, |reader, frame| {
+      reader.read_frame(frame, color_palette)
+    })
+  }
+
+  fn get_pixel_data_single_channel_images(
+    &self,
+  ) -> Result<Vec<SingleChannelImage>, PixelDataFilterError> {
+    get_pixel_data(self, |reader, frame| {
+      reader.read_single_channel_frame(frame)
+    })
+  }
+
+  fn get_pixel_data_color_images(
+    &self,
+  ) -> Result<Vec<ColorImage>, PixelDataFilterError> {
+    get_pixel_data(self, |reader, frame| reader.read_color_frame(frame))
+  }
+}
+
+fn get_pixel_data<T, F>(
+  data_set: &DataSet,
+  mut process_frame: F,
+) -> Result<Vec<T>, PixelDataFilterError>
+where
+  F: FnMut(&PixelDataReader, &mut PixelDataFrame) -> Result<T, DataError>,
+{
+  let reader = PixelDataReader::from_data_set(data_set)
+    .map_err(PixelDataFilterError::DataError)?;
+
+  let frames = data_set.get_pixel_data_frames()?;
+
+  frames
+    .into_iter()
+    .map(|mut frame| {
+      process_frame(&reader, &mut frame)
+        .map_err(PixelDataFilterError::DataError)
+    })
+    .collect()
 }
 
 /// Returns the file extension to use for pixel data in the given transfer

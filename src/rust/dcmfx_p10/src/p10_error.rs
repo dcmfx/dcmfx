@@ -105,9 +105,7 @@ impl P10Error {
       P10Error::TokenStreamInvalid { .. } => {
         "P10 token stream invalid".to_string()
       }
-      P10Error::WriteAfterCompletion { .. } => {
-        "Write after completion".to_string()
-      }
+      P10Error::WriteAfterCompletion => "Write after completion".to_string(),
       P10Error::FileError { .. } => "File I/O failure".to_string(),
       P10Error::OtherError { error_type, .. } => error_type.clone(),
     }

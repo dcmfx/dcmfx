@@ -107,7 +107,7 @@ impl PixelDataDefinition {
         usize::from(self.samples_per_pixel) * usize::from(self.bits_allocated)
       }
 
-      PhotometricInterpretation::YbrFull422 { .. } => {
+      PhotometricInterpretation::YbrFull422 => {
         2 * usize::from(self.bits_allocated)
       }
     }

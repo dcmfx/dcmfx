@@ -2,8 +2,7 @@ use image::{ImageBuffer, Rgb, RgbImage};
 
 use crate::{PhotometricInterpretation, PixelDataDefinition};
 
-/// A color image that stores integer color values for each pixel. The colors
-/// may be RGB or YBR.
+/// A color image that stores integer RGB color values for each pixel.
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub enum ColorImage {
@@ -148,63 +147,4 @@ impl ColorImage {
 
     ImageBuffer::from_raw(self.width(), self.height(), rgb_pixels).unwrap()
   }
-
-  /// Converts YBR colors in the range 0-1 to RGB colors in the range 0-1.
-  ///
-  pub fn convert_ybr_to_rgb(&mut self, definition: &PixelDataDefinition) {
-    let scale = ((1u64 << definition.bits_stored as u64) - 1) as f64;
-    let one_over_scale = 1.0 / scale;
-
-    match self {
-      ColorImage::Uint8(data) => {
-        for pixel in data.pixels_mut() {
-          let y = pixel.0[0] as f64 * one_over_scale;
-          let cb = pixel.0[1] as f64 * one_over_scale;
-          let cr = pixel.0[2] as f64 * one_over_scale;
-
-          let [r, g, b] = ybr_to_rgb(y, cb, cr);
-
-          pixel.0[0] = (r * scale).clamp(0.0, u8::MAX as f64) as u8;
-          pixel.0[1] = (g * scale).clamp(0.0, u8::MAX as f64) as u8;
-          pixel.0[2] = (b * scale).clamp(0.0, u8::MAX as f64) as u8;
-        }
-      }
-
-      ColorImage::Uint16(data) => {
-        for pixel in data.pixels_mut() {
-          let y = pixel.0[0] as f64 * one_over_scale;
-          let cb = pixel.0[1] as f64 * one_over_scale;
-          let cr = pixel.0[2] as f64 * one_over_scale;
-
-          let [r, g, b] = ybr_to_rgb(y, cb, cr);
-
-          pixel.0[0] = (r * scale).clamp(0.0, u16::MAX as f64) as u16;
-          pixel.0[1] = (g * scale).clamp(0.0, u16::MAX as f64) as u16;
-          pixel.0[2] = (b * scale).clamp(0.0, u16::MAX as f64) as u16;
-        }
-      }
-
-      ColorImage::Uint32(data) => {
-        for pixel in data.pixels_mut() {
-          let y = pixel.0[0] as f64 * one_over_scale;
-          let cb = pixel.0[1] as f64 * one_over_scale;
-          let cr = pixel.0[2] as f64 * one_over_scale;
-
-          let [r, g, b] = ybr_to_rgb(y, cb, cr);
-
-          pixel.0[0] = (r * scale).clamp(0.0, u32::MAX as f64) as u32;
-          pixel.0[1] = (g * scale).clamp(0.0, u32::MAX as f64) as u32;
-          pixel.0[2] = (b * scale).clamp(0.0, u32::MAX as f64) as u32;
-        }
-      }
-    }
-  }
-}
-
-fn ybr_to_rgb(y: f64, cb: f64, cr: f64) -> [f64; 3] {
-  let r = y + 1.402 * (cr - 0.5);
-  let g = y - 0.3441362862 * (cb - 0.5) - 0.7141362862 * (cr - 0.5);
-  let b = y + 1.772 * (cb - 0.5);
-
-  [r, g, b]
 }

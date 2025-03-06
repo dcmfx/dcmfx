@@ -86,7 +86,7 @@ impl DataElementValue {
   pub fn to_string(&self, tag: DataElementTag, output_width: usize) -> String {
     // Maximum number of items needed in a comma-separated list of values before
     // reaching the output width
-    let output_list_max_size = (output_width + 2) / 3;
+    let output_list_max_size = output_width.div_ceil(3);
 
     let result = match &self.0 {
       RawDataElementValue::BinaryValue { vr, bytes } if vr.is_string() => {
