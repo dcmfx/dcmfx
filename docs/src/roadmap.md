@@ -3,7 +3,8 @@
 DCMfx has no formal roadmap, but future additions are likely to include the
 following:
 
-- Read pixel data that uses the 'JPEG Extended (Process 2 & 4)' transfer syntax
+- Pixel data decoding of the JPEG Extended, JPEG 2000, and JPEG-LS transfer
+  syntaxes on Rust's WASM target
 
 - Transcode between a wider range of transfer syntaxes
 

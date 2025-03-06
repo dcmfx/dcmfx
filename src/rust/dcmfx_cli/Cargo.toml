@@ -19,7 +19,7 @@ image = { version = "0.25", default-features = false, features = ["jpeg", "png"]
 same-file = "1.0.6"
 
 [target.'cfg(not(windows))'.dependencies]
-libc = "0.2.169"
+libc = "0.2.170"
 
 [package.metadata.cargo-machete]
 ignored = ["flate2"]

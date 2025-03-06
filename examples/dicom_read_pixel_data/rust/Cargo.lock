@@ -213,12 +213,16 @@ name = "dcmfx_pixel_data"
 version = "0.0.0"
 dependencies = [
  "byteorder",
+ "cc",
  "charls",
  "dcmfx_core",
  "dcmfx_p10",
+ "glob",
  "image",
  "jpeg-decoder",
  "jpeg2k",
+ "libc",
+ "wasm32-unknown-unknown-openbsd-libc",
 ]
 
 [[package]]
@@ -231,9 +235,9 @@ dependencies = [
 
 [[package]]
 name = "either"
-version = "1.14.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7914353092ddf589ad78f25c5c1c21b7f80b0ff8621e7c814c3485b5306da9d"
+checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
 name = "errno"
@@ -276,6 +280,12 @@ dependencies = [
  "wasi",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "glob"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8d1add55171497b4705a648c6b583acafb01d58050a51727785f0b2c8e0a2b2"
 
 [[package]]
 name = "hermit-abi"
@@ -323,7 +333,7 @@ checksum = "d75a2a4b1b190afb6f5425f10f6a8f959d2ea0b9c2b1d79553551850539e4674"
 [[package]]
 name = "jpeg-decoder"
 version = "0.3.1"
-source = "git+https://github.com/richard-viney/jpeg-decoder.git?branch=fix-panic-in-invalid-prediction-shift#9c138ff62ce14d1a1417a31e932858b2a5db2c72"
+source = "git+https://github.com/richard-viney/jpeg-decoder.git?branch=fix-panic-in-invalid-prediction-shift#00d6bd912dd0ec2eda9e9c867341c321787740dc"
 dependencies = [
  "rayon",
 ]
@@ -354,9 +364,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.169"
+version = "0.2.170"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5aba8db14291edd000dfcc4d620c7ebfb122c613afb886ca8803fa4e128a20a"
+checksum = "875b3680cb2f8f71bdcf9a30f38d48282f5d3c95cbf9b3fa57269bb5d5c06828"
 
 [[package]]
 name = "linux-raw-sys"
@@ -761,6 +771,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a05d73b933a847d6cccdda8f838a22ff101ad9bf93e33684f39c1f5f0eece3d"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "wasm32-unknown-unknown-openbsd-libc"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6abee48844f5d109794276675f8f63c2ecdc21a1b941b45dd346e606fca3a8c"
+dependencies = [
+ "cc",
 ]
 
 [[package]]

@@ -463,12 +463,16 @@ name = "dcmfx_pixel_data"
 version = "0.0.0"
 dependencies = [
  "byteorder",
+ "cc",
  "charls",
  "dcmfx_core",
  "dcmfx_p10",
+ "glob",
  "image",
  "jpeg-decoder 0.3.1 (git+https://github.com/richard-viney/jpeg-decoder.git?branch=fix-panic-in-invalid-prediction-shift)",
  "jpeg2k",
+ "libc",
+ "wasm32-unknown-unknown-openbsd-libc",
 ]
 
 [[package]]
@@ -577,6 +581,12 @@ dependencies = [
  "color_quant",
  "weezl",
 ]
+
+[[package]]
+name = "glob"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8d1add55171497b4705a648c6b583acafb01d58050a51727785f0b2c8e0a2b2"
 
 [[package]]
 name = "half"
@@ -735,7 +745,7 @@ checksum = "f5d4a7da358eff58addd2877a45865158f0d78c911d43a5784ceb7bbf52833b0"
 [[package]]
 name = "jpeg-decoder"
 version = "0.3.1"
-source = "git+https://github.com/richard-viney/jpeg-decoder.git?branch=fix-panic-in-invalid-prediction-shift#9c138ff62ce14d1a1417a31e932858b2a5db2c72"
+source = "git+https://github.com/richard-viney/jpeg-decoder.git?branch=fix-panic-in-invalid-prediction-shift#00d6bd912dd0ec2eda9e9c867341c321787740dc"
 dependencies = [
  "rayon",
 ]
@@ -772,9 +782,9 @@ checksum = "03087c2bad5e1034e8cace5926dec053fb3790248370865f5117a7d0213354c8"
 
 [[package]]
 name = "libc"
-version = "0.2.169"
+version = "0.2.170"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5aba8db14291edd000dfcc4d620c7ebfb122c613afb886ca8803fa4e128a20a"
+checksum = "875b3680cb2f8f71bdcf9a30f38d48282f5d3c95cbf9b3fa57269bb5d5c06828"
 
 [[package]]
 name = "libfuzzer-sys"
@@ -1609,6 +1619,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a05d73b933a847d6cccdda8f838a22ff101ad9bf93e33684f39c1f5f0eece3d"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "wasm32-unknown-unknown-openbsd-libc"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6abee48844f5d109794276675f8f63c2ecdc21a1b941b45dd346e606fca3a8c"
+dependencies = [
+ "cc",
 ]
 
 [[package]]

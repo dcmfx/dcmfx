@@ -166,6 +166,11 @@ impl PixelDataReader {
         decode::jpeg::decode_single_channel(&self.definition, data)
       }
 
+      #[cfg(not(target_arch = "wasm32"))]
+      &JPEG_EXTENDED_12BIT => {
+        decode::libjpeg_12bit::decode_single_channel(&self.definition, data)
+      }
+
       &JPEG_LOSSLESS_NON_HIERARCHICAL | &JPEG_LOSSLESS_NON_HIERARCHICAL_SV1 => {
         decode::jpeg_decoder::decode_single_channel(&self.definition, data)
       }
@@ -219,6 +224,11 @@ impl PixelDataReader {
       }
 
       &JPEG_BASELINE_8BIT => decode::jpeg::decode_color(&self.definition, data),
+
+      #[cfg(not(target_arch = "wasm32"))]
+      &JPEG_EXTENDED_12BIT => {
+        decode::libjpeg_12bit::decode_color(&self.definition, data)
+      }
 
       &JPEG_LOSSLESS_NON_HIERARCHICAL | &JPEG_LOSSLESS_NON_HIERARCHICAL_SV1 => {
         decode::jpeg_decoder::decode_color(&self.definition, data)
