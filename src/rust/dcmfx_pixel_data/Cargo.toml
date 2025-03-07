@@ -15,7 +15,7 @@ byteorder = "1.5.0"
 dcmfx_core = { path = "../dcmfx_core", version = "0.0.0" }
 dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0" }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
-jpeg-decoder = { git = "https://github.com/richard-viney/jpeg-decoder.git", branch = "fix-panic-in-invalid-prediction-shift" }
+jpeg-decoder = { git = "https://github.com/image-rs/jpeg-decoder.git", rev = "95550d7" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 charls = { version = "0.4.0", features = ["static"] }

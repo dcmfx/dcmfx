@@ -333,7 +333,7 @@ checksum = "d75a2a4b1b190afb6f5425f10f6a8f959d2ea0b9c2b1d79553551850539e4674"
 [[package]]
 name = "jpeg-decoder"
 version = "0.3.1"
-source = "git+https://github.com/richard-viney/jpeg-decoder.git?branch=fix-panic-in-invalid-prediction-shift#00d6bd912dd0ec2eda9e9c867341c321787740dc"
+source = "git+https://github.com/image-rs/jpeg-decoder.git?rev=95550d7#95550d7eec747b94b5f9beba3be2c6fcb1f4f70e"
 dependencies = [
  "rayon",
 ]
