@@ -84,6 +84,10 @@ jobs:
         working-directory: src/rust
         run: cargo test --frozen
 
+      - name: Check a no_std build succeeds
+        working-directory: src/rust
+        run: cargo build -p dcmfx --no-default-features
+
   test_dcmfx_rust_wasm_build:
     name: Test DCMfx Rust WASM build
     timeout-minutes: 10

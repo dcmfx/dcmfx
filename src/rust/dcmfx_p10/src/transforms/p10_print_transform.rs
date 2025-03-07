@@ -1,3 +1,11 @@
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
+
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataSet, DataSetPrintOptions,
   ValueRepresentation, data_set, dictionary,
@@ -70,8 +78,10 @@ impl P10PrintTransform {
         self.current_data_element = *tag;
 
         // Calculate the width remaining for previewing the value
-        self.value_max_width =
-          std::cmp::max(self.print_options.max_width.saturating_sub(width), 10);
+        self.value_max_width = core::cmp::max(
+          self.print_options.max_width.saturating_sub(width),
+          10,
+        );
 
         // Use the next value bytes token to print a preview of the data
         // element's value
@@ -198,8 +208,10 @@ impl P10PrintTransform {
         );
 
         // Calculate the width remaining for previewing the value
-        self.value_max_width =
-          std::cmp::max(self.print_options.max_width.saturating_sub(width), 10);
+        self.value_max_width = core::cmp::max(
+          self.print_options.max_width.saturating_sub(width),
+          10,
+        );
 
         // Use the next value bytes token to print a preview of the pixel data
         // item's value

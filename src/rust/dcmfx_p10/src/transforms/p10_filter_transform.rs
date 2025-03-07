@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::{boxed::Box, vec, vec::Vec};
+
 use dcmfx_core::{DataElementTag, ValueRepresentation, dictionary};
 
 use crate::P10Token;

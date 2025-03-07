@@ -1,5 +1,12 @@
 //! Work with the DICOM `DateTime` value representation.
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec::Vec,
+};
+
 use regex::Regex;
 
 use crate::data_element_value::date::StructuredDate;
@@ -18,25 +25,22 @@ pub struct StructuredDateTime {
   pub time_zone_offset: Option<i16>,
 }
 
-static PARSE_DATE_TIME_REGEX: std::sync::LazyLock<Regex> =
-  std::sync::LazyLock::new(|| {
-    Regex::new(
-      "^(\\d{4})((\\d{2})((\\d{2})((\\d{2})((\\d{2})((\\d{2})(\\.\\d{1,6})?)?)?)?)?)?([\\+\\-]\\d{4})?$",
-    )
-    .unwrap()
-  });
+const PARSE_DATE_TIME_REGEX: &str = "^(\\d{4})((\\d{2})((\\d{2})((\\d{2})((\\d{2})((\\d{2})(\\.\\d{1,6})?)?)?)?)?)?([\\+\\-]\\d{4})?$";
 
 impl StructuredDateTime {
   /// Converts a `DateTime` value into a structured date/time.
   ///
   pub fn from_bytes(bytes: &[u8]) -> Result<StructuredDateTime, DataError> {
-    let date_time_string = std::str::from_utf8(bytes).map_err(|_| {
+    let date_time_string = core::str::from_utf8(bytes).map_err(|_| {
       DataError::new_value_invalid("DateTime is invalid UTF-8".to_string())
     })?;
 
     let date_time_string = date_time_string.trim_matches('\0').trim();
 
-    match PARSE_DATE_TIME_REGEX.captures(date_time_string) {
+    match Regex::new(PARSE_DATE_TIME_REGEX)
+      .unwrap()
+      .captures(date_time_string)
+    {
       Some(caps) => {
         let year = caps.get(1).unwrap().as_str().parse::<u16>().unwrap();
         let month = caps.get(3).map(|m| m.as_str().parse::<u8>().unwrap());

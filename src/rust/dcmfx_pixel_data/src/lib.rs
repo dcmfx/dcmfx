@@ -1,5 +1,13 @@
 //! Access pixel data in a DICOM data set.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
+
 use image::RgbImage;
 
 mod color_image;
@@ -236,7 +244,11 @@ pub fn file_extension_for_transfer_syntax(ts: &TransferSyntax) -> &'static str {
 
 #[cfg(test)]
 mod tests {
+  #[cfg(feature = "std")]
   use std::rc::Rc;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::{rc::Rc, string::ToString};
 
   use super::*;
   use dcmfx_core::{DataElementValue, ValueRepresentation, dictionary};

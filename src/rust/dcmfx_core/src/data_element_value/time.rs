@@ -1,5 +1,12 @@
 //! Work with the DICOM `Time` value representation.
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec::Vec,
+};
+
 use regex::Regex;
 
 use crate::DataError;
@@ -13,22 +20,19 @@ pub struct StructuredTime {
   pub second: Option<f64>,
 }
 
-static PARSE_TIME_REGEX: std::sync::LazyLock<Regex> =
-  std::sync::LazyLock::new(|| {
-    Regex::new("^(\\d\\d)((\\d\\d)((\\d\\d)(\\.\\d{1,6})?)?)?$").unwrap()
-  });
+const PARSE_TIME_REGEX: &str = "^(\\d\\d)((\\d\\d)((\\d\\d)(\\.\\d{1,6})?)?)?$";
 
 impl StructuredTime {
   /// Converts a `Time` value into a structured time.
   ///
   pub fn from_bytes(bytes: &[u8]) -> Result<Self, DataError> {
-    let time_string = std::str::from_utf8(bytes).map_err(|_| {
+    let time_string = core::str::from_utf8(bytes).map_err(|_| {
       DataError::new_value_invalid("Time is invalid UTF-8".to_string())
     })?;
 
     let time_string = time_string.trim_matches('\0').trim();
 
-    match PARSE_TIME_REGEX.captures(time_string) {
+    match Regex::new(PARSE_TIME_REGEX).unwrap().captures(time_string) {
       Some(caps) => {
         let hour = caps.get(1).unwrap().as_str().parse::<u8>().unwrap();
         let minute = caps.get(3).map(|m| m.as_str().parse::<u8>().unwrap());

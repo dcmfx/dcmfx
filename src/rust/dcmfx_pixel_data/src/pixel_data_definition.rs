@@ -1,5 +1,8 @@
 //! Specifies values of data elements relevant to parsing pixel data.
 
+#[cfg(not(feature = "std"))]
+use alloc::{format, string::ToString};
+
 use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath, dictionary};
 
 use crate::LookupTable;
@@ -355,8 +358,8 @@ impl PhotometricInterpretation {
   }
 }
 
-impl std::fmt::Display for PhotometricInterpretation {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for PhotometricInterpretation {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     let s = match self {
       PhotometricInterpretation::Monochrome1 => "Monochrome1",
       PhotometricInterpretation::Monochrome2 => "Monochrome2",

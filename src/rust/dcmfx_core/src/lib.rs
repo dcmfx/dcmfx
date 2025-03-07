@@ -2,6 +2,11 @@
 //! representations, transfer syntaxes, and a dictionary of the data elements
 //! defined in DICOM PS3.6 as well as well-known private data elements.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
 pub mod code_strings;
 pub mod data_element_tag;
 pub mod data_element_value;

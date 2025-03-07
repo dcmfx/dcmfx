@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+
 use image::DynamicImage;
 
 use dcmfx_core::DataError;

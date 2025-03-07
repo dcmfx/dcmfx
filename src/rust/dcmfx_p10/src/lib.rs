@@ -1,6 +1,14 @@
 //! Reads and writes the DICOM Part 10 (P10) binary format used to store and
 //! transmit DICOM-based medical imaging information.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{boxed::Box, rc::Rc, vec::Vec};
+
 pub mod data_set_builder;
 pub mod p10_error;
 pub mod p10_read;
@@ -11,8 +19,13 @@ pub mod uids;
 
 mod internal;
 
+#[cfg(feature = "std")]
 use std::fs::File;
+
+#[cfg(feature = "std")]
 use std::io::Read;
+
+#[cfg(feature = "std")]
 use std::rc::Rc;
 
 use dcmfx_core::DataSet;
@@ -33,6 +46,7 @@ pub use transforms::p10_print_transform::P10PrintTransform;
 /// of the DICOM P10 header and the start of a File Meta Information Group
 /// Length data element.
 ///
+#[cfg(feature = "std")]
 pub fn is_valid_file(filename: String) -> bool {
   match File::open(filename) {
     Ok(mut file) => {
@@ -60,6 +74,7 @@ pub fn is_valid_bytes(bytes: &[u8]) -> bool {
 
 /// Reads DICOM P10 data from a file into an in-memory data set.
 ///
+#[cfg(feature = "std")]
 pub fn read_file(filename: &str) -> Result<DataSet, P10Error> {
   match read_file_returning_builder_on_error(filename) {
     Ok(data_set) => Ok(data_set),
@@ -74,6 +89,7 @@ pub fn read_file(filename: &str) -> Result<DataSet, P10Error> {
 /// This allows for the data that was successfully read prior to the error to be
 /// converted into a partially-complete data set.
 ///
+#[cfg(feature = "std")]
 pub fn read_file_returning_builder_on_error(
   filename: &str,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
@@ -92,6 +108,7 @@ pub fn read_file_returning_builder_on_error(
 /// Reads DICOM P10 data from a read stream into an in-memory data set. This
 /// will attempt to consume all data available in the read stream.
 ///
+#[cfg(feature = "std")]
 pub fn read_stream(
   stream: &mut dyn std::io::Read,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
@@ -124,6 +141,7 @@ pub fn read_stream(
 /// bytes from the read stream in 256 KiB chunks until at least one DICOM P10
 /// token is made available by the read context or an error occurs.
 ///
+#[cfg(feature = "std")]
 pub fn read_tokens_from_stream(
   stream: &mut dyn std::io::Read,
   context: &mut P10ReadContext,
@@ -206,6 +224,7 @@ pub fn read_bytes(
 /// Writes a data set to a DICOM P10 file. This will overwrite any existing file
 /// with the given name.
 ///
+#[cfg(feature = "std")]
 pub fn write_file(
   filename: &str,
   data_set: &DataSet,
@@ -224,6 +243,7 @@ pub fn write_file(
 
 /// Writes a data set as DICOM P10 bytes directly to a write stream.
 ///
+#[cfg(feature = "std")]
 pub fn write_stream(
   stream: &mut dyn std::io::Write,
   data_set: &DataSet,
@@ -253,6 +273,7 @@ pub fn write_stream(
 /// write context. Returns whether a [`P10Token::End`] token was present in the
 /// tokens.
 ///
+#[cfg(feature = "std")]
 pub fn write_tokens_to_stream(
   tokens: &[P10Token],
   stream: &mut dyn std::io::Write,
@@ -291,11 +312,13 @@ where
 {
   /// Reads DICOM P10 data from a file into an in-memory data set.
   ///
+  #[cfg(feature = "std")]
   fn read_p10_file(filename: &str) -> Result<Self, P10Error>;
 
   /// Reads DICOM P10 data from a read stream into an in-memory data set. This
   /// will attempt to consume all data available in the read stream.
   ///
+  #[cfg(feature = "std")]
   fn read_p10_stream(
     stream: &mut dyn std::io::Read,
   ) -> Result<DataSet, P10Error>;
@@ -303,6 +326,7 @@ where
   /// Writes a data set to a DICOM P10 file. This will overwrite any existing
   /// file with the given name.
   ///
+  #[cfg(feature = "std")]
   fn write_p10_file(
     &self,
     filename: &str,
@@ -311,6 +335,7 @@ where
 
   /// Writes a data set as DICOM P10 bytes directly to a write stream.
   ///
+  #[cfg(feature = "std")]
   fn write_p10_stream(
     &self,
     stream: &mut dyn std::io::Write,
@@ -336,16 +361,19 @@ where
 }
 
 impl DataSetP10Extensions for DataSet {
+  #[cfg(feature = "std")]
   fn read_p10_file(filename: &str) -> Result<Self, P10Error> {
     read_file(filename)
   }
 
+  #[cfg(feature = "std")]
   fn read_p10_stream(
     stream: &mut dyn std::io::Read,
   ) -> Result<DataSet, P10Error> {
     read_stream(stream).map_err(|e| e.0)
   }
 
+  #[cfg(feature = "std")]
   fn write_p10_file(
     &self,
     filename: &str,
@@ -354,6 +382,7 @@ impl DataSetP10Extensions for DataSet {
     write_file(filename, self, config)
   }
 
+  #[cfg(feature = "std")]
   fn write_p10_stream(
     &self,
     stream: &mut dyn std::io::Write,

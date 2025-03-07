@@ -1,3 +1,11 @@
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
+
 use dcmfx_core::{DataError, DataSet, DataSetPath, dictionary};
 
 /// Describes a single VOI LUT windowing function that can be applied in order

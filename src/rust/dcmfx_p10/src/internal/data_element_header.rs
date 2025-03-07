@@ -12,11 +12,11 @@ pub struct DataElementHeader {
   pub length: ValueLength,
 }
 
-impl std::fmt::Display for DataElementHeader {
+impl core::fmt::Display for DataElementHeader {
   /// Converts a data element header to a human-readable string in the format
   /// "(GROUP,ELEMENT) VR NAME", e.g. `"(0008,0020) DA StudyDate"`.
   ///
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     let tag_name = dictionary::tag_name(self.tag, None);
 
     match self.vr {
@@ -93,6 +93,9 @@ impl DataElementHeader {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::string::ToString;
 
   #[test]
   fn to_string_test() {

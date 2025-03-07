@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::string::{String, ToString};
+
 use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath, dictionary};
 
 use crate::luts::lookup_table::LookupTable;

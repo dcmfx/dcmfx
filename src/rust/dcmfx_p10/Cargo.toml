@@ -12,6 +12,10 @@ keywords.workspace = true
 
 [dependencies]
 byteorder = "1.5.0"
-dcmfx_character_set = { path = "../dcmfx_character_set", version = "0.0.0" }
-dcmfx_core = { path = "../dcmfx_core", version = "0.0.0" }
+dcmfx_character_set = { path = "../dcmfx_character_set", version = "0.0.0", default-features = false }
+dcmfx_core = { path = "../dcmfx_core", version = "0.0.0", default-features = false }
 flate2 = "1.0.35"
+
+[features]
+default = ["std"]
+std = ["dcmfx_character_set/std", "dcmfx_core/std"]

@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
 use image::{GrayImage, RgbImage};
 
 /// Defines a color palette that converts a grayscale value to a color.

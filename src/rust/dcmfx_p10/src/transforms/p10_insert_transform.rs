@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::{boxed::Box, vec, vec::Vec};
+
 use dcmfx_core::{DataElementTag, DataElementValue, DataSet};
 
 use crate::{P10FilterTransform, P10Token, p10_token};
@@ -111,11 +114,18 @@ impl P10InsertTransform {
 
 #[cfg(test)]
 mod tests {
+  #[cfg(feature = "std")]
   use std::rc::Rc;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::{format, rc::Rc};
 
   use dcmfx_core::value_representation::ValueRepresentation;
 
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::string::ToString;
 
   #[test]
   fn add_tokens_test() {

@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::{format, string::String, string::ToString, vec, vec::Vec};
+
 use byteorder::ByteOrder;
 
 use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath};
@@ -241,8 +244,13 @@ impl LookupTable {
 mod tests {
   use super::*;
 
-  use dcmfx_core::{DataElementValue, ValueRepresentation, dictionary};
+  #[cfg(feature = "std")]
   use std::rc::Rc;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::rc::Rc;
+
+  use dcmfx_core::{DataElementValue, ValueRepresentation, dictionary};
 
   #[test]
   fn create_from_data_set() {

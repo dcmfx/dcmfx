@@ -1,11 +1,18 @@
 //! Work with the DICOM `IntegerString` value representation.
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec::Vec,
+};
+
 use crate::DataError;
 
 /// Converts a `IntegerString` value to a list of ints.
 ///
 pub fn from_bytes(bytes: &[u8]) -> Result<Vec<i32>, DataError> {
-  let integer_string = std::str::from_utf8(bytes).map_err(|_| {
+  let integer_string = core::str::from_utf8(bytes).map_err(|_| {
     DataError::new_value_invalid("IntegerString is invalid UTF-8".to_string())
   })?;
 
@@ -45,6 +52,9 @@ pub fn to_bytes(values: &[i32]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::vec;
 
   #[test]
   fn from_bytes_test() {

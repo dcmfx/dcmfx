@@ -1,7 +1,17 @@
 //! Defines the various tokens of a DICOM P10 that are read out of raw DICOM P10
 //! data by the `p10_read` module.
 
+#[cfg(feature = "std")]
 use std::rc::Rc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  boxed::Box,
+  format,
+  rc::Rc,
+  string::{String, ToString},
+  vec::Vec,
+};
 
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataSet, ValueRepresentation, dictionary,
@@ -80,10 +90,10 @@ pub enum P10Token {
   End,
 }
 
-impl std::fmt::Display for P10Token {
+impl core::fmt::Display for P10Token {
   /// Converts a DICOM P10 token to a human-readable string.
   ///
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     let s = match self {
       P10Token::FilePreambleAndDICMPrefix { .. } => {
         "FilePreambleAndDICMPrefix".to_string()

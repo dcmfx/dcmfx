@@ -1,6 +1,17 @@
 //! Decodes DICOM string data that uses a Specific Character Set into a native
 //! UTF-8 string.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  string::{String, ToString},
+  vec::Vec,
+};
+
 mod internal;
 
 use internal::character_set::{self, CharacterSet, CodeElementPair};
@@ -321,6 +332,9 @@ pub fn sanitize_default_charset_bytes(bytes: &mut [u8]) -> &[u8] {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::format;
 
   #[test]
   pub fn specific_character_set_test() {

@@ -1,5 +1,8 @@
 //! DICOM value multiplicity (VM).
 
+#[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+
 /// Describes DICOM value multiplicity, i.e. the number of values that are
 /// allowed to be present in a data element. The `min` value is always at least
 /// 1, and the maximum (if applicable) will always be greater than or equal to
@@ -20,11 +23,11 @@ impl ValueMultiplicity {
   }
 }
 
-impl std::fmt::Display for ValueMultiplicity {
+impl core::fmt::Display for ValueMultiplicity {
   /// Returns a value multiplicity as a human-readable string, e.g. "1-3", or
   /// "2-n".
   ///
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     if self.min == 1 && self.max == Some(1) {
       return write!(f, "1");
     }

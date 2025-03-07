@@ -1,4 +1,8 @@
+#[cfg(feature = "std")]
 use std::collections::VecDeque;
+
+#[cfg(not(feature = "std"))]
+use alloc::{collections::VecDeque, vec, vec::Vec};
 
 /// A byte stream that takes incoming chunks of binary data of any size and
 /// allows the resulting data to to read and peeked as if it were one large
@@ -148,7 +152,7 @@ impl ByteStream {
       // Slice off the required amount and copy into the final result
       let start = queue_item.bytes_read;
       let end = start
-        + std::cmp::min(
+        + core::cmp::min(
           queue_item.data.len() - start,
           byte_count - result.len(),
         );
@@ -197,7 +201,7 @@ impl ByteStream {
       // Slice off the required amount and copy into the final result
       let start = queue_item.bytes_read;
       let end = start
-        + std::cmp::min(
+        + core::cmp::min(
           queue_item.data.len() - start,
           byte_count - result.len(),
         );

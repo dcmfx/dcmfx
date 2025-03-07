@@ -3,6 +3,14 @@
 
 use crate::{DataSetPath, DcmfxError, ValueRepresentation, dictionary};
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
+
 /// An error that occurred when retrieving or creating data elements in data
 /// sets. An error can be one of the following types:
 ///
@@ -72,8 +80,8 @@ enum RawDataError {
   },
 }
 
-impl std::fmt::Display for DataError {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for DataError {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     fn optional_path_to_string(path: &Option<DataSetPath>) -> String {
       path
         .as_ref()
@@ -304,8 +312,6 @@ impl DcmfxError for DataError {
     lines
   }
 }
-
-impl std::error::Error for DataError {}
 
 #[cfg(test)]
 mod tests {

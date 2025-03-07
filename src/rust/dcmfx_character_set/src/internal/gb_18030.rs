@@ -2986,6 +2986,9 @@ static GBK_LOOKUP_TABLE: [u16; 24066] = [
 mod tests {
   use super::*;
 
+  #[cfg(not(feature = "std"))]
+  use alloc::vec;
+
   #[test]
   fn decode_next_codepoint_test() {
     for (bytes, expected_codepoint) in [

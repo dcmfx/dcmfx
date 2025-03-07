@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
 use image::{ImageBuffer, Rgb, RgbImage};
 
 use crate::{PhotometricInterpretation, PixelDataDefinition};
