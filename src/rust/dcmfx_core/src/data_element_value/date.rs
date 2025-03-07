@@ -1,5 +1,12 @@
 //! Work with the DICOM `Date` value representation.
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec::Vec,
+};
+
 use regex::Regex;
 
 use crate::DataError;
@@ -13,22 +20,19 @@ pub struct StructuredDate {
   pub day: u8,
 }
 
-static PARSE_DATE_REGEX: std::sync::LazyLock<Regex> =
-  std::sync::LazyLock::new(|| {
-    Regex::new("^(\\d{4})(\\d\\d)(\\d\\d)$").unwrap()
-  });
+const PARSE_DATE_REGEX: &str = "^(\\d{4})(\\d\\d)(\\d\\d)$";
 
 impl StructuredDate {
   /// Converts a `Date` value into a structured date.
   ///
   pub fn from_bytes(bytes: &[u8]) -> Result<Self, DataError> {
-    let date_string = std::str::from_utf8(bytes).map_err(|_| {
+    let date_string = core::str::from_utf8(bytes).map_err(|_| {
       DataError::new_value_invalid("Date is invalid UTF-8".to_string())
     })?;
 
     let date_string = date_string.trim_matches('\0').trim();
 
-    match PARSE_DATE_REGEX.captures(date_string) {
+    match Regex::new(PARSE_DATE_REGEX).unwrap().captures(date_string) {
       Some(caps) => {
         let year = caps.get(1).unwrap().as_str().parse::<u16>().unwrap();
         let month = caps.get(2).unwrap().as_str().parse::<u8>().unwrap();

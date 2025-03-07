@@ -1,7 +1,15 @@
 //! Extracts frames of pixel data from a stream of DICOM P10 tokens.
 
-use byteorder::ByteOrder;
+#[cfg(feature = "std")]
 use std::{collections::VecDeque, rc::Rc};
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  boxed::Box, collections::VecDeque, format, rc::Rc, string::ToString, vec,
+  vec::Vec,
+};
+
+use byteorder::ByteOrder;
 
 use dcmfx_core::{
   DataElementValue, DataError, DataSet, ValueRepresentation, dictionary,
@@ -92,8 +100,8 @@ pub enum PixelDataFilterError {
   DataError(DataError),
 }
 
-impl std::fmt::Display for PixelDataFilterError {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for PixelDataFilterError {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     match self {
       Self::DataError(e) => e.fmt(f),
       Self::P10Error(e) => e.fmt(f),

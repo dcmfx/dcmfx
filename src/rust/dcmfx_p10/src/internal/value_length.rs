@@ -32,8 +32,8 @@ impl ValueLength {
   pub const ZERO: ValueLength = ValueLength::Defined { length: 0 };
 }
 
-impl std::fmt::Display for ValueLength {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for ValueLength {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     match self {
       Self::Defined { length } => write!(f, "{} bytes", length),
       Self::Undefined => write!(f, "UNDEFINED"),

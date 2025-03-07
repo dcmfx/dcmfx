@@ -1,8 +1,17 @@
 //! Provides a transform for converting a stream of DICOM [`P10Token`]s into a
 //! stream of DICOM JSON data.
 
-use core::str;
+#[cfg(feature = "std")]
 use std::{io::Write, rc::Rc};
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  rc::Rc,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
 
 use base64::prelude::*;
 
@@ -78,7 +87,7 @@ impl P10JsonTransform {
   pub fn add_token(
     &mut self,
     token: &P10Token,
-    stream: &mut dyn std::io::Write,
+    stream: &mut crate::IoWrite,
   ) -> Result<(), JsonSerializeError> {
     let token_stream_invalid_error = || {
       JsonSerializeError::P10Error(P10Error::TokenStreamInvalid {
@@ -208,17 +217,17 @@ impl P10JsonTransform {
 
   fn write_indent(
     &self,
-    stream: &mut dyn std::io::Write,
+    stream: &mut crate::IoWrite,
     offset: isize,
-  ) -> Result<(), std::io::Error> {
+  ) -> Result<(), crate::IoError> {
     stream.write_all(self.indent(offset).as_bytes())
   }
 
   fn begin(
     &mut self,
     file_meta_information: &DataSet,
-    stream: &mut dyn std::io::Write,
-  ) -> Result<(), std::io::Error> {
+    stream: &mut crate::IoWrite,
+  ) -> Result<(), crate::IoError> {
     if self.config.pretty_print {
       stream.write_all(b"{\n")?;
     } else {
@@ -254,8 +263,8 @@ impl P10JsonTransform {
     tag: DataElementTag,
     vr: ValueRepresentation,
     length: u32,
-    stream: &mut dyn std::io::Write,
-  ) -> Result<(), std::io::Error> {
+    stream: &mut crate::IoWrite,
+  ) -> Result<(), crate::IoError> {
     // Exclude group length data elements as these have no use in DICOM JSON.
     // Also exclude the '(0008,0005) Specific Character Set' data element as
     // DICOM JSON always uses UTF-8
@@ -344,7 +353,7 @@ impl P10JsonTransform {
     vr: ValueRepresentation,
     data: &Rc<Vec<u8>>,
     bytes_remaining: u32,
-    stream: &mut dyn std::io::Write,
+    stream: &mut crate::IoWrite,
   ) -> Result<(), JsonSerializeError> {
     // If this data element value is being ignored then do nothing
     if self.ignore_data_element_value_bytes {
@@ -451,9 +460,9 @@ impl P10JsonTransform {
       stream
         .write_all(b"\n")
         .and_then(|_| self.write_indent(stream, 1))
-        .and_then(|_| stream.write(b"]\n"))
+        .and_then(|_| stream.write_all(b"]\n"))
         .and_then(|_| self.write_indent(stream, 0))
-        .and_then(|_| stream.write(b"}"))
+        .and_then(|_| stream.write_all(b"}"))
         .map(|_| ())
     } else {
       stream.write_all(b"]}")
@@ -465,7 +474,7 @@ impl P10JsonTransform {
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
-    stream: &mut dyn std::io::Write,
+    stream: &mut crate::IoWrite,
   ) -> Result<(), JsonSerializeError> {
     if self.insert_comma {
       if self.config.pretty_print {
@@ -542,8 +551,8 @@ impl P10JsonTransform {
 
   fn write_sequence_end(
     &mut self,
-    stream: &mut dyn std::io::Write,
-  ) -> Result<(), std::io::Error> {
+    stream: &mut crate::IoWrite,
+  ) -> Result<(), crate::IoError> {
     if self.in_encapsulated_pixel_data {
       self.in_encapsulated_pixel_data = false;
       self.write_base64(&[], true, stream)?;
@@ -572,8 +581,8 @@ impl P10JsonTransform {
 
   fn write_sequence_item_start(
     &mut self,
-    stream: &mut dyn std::io::Write,
-  ) -> Result<(), std::io::Error> {
+    stream: &mut crate::IoWrite,
+  ) -> Result<(), crate::IoError> {
     if self.insert_comma {
       stream.write_all(b",")?;
     }
@@ -590,8 +599,8 @@ impl P10JsonTransform {
 
   fn write_sequence_item_end(
     &mut self,
-    stream: &mut dyn std::io::Write,
-  ) -> Result<(), std::io::Error> {
+    stream: &mut crate::IoWrite,
+  ) -> Result<(), crate::IoError> {
     self.insert_comma = true;
 
     if self.config.pretty_print {
@@ -606,7 +615,7 @@ impl P10JsonTransform {
   fn write_encapsulated_pixel_data_item(
     &mut self,
     length: u32,
-    stream: &mut dyn std::io::Write,
+    stream: &mut crate::IoWrite,
   ) -> Result<(), JsonSerializeError> {
     if !self.config.store_encapsulated_pixel_data {
       return Err(JsonSerializeError::DataError(
@@ -628,10 +637,7 @@ impl P10JsonTransform {
       .map_err(JsonSerializeError::IOError)
   }
 
-  fn end(
-    &mut self,
-    stream: &mut dyn std::io::Write,
-  ) -> Result<(), std::io::Error> {
+  fn end(&mut self, stream: &mut crate::IoWrite) -> Result<(), crate::IoError> {
     if self.config.pretty_print {
       stream.write_all(b"\n}\n")
     } else {
@@ -643,8 +649,8 @@ impl P10JsonTransform {
     &mut self,
     input: &[u8],
     finish: bool,
-    stream: &mut dyn std::io::Write,
-  ) -> Result<(), std::io::Error> {
+    stream: &mut crate::IoWrite,
+  ) -> Result<(), crate::IoError> {
     // If there's still insufficient data to encode with this new data then
     // accumulate the bytes and wait till next time
     if self.pending_base64_input.len() + input.len() < 3 && !finish {
@@ -664,11 +670,27 @@ impl P10JsonTransform {
     };
 
     // Base64 encode the bytes and output to the stream
-    let mut encoder =
-      base64::write::EncoderWriter::new(stream, &BASE64_STANDARD);
-    encoder.write_all(&self.pending_base64_input)?;
-    encoder.write_all(&input[0..input_bytes_consumed])?;
-    encoder.finish()?;
+    #[cfg(feature = "std")]
+    {
+      let mut encoder =
+        base64::write::EncoderWriter::new(stream, &BASE64_STANDARD);
+      encoder.write_all(&self.pending_base64_input)?;
+      encoder.write_all(&input[0..input_bytes_consumed])?;
+      encoder.finish()?;
+    }
+
+    #[cfg(not(feature = "std"))]
+    {
+      self
+        .pending_base64_input
+        .extend_from_slice(&input[0..input_bytes_consumed]);
+
+      stream.write_all(
+        base64::prelude::BASE64_STANDARD
+          .encode(&self.pending_base64_input)
+          .as_bytes(),
+      )?;
+    }
 
     // Save off unencoded bytes for next time
     self.pending_base64_input = input[input_bytes_consumed..].to_vec();
@@ -718,7 +740,7 @@ impl P10JsonTransform {
 
       // PersonName value representation
       ValueRepresentation::PersonName => {
-        let string = str::from_utf8(&bytes).map_err(|_| {
+        let string = core::str::from_utf8(&bytes).map_err(|_| {
           DataError::new_value_invalid(
             "PersonName is invalid UTF-8".to_string(),
           )
@@ -832,7 +854,7 @@ impl P10JsonTransform {
       | ValueRepresentation::Date
       | ValueRepresentation::DateTime
       | ValueRepresentation::Time => {
-        let string = std::str::from_utf8(&bytes)
+        let string = core::str::from_utf8(&bytes)
           .map_err(|_| {
             DataError::new_value_invalid(
               "String bytes are not valid UTF-8".to_string(),

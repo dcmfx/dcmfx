@@ -4,8 +4,13 @@
 //! syntax, but the details of how it is encoded are not a concern of
 //! [`PixelDataFrame`].
 
-use std::ops::Range;
+#[cfg(feature = "std")]
 use std::rc::Rc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{rc::Rc, vec, vec::Vec};
+
+use core::ops::Range;
 
 /// A single frame of pixel data in its raw form. It is made up of a one or more
 /// slices into reference-counted `Vec<u8>` data, which avoids copying of data.

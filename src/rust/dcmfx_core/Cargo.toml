@@ -24,3 +24,7 @@ terminal_size = "0.4.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2.15", features = ["js"] }
+
+[features]
+default = ["std"]
+std = []

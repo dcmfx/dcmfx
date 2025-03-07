@@ -4,7 +4,18 @@
 //! Most commonly the stream of DICOM P10 tokens originates from reading raw
 //! DICOM P10 data with the [`crate::p10_read`] module.
 
+#[cfg(feature = "std")]
 use std::rc::Rc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  boxed::Box,
+  format,
+  rc::Rc,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
 
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataSet, ValueRepresentation, dictionary,
@@ -108,7 +119,7 @@ impl DataSetBuilder {
   pub fn final_data_set(&mut self) -> Result<DataSet, ()> {
     let mut data_set = match (self.is_complete, self.location.as_mut_slice()) {
       (true, [BuilderLocation::RootDataSet { data_set }]) => {
-        std::mem::take(data_set)
+        core::mem::take(data_set)
       }
       _ => return Err(()),
     };

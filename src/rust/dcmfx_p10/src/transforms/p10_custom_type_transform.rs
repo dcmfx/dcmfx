@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::boxed::Box;
+
 use dcmfx_core::{DataElementTag, DataError, DataSet};
 
 use crate::{DataSetBuilder, P10Error, P10FilterTransform, P10Token};

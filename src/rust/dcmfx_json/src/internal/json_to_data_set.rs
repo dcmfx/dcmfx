@@ -1,4 +1,14 @@
+#[cfg(feature = "std")]
 use std::rc::Rc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  rc::Rc,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
 
 use base64::prelude::*;
 use byteorder::ByteOrder;

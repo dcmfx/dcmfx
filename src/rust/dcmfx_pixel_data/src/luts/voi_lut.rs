@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
+
 use dcmfx_core::{DataElementTag, DataError, DataSet, dictionary};
 
 use crate::luts::{LookupTable, VoiWindow};

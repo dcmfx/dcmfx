@@ -2,6 +2,9 @@
 //! functions for converting string data stored in a character set into Unicode
 //! codepoints.
 
+#[cfg(not(feature = "std"))]
+use alloc::{format, string::String};
+
 use crate::internal::gb_18030;
 use crate::internal::iso_8859_1;
 use crate::internal::iso_8859_2;

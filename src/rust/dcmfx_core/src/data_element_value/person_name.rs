@@ -1,5 +1,12 @@
 //! Work with the DICOM `PersonName` value representation.
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec::Vec,
+};
+
 use crate::DataError;
 
 /// The components of a single person name.
@@ -30,7 +37,7 @@ pub struct StructuredPersonName {
 pub fn from_bytes(
   bytes: &[u8],
 ) -> Result<Vec<StructuredPersonName>, DataError> {
-  let person_name_string = std::str::from_utf8(bytes).map_err(|_| {
+  let person_name_string = core::str::from_utf8(bytes).map_err(|_| {
     DataError::new_value_invalid("PersonName is invalid UTF-8".to_string())
   })?;
 
@@ -166,6 +173,9 @@ fn components_to_string(
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::vec;
 
   #[test]
   fn from_bytes_test() {

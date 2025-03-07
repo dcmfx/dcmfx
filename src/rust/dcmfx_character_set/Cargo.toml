@@ -9,3 +9,7 @@ license.workspace = true
 version.workspace = true
 homepage.workspace = true
 keywords.workspace = true
+
+[features]
+default = ["std"]
+std = []

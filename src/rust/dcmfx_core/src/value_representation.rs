@@ -3,6 +3,9 @@
 //! See [section 6.2](https://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html)
 //! of the DICOM specification for VR definitions.
 
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
 /// All DICOM value representations (VRs).
 ///
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -65,9 +68,9 @@ pub struct LengthRequirements {
   pub string_characters_max: Option<usize>,
 }
 
-impl std::fmt::Display for ValueRepresentation {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-    f.write_str(std::str::from_utf8(&self.to_bytes()).unwrap())
+impl core::fmt::Display for ValueRepresentation {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    f.write_str(core::str::from_utf8(&self.to_bytes()).unwrap())
   }
 }
 
@@ -477,6 +480,9 @@ impl ValueRepresentation {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::{string::ToString, vec};
 
   const ALL_VRS: [(ValueRepresentation, &str, &str); 34] = [
     (ValueRepresentation::AgeString, "AS", "AgeString"),

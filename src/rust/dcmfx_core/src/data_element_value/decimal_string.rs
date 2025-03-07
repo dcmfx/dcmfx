@@ -1,11 +1,18 @@
 //! Work with the DICOM `DecimalString` value representation.
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec::Vec,
+};
+
 use crate::DataError;
 
 /// Converts a `DecimalString` value to a list of floats.
 ///
 pub fn from_bytes(bytes: &[u8]) -> Result<Vec<f64>, DataError> {
-  let decimal_string = std::str::from_utf8(bytes).map_err(|_| {
+  let decimal_string = core::str::from_utf8(bytes).map_err(|_| {
     DataError::new_value_invalid("DecimalString is invalid UTF-8".to_string())
   })?;
 
@@ -43,7 +50,7 @@ pub fn to_bytes(values: &[f64]) -> Vec<u8> {
           &decimal_value
         };
 
-        trimmed[0..std::cmp::min(trimmed.len(), 16)].to_string()
+        trimmed[0..core::cmp::min(trimmed.len(), 16)].to_string()
       } else {
         exponential_value
       }
@@ -62,6 +69,9 @@ pub fn to_bytes(values: &[f64]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::vec;
 
   #[test]
   fn from_bytes_test() {

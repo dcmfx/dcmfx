@@ -7,6 +7,9 @@
 
 #![allow(clippy::result_unit_err)]
 
+#[cfg(not(feature = "std"))]
+use alloc::{format, string::String};
+
 use crate::{DataElementTag, ValueMultiplicity, ValueRepresentation};
 
 /// An item in the data element dictionary.

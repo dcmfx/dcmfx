@@ -3,8 +3,20 @@
 
 pub mod print;
 
-use std::collections::BTreeMap;
-use std::rc::Rc;
+#[cfg(feature = "std")]
+use std::{
+  collections::{BTreeMap, btree_map},
+  rc::Rc,
+};
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  collections::{BTreeMap, btree_map},
+  format,
+  rc::Rc,
+  string::{String, ToString},
+  vec::Vec,
+};
 
 use crate::data_element_value::{
   age_string, date, date_time, person_name, time,
@@ -68,8 +80,8 @@ impl DataSet {
     let mut file_meta_information: DataSet = self
       .0
       .range((
-        std::ops::Bound::Included(DataElementTag::new(2, 0x0000)),
-        std::ops::Bound::Included(DataElementTag::new(2, 0xFFFF)),
+        core::ops::Bound::Included(DataElementTag::new(2, 0x0000)),
+        core::ops::Bound::Included(DataElementTag::new(2, 0xFFFF)),
       ))
       .map(|(tag, value)| (*tag, value.clone()))
       .collect();
@@ -276,7 +288,7 @@ impl DataSet {
   ) -> Result<(), DataError> {
     fn convert_and_build<U>(
       value: &[i64],
-      converter: fn(i64) -> Result<U, std::num::TryFromIntError>,
+      converter: fn(i64) -> Result<U, core::num::TryFromIntError>,
       builder: fn(&[U]) -> Result<DataElementValue, DataError>,
       vr: ValueRepresentation,
     ) -> Result<DataElementValue, DataError> {
@@ -356,7 +368,7 @@ impl DataSet {
   ) -> Result<(), DataError> {
     fn convert_and_build<U>(
       value: &[i128],
-      converter: fn(i128) -> Result<U, std::num::TryFromIntError>,
+      converter: fn(i128) -> Result<U, core::num::TryFromIntError>,
       builder: fn(&[U]) -> Result<DataElementValue, DataError>,
       vr: ValueRepresentation,
       tag: DataElementTag,
@@ -551,10 +563,7 @@ impl DataSet {
 
   /// Returns an iterator over a data set's elements, sorted by tag.
   ///
-  pub fn iter(
-    &self,
-  ) -> std::collections::btree_map::Iter<'_, DataElementTag, DataElementValue>
-  {
+  pub fn iter(&self) -> btree_map::Iter<'_, DataElementTag, DataElementValue> {
     self.0.iter()
   }
 
@@ -562,13 +571,13 @@ impl DataSet {
   ///
   pub fn iter_mut(
     &mut self,
-  ) -> std::collections::btree_map::IterMut<'_, DataElementTag, DataElementValue>
-  {
+  ) -> btree_map::IterMut<'_, DataElementTag, DataElementValue> {
     self.0.iter_mut()
   }
 
   /// Prints a data set to stdout formatted for readability.
   ///
+  #[cfg(feature = "std")]
   pub fn print(&self) {
     self.print_with_options(&DataSetPrintOptions::default());
   }
@@ -576,6 +585,7 @@ impl DataSet {
   /// Prints a data set to stdout formatted for readability using the given
   /// print options.
   ///
+  #[cfg(feature = "std")]
   pub fn print_with_options(&self, print_options: &DataSetPrintOptions) {
     self.to_lines(print_options, &mut |line| {
       println!("{}", line);
@@ -1072,8 +1082,7 @@ impl FromIterator<(DataElementTag, DataElementValue)> for DataSet {
 impl IntoIterator for DataSet {
   type Item = (DataElementTag, DataElementValue);
 
-  type IntoIter =
-    std::collections::btree_map::IntoIter<DataElementTag, DataElementValue>;
+  type IntoIter = btree_map::IntoIter<DataElementTag, DataElementValue>;
 
   fn into_iter(self) -> Self::IntoIter {
     self.0.into_iter()

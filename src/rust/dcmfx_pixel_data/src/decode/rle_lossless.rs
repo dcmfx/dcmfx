@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::{format, string::ToString, vec, vec::Vec};
+
 use byteorder::ByteOrder;
 use image::ImageBuffer;
 

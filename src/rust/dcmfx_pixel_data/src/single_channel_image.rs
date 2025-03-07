@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
 use image::{GrayImage, ImageBuffer, Luma};
 
 use crate::{

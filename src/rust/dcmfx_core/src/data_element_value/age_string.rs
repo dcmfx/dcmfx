@@ -1,5 +1,8 @@
 //! Work with the DICOM `AgeString` value representation.
 
+#[cfg(not(feature = "std"))]
+use alloc::{format, string::ToString, vec::Vec};
+
 use regex::Regex;
 
 use crate::DataError;
@@ -22,10 +25,10 @@ pub struct StructuredAge {
   pub unit: AgeUnit,
 }
 
-impl std::fmt::Display for StructuredAge {
+impl core::fmt::Display for StructuredAge {
   /// Formats a structured age as a human-readable string.
   ///
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     let unit = match self.unit {
       AgeUnit::Days => "day",
       AgeUnit::Weeks => "week",
@@ -39,20 +42,22 @@ impl std::fmt::Display for StructuredAge {
   }
 }
 
-static PARSE_AGE_STRING_REGEX: std::sync::LazyLock<Regex> =
-  std::sync::LazyLock::new(|| Regex::new("^(\\d\\d\\d)([DWMY])$").unwrap());
+const PARSE_AGE_STRING_REGEX: &str = "^(\\d\\d\\d)([DWMY])$";
 
 impl StructuredAge {
   /// Converts an `AgeString` value into a structured age.
   ///
   pub fn from_bytes(bytes: &[u8]) -> Result<Self, DataError> {
-    let age_string = std::str::from_utf8(bytes).map_err(|_| {
+    let age_string = core::str::from_utf8(bytes).map_err(|_| {
       DataError::new_value_invalid("AgeString is invalid UTF-8".to_string())
     })?;
 
     let age_string = age_string.trim_matches('\0').trim();
 
-    match PARSE_AGE_STRING_REGEX.captures(age_string) {
+    match Regex::new(PARSE_AGE_STRING_REGEX)
+      .unwrap()
+      .captures(age_string)
+    {
       Some(caps) => {
         let number = caps.get(1).unwrap().as_str().parse::<u16>().unwrap();
         let unit = caps.get(2).unwrap().as_str();

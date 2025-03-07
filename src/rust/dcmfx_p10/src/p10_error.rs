@@ -1,6 +1,14 @@
 //! Defines the type used to describe errors that can occur when reading and
 //! writing DICOM P10 data.
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
+
 use dcmfx_core::{DataSetPath, DcmfxError};
 
 use crate::P10Token;
@@ -79,8 +87,8 @@ pub enum P10Error {
   OtherError { error_type: String, details: String },
 }
 
-impl std::fmt::Display for P10Error {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for P10Error {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     write!(f, "DICOM P10 error: {}", self.name())
   }
 }
@@ -190,5 +198,3 @@ impl DcmfxError for P10Error {
     lines
   }
 }
-
-impl std::error::Error for P10Error {}

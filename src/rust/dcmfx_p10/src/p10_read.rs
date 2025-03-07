@@ -14,7 +14,11 @@
 //! Additional configuration for controlling memory usage when reading DICOM
 //! P10 data is available via [`P10ReadConfig`].
 
+#[cfg(feature = "std")]
 use std::rc::Rc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{boxed::Box, format, rc::Rc, string::ToString, vec, vec::Vec};
 
 use byteorder::ByteOrder;
 
@@ -183,7 +187,8 @@ impl P10ReadContext {
   pub fn set_config(&mut self, config: &P10ReadConfig) {
     // Round max token size to a multiple of 8
     let max_token_size = { config.max_token_size / 8 } * 8;
-    let max_string_size = std::cmp::max(config.max_string_size, max_token_size);
+    let max_string_size =
+      core::cmp::max(config.max_string_size, max_token_size);
 
     self.config = P10ReadConfig {
       max_token_size,
@@ -594,7 +599,7 @@ impl P10ReadContext {
       }
 
       let token = P10Token::FileMetaInformation {
-        data_set: std::mem::take(fmi_data_set),
+        data_set: core::mem::take(fmi_data_set),
       };
 
       self.next_action = NextAction::ReadDataElementHeader;
@@ -1106,7 +1111,7 @@ impl P10ReadContext {
     let bytes_to_read = if materialized_value_required {
       value_length
     } else {
-      std::cmp::min(bytes_remaining, self.config.max_token_size)
+      core::cmp::min(bytes_remaining, self.config.max_token_size)
     };
 
     match self.stream.read(bytes_to_read as usize) {

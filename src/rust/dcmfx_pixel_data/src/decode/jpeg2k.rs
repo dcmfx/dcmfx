@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+
 use image::ImageBuffer;
 use jpeg2k::*;
 

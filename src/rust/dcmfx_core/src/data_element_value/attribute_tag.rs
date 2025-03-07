@@ -1,5 +1,8 @@
 //! Work with the DICOM `AttributeTag` value representation.
 
+#[cfg(not(feature = "std"))]
+use alloc::{string::ToString, vec::Vec};
+
 use crate::{DataElementTag, DataError};
 
 /// Converts an `AttributeTag` value into data element tags.
@@ -39,6 +42,9 @@ pub fn to_bytes(values: &[DataElementTag]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::vec;
 
   #[test]
   fn from_bytes_test() {

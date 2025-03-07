@@ -1,4 +1,11 @@
+#[cfg(feature = "std")]
 use std::io::IsTerminal;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+};
 
 use crate::{DataElementTag, DataSet, ValueRepresentation, dictionary, utils};
 
@@ -41,7 +48,12 @@ impl DataSetPrintOptions {
   /// when possible.
   ///
   pub fn new() -> Self {
+    #[cfg(feature = "std")]
     let is_terminal = std::io::stdout().is_terminal();
+
+    #[cfg(not(feature = "std"))]
+    let is_terminal = false;
+
     let color_support =
       supports_color::on(supports_color::Stream::Stdout).is_some();
 
@@ -144,7 +156,7 @@ pub fn data_set_to_lines(
           print_options,
         );
 
-        let value_max_width = std::cmp::max(
+        let value_max_width = core::cmp::max(
           print_options.max_width.saturating_sub(item_header_width),
           10,
         );
@@ -167,8 +179,10 @@ pub fn data_set_to_lines(
         .0,
       );
     } else {
-      let value_max_width =
-        std::cmp::max(print_options.max_width.saturating_sub(header_width), 10);
+      let value_max_width = core::cmp::max(
+        print_options.max_width.saturating_sub(header_width),
+        10,
+      );
 
       callback(format!(
         "{header}{}",
@@ -247,7 +261,7 @@ pub fn format_data_element_prefix(
   let empty = "";
 
   let padding = if has_length {
-    std::cmp::max(50i64 - (tag_and_vr_width + tag_name_len) as i64, 0) as usize
+    core::cmp::max(50i64 - (tag_and_vr_width + tag_name_len) as i64, 0) as usize
       + 2
   } else {
     0

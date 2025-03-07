@@ -1,3 +1,11 @@
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
+
 use dcmfx_core::{DataError, DataSetPath, DcmfxError, dictionary};
 use dcmfx_p10::P10Error;
 
@@ -19,7 +27,7 @@ pub enum JsonSerializeError {
   /// provided stream. Details of the issue are contained in the enclosed
   /// [`std::io::Error`].
   ///
-  IOError(std::io::Error),
+  IOError(crate::IoError),
 }
 
 /// Occurs when an error is encountered converting from the DICOM JSON model.
@@ -47,8 +55,8 @@ impl PartialEq for JsonSerializeError {
   }
 }
 
-impl std::fmt::Display for JsonSerializeError {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for JsonSerializeError {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     match self {
       JsonSerializeError::DataError(e) => e.fmt(f),
       JsonSerializeError::P10Error(e) => e.fmt(f),
@@ -57,8 +65,8 @@ impl std::fmt::Display for JsonSerializeError {
   }
 }
 
-impl std::fmt::Display for JsonDeserializeError {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for JsonDeserializeError {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     match self {
       JsonDeserializeError::JsonInvalid { details, path } => {
         write!(
@@ -117,6 +125,3 @@ impl DcmfxError for JsonDeserializeError {
     }
   }
 }
-
-impl std::error::Error for JsonSerializeError {}
-impl std::error::Error for JsonDeserializeError {}

@@ -2,7 +2,17 @@
 //! Data element values are usually stored in a [`DataSet`] which maps data
 //! element tags to data element values.
 
+#[cfg(feature = "std")]
 use std::rc::Rc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  rc::Rc,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
 
 use byteorder::ByteOrder;
 use unicode_segmentation::UnicodeSegmentation;
@@ -93,13 +103,13 @@ impl DataElementValue {
         // If the data isn't valid UTF-8 then try to ensure the data slice ends
         // exactly on a UTF-8 character boundary so that data element values
         // with partial data are still displayable
-        let mut utf8 = std::str::from_utf8(bytes);
+        let mut utf8 = core::str::from_utf8(bytes);
         if utf8.is_err() {
           if let Some(index) = bytes
             .iter()
             .rposition(|b| (*b & 0b1100_0000) != 0b1000_0000)
           {
-            utf8 = std::str::from_utf8(&bytes[0..index]);
+            utf8 = core::str::from_utf8(&bytes[0..index]);
           }
         }
 
@@ -286,7 +296,7 @@ impl DataElementValue {
         // Calculate width available for the value once the suffix isn't taken
         // into account. Always allow at least 10 characters.
         let output_width =
-          std::cmp::max(output_width.saturating_sub(suffix.len()), 10);
+          core::cmp::max(output_width.saturating_sub(suffix.len()), 10);
 
         // If there are more codepoints than columns then convert to graphemes
         // and assume one column per grapheme for display
@@ -332,7 +342,7 @@ impl DataElementValue {
     }
 
     if vr.is_encoded_string() {
-      if std::str::from_utf8(&bytes).is_err() {
+      if core::str::from_utf8(&bytes).is_err() {
         return Err(DataError::new_value_invalid(format!(
           "Bytes for '{}' are not valid UTF-8",
           vr
@@ -876,7 +886,7 @@ impl DataElementValue {
         .fold(0, |acc, item| acc + item.total_byte_size()),
     };
 
-    let fixed_size = std::mem::size_of::<Self>() as u64;
+    let fixed_size = core::mem::size_of::<Self>() as u64;
 
     data_size + fixed_size
   }
@@ -895,7 +905,7 @@ impl DataElementValue {
           || *vr == ValueRepresentation::UniversalResourceIdentifier
           || *vr == ValueRepresentation::UnlimitedText =>
       {
-        let string = std::str::from_utf8(bytes.as_slice()).map_err(|_| {
+        let string = core::str::from_utf8(bytes.as_slice()).map_err(|_| {
           DataError::new_value_invalid(
             "String bytes are not valid UTF-8".to_string(),
           )
@@ -935,7 +945,7 @@ impl DataElementValue {
           || *vr == ValueRepresentation::ShortString
           || *vr == ValueRepresentation::UnlimitedCharacters =>
       {
-        let string = std::str::from_utf8(bytes.as_slice()).map_err(|_| {
+        let string = core::str::from_utf8(bytes.as_slice()).map_err(|_| {
           DataError::new_value_invalid(
             "String bytes are not valid UTF-8".to_string(),
           )
@@ -981,7 +991,7 @@ impl DataElementValue {
     // Converts an integer value to the target integer type, erroring if the
     // conversion is out of bounds
     fn convert_int<
-      U: num_traits::PrimInt + Into<i64> + std::fmt::Display,
+      U: num_traits::PrimInt + Into<i64> + core::fmt::Display,
       T: num_traits::PrimInt + TryFrom<i64>,
     >(
       i: U,
@@ -991,7 +1001,7 @@ impl DataElementValue {
         Err(_) => Err(DataError::new_value_invalid(format!(
           "Value '{}' is out of range for the target integer type '{}'",
           i,
-          std::any::type_name::<T>()
+          core::any::type_name::<T>()
         ))),
       }
     }

@@ -2,6 +2,35 @@
 //!
 //! Ref: PS3.18 F.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  string::{String, ToString},
+  vec::Vec,
+};
+
+#[cfg(feature = "std")]
+pub type IoWrite = dyn std::io::Write;
+
+#[cfg(feature = "std")]
+pub type IoError = std::io::Error;
+
+#[cfg(not(feature = "std"))]
+pub type IoError = String;
+
+#[cfg(not(feature = "std"))]
+pub trait Write {
+  fn write_all(&mut self, buf: &[u8]) -> Result<(), IoError>;
+  fn flush(&mut self) -> Result<(), IoError>;
+}
+
+#[cfg(not(feature = "std"))]
+pub type IoWrite = dyn Write;
+
 mod internal;
 mod json_config;
 mod json_error;
@@ -32,7 +61,7 @@ where
   fn to_json_stream(
     &self,
     config: DicomJsonConfig,
-    stream: &mut dyn std::io::Write,
+    stream: &mut IoWrite,
   ) -> Result<(), JsonSerializeError>;
 
   /// Constructs a new data set from DICOM JSON data.
@@ -40,12 +69,42 @@ where
   fn from_json(json: &str) -> Result<Self, JsonDeserializeError>;
 }
 
+#[cfg(not(feature = "std"))]
+struct Cursor {
+  data: Vec<u8>,
+}
+
+#[cfg(not(feature = "std"))]
+impl Cursor {
+  fn into_inner(self) -> Vec<u8> {
+    self.data
+  }
+}
+
+#[cfg(not(feature = "std"))]
+impl Write for Cursor {
+  fn write_all(&mut self, buf: &[u8]) -> Result<(), IoError> {
+    self.data.extend_from_slice(buf);
+    Ok(())
+  }
+
+  fn flush(&mut self) -> Result<(), IoError> {
+    Ok(())
+  }
+}
+
 impl DataSetJsonExtensions for DataSet {
   fn to_json(
     &self,
     config: DicomJsonConfig,
   ) -> Result<String, JsonSerializeError> {
-    let mut cursor = std::io::Cursor::new(Vec::with_capacity(64 * 1024));
+    let buffer = Vec::with_capacity(64 * 1024);
+
+    #[cfg(feature = "std")]
+    let mut cursor = std::io::Cursor::new(buffer);
+
+    #[cfg(not(feature = "std"))]
+    let mut cursor = Cursor { data: buffer };
 
     self.to_json_stream(config, &mut cursor)?;
 
@@ -55,7 +114,7 @@ impl DataSetJsonExtensions for DataSet {
   fn to_json_stream(
     &self,
     config: DicomJsonConfig,
-    stream: &mut dyn std::io::Write,
+    stream: &mut IoWrite,
   ) -> Result<(), JsonSerializeError> {
     let mut json_transform = P10JsonTransform::new(&config);
     let mut token_to_stream =
@@ -83,7 +142,11 @@ impl DataSetJsonExtensions for DataSet {
 
 #[cfg(test)]
 mod tests {
+  #[cfg(feature = "std")]
   use std::rc::Rc;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::{rc::Rc, vec};
 
   use dcmfx_core::{
     DataElementTag, DataElementValue, PersonNameComponents,

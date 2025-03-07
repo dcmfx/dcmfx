@@ -3,6 +3,14 @@
 
 use crate::{DataElementTag, dictionary};
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
+
 /// A path in a data set that specifies the precise location of a specific data
 /// element or sequence item. Entries in a data set path are separated by a
 /// forward slash when a path is represented as a string.
@@ -174,10 +182,10 @@ impl DataSetPath {
   }
 }
 
-impl std::fmt::Display for DataSetPath {
+impl core::fmt::Display for DataSetPath {
   /// Formats a data set path with its entries separated by forward slashes.
   ///
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     let path = self
       .0
       .iter()

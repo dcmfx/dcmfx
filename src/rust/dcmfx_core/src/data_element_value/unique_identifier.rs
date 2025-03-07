@@ -1,5 +1,11 @@
 //! Work with the DICOM `UniqueIdentifier` value representation.
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+  string::{String, ToString},
+  vec::Vec,
+};
+
 use rand::Rng;
 use regex::Regex;
 
@@ -23,10 +29,7 @@ pub fn to_bytes(uids: &[&str]) -> Result<Vec<u8>, DataError> {
   Ok(bytes)
 }
 
-static PARSE_UID_REGEX: std::sync::LazyLock<Regex> =
-  std::sync::LazyLock::new(|| {
-    Regex::new("^(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*))*$").unwrap()
-  });
+const PARSE_UID_REGEX: &str = "^(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*))*$";
 
 /// Returns whether the given string is a valid `UniqueIdentifier`. Valid UIDs
 /// are 1-64 characters in length, and are made up of sequences of digits
@@ -39,7 +42,7 @@ pub fn is_valid(uid: &str) -> bool {
     return false;
   }
 
-  PARSE_UID_REGEX.is_match(uid)
+  Regex::new(PARSE_UID_REGEX).unwrap().is_match(uid)
 }
 
 /// Generates a new random UID with the given prefix. The new UID will have a
@@ -77,6 +80,9 @@ pub fn new(prefix: &str) -> Result<String, ()> {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::vec;
 
   #[test]
   fn to_bytes_test() {

@@ -1,5 +1,8 @@
 //! A DICOM data element tag, defined as 16-bit `group` and `element` values.
 
+#[cfg(not(feature = "std"))]
+use alloc::string::{String, ToString};
+
 /// A data element tag that is defined by `group` and `element` values, each of
 /// which is a 16-bit unsigned integer.
 ///
@@ -9,14 +12,14 @@ pub struct DataElementTag {
   pub element: u16,
 }
 
-impl std::fmt::Debug for DataElementTag {
+impl core::fmt::Debug for DataElementTag {
   /// Print a tag's group and element in hex when debug printing.
   ///
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let hex_digits = self.to_hex_digits();
 
-    let group = std::str::from_utf8(&hex_digits[0..4]).unwrap();
-    let element = std::str::from_utf8(&hex_digits[4..8]).unwrap();
+    let group = core::str::from_utf8(&hex_digits[0..4]).unwrap();
+    let element = core::str::from_utf8(&hex_digits[4..8]).unwrap();
 
     f.debug_struct("DataElementTag")
       .field("group", &format_args!("0x{}", group))
@@ -25,14 +28,14 @@ impl std::fmt::Debug for DataElementTag {
   }
 }
 
-impl std::fmt::Display for DataElementTag {
+impl core::fmt::Display for DataElementTag {
   /// Formats a data element tag as `"($GROUP,$ELEMENT)"`, e.g.`"(0008,0020)"`.
   ///
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     let hex_digits = self.to_hex_digits();
 
-    let group = std::str::from_utf8(&hex_digits[0..4]).unwrap();
-    let element = std::str::from_utf8(&hex_digits[4..8]).unwrap();
+    let group = core::str::from_utf8(&hex_digits[0..4]).unwrap();
+    let element = core::str::from_utf8(&hex_digits[4..8]).unwrap();
 
     write!(f, "({},{})", group, element)
   }
@@ -78,7 +81,7 @@ impl DataElementTag {
   /// Formats a data element tag as `"$GROUP$ELEMENT"`, e.g.`"0008002D"`.
   ///
   pub fn to_hex_string(&self) -> String {
-    std::str::from_utf8(&self.to_hex_digits())
+    core::str::from_utf8(&self.to_hex_digits())
       .unwrap()
       .to_string()
   }
@@ -120,6 +123,9 @@ impl DataElementTag {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::format;
 
   #[test]
   fn debug_format_test() {

@@ -22,7 +22,17 @@
 //!    either the `UnsignedShort` or `SignedShort` VR, and determining which
 //!    requires the *'(0028,0103) Pixel Representation'* data element's value.
 
-use std::collections::HashMap;
+#[cfg(feature = "std")]
+use std::collections::BTreeMap;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+  collections::BTreeMap,
+  format,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
 
 use dcmfx_character_set::{self, SpecificCharacterSet, StringType};
 use dcmfx_core::{DataElementTag, ValueRepresentation, dictionary, utils};
@@ -71,7 +81,7 @@ struct ClarifyingDataElements {
   pixel_representation: Option<u16>,
   waveform_bits_stored: Option<u16>,
   waveform_bits_allocated: Option<u16>,
-  private_creators: HashMap<DataElementTag, String>,
+  private_creators: BTreeMap<DataElementTag, String>,
 }
 
 /// Returns whether a data element tag is for a clarifying data element that
@@ -109,7 +119,7 @@ impl Default for ClarifyingDataElements {
       pixel_representation: None,
       waveform_bits_stored: None,
       waveform_bits_allocated: None,
-      private_creators: HashMap::new(),
+      private_creators: BTreeMap::new(),
     }
   }
 }
@@ -450,7 +460,7 @@ impl P10Location {
     value_bytes: &mut Vec<u8>,
   ) -> Result<(), P10Error> {
     let specific_character_set =
-      std::str::from_utf8(value_bytes).map_err(|_| {
+      core::str::from_utf8(value_bytes).map_err(|_| {
         P10Error::SpecificCharacterSetInvalid {
           specific_character_set: utils::inspect_u8_slice(value_bytes, 64),
           details: "Invalid UTF-8".to_string(),
@@ -499,7 +509,7 @@ impl P10Location {
     value_bytes: &[u8],
     tag: DataElementTag,
   ) {
-    let private_creator = match std::str::from_utf8(value_bytes) {
+    let private_creator = match core::str::from_utf8(value_bytes) {
       Ok(value) => value.trim_end_matches(' ').to_string(),
       Err(_) => return,
     };

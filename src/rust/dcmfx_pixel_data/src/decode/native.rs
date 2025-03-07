@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::{format, string::ToString, vec};
+
 use image::ImageBuffer;
 
 use dcmfx_core::DataError;
@@ -604,6 +607,10 @@ mod tests {
   use image::{Luma, Rgb};
 
   use super::*;
+
+  #[cfg(not(feature = "std"))]
+  use alloc::vec::Vec;
+
   use crate::PixelRepresentation;
 
   #[test]
