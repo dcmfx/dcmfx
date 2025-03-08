@@ -2,6 +2,8 @@
 //! standard, the international standard for medical images and related
 //! information.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 /// Anonymization of data sets by removing data elements that identify the
 /// patient, or potentially contribute to identification of the patient.
 ///

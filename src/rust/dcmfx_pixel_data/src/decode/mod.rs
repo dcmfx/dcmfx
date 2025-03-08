@@ -4,8 +4,10 @@ pub mod jpeg;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod jpeg2k;
 pub mod jpeg_decoder;
-#[cfg(not(target_arch = "wasm32"))]
 pub mod libjpeg_12bit;
 pub mod native;
 pub mod rle_lossless;
 pub mod ybr_to_rgb;
+
+#[cfg(not(feature = "std"))]
+mod c_alloc;

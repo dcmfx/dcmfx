@@ -1,4 +1,4 @@
-// Integration tests for dcmfx
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
   const RNG_SEED: u64 = 1023;
