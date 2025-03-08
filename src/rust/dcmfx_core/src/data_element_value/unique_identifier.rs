@@ -6,7 +6,6 @@ use alloc::{
   vec::Vec,
 };
 
-use rand::Rng;
 use regex::Regex;
 
 use crate::DataError;
@@ -49,8 +48,30 @@ pub fn is_valid(uid: &str) -> bool {
 /// length of 64 characters. If a prefix is specified then it must itself be
 /// a valid UID and no longer than 60 characters.
 ///
+#[cfg(not(target_arch = "wasm32"))]
 #[allow(clippy::result_unit_err)]
 pub fn new(prefix: &str) -> Result<String, ()> {
+  use rand::Rng;
+
+  let mut rng = rand::rng();
+  let mut random_character = |range: core::ops::Range<u8>| -> char {
+    char::from_u32(rng.random_range(range) as u32).unwrap()
+  };
+
+  new_using_rng(prefix, &mut random_character)
+}
+
+/// Generates a new random UID with the given prefix. The specified function is
+/// used to generate random characters.
+/// 
+/// The new UID will have a length of 64 characters. If a prefix is specified
+/// then it must itself be a valid UID and no longer than 60 characters.
+///
+#[allow(clippy::result_unit_err)]
+pub fn new_using_rng(
+  prefix: &str,
+  rng: &mut dyn FnMut(core::ops::Range<u8>) -> char,
+) -> Result<String, ()> {
   let prefix_length = prefix.len();
 
   // Check the prefix is valid
@@ -58,20 +79,15 @@ pub fn new(prefix: &str) -> Result<String, ()> {
     return Err(());
   }
 
-  let mut rng = rand::thread_rng();
-  let mut random_character = |offset: u32, range: u32| -> char {
-    char::from_u32(rng.gen_range(offset..(offset + range))).unwrap()
-  };
-
   // Start with a separator, if needed, and a non-zero character
   let mut uid = prefix.to_string();
   if !uid.is_empty() {
     uid.push('.')
   }
-  uid.push(random_character(49, 9));
+  uid.push(rng(49..58));
 
   while uid.len() < 64 {
-    uid.push(random_character(48, 10));
+    uid.push(rng(48..58));
   }
 
   Ok(uid)
