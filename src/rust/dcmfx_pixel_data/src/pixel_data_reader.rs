@@ -169,7 +169,6 @@ impl PixelDataReader {
         decode::jpeg::decode_single_channel(&self.definition, data)
       }
 
-      #[cfg(not(target_arch = "wasm32"))]
       &JPEG_EXTENDED_12BIT => {
         decode::libjpeg_12bit::decode_single_channel(&self.definition, data)
       }
@@ -228,7 +227,6 @@ impl PixelDataReader {
 
       &JPEG_BASELINE_8BIT => decode::jpeg::decode_color(&self.definition, data),
 
-      #[cfg(not(target_arch = "wasm32"))]
       &JPEG_EXTENDED_12BIT => {
         decode::libjpeg_12bit::decode_color(&self.definition, data)
       }

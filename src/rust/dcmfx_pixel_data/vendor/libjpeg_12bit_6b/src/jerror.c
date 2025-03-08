@@ -76,7 +76,9 @@ error_exit (j_common_ptr cinfo)
   /* Let the memory manager delete any temp files before we die */
   jpeg_destroy(cinfo);
 
+#ifndef __wasm__
   exit(EXIT_FAILURE);
+#endif
 }
 
 
@@ -107,7 +109,7 @@ output_message (j_common_ptr cinfo)
   /* Display it in a message dialog box */
   MessageBox(GetActiveWindow(), buffer, "JPEG Library Error",
 	     MB_OK | MB_ICONERROR);
-#else
+#elif !defined(__wasm__)
   /* Send it to stderr, adding a newline */
   fprintf(stderr, "%s\n", buffer);
 #endif
@@ -190,6 +192,12 @@ format_message (j_common_ptr cinfo, char * buffer)
   }
 
   /* Format the message into the passed buffer */
+#ifdef __wasm__
+  /* On WASM the raw msgtext is output without interpolating the relevant parts
+     of err->msg_parm into it. This is because there's no sprintf implementation
+     available. One could be brought in though. TODO. */
+  strcpy(buffer, msgtext);
+#else
   if (isstring)
     sprintf(buffer, msgtext, err->msg_parm.s);
   else
@@ -198,6 +206,7 @@ format_message (j_common_ptr cinfo, char * buffer)
 	    err->msg_parm.i[2], err->msg_parm.i[3],
 	    err->msg_parm.i[4], err->msg_parm.i[5],
 	    err->msg_parm.i[6], err->msg_parm.i[7]);
+#endif
 }
 
 

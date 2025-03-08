@@ -57,11 +57,11 @@ static void skip_input_data(j_decompress_ptr dinfo, long num_bytes)
 static void term_source(j_decompress_ptr _dinfo) {}
 
 // Decodes the given bytes as a 12-bit JPEG.
-int ijg_decode_jpeg_12bit(unsigned char *jpeg_data, size_t jpeg_size,
-                          int *width, int *height, int *channels,
-                          JSAMPLE *output_buffer,
-                          size_t output_buffer_size,
-                          char error_message[JMSG_LENGTH_MAX])
+int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
+                         uint32_t *width, uint32_t *height, uint32_t *channels,
+                         uint16_t *output_buffer,
+                         uint64_t output_buffer_size,
+                         int8_t error_message[JMSG_LENGTH_MAX])
 {
   struct jpeg_decompress_struct dinfo;
 
@@ -110,7 +110,7 @@ int ijg_decode_jpeg_12bit(unsigned char *jpeg_data, size_t jpeg_size,
   // Check that the data uses the expected 12-bit precision
   if (dinfo.data_precision != 12)
   {
-    sprintf(error_message, "Data precision is not 12-bit", dinfo.data_precision);
+    strcpy(error_message, "Data precision is not 12-bit");
     return -1;
   }
 
@@ -125,12 +125,7 @@ int ijg_decode_jpeg_12bit(unsigned char *jpeg_data, size_t jpeg_size,
   else
   {
     jpeg_destroy_decompress(&dinfo);
-
-    sprintf(
-        error_message,
-        "Output components is %i but only 1 and 3 components are supported",
-        dinfo.output_components);
-
+    strcpy(error_message, "Output components is not 1 or 3");
     return -1;
   }
 
@@ -138,7 +133,7 @@ int ijg_decode_jpeg_12bit(unsigned char *jpeg_data, size_t jpeg_size,
   *width = dinfo.output_width;
   *height = dinfo.output_height;
   *channels = dinfo.output_components;
-  if (output_buffer_size < *width * *height * *channels)
+  if (output_buffer_size < (uint64_t)*width * (uint64_t)*height * (uint64_t)*channels)
   {
     jpeg_destroy_decompress(&dinfo);
     strcpy(error_message, "Output buffer is too small");

@@ -48,9 +48,9 @@ fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<(u32, u32, usize, Vec<u16>), DataError> {
-  let mut width: i32 = 0;
-  let mut height: i32 = 0;
-  let mut channels: i32 = 0;
+  let mut width: u32 = 0;
+  let mut height: u32 = 0;
+  let mut channels: u32 = 0;
   let mut error_message: [i8; 200] = [0; 200];
 
   // Allocate output buffer
@@ -62,14 +62,14 @@ fn decode(
 
   // Make FFI call into libjpeg_12bit to perform the decompression
   let result = unsafe {
-    ffi::ijg_decode_jpeg_12bit(
+    ffi::libjpeg_12bit_decode(
       data.as_ptr(),
-      data.len(),
+      data.len() as u64,
       &mut width,
       &mut height,
       &mut channels,
       output_buffer.as_mut_ptr(),
-      output_buffer.len(),
+      output_buffer.len() as u64,
       error_message.as_mut_ptr(),
     )
   };
@@ -91,24 +91,19 @@ fn decode(
     ));
   }
 
-  Ok((
-    width as u32,
-    height as u32,
-    channels as usize,
-    output_buffer,
-  ))
+  Ok((width, height, channels as usize, output_buffer))
 }
 
 mod ffi {
   unsafe extern "C" {
-    pub fn ijg_decode_jpeg_12bit(
+    pub fn libjpeg_12bit_decode(
       jpeg_data: *const u8,
-      jpeg_size: usize,
-      width: *mut i32,
-      height: *mut i32,
-      channels: *mut i32,
+      jpeg_size: u64,
+      width: *mut u32,
+      height: *mut u32,
+      channels: *mut u32,
       output_buffer: *mut u16,
-      output_buffer_size: usize,
+      output_buffer_size: u64,
       error_message: *mut i8,
     ) -> i32;
   }
