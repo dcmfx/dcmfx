@@ -63,7 +63,7 @@ pub fn new(prefix: &str) -> Result<String, ()> {
 
 /// Generates a new random UID with the given prefix. The specified function is
 /// used to generate random characters.
-/// 
+///
 /// The new UID will have a length of 64 characters. If a prefix is specified
 /// then it must itself be a valid UID and no longer than 60 characters.
 ///

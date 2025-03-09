@@ -3,12 +3,14 @@
 DCMfx has no formal roadmap, but future additions are likely to include the
 following:
 
-- Pixel data decoding of the JPEG 2000, and JPEG-LS transfer syntaxes on Rust's
-  WASM target
-
-- Transcode between a wider range of transfer syntaxes
+- Pixel Data
+  - Decoding of the JPEG-LS transfer syntax on Rust's WASM targets
+  - Correctly handle invalid data when decoding JPEG Extended on Rust's WASM
+    targets
 
 - Overlay rendering
+
+- Stream transcoding between a wider range of transfer syntaxes
 
 - DIMSE networking
 

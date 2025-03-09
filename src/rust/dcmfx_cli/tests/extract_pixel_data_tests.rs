@@ -178,7 +178,7 @@ fn dicom_jpeg_2000_single_channel_to_jpg() {
     .arg("-f")
     .arg("jpg")
     .arg("--voi-window")
-    .arg("33904")
+    .arg("1136")
     .arg("2018")
     .assert()
     .success()

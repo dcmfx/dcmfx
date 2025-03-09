@@ -19,8 +19,6 @@ jpeg-decoder = { git = "https://github.com/image-rs/jpeg-decoder.git", rev = "95
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 charls = { version = "0.4.0", features = ["static"] }
-jpeg2k = "0.9.1"
-libc = "0.2.170"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm32-unknown-unknown-openbsd-libc = "0.2"

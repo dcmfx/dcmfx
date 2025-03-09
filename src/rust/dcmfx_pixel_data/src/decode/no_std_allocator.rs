@@ -2,7 +2,7 @@ use alloc::alloc::Layout;
 
 /// Provides a C-compatible `malloc()` function that maps through to the global
 /// allocator.
-/// 
+///
 /// This is used on WASM platforms so that image codec libraries written in C
 /// can allocate memory.
 ///
@@ -28,6 +28,26 @@ pub extern "C" fn malloc(size: usize) -> *mut u8 {
 
   // Return pointer to the data following the layout definition
   unsafe { ptr.add(layout_size) }
+}
+
+/// Provides a C-compatible `calloc()` function that maps through to the global
+/// allocator.
+///
+/// This is used on WASM platforms so that image codec libraries written in C
+/// can allocate memory.
+///
+#[unsafe(no_mangle)]
+pub extern "C" fn calloc(count: usize, size: usize) -> *mut u8 {
+  let ptr = malloc(count * size);
+  if ptr.is_null() {
+    return ptr;
+  }
+
+  unsafe {
+    ::core::ptr::write_bytes(ptr, 0, count * size);
+  }
+
+  ptr
 }
 
 /// Provides a C-compatible `free()` function that maps through to the global
