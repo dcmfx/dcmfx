@@ -177,13 +177,12 @@ impl PixelDataReader {
         decode::jpeg_decoder::decode_single_channel(&self.definition, data)
       }
 
-      #[cfg(not(target_arch = "wasm32"))]
       &JPEG_2K
       | &JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K
       | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
-        decode::jpeg2k::decode_single_channel(&self.definition, data)
+        decode::openjpeg::decode_single_channel(&self.definition, data)
       }
 
       #[cfg(not(target_arch = "wasm32"))]
@@ -235,13 +234,12 @@ impl PixelDataReader {
         decode::jpeg_decoder::decode_color(&self.definition, data)
       }
 
-      #[cfg(not(target_arch = "wasm32"))]
       &JPEG_2K
       | &JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K
       | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
-        decode::jpeg2k::decode_color(&self.definition, data)
+        decode::openjpeg::decode_color(&self.definition, data)
       }
 
       #[cfg(not(target_arch = "wasm32"))]

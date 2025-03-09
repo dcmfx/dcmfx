@@ -1,6 +1,7 @@
 // This file contains the C entry point called from Rust to perform decoding of
 // 12-bit JPEG data.
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,11 +10,10 @@
 #include <setjmp.h>
 #endif
 
-#include "./src/jpeglib12.h"
 #include "./src/jerror12.h"
+#include "./src/jpeglib12.h"
 
-struct my_error_mgr
-{
+struct my_error_mgr {
   struct jpeg_error_mgr pub;
 
 #ifndef __wasm__
@@ -25,8 +25,7 @@ struct my_error_mgr
 // This function is called from inside libjpeg to terminate JPEG decoding on an
 // error. It outputs the message and then longjmp's back to exit from the
 // decoding function higher up the stack.
-static void on_jpeg_error(j_common_ptr cinfo)
-{
+static void on_jpeg_error(j_common_ptr cinfo) {
   (*cinfo->err->output_message)(cinfo);
 
   longjmp(((struct my_error_mgr *)cinfo->err)->setjmp_buffer, 1);
@@ -37,18 +36,16 @@ static void output_message(j_common_ptr _cinfo) {}
 
 static void init_source(j_decompress_ptr _dinfo) {}
 
-static boolean fill_input_buffer(j_decompress_ptr _dinfo)
-{
-  return FALSE;
-}
+static boolean fill_input_buffer(j_decompress_ptr _dinfo) { return FALSE; }
 
-static void skip_input_data(j_decompress_ptr dinfo, long num_bytes)
-{
-  if (num_bytes <= 0)
+static void skip_input_data(j_decompress_ptr dinfo, long num_bytes) {
+  if (num_bytes <= 0) {
     return;
+  }
 
-  if ((size_t)num_bytes > dinfo->src->bytes_in_buffer)
+  if ((size_t)num_bytes > dinfo->src->bytes_in_buffer) {
     num_bytes = dinfo->src->bytes_in_buffer;
+  }
 
   dinfo->src->bytes_in_buffer -= num_bytes;
   dinfo->src->next_input_byte += num_bytes;
@@ -59,10 +56,8 @@ static void term_source(j_decompress_ptr _dinfo) {}
 // Decodes the given bytes as a 12-bit JPEG.
 int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
                          uint32_t *width, uint32_t *height, uint32_t *channels,
-                         uint16_t *output_buffer,
-                         uint64_t output_buffer_size,
-                         int8_t error_message[JMSG_LENGTH_MAX])
-{
+                         uint16_t *output_buffer, uint64_t output_buffer_size,
+                         int8_t error_message[JMSG_LENGTH_MAX]) {
   struct jpeg_decompress_struct dinfo;
 
   struct my_error_mgr jerr;
@@ -75,8 +70,7 @@ int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
   // Setup jump-based error handling
 #ifndef __wasm__
   jerr.pub.error_exit = on_jpeg_error;
-  if (setjmp(jerr.setjmp_buffer))
-  {
+  if (setjmp(jerr.setjmp_buffer)) {
     // Put error details into the error message output
     (dinfo.err->format_message)((j_common_ptr)&dinfo, error_message);
 
@@ -101,15 +95,13 @@ int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
   dinfo.src = &src;
 
   // Read JPEG header
-  if (jpeg_read_header(&dinfo, TRUE) != JPEG_HEADER_OK)
-  {
+  if (jpeg_read_header(&dinfo, TRUE) != JPEG_HEADER_OK) {
     strcpy(error_message, "Failed reading JPEG header");
     return -1;
   }
 
   // Check that the data uses the expected 12-bit precision
-  if (dinfo.data_precision != 12)
-  {
+  if (dinfo.data_precision != 12) {
     strcpy(error_message, "Data precision is not 12-bit");
     return -1;
   }
@@ -118,12 +110,11 @@ int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
   jpeg_start_decompress(&dinfo);
 
   // Set output color space to RGB for color images
-  if (dinfo.output_components == 1)
+  if (dinfo.output_components == 1) {
     dinfo.out_color_space = JCS_GRAYSCALE;
-  else if (dinfo.output_components == 3)
+  } else if (dinfo.output_components == 3) {
     dinfo.out_color_space = JCS_RGB;
-  else
-  {
+  } else {
     jpeg_destroy_decompress(&dinfo);
     strcpy(error_message, "Output components is not 1 or 3");
     return -1;
@@ -133,8 +124,8 @@ int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
   *width = dinfo.output_width;
   *height = dinfo.output_height;
   *channels = dinfo.output_components;
-  if (output_buffer_size < (uint64_t)*width * (uint64_t)*height * (uint64_t)*channels)
-  {
+  if (output_buffer_size <
+      (uint64_t)*width * (uint64_t)*height * (uint64_t)*channels) {
     jpeg_destroy_decompress(&dinfo);
     strcpy(error_message, "Output buffer is too small");
     return -1;
@@ -142,12 +133,11 @@ int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
 
   // Allocate buffer to store a single scanline
   int row_stride = dinfo.output_width * dinfo.output_components;
-  JSAMPARRAY buffer = (*dinfo.mem->alloc_sarray)((j_common_ptr)&dinfo, JPOOL_IMAGE,
-                                                 row_stride, 1);
+  JSAMPARRAY buffer = (*dinfo.mem->alloc_sarray)((j_common_ptr)&dinfo,
+                                                 JPOOL_IMAGE, row_stride, 1);
 
   // Read scanlines and accumulate in the output buffer
-  while (dinfo.output_scanline < dinfo.output_height)
-  {
+  while (dinfo.output_scanline < dinfo.output_height) {
     jpeg_read_scanlines(&dinfo, buffer, 1);
     memcpy(output_buffer, buffer[0], row_stride * sizeof(JSAMPLE));
     output_buffer += row_stride;
