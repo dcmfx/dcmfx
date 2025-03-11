@@ -1,31 +1,57 @@
 fn main() {
-  // Glob for all the .c files
-  let c_files: Vec<_> = glob::glob("vendor/**/*.c")
-    .unwrap()
-    .filter_map(Result::ok)
-    .collect();
+  build_c_code();
+  build_cpp_code();
 
-  // Re-run build if any of the .c files change
-  for file in c_files.iter() {
-    println!("cargo:rerun-if-changed={}", file.to_string_lossy());
+  // Add output directory to the linker's search path
+  let out_dir = std::env::var("OUT_DIR").unwrap();
+  println!("cargo::rustc-link-search=native={}", out_dir);
+}
+
+fn build_c_code() {
+  let mut build = cc::Build::new();
+
+  shared_build_config(&mut build, "vendor/**/*.c", "vendor/**/*.h");
+  build.include("vendor/libjpeg_12bit_6b");
+  build.include("vendor/openjpeg_2.5.3/src");
+
+  build.compile("dcmfx_pixel_data_c_libs");
+}
+
+fn build_cpp_code() {
+  let mut build = cc::Build::new();
+
+  shared_build_config(&mut build, "vendor/**/*.cpp", "vendor/**/*.hpp");
+  build.compiler("clang++");
+  build.include("vendor/charls_2.4.2/include");
+  build.define("CHARLS_STATIC", "1");
+
+  build.compile("dcmfx_pixel_data_cpp_libs");
+
+  // Link to C++ standard library
+  if let Ok(inner) = std::env::var("CARGO_CFG_TARGET_OS") {
+    match inner.as_str() {
+      "linux" => println!("cargo:rustc-link-lib=stdc++"),
+      "macos" => println!("cargo:rustc-link-lib=c++"),
+      _ => {}
+    }
+  }
+}
+
+fn shared_build_config(
+  build: &mut cc::Build,
+  glob_path: &str,
+  header_glob_path: &str,
+) {
+  // Silence build warnings
+  if std::env::var("TARGET").unwrap().contains("msvc") {
+    build.flag("/w");
+  } else {
+    build.flag("-w");
   }
 
-  // Determine the compilation flag to hide build warnings
-  let disable_warnings_flag =
-    if std::env::var("TARGET").unwrap().contains("msvc") {
-      "/w"
-    } else {
-      "-w"
-    };
-
-  // Prepare build
-  let mut build = cc::Build::new();
-  build
-    .files(c_files)
-    .flag(disable_warnings_flag)
-    .opt_level(2)
-    .flag("-DNDEBUG")
-    .opt_level(2);
+  // Optimize builds
+  build.define("NDEBUG", "1");
+  build.opt_level(2);
 
   // When targeting WASM, add OpenBSD libc include path
   if let Some(libc) =
@@ -35,12 +61,25 @@ fn main() {
     println!("cargo::rustc-link-lib=wasm32-unknown-unknown-openbsd-libc");
   }
 
-  build.include("vendor/libjpeg_12bit_6b");
-  build.include("vendor/openjpeg_2.5.3/src");
+  // Glob for all the .c files
+  let src_files: Vec<_> = glob::glob(glob_path)
+    .unwrap()
+    .filter_map(Result::ok)
+    .collect();
 
-  build.compile("dcmfx_pixel_data_c_libs");
+  // Re-run build if any of the .c files change
+  for file in src_files.iter() {
+    println!("cargo:rerun-if-changed={}", file.to_string_lossy());
+  }
 
-  // Add output directory to the linker's search path
-  let out_dir = std::env::var("OUT_DIR").unwrap();
-  println!("cargo::rustc-link-search=native={}", out_dir);
+  let header_files: Vec<_> = glob::glob(header_glob_path)
+    .unwrap()
+    .filter_map(Result::ok)
+    .collect();
+
+  for file in header_files {
+    println!("cargo:rerun-if-changed={}", file.to_string_lossy());
+  }
+
+  build.files(src_files);
 }

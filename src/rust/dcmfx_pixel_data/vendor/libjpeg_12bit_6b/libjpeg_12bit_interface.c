@@ -57,7 +57,7 @@ static void term_source(j_decompress_ptr _dinfo) {}
 int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
                          uint32_t *width, uint32_t *height, uint32_t *channels,
                          uint16_t *output_buffer, uint64_t output_buffer_size,
-                         int8_t error_message[JMSG_LENGTH_MAX]) {
+                         char error_message[JMSG_LENGTH_MAX]) {
   struct jpeg_decompress_struct dinfo;
 
   struct my_error_mgr jerr;

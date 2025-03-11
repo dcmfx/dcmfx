@@ -3,11 +3,13 @@ use alloc::{format, string::ToString, vec, vec::Vec};
 
 use image::ImageBuffer;
 
+use dcmfx_core::DataError;
+
+use super::unsafe_vec_u8_into;
 use crate::{
   BitsAllocated, ColorImage, PixelDataDefinition, PixelRepresentation,
   SingleChannelImage,
 };
-use dcmfx_core::DataError;
 
 /// Decodes single channel pixel data using OpenJPEG.
 ///
@@ -42,7 +44,7 @@ pub fn decode_single_channel(
         ImageBuffer::from_raw(
           definition.columns as u32,
           definition.rows as u32,
-          vec_u8_into::<i8>(pixels),
+          unsafe_vec_u8_into::<i8>(pixels),
         )
         .unwrap(),
       ))
@@ -53,7 +55,7 @@ pub fn decode_single_channel(
         ImageBuffer::from_raw(
           definition.columns as u32,
           definition.rows as u32,
-          vec_u8_into::<u16>(pixels),
+          unsafe_vec_u8_into::<u16>(pixels),
         )
         .unwrap(),
       ))
@@ -64,7 +66,7 @@ pub fn decode_single_channel(
         ImageBuffer::from_raw(
           definition.columns as u32,
           definition.rows as u32,
-          vec_u8_into::<i16>(pixels),
+          unsafe_vec_u8_into::<i16>(pixels),
         )
         .unwrap(),
       ))
@@ -75,7 +77,7 @@ pub fn decode_single_channel(
         ImageBuffer::from_raw(
           definition.columns as u32,
           definition.rows as u32,
-          vec_u8_into::<u32>(pixels),
+          unsafe_vec_u8_into::<u32>(pixels),
         )
         .unwrap(),
       ))
@@ -86,7 +88,7 @@ pub fn decode_single_channel(
         ImageBuffer::from_raw(
           definition.columns as u32,
           definition.rows as u32,
-          vec_u8_into::<i32>(pixels),
+          unsafe_vec_u8_into::<i32>(pixels),
         )
         .unwrap(),
       ))
@@ -120,7 +122,7 @@ pub fn decode_color(
       ImageBuffer::from_raw(
         definition.columns as u32,
         definition.rows as u32,
-        vec_u8_into::<u16>(pixels),
+        unsafe_vec_u8_into::<u16>(pixels),
       )
       .unwrap(),
     )),
@@ -129,7 +131,7 @@ pub fn decode_color(
       ImageBuffer::from_raw(
         definition.columns as u32,
         definition.rows as u32,
-        vec_u8_into::<u32>(pixels),
+        unsafe_vec_u8_into::<u32>(pixels),
       )
       .unwrap(),
     )),
@@ -192,16 +194,6 @@ fn decode(
   }
 
   Ok(output_buffer)
-}
-
-fn vec_u8_into<T>(mut v: Vec<u8>) -> Vec<T> {
-  let ptr = v.as_mut_ptr() as *mut T;
-  let len = v.len() / 2;
-  let cap = v.capacity() / 2;
-
-  core::mem::forget(v);
-
-  unsafe { Vec::from_raw_parts(ptr, len, cap) }
 }
 
 mod ffi {

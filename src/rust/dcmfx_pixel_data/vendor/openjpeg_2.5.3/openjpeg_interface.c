@@ -49,7 +49,7 @@ OPJ_OFF_T stream_skip(OPJ_OFF_T n_bytes, void *p_user_data) {
 
   if (new_offset < 0) {
     new_offset = 0;
-  } else if (new_offset > data_source->data_length) {
+  } else if ((uint64_t)new_offset > data_source->data_length) {
     new_offset = data_source->data_length;
   }
 
@@ -73,8 +73,8 @@ OPJ_BOOL stream_seek(OPJ_OFF_T n_bytes, void *p_user_data) {
 }
 
 static void cleanup(opj_stream_t stream, opj_codec_t *codec, opj_image_t *image,
-                    int8_t *error_buffer, uint32_t error_buffer_size,
-                    char *error, char *error_details) {
+                    char *error_buffer, uint32_t error_buffer_size, char *error,
+                    char *error_details) {
   opj_stream_destroy(stream);
   opj_destroy_codec(codec);
   opj_image_destroy(image);
@@ -117,7 +117,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
                     uint32_t width, uint32_t height, uint32_t samples_per_pixel,
                     uint32_t bits_allocated, uint32_t pixel_representation,
                     uint8_t *output_data, uint64_t output_data_size,
-                    int8_t *error_buffer, uint32_t error_buffer_size) {
+                    char *error_buffer, uint32_t error_buffer_size) {
   // Determine codec by looking at the initial bytes of the input data
   int codec_format = OPJ_CODEC_UNKNOWN;
   if ((input_data_size >= 12 &&
@@ -186,7 +186,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
   }
 
   // Validate that each component has the expected precision and signedness
-  for (int i = 0; i < image->numcomps; i++) {
+  for (uint32_t i = 0; i < image->numcomps; i++) {
     if (image->comps[i].prec != bits_allocated ||
         image->comps[i].sgnd != pixel_representation) {
       cleanup(stream, codec, image, error_buffer, error_buffer_size,
@@ -221,11 +221,11 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
       }
 
       if (pixel_representation == 0) {
-        for (int i = 0; i < width * height; i++) {
+        for (uint32_t i = 0; i < width * height; i++) {
           output_data[i] = image->comps[0].data[i];
         }
       } else {
-        for (int i = 0; i < width * height; i++) {
+        for (uint32_t i = 0; i < width * height; i++) {
           ((int8_t *)output_data)[i] = image->comps[0].data[i];
         }
       }
@@ -237,11 +237,11 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
       }
 
       if (pixel_representation == 0) {
-        for (int i = 0; i < width * height; i++) {
+        for (uint32_t i = 0; i < width * height; i++) {
           ((uint16_t *)output_data)[i] = image->comps[0].data[i];
         }
       } else {
-        for (int i = 0; i < width * height; i++) {
+        for (uint32_t i = 0; i < width * height; i++) {
           ((int16_t *)output_data)[i] = image->comps[0].data[i];
         }
       }
@@ -253,11 +253,11 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
       }
 
       if (pixel_representation == 0) {
-        for (int i = 0; i < width * height; i++) {
+        for (uint32_t i = 0; i < width * height; i++) {
           ((uint32_t *)output_data)[i] = image->comps[0].data[i];
         }
       } else {
-        for (int i = 0; i < width * height; i++) {
+        for (uint32_t i = 0; i < width * height; i++) {
           ((int32_t *)output_data)[i] = image->comps[0].data[i];
         }
       }
@@ -278,7 +278,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
         return -1;
       }
 
-      for (int i = 0; i < width * height; i++) {
+      for (uint32_t i = 0; i < width * height; i++) {
         output_data[i * 3] = red_data[i];
         output_data[i * 3 + 1] = green_data[i];
         output_data[i * 3 + 2] = blue_data[i];
@@ -290,7 +290,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
         return -1;
       }
 
-      for (int i = 0; i < width * height; i++) {
+      for (uint32_t i = 0; i < width * height; i++) {
         ((uint16_t *)output_data)[i * 3] = red_data[i];
         ((uint16_t *)output_data)[i * 3 + 1] = green_data[i];
         ((uint16_t *)output_data)[i * 3 + 2] = blue_data[i];
@@ -302,7 +302,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
         return -1;
       }
 
-      for (int i = 0; i < width * height; i++) {
+      for (uint32_t i = 0; i < width * height; i++) {
         ((uint32_t *)output_data)[i * 3] = red_data[i];
         ((uint32_t *)output_data)[i * 3 + 1] = green_data[i];
         ((uint32_t *)output_data)[i * 3 + 2] = blue_data[i];
