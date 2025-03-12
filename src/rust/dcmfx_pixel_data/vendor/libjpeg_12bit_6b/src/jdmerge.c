@@ -79,7 +79,7 @@ typedef my_upsampler * my_upsample_ptr;
  * This is taken directly from jdcolor.c; see that file for more info.
  */
 
-LOCAL(void)
+J_WARN_UNUSED_RESULT LOCAL(void_result_t)
 build_ycc_rgb_table (j_decompress_ptr cinfo)
 {
   my_upsample_ptr upsample = (my_upsample_ptr) cinfo->upsample;
@@ -87,18 +87,33 @@ build_ycc_rgb_table (j_decompress_ptr cinfo)
   IJG_INT32 x;
   SHIFT_TEMPS
 
-  upsample->Cr_r_tab = (int *)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 (MAXJSAMPLE+1) * SIZEOF(int));
-  upsample->Cb_b_tab = (int *)
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  upsample->Cr_r_tab = (int *) alloc_small_result.value;
+
+  alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 (MAXJSAMPLE+1) * SIZEOF(int));
-  upsample->Cr_g_tab = (IJG_INT32 *)
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  upsample->Cb_b_tab = (int *) alloc_small_result.value;
+
+  alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 (MAXJSAMPLE+1) * SIZEOF(IJG_INT32));
-  upsample->Cb_g_tab = (IJG_INT32 *)
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  upsample->Cr_g_tab = (IJG_INT32 *) alloc_small_result.value;
+
+  alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 (MAXJSAMPLE+1) * SIZEOF(IJG_INT32));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  upsample->Cb_g_tab = (IJG_INT32 *) alloc_small_result.value;
 
   for (i = 0, x = -CENTERJSAMPLE; i <= MAXJSAMPLE; i++, x++) {
     /* i is the actual input pixel value, in the range 0..MAXJSAMPLE */
@@ -115,6 +130,8 @@ build_ycc_rgb_table (j_decompress_ptr cinfo)
     /* We also add in ONE_HALF so that need not do it in inner loop */
     upsample->Cb_g_tab[i] = (- FIX(0.34414)) * x + ONE_HALF;
   }
+
+  return OK_VOID;
 }
 
 
@@ -140,7 +157,7 @@ start_pass_merged_upsample (j_decompress_ptr cinfo)
  * The control routine just handles the row buffering considerations.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 merged_2v_upsample (j_decompress_ptr cinfo,
             JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
             JDIMENSION in_row_groups_avail,
@@ -187,10 +204,12 @@ merged_2v_upsample (j_decompress_ptr cinfo,
   /* When the buffer is emptied, declare this input row group consumed */
   if (! upsample->spare_full)
     (*in_row_group_ctr)++;
+
+  return OK_VOID;
 }
 
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 merged_1v_upsample (j_decompress_ptr cinfo,
             JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
             JDIMENSION in_row_groups_avail,
@@ -208,6 +227,8 @@ merged_1v_upsample (j_decompress_ptr cinfo,
   /* Adjust counts */
   (*out_row_ctr)++;
   (*in_row_group_ctr)++;
+
+  return OK_VOID;
 }
 
 
@@ -369,14 +390,17 @@ h2v2_merged_upsample (j_decompress_ptr cinfo,
  * of this module; no safety checks are made here.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_merged_upsampler (j_decompress_ptr cinfo)
 {
   my_upsample_ptr upsample;
 
-  upsample = (my_upsample_ptr)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 SIZEOF(my_upsampler));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  upsample = (my_upsample_ptr) alloc_small_result.value;
   cinfo->upsample = (struct jpeg_upsampler *) upsample;
   upsample->pub.start_pass = start_pass_merged_upsample;
   upsample->pub.need_context_rows = FALSE;
@@ -387,9 +411,12 @@ jinit_merged_upsampler (j_decompress_ptr cinfo)
     upsample->pub.upsample = merged_2v_upsample;
     upsample->upmethod = h2v2_merged_upsample;
     /* Allocate a spare row buffer */
-    upsample->spare_row = (JSAMPROW)
+    void_far_ptr_result_t alloc_large_result =
       (*cinfo->mem->alloc_large) ((j_common_ptr) cinfo, JPOOL_IMAGE,
         (size_t) (upsample->out_row_width * SIZEOF(JSAMPLE)));
+    if (alloc_large_result.is_err)
+      return ERR_VOID(alloc_large_result.err_code);
+    upsample->spare_row = (JSAMPROW) alloc_large_result.value;
   } else {
     upsample->pub.upsample = merged_1v_upsample;
     upsample->upmethod = h2v1_merged_upsample;
@@ -397,7 +424,7 @@ jinit_merged_upsampler (j_decompress_ptr cinfo)
     upsample->spare_row = NULL;
   }
 
-  build_ycc_rgb_table(cinfo);
+  return build_ycc_rgb_table(cinfo);
 }
 
 #endif /* UPSAMPLE_MERGING_SUPPORTED */

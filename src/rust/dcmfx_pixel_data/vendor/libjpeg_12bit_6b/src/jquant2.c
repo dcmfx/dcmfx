@@ -536,7 +536,7 @@ compute_color (j_decompress_ptr cinfo, boxptr boxp, int icolor)
 }
 
 
-LOCAL(void)
+J_WARN_UNUSED_RESULT LOCAL(void_result_t)
 select_colors (j_decompress_ptr cinfo, int desired_colors)
 /* Master routine for color selection */
 {
@@ -545,8 +545,12 @@ select_colors (j_decompress_ptr cinfo, int desired_colors)
   int i;
 
   /* Allocate workspace for box list */
-  boxlist = (boxptr) (*cinfo->mem->alloc_small)
+  void_ptr_result_t alloc_small_result = (*cinfo->mem->alloc_small)
     ((j_common_ptr) cinfo, JPOOL_IMAGE, (size_t)desired_colors * SIZEOF(box));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  boxlist = (boxptr) alloc_small_result.value;
+
   /* Initialize one box containing whole space */
   numboxes = 1;
   boxlist[0].c0min = 0;
@@ -564,6 +568,8 @@ select_colors (j_decompress_ptr cinfo, int desired_colors)
     compute_color(cinfo, & boxlist[i], i);
   cinfo->actual_number_of_colors = numboxes;
   TRACEMS1(cinfo, 1, JTRC_QUANT_SELECTED, numboxes);
+
+  return OK_VOID;
 }
 
 
@@ -1105,7 +1111,7 @@ pass2_fs_dither (j_decompress_ptr cinfo,
  * to Aaron Giles for this idea.
  */
 
-LOCAL(void)
+J_WARN_UNUSED_RESULT LOCAL(void_result_t)
 init_error_limit (j_decompress_ptr cinfo)
 /* Allocate and fill in the error_limiter table */
 {
@@ -1113,8 +1119,12 @@ init_error_limit (j_decompress_ptr cinfo)
   int * table;
   int in, out;
 
-  table = (int *) (*cinfo->mem->alloc_small)
+  void_ptr_result_t alloc_small_result = (*cinfo->mem->alloc_small)
     ((j_common_ptr) cinfo, JPOOL_IMAGE, (MAXJSAMPLE*2+1) * SIZEOF(int));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  table = (int *) alloc_small_result.value;
+
   table += MAXJSAMPLE;      /* so can index -MAXJSAMPLE .. +MAXJSAMPLE */
   cquantize->error_limiter = table;
 
@@ -1133,6 +1143,8 @@ init_error_limit (j_decompress_ptr cinfo)
     table[in] = out; table[-in] = -out;
   }
 #undef STEPSIZE
+
+  return OK_VOID;
 }
 
 
@@ -1140,24 +1152,29 @@ init_error_limit (j_decompress_ptr cinfo)
  * Finish up at the end of each pass.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 finish_pass1 (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
 
   /* Select the representative colors and fill in cinfo->colormap */
   cinfo->colormap = cquantize->sv_colormap;
-  select_colors(cinfo, cquantize->desired);
+  void_result_t select_colors_result = select_colors(cinfo, cquantize->desired);
+  if (select_colors_result.is_err)
+    return select_colors_result;
   /* Force next pass to zero the color index table */
   cquantize->needs_zeroed = TRUE;
+
+  return OK_VOID;
 }
 
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 finish_pass2 (j_decompress_ptr cinfo)
 {
   (void) cinfo;
   /* no work */
+  return OK_VOID;
 }
 
 
@@ -1165,7 +1182,7 @@ finish_pass2 (j_decompress_ptr cinfo)
  * Initialize for each processing pass.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 start_pass_2_quant (j_decompress_ptr cinfo, boolean is_pre_scan)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
@@ -1193,22 +1210,29 @@ start_pass_2_quant (j_decompress_ptr cinfo, boolean is_pre_scan)
     /* Make sure color count is acceptable */
     i = cinfo->actual_number_of_colors;
     if (i < 1)
-      ERREXIT1(cinfo, JERR_QUANT_FEW_COLORS, 1);
+      ERREXIT1(cinfo, JERR_QUANT_FEW_COLORS, 1, ERR_VOID);
     if (i > MAXNUMCOLORS)
-      ERREXIT1(cinfo, JERR_QUANT_MANY_COLORS, MAXNUMCOLORS);
+      ERREXIT1(cinfo, JERR_QUANT_MANY_COLORS, MAXNUMCOLORS, ERR_VOID);
 
     if (cinfo->dither_mode == JDITHER_FS) {
       size_t arraysize = (size_t) ((cinfo->output_width + 2) *
                    (3 * SIZEOF(FSERROR)));
       /* Allocate Floyd-Steinberg workspace if we didn't already. */
-      if (cquantize->fserrors == NULL)
-    cquantize->fserrors = (FSERRPTR) (*cinfo->mem->alloc_large)
-      ((j_common_ptr) cinfo, JPOOL_IMAGE, arraysize);
+      if (cquantize->fserrors == NULL) {
+        void_far_ptr_result_t alloc_large_result = (*cinfo->mem->alloc_large)
+          ((j_common_ptr) cinfo, JPOOL_IMAGE, arraysize);
+        if (alloc_large_result.is_err)
+          return ERR_VOID(alloc_large_result.err_code);
+        cquantize->fserrors = (FSERRPTR) alloc_large_result.value;
+      }
       /* Initialize the propagated errors to zero. */
       jzero_far((void FAR *) cquantize->fserrors, arraysize);
       /* Make the error-limit table if we didn't already. */
-      if (cquantize->error_limiter == NULL)
-    init_error_limit(cinfo);
+      if (cquantize->error_limiter == NULL) {
+        void_result_t init_error_limit_result = init_error_limit(cinfo);
+        if (init_error_limit_result.is_err)
+          return init_error_limit_result;
+      }
       cquantize->on_odd_row = FALSE;
     }
 
@@ -1221,6 +1245,8 @@ start_pass_2_quant (j_decompress_ptr cinfo, boolean is_pre_scan)
     }
     cquantize->needs_zeroed = FALSE;
   }
+
+  return OK_VOID;
 }
 
 
@@ -1228,13 +1254,15 @@ start_pass_2_quant (j_decompress_ptr cinfo, boolean is_pre_scan)
  * Switch to a new external colormap between output passes.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 new_color_map_2_quant (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
 
   /* Reset the inverse color map */
   cquantize->needs_zeroed = TRUE;
+
+  return OK_VOID;
 }
 
 
@@ -1242,15 +1270,19 @@ new_color_map_2_quant (j_decompress_ptr cinfo)
  * Module initialization routine for 2-pass color quantization.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_2pass_quantizer (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize;
   int i;
 
-  cquantize = (my_cquantize_ptr)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 SIZEOF(my_cquantizer));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  cquantize = (my_cquantize_ptr) alloc_small_result.value;
+
   cinfo->cquantize = (struct jpeg_color_quantizer *) cquantize;
   cquantize->pub.start_pass = start_pass_2_quant;
   cquantize->pub.new_color_map = new_color_map_2_quant;
@@ -1259,15 +1291,21 @@ jinit_2pass_quantizer (j_decompress_ptr cinfo)
 
   /* Make sure jdmaster didn't give me a case I can't handle */
   if (cinfo->out_color_components != 3)
-    ERREXIT(cinfo, JERR_NOTIMPL);
+    ERREXIT(cinfo, JERR_NOTIMPL, ERR_VOID);
 
   /* Allocate the histogram/inverse colormap storage */
-  cquantize->histogram = (hist3d) (*cinfo->mem->alloc_small)
+  alloc_small_result = (*cinfo->mem->alloc_small)
     ((j_common_ptr) cinfo, JPOOL_IMAGE, HIST_C0_ELEMS * SIZEOF(hist2d));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  cquantize->histogram = (hist3d) alloc_small_result.value;
   for (i = 0; i < HIST_C0_ELEMS; i++) {
-    cquantize->histogram[i] = (hist2d) (*cinfo->mem->alloc_large)
+    void_far_ptr_result_t alloc_large_result = (*cinfo->mem->alloc_large)
       ((j_common_ptr) cinfo, JPOOL_IMAGE,
        HIST_C1_ELEMS*HIST_C2_ELEMS * SIZEOF(histcell));
+    if (alloc_large_result.is_err)
+      return ERR_VOID(alloc_large_result.err_code);
+    cquantize->histogram[i] = (hist2d) alloc_large_result.value;
   }
   cquantize->needs_zeroed = TRUE; /* histogram is garbage now */
 
@@ -1280,12 +1318,15 @@ jinit_2pass_quantizer (j_decompress_ptr cinfo)
     int desired = cinfo->desired_number_of_colors;
     /* Lower bound on # of colors ... somewhat arbitrary as long as > 0 */
     if (desired < 8)
-      ERREXIT1(cinfo, JERR_QUANT_FEW_COLORS, 8);
+      ERREXIT1(cinfo, JERR_QUANT_FEW_COLORS, 8, ERR_VOID);
     /* Make sure colormap indexes can be represented by JSAMPLEs */
     if (desired > MAXNUMCOLORS)
-      ERREXIT1(cinfo, JERR_QUANT_MANY_COLORS, MAXNUMCOLORS);
-    cquantize->sv_colormap = (*cinfo->mem->alloc_sarray)
+      ERREXIT1(cinfo, JERR_QUANT_MANY_COLORS, MAXNUMCOLORS, ERR_VOID);
+    jsamparray_result_t alloc_sarray_result = (*cinfo->mem->alloc_sarray)
       ((j_common_ptr) cinfo,JPOOL_IMAGE, (JDIMENSION) desired, (JDIMENSION) 3);
+    if (alloc_sarray_result.is_err)
+      return ERR_VOID(alloc_sarray_result.err_code);
+    cquantize->sv_colormap = alloc_sarray_result.value;
     cquantize->desired = desired;
   } else
     cquantize->sv_colormap = NULL;
@@ -1301,12 +1342,17 @@ jinit_2pass_quantizer (j_decompress_ptr cinfo)
    * we do not promise to honor max_memory_to_use if dither_mode changes.
    */
   if (cinfo->dither_mode == JDITHER_FS) {
-    cquantize->fserrors = (FSERRPTR) (*cinfo->mem->alloc_large)
+    void_far_ptr_result_t alloc_large_result = (*cinfo->mem->alloc_large)
       ((j_common_ptr) cinfo, JPOOL_IMAGE,
        (size_t) ((cinfo->output_width + 2) * (3 * SIZEOF(FSERROR))));
+    if (alloc_large_result.is_err)
+      return ERR_VOID(alloc_large_result.err_code);
+    cquantize->fserrors = (FSERRPTR) alloc_large_result.value;
     /* Might as well create the error-limiting table too. */
-    init_error_limit(cinfo);
+    return init_error_limit(cinfo);
   }
+
+  return OK_VOID;
 }
 
 #endif /* QUANT_2PASS_SUPPORTED */

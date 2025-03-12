@@ -1,7 +1,9 @@
 // This file contains the C entry point called from Rust to perform decoding of
 // JPEG 2000 data.
 
+#ifndef __wasm__
 #include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 

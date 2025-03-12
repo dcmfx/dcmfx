@@ -36,7 +36,9 @@
 //***************************************************************************/
 
 #include <string.h>
+#ifndef __wasm__
 #include <stdio.h>
+#endif
 #include <assert.h>
 #include <stdint.h>
 

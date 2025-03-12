@@ -102,7 +102,6 @@ jobs:
           key: v1-${{ matrix.target }}
           workspaces: rust
 
-
       - name: Fetch dependencies
         working-directory: src/rust
         run: cargo fetch --locked --target ${{ matrix.target }}

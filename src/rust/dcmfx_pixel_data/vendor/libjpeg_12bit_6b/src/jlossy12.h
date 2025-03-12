@@ -65,7 +65,7 @@ typedef struct {
 
   /* Coefficient buffer control */
   JMETHOD(void, coef_start_input_pass, (j_decompress_ptr cinfo));
-  JMETHOD(void, coef_start_output_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, coef_start_output_pass, (j_decompress_ptr cinfo));
 
   /* Pointer to array of coefficient virtual arrays, or NULL if none */
   jvirt_barray_ptr *coef_arrays;
@@ -75,8 +75,8 @@ typedef struct {
 
 
   /* Entropy decoding */
-  JMETHOD(void, entropy_start_pass, (j_decompress_ptr cinfo));
-  JMETHOD(boolean, entropy_decode_mcu, (j_decompress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, entropy_start_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(boolean_result_t, entropy_decode_mcu, (j_decompress_ptr cinfo,
 					JBLOCKROW *MCU_data));
 
   /* This is here to share code between baseline and progressive decoders; */
@@ -88,7 +88,7 @@ typedef struct {
 
 
   /* Inverse DCT (also performs dequantization) */
-  JMETHOD(void, idct_start_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, idct_start_pass, (j_decompress_ptr cinfo));
 
   /* It is useful to allow each component to have a separate IDCT method. */
   inverse_DCT_method_ptr inverse_DCT[MAX_COMPONENTS];
@@ -110,11 +110,11 @@ EXTERN(void) jinit_shuff_encoder JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_phuff_encoder JPP((j_compress_ptr cinfo));
 
 /* Decompression module initialization routines */
-EXTERN(void) jinit_lossy_d_codec JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_d_coef_controller JPP((j_decompress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_lossy_d_codec JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_d_coef_controller JPP((j_decompress_ptr cinfo,
 					  boolean need_full_buffer));
-EXTERN(void) jinit_shuff_decoder JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_phuff_decoder JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_inverse_dct JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_shuff_decoder JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_phuff_decoder JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_inverse_dct JPP((j_decompress_ptr cinfo));
 
 #endif /* JLOSSY_H */

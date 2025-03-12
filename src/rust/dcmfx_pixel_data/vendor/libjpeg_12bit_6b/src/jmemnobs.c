@@ -92,13 +92,13 @@ jpeg_mem_available (j_common_ptr cinfo, long min_bytes_needed,
  * this should never be called and we can just error out.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jpeg_open_backing_store (j_common_ptr cinfo, backing_store_ptr info,
 			 long total_bytes_needed)
 {
   (void) info;
   (void) total_bytes_needed;
-  ERREXIT(cinfo, JERR_NO_BACKING_STORE);
+  ERREXIT(cinfo, JERR_NO_BACKING_STORE, ERR_VOID);
 }
 
 

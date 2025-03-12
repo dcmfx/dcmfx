@@ -43,7 +43,9 @@
 #include <sys/types.h>
 #endif
 
+#ifndef __wasm__
 #include <stdio.h>
+#endif
 
 /*
  * We need memory copying and zeroing functions, plus strncpy().

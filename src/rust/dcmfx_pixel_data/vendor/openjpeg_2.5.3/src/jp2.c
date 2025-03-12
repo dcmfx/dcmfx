@@ -3194,11 +3194,7 @@ opj_jp2_t* opj_jp2_create(OPJ_BOOL p_is_decoder)
     return jp2;
 }
 
-#ifdef __wasm__
-
-void jp2_dump(opj_jp2_t* p_jp2, OPJ_INT32 flag, FILE* out_stream) {}
-
-#else
+#ifndef __wasm__
 
 void jp2_dump(opj_jp2_t* p_jp2, OPJ_INT32 flag, FILE* out_stream)
 {

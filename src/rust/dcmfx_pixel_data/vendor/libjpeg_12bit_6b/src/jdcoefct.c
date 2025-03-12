@@ -61,15 +61,15 @@ typedef struct {
 typedef d_coef_controller * d_coef_ptr;
 
 /* Forward declarations */
-METHODDEF(int) decompress_onepass
+J_WARN_UNUSED_RESULT METHODDEF(int_result_t) decompress_onepass
     JPP((j_decompress_ptr cinfo, JSAMPIMAGE output_buf));
 #ifdef D_MULTISCAN_FILES_SUPPORTED
-METHODDEF(int) decompress_data
+J_WARN_UNUSED_RESULT METHODDEF(int_result_t) decompress_data
     JPP((j_decompress_ptr cinfo, JSAMPIMAGE output_buf));
 #endif
 #ifdef BLOCK_SMOOTHING_SUPPORTED
-LOCAL(boolean) smoothing_ok JPP((j_decompress_ptr cinfo));
-METHODDEF(int) decompress_smooth_data
+J_WARN_UNUSED_RESULT LOCAL(boolean_result_t) smoothing_ok JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT METHODDEF(int_result_t) decompress_smooth_data
     JPP((j_decompress_ptr cinfo, JSAMPIMAGE output_buf));
 #endif
 
@@ -115,7 +115,7 @@ start_input_pass (j_decompress_ptr cinfo)
  * Initialize for an output processing pass.
  */
 
-METHODDEF(void)
+ J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 start_output_pass (j_decompress_ptr cinfo)
 {
 #ifdef BLOCK_SMOOTHING_SUPPORTED
@@ -124,13 +124,22 @@ start_output_pass (j_decompress_ptr cinfo)
 
   /* If multipass, check to see whether to use block smoothing on this pass */
   if (lossyd->coef_arrays != NULL) {
-    if (cinfo->do_block_smoothing && smoothing_ok(cinfo))
-      lossyd->pub.decompress_data = decompress_smooth_data;
+    if (cinfo->do_block_smoothing) {
+      boolean_result_t smoothing_ok_result = smoothing_ok(cinfo);
+      if (smoothing_ok_result.is_err)
+        return ERR_VOID(smoothing_ok_result.err_code);
+      if (smoothing_ok_result.value)
+        lossyd->pub.decompress_data = decompress_smooth_data;
+      else
+        lossyd->pub.decompress_data = decompress_data;
+    }
     else
       lossyd->pub.decompress_data = decompress_data;
   }
 #endif
   cinfo->output_iMCU_row = 0;
+
+  return OK_VOID;
 }
 
 
@@ -144,7 +153,7 @@ start_output_pass (j_decompress_ptr cinfo)
  * which we index according to the component's SOF position.
  */
 
-METHODDEF(int)
+J_WARN_UNUSED_RESULT METHODDEF(int_result_t)
 decompress_onepass (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -166,11 +175,14 @@ decompress_onepass (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
       /* Try to fetch an MCU.  Entropy decoder expects buffer to be zeroed. */
       jzero_far((void FAR *) coef->MCU_buffer[0],
         (size_t)cinfo->data_units_in_MCU * SIZEOF(JBLOCK));
-      if (! (*lossyd->entropy_decode_mcu) (cinfo, coef->MCU_buffer)) {
+        boolean_result_t entropy_decode_mcu_result = (*lossyd->entropy_decode_mcu) (cinfo, coef->MCU_buffer);
+        if (entropy_decode_mcu_result.is_err)
+          return RESULT_ERR(int, entropy_decode_mcu_result.err_code);
+      if (!entropy_decode_mcu_result.value) {
     /* Suspension forced; update state counters and exit */
     coef->MCU_vert_offset = yoffset;
     coef->MCU_ctr = MCU_col_num;
-    return JPEG_SUSPENDED;
+    return RESULT_OK(int, JPEG_SUSPENDED);
       }
       /* Determine where data should go in output_buf and do the IDCT thing.
        * We skip dummy blocks at the right and bottom edges (but blkn gets
@@ -214,11 +226,11 @@ decompress_onepass (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
   cinfo->output_iMCU_row++;
   if (++(cinfo->input_iMCU_row) < cinfo->total_iMCU_rows) {
     start_iMCU_row(cinfo);
-    return JPEG_ROW_COMPLETED;
+    return RESULT_OK(int, JPEG_ROW_COMPLETED);
   }
   /* Completed the scan */
   (*cinfo->inputctl->finish_input_pass) (cinfo);
-  return JPEG_SCAN_COMPLETED;
+  return RESULT_OK(int, JPEG_SCAN_COMPLETED);
 }
 
 
@@ -226,11 +238,11 @@ decompress_onepass (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
  * Dummy consume-input routine for single-pass operation.
  */
 
-METHODDEF(int)
+J_WARN_UNUSED_RESULT METHODDEF(int_result_t)
 dummy_consume_data (j_decompress_ptr cinfo)
 {
   (void)cinfo;
-  return JPEG_SUSPENDED;    /* Always indicate nothing was done */
+  return RESULT_OK(int, JPEG_SUSPENDED);    /* Always indicate nothing was done */
 }
 
 
@@ -243,7 +255,7 @@ dummy_consume_data (j_decompress_ptr cinfo)
  * Return value is JPEG_ROW_COMPLETED, JPEG_SCAN_COMPLETED, or JPEG_SUSPENDED.
  */
 
-METHODDEF(int)
+J_WARN_UNUSED_RESULT METHODDEF(int_result_t)
 consume_data (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -258,10 +270,13 @@ consume_data (j_decompress_ptr cinfo)
   /* Align the virtual buffers for the components used in this scan. */
   for (ci = 0; ci < cinfo->comps_in_scan; ci++) {
     compptr = cinfo->cur_comp_info[ci];
-    buffer[ci] = (*cinfo->mem->access_virt_barray)
+    jblockarray_result_t access_virt_barray_result = (*cinfo->mem->access_virt_barray)
       ((j_common_ptr) cinfo, coef->whole_image[compptr->component_index],
        cinfo->input_iMCU_row * (JDIMENSION)compptr->v_samp_factor,
        (JDIMENSION) compptr->v_samp_factor, TRUE);
+    if (access_virt_barray_result.is_err)
+      return RESULT_ERR(int, access_virt_barray_result.err_code);
+    buffer[ci] = access_virt_barray_result.value;
     /* Note: entropy decoder expects buffer to be zeroed,
      * but this is handled automatically by the memory manager
      * because we requested a pre-zeroed array.
@@ -286,11 +301,14 @@ consume_data (j_decompress_ptr cinfo)
     }
       }
       /* Try to fetch the MCU. */
-      if (! (*lossyd->entropy_decode_mcu) (cinfo, coef->MCU_buffer)) {
+      boolean_result_t entropy_decode_mcu_result = (*lossyd->entropy_decode_mcu) (cinfo, coef->MCU_buffer);
+      if (entropy_decode_mcu_result.is_err)
+        return RESULT_ERR(int, entropy_decode_mcu_result.err_code);
+      if (!entropy_decode_mcu_result.value) {
     /* Suspension forced; update state counters and exit */
     coef->MCU_vert_offset = yoffset;
     coef->MCU_ctr = MCU_col_num;
-    return JPEG_SUSPENDED;
+    return RESULT_OK(int, JPEG_SUSPENDED);
       }
     }
     /* Completed an MCU row, but perhaps not an iMCU row */
@@ -299,11 +317,11 @@ consume_data (j_decompress_ptr cinfo)
   /* Completed the iMCU row, advance counters for next one */
   if (++(cinfo->input_iMCU_row) < cinfo->total_iMCU_rows) {
     start_iMCU_row(cinfo);
-    return JPEG_ROW_COMPLETED;
+    return RESULT_OK(int, JPEG_ROW_COMPLETED);
   }
   /* Completed the scan */
   (*cinfo->inputctl->finish_input_pass) (cinfo);
-  return JPEG_SCAN_COMPLETED;
+  return RESULT_OK(int, JPEG_SCAN_COMPLETED);
 }
 
 
@@ -315,7 +333,7 @@ consume_data (j_decompress_ptr cinfo)
  * NB: output_buf contains a plane for each component in image.
  */
 
-METHODDEF(int)
+J_WARN_UNUSED_RESULT METHODDEF(int_result_t)
 decompress_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -334,8 +352,11 @@ decompress_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
   while (cinfo->input_scan_number < cinfo->output_scan_number ||
      (cinfo->input_scan_number == cinfo->output_scan_number &&
       cinfo->input_iMCU_row <= cinfo->output_iMCU_row)) {
-    if ((*cinfo->inputctl->consume_input)(cinfo) == JPEG_SUSPENDED)
-      return JPEG_SUSPENDED;
+    int_result_t consume_input_result = (*cinfo->inputctl->consume_input)(cinfo);
+    if (consume_input_result.is_err)
+      return consume_input_result;
+    if (consume_input_result.value == JPEG_SUSPENDED)
+      return RESULT_OK(int, JPEG_SUSPENDED);
   }
 
   /* OK, output from the virtual arrays. */
@@ -345,10 +366,13 @@ decompress_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
     if (! compptr->component_needed)
       continue;
     /* Align the virtual buffer for this component. */
-    buffer = (*cinfo->mem->access_virt_barray)
+    jblockarray_result_t access_virt_barray_result = (*cinfo->mem->access_virt_barray)
       ((j_common_ptr) cinfo, coef->whole_image[ci],
        cinfo->output_iMCU_row * (JDIMENSION)compptr->v_samp_factor,
        (JDIMENSION) compptr->v_samp_factor, FALSE);
+    if (access_virt_barray_result.is_err)
+      return RESULT_ERR(int, access_virt_barray_result.err_code);
+    buffer = access_virt_barray_result.value;
     /* Count non-dummy DCT block rows in this iMCU row. */
     if (cinfo->output_iMCU_row < last_iMCU_row)
       block_rows = compptr->v_samp_factor;
@@ -374,8 +398,8 @@ decompress_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
   }
 
   if (++(cinfo->output_iMCU_row) < cinfo->total_iMCU_rows)
-    return JPEG_ROW_COMPLETED;
-  return JPEG_SCAN_COMPLETED;
+    return RESULT_OK(int, JPEG_ROW_COMPLETED);
+  return RESULT_OK(int, JPEG_SCAN_COMPLETED);
 }
 
 #endif /* D_MULTISCAN_FILES_SUPPORTED */
@@ -406,7 +430,7 @@ decompress_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
  * more accurately than they really are.
  */
 
-LOCAL(boolean)
+J_WARN_UNUSED_RESULT LOCAL(boolean_result_t)
 smoothing_ok (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -419,21 +443,25 @@ smoothing_ok (j_decompress_ptr cinfo)
   int * coef_bits_latch;
 
    if ((! (cinfo->process == JPROC_PROGRESSIVE)) || cinfo->coef_bits == NULL)
-    return FALSE;
+    return RESULT_OK(boolean, FALSE);
 
   /* Allocate latch area if not already done */
-  if (coef->coef_bits_latch == NULL)
-    coef->coef_bits_latch = (int *)
+  if (coef->coef_bits_latch == NULL) {
+    void_ptr_result_t alloc_small_result =
       (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                   (size_t)cinfo->num_components *
                   (SAVED_COEFS * SIZEOF(int)));
+    if (alloc_small_result.is_err)
+      return RESULT_ERR(boolean, alloc_small_result.err_code);
+    coef->coef_bits_latch = (int *) alloc_small_result.value;
+  }
   coef_bits_latch = coef->coef_bits_latch;
 
   for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
        ci++, compptr++) {
     /* All components' quantization values must already be latched. */
     if ((qtable = compptr->quant_table) == NULL)
-      return FALSE;
+      return RESULT_OK(boolean, FALSE);
     /* Verify DC & first 5 AC quantizers are nonzero to avoid zero-divide. */
     if (qtable->quantval[0] == 0 ||
     qtable->quantval[Q01_POS] == 0 ||
@@ -441,11 +469,11 @@ smoothing_ok (j_decompress_ptr cinfo)
     qtable->quantval[Q20_POS] == 0 ||
     qtable->quantval[Q11_POS] == 0 ||
     qtable->quantval[Q02_POS] == 0)
-      return FALSE;
+      return RESULT_OK(boolean, FALSE);
     /* DC values must be at least partly known for all components. */
     coef_bits = cinfo->coef_bits[ci];
     if (coef_bits[0] < 0)
-      return FALSE;
+      return RESULT_OK(boolean, FALSE);
     /* Block smoothing is helpful if some AC coefficients remain inaccurate. */
     for (coefi = 1; coefi <= 5; coefi++) {
       coef_bits_latch[coefi] = coef_bits[coefi];
@@ -455,7 +483,7 @@ smoothing_ok (j_decompress_ptr cinfo)
     coef_bits_latch += SAVED_COEFS;
   }
 
-  return smoothing_useful;
+  return RESULT_OK(boolean, smoothing_useful);
 }
 
 
@@ -463,7 +491,7 @@ smoothing_ok (j_decompress_ptr cinfo)
  * Variant of decompress_data for use when doing block smoothing.
  */
 
-METHODDEF(int)
+ J_WARN_UNUSED_RESULT METHODDEF(int_result_t)
 decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -498,8 +526,11 @@ decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
       if (cinfo->input_iMCU_row > cinfo->output_iMCU_row+delta)
     break;
     }
-    if ((*cinfo->inputctl->consume_input)(cinfo) == JPEG_SUSPENDED)
-      return JPEG_SUSPENDED;
+    int_result_t consume_input_result = (*cinfo->inputctl->consume_input)(cinfo);
+    if (consume_input_result.is_err)
+      return consume_input_result;
+    if (consume_input_result.value == JPEG_SUSPENDED)
+      return RESULT_OK(int, JPEG_SUSPENDED);
   }
 
   /* OK, output from the virtual arrays. */
@@ -523,16 +554,25 @@ decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
     /* Align the virtual buffer for this component. */
     if (cinfo->output_iMCU_row > 0) {
       access_rows += compptr->v_samp_factor; /* prior iMCU row too */
-      buffer = (*cinfo->mem->access_virt_barray)
-    ((j_common_ptr) cinfo, coef->whole_image[ci],
-     (cinfo->output_iMCU_row - 1) * (JDIMENSION)compptr->v_samp_factor,
-     (JDIMENSION) access_rows, FALSE);
+      jblockarray_result_t access_virt_barray_result = 
+        (*cinfo->mem->access_virt_barray)
+        ((j_common_ptr) cinfo, coef->whole_image[ci],
+        (cinfo->output_iMCU_row - 1) * (JDIMENSION)compptr->v_samp_factor,
+        (JDIMENSION) access_rows, FALSE);
+      if (access_virt_barray_result.is_err)
+        return RESULT_ERR(int, access_virt_barray_result.err_code);
+
+      buffer = access_virt_barray_result.value;
       buffer += compptr->v_samp_factor; /* point to current iMCU row */
       first_row = FALSE;
     } else {
-      buffer = (*cinfo->mem->access_virt_barray)
-    ((j_common_ptr) cinfo, coef->whole_image[ci],
-     (JDIMENSION) 0, (JDIMENSION) access_rows, FALSE);
+      jblockarray_result_t access_virt_barray_result = 
+        (*cinfo->mem->access_virt_barray)
+          ((j_common_ptr) cinfo, coef->whole_image[ci],
+          (JDIMENSION) 0, (JDIMENSION) access_rows, FALSE);
+      if (access_virt_barray_result.is_err)
+        return RESULT_ERR(int, access_virt_barray_result.err_code);
+      buffer = access_virt_barray_result.value;
       first_row = TRUE;
     }
     /* Fetch component-dependent info */
@@ -668,8 +708,8 @@ decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
   }
 
   if (++(cinfo->output_iMCU_row) < cinfo->total_iMCU_rows)
-    return JPEG_ROW_COMPLETED;
-  return JPEG_SCAN_COMPLETED;
+    return RESULT_OK(int, JPEG_ROW_COMPLETED);
+  return RESULT_OK(int, JPEG_SCAN_COMPLETED);
 }
 
 #endif /* BLOCK_SMOOTHING_SUPPORTED */
@@ -679,15 +719,17 @@ decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
  * Initialize coefficient buffer controller.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_d_coef_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
   d_coef_ptr coef;
 
-  coef = (d_coef_ptr)
-    (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
+  void_ptr_result_t alloc_small_result = (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 SIZEOF(d_coef_controller));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  coef = (d_coef_ptr)alloc_small_result.value;
   lossyd->coef_private = (void *) coef;
   lossyd->coef_start_input_pass = start_input_pass;
   lossyd->coef_start_output_pass = start_output_pass;
@@ -712,28 +754,33 @@ jinit_d_coef_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
       if (cinfo->process == JPROC_PROGRESSIVE)
     access_rows *= 3;
 #endif
-      coef->whole_image[ci] = (*cinfo->mem->request_virt_barray)
-    ((j_common_ptr) cinfo, JPOOL_IMAGE, TRUE,
-     (JDIMENSION) jround_up((long) compptr->width_in_data_units,
-                (long) compptr->h_samp_factor),
-     (JDIMENSION) jround_up((long) compptr->height_in_data_units,
-                (long) compptr->v_samp_factor),
-     (JDIMENSION) access_rows);
+      jvirt_barray_result_t request_virt_barray_result = (*cinfo->mem->request_virt_barray)
+        ((j_common_ptr) cinfo, JPOOL_IMAGE, TRUE,
+        (JDIMENSION) jround_up((long) compptr->width_in_data_units,
+                    (long) compptr->h_samp_factor),
+        (JDIMENSION) jround_up((long) compptr->height_in_data_units,
+                    (long) compptr->v_samp_factor),
+        (JDIMENSION) access_rows);
+      if (request_virt_barray_result.is_err)
+        return ERR_VOID(request_virt_barray_result.err_code);
+      coef->whole_image[ci] = request_virt_barray_result.value;
     }
     lossyd->pub.consume_data = consume_data;
     lossyd->pub.decompress_data = decompress_data;
     lossyd->coef_arrays = coef->whole_image; /* link to virtual arrays */
 #else
-    ERREXIT(cinfo, JERR_NOT_COMPILED);
+    ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
 #endif
   } else {
     /* We only need a single-MCU buffer. */
     JBLOCKROW buffer;
     int i;
 
-    buffer = (JBLOCKROW)
-      (*cinfo->mem->alloc_large) ((j_common_ptr) cinfo, JPOOL_IMAGE,
+    void_far_ptr_result_t alloc_large_result = (*cinfo->mem->alloc_large) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                   D_MAX_DATA_UNITS_IN_MCU * SIZEOF(JBLOCK));
+    if (alloc_large_result.is_err)
+      return ERR_VOID(alloc_large_result.err_code);
+    buffer = (JBLOCKROW) alloc_large_result.value;
     for (i = 0; i < D_MAX_DATA_UNITS_IN_MCU; i++) {
       coef->MCU_buffer[i] = buffer + i;
     }
@@ -741,4 +788,6 @@ jinit_d_coef_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
     lossyd->pub.decompress_data = decompress_onepass;
     lossyd->coef_arrays = NULL; /* flag for no virtual arrays */
   }
+
+  return OK_VOID;
 }

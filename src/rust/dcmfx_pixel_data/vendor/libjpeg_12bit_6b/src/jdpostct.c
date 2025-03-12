@@ -43,20 +43,20 @@ typedef my_post_controller * my_post_ptr;
 
 
 /* Forward declarations */
-METHODDEF(void) post_process_1pass
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t) post_process_1pass
     JPP((j_decompress_ptr cinfo,
          JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
          JDIMENSION in_row_groups_avail,
          JSAMPARRAY output_buf, JDIMENSION *out_row_ctr,
          JDIMENSION out_rows_avail));
 #ifdef QUANT_2PASS_SUPPORTED
-METHODDEF(void) post_process_prepass
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t) post_process_prepass
     JPP((j_decompress_ptr cinfo,
          JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
          JDIMENSION in_row_groups_avail,
          JSAMPARRAY output_buf, JDIMENSION *out_row_ctr,
          JDIMENSION out_rows_avail));
-METHODDEF(void) post_process_2pass
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t) post_process_2pass
     JPP((j_decompress_ptr cinfo,
          JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
          JDIMENSION in_row_groups_avail,
@@ -69,7 +69,7 @@ METHODDEF(void) post_process_2pass
  * Initialize for a processing pass.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 start_pass_dpost (j_decompress_ptr cinfo, J_BUF_MODE pass_mode)
 {
   my_post_ptr post = (my_post_ptr) cinfo->post;
@@ -84,9 +84,12 @@ start_pass_dpost (j_decompress_ptr cinfo, J_BUF_MODE pass_mode)
        * allocate a strip buffer.  Use the virtual-array buffer as workspace.
        */
       if (post->buffer == NULL) {
-    post->buffer = (*cinfo->mem->access_virt_sarray)
-      ((j_common_ptr) cinfo, post->whole_image,
-       (JDIMENSION) 0, post->strip_height, TRUE);
+        jsamparray_result_t access_virt_sarray_result = (*cinfo->mem->access_virt_sarray)
+          ((j_common_ptr) cinfo, post->whole_image,
+          (JDIMENSION) 0, post->strip_height, TRUE);
+        if (access_virt_sarray_result.is_err)
+          return ERR_VOID(access_virt_sarray_result.err_code);
+        post->buffer = access_virt_sarray_result.value;
       }
     } else {
       /* For single-pass processing without color quantization,
@@ -99,21 +102,23 @@ start_pass_dpost (j_decompress_ptr cinfo, J_BUF_MODE pass_mode)
   case JBUF_SAVE_AND_PASS:
     /* First pass of 2-pass quantization */
     if (post->whole_image == NULL)
-      ERREXIT(cinfo, JERR_BAD_BUFFER_MODE);
+      ERREXIT(cinfo, JERR_BAD_BUFFER_MODE, ERR_VOID);
     post->pub.post_process_data = post_process_prepass;
     break;
   case JBUF_CRANK_DEST:
     /* Second pass of 2-pass quantization */
     if (post->whole_image == NULL)
-      ERREXIT(cinfo, JERR_BAD_BUFFER_MODE);
+      ERREXIT(cinfo, JERR_BAD_BUFFER_MODE, ERR_VOID);
     post->pub.post_process_data = post_process_2pass;
     break;
 #endif /* QUANT_2PASS_SUPPORTED */
   default:
-    ERREXIT(cinfo, JERR_BAD_BUFFER_MODE);
+    ERREXIT(cinfo, JERR_BAD_BUFFER_MODE, ERR_VOID);
     break;
   }
   post->starting_row = post->next_row = 0;
+
+  return OK_VOID;
 }
 
 
@@ -122,7 +127,7 @@ start_pass_dpost (j_decompress_ptr cinfo, J_BUF_MODE pass_mode)
  * This is used for color precision reduction as well as one-pass quantization.
  */
 
-METHODDEF(void)
+METHODDEF(void_result_t)
 post_process_1pass (j_decompress_ptr cinfo,
             JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
             JDIMENSION in_row_groups_avail,
@@ -138,13 +143,17 @@ post_process_1pass (j_decompress_ptr cinfo,
   if (max_rows > post->strip_height)
     max_rows = post->strip_height;
   num_rows = 0;
-  (*cinfo->upsample->upsample) (cinfo,
+  void_result_t upsample_result = (*cinfo->upsample->upsample) (cinfo,
         input_buf, in_row_group_ctr, in_row_groups_avail,
         post->buffer, &num_rows, max_rows);
+  if (upsample_result.is_err)
+    return upsample_result;
   /* Quantize and emit data. */
   (*cinfo->cquantize->color_quantize) (cinfo,
         post->buffer, output_buf + *out_row_ctr, (int) num_rows);
   *out_row_ctr += num_rows;
+
+  return OK_VOID;
 }
 
 
@@ -154,7 +163,7 @@ post_process_1pass (j_decompress_ptr cinfo,
  * Process some data in the first pass of 2-pass quantization.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 post_process_prepass (j_decompress_ptr cinfo,
               JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
               JDIMENSION in_row_groups_avail,
@@ -168,16 +177,21 @@ post_process_prepass (j_decompress_ptr cinfo,
 
   /* Reposition virtual buffer if at start of strip. */
   if (post->next_row == 0) {
-    post->buffer = (*cinfo->mem->access_virt_sarray)
-    ((j_common_ptr) cinfo, post->whole_image,
-     post->starting_row, post->strip_height, TRUE);
+    jsamparray_result_t access_virt_sarray_result = (*cinfo->mem->access_virt_sarray)
+      ((j_common_ptr) cinfo, post->whole_image,
+      post->starting_row, post->strip_height, TRUE);
+    if (access_virt_sarray_result.is_err)
+      return ERR_VOID(access_virt_sarray_result.err_code);
+    post->buffer = access_virt_sarray_result.value;
   }
 
   /* Upsample some data (up to a strip height's worth). */
   old_next_row = post->next_row;
-  (*cinfo->upsample->upsample) (cinfo,
+  void_result_t upsample_result = (*cinfo->upsample->upsample) (cinfo,
         input_buf, in_row_group_ctr, in_row_groups_avail,
         post->buffer, &post->next_row, post->strip_height);
+  if (upsample_result.is_err)
+    return upsample_result;
 
   /* Allow quantizer to scan new data.  No data is emitted, */
   /* but we advance out_row_ctr so outer loop can tell when we're done. */
@@ -193,6 +207,8 @@ post_process_prepass (j_decompress_ptr cinfo,
     post->starting_row += post->strip_height;
     post->next_row = 0;
   }
+
+  return OK_VOID;
 }
 
 
@@ -200,7 +216,7 @@ post_process_prepass (j_decompress_ptr cinfo,
  * Process some data in the second pass of 2-pass quantization.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 post_process_2pass (j_decompress_ptr cinfo,
             JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
             JDIMENSION in_row_groups_avail,
@@ -216,9 +232,13 @@ post_process_2pass (j_decompress_ptr cinfo,
 
   /* Reposition virtual buffer if at start of strip. */
   if (post->next_row == 0) {
-    post->buffer = (*cinfo->mem->access_virt_sarray)
-    ((j_common_ptr) cinfo, post->whole_image,
-     post->starting_row, post->strip_height, FALSE);
+    jsamparray_result_t access_virt_sarray_result =
+      (*cinfo->mem->access_virt_sarray)
+      ((j_common_ptr) cinfo, post->whole_image,
+      post->starting_row, post->strip_height, FALSE);
+    if (access_virt_sarray_result.is_err)
+      return ERR_VOID(access_virt_sarray_result.err_code);
+    post->buffer = access_virt_sarray_result.value;
   }
 
   /* Determine number of rows to emit. */
@@ -243,6 +263,8 @@ post_process_2pass (j_decompress_ptr cinfo,
     post->starting_row += post->strip_height;
     post->next_row = 0;
   }
+
+  return OK_VOID;
 }
 
 #endif /* QUANT_2PASS_SUPPORTED */
@@ -252,14 +274,17 @@ post_process_2pass (j_decompress_ptr cinfo,
  * Initialize postprocessing controller.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_d_post_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
 {
   my_post_ptr post;
 
-  post = (my_post_ptr)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 SIZEOF(my_post_controller));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  post = (my_post_ptr) alloc_small_result.value;
   cinfo->post = (struct jpeg_d_post_controller *) post;
   post->pub.start_pass = start_pass_dpost;
   post->whole_image = NULL; /* flag for no virtual arrays */
@@ -276,21 +301,30 @@ jinit_d_post_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
       /* Two-pass color quantization: need full-image storage. */
       /* We round up the number of rows to a multiple of the strip height. */
 #ifdef QUANT_2PASS_SUPPORTED
-      post->whole_image = (*cinfo->mem->request_virt_sarray)
-    ((j_common_ptr) cinfo, JPOOL_IMAGE, FALSE,
-     cinfo->output_width * (JDIMENSION)cinfo->out_color_components,
-     (JDIMENSION) jround_up((long) cinfo->output_height,
-                (long) post->strip_height),
-     post->strip_height);
+      jvirt_sarray_result_t request_virt_sarray_result =
+        (*cinfo->mem->request_virt_sarray)
+        ((j_common_ptr) cinfo, JPOOL_IMAGE, FALSE,
+        cinfo->output_width * (JDIMENSION)cinfo->out_color_components,
+        (JDIMENSION) jround_up((long) cinfo->output_height,
+                    (long) post->strip_height),
+        post->strip_height);
+      if (request_virt_sarray_result.is_err)
+        return ERR_VOID(request_virt_sarray_result.err_code);
+      post->whole_image = request_virt_sarray_result.value;
 #else
-      ERREXIT(cinfo, JERR_BAD_BUFFER_MODE);
+      ERREXIT(cinfo, JERR_BAD_BUFFER_MODE, ERR_VOID);
 #endif /* QUANT_2PASS_SUPPORTED */
     } else {
       /* One-pass color quantization: just make a strip buffer. */
-      post->buffer = (*cinfo->mem->alloc_sarray)
-    ((j_common_ptr) cinfo, JPOOL_IMAGE,
-     cinfo->output_width * (JDIMENSION)cinfo->out_color_components,
-     post->strip_height);
+      jsamparray_result_t alloc_sarray_result = (*cinfo->mem->alloc_sarray)
+        ((j_common_ptr) cinfo, JPOOL_IMAGE,
+        cinfo->output_width * (JDIMENSION)cinfo->out_color_components,
+        post->strip_height);
+      if (alloc_sarray_result.is_err)
+        return ERR_VOID(alloc_sarray_result.err_code);
+      post->buffer = alloc_sarray_result.value;
     }
   }
+
+  return OK_VOID;
 }

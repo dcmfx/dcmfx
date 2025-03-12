@@ -203,6 +203,15 @@ typedef long IJG_INT32;
 
 typedef unsigned int JDIMENSION;
 
+typedef struct {
+  int is_err;
+  JDIMENSION value;
+  int err_code;
+} jdimension_result_t;
+
+#define ERR_JDIMENSION(code) ((jdimension_result_t){TRUE, 0, code})
+
+
 #define JPEG_MAX_DIMENSION  65500L  /* a tad under 64K to prevent overflows */
 
 

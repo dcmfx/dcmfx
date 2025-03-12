@@ -69,7 +69,7 @@ typedef lhuff_entropy_decoder * lhuff_entropy_ptr;
  * Initialize for a Huffman-compressed scan.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 start_pass_lhuff_decoder (j_decompress_ptr cinfo)
 {
   j_lossless_d_ptr losslsd = (j_lossless_d_ptr) cinfo->codec;
@@ -83,11 +83,14 @@ start_pass_lhuff_decoder (j_decompress_ptr cinfo)
     /* Make sure requested tables are present */
     if (dctbl < 0 || dctbl >= NUM_HUFF_TBLS ||
     cinfo->dc_huff_tbl_ptrs[dctbl] == NULL)
-      ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, dctbl);
+      ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, dctbl, ERR_VOID);
     /* Compute derived values for Huffman tables */
     /* We may do this more than once for a table, but it's not expensive */
-    jpeg_make_d_derived_tbl(cinfo, TRUE, dctbl,
-                & entropy->derived_tbls[dctbl]);
+    void_result_t jpeg_make_d_derived_tbl_result =
+        jpeg_make_d_derived_tbl(cinfo, TRUE, dctbl,
+          & entropy->derived_tbls[dctbl]);
+    if (jpeg_make_d_derived_tbl_result.is_err)
+      return jpeg_make_d_derived_tbl_result;
   }
 
   /* Precalculate decoding info for each sample in an MCU of this scan */
@@ -113,6 +116,8 @@ start_pass_lhuff_decoder (j_decompress_ptr cinfo)
   entropy->bitstate.bits_left = 0;
   entropy->bitstate.get_buffer = 0; /* unnecessary, but keeps Purify quiet */
   entropy->insufficient_data = FALSE;
+
+  return OK_VOID;
 }
 
 
@@ -152,7 +157,7 @@ static const int extend_offset[16] = /* entry n is (-1 << n) + 1 */
  * Returns FALSE if must suspend.
  */
 
-METHODDEF(boolean)
+J_WARN_UNUSED_RESULT METHODDEF(boolean_result_t)
 process_restart (j_decompress_ptr cinfo)
 {
   j_lossless_d_ptr losslsd = (j_lossless_d_ptr) cinfo->codec;
@@ -165,8 +170,11 @@ process_restart (j_decompress_ptr cinfo)
   entropy->bitstate.bits_left = 0;
 
   /* Advance past the RSTn marker */
-  if (! (*cinfo->marker->read_restart_marker) (cinfo))
-    return FALSE;
+  boolean_result_t read_restart_marker_result = (*cinfo->marker->read_restart_marker) (cinfo);
+  if (read_restart_marker_result.is_err)
+    return read_restart_marker_result;
+  if (!read_restart_marker_result.value)
+    return RESULT_OK(boolean, FALSE);
 
   /* Reset out-of-data flag, unless read_restart_marker left us smack up
    * against a marker.  In that case we will end up treating the next data
@@ -176,7 +184,7 @@ process_restart (j_decompress_ptr cinfo)
   if (cinfo->unread_marker == 0)
     entropy->insufficient_data = FALSE;
 
-  return TRUE;
+  return RESULT_OK(boolean, TRUE);
 }
 
 
@@ -195,7 +203,7 @@ process_restart (j_decompress_ptr cinfo)
  * re-assign them on the next call.)
  */
 
-METHODDEF(JDIMENSION)
+J_WARN_UNUSED_RESULT METHODDEF(jdimension_result_t)
 decode_mcus (j_decompress_ptr cinfo, JDIFFIMAGE diff_buf,
          JDIMENSION MCU_row_num, JDIMENSION MCU_col_num, JDIMENSION nMCU)
 {
@@ -226,7 +234,9 @@ decode_mcus (j_decompress_ptr cinfo, JDIFFIMAGE diff_buf,
       jzero_far((void FAR *) entropy->output_ptr[ptrn],
         nMCU * (size_t)entropy->output_ptr_info[ptrn].MCU_width * SIZEOF(JDIFF));
 
-    (*losslsd->predict_process_restart) (cinfo);
+    void_result_t predict_process_restart_result = ((*losslsd->predict_process_restart) (cinfo));
+    if (predict_process_restart_result.is_err)
+      return RESULT_ERR(jdimension, predict_process_restart_result.err_code);
   }
 
   else {
@@ -244,12 +254,12 @@ decode_mcus (j_decompress_ptr cinfo, JDIFFIMAGE diff_buf,
     register int s, r;
 
     /* Section H.2.2: decode the sample difference */
-    HUFF_DECODE(s, br_state, dctbl, return mcu_num, label1);
+    HUFF_DECODE(s, br_state, dctbl, return RESULT_OK(jdimension, mcu_num), label1);
     if (s) {
       if (s == 16)  /* special case: always output 32768 */
         s = 32768;
       else {    /* normal case: fetch subsequent bits */
-        CHECK_BIT_BUFFER(br_state, s, return mcu_num);
+        CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(jdimension, mcu_num));
         r = GET_BITS(s);
         s = HUFF_EXTEND(r, s);
       }
@@ -264,7 +274,7 @@ decode_mcus (j_decompress_ptr cinfo, JDIFFIMAGE diff_buf,
     }
   }
 
- return nMCU;
+ return RESULT_OK(jdimension, nMCU);
 }
 
 
@@ -272,16 +282,19 @@ decode_mcus (j_decompress_ptr cinfo, JDIFFIMAGE diff_buf,
  * Module initialization routine for lossless Huffman entropy decoding.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_lhuff_decoder (j_decompress_ptr cinfo)
 {
   j_lossless_d_ptr losslsd = (j_lossless_d_ptr) cinfo->codec;
   lhuff_entropy_ptr entropy;
   int i;
 
-  entropy = (lhuff_entropy_ptr)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 SIZEOF(lhuff_entropy_decoder));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  entropy = (lhuff_entropy_ptr) alloc_small_result.value;
   losslsd->entropy_private = (void *) entropy;
   losslsd->entropy_start_pass = start_pass_lhuff_decoder;
   losslsd->entropy_process_restart = process_restart;
@@ -291,6 +304,8 @@ jinit_lhuff_decoder (j_decompress_ptr cinfo)
   for (i = 0; i < NUM_HUFF_TBLS; i++) {
     entropy->derived_tbls[i] = NULL;
   }
+
+  return OK_VOID;
 }
 
 #endif /* D_LOSSLESS_SUPPORTED */

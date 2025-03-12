@@ -79,6 +79,35 @@ typedef JDIFF FAR *JDIFFROW;	/* pointer to one row of difference values */
 typedef JDIFFROW *JDIFFARRAY;	/* ptr to some rows (a 2-D diff array) */
 typedef JDIFFARRAY *JDIFFIMAGE;	/* a 3-D diff array: top index is color */
 
+#define DEFINE_RESULT_TYPE(name, value_type) \
+  typedef struct { \
+    int is_err; \
+    value_type value; \
+    int err_code; \
+  } name##_result_t;
+
+#define RESULT_OK(value_type, ok_value) ((value_type##_result_t){FALSE, ok_value, 0})
+#define RESULT_ERR(value_type, err_code) ((value_type##_result_t){TRUE, 0, err_code})
+
+DEFINE_RESULT_TYPE(int, int)
+DEFINE_RESULT_TYPE(boolean, boolean)
+
+#define ERR_INT(err_code) RESULT_ERR(int, err_code)
+#define ERR_BOOL(err_code) RESULT_ERR(boolean, err_code)
+
+/* Void errors have no 'value', so can't use the above macros. */
+typedef struct {
+  int is_err;
+  int err_code;
+} void_result_t;
+#define OK_VOID ((void_result_t){FALSE, 0})
+#define ERR_VOID(err_code) ((void_result_t){TRUE, err_code})
+
+#if 0
+#define J_WARN_UNUSED_RESULT  __attribute__((warn_unused_result))
+#else
+#define J_WARN_UNUSED_RESULT 
+#endif
 
 /* Types for JPEG compression parameters and working tables. */
 
@@ -741,9 +770,9 @@ struct jpeg_destination_mgr {
   JOCTET * next_output_byte;	/* => next byte to write in buffer */
   size_t free_in_buffer;	/* # of byte spaces remaining in buffer */
 
-  JMETHOD(void, init_destination, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, init_destination, (j_compress_ptr cinfo));
   JMETHOD(boolean, empty_output_buffer, (j_compress_ptr cinfo));
-  JMETHOD(void, term_destination, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, term_destination, (j_compress_ptr cinfo));
 };
 
 
@@ -779,46 +808,54 @@ struct jpeg_source_mgr {
 typedef struct jvirt_sarray_control * jvirt_sarray_ptr;
 typedef struct jvirt_barray_control * jvirt_barray_ptr;
 
+DEFINE_RESULT_TYPE(void_ptr, void *);
+DEFINE_RESULT_TYPE(void_far_ptr, void FAR *);
+DEFINE_RESULT_TYPE(jsamparray, JSAMPARRAY);
+DEFINE_RESULT_TYPE(jblockarray, JBLOCKARRAY);
+DEFINE_RESULT_TYPE(jdiffarray, JDIFFARRAY);
+DEFINE_RESULT_TYPE(jvirt_sarray, jvirt_sarray_ptr);
+DEFINE_RESULT_TYPE(jvirt_barray, jvirt_barray_ptr);
+
 struct jpeg_memory_mgr {
   /* Method pointers */
-  JMETHOD(void *, alloc_small, (j_common_ptr cinfo, int pool_id,
+  J_WARN_UNUSED_RESULT JMETHOD(void_ptr_result_t, alloc_small, (j_common_ptr cinfo, int pool_id,
 				size_t sizeofobject));
-  JMETHOD(void FAR *, alloc_large, (j_common_ptr cinfo, int pool_id,
+  J_WARN_UNUSED_RESULT JMETHOD(void_far_ptr_result_t, alloc_large, (j_common_ptr cinfo, int pool_id,
 				     size_t sizeofobject));
-  JMETHOD(JSAMPARRAY, alloc_sarray, (j_common_ptr cinfo, int pool_id,
+  J_WARN_UNUSED_RESULT JMETHOD(jsamparray_result_t, alloc_sarray, (j_common_ptr cinfo, int pool_id,
 				     JDIMENSION samplesperrow,
 				     JDIMENSION numrows));
-  JMETHOD(JBLOCKARRAY, alloc_barray, (j_common_ptr cinfo, int pool_id,
+  J_WARN_UNUSED_RESULT JMETHOD(jblockarray_result_t, alloc_barray, (j_common_ptr cinfo, int pool_id,
 				      JDIMENSION blocksperrow,
 				      JDIMENSION numrows));
-  JMETHOD(JDIFFARRAY, alloc_darray, (j_common_ptr cinfo, int pool_id,
+  J_WARN_UNUSED_RESULT JMETHOD(jdiffarray_result_t, alloc_darray, (j_common_ptr cinfo, int pool_id,
 				     JDIMENSION diffsperrow,
 				     JDIMENSION numrows));
-  JMETHOD(jvirt_sarray_ptr, request_virt_sarray, (j_common_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(jvirt_sarray_result_t, request_virt_sarray, (j_common_ptr cinfo,
 						  int pool_id,
 						  boolean pre_zero,
 						  JDIMENSION samplesperrow,
 						  JDIMENSION numrows,
 						  JDIMENSION maxaccess));
-  JMETHOD(jvirt_barray_ptr, request_virt_barray, (j_common_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(jvirt_barray_result_t, request_virt_barray, (j_common_ptr cinfo,
 						  int pool_id,
 						  boolean pre_zero,
 						  JDIMENSION blocksperrow,
 						  JDIMENSION numrows,
 						  JDIMENSION maxaccess));
-  JMETHOD(void, realize_virt_arrays, (j_common_ptr cinfo));
-  JMETHOD(JSAMPARRAY, access_virt_sarray, (j_common_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, realize_virt_arrays, (j_common_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(jsamparray_result_t, access_virt_sarray, (j_common_ptr cinfo,
 					   jvirt_sarray_ptr ptr,
 					   JDIMENSION start_row,
 					   JDIMENSION num_rows,
 					   boolean writable));
-  JMETHOD(JBLOCKARRAY, access_virt_barray, (j_common_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(jblockarray_result_t, access_virt_barray, (j_common_ptr cinfo,
 					    jvirt_barray_ptr ptr,
 					    JDIMENSION start_row,
 					    JDIMENSION num_rows,
 					    boolean writable));
-  JMETHOD(void, free_pool, (j_common_ptr cinfo, int pool_id));
-  JMETHOD(void, self_destruct, (j_common_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, free_pool, (j_common_ptr cinfo, int pool_id));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, self_destruct, (j_common_ptr cinfo));
 
   /* Limit on memory allocation for this JPEG object.  (Note that this is
    * merely advisory, not a guaranteed maximum; it only affects the space
@@ -835,7 +872,7 @@ struct jpeg_memory_mgr {
 /* Routine signature for application-supplied marker processing methods.
  * Need not pass marker code since it is stored in cinfo->unread_marker.
  */
-typedef JMETHOD(boolean, jpeg_marker_parser_method, (j_decompress_ptr cinfo));
+typedef JMETHOD(boolean_result_t, jpeg_marker_parser_method, (j_decompress_ptr cinfo));
 
 
 /* Declarations for routines called by application.
@@ -1001,16 +1038,20 @@ EXTERN(struct jpeg_error_mgr *) jpeg_std_error
 			  (size_t) sizeof(struct jpeg_decompress_struct))
 EXTERN(void) jpeg_CreateCompress JPP((j_compress_ptr cinfo,
 				      int version, size_t structsize));
-EXTERN(void) jpeg_CreateDecompress JPP((j_decompress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_CreateDecompress JPP((j_decompress_ptr cinfo,
 					int version, size_t structsize));
 /* Destruction of JPEG compression objects */
 EXTERN(void) jpeg_destroy_compress JPP((j_compress_ptr cinfo));
-EXTERN(void) jpeg_destroy_decompress JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_destroy_decompress JPP((j_decompress_ptr cinfo));
+
+#ifndef __wasm__
 
 /* Standard data source and destination managers: stdio streams. */
 /* Caller is responsible for opening the file before and closing after. */
 EXTERN(void) jpeg_stdio_dest JPP((j_compress_ptr cinfo, FILE * outfile));
 EXTERN(void) jpeg_stdio_src JPP((j_decompress_ptr cinfo, FILE * infile));
+
+#endif
 
 /* Default parameter setup for compression */
 EXTERN(void) jpeg_set_defaults JPP((j_compress_ptr cinfo));
@@ -1033,8 +1074,12 @@ EXTERN(void) jpeg_simple_lossless JPP((j_compress_ptr cinfo,
 EXTERN(void) jpeg_simple_progression JPP((j_compress_ptr cinfo));
 EXTERN(void) jpeg_suppress_tables JPP((j_compress_ptr cinfo,
 				       boolean suppress));
-EXTERN(JQUANT_TBL *) jpeg_alloc_quant_table JPP((j_common_ptr cinfo));
-EXTERN(JHUFF_TBL *) jpeg_alloc_huff_table JPP((j_common_ptr cinfo));
+
+DEFINE_RESULT_TYPE(jquant_tbl_ptr, JQUANT_TBL *);
+DEFINE_RESULT_TYPE(jhuff_tbl_ptr, JHUFF_TBL *);
+
+EXTERN(jquant_tbl_ptr_result_t) jpeg_alloc_quant_table JPP((j_common_ptr cinfo));
+EXTERN(jhuff_tbl_ptr_result_t) jpeg_alloc_huff_table JPP((j_common_ptr cinfo));
 
 /* Main entry points for compression */
 EXTERN(void) jpeg_start_compress JPP((j_compress_ptr cinfo,
@@ -1060,10 +1105,10 @@ EXTERN(void) jpeg_write_m_byte
 	JPP((j_compress_ptr cinfo, int val));
 
 /* Alternate compression function: just write an abbreviated table file */
-EXTERN(void) jpeg_write_tables JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_write_tables JPP((j_compress_ptr cinfo));
 
 /* Decompression startup: read start of JPEG datastream to see what's there */
-EXTERN(int) jpeg_read_header JPP((j_decompress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(int_result_t) jpeg_read_header JPP((j_decompress_ptr cinfo,
 				  boolean require_image));
 /* Return value is one of: */
 #define JPEG_SUSPENDED		0 /* Suspended due to lack of input data */
@@ -1076,25 +1121,25 @@ EXTERN(int) jpeg_read_header JPP((j_decompress_ptr cinfo,
  */
 
 /* Main entry points for decompression */
-EXTERN(boolean) jpeg_start_decompress JPP((j_decompress_ptr cinfo));
-EXTERN(JDIMENSION) jpeg_read_scanlines JPP((j_decompress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(boolean_result_t) jpeg_start_decompress JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(jdimension_result_t) jpeg_read_scanlines JPP((j_decompress_ptr cinfo,
 					    JSAMPARRAY scanlines,
 					    JDIMENSION max_lines));
-EXTERN(boolean) jpeg_finish_decompress JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(boolean_result_t) jpeg_finish_decompress JPP((j_decompress_ptr cinfo));
 
 /* Replaces jpeg_read_scanlines when reading raw downsampled data. */
-EXTERN(JDIMENSION) jpeg_read_raw_data JPP((j_decompress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(jdimension_result_t) jpeg_read_raw_data JPP((j_decompress_ptr cinfo,
 					   JSAMPIMAGE data,
 					   JDIMENSION max_lines));
 
 /* Additional entry points for buffered-image mode. */
-EXTERN(boolean) jpeg_has_multiple_scans JPP((j_decompress_ptr cinfo));
-EXTERN(boolean) jpeg_start_output JPP((j_decompress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(boolean_result_t) jpeg_has_multiple_scans JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(boolean_result_t) jpeg_start_output JPP((j_decompress_ptr cinfo,
 				       int scan_number));
-EXTERN(boolean) jpeg_finish_output JPP((j_decompress_ptr cinfo));
-EXTERN(boolean) jpeg_input_complete JPP((j_decompress_ptr cinfo));
-EXTERN(void) jpeg_new_colormap JPP((j_decompress_ptr cinfo));
-EXTERN(int) jpeg_consume_input JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(boolean_result_t) jpeg_finish_output JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(boolean_result_t) jpeg_input_complete JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_new_colormap JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(int_result_t) jpeg_consume_input JPP((j_decompress_ptr cinfo));
 /* Return value is one of: */
 /* #define JPEG_SUSPENDED	0    Suspended due to lack of input data */
 #define JPEG_REACHED_SOS	1 /* Reached start of new scan */
@@ -1103,15 +1148,15 @@ EXTERN(int) jpeg_consume_input JPP((j_decompress_ptr cinfo));
 #define JPEG_SCAN_COMPLETED	4 /* Completed last iMCU row of a scan */
 
 /* Precalculate output dimensions for current decompression parameters. */
-EXTERN(void) jpeg_calc_output_dimensions JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_calc_output_dimensions JPP((j_decompress_ptr cinfo));
 
 /* Control saving of COM and APPn markers into marker_list. */
-EXTERN(void) jpeg_save_markers
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_save_markers
 	JPP((j_decompress_ptr cinfo, int marker_code,
 	     unsigned int length_limit));
 
 /* Install a special processing method for COM or APPn markers. */
-EXTERN(void) jpeg_set_marker_processor
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_set_marker_processor
 	JPP((j_decompress_ptr cinfo, int marker_code,
 	     jpeg_marker_parser_method routine));
 
@@ -1129,13 +1174,13 @@ EXTERN(void) jpeg_copy_critical_parameters JPP((j_decompress_ptr srcinfo,
  * reuse it, call this:
  */
 EXTERN(void) jpeg_abort_compress JPP((j_compress_ptr cinfo));
-EXTERN(void) jpeg_abort_decompress JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_abort_decompress JPP((j_decompress_ptr cinfo));
 
 /* Generic versions of jpeg_abort and jpeg_destroy that work on either
  * flavor of JPEG object.  These may be more convenient in some places.
  */
-EXTERN(void) jpeg_abort JPP((j_common_ptr cinfo));
-EXTERN(void) jpeg_destroy JPP((j_common_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_abort JPP((j_common_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_destroy JPP((j_common_ptr cinfo));
 
 /* Default restart-marker-resync procedure for use by data source modules */
 EXTERN(boolean) jpeg_resync_to_restart JPP((j_decompress_ptr cinfo,

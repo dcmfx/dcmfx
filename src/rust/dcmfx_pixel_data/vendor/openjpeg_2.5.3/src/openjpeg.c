@@ -88,6 +88,7 @@ OPJ_BOOL OPJ_CALLCONV opj_set_error_handler(opj_codec_t * p_codec,
 
 /* ---------------------------------------------------------------------- */
 
+#ifndef __wasm__
 static OPJ_SIZE_T opj_read_from_file(void * p_buffer, OPJ_SIZE_T p_nb_bytes,
                                      void * p_user_data)
 {
@@ -140,6 +141,7 @@ static void opj_close_from_file(void* p_user_data)
     FILE* p_file = (FILE*)p_user_data;
     fclose(p_file);
 }
+#endif
 
 /* ---------------------------------------------------------------------- */
 #ifdef _WIN32
@@ -194,7 +196,9 @@ opj_codec_t* OPJ_CALLCONV opj_create_decompress(OPJ_CODEC_FORMAT p_format)
 
     switch (p_format) {
     case OPJ_CODEC_J2K:
+#ifndef __wasm__
         l_codec->opj_dump_codec = (void (*)(void*, OPJ_INT32, FILE*)) j2k_dump;
+#endif
 
         l_codec->opj_get_codec_info = (opj_codestream_info_v2_t* (*)(
                                            void*)) j2k_get_cstr_info;
@@ -285,7 +289,9 @@ opj_codec_t* OPJ_CALLCONV opj_create_decompress(OPJ_CODEC_FORMAT p_format)
 
     case OPJ_CODEC_JP2:
         /* get a JP2 decoder handle */
+#ifndef __wasm__
         l_codec->opj_dump_codec = (void (*)(void*, OPJ_INT32, FILE*)) jp2_dump;
+#endif
 
         l_codec->opj_get_codec_info = (opj_codestream_info_v2_t* (*)(
                                            void*)) jp2_get_cstr_info;
@@ -1015,7 +1021,7 @@ void OPJ_CALLCONV opj_destroy_codec(opj_codec_t *p_codec)
 }
 
 /* ---------------------------------------------------------------------- */
-
+#ifndef __wasm__
 void OPJ_CALLCONV opj_dump_codec(opj_codec_t *p_codec,
                                  OPJ_INT32 info_flag,
                                  FILE* output_stream)
@@ -1031,6 +1037,7 @@ void OPJ_CALLCONV opj_dump_codec(opj_codec_t *p_codec,
     /* fprintf(stderr, "[ERROR] Input parameter of the dump_codec function are incorrect.\n"); */
     return;
 }
+#endif
 
 opj_codestream_info_v2_t* OPJ_CALLCONV opj_get_cstr_info(opj_codec_t *p_codec)
 {
@@ -1079,6 +1086,7 @@ void OPJ_CALLCONV opj_destroy_cstr_index(opj_codestream_index_t **p_cstr_index)
     }
 }
 
+#ifndef __wasm__
 opj_stream_t* OPJ_CALLCONV opj_stream_create_default_file_stream(
     const char *fname, OPJ_BOOL p_is_read_stream)
 {
@@ -1128,6 +1136,7 @@ opj_stream_t* OPJ_CALLCONV opj_stream_create_file_stream(
 
     return l_stream;
 }
+#endif
 
 
 void* OPJ_CALLCONV opj_image_data_alloc(OPJ_SIZE_T size)

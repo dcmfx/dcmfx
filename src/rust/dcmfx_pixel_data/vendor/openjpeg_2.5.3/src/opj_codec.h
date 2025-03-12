@@ -164,8 +164,10 @@ typedef struct opj_codec_private {
     opj_event_mgr_t m_event_mgr;
     /** Flag to indicate if the codec is used to decode or encode*/
     OPJ_BOOL is_decompressor;
+#ifndef __wasm__
     void (*opj_dump_codec)(void * p_codec, OPJ_INT32 info_flag,
                            FILE* output_stream);
+#endif
     opj_codestream_info_v2_t* (*opj_get_codec_info)(void* p_codec);
     opj_codestream_index_t* (*opj_get_codec_index)(void* p_codec);
 

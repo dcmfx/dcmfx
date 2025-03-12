@@ -37,7 +37,7 @@
 #define NEED_SYS_TYPES_H
 
 /* must always be defined for our implementation */
-#define NEED_SHORT_EXTERNAL_NAMES
+// #define NEED_SHORT_EXTERNAL_NAMES
 
 #ifdef JPEG_INTERNALS
 

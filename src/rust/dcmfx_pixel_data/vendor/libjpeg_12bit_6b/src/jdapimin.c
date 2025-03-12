@@ -26,7 +26,7 @@
  * The error manager must already be set up (in case memory manager fails).
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
 {
   int i;
@@ -34,10 +34,10 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
   /* Guard against version mismatches between library and caller. */
   cinfo->mem = NULL;		/* so jpeg_destroy knows mem mgr not called */
   if (version != JPEG_LIB_VERSION)
-    ERREXIT2(cinfo, JERR_BAD_LIB_VERSION, JPEG_LIB_VERSION, version);
+    ERREXIT2(cinfo, JERR_BAD_LIB_VERSION, JPEG_LIB_VERSION, version, ERR_VOID);
   if (structsize != SIZEOF(struct jpeg_decompress_struct))
     ERREXIT2(cinfo, JERR_BAD_STRUCT_SIZE, 
-	     (int) SIZEOF(struct jpeg_decompress_struct), (int) structsize);
+	     (int) SIZEOF(struct jpeg_decompress_struct), (int) structsize, ERR_VOID);
 
   /* For debugging purposes, we zero the whole master structure.
    * But the application has already set the err pointer, and may have set
@@ -55,7 +55,9 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
   cinfo->is_decompressor = TRUE;
 
   /* Initialize a memory manager instance for this object */
-  jinit_memory_mgr((j_common_ptr) cinfo);
+  void_result_t jinit_memory_mgr_result = jinit_memory_mgr((j_common_ptr) cinfo);
+  if (jinit_memory_mgr_result.is_err)
+    return jinit_memory_mgr_result;
 
   /* Zero out pointers to permanent structures. */
   cinfo->progress = NULL;
@@ -73,13 +75,19 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
    * for COM, APPn markers before calling jpeg_read_header.
    */
   cinfo->marker_list = NULL;
-  jinit_marker_reader(cinfo);
+  void_result_t jinit_marker_reader_result = jinit_marker_reader(cinfo);
+  if (jinit_marker_reader_result.is_err)
+    return jinit_marker_reader_result;
 
   /* And initialize the overall input controller. */
-  jinit_input_controller(cinfo);
+  void_result_t jinit_input_controller_result = jinit_input_controller(cinfo);
+  if (jinit_input_controller_result.is_err)
+    return jinit_input_controller_result;
 
   /* OK, I'm ready */
   cinfo->global_state = DSTATE_START;
+
+  return OK_VOID;
 }
 
 
@@ -87,10 +95,10 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
  * Destruction of a JPEG decompression object
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jpeg_destroy_decompress (j_decompress_ptr cinfo)
 {
-  jpeg_destroy((j_common_ptr) cinfo); /* use common routine */
+  return jpeg_destroy((j_common_ptr) cinfo); /* use common routine */
 }
 
 
@@ -99,10 +107,10 @@ jpeg_destroy_decompress (j_decompress_ptr cinfo)
  * but don't destroy the object itself.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jpeg_abort_decompress (j_decompress_ptr cinfo)
 {
-  jpeg_abort((j_common_ptr) cinfo); /* use common routine */
+  return jpeg_abort((j_common_ptr) cinfo); /* use common routine */
 }
 
 
@@ -243,37 +251,44 @@ default_decompress_parms (j_decompress_ptr cinfo)
  * extra error checking.
  */
 
-GLOBAL(int)
+J_WARN_UNUSED_RESULT GLOBAL(int_result_t)
 jpeg_read_header (j_decompress_ptr cinfo, boolean require_image)
 {
   int retcode;
 
   if (cinfo->global_state != DSTATE_START &&
       cinfo->global_state != DSTATE_INHEADER)
-    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
+    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state, ERR_INT);
 
-  retcode = jpeg_consume_input(cinfo);
+  int_result_t jpeg_consume_input_result = jpeg_consume_input(cinfo);
+  if (jpeg_consume_input_result.is_err)
+    return jpeg_consume_input_result;
+
+  retcode = jpeg_consume_input_result.value;
 
   switch (retcode) {
   case JPEG_REACHED_SOS:
     retcode = JPEG_HEADER_OK;
     break;
-  case JPEG_REACHED_EOI:
+  case JPEG_REACHED_EOI: {
     if (require_image)		/* Complain if application wanted an image */
-      ERREXIT(cinfo, JERR_NO_IMAGE);
+      ERREXIT(cinfo, JERR_NO_IMAGE, ERR_INT);
     /* Reset to start state; it would be safer to require the application to
      * call jpeg_abort, but we can't change it now for compatibility reasons.
      * A side effect is to free any temporary memory (there shouldn't be any).
      */
-    jpeg_abort((j_common_ptr) cinfo); /* sets state = DSTATE_START */
+    void_result_t jpeg_abort_result = jpeg_abort((j_common_ptr) cinfo); /* sets state = DSTATE_START */
+    if (jpeg_abort_result.is_err)
+      return RESULT_ERR(int, jpeg_abort_result.err_code);
     retcode = JPEG_HEADER_TABLES_ONLY;
     break;
+  }
   case JPEG_SUSPENDED:
     /* no work */
     break;
   }
 
-  return retcode;
+  return RESULT_OK(int, retcode);
 }
 
 
@@ -289,7 +304,7 @@ jpeg_read_header (j_decompress_ptr cinfo, boolean require_image)
  * method.
  */
 
-GLOBAL(int)
+J_WARN_UNUSED_RESULT GLOBAL(int_result_t)
 jpeg_consume_input (j_decompress_ptr cinfo)
 {
   int retcode = JPEG_SUSPENDED;
@@ -303,8 +318,11 @@ jpeg_consume_input (j_decompress_ptr cinfo)
     (*cinfo->src->init_source) (cinfo);
     cinfo->global_state = DSTATE_INHEADER;
     /*FALLTHROUGH*/
-  case DSTATE_INHEADER:
-    retcode = (*cinfo->inputctl->consume_input) (cinfo);
+  case DSTATE_INHEADER: {
+    int_result_t consume_input_result = (*cinfo->inputctl->consume_input) (cinfo);
+    if (consume_input_result.is_err)
+      return consume_input_result;
+    retcode = consume_input_result.value;
     if (retcode == JPEG_REACHED_SOS) { /* Found SOS, prepare to decompress */
       /* Set up default parameters based on header data */
       default_decompress_parms(cinfo);
@@ -312,6 +330,7 @@ jpeg_consume_input (j_decompress_ptr cinfo)
       cinfo->global_state = DSTATE_READY;
     }
     break;
+  }
   case DSTATE_READY:
     /* Can't advance past first SOS until start_decompress is called */
     retcode = JPEG_REACHED_SOS;
@@ -322,13 +341,17 @@ jpeg_consume_input (j_decompress_ptr cinfo)
   case DSTATE_RAW_OK:
   case DSTATE_BUFIMAGE:
   case DSTATE_BUFPOST:
-  case DSTATE_STOPPING:
-    retcode = (*cinfo->inputctl->consume_input) (cinfo);
+  case DSTATE_STOPPING: {
+    int_result_t consume_input_result = (*cinfo->inputctl->consume_input) (cinfo);
+    if (consume_input_result.is_err)
+      return consume_input_result;
+    retcode = consume_input_result.value;
     break;
-  default:
-    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
   }
-  return retcode;
+  default:
+    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state, ERR_INT);
+  }
+  return RESULT_OK(int, retcode);
 }
 
 
@@ -336,14 +359,14 @@ jpeg_consume_input (j_decompress_ptr cinfo)
  * Have we finished reading the input file?
  */
 
-GLOBAL(boolean)
+J_WARN_UNUSED_RESULT GLOBAL(boolean_result_t)
 jpeg_input_complete (j_decompress_ptr cinfo)
 {
   /* Check for valid jpeg object */
   if (cinfo->global_state < DSTATE_START ||
       cinfo->global_state > DSTATE_STOPPING)
-    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
-  return cinfo->inputctl->eoi_reached;
+    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state, ERR_BOOL);
+  return RESULT_OK(boolean, cinfo->inputctl->eoi_reached);
 }
 
 
@@ -351,14 +374,14 @@ jpeg_input_complete (j_decompress_ptr cinfo)
  * Is there more than one scan?
  */
 
-GLOBAL(boolean)
+J_WARN_UNUSED_RESULT GLOBAL(boolean_result_t)
 jpeg_has_multiple_scans (j_decompress_ptr cinfo)
 {
   /* Only valid after jpeg_read_header completes */
   if (cinfo->global_state < DSTATE_READY ||
       cinfo->global_state > DSTATE_STOPPING)
-    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
-  return cinfo->inputctl->has_multiple_scans;
+    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state, ERR_BOOL);
+  return RESULT_OK(boolean, cinfo->inputctl->has_multiple_scans);
 }
 
 
@@ -371,31 +394,39 @@ jpeg_has_multiple_scans (j_decompress_ptr cinfo)
  * a suspending data source is used.
  */
 
-GLOBAL(boolean)
+J_WARN_UNUSED_RESULT GLOBAL(boolean_result_t)
 jpeg_finish_decompress (j_decompress_ptr cinfo)
 {
   if ((cinfo->global_state == DSTATE_SCANNING ||
        cinfo->global_state == DSTATE_RAW_OK) && ! cinfo->buffered_image) {
     /* Terminate final pass of non-buffered mode */
     if (cinfo->output_scanline < cinfo->output_height)
-      ERREXIT(cinfo, JERR_TOO_LITTLE_DATA);
-    (*cinfo->master->finish_output_pass) (cinfo);
+      ERREXIT(cinfo, JERR_TOO_LITTLE_DATA, ERR_BOOL);
+    void_result_t finish_output_pass_result = ((*cinfo->master->finish_output_pass) (cinfo));
+    if (finish_output_pass_result.is_err)
+      return RESULT_ERR(boolean, finish_output_pass_result.err_code);
     cinfo->global_state = DSTATE_STOPPING;
   } else if (cinfo->global_state == DSTATE_BUFIMAGE) {
     /* Finishing after a buffered-image operation */
     cinfo->global_state = DSTATE_STOPPING;
   } else if (cinfo->global_state != DSTATE_STOPPING) {
     /* STOPPING = repeat call after a suspension, anything else is error */
-    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
+    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state, ERR_BOOL);
   }
   /* Read until EOI */
   while (! cinfo->inputctl->eoi_reached) {
-    if ((*cinfo->inputctl->consume_input) (cinfo) == JPEG_SUSPENDED)
-      return FALSE;		/* Suspend, come back later */
+    int_result_t consume_input_result = (*cinfo->inputctl->consume_input) (cinfo);
+    if (consume_input_result.is_err)
+      return RESULT_OK(boolean, FALSE);
+    if (consume_input_result.value == JPEG_SUSPENDED)
+      return RESULT_OK(boolean, FALSE);		/* Suspend, come back later */
   }
   /* Do final cleanup */
   (*cinfo->src->term_source) (cinfo);
   /* We can use jpeg_abort to release memory and reset global_state */
-  jpeg_abort((j_common_ptr) cinfo);
-  return TRUE;
+  void_result_t jpeg_abort_result = jpeg_abort((j_common_ptr) cinfo);
+  if (jpeg_abort_result.is_err)
+    return RESULT_ERR(boolean, jpeg_abort_result.err_code);
+
+  return RESULT_OK(boolean, TRUE);
 }

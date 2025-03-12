@@ -74,7 +74,7 @@ error_exit (j_common_ptr cinfo)
   (*cinfo->err->output_message) (cinfo);
 
   /* Let the memory manager delete any temp files before we die */
-  jpeg_destroy(cinfo);
+  (void) jpeg_destroy(cinfo);
 
 #ifndef __wasm__
   exit(EXIT_FAILURE);

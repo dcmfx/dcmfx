@@ -52,7 +52,9 @@
 #include <float.h>
 #endif
 #include <time.h>
+#ifndef __wasm__
 #include <stdio.h>
+#endif
 #include <stdarg.h>
 #include <ctype.h>
 #include <assert.h>

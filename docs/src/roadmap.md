@@ -3,9 +3,7 @@
 DCMfx has no formal roadmap, but future additions are likely to include the
 following:
 
-- Pixel Data
-  - Decoding of the JPEG-LS transfer syntax on WASM
-  - Correctly handle invalid data when decoding JPEG Extended on WASM
+- Decoding of JPEG-LS pixel data on WASM
 
 - Overlay rendering
 

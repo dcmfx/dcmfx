@@ -814,6 +814,7 @@ OPJ_BOOL opj_j2k_set_decode_area(opj_j2k_t *p_j2k,
 opj_j2k_t* opj_j2k_create_decompress(void);
 
 
+#ifndef __wasm__
 /**
  * Dump some elements from the J2K decompression structure .
  *
@@ -823,7 +824,6 @@ opj_j2k_t* opj_j2k_create_decompress(void);
  *
 */
 void j2k_dump(opj_j2k_t* p_j2k, OPJ_INT32 flag, FILE* out_stream);
-
 
 
 /**
@@ -836,6 +836,7 @@ void j2k_dump(opj_j2k_t* p_j2k, OPJ_INT32 flag, FILE* out_stream);
 void j2k_dump_image_header(opj_image_t* image, OPJ_BOOL dev_dump_flag,
                            FILE* out_stream);
 
+
 /**
  * Dump a component image header structure.
  *
@@ -845,6 +846,7 @@ void j2k_dump_image_header(opj_image_t* image, OPJ_BOOL dev_dump_flag,
  */
 void j2k_dump_image_comp_header(opj_image_comp_t* comp, OPJ_BOOL dev_dump_flag,
                                 FILE* out_stream);
+#endif
 
 /**
  * Get the codestream info from a JPEG2000 codec.

@@ -484,6 +484,7 @@ OPJ_BOOL opj_jp2_encoder_set_extra_options(
 
 
 /* TODO MSD: clean these 3 functions */
+#ifndef __wasm__
 /**
  * Dump some elements from the JP2 decompression structure .
  *
@@ -493,6 +494,7 @@ OPJ_BOOL opj_jp2_encoder_set_extra_options(
  *
 */
 void jp2_dump(opj_jp2_t* p_jp2, OPJ_INT32 flag, FILE* out_stream);
+#endif
 
 /**
  * Get the codestream info from a JPEG2000 codec.

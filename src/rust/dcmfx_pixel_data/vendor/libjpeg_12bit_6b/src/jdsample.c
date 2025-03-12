@@ -85,7 +85,7 @@ start_pass_upsample (j_decompress_ptr cinfo)
  * color conversion a row at a time.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 sep_upsample (j_decompress_ptr cinfo,
           JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
           JDIMENSION in_row_groups_avail,
@@ -138,6 +138,8 @@ sep_upsample (j_decompress_ptr cinfo,
   /* When the buffer is emptied, declare this input row group consumed */
   if (upsample->next_row_out >= cinfo->max_v_samp_factor)
     (*in_row_group_ctr)++;
+
+  return OK_VOID;
 }
 
 
@@ -403,7 +405,7 @@ h2v2_fancy_upsample (j_decompress_ptr cinfo, jpeg_component_info * compptr,
  * Module initialization routine for upsampling.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_upsampler (j_decompress_ptr cinfo)
 {
   my_upsample_ptr upsample;
@@ -412,16 +414,20 @@ jinit_upsampler (j_decompress_ptr cinfo)
   boolean need_buffer, do_fancy;
   int h_in_group, v_in_group, h_out_group, v_out_group;
 
-  upsample = (my_upsample_ptr)
+  
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 SIZEOF(my_upsampler));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  upsample = (my_upsample_ptr) alloc_small_result.value;
   cinfo->upsample = (struct jpeg_upsampler *) upsample;
   upsample->pub.start_pass = start_pass_upsample;
   upsample->pub.upsample = sep_upsample;
   upsample->pub.need_context_rows = FALSE; /* until we find out differently */
 
   if (cinfo->CCIR601_sampling)  /* this isn't supported */
-    ERREXIT(cinfo, JERR_CCIR601_NOTIMPL);
+    ERREXIT(cinfo, JERR_CCIR601_NOTIMPL, ERR_VOID);
 
   /* jdmainct.c doesn't support context rows when min_codec_data_unit = 1,
    * so don't ask for it.
@@ -474,13 +480,18 @@ jinit_upsampler (j_decompress_ptr cinfo)
       upsample->h_expand[ci] = (UINT8) (h_out_group / h_in_group);
       upsample->v_expand[ci] = (UINT8) (v_out_group / v_in_group);
     } else
-      ERREXIT(cinfo, JERR_FRACT_SAMPLE_NOTIMPL);
+      ERREXIT(cinfo, JERR_FRACT_SAMPLE_NOTIMPL, ERR_VOID);
     if (need_buffer) {
-      upsample->color_buf[ci] = (*cinfo->mem->alloc_sarray)
-    ((j_common_ptr) cinfo, JPOOL_IMAGE,
-     (JDIMENSION) jround_up((long) cinfo->output_width,
-                (long) cinfo->max_h_samp_factor),
-     (JDIMENSION) cinfo->max_v_samp_factor);
+      jsamparray_result_t alloc_sarray_result = (*cinfo->mem->alloc_sarray)
+        ((j_common_ptr) cinfo, JPOOL_IMAGE,
+        (JDIMENSION) jround_up((long) cinfo->output_width,
+                    (long) cinfo->max_h_samp_factor),
+        (JDIMENSION) cinfo->max_v_samp_factor);
+      if (alloc_sarray_result.is_err)
+        return ERR_VOID(alloc_sarray_result.err_code);
+      upsample->color_buf[ci] = alloc_sarray_result.value;
     }
   }
+
+  return OK_VOID;
 }

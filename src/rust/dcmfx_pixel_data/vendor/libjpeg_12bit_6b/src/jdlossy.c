@@ -121,7 +121,7 @@ calc_output_dimensions (j_decompress_ptr cinfo)
  * not at the current Q-table slots.
  */
 
-LOCAL(void)
+J_WARN_UNUSED_RESULT LOCAL(void_result_t)
 latch_quant_tables (j_decompress_ptr cinfo)
 {
   int ci, qtblno;
@@ -137,14 +137,19 @@ latch_quant_tables (j_decompress_ptr cinfo)
     qtblno = compptr->quant_tbl_no;
     if (qtblno < 0 || qtblno >= NUM_QUANT_TBLS ||
 	cinfo->quant_tbl_ptrs[qtblno] == NULL)
-      ERREXIT1(cinfo, JERR_NO_QUANT_TABLE, qtblno);
+      ERREXIT1(cinfo, JERR_NO_QUANT_TABLE, qtblno, ERR_VOID);
     /* OK, save away the quantization table */
-    qtbl = (JQUANT_TBL *)
+    void_ptr_result_t alloc_small_result =
       (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				  SIZEOF(JQUANT_TBL));
+    if (alloc_small_result.is_err)
+      return ERR_VOID(alloc_small_result.err_code);
+    qtbl = (JQUANT_TBL *) alloc_small_result.value;
     MEMCOPY(qtbl, cinfo->quant_tbl_ptrs[qtblno], SIZEOF(JQUANT_TBL));
     compptr->quant_table = qtbl;
   }
+
+  return OK_VOID;
 }
 
 
@@ -152,14 +157,22 @@ latch_quant_tables (j_decompress_ptr cinfo)
  * Initialize for an input processing pass.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 start_input_pass (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
 
-  latch_quant_tables(cinfo);
-  (*lossyd->entropy_start_pass) (cinfo);
+  void_result_t latch_quant_tables_result = latch_quant_tables(cinfo);
+  if (latch_quant_tables_result.is_err)
+    return latch_quant_tables_result;
+
+  void_result_t entropy_start_pass_result = ((*lossyd->entropy_start_pass) (cinfo));
+  if (entropy_start_pass_result.is_err)
+    return entropy_start_pass_result;
+
   (*lossyd->coef_start_input_pass) (cinfo);
+
+  return OK_VOID;
 }
 
 
@@ -167,13 +180,19 @@ start_input_pass (j_decompress_ptr cinfo)
  * Initialize for an output processing pass.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 start_output_pass (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
 
-  (*lossyd->idct_start_pass) (cinfo);
-  (*lossyd->coef_start_output_pass) (cinfo);
+  void_result_t idct_start_pass_result = ((*lossyd->idct_start_pass) (cinfo));
+  if (idct_start_pass_result.is_err)
+    return idct_start_pass_result;
+  void_result_t coef_start_output_pass_result = ((*lossyd->coef_start_output_pass) (cinfo));
+  if (coef_start_output_pass_result.is_err)
+    return coef_start_output_pass_result;
+
+  return OK_VOID;
 }
 
 /*
@@ -181,42 +200,54 @@ start_output_pass (j_decompress_ptr cinfo)
  * This is called only once, during master selection.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_lossy_d_codec (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd;
   boolean use_c_buffer;
 
   /* Create subobject in permanent pool */
-  lossyd = (j_lossy_d_ptr)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
 				SIZEOF(jpeg_lossy_d_codec));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  lossyd = (j_lossy_d_ptr) alloc_small_result.value;
   cinfo->codec = (struct jpeg_d_codec *) lossyd;
 
   /* Initialize sub-modules */
 
   /* Inverse DCT */
-  jinit_inverse_dct(cinfo);
+  void_result_t jinit_inverse_dct_result = jinit_inverse_dct(cinfo);
+  if (jinit_inverse_dct_result.is_err)
+    return jinit_inverse_dct_result;
   /* Entropy decoding: either Huffman or arithmetic coding. */
   if (cinfo->arith_code) {
 #ifdef WITH_ARITHMETIC_PATCH
     jinit_arith_decoder(cinfo);
 #else
-    ERREXIT(cinfo, JERR_ARITH_NOTIMPL);
+    ERREXIT(cinfo, JERR_ARITH_NOTIMPL, ERR_VOID);
 #endif
   } else {
     if (cinfo->process == JPROC_PROGRESSIVE) {
 #ifdef D_PROGRESSIVE_SUPPORTED
-      jinit_phuff_decoder(cinfo);
+      void_result_t jinit_phuff_decoder_result = jinit_phuff_decoder(cinfo);
+      if (jinit_phuff_decoder_result.is_err)
+        return jinit_phuff_decoder_result;
 #else
-      ERREXIT(cinfo, JERR_NOT_COMPILED);
+      ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
 #endif
-    } else
-      jinit_shuff_decoder(cinfo);
+    } else {
+      void_result_t jinit_shuff_decoder_result = jinit_shuff_decoder(cinfo);
+      if (jinit_shuff_decoder_result.is_err)
+        return jinit_shuff_decoder_result;
+    }
   }
 
   use_c_buffer = cinfo->inputctl->has_multiple_scans || cinfo->buffered_image;
-  jinit_d_coef_controller(cinfo, use_c_buffer);
+  void_result_t jinit_d_coef_controller_result = jinit_d_coef_controller(cinfo, use_c_buffer);
+  if (jinit_d_coef_controller_result.is_err)
+    return jinit_d_coef_controller_result;
 
   /* Initialize method pointers.
    *
@@ -225,6 +256,8 @@ jinit_lossy_d_codec (j_decompress_ptr cinfo)
   lossyd->pub.calc_output_dimensions = calc_output_dimensions;
   lossyd->pub.start_input_pass = start_input_pass;
   lossyd->pub.start_output_pass = start_output_pass;
+
+  return OK_VOID;
 }
 
 

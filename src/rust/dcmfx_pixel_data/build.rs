@@ -13,6 +13,7 @@ fn build_c_code() {
   shared_build_config(&mut build, "vendor/**/*.c", "vendor/**/*.h");
   build.include("vendor/libjpeg_12bit_6b");
   build.include("vendor/openjpeg_2.5.3/src");
+  build.define("OPJ_STATIC", "1");
 
   build.compile("dcmfx_pixel_data_c_libs");
 }
@@ -44,9 +45,11 @@ fn shared_build_config(
 ) {
   // Silence build warnings
   if std::env::var("TARGET").unwrap().contains("msvc") {
-    build.flag("/w");
+    // TODO: disable warnings on MSVC
   } else {
-    build.flag("-w");
+    build.flag("-Wno-unused-but-set-variable");
+    build.flag("-Wno-unused-parameter");
+    build.flag("-Wno-implicit-fallthrough");
   }
 
   // Optimize builds

@@ -217,39 +217,53 @@ JMESSAGE(JWRN_TOO_MUCH_DATA, "Application transferred too many scanlines")
 #ifndef JERROR_H
 #define JERROR_H
 
+
 /* Macros to simplify using the error and trace message stuff */
 /* The first parameter is either type of cinfo pointer */
 
+
 /* Fatal errors (print message and exit) */
-#define ERREXIT(cinfo,code)  \
-  ((cinfo)->err->msg_code = (code), \
-   (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)))
-#define ERREXIT1(cinfo,code,p1)  \
-  ((cinfo)->err->msg_code = (code), \
-   (cinfo)->err->msg_parm.i[0] = (p1), \
-   (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)))
-#define ERREXIT2(cinfo,code,p1,p2)  \
-  ((cinfo)->err->msg_code = (code), \
-   (cinfo)->err->msg_parm.i[0] = (p1), \
-   (cinfo)->err->msg_parm.i[1] = (p2), \
-   (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)))
-#define ERREXIT3(cinfo,code,p1,p2,p3)  \
-  ((cinfo)->err->msg_code = (code), \
-   (cinfo)->err->msg_parm.i[0] = (p1), \
-   (cinfo)->err->msg_parm.i[1] = (p2), \
-   (cinfo)->err->msg_parm.i[2] = (p3), \
-   (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)))
-#define ERREXIT4(cinfo,code,p1,p2,p3,p4)  \
-  ((cinfo)->err->msg_code = (code), \
-   (cinfo)->err->msg_parm.i[0] = (p1), \
-   (cinfo)->err->msg_parm.i[1] = (p2), \
-   (cinfo)->err->msg_parm.i[2] = (p3), \
-   (cinfo)->err->msg_parm.i[3] = (p4), \
-   (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)))
-#define ERREXITS(cinfo,code,str)  \
-  ((cinfo)->err->msg_code = (code), \
-   strncpy((cinfo)->err->msg_parm.s, (str), JMSG_STR_PARM_MAX), \
-   (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)))
+#define ERREXIT(cinfo,code,err_value) do { \
+    (cinfo)->err->msg_code = (code); \
+    (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)); \
+    return err_value(code); \
+  } while (0)
+#define ERREXIT1(cinfo,code,p1,err_value) do { \
+    (cinfo)->err->msg_code = (code); \
+    (cinfo)->err->msg_parm.i[0] = (p1); \
+    (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)); \
+   return err_value(code); \
+ } while (0)
+#define ERREXIT2(cinfo,code,p1,p2,err_value) do { \
+    (cinfo)->err->msg_code = (code); \
+    (cinfo)->err->msg_parm.i[0] = (p1); \
+    (cinfo)->err->msg_parm.i[1] = (p2); \
+    (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)); \
+    return err_value(code); \
+ } while (0)
+#define ERREXIT3(cinfo,code,p1,p2,p3,err_value) do { \
+    (cinfo)->err->msg_code = (code); \
+    (cinfo)->err->msg_parm.i[0] = (p1); \
+    (cinfo)->err->msg_parm.i[1] = (p2); \
+    (cinfo)->err->msg_parm.i[2] = (p3); \
+    (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)); \
+    return err_value(code); \
+ } while (0)
+#define ERREXIT4(cinfo,code,p1,p2,p3,p4,err_value) do { \
+    (cinfo)->err->msg_code = (code); \
+    (cinfo)->err->msg_parm.i[0] = (p1); \
+    (cinfo)->err->msg_parm.i[1] = (p2); \
+    (cinfo)->err->msg_parm.i[2] = (p3); \
+    (cinfo)->err->msg_parm.i[3] = (p4); \
+    (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)); \
+    return err_value(code); \
+ } while (0)
+#define ERREXITS(cinfo,code,str,err_value) do { \
+    (cinfo)->err->msg_code = (code); \
+    strncpy((cinfo)->err->msg_parm.s, (str), JMSG_STR_PARM_MAX); \
+    (*(cinfo)->err->error_exit) ((j_common_ptr) (cinfo)); \
+    return err_value(code); \
+ } while (0)
 
 #define MAKESTMT(stuff)		do { stuff } while (0)
 

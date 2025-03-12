@@ -51,7 +51,22 @@ jobs:
   test_dcmfx_rust:
     name: Test DCMfx (Rust)
     timeout-minutes: 10
-    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - x86_64-pc-windows-msvc
+        include:
+          - runs-on: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+          - runs-on: windows-2022
+            target: x86_64-pc-windows-msvc
+
+    runs-on: ${{ matrix.runs-on }}
+
+    env:
+      CARGO_TERM_COLOR: always
 
     steps:
       - name: Checkout repository
@@ -86,7 +101,7 @@ jobs:
 
       - name: Check a no_std build succeeds
         working-directory: src/rust
-        run: cargo build -p dcmfx --no-default-features
+        run: cargo build --frozen -p dcmfx --no-default-features
 
   test_dcmfx_rust_wasm_build:
     name: Test DCMfx Rust WASM build
@@ -115,7 +130,7 @@ jobs:
 
       - name: Build for WASM target
         working-directory: src/rust
-        run: cargo build --target wasm32-unknown-unknown --frozen --package dcmfx
+        run: cargo build --frozen --package dcmfx --target wasm32-unknown-unknown --no-default-features
 
   test_examples:
     name: Test examples

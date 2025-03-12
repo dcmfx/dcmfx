@@ -81,13 +81,13 @@ use_merged_upsample (j_decompress_ptr cinfo)
  * Also note that it may be called before the master module is initialized!
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jpeg_calc_output_dimensions (j_decompress_ptr cinfo)
 /* Do computations that are needed before master selection phase */
 {
   /* Prevent application from calling me at wrong times */
   if (cinfo->global_state != DSTATE_READY)
-    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
+    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state, ERR_VOID);
 
   (*cinfo->codec->calc_output_dimensions) (cinfo);
 
@@ -121,6 +121,8 @@ jpeg_calc_output_dimensions (j_decompress_ptr cinfo)
     cinfo->rec_outbuf_height = cinfo->max_v_samp_factor;
   else
     cinfo->rec_outbuf_height = 1;
+
+  return OK_VOID;
 }
 
 
@@ -167,16 +169,19 @@ jpeg_calc_output_dimensions (j_decompress_ptr cinfo)
  * enough and used often enough to justify this.
  */
 
-LOCAL(void)
+J_WARN_UNUSED_RESULT LOCAL(void_result_t)
 prepare_range_limit_table (j_decompress_ptr cinfo)
 /* Allocate and fill in the sample_range_limit table */
 {
   JSAMPLE * table;
   int i;
 
-  table = (JSAMPLE *)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-		(5 * (MAXJSAMPLE+1) + CENTERJSAMPLE) * SIZEOF(JSAMPLE));
+		  (5 * (MAXJSAMPLE+1) + CENTERJSAMPLE) * SIZEOF(JSAMPLE));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  table = (JSAMPLE *) alloc_small_result.value;
   table += (MAXJSAMPLE+1);	/* allow negative subscripts of simple table */
   cinfo->sample_range_limit = table;
   /* First segment of "simple" table: limit[x] = 0 for x < 0 */
@@ -193,6 +198,8 @@ prepare_range_limit_table (j_decompress_ptr cinfo)
 	  (2 * (MAXJSAMPLE+1) - CENTERJSAMPLE) * SIZEOF(JSAMPLE));
   MEMCOPY(table + (4 * (MAXJSAMPLE+1) - CENTERJSAMPLE),
 	  cinfo->sample_range_limit, CENTERJSAMPLE * SIZEOF(JSAMPLE));
+
+  return OK_VOID;
 }
 
 
@@ -207,7 +214,7 @@ prepare_range_limit_table (j_decompress_ptr cinfo)
  * settings.
  */
 
-LOCAL(void)
+J_WARN_UNUSED_RESULT LOCAL(void_result_t)
 master_selection (j_decompress_ptr cinfo)
 {
   my_master_ptr master = (my_master_ptr) cinfo->master;
@@ -215,14 +222,18 @@ master_selection (j_decompress_ptr cinfo)
   JDIMENSION jd_samplesperrow;
 
   /* Initialize dimensions and other stuff */
-  jpeg_calc_output_dimensions(cinfo);
-  prepare_range_limit_table(cinfo);
+  void_result_t jpeg_calc_output_dimensions_result = jpeg_calc_output_dimensions(cinfo);
+  if (jpeg_calc_output_dimensions_result.is_err)
+    return jpeg_calc_output_dimensions_result;
+  void_result_t prepare_range_limit_table_result = prepare_range_limit_table(cinfo);
+  if (prepare_range_limit_table_result.is_err)
+    return prepare_range_limit_table_result;
 
   /* Width of an output scanline must be representable as JDIMENSION. */
   samplesperrow = (long) cinfo->output_width * (long) cinfo->out_color_components;
   jd_samplesperrow = (JDIMENSION) samplesperrow;
   if ((long) jd_samplesperrow != samplesperrow)
-    ERREXIT(cinfo, JERR_WIDTH_OVERFLOW);
+    ERREXIT(cinfo, JERR_WIDTH_OVERFLOW, ERR_VOID);
 
   /* Initialize my private state */
   master->pass_number = 0;
@@ -239,7 +250,7 @@ master_selection (j_decompress_ptr cinfo)
   }
   if (cinfo->quantize_colors) {
     if (cinfo->raw_data_out)
-      ERREXIT(cinfo, JERR_NOTIMPL);
+      ERREXIT(cinfo, JERR_NOTIMPL, ERR_VOID);
     /* 2-pass quantizer only works in 3-component color space. */
     if (cinfo->out_color_components != 3) {
       cinfo->enable_1pass_quant = TRUE;
@@ -256,20 +267,24 @@ master_selection (j_decompress_ptr cinfo)
 
     if (cinfo->enable_1pass_quant) {
 #ifdef QUANT_1PASS_SUPPORTED
-      jinit_1pass_quantizer(cinfo);
+      void_result_t jinit_1pass_quantizer_result = jinit_1pass_quantizer(cinfo);
+      if (jinit_1pass_quantizer_result.is_err)
+        return jinit_1pass_quantizer_result;
       master->quantizer_1pass = cinfo->cquantize;
 #else
-      ERREXIT(cinfo, JERR_NOT_COMPILED);
+      ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
 #endif
     }
 
     /* We use the 2-pass code to map to external colormaps. */
     if (cinfo->enable_2pass_quant || cinfo->enable_external_quant) {
 #ifdef QUANT_2PASS_SUPPORTED
-      jinit_2pass_quantizer(cinfo);
+      void_result_t jinit_2pass_quantizer_result = jinit_2pass_quantizer(cinfo);
+      if (jinit_2pass_quantizer_result.is_err)
+        return jinit_2pass_quantizer_result;
       master->quantizer_2pass = cinfo->cquantize;
 #else
-      ERREXIT(cinfo, JERR_NOT_COMPILED);
+      ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
 #endif
     }
     /* If both quantizers are initialized, the 2-pass one is left active;
@@ -281,26 +296,41 @@ master_selection (j_decompress_ptr cinfo)
   if (! cinfo->raw_data_out) {
     if (master->using_merged_upsample) {
 #ifdef UPSAMPLE_MERGING_SUPPORTED
-      jinit_merged_upsampler(cinfo); /* does color conversion too */
+      void_result_t jinit_merged_upsampler_result = jinit_merged_upsampler(cinfo);
+      if (jinit_merged_upsampler_result.is_err) /* does color conversion too */
+        return jinit_merged_upsampler_result;
 #else
-      ERREXIT(cinfo, JERR_NOT_COMPILED);
+      ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
 #endif
     } else {
-      jinit_color_deconverter(cinfo);
-      jinit_upsampler(cinfo);
+      void_result_t jinit_color_deconverter_result = jinit_color_deconverter(cinfo);
+      if (jinit_color_deconverter_result.is_err)
+        return jinit_color_deconverter_result;
+      void_result_t jinit_upsampler_result = jinit_upsampler(cinfo);
+      if (jinit_upsampler_result.is_err)
+        return jinit_upsampler_result;
     }
-    jinit_d_post_controller(cinfo, cinfo->enable_2pass_quant);
+    void_result_t jinit_d_post_controller_result = jinit_d_post_controller(cinfo, cinfo->enable_2pass_quant);
+    if (jinit_d_post_controller_result.is_err)
+      return jinit_d_post_controller_result;
   }
 
   /* Initialize principal buffer controllers. */
-  if (! cinfo->raw_data_out)
-    jinit_d_main_controller(cinfo, FALSE /* never need full buffer here */);
+  if (! cinfo->raw_data_out) {
+    void_result_t jinit_d_main_controller_result = jinit_d_main_controller(cinfo, FALSE /* never need full buffer here */);
+    if (jinit_d_main_controller_result.is_err)
+      return jinit_d_main_controller_result;
+  }
 
   /* We can now tell the memory manager to allocate virtual arrays. */
-  (*cinfo->mem->realize_virt_arrays) ((j_common_ptr) cinfo);
+  void_result_t realize_virt_arrays_result = ((*cinfo->mem->realize_virt_arrays) ((j_common_ptr) cinfo));
+  if (realize_virt_arrays_result.is_err)
+    return realize_virt_arrays_result;
 
   /* Initialize input side of decompressor to consume first scan. */
-  (*cinfo->inputctl->start_input_pass) (cinfo);
+  void_result_t start_input_pass_result = ((*cinfo->inputctl->start_input_pass) (cinfo));
+  if (start_input_pass_result.is_err)
+    return start_input_pass_result;
 
 #ifdef D_MULTISCAN_FILES_SUPPORTED
   /* If jpeg_start_decompress will read the whole file, initialize
@@ -326,6 +356,8 @@ master_selection (j_decompress_ptr cinfo)
     master->pass_number++;
   }
 #endif /* D_MULTISCAN_FILES_SUPPORTED */
+
+  return OK_VOID;
 }
 
 
@@ -338,7 +370,7 @@ master_selection (j_decompress_ptr cinfo)
  * (In the latter case, jdapistd.c will crank the pass to completion.)
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 prepare_for_output_pass (j_decompress_ptr cinfo)
 {
   my_master_ptr master = (my_master_ptr) cinfo->master;
@@ -347,11 +379,17 @@ prepare_for_output_pass (j_decompress_ptr cinfo)
 #ifdef QUANT_2PASS_SUPPORTED
     /* Final pass of 2-pass quantization */
     master->pub.is_dummy_pass = FALSE;
-    (*cinfo->cquantize->start_pass) (cinfo, FALSE);
-    (*cinfo->post->start_pass) (cinfo, JBUF_CRANK_DEST);
-    (*cinfo->main->start_pass) (cinfo, JBUF_CRANK_DEST);
+    void_result_t start_pass_result = ((*cinfo->cquantize->start_pass) (cinfo, FALSE));
+    if (start_pass_result.is_err)
+      return start_pass_result;
+    start_pass_result = ((*cinfo->post->start_pass) (cinfo, JBUF_CRANK_DEST));
+    if (start_pass_result.is_err)
+      return start_pass_result;
+    start_pass_result = ((*cinfo->main->start_pass) (cinfo, JBUF_CRANK_DEST));
+    if (start_pass_result.is_err)
+      return start_pass_result;
 #else
-    ERREXIT(cinfo, JERR_NOT_COMPILED);
+    ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
 #endif /* QUANT_2PASS_SUPPORTED */
   } else {
     if (cinfo->quantize_colors && cinfo->colormap == NULL) {
@@ -362,19 +400,28 @@ prepare_for_output_pass (j_decompress_ptr cinfo)
       } else if (cinfo->enable_1pass_quant) {
 	cinfo->cquantize = master->quantizer_1pass;
       } else {
-	ERREXIT(cinfo, JERR_MODE_CHANGE);
+	ERREXIT(cinfo, JERR_MODE_CHANGE, ERR_VOID);
       }
     }
-    (*cinfo->codec->start_output_pass) (cinfo);
+    void_result_t start_output_pass_result = ((*cinfo->codec->start_output_pass) (cinfo));
+    if (start_output_pass_result.is_err)
+      return start_output_pass_result;
     if (! cinfo->raw_data_out) {
       if (! master->using_merged_upsample)
 	(*cinfo->cconvert->start_pass) (cinfo);
       (*cinfo->upsample->start_pass) (cinfo);
-      if (cinfo->quantize_colors)
-	(*cinfo->cquantize->start_pass) (cinfo, master->pub.is_dummy_pass);
-      (*cinfo->post->start_pass) (cinfo,
-	    (master->pub.is_dummy_pass ? JBUF_SAVE_AND_PASS : JBUF_PASS_THRU));
-      (*cinfo->main->start_pass) (cinfo, JBUF_PASS_THRU);
+      if (cinfo->quantize_colors) {
+        void_result_t start_pass_result = ((*cinfo->cquantize->start_pass) (cinfo, master->pub.is_dummy_pass));
+	      if (start_pass_result.is_err)
+          return start_pass_result;
+      }
+      void_result_t start_pass_result = ((*cinfo->post->start_pass) (cinfo,
+        (master->pub.is_dummy_pass ? JBUF_SAVE_AND_PASS : JBUF_PASS_THRU)));
+      if (start_pass_result.is_err)
+        return start_pass_result;
+      start_pass_result = ((*cinfo->main->start_pass) (cinfo, JBUF_PASS_THRU));
+      if (start_pass_result.is_err)
+        return ERR_VOID(start_pass_result.err_code);
     }
   }
 
@@ -390,6 +437,8 @@ prepare_for_output_pass (j_decompress_ptr cinfo)
       cinfo->progress->total_passes += (cinfo->enable_2pass_quant ? 2 : 1);
     }
   }
+
+  return OK_VOID;
 }
 
 
@@ -397,14 +446,19 @@ prepare_for_output_pass (j_decompress_ptr cinfo)
  * Finish up at end of an output pass.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 finish_output_pass (j_decompress_ptr cinfo)
 {
   my_master_ptr master = (my_master_ptr) cinfo->master;
 
-  if (cinfo->quantize_colors)
-    (*cinfo->cquantize->finish_pass) (cinfo);
+  if (cinfo->quantize_colors) {
+    void_result_t finish_pass_result = ((*cinfo->cquantize->finish_pass) (cinfo));
+    if (finish_pass_result.is_err)
+      return finish_pass_result;
+  }
   master->pass_number++;
+
+  return OK_VOID;
 }
 
 
@@ -414,24 +468,28 @@ finish_output_pass (j_decompress_ptr cinfo)
  * Switch to a new external colormap between output passes.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jpeg_new_colormap (j_decompress_ptr cinfo)
 {
   my_master_ptr master = (my_master_ptr) cinfo->master;
 
   /* Prevent application from calling me at wrong times */
   if (cinfo->global_state != DSTATE_BUFIMAGE)
-    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
+    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state, ERR_VOID);
 
   if (cinfo->quantize_colors && cinfo->enable_external_quant &&
       cinfo->colormap != NULL) {
     /* Select 2-pass quantizer for external colormap use */
     cinfo->cquantize = master->quantizer_2pass;
     /* Notify quantizer of colormap change */
-    (*cinfo->cquantize->new_color_map) (cinfo);
+    void_result_t new_color_map_result = ((*cinfo->cquantize->new_color_map) (cinfo));
+    if (new_color_map_result.is_err)
+      return new_color_map_result;
     master->pub.is_dummy_pass = FALSE; /* just in case */
   } else
-    ERREXIT(cinfo, JERR_MODE_CHANGE);
+    ERREXIT(cinfo, JERR_MODE_CHANGE, ERR_VOID);
+
+  return OK_VOID;
 }
 
 #endif /* D_MULTISCAN_FILES_SUPPORTED */
@@ -442,19 +500,22 @@ jpeg_new_colormap (j_decompress_ptr cinfo)
  * This is performed at the start of jpeg_start_decompress.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_master_decompress (j_decompress_ptr cinfo)
 {
   my_master_ptr master;
 
-  master = (my_master_ptr)
+  void_ptr_result_t alloc_small_result =
       (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				  SIZEOF(my_decomp_master));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  master = (my_master_ptr) alloc_small_result.value;
   cinfo->master = (struct jpeg_decomp_master *) master;
   master->pub.prepare_for_output_pass = prepare_for_output_pass;
   master->pub.finish_output_pass = finish_output_pass;
 
   master->pub.is_dummy_pass = FALSE;
 
-  master_selection(cinfo);
+  return master_selection(cinfo);
 }

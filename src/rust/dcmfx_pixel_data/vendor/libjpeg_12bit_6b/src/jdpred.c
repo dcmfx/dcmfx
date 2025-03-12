@@ -235,7 +235,7 @@ jpeg_undifference_first_row(j_decompress_ptr cinfo, int comp_index,
  * Initialize for an input processing pass.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 predict_start_pass (j_decompress_ptr cinfo)
 {
   j_lossless_d_ptr losslsd = (j_lossless_d_ptr) cinfo->codec;
@@ -254,11 +254,13 @@ predict_start_pass (j_decompress_ptr cinfo)
       cinfo->Se != 0 || cinfo->Ah != 0 ||
       cinfo->Al > 15)               /* need not check for < 0 */
     ERREXIT4(cinfo, JERR_BAD_LOSSLESS,
-         cinfo->Ss, cinfo->Se, cinfo->Ah, cinfo->Al);
+         cinfo->Ss, cinfo->Se, cinfo->Ah, cinfo->Al, ERR_VOID);
 
   /* Set undifference functions to first row function */
   for (ci = 0; ci < cinfo->num_components; ci++)
     losslsd->predict_undifference[ci] = jpeg_undifference_first_row;
+    
+  return OK_VOID;
 }
 
 

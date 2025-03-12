@@ -84,7 +84,7 @@ typedef union {
  * a matching multiplier table.
  */
 
-METHODDEF(void)
+ J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 start_pass (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -134,12 +134,12 @@ start_pass (j_decompress_ptr cinfo)
 	break;
 #endif
       default:
-	ERREXIT(cinfo, JERR_NOT_COMPILED);
+	ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
 	break;
       }
       break;
     default:
-      ERREXIT1(cinfo, JERR_BAD_DCTSIZE, compptr->codec_data_unit);
+      ERREXIT1(cinfo, JERR_BAD_DCTSIZE, compptr->codec_data_unit, ERR_VOID);
       break;
     }
     lossyd->inverse_DCT[ci] = method_ptr;
@@ -232,10 +232,12 @@ start_pass (j_decompress_ptr cinfo)
       break;
 #endif
     default:
-      ERREXIT(cinfo, JERR_NOT_COMPILED);
+      ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
       break;
     }
   }
+
+  return OK_VOID;
 }
 
 
@@ -243,7 +245,7 @@ start_pass (j_decompress_ptr cinfo)
  * Initialize IDCT manager.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_inverse_dct (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -251,20 +253,28 @@ jinit_inverse_dct (j_decompress_ptr cinfo)
   int ci;
   jpeg_component_info *compptr;
 
-  idct = (idct_ptr)
+  void_ptr_result_t alloc_small_result = 
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				SIZEOF(idct_controller));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  idct = (idct_ptr) alloc_small_result.value;
   lossyd->idct_private = (void *) idct;
   lossyd->idct_start_pass = start_pass;
 
   for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
        ci++, compptr++) {
     /* Allocate and pre-zero a multiplier table for each component */
-    compptr->dct_table =
+    alloc_small_result = 
       (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				  SIZEOF(multiplier_table));
+    if (alloc_small_result.is_err)
+      return ERR_VOID(alloc_small_result.err_code);
+    compptr->dct_table = alloc_small_result.value;
     MEMZERO(compptr->dct_table, SIZEOF(multiplier_table));
     /* Mark multiplier table not yet set up for any method */
     idct->cur_method[ci] = -1;
   }
+
+  return OK_VOID;
 }

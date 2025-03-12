@@ -135,7 +135,10 @@ typedef uint64_t OPJ_UINT64;
 
 typedef int64_t  OPJ_OFF_T; /* 64-bit file offset type */
 
+#ifndef __wasm__
 #include <stdio.h>
+#endif
+
 typedef size_t   OPJ_SIZE_T;
 
 #include "opj_config.h"
@@ -1682,7 +1685,7 @@ Destroy Codestream information after compression or decompression
 OPJ_API void OPJ_CALLCONV opj_destroy_cstr_info(opj_codestream_info_v2_t
         **cstr_info);
 
-
+#ifndef __wasm__
 /**
  * Dump the codec information into the output stream
  *
@@ -1694,6 +1697,7 @@ OPJ_API void OPJ_CALLCONV opj_destroy_cstr_info(opj_codestream_info_v2_t
 OPJ_API void OPJ_CALLCONV opj_dump_codec(opj_codec_t *p_codec,
         OPJ_INT32 info_flag,
         FILE* output_stream);
+#endif
 
 /**
  * Get the codestream information from the codec

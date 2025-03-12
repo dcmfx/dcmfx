@@ -25,20 +25,22 @@
  * responsibility.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jpeg_abort (j_common_ptr cinfo)
 {
   int pool;
 
   /* Do nothing if called on a not-initialized or destroyed JPEG object. */
   if (cinfo->mem == NULL)
-    return;
+    return OK_VOID;
 
   /* Releasing pools in reverse order might help avoid fragmentation
    * with some (brain-damaged) malloc libraries.
    */
   for (pool = JPOOL_NUMPOOLS-1; pool > JPOOL_PERMANENT; pool--) {
-    (*cinfo->mem->free_pool) (cinfo, pool);
+    void_result_t free_pool_result = (*cinfo->mem->free_pool) (cinfo, pool);
+    if (free_pool_result.is_err)
+      return free_pool_result;
   }
 
   /* Reset overall state for possible reuse of object */
@@ -51,6 +53,8 @@ jpeg_abort (j_common_ptr cinfo)
   } else {
     cinfo->global_state = CSTATE_START;
   }
+
+  return OK_VOID;
 }
 
 
@@ -65,15 +69,20 @@ jpeg_abort (j_common_ptr cinfo)
  * responsibility.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jpeg_destroy (j_common_ptr cinfo)
 {
   /* We need only tell the memory manager to release everything. */
   /* NB: mem pointer is NULL if memory mgr failed to initialize. */
-  if (cinfo->mem != NULL)
-    (*cinfo->mem->self_destruct) (cinfo);
+  if (cinfo->mem != NULL) {
+    void_result_t self_destruct_result = (*cinfo->mem->self_destruct) (cinfo);
+    if (self_destruct_result.is_err)
+      return self_destruct_result;
+  }
   cinfo->mem = NULL;		/* be safe if jpeg_destroy is called twice */
   cinfo->global_state = 0;	/* mark it destroyed */
+
+  return OK_VOID;
 }
 
 
@@ -82,25 +91,29 @@ jpeg_destroy (j_common_ptr cinfo)
  * (Would jutils.c be a more reasonable place to put these?)
  */
 
-GLOBAL(JQUANT_TBL *)
+GLOBAL(jquant_tbl_ptr_result_t)
 jpeg_alloc_quant_table (j_common_ptr cinfo)
 {
   JQUANT_TBL *tbl;
 
-  tbl = (JQUANT_TBL *)
-    (*cinfo->mem->alloc_small) (cinfo, JPOOL_PERMANENT, SIZEOF(JQUANT_TBL));
+  void_ptr_result_t alloc_small_result = (*cinfo->mem->alloc_small) (cinfo, JPOOL_PERMANENT, SIZEOF(JQUANT_TBL));
+  if (alloc_small_result.is_err)
+    return RESULT_ERR(jquant_tbl_ptr, alloc_small_result.err_code);
+  tbl = (JQUANT_TBL *) alloc_small_result.value;
   tbl->sent_table = FALSE;	/* make sure this is false in any new table */
-  return tbl;
+  return RESULT_OK(jquant_tbl_ptr, tbl);
 }
 
 
-GLOBAL(JHUFF_TBL *)
+GLOBAL(jhuff_tbl_ptr_result_t)
 jpeg_alloc_huff_table (j_common_ptr cinfo)
 {
   JHUFF_TBL *tbl;
 
-  tbl = (JHUFF_TBL *)
-    (*cinfo->mem->alloc_small) (cinfo, JPOOL_PERMANENT, SIZEOF(JHUFF_TBL));
+  void_ptr_result_t alloc_small_result = (*cinfo->mem->alloc_small) (cinfo, JPOOL_PERMANENT, SIZEOF(JHUFF_TBL));
+  if (alloc_small_result.is_err)
+    return RESULT_ERR(jhuff_tbl_ptr, alloc_small_result.err_code);
+  tbl = (JHUFF_TBL *) alloc_small_result.value;
   tbl->sent_table = FALSE;	/* make sure this is false in any new table */
-  return tbl;
+  return RESULT_OK(jhuff_tbl_ptr, tbl);
 }

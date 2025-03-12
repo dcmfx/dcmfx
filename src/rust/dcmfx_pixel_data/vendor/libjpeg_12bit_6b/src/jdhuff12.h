@@ -47,7 +47,7 @@ typedef struct {
 } d_derived_tbl;
 
 /* Expand a Huffman table definition into the derived format */
-EXTERN(void) jpeg_make_d_derived_tbl
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_make_d_derived_tbl
 	JPP((j_decompress_ptr cinfo, boolean isDC, int tblno,
 	     d_derived_tbl ** pdtbl));
 

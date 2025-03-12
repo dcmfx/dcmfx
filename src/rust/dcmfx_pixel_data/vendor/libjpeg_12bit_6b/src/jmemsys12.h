@@ -160,7 +160,7 @@ typedef struct backing_store_struct {
   short temp_file;		/* file reference number to temp file */
   FSSpec tempSpec;		/* the FSSpec for the temp file */
   char temp_name[TEMP_NAME_LENGTH]; /* name if it's a file */
-#else
+#elif !defined(__wasm__)
   /* For a typical implementation with temp files, we need: */
   FILE * temp_file;		/* stdio reference to temp file */
   char temp_name[TEMP_NAME_LENGTH]; /* name of temp file */
@@ -177,7 +177,7 @@ typedef struct backing_store_struct {
  * just take an error exit.)
  */
 
-EXTERN(void) jpeg_open_backing_store JPP((j_common_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_open_backing_store JPP((j_common_ptr cinfo,
 					  backing_store_ptr info,
 					  long total_bytes_needed));
 

@@ -82,7 +82,7 @@ typedef shuff_entropy_decoder * shuff_entropy_ptr;
  * Initialize for a Huffman-compressed scan.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 start_pass_huff_decoder (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -104,10 +104,16 @@ start_pass_huff_decoder (j_decompress_ptr cinfo)
     actbl = compptr->ac_tbl_no;
     /* Compute derived values for Huffman tables */
     /* We may do this more than once for a table, but it's not expensive */
-    jpeg_make_d_derived_tbl(cinfo, TRUE, dctbl,
-                & entropy->dc_derived_tbls[dctbl]);
-    jpeg_make_d_derived_tbl(cinfo, FALSE, actbl,
-                & entropy->ac_derived_tbls[actbl]);
+    void_result_t jpeg_make_d_derived_tbl_result = jpeg_make_d_derived_tbl(cinfo, TRUE, dctbl,
+      & entropy->dc_derived_tbls[dctbl]);
+    if (jpeg_make_d_derived_tbl_result.is_err)
+      return jpeg_make_d_derived_tbl_result;
+
+    jpeg_make_d_derived_tbl_result = jpeg_make_d_derived_tbl(cinfo, FALSE, actbl,
+      & entropy->ac_derived_tbls[actbl]);
+    if (jpeg_make_d_derived_tbl_result.is_err)
+      return jpeg_make_d_derived_tbl_result;
+
     /* Initialize DC predictions to 0 */
     entropy->saved.last_dc_val[ci] = 0;
   }
@@ -136,6 +142,8 @@ start_pass_huff_decoder (j_decompress_ptr cinfo)
 
   /* Initialize restart counter */
   entropy->restarts_to_go = cinfo->restart_interval;
+
+  return OK_VOID;
 }
 
 
@@ -175,7 +183,7 @@ static const int extend_offset[16] = /* entry n is (-1 << n) + 1 */
  * Returns FALSE if must suspend.
  */
 
-LOCAL(boolean)
+J_WARN_UNUSED_RESULT LOCAL(boolean_result_t)
 process_restart (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -188,8 +196,11 @@ process_restart (j_decompress_ptr cinfo)
   entropy->bitstate.bits_left = 0;
 
   /* Advance past the RSTn marker */
-  if (! (*cinfo->marker->read_restart_marker) (cinfo))
-    return FALSE;
+  boolean_result_t read_restart_marker_result = (*cinfo->marker->read_restart_marker) (cinfo);
+  if (read_restart_marker_result.is_err)
+    return read_restart_marker_result;
+  if (!read_restart_marker_result.value)
+    return RESULT_OK(boolean, FALSE);
 
   /* Re-initialize DC predictions to 0 */
   for (ci = 0; ci < cinfo->comps_in_scan; ci++)
@@ -206,7 +217,7 @@ process_restart (j_decompress_ptr cinfo)
   if (cinfo->unread_marker == 0)
     entropy->insufficient_data = FALSE;
 
-  return TRUE;
+  return RESULT_OK(boolean, TRUE);
 }
 
 
@@ -225,7 +236,7 @@ process_restart (j_decompress_ptr cinfo)
  * this module, since we'll just re-assign them on the next call.)
  */
 
-METHODDEF(boolean)
+J_WARN_UNUSED_RESULT METHODDEF(boolean_result_t)
 decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
@@ -236,9 +247,13 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 
   /* Process restart marker if needed; may have to suspend */
   if (cinfo->restart_interval) {
-    if (entropy->restarts_to_go == 0)
-      if (! process_restart(cinfo))
-    return FALSE;
+    if (entropy->restarts_to_go == 0) {
+      boolean_result_t process_restart_result = process_restart(cinfo);
+      if (process_restart_result.is_err)
+        return process_restart_result;
+      if (! process_restart_result.value)
+        return RESULT_OK(boolean, FALSE);
+    }
   }
 
   /* If we've run out of data, just leave the MCU set to zeroes.
@@ -261,9 +276,9 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       /* Decode a single block's worth of coefficients */
 
       /* Section F.2.2.1: decode the DC coefficient difference */
-      HUFF_DECODE(s, br_state, dctbl, return FALSE, label1);
+      HUFF_DECODE(s, br_state, dctbl, return RESULT_OK(boolean, FALSE), label1);
       if (s) {
-    CHECK_BIT_BUFFER(br_state, s, return FALSE);
+    CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE));
     r = GET_BITS(s);
     s = HUFF_EXTEND(r, s);
       }
@@ -282,14 +297,14 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     /* Section F.2.2.2: decode the AC coefficients */
     /* Since zeroes are skipped, output area must be cleared beforehand */
     for (k = 1; k < DCTSIZE2; k++) {
-      HUFF_DECODE(s, br_state, actbl, return FALSE, label2);
+      HUFF_DECODE(s, br_state, actbl, return RESULT_OK(boolean, FALSE), label2);
 
       r = s >> 4;
       s &= 15;
 
       if (s) {
         k += r;
-        CHECK_BIT_BUFFER(br_state, s, return FALSE);
+        CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE));
         r = GET_BITS(s);
         s = HUFF_EXTEND(r, s);
         /* Output coefficient in natural (dezigzagged) order.
@@ -309,14 +324,14 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     /* Section F.2.2.2: decode the AC coefficients */
     /* In this path we just discard the values */
     for (k = 1; k < DCTSIZE2; k++) {
-      HUFF_DECODE(s, br_state, actbl, return FALSE, label3);
+      HUFF_DECODE(s, br_state, actbl, return RESULT_OK(boolean, FALSE), label3);
 
       r = s >> 4;
       s &= 15;
 
       if (s) {
         k += r;
-        CHECK_BIT_BUFFER(br_state, s, return FALSE);
+        CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE));
         DROP_BITS(s);
       } else {
         if (r != 15)
@@ -336,7 +351,7 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   /* Account for restart interval (no-op if not using restarts) */
   entropy->restarts_to_go--;
 
-  return TRUE;
+  return RESULT_OK(boolean, TRUE);
 }
 
 
@@ -344,16 +359,19 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
  * Module initialization routine for Huffman entropy decoding.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_shuff_decoder (j_decompress_ptr cinfo)
 {
   j_lossy_d_ptr lossyd = (j_lossy_d_ptr) cinfo->codec;
   shuff_entropy_ptr entropy;
   int i;
 
-  entropy = (shuff_entropy_ptr)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                 SIZEOF(shuff_entropy_decoder));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  entropy = (shuff_entropy_ptr) alloc_small_result.value;
   lossyd->entropy_private = (void *) entropy;
   lossyd->entropy_start_pass = start_pass_huff_decoder;
   lossyd->entropy_decode_mcu = decode_mcu;
@@ -362,4 +380,6 @@ jinit_shuff_decoder (j_decompress_ptr cinfo)
   for (i = 0; i < NUM_HUFF_TBLS; i++) {
     entropy->dc_derived_tbls[i] = entropy->ac_derived_tbls[i] = NULL;
   }
+
+  return OK_VOID;
 }

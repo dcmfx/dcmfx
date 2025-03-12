@@ -22,7 +22,7 @@
  * This routine also performs some validation checks on the table.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jpeg_make_d_derived_tbl (j_decompress_ptr cinfo, boolean isDC, int tblno,
              d_derived_tbl ** pdtbl)
 {
@@ -40,17 +40,21 @@ jpeg_make_d_derived_tbl (j_decompress_ptr cinfo, boolean isDC, int tblno,
 
   /* Find the input Huffman table */
   if (tblno < 0 || tblno >= NUM_HUFF_TBLS)
-    ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tblno);
+    ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tblno, ERR_VOID);
   htbl =
     isDC ? cinfo->dc_huff_tbl_ptrs[tblno] : cinfo->ac_huff_tbl_ptrs[tblno];
   if (htbl == NULL)
-    ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tblno);
+    ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tblno, ERR_VOID);
 
   /* Allocate a workspace if we haven't already done so. */
-  if (*pdtbl == NULL)
-    *pdtbl = (d_derived_tbl *)
+  if (*pdtbl == NULL) {
+    void_ptr_result_t alloc_small_result =
       (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                   SIZEOF(d_derived_tbl));
+    if (alloc_small_result.is_err)
+      return ERR_VOID(alloc_small_result.err_code);
+    *pdtbl = (d_derived_tbl *) alloc_small_result.value;
+  }
   dtbl = *pdtbl;
   dtbl->pub = htbl;     /* fill in back link */
 
@@ -60,7 +64,7 @@ jpeg_make_d_derived_tbl (j_decompress_ptr cinfo, boolean isDC, int tblno,
   for (l = 1; l <= 16; l++) {
     i = (int) htbl->bits[l];
     if (i < 0 || p + i > 256)   /* protect against table overrun */
-      ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
+      ERREXIT(cinfo, JERR_BAD_HUFF_TABLE, ERR_VOID);
     while (i--)
       huffsize[p++] = (char) l;
   }
@@ -83,7 +87,7 @@ jpeg_make_d_derived_tbl (j_decompress_ptr cinfo, boolean isDC, int tblno,
      * BUG FIX: Comparison must be >, not >=
      */
     if (((IJG_INT32) code) > (((IJG_INT32) 1) << si))
-      ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
+      ERREXIT(cinfo, JERR_BAD_HUFF_TABLE, ERR_VOID);
     code <<= 1;
     si++;
   }
@@ -138,9 +142,11 @@ jpeg_make_d_derived_tbl (j_decompress_ptr cinfo, boolean isDC, int tblno,
     for (i = 0; i < numsymbols; i++) {
       int sym = htbl->huffval[i];
       if (sym < 0 || sym > 16)
-    ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
+    ERREXIT(cinfo, JERR_BAD_HUFF_TABLE, ERR_VOID);
     }
   }
+
+  return OK_VOID;
 }
 
 

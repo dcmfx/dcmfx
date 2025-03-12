@@ -103,17 +103,22 @@ scaler_start_pass (j_decompress_ptr cinfo)
 }
 
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_d_scaler (j_decompress_ptr cinfo)
 {
   j_lossless_d_ptr losslsd = (j_lossless_d_ptr) cinfo->codec;
   scaler_ptr scale;
 
-  scale = (scaler_ptr)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				SIZEOF(scaler));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  scale = (scaler_ptr) alloc_small_result.value;
   losslsd->scaler_private = (void *) scale;
   losslsd->scaler_start_pass = scaler_start_pass;
+
+  return OK_VOID;
 }
 
 #endif /* D_LOSSLESS_SUPPORTED */

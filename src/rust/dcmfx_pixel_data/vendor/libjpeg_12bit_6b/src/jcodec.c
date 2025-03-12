@@ -14,24 +14,27 @@
 #include "jlossy12.h"
 #include "jlossls12.h"
 
-
+#if 0
 /*
  * Initialize the compression codec.
  * This is called only once, during master selection.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_c_codec (j_compress_ptr cinfo)
 {
   if (cinfo->process == JPROC_LOSSLESS) {
 #ifdef C_LOSSLESS_SUPPORTED
     jinit_lossless_c_codec(cinfo);
 #else
-    ERREXIT(cinfo, JERR_NOT_COMPILED);
+    ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
 #endif
   } else
     jinit_lossy_c_codec(cinfo);
+
+  return OK_VOID;
 }
+#endif
 
 
 /*
@@ -39,15 +42,15 @@ jinit_c_codec (j_compress_ptr cinfo)
  * This is called only once, during master selection.
  */
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_d_codec (j_decompress_ptr cinfo)
 {
   if (cinfo->process == JPROC_LOSSLESS) {
 #ifdef D_LOSSLESS_SUPPORTED
-    jinit_lossless_d_codec(cinfo);
+    return jinit_lossless_d_codec(cinfo);
 #else
-    ERREXIT(cinfo, JERR_NOT_COMPILED);
+    ERREXIT(cinfo, JERR_NOT_COMPILED, ERR_VOID);
 #endif
   } else
-    jinit_lossy_d_codec(cinfo);
+    return jinit_lossy_d_codec(cinfo);
 }

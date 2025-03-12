@@ -36,15 +36,23 @@ calc_output_dimensions (j_decompress_ptr cinfo)
  * Initialize for an input processing pass.
  */
 
-METHODDEF(void)
+J_WARN_UNUSED_RESULT METHODDEF(void_result_t)
 start_input_pass (j_decompress_ptr cinfo)
 {
   j_lossless_d_ptr losslsd = (j_lossless_d_ptr) cinfo->codec;
 
-  (*losslsd->entropy_start_pass) (cinfo);
-  (*losslsd->predict_start_pass) (cinfo);
+  void_result_t entropy_start_pass = ((*losslsd->entropy_start_pass) (cinfo));
+  if (entropy_start_pass.is_err)
+    return entropy_start_pass;
+  void_result_t predict_start_pass_result = ((*losslsd->predict_start_pass) (cinfo));
+  if (predict_start_pass_result.is_err)
+    return predict_start_pass_result;
   (*losslsd->scaler_start_pass) (cinfo);
-  (*losslsd->diff_start_input_pass) (cinfo);
+  void_result_t diff_start_input_pass_result = ((*losslsd->diff_start_input_pass) (cinfo));
+  if (diff_start_input_pass_result.is_err)
+    return diff_start_input_pass_result;
+
+  return OK_VOID;
 }
 
 
@@ -53,16 +61,19 @@ start_input_pass (j_decompress_ptr cinfo)
  * This is called only once, during master selection.
  */
 
-GLOBAL(void) 
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t) 
 jinit_lossless_d_codec(j_decompress_ptr cinfo)
 {
   j_lossless_d_ptr losslsd;
   boolean use_c_buffer;
 
   /* Create subobject in permanent pool */
-  losslsd = (j_lossless_d_ptr)
+  void_ptr_result_t alloc_small_result =
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
 				SIZEOF(jpeg_lossless_d_codec));
+  if (alloc_small_result.is_err)
+    return ERR_VOID(alloc_small_result.err_code);
+  losslsd = (j_lossless_d_ptr) alloc_small_result.value;
   cinfo->codec = (struct jpeg_d_codec *) losslsd;
 
   /* Initialize sub-modules */
@@ -71,20 +82,26 @@ jinit_lossless_d_codec(j_decompress_ptr cinfo)
 #ifdef WITH_ARITHMETIC_PATCH
     jinit_arith_decoder(cinfo);
 #else
-    ERREXIT(cinfo, JERR_ARITH_NOTIMPL);
+    ERREXIT(cinfo, JERR_ARITH_NOTIMPL, ERR_VOID);
 #endif
   } else {
-    jinit_lhuff_decoder(cinfo);
+    void_result_t jinit_lhuff_decoder_result = jinit_lhuff_decoder(cinfo);
+    if (jinit_lhuff_decoder_result.is_err)
+      return jinit_lhuff_decoder_result;
   }
 
   /* Undifferencer */
   jinit_undifferencer(cinfo);
 
   /* Scaler */
-  jinit_d_scaler(cinfo);
+  void_result_t jinit_d_scaler_result = jinit_d_scaler(cinfo);
+  if (jinit_d_scaler_result.is_err)
+    return jinit_d_scaler_result;
 
   use_c_buffer = cinfo->inputctl->has_multiple_scans || cinfo->buffered_image;
-  jinit_d_diff_controller(cinfo, use_c_buffer);
+  void_result_t jinit_d_diff_controller_result = jinit_d_diff_controller(cinfo, use_c_buffer);
+  if (jinit_d_diff_controller_result.is_err)
+    return jinit_d_diff_controller_result;
 
   /* Initialize method pointers.
    *
@@ -93,6 +110,8 @@ jinit_lossless_d_codec(j_decompress_ptr cinfo)
    */
   losslsd->pub.calc_output_dimensions = calc_output_dimensions;
   losslsd->pub.start_input_pass = start_input_pass;
+
+  return OK_VOID;
 }
 
 #endif /* D_LOSSLESS_SUPPORTED */

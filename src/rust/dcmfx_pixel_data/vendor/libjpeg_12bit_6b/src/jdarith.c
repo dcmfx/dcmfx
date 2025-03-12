@@ -16,11 +16,11 @@
 /*
  * Module initialization routine for arithmetic entropy decoding.
  */
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_arith_decoder (j_decompress_ptr cinfo);
 
-GLOBAL(void)
+J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
 jinit_arith_decoder (j_decompress_ptr cinfo)
 {
-  ERREXIT(cinfo, JERR_ARITH_NOTIMPL);
+  ERREXIT(cinfo, JERR_ARITH_NOTIMPL, ERR_VOID);
 }

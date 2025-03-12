@@ -61,7 +61,7 @@ typedef struct {
 
 
   /* Prediction, differencing */
-  JMETHOD(void, predict_start_pass, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, predict_start_pass, (j_compress_ptr cinfo));
 
   /* It is useful to allow each component to have a separate diff method. */
   predict_difference_method_ptr predict_difference[MAX_COMPONENTS];
@@ -94,16 +94,16 @@ typedef struct {
 
 
   /* Difference buffer control */
-  JMETHOD(void, diff_start_input_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, diff_start_input_pass, (j_decompress_ptr cinfo));
 
   /* Pointer to data which is private to diff controller */
   void *diff_private;
 
 
   /* Entropy decoding */
-  JMETHOD(void, entropy_start_pass, (j_decompress_ptr cinfo));
-  JMETHOD(boolean, entropy_process_restart, (j_decompress_ptr cinfo));
-  JMETHOD(JDIMENSION, entropy_decode_mcus, (j_decompress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, entropy_start_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(boolean_result_t, entropy_process_restart, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(jdimension_result_t, entropy_decode_mcus, (j_decompress_ptr cinfo,
 					    JDIFFIMAGE diff_buf,
 					    JDIMENSION MCU_row_num,
 					    JDIMENSION MCU_col_num,
@@ -114,8 +114,8 @@ typedef struct {
 
 
   /* Prediction, undifferencing */
-  JMETHOD(void, predict_start_pass, (j_decompress_ptr cinfo));
-  JMETHOD(void, predict_process_restart, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, predict_start_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, predict_process_restart, (j_decompress_ptr cinfo));
 
   /* It is useful to allow each component to have a separate undiff method. */
   predict_undifference_method_ptr predict_undifference[MAX_COMPONENTS];
@@ -143,9 +143,9 @@ EXTERN(void) jinit_lhuff_encoder JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_differencer JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_c_scaler JPP((j_compress_ptr cinfo));
 /* Decompression module initialization routines */
-EXTERN(void) jinit_lossless_d_codec JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_lhuff_decoder JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_lossless_d_codec JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_lhuff_decoder JPP((j_decompress_ptr cinfo));
 EXTERN(void) jinit_undifferencer JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_d_scaler JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_d_scaler JPP((j_decompress_ptr cinfo));
 
 #endif /* JLOSSLS_H */

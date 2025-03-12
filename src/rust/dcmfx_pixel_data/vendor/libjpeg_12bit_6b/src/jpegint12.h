@@ -78,7 +78,7 @@ struct jpeg_c_codec {
 				     boolean gather_statistics));
   JMETHOD(void, entropy_finish_pass, (j_compress_ptr cinfo));
   JMETHOD(boolean, need_optimization_pass, (j_compress_ptr cinfo));
-  JMETHOD(void, start_pass, (j_compress_ptr cinfo, J_BUF_MODE pass_mode));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_pass, (j_compress_ptr cinfo, J_BUF_MODE pass_mode));
   JMETHOD(boolean, compress_data, (j_compress_ptr cinfo,
 				   JSAMPIMAGE input_buf));
 };
@@ -121,8 +121,8 @@ struct jpeg_marker_writer {
 
 /* Master control module */
 struct jpeg_decomp_master {
-  JMETHOD(void, prepare_for_output_pass, (j_decompress_ptr cinfo));
-  JMETHOD(void, finish_output_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, prepare_for_output_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, finish_output_pass, (j_decompress_ptr cinfo));
 
   /* State variables made visible to other modules */
   boolean is_dummy_pass;	/* True during 1st pass for 2-pass quant */
@@ -130,9 +130,9 @@ struct jpeg_decomp_master {
 
 /* Input control module */
 struct jpeg_input_controller {
-  JMETHOD(int, consume_input, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(int_result_t, consume_input, (j_decompress_ptr cinfo));
   JMETHOD(void, reset_input_controller, (j_decompress_ptr cinfo));
-  JMETHOD(void, start_input_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_input_pass, (j_decompress_ptr cinfo));
   JMETHOD(void, finish_input_pass, (j_decompress_ptr cinfo));
 
   /* State variables made visible to other modules */
@@ -142,8 +142,8 @@ struct jpeg_input_controller {
 
 /* Main buffer control (downsampled-data buffer) */
 struct jpeg_d_main_controller {
-  JMETHOD(void, start_pass, (j_decompress_ptr cinfo, J_BUF_MODE pass_mode));
-  JMETHOD(void, process_data, (j_decompress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_pass, (j_decompress_ptr cinfo, J_BUF_MODE pass_mode));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, process_data, (j_decompress_ptr cinfo,
 			       JSAMPARRAY output_buf, JDIMENSION *out_row_ctr,
 			       JDIMENSION out_rows_avail));
 };
@@ -151,17 +151,17 @@ struct jpeg_d_main_controller {
 /* Decompression codec (decompressor proper) */
 struct jpeg_d_codec {
   JMETHOD(void, calc_output_dimensions, (j_decompress_ptr cinfo));
-  JMETHOD(void, start_input_pass, (j_decompress_ptr cinfo));
-  JMETHOD(int, consume_data, (j_decompress_ptr cinfo));
-  JMETHOD(void, start_output_pass, (j_decompress_ptr cinfo));
-  JMETHOD(int, decompress_data, (j_decompress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_input_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(int_result_t, consume_data, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_output_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(int_result_t, decompress_data, (j_decompress_ptr cinfo,
 				 JSAMPIMAGE output_buf));
 };
 
 /* Decompression postprocessing (color quantization buffer control) */
 struct jpeg_d_post_controller {
-  JMETHOD(void, start_pass, (j_decompress_ptr cinfo, J_BUF_MODE pass_mode));
-  JMETHOD(void, post_process_data, (j_decompress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_pass, (j_decompress_ptr cinfo, J_BUF_MODE pass_mode));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, post_process_data, (j_decompress_ptr cinfo,
 				    JSAMPIMAGE input_buf,
 				    JDIMENSION *in_row_group_ctr,
 				    JDIMENSION in_row_groups_avail,
@@ -177,7 +177,7 @@ struct jpeg_marker_reader {
    * Returns same codes as are defined for jpeg_consume_input:
    * JPEG_SUSPENDED, JPEG_REACHED_SOS, or JPEG_REACHED_EOI.
    */
-  JMETHOD(int, read_markers, (j_decompress_ptr cinfo));
+  JMETHOD(int_result_t, read_markers, (j_decompress_ptr cinfo));
   /* Read a restart marker --- exported for use by entropy decoder only */
   jpeg_marker_parser_method read_restart_marker;
 
@@ -193,7 +193,7 @@ struct jpeg_marker_reader {
 /* Upsampling (note that upsampler must also call color converter) */
 struct jpeg_upsampler {
   JMETHOD(void, start_pass, (j_decompress_ptr cinfo));
-  JMETHOD(void, upsample, (j_decompress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, upsample, (j_decompress_ptr cinfo,
 			   JSAMPIMAGE input_buf,
 			   JDIMENSION *in_row_group_ctr,
 			   JDIMENSION in_row_groups_avail,
@@ -214,12 +214,12 @@ struct jpeg_color_deconverter {
 
 /* Color quantization or color precision reduction */
 struct jpeg_color_quantizer {
-  JMETHOD(void, start_pass, (j_decompress_ptr cinfo, boolean is_pre_scan));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_pass, (j_decompress_ptr cinfo, boolean is_pre_scan));
   JMETHOD(void, color_quantize, (j_decompress_ptr cinfo,
 				 JSAMPARRAY input_buf, JSAMPARRAY output_buf,
 				 int num_rows));
-  JMETHOD(void, finish_pass, (j_decompress_ptr cinfo));
-  JMETHOD(void, new_color_map, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, finish_pass, (j_decompress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, new_color_map, (j_decompress_ptr cinfo));
 };
 
 
@@ -310,7 +310,7 @@ struct jpeg_color_quantizer {
 
 
 /* Compression module initialization routines */
-EXTERN(void) jinit_c_codec JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_c_codec JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_c_diff_controller JPP((j_compress_ptr cinfo, boolean need_full_buffer));
 EXTERN(void) jinit_compress_master JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_c_master_control JPP((j_compress_ptr cinfo,
@@ -327,26 +327,26 @@ EXTERN(void) jinit_marker_writer JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_arith_encoder JPP((j_compress_ptr cinfo));
 #endif
 /* Decompression module initialization routines */
-EXTERN(void) jinit_d_codec JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_d_diff_controller JPP((j_decompress_ptr cinfo, boolean need_full_buffer));
-EXTERN(void) jinit_master_decompress JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_d_main_controller JPP((j_decompress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_d_codec JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_d_diff_controller JPP((j_decompress_ptr cinfo, boolean need_full_buffer));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_master_decompress JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_d_main_controller JPP((j_decompress_ptr cinfo,
 					  boolean need_full_buffer));
 EXTERN(void) jinit_decompressor JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_d_post_controller JPP((j_decompress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_d_post_controller JPP((j_decompress_ptr cinfo,
 					  boolean need_full_buffer));
-EXTERN(void) jinit_input_controller JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_marker_reader JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_input_controller JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_marker_reader JPP((j_decompress_ptr cinfo));
 #ifdef WITH_ARITHMETIC_PATCH
-EXTERN(void) jinit_arith_decoder JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_arith_decoder JPP((j_decompress_ptr cinfo));
 #endif
-EXTERN(void) jinit_upsampler JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_color_deconverter JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_1pass_quantizer JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_2pass_quantizer JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_merged_upsampler JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_upsampler JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_color_deconverter JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_1pass_quantizer JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_2pass_quantizer JPP((j_decompress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_merged_upsampler JPP((j_decompress_ptr cinfo));
 /* Memory manager initialization */
-EXTERN(void) jinit_memory_mgr JPP((j_common_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_memory_mgr JPP((j_common_ptr cinfo));
 
 /* Utility routines in jutils.c */
 EXTERN(long) jdiv_round_up JPP((long a, long b));

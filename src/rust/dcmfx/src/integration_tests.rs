@@ -203,22 +203,22 @@ mod tests {
     dicom: &Path,
     data_set: &DataSet,
   ) -> Result<(), DicomValidationError> {
-    let expected_print_output =
+    let expected_print_output: Vec<_> =
       std::fs::read_to_string(format!("{}.printed", dicom.to_string_lossy()))
-        .map_err(|_| DicomValidationError::PrintedOutputMissing)?;
+        .map_err(|_| DicomValidationError::PrintedOutputMissing)?
+        .lines()
+        .map(String::from)
+        .collect();
 
-    // Print the data set into a string
-    let mut print_result = String::new();
+    // Print the data set into lines
+    let mut print_result = vec![];
     data_set.to_lines(
       &DataSetPrintOptions::new().styled(false).max_width(100),
-      &mut |s| {
-        print_result.push_str(&s);
-        print_result.push('\n');
-      },
+      &mut |s| print_result.push(s),
     );
 
     // Compare the actual print output to the expected print output
-    if print_result == *expected_print_output {
+    if print_result == expected_print_output {
       Ok(())
     } else {
       // The printed output didn't match so write what was generated to a
@@ -229,7 +229,7 @@ mod tests {
       ))
       .unwrap();
 
-      file.write_all(print_result.as_bytes()).unwrap();
+      file.write_all(print_result.join("\n").as_bytes()).unwrap();
       file.flush().unwrap();
 
       Err(DicomValidationError::PrintedOutputMismatch)

@@ -1300,9 +1300,11 @@ static OPJ_BOOL opj_j2k_calculate_tp(opj_j2k_t *p_j2k,
                                      opj_image_t *image,
                                      opj_event_mgr_t * p_manager);
 
+#ifndef __wasm__
 static void opj_j2k_dump_MH_info(opj_j2k_t* p_j2k, FILE* out_stream);
 
 static void opj_j2k_dump_MH_index(opj_j2k_t* p_j2k, FILE* out_stream);
+#endif
 
 static opj_codestream_index_t* opj_j2k_create_cstr_index(void);
 
@@ -8018,10 +8020,12 @@ OPJ_BOOL opj_j2k_setup_encoder(opj_j2k_t *p_j2k,
         }
         strcpy(cp->comment, parameters->cp_comment);
     } else {
+#if defined(USE_JPWL) || !defined(__wasm__)
         /* Create default comment for codestream */
         const char comment[] = "Created by OpenJPEG version ";
         const size_t clen = strlen(comment);
         const char *version = opj_version();
+#endif
 
         /* UniPG>> */
 #ifdef USE_JPWL
@@ -8034,7 +8038,7 @@ OPJ_BOOL opj_j2k_setup_encoder(opj_j2k_t *p_j2k,
         }
         snprintf(cp->comment, cp_comment_buf_size, "%s%s with JPWL",
                  comment, version);
-#else
+#elif !defined(__wasm__)
         const size_t cp_comment_buf_size = clen + strlen(version) + 1;
         cp->comment = (char*)opj_malloc(cp_comment_buf_size);
         if (!cp->comment) {
@@ -11432,11 +11436,7 @@ static void opj_j2k_copy_tile_quantization_parameters(opj_j2k_t *p_j2k)
     }
 }
 
-#ifdef __wasm__
-
-void j2k_dump(opj_j2k_t* p_j2k, OPJ_INT32 flag, FILE* out_stream) {}
-
-#else
+#ifndef __wasm__
 
 static void opj_j2k_dump_tile_info(opj_tcp_t * l_default_tile,
                                    OPJ_INT32 numcomps, FILE* out_stream)
