@@ -1,11 +1,11 @@
 name = "dcmfx_dictionary_codegen"
 description = "DCMfx dictionary code generator"
 licences = ["AGPL-3.0-only"]
-gleam = ">= 1.7.0"
+gleam = ">= 1.9.0"
 
 [dependencies]
 gleam_json = ">= 2.3.0 and < 3.0.0"
-gleam_stdlib = ">= 0.53.0 and < 2.0.0"
+gleam_stdlib = ">= 0.57.0 and < 2.0.0"
 simplifile = ">= 2.2.0 and < 3.0.0"
 
 [javascript]

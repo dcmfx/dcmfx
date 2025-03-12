@@ -714,16 +714,19 @@ fn write_base64(
 
   // Save off unencoded bytes for next time
   let transform =
-    P10JsonTransform(..transform, pending_base64_input: case
-      bit_array.slice(
-        input,
-        input_bytes_consumed,
-        input_size - input_bytes_consumed,
-      )
-    {
-      Ok(bytes) -> bytes
-      _ -> <<>>
-    })
+    P10JsonTransform(
+      ..transform,
+      pending_base64_input: case
+        bit_array.slice(
+          input,
+          input_bytes_consumed,
+          input_size - input_bytes_consumed,
+        )
+      {
+        Ok(bytes) -> bytes
+        _ -> <<>>
+      },
+    )
 
   #(json, transform)
 }

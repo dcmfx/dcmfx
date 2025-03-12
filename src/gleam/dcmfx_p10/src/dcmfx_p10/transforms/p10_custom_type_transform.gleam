@@ -78,20 +78,20 @@ pub fn add_token(
     Some(#(filter, builder)) -> {
       let is_at_root = p10_filter_transform.is_at_root(filter)
 
-      use #(filter, builder) <- result.try(case
-        p10_filter_transform.add_token(filter, token)
-      {
-        #(True, filter) -> {
-          let builder =
-            builder
-            |> data_set_builder.add_token(token)
-            |> result.map_error(P10Error)
-          use builder <- result.map(builder)
+      use #(filter, builder) <- result.try(
+        case p10_filter_transform.add_token(filter, token) {
+          #(True, filter) -> {
+            let builder =
+              builder
+              |> data_set_builder.add_token(token)
+              |> result.map_error(P10Error)
+            use builder <- result.map(builder)
 
-          #(filter, builder)
-        }
-        #(False, filter) -> Ok(#(filter, builder))
-      })
+            #(filter, builder)
+          }
+          #(False, filter) -> Ok(#(filter, builder))
+        },
+      )
 
       // Check whether all the relevant tags have now been read. If they have
       // then the final type can be constructed.
