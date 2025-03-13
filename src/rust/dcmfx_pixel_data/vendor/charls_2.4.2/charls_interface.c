@@ -8,32 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef void *charls_jpegls_decoder;
-
-// Declarations for CharLS' C API
-extern charls_jpegls_decoder charls_jpegls_decoder_create();
-extern void charls_jpegls_decoder_destroy(charls_jpegls_decoder decoder);
-extern int
-charls_jpegls_decoder_set_source_buffer(charls_jpegls_decoder decoder,
-                                        const void *source_buffer,
-                                        size_t source_size_bytes);
-extern int charls_jpegls_decoder_read_header(charls_jpegls_decoder decoder);
-extern int
-charls_jpegls_decoder_get_destination_size(charls_jpegls_decoder decoder,
-                                           uint32_t stide,
-                                           size_t *destination_size_bytes);
-extern int charls_jpegls_decoder_decode_to_buffer(charls_jpegls_decoder decoder,
-                                                  void *destination_buffer,
-                                                  size_t destination_size_bytes,
-                                                  uint32_t stride);
-typedef struct {
-  uint32_t width;
-  uint32_t height;
-  int32_t bits_per_sample;
-  int32_t component_count;
-} charls_frame_info;
-extern int charls_jpegls_decoder_get_frame_info(charls_jpegls_decoder decoder,
-                                                charls_frame_info *frame_info);
+#include <charls/charls_jpegls_decoder.h>
 
 int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
                   uint32_t height, uint32_t samples_per_pixel,
@@ -41,7 +16,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
                   uint64_t output_buffer_size, char *error_buffer,
                   uint32_t error_buffer_size) {
   // Create decoder
-  charls_jpegls_decoder decoder = charls_jpegls_decoder_create();
+  struct charls_jpegls_decoder *decoder = charls_jpegls_decoder_create();
   if (!decoder) {
     strncpy(error_buffer, "charls_jpegls_decoder_create() failed",
             error_buffer_size - 1);

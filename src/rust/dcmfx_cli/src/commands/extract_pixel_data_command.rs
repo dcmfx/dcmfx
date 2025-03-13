@@ -110,6 +110,11 @@ impl StandardColorPaletteArg {
 }
 
 pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
+  if args.output_prefix.is_none() && args.input_filename == "-" {
+    eprintln!("--output-prefix must be specified when reading from stdin");
+    return Err(());
+  }
+
   let output_prefix =
     args.output_prefix.as_ref().unwrap_or(&args.input_filename);
 

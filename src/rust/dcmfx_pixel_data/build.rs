@@ -11,8 +11,10 @@ fn build_c_code() {
   let mut build = cc::Build::new();
 
   shared_build_config(&mut build, "vendor/**/*.c", "vendor/**/*.h");
+  build.include("vendor/charls_2.4.2/include");
   build.include("vendor/libjpeg_12bit_6b");
   build.include("vendor/openjpeg_2.5.3/src");
+  build.define("CHARLS_STATIC", "1");
   build.define("OPJ_STATIC", "1");
 
   build.compile("dcmfx_pixel_data_c_libs");

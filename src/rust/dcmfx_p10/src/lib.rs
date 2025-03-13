@@ -182,8 +182,7 @@ pub fn read_tokens_from_stream(
   }
 }
 
-/// Reads DICOM P10 data from an in-memory vector of bytes into an in-memory
-/// data set.
+/// Reads DICOM P10 data from a vector of bytes into a data set.
 ///
 pub fn read_bytes(
   bytes: Vec<u8>,
@@ -319,9 +318,13 @@ where
   /// will attempt to consume all data available in the read stream.
   ///
   #[cfg(feature = "std")]
-  fn read_p10_stream(
-    stream: &mut dyn std::io::Read,
-  ) -> Result<DataSet, P10Error>;
+  fn read_p10_stream(stream: &mut dyn std::io::Read) -> Result<Self, P10Error>;
+
+  /// Reads DICOM P10 data from a vector of bytes into a data set.
+  ///
+  fn read_p10_bytes(
+    bytes: Vec<u8>,
+  ) -> Result<Self, (P10Error, Box<DataSetBuilder>)>;
 
   /// Writes a data set to a DICOM P10 file. This will overwrite any existing
   /// file with the given name.
@@ -371,6 +374,12 @@ impl DataSetP10Extensions for DataSet {
     stream: &mut dyn std::io::Read,
   ) -> Result<DataSet, P10Error> {
     read_stream(stream).map_err(|e| e.0)
+  }
+
+  fn read_p10_bytes(
+    bytes: Vec<u8>,
+  ) -> Result<Self, (P10Error, Box<DataSetBuilder>)> {
+    read_bytes(bytes)
   }
 
   #[cfg(feature = "std")]
