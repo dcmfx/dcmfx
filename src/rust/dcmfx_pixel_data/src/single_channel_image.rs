@@ -21,6 +21,19 @@ pub enum SingleChannelImage {
 }
 
 impl SingleChannelImage {
+  /// Returns whether this single channel image is empty, i.e. it has no pixels.
+  ///
+  pub fn is_empty(&self) -> bool {
+    match self {
+      SingleChannelImage::Int8(data) => data.is_empty(),
+      SingleChannelImage::Uint8(data) => data.is_empty(),
+      SingleChannelImage::Int16(data) => data.is_empty(),
+      SingleChannelImage::Uint16(data) => data.is_empty(),
+      SingleChannelImage::Int32(data) => data.is_empty(),
+      SingleChannelImage::Uint32(data) => data.is_empty(),
+    }
+  }
+
   /// Returns the width in pixels of this single channel image.
   ///
   pub fn width(&self) -> u32 {

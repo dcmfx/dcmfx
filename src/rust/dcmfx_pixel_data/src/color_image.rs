@@ -15,6 +15,16 @@ pub enum ColorImage {
 }
 
 impl ColorImage {
+  /// Returns whether this color image is empty, i.e. it has no pixels.
+  ///
+  pub fn is_empty(&self) -> bool {
+    match self {
+      ColorImage::Uint8(data) => data.is_empty(),
+      ColorImage::Uint16(data) => data.is_empty(),
+      ColorImage::Uint32(data) => data.is_empty(),
+    }
+  }
+
   /// Returns the width in pixels of this color image.
   ///
   pub fn width(&self) -> u32 {
@@ -39,6 +49,40 @@ impl ColorImage {
   ///
   pub fn pixel_count(&self) -> usize {
     self.width() as usize * self.height() as usize
+  }
+
+  /// Returns the minimum and maximum values for each channel in this color
+  /// image.
+  ///
+  #[allow(clippy::type_complexity)]
+  pub fn min_max_values(&self) -> Option<((u64, u64), (u64, u64), (u64, u64))> {
+    if self.is_empty() {
+      return None;
+    }
+
+    fn min_max<I: Iterator<Item = u64>>(iter: I) -> (u64, u64) {
+      iter.fold((u64::MAX, 0), |acc: (u64, u64), x| {
+        (acc.0.min(x), acc.1.max(x))
+      })
+    }
+
+    match self {
+      ColorImage::Uint8(data) => Some((
+        min_max(data.pixels().map(|x| x.0[0] as u64)),
+        min_max(data.pixels().map(|x| x.0[1] as u64)),
+        min_max(data.pixels().map(|x| x.0[2] as u64)),
+      )),
+      ColorImage::Uint16(data) => Some((
+        min_max(data.pixels().map(|x| x.0[0] as u64)),
+        min_max(data.pixels().map(|x| x.0[1] as u64)),
+        min_max(data.pixels().map(|x| x.0[2] as u64)),
+      )),
+      ColorImage::Uint32(data) => Some((
+        min_max(data.pixels().map(|x| x.0[0] as u64)),
+        min_max(data.pixels().map(|x| x.0[1] as u64)),
+        min_max(data.pixels().map(|x| x.0[2] as u64)),
+      )),
+    }
   }
 
   /// Converts this color image to an RGB8 image.
