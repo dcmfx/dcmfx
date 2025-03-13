@@ -13,31 +13,13 @@ use alloc::{
   vec::Vec,
 };
 
-#[cfg(feature = "std")]
-pub type IoWrite = dyn std::io::Write;
-
-#[cfg(feature = "std")]
-pub type IoError = std::io::Error;
-
-#[cfg(not(feature = "std"))]
-pub type IoError = String;
-
-#[cfg(not(feature = "std"))]
-pub trait Write {
-  fn write_all(&mut self, buf: &[u8]) -> Result<(), IoError>;
-  fn flush(&mut self) -> Result<(), IoError>;
-}
-
-#[cfg(not(feature = "std"))]
-pub type IoWrite = dyn Write;
-
 mod internal;
 mod json_config;
 mod json_error;
 mod transforms;
 
 use dcmfx_core::{DataSet, DataSetPath};
-use dcmfx_p10::{DataSetP10Extensions, P10Token};
+use dcmfx_p10::{DataSetP10Extensions, IoError, IoWrite, P10Token};
 
 pub use json_config::DicomJsonConfig;
 pub use json_error::{JsonDeserializeError, JsonSerializeError};
@@ -82,7 +64,7 @@ impl Cursor {
 }
 
 #[cfg(not(feature = "std"))]
-impl Write for Cursor {
+impl dcmfx_p10::Write for Cursor {
   fn write_all(&mut self, buf: &[u8]) -> Result<(), IoError> {
     self.data.extend_from_slice(buf);
     Ok(())

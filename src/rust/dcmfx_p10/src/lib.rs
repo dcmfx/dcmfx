@@ -7,7 +7,13 @@
 extern crate alloc;
 
 #[cfg(not(feature = "std"))]
-use alloc::{boxed::Box, rc::Rc, vec::Vec};
+use alloc::{
+  boxed::Box,
+  rc::Rc,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
 
 pub mod data_set_builder;
 pub mod p10_error;
@@ -20,13 +26,36 @@ pub mod uids;
 mod internal;
 
 #[cfg(feature = "std")]
-use std::fs::File;
+use std::{fs::File, io::Read, rc::Rc};
 
 #[cfg(feature = "std")]
-use std::io::Read;
+pub type IoRead = dyn std::io::Read;
 
 #[cfg(feature = "std")]
-use std::rc::Rc;
+pub type IoWrite = dyn std::io::Write;
+
+#[cfg(feature = "std")]
+pub type IoError = std::io::Error;
+
+#[cfg(not(feature = "std"))]
+pub trait Read {
+  fn read(&mut self, buf: &mut [u8]) -> Result<usize, IoError>;
+}
+
+#[cfg(not(feature = "std"))]
+pub trait Write {
+  fn write_all(&mut self, buf: &[u8]) -> Result<(), IoError>;
+  fn flush(&mut self) -> Result<(), IoError>;
+}
+
+#[cfg(not(feature = "std"))]
+pub type IoRead = dyn Read;
+
+#[cfg(not(feature = "std"))]
+pub type IoWrite = dyn Write;
+
+#[cfg(not(feature = "std"))]
+pub type IoError = String;
 
 use dcmfx_core::DataSet;
 
@@ -108,9 +137,8 @@ pub fn read_file_returning_builder_on_error(
 /// Reads DICOM P10 data from a read stream into an in-memory data set. This
 /// will attempt to consume all data available in the read stream.
 ///
-#[cfg(feature = "std")]
 pub fn read_stream(
-  stream: &mut dyn std::io::Read,
+  stream: &mut IoRead,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
   let mut context = P10ReadContext::new();
   let mut builder = Box::new(DataSetBuilder::new());
@@ -141,9 +169,8 @@ pub fn read_stream(
 /// bytes from the read stream in 256 KiB chunks until at least one DICOM P10
 /// token is made available by the read context or an error occurs.
 ///
-#[cfg(feature = "std")]
 pub fn read_tokens_from_stream(
-  stream: &mut dyn std::io::Read,
+  stream: &mut IoRead,
   context: &mut P10ReadContext,
 ) -> Result<Vec<P10Token>, P10Error> {
   loop {
@@ -242,9 +269,8 @@ pub fn write_file(
 
 /// Writes a data set as DICOM P10 bytes directly to a write stream.
 ///
-#[cfg(feature = "std")]
 pub fn write_stream(
-  stream: &mut dyn std::io::Write,
+  stream: &mut IoWrite,
   data_set: &DataSet,
   config: Option<P10WriteConfig>,
 ) -> Result<(), P10Error> {
@@ -272,10 +298,9 @@ pub fn write_stream(
 /// write context. Returns whether a [`P10Token::End`] token was present in the
 /// tokens.
 ///
-#[cfg(feature = "std")]
 pub fn write_tokens_to_stream(
   tokens: &[P10Token],
-  stream: &mut dyn std::io::Write,
+  stream: &mut IoWrite,
   context: &mut P10WriteContext,
 ) -> Result<bool, P10Error> {
   for token in tokens.iter() {
@@ -317,8 +342,7 @@ where
   /// Reads DICOM P10 data from a read stream into an in-memory data set. This
   /// will attempt to consume all data available in the read stream.
   ///
-  #[cfg(feature = "std")]
-  fn read_p10_stream(stream: &mut dyn std::io::Read) -> Result<Self, P10Error>;
+  fn read_p10_stream(stream: &mut IoRead) -> Result<Self, P10Error>;
 
   /// Reads DICOM P10 data from a vector of bytes into a data set.
   ///
@@ -338,10 +362,9 @@ where
 
   /// Writes a data set as DICOM P10 bytes directly to a write stream.
   ///
-  #[cfg(feature = "std")]
   fn write_p10_stream(
     &self,
-    stream: &mut dyn std::io::Write,
+    stream: &mut IoWrite,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error>;
 
@@ -369,10 +392,7 @@ impl DataSetP10Extensions for DataSet {
     read_file(filename)
   }
 
-  #[cfg(feature = "std")]
-  fn read_p10_stream(
-    stream: &mut dyn std::io::Read,
-  ) -> Result<DataSet, P10Error> {
+  fn read_p10_stream(stream: &mut IoRead) -> Result<DataSet, P10Error> {
     read_stream(stream).map_err(|e| e.0)
   }
 
@@ -391,10 +411,9 @@ impl DataSetP10Extensions for DataSet {
     write_file(filename, self, config)
   }
 
-  #[cfg(feature = "std")]
   fn write_p10_stream(
     &self,
-    stream: &mut dyn std::io::Write,
+    stream: &mut IoWrite,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error> {
     write_stream(stream, self, config)
