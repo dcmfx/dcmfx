@@ -81,7 +81,7 @@ fn decode(
     let error_str = error_c_str.to_str().unwrap_or("<invalid error>");
 
     return Err(DataError::new_value_invalid(format!(
-      "JPEG 12-bit pixel data decode failed, details: {error_str}"
+      "JPEG 12-bit decode failed with '{error_str}'"
     )));
   }
 

@@ -117,7 +117,7 @@ fn decode(
       .unwrap_or("<invalid error>");
 
     return Err(DataError::new_value_invalid(format!(
-      "CharLS decode failed, details: {error}"
+      "CharLS decode failed with '{error}'"
     )));
   }
 

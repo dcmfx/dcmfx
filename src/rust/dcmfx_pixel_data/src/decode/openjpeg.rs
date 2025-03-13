@@ -189,7 +189,7 @@ fn decode(
       .unwrap_or("<invalid error>");
 
     return Err(DataError::new_value_invalid(format!(
-      "OpenJPEG decode failed, details: {error}"
+      "OpenJPEG decode failed with '{error}'"
     )));
   }
 
