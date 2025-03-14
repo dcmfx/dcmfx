@@ -51,7 +51,7 @@ fn decode(
   let mut width: u32 = 0;
   let mut height: u32 = 0;
   let mut channels: u32 = 0;
-  let mut error_message: [i8; 200] = [0; 200];
+  let mut error_message = [0 as ::core::ffi::c_char; 200];
 
   // Allocate output buffer
   let mut output_buffer = vec![
@@ -104,7 +104,7 @@ mod ffi {
       channels: *mut u32,
       output_buffer: *mut u16,
       output_buffer_size: u64,
-      error_message: *mut i8,
+      error_message: *mut ::core::ffi::c_char,
     ) -> i32;
   }
 }

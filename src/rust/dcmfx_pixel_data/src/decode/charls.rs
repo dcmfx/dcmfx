@@ -84,7 +84,7 @@ fn decode(
   let height = definition.rows as u32;
   let samples_per_pixel = usize::from(definition.samples_per_pixel) as u32;
   let bits_allocated = usize::from(definition.bits_allocated) as u32;
-  let mut error_buffer = [0; 256];
+  let mut error_buffer = [0 as ::core::ffi::c_char; 256];
 
   // Allocate output buffer
   let mut output_buffer = vec![
@@ -133,7 +133,7 @@ mod ffi {
       bits_allocated: u32,
       output_data: *mut u8,
       output_data_size: u64,
-      error_buffer: *mut i8,
+      error_buffer: *mut ::core::ffi::c_char,
       error_buffer_size: u32,
     ) -> i32;
   }

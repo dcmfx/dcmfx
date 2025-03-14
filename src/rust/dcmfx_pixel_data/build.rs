@@ -24,9 +24,13 @@ fn build_cpp_code() {
   let mut build = cc::Build::new();
 
   shared_build_config(&mut build, "vendor/**/*.cpp", "vendor/**/*.hpp");
-  build.compiler("clang++");
   build.include("vendor/charls_2.4.2/include");
   build.define("CHARLS_STATIC", "1");
+
+  // Explicitly specify C++14 as this is what CharLS 2.x targets
+  if !std::env::var("TARGET").unwrap().contains("msvc") {
+    build.flag("-std=c++14");
+  }
 
   build.compile("dcmfx_pixel_data_cpp_libs");
 
@@ -46,9 +50,7 @@ fn shared_build_config(
   header_glob_path: &str,
 ) {
   // Silence build warnings
-  if std::env::var("TARGET").unwrap().contains("msvc") {
-    // TODO: disable warnings on MSVC
-  } else {
+  if !std::env::var("TARGET").unwrap().contains("msvc") {
     build.flag("-Wno-unused-but-set-variable");
     build.flag("-Wno-unused-parameter");
     build.flag("-Wno-implicit-fallthrough");

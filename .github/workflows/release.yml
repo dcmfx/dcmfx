@@ -57,29 +57,29 @@ jobs:
     strategy:
       matrix:
         target:
-          - aarch64-unknown-linux-musl
-          - x86_64-unknown-linux-musl
           - aarch64-apple-darwin
+          - aarch64-unknown-linux-musl
           - x86_64-apple-darwin
           - x86_64-pc-windows-msvc
+          - x86_64-unknown-linux-musl
         include:
+          - runs-on: macos-14
+            target: aarch64-apple-darwin
+            cargo-tool: cargo
           - runs-on: ubuntu-24.04
             target: aarch64-unknown-linux-musl
             cargo-tool: cross
             rust-flags: -C link-arg=-Wl,--build-id
-          - runs-on: ubuntu-24.04
-            target: x86_64-unknown-linux-musl
-            cargo-tool: cross
-            rust-flags: -C link-arg=-Wl,--build-id
-          - runs-on: macos-14
-            target: aarch64-apple-darwin
-            cargo-tool: cargo
           - runs-on: macos-13
             target: x86_64-apple-darwin
             cargo-tool: cargo
           - runs-on: windows-2022
             target: x86_64-pc-windows-msvc
             cargo-tool: cargo
+          - runs-on: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+            cargo-tool: cross
+            rust-flags: -C link-arg=-Wl,--build-id
 
     runs-on: ${{ matrix.runs-on }}
 
