@@ -68,22 +68,24 @@ fn shared_build_config(
     println!("cargo::rustc-link-lib=wasm32-unknown-unknown-openbsd-libc");
   }
 
-  // Glob for all the .c files
+  // Glob for all the source files
   let src_files: Vec<_> = glob::glob(glob_path)
     .unwrap()
     .filter_map(Result::ok)
     .collect();
 
-  // Re-run build if any of the .c files change
+  // Re-run build if any of the source files change
   for file in src_files.iter() {
     println!("cargo:rerun-if-changed={}", file.to_string_lossy());
   }
 
+  // Glob for all the header files
   let header_files: Vec<_> = glob::glob(header_glob_path)
     .unwrap()
     .filter_map(Result::ok)
     .collect();
 
+  // Re-run build if any of the header files change
   for file in header_files {
     println!("cargo:rerun-if-changed={}", file.to_string_lossy());
   }

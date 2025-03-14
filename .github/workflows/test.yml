@@ -25,19 +25,19 @@ jobs:
       - name: Setup Gleam
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 27.2
+          otp-version: 27.3
           gleam-version: 1.9.1
           version-type: strict
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.13
+          node-version: 22.14
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.1
+          deno-version: 2.2
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -150,7 +150,7 @@ jobs:
       - name: Setup Gleam
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 27.2
+          otp-version: 27.3
           gleam-version: 1.9.1
           version-type: strict
 
@@ -168,12 +168,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.13
+          node-version: 22.14
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: 2.1
+          deno-version: 2.2
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -198,7 +198,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.13
+          node-version: 22.14
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1

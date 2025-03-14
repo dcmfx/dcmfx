@@ -40,10 +40,7 @@ impl ColorPalette {
 
     for pixel in image.pixels() {
       let color = self.lookup(pixel.0[0]);
-
-      pixels.push(color[0]);
-      pixels.push(color[1]);
-      pixels.push(color[2]);
+      pixels.extend_from_slice(&color);
     }
 
     RgbImage::from_raw(image.width(), image.height(), pixels).unwrap()
