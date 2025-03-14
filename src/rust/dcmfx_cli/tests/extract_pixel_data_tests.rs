@@ -207,6 +207,29 @@ fn dicom_jpeg_2000_color_to_png() {
 }
 
 #[test]
+fn dicom_jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg()
+{
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/J2K_pixelrep_mismatch.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("extract-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{output_file}\" …\n"));
+
+  assert_image_snapshot!(
+    output_file,
+    "dicom_jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg.jpg"
+  );
+}
+
+#[test]
 fn dicom_jpeg_ls_single_channel_to_png() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm";

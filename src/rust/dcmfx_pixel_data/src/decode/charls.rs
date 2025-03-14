@@ -5,7 +5,7 @@ use image::ImageBuffer;
 
 use dcmfx_core::DataError;
 
-use super::unsafe_vec_u8_into;
+use super::vec_cast;
 use crate::{
   BitsAllocated, ColorImage, PixelDataDefinition, SingleChannelImage,
 };
@@ -32,8 +32,10 @@ pub fn decode_single_channel(
     && pixels.len() == pixel_count * 2
   {
     Ok(SingleChannelImage::Uint16(
-      ImageBuffer::from_raw(width, height, unsafe_vec_u8_into::<u16>(pixels))
-        .unwrap(),
+      ImageBuffer::from_raw(width, height, unsafe {
+        vec_cast::<u8, u16>(pixels)
+      })
+      .unwrap(),
     ))
   } else {
     Err(DataError::new_value_invalid(
@@ -63,11 +65,7 @@ pub fn decode_color(
   } else if definition.bits_allocated == BitsAllocated::Sixteen
     && pixels.len() == pixel_count * 6
   {
-    let mut data = Vec::with_capacity(pixels.len() / 2);
-    for chunk in pixels.chunks_exact(2) {
-      data.push(u16::from_le_bytes([chunk[0], chunk[1]]));
-    }
-
+    let data = unsafe { vec_cast::<u8, u16>(pixels) };
     Ok(ColorImage::Uint16(
       ImageBuffer::from_raw(width, height, data).unwrap(),
     ))

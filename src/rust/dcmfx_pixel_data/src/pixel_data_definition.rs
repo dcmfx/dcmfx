@@ -497,3 +497,12 @@ impl PixelRepresentation {
     *self == Self::Signed
   }
 }
+
+impl From<PixelRepresentation> for usize {
+  fn from(pixel_representation: PixelRepresentation) -> usize {
+    match pixel_representation {
+      PixelRepresentation::Unsigned => 0,
+      PixelRepresentation::Signed => 1,
+    }
+  }
+}

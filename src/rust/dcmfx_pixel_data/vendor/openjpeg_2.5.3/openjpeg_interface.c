@@ -117,7 +117,7 @@ static void cleanup(opj_stream_t stream, opj_codec_t *codec, opj_image_t *image,
 
 int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
                     uint32_t width, uint32_t height, uint32_t samples_per_pixel,
-                    uint32_t bits_allocated, uint32_t pixel_representation,
+                    uint32_t bits_allocated, uint32_t *pixel_representation,
                     uint8_t *output_data, uint64_t output_data_size,
                     char *error_buffer, uint32_t error_buffer_size) {
   // Determine codec by looking at the initial bytes of the input data
@@ -187,13 +187,14 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
     return -1;
   }
 
-  // Validate that each component has the expected precision and signedness
+  // Return the pixel representation of the data being read
+  *pixel_representation = image->comps[0].sgnd;
+
+  // Validate that each component has a valid precision
   for (uint32_t i = 0; i < image->numcomps; i++) {
-    if (image->comps[i].prec != bits_allocated ||
-        image->comps[i].sgnd != pixel_representation) {
+    if (image->comps[i].prec > bits_allocated) {
       cleanup(stream, codec, image, error_buffer, error_buffer_size,
-              "Image does not have the expected bits allocated or pixel "
-              "representation",
+              "Image precision exceeds the bits allocated",
               error_details);
       return -1;
     }
@@ -215,7 +216,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
 
   // Copy decoded pixels into the output data
   if (image->numcomps == 1) {
-    if (image->comps[0].prec == 8) {
+    if (bits_allocated == 8) {
       if (output_data_size != width * height) {
         cleanup(stream, codec, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
@@ -231,7 +232,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
           ((int8_t *)output_data)[i] = image->comps[0].data[i];
         }
       }
-    } else if (image->comps[0].prec == 16) {
+    } else if (bits_allocated == 16) {
       if (output_data_size != width * height * 2) {
         cleanup(stream, codec, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
@@ -247,7 +248,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
           ((int16_t *)output_data)[i] = image->comps[0].data[i];
         }
       }
-    } else if (image->comps[0].prec == 32) {
+    } else if (bits_allocated == 32) {
       if (output_data_size != width * height * 4) {
         cleanup(stream, codec, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
@@ -273,7 +274,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
     OPJ_INT32 *green_data = image->comps[1].data;
     OPJ_INT32 *blue_data = image->comps[2].data;
 
-    if (image->comps[0].prec == 8) {
+    if (bits_allocated == 8) {
       if (output_data_size != width * height * 3) {
         cleanup(stream, codec, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
@@ -285,7 +286,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
         output_data[i * 3 + 1] = green_data[i];
         output_data[i * 3 + 2] = blue_data[i];
       }
-    } else if (image->comps[0].prec == 16) {
+    } else if (bits_allocated == 16) {
       if (output_data_size != width * height * 2 * 3) {
         cleanup(stream, codec, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
@@ -297,7 +298,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
         ((uint16_t *)output_data)[i * 3 + 1] = green_data[i];
         ((uint16_t *)output_data)[i * 3 + 2] = blue_data[i];
       }
-    } else if (image->comps[0].prec == 32) {
+    } else if (bits_allocated == 32) {
       if (output_data_size != width * height * 4 * 3) {
         cleanup(stream, codec, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);

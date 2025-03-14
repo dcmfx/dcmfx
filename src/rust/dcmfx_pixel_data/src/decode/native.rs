@@ -161,12 +161,6 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   validate_data_length(definition, data)?;
 
-  if definition.pixel_representation.is_signed() {
-    return Err(DataError::new_value_invalid(
-      "Color pixel data must not be signed".to_string(),
-    ));
-  }
-
   let width = definition.columns as u32;
   let height = definition.rows as u32;
   let pixel_count = definition.pixel_count();
