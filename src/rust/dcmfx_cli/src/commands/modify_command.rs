@@ -91,10 +91,12 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
 
   // Create a filter transform for anonymization and tag deletion if needed
   let filter_context = if anonymize || !tags_to_delete.is_empty() {
-    Some(P10FilterTransform::new(Box::new(move |tag, vr, _| {
-      (!anonymize || dcmfx::anonymize::filter_tag(tag, vr))
-        && !tags_to_delete.contains(&tag)
-    })))
+    Some(P10FilterTransform::new(Box::new(
+      move |tag, vr, _length, _location| {
+        (!anonymize || dcmfx::anonymize::filter_tag(tag, vr))
+          && !tags_to_delete.contains(&tag)
+      },
+    )))
   } else {
     None
   };

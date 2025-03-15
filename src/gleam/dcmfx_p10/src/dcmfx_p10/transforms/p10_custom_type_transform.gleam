@@ -51,7 +51,7 @@ pub fn new(
   target_from_data_set: fn(DataSet) -> Result(a, data_error.DataError),
 ) -> P10CustomTypeTransform(a) {
   let filter =
-    p10_filter_transform.new(fn(tag, _vr, _location) {
+    p10_filter_transform.new(fn(tag, _vr, _length, _location) {
       list.contains(tags, tag)
     })
 

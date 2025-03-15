@@ -3,6 +3,7 @@ import dcmfx_core/dictionary
 import dcmfx_core/value_representation.{type ValueRepresentation}
 import dcmfx_p10/p10_token.{type P10Token}
 import gleam/list
+import gleam/option.{type Option, None, Some}
 
 /// Transform that applies a data element filter to a stream of DICOM P10
 /// tokens.
@@ -19,7 +20,8 @@ pub type LocationEntry {
 }
 
 type PredicateFunction =
-  fn(DataElementTag, ValueRepresentation, List(LocationEntry)) -> Bool
+  fn(DataElementTag, ValueRepresentation, Option(Int), List(LocationEntry)) ->
+    Bool
 
 /// Creates a new filter transform for filtering a stream of DICOM P10 tokens.
 ///
@@ -45,25 +47,33 @@ pub fn add_token(
   context: P10FilterTransform,
   token: P10Token,
 ) -> #(Bool, P10FilterTransform) {
+  let push_location_entry = fn(
+    tag: DataElementTag,
+    vr: ValueRepresentation,
+    length: Option(Int),
+  ) {
+    let filter_result = case context.location {
+      [] | [LocationEntry(_, True), ..] ->
+        context.predicate(tag, vr, length, context.location)
+
+      // The predicate function is skipped if a parent has already been filtered
+      // out
+      _ -> False
+    }
+
+    let new_location = [LocationEntry(tag, filter_result), ..context.location]
+
+    let new_context = P10FilterTransform(..context, location: new_location)
+
+    #(filter_result, new_context)
+  }
+
   case token {
     // If this is a new sequence or data element then run the predicate function
     // to see if it passes the filter, then add it to the location
-    p10_token.SequenceStart(tag, vr) | p10_token.DataElementHeader(tag, vr, _) -> {
-      // The predicate function is skipped if a parent has already been filtered
-      // out
-      let filter_result = case context.location {
-        [] | [LocationEntry(_, True), ..] ->
-          context.predicate(tag, vr, context.location)
-
-        _ -> False
-      }
-
-      let new_location = [LocationEntry(tag, filter_result), ..context.location]
-
-      let new_context = P10FilterTransform(..context, location: new_location)
-
-      #(filter_result, new_context)
-    }
+    p10_token.SequenceStart(tag, vr) -> push_location_entry(tag, vr, None)
+    p10_token.DataElementHeader(tag, vr, length) ->
+      push_location_entry(tag, vr, Some(length))
 
     // If this is a new pixel data item then add it to the location
     p10_token.PixelDataItem(_) -> {

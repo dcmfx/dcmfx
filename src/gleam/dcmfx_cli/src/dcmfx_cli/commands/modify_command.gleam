@@ -117,7 +117,7 @@ pub fn run() {
   // Create a filter transform for anonymization and tag deletion if needed
   let filter_context = case anonymize || !list.is_empty(tags_to_delete) {
     True ->
-      p10_filter_transform.new(fn(tag, vr, _) {
+      p10_filter_transform.new(fn(tag, vr, _length, _location) {
         { !anonymize || dcmfx_anonymize.filter_tag(tag, vr) }
         && !list.contains(tags_to_delete, tag)
       })

@@ -19,8 +19,12 @@ pub struct LocationEntry {
   filter_result: bool,
 }
 
-type PredicateFunction =
-  dyn FnMut(DataElementTag, ValueRepresentation, &[LocationEntry]) -> bool;
+type PredicateFunction = dyn FnMut(
+  DataElementTag,
+  ValueRepresentation,
+  Option<u32>,
+  &[LocationEntry],
+) -> bool;
 
 impl P10FilterTransform {
   /// Creates a new filter transform for filtering a stream of DICOM P10 tokens.
@@ -47,32 +51,35 @@ impl P10FilterTransform {
   /// should be included in the filtered token stream.
   ///
   pub fn add_token(&mut self, token: &P10Token) -> bool {
+    let mut push_location_entry = |tag, vr, length: Option<u32>| -> bool {
+      let filter_result = match self.location.as_slice() {
+        []
+        | [
+          ..,
+          LocationEntry {
+            filter_result: true,
+            ..
+          },
+        ] => (self.predicate)(tag, vr, length, &self.location),
+
+        // The predicate function is skipped if a parent has already been
+        // filtered out
+        _ => false,
+      };
+
+      self.location.push(LocationEntry { tag, filter_result });
+
+      filter_result
+    };
+
     match token {
       // If this is a new sequence or data element then run the predicate
       // function to see if it passes the filter, then add it to the location
-      P10Token::SequenceStart { tag, vr }
-      | P10Token::DataElementHeader { tag, vr, .. } => {
-        // The predicate function is skipped if a parent has already been
-        // filtered out
-        let filter_result = match self.location.as_slice() {
-          []
-          | [
-            ..,
-            LocationEntry {
-              filter_result: true,
-              ..
-            },
-          ] => (self.predicate)(*tag, *vr, &self.location),
-
-          _ => false,
-        };
-
-        self.location.push(LocationEntry {
-          tag: *tag,
-          filter_result,
-        });
-
-        filter_result
+      P10Token::SequenceStart { tag, vr } => {
+        push_location_entry(*tag, *vr, None)
+      }
+      P10Token::DataElementHeader { tag, vr, length } => {
+        push_location_entry(*tag, *vr, Some(*length))
       }
 
       // If this is a new pixel data item then add it to the location

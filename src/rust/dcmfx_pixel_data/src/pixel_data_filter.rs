@@ -124,7 +124,7 @@ impl PixelDataFilter {
     );
 
     let pixel_data_filter =
-      P10FilterTransform::new(Box::new(|tag, _, location| {
+      P10FilterTransform::new(Box::new(|tag, _vr, _length, location| {
         tag == dictionary::PIXEL_DATA.tag && location.is_empty()
       }));
 

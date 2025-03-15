@@ -23,7 +23,7 @@ impl P10InsertTransform {
     // going to be inserted. This ensures there are no duplicate data elements
     // in the resulting token stream.
     let filter_transform =
-      P10FilterTransform::new(Box::new(move |tag, _vr, location| {
+      P10FilterTransform::new(Box::new(move |tag, _vr, _length, location| {
         !location.is_empty() || !tags_to_insert.contains(&tag)
       }));
 

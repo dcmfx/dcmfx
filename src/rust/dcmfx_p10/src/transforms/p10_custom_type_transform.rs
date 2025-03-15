@@ -49,7 +49,7 @@ impl<T> P10CustomTypeTransform<T> {
     target_from_data_set: TargetFromDataSetFn<T>,
   ) -> Self {
     let filter =
-      P10FilterTransform::new(Box::new(move |tag, _vr, _location| {
+      P10FilterTransform::new(Box::new(move |tag, _vr, _length, _location| {
         tags.contains(&tag)
       }));
 

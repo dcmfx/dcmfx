@@ -106,7 +106,7 @@ pub fn new() -> PixelDataFilter {
     )
 
   let pixel_data_filter =
-    p10_filter_transform.new(fn(tag, _, location) {
+    p10_filter_transform.new(fn(tag, _vr, _length, location) {
       tag == dictionary.pixel_data.tag && location == []
     })
 
