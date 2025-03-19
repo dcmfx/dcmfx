@@ -1,0 +1,49 @@
+---
+source: dcmfx_cli/tests/cli_tests.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (Deflated Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    12 bytes] "DCMfx 0.0.0"
+(0008,0008) CS Image Type                           [    16 bytes] "ORIGINAL P …
+(0008,0012) DA Instance Creation Date               [    10 bytes] "1995.07.20"
+(0008,0013) TM Instance Creation Time               [     8 bytes] "11:22:07"
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Computed Radiography Image Storage)
+(0008,0018) UI SOP Instance UID                     [    36 bytes] "1.2.392.20 …
+(0008,0022) DA Acquisition Date                     [    10 bytes] "1993.02.24"
+(0008,0032) TM Acquisition Time                     [     8 bytes] "17:58:00"
+(0008,0050) SH Accession Number                     [    10 bytes] "FUJI95714"
+(0008,0060) CS Modality                             [     2 bytes] "CR" (Computed Radiography)
+(0008,0070) LO Manufacturer                         [    24 bytes] "FUJI PHOTO …
+(0008,0080) LO Institution Name                     [    20 bytes] "FUJI PHOTO …
+(0008,1040) LO Institutional Department Name        [     8 bytes] "!!!!!!!!"
+(0008,1090) LO Manufacturer's Model Name            [     4 bytes] "9000"
+(0010,0010) PN Patient's Name                       [    10 bytes] "Anonymized"
+(0018,0015) CS Body Part Examined                   [     6 bytes] "CHEST"
+(0018,1050) DS Spatial Resolution                   [     4 bytes] "0.2"
+(0018,1260) SH Plate Type                           [     2 bytes] "ST"
+(0018,1261) LO Phosphor Type                        [     2 bytes] "5"
+(0018,1400) LO Acquisition Device Processing Description  [    20 bytes] "[CHEST, …
+(0018,1401) LO Acquisition Device Processing Code   [     2 bytes] "00"
+(0018,1402) CS Cassette Orientation                 [     8 bytes] "PORTRAIT"
+(0018,1403) CS Cassette Size                        [    10 bytes] "35CMX35CM"
+(0018,5101) CS View Position                        [     2 bytes] "PA" (Posterior/Anterior)
+(0018,6000) DS Sensitivity                          [     4 bytes] "357"
+(0020,000D) UI Study Instance UID                   [    38 bytes] "1.2.392.20 …
+(0020,000E) UI Series Instance UID                  [    38 bytes] "1.2.392.20 …
+(0020,0013) IS Instance Number                      [     2 bytes] "16"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME1"
+(0028,0010) US Rows                                 [     2 bytes] 440
+(0028,0011) US Columns                              [     2 bytes] 440
+(0028,0034) IS Pixel Aspect Ratio                   [     2 bytes] "01"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 10
+(0028,0102) US High Bit                             [     2 bytes] 9
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,1050) DS Window Center                        [     4 bytes] "550"
+(0028,1051) DS Window Width                         [     4 bytes] "1024"
+(2010,0100) CS Border Density                       [     6 bytes] "BLACK"
+(7FE0,0010) OW Pixel Data                           [387200 bytes] [00 00 D1 0 …

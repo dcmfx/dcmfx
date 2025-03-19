@@ -69,13 +69,12 @@ DCMfx is a CLI tool for working with DICOM and DICOM JSON
 Usage: dcmfx [OPTIONS] <COMMAND>
 
 Commands:
-  extract-pixel-data  Extracts the pixel data from a DICOM P10 file and writes
-                      each frame to a separate image file
-  modify              Reads a DICOM P10 file, applies requested modifications,
-                      and writes out a new DICOM P10 file
-  print               Prints the content of a DICOM P10 file
-  to-dcm              Converts a DICOM JSON file to a DICOM P10 file
-  to-json             Converts a DICOM P10 file to a DICOM JSON file
+  extract-pixel-data  Extracts pixel data from DICOM P10 files, writing each
+                      frame to an image file
+  modify              Modifies the content of DICOM P10 files
+  print               Prints the content of DICOM P10 files
+  to-dcm              Converts DICOM JSON files to DICOM P10 files
+  to-json             Converts DICOM P10 files to DICOM JSON files
   help                Print this message or the help of the given subcommand(s)
 
 Options:
@@ -95,19 +94,19 @@ Options:
 2. Convert a DICOM P10 file to a DICOM JSON file:
 
    ```sh
-   dcmfx to-json input.dcm output.json
+   dcmfx to-json input.dcm
    ```
 
    To pretty-print the DICOM JSON directly to stdout:
 
    ```sh
-   dcmfx to-json --pretty input.dcm -
+   dcmfx to-json --pretty --output-filename - input.dcm 
    ```
 
 3. Convert a DICOM JSON file to a DICOM P10 file:
 
    ```sh
-   dcmfx to-dcm input.json output.dcm
+   dcmfx to-dcm input.json
    ```
 
 4. Extract pixel data from a DICOM P10 file to one image file per frame:
@@ -120,15 +119,15 @@ Options:
    frame:
 
    ```sh
-   dcmfx extract-pixel-data input.dcm --format png
-   dcmfx extract-pixel-data input.dcm --format jpg --quality 70
+   dcmfx extract-pixel-data --format png input.dcm
+   dcmfx extract-pixel-data --format jpg --quality 70 input.dcm 
    ```
 
    Single channel data can also specify a VOI window center and width and/or a
    well-known color palette:
 
    ```sh
-   dcmfx extract-pixel-data input.dcm --format png --voi-window 500 2000 --color-palette hot-iron
+   dcmfx extract-pixel-data --format png --voi-window 500 2000 --color-palette hot-iron input.dcm
    ```
 
 5. Rewrite a DICOM P10 file. This will convert the specific character set to
@@ -136,7 +135,7 @@ Options:
    files where possible:
 
    ```sh
-   dcmfx modify input.dcm output.dcm
+   dcmfx modify --output-filename output.dcm input.dcm
    ```
 
 6. Modify a DICOM P10 file to use the 'Deflated Explicit VR Little Endian'
@@ -158,10 +157,11 @@ Options:
 
    Conversion between other transfer syntaxes is not supported.
 
-7. Anonymize a DICOM P10 file by removing all identifying data elements:
+7. Anonymize a DICOM P10 file in-place by removing all identifying data
+   elements and private data elements:
 
    ```sh
-   dcmfx modify input.dcm output.dcm --anonymize
+   dcmfx modify --in-place --anonymize input.dcm
    ```
 
    Note that this does not remove any identifying information baked into pixel
@@ -171,19 +171,19 @@ Options:
    file:
 
    ```sh
-   dcmfx modify input.dcm output.dcm --delete-tags 7FE00010
+   dcmfx modify --in-place --delete-tags 7FE00010 input.dcm
    ```
 
    Multiple data elements can be deleted by using a comma as a separator:
 
    ```sh
-   dcmfx modify input.dcm output.dcm --delete-tags 00100010,00100030
+   dcmfx modify --in-place --delete-tags 00100010,00100030 input.dcm
    ```
 
 ## Gleam CLI
 
 The above examples assume the Rust version of the CLI tool is in use, however
-all commands are also supported by the Gleam version of the CLI, which can be
+most functionality is also supported by the Gleam version of the CLI, which can be
 run with `gleam run` in `/src/gleam/dcmfx_cli`.
 
 The Gleam CLI is primarily used when working on the Gleam implementation of

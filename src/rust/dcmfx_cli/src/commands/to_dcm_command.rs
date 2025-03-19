@@ -1,5 +1,8 @@
-use std::fs::File;
-use std::io::{Read, Write};
+use std::{
+  fs::File,
+  io::{Read, Write},
+  path::PathBuf,
+};
 
 use clap::Args;
 
@@ -7,75 +10,124 @@ use dcmfx::core::*;
 use dcmfx::json::*;
 use dcmfx::p10::*;
 
-pub const ABOUT: &str = "Converts a DICOM JSON file to a DICOM P10 file";
+use crate::InputSource;
+
+pub const ABOUT: &str = "Converts DICOM JSON files to DICOM P10 files";
 
 #[derive(Args)]
 pub struct ToDcmArgs {
   #[clap(
-    help = "The name of the file to read DICOM JSON content from. Specify '-' \
-      to read from stdin."
+    required = true,
+    help = "The names of the DICOM JSON files to convert to DICOM P10 files. \
+      Specify '-' to read from stdin."
   )]
-  input_filename: String,
+  input_filenames: Vec<PathBuf>,
 
   #[clap(
-    help = "The name of the file to write DICOM P10 content to. Specify '-' \
-      to write to stdout."
+    long,
+    short,
+    help = "The name of the output DICOM P10 file. This option is only valid \
+      when a single input filename is specified. Specify '-' to write to \
+      stdout."
   )]
-  output_filename: String,
+  output_filename: Option<PathBuf>,
+}
+
+enum ToDcmError {
+  P10Error(P10Error),
+  JsonDeserializeError(JsonDeserializeError),
 }
 
 pub fn run(args: &ToDcmArgs) -> Result<(), ()> {
-  let json = match args.input_filename.as_str() {
-    "-" => {
-      let mut input = String::new();
-      std::io::stdin().read_to_string(&mut input).map(|_| input)
-    }
-    _ => std::fs::read_to_string(&args.input_filename),
-  };
+  let input_sources = crate::get_input_sources(&args.input_filenames);
 
-  let json = match json {
-    Ok(json) => json,
-    Err(e) => {
-      P10Error::FileError {
-        when: format!("reading file \"{}\"", args.input_filename),
-        details: e.to_string(),
-      }
-      .print(&format!("reading file \"{}\"", args.input_filename));
+  if input_sources.len() > 1 && args.output_filename.is_some() {
+    eprintln!(
+      "When there are multiple input files --output-filename must not be \
+       specified"
+    );
+    return Err(());
+  }
 
-      return Err(());
-    }
-  };
+  for input_source in input_sources {
+    match input_source_to_dcm(&input_source, args) {
+      Ok(()) => (),
 
-  let data_set = match DataSet::from_json(&json) {
-    Ok(data_set) => data_set,
-    Err(e) => {
-      e.print(&format!("parsing file \"{}\"", args.input_filename));
-      return Err(());
-    }
-  };
-
-  // Open output stream
-  let mut output_stream: Box<dyn Write> = match args.output_filename.as_str() {
-    "-" => Box::new(std::io::stdout()),
-    _ => match File::create(&args.output_filename) {
-      Ok(file) => Box::new(file),
       Err(e) => {
-        P10Error::FileError {
-          when: "Opening file".to_string(),
-          details: e.to_string(),
+        let task_description = format!("converting \"{}\"", input_source);
+
+        match e {
+          ToDcmError::P10Error(e) => e.print(&task_description),
+          ToDcmError::JsonDeserializeError(e) => e.print(&task_description),
         }
-        .print(&format!("opening file \"{}\"", args.output_filename));
 
         return Err(());
       }
-    },
-  };
-
-  match data_set.write_p10_stream(&mut output_stream, None) {
-    Ok(_) => Ok(()),
-    Err(e) => {
-      e.print(&format!("writing file \"{}\"", args.output_filename));
-      Err(())
     }
   }
+
+  Ok(())
+}
+
+fn input_source_to_dcm(
+  input_source: &InputSource,
+  args: &ToDcmArgs,
+) -> Result<(), ToDcmError> {
+  let mut stream = input_source
+    .open_read_stream()
+    .map_err(ToDcmError::P10Error)?;
+
+  let output_filename = args
+    .output_filename
+    .clone()
+    .unwrap_or_else(|| input_source.clone().append(".dcm"));
+
+  let mut buffer = vec![];
+
+  // Read the DICOM JSON from the input stream
+  if let Err(e) = stream.read_to_end(&mut buffer) {
+    return Err(ToDcmError::P10Error(P10Error::FileError {
+      when: "Reading file".to_string(),
+      details: e.to_string(),
+    }));
+  }
+
+  // Validate the data is UTF-8
+  let json = match std::str::from_utf8(&buffer) {
+    Ok(s) => s,
+    Err(e) => {
+      return Err(ToDcmError::P10Error(P10Error::FileError {
+        when: "Reading file".to_string(),
+        details: format!("Invalid UTF-8 at byte {}", e.valid_up_to()),
+      }));
+    }
+  };
+
+  // Read DICOM JSON into a data set
+  let data_set =
+    DataSet::from_json(json).map_err(ToDcmError::JsonDeserializeError)?;
+
+  // Open output stream
+  let mut output_stream: Box<dyn Write> =
+    if output_filename == PathBuf::from("-") {
+      Box::new(std::io::stdout())
+    } else {
+      match File::create(&output_filename) {
+        Ok(file) => {
+          println!("Writing \"{}\" …", output_filename.display());
+          Box::new(file)
+        }
+        Err(e) => {
+          return Err(ToDcmError::P10Error(P10Error::FileError {
+            when: "Opening file".to_string(),
+            details: e.to_string(),
+          }));
+        }
+      }
+    };
+
+  // Write P10 data to output stream
+  data_set
+    .write_p10_stream(&mut output_stream, None)
+    .map_err(ToDcmError::P10Error)
 }

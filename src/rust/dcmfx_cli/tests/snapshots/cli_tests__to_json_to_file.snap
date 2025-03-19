@@ -1,8 +1,15 @@
 ---
 source: dcmfx_cli/tests/cli_tests.rs
-expression: output
+expression: "std::fs::read_to_string(&temp_path).unwrap()"
+snapshot_kind: text
 ---
 {
+  "00020010": {
+    "vr": "UI",
+    "Value": [
+      "1.2.840.10008.1.2.1"
+    ]
+  },
   "00080008": {
     "vr": "CS",
     "Value": [

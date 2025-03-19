@@ -1,6 +1,7 @@
 //! Entry point for DCMfx's CLI tool.
 
 mod commands;
+mod input_source;
 
 use clap::{Parser, Subcommand};
 
@@ -8,6 +9,7 @@ use commands::{
   extract_pixel_data_command, modify_command, print_command, to_dcm_command,
   to_json_command,
 };
+use input_source::{InputSource, get_input_sources};
 
 #[derive(Parser)]
 #[command(

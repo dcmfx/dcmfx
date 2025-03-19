@@ -1,27 +1,43 @@
-use std::fs::File;
+use std::ffi::OsStr;
 use std::io::{Read, Write};
+use std::{fs::File, path::PathBuf};
 
 use clap::Args;
+use rand::Rng;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
 
-pub const ABOUT: &str = "Reads a DICOM P10 file, applies requested \
-  modifications, and writes out a new DICOM P10 file";
+use crate::InputSource;
+
+pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
 
 #[derive(Args)]
 pub struct ModifyArgs {
   #[clap(
-    help = "The name of the file to read DICOM P10 content from. Specify '-' \
-      to read from stdin."
+    required = true,
+    help = "The names of the DICOM P10 files to modify. Specify '-' to read \
+      from stdin."
   )]
-  input_filename: String,
+  input_filenames: Vec<PathBuf>,
 
   #[clap(
-    help = "The name of the file to write DICOM P10 content to. Specify '-' to \
-      write to stdout."
+    long,
+    short,
+    help = "The name of the output DICOM P10 file. This option is only valid \
+      when a single input filename is specified. Specify '-' to write to \
+      stdout."
   )]
-  output_filename: String,
+  output_filename: Option<PathBuf>,
+
+  #[arg(
+    long,
+    help = "Whether to modify the input files in place, i.e. overwrite them \
+      with the newly modified version rather than write it to a new file. \
+      WARNING: this is a potentially irreversible operation.",
+    default_value_t = false
+  )]
+  in_place: bool,
 
   #[arg(
     long,
@@ -35,7 +51,6 @@ pub struct ModifyArgs {
 
   #[arg(
     long,
-    short,
     help = "\
       The zlib compression level to use when outputting to the 'Deflated \
       Explicit VR Little Endian' transfer syntax. The level ranges from 0, \
@@ -48,7 +63,6 @@ pub struct ModifyArgs {
 
   #[arg(
     long,
-    short,
     help = "Whether to anonymize the output DICOM P10 file by removing all \
       patient data elements, other identifying data elements, as well as \
       private data elements. Note that this option does not remove any \
@@ -59,7 +73,6 @@ pub struct ModifyArgs {
 
   #[arg(
     long,
-    short,
     help = "The data element tags to delete and not include in the output \
       DICOM P10 file. Separate each tag to be removed with a comma. E.g. \
       --delete-tags 00100010,00100030",
@@ -81,15 +94,73 @@ fn validate_data_element_tag_list(
 }
 
 pub fn run(args: &ModifyArgs) -> Result<(), ()> {
-  // Set the zlib compression level in the write config
-  let write_config = P10WriteConfig {
-    zlib_compression_level: args.zlib_compression_level,
+  let input_sources = crate::get_input_sources(&args.input_filenames);
+
+  if !(args.in_place ^ args.output_filename.is_some()) {
+    eprintln!(
+      "Exactly one of --output-filename or --in-place must be specified"
+    );
+    return Err(());
+  }
+
+  if input_sources.len() > 1 && args.output_filename.is_some() {
+    eprintln!(
+      "When there are multiple input files --output-filename must not be specified"
+    );
+    return Err(());
+  }
+
+  if args.in_place && input_sources.contains(&InputSource::Stdin) {
+    eprintln!("When reading from stdin --in-place must not be specified");
+    return Err(());
+  }
+
+  for input_source in input_sources {
+    match modify_input_source(&input_source, args) {
+      Ok(()) => (),
+
+      Err(e) => {
+        e.print(&format!("modifying \"{}\"", input_source));
+        return Err(());
+      }
+    }
+  }
+
+  Ok(())
+}
+
+fn modify_input_source(
+  input_source: &InputSource,
+  args: &ModifyArgs,
+) -> Result<(), P10Error> {
+  let output_filename = args
+    .output_filename
+    .clone()
+    .unwrap_or_else(|| input_source.clone().into_path());
+
+  // Append a random suffix to get a unique name for a temporary output file.
+  // This isn't needed when outputting to stdout.
+  let tmp_output_filename = if output_filename == PathBuf::from("-") {
+    None
+  } else {
+    let mut rng = rand::rng();
+    let random_suffix: String = (0..16)
+      .map(|_| rng.sample(rand::distr::Alphanumeric) as char)
+      .collect();
+
+    let file_name = output_filename.file_name().unwrap_or(OsStr::new(""));
+    let file_name =
+      format!("{}.{}.tmp", file_name.to_string_lossy(), random_suffix);
+
+    let mut new_path = output_filename.clone();
+    new_path.set_file_name(file_name);
+
+    Some(new_path)
   };
 
-  let anonymize = args.anonymize;
-  let tags_to_delete = args.delete_tags.clone();
-
   // Create a filter transform for anonymization and tag deletion if needed
+  let tags_to_delete = args.delete_tags.clone();
+  let anonymize = args.anonymize;
   let filter_context = if anonymize || !tags_to_delete.is_empty() {
     Some(P10FilterTransform::new(Box::new(
       move |tag, vr, _length, _location| {
@@ -101,30 +172,42 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
     None
   };
 
-  let modify_result = match parse_transfer_syntax_flag(&args.transfer_syntax) {
-    Ok(output_transfer_syntax) => streaming_rewrite(
-      &args.input_filename,
-      &args.output_filename,
-      write_config,
-      output_transfer_syntax,
-      filter_context,
-    ),
+  let output_transfer_syntax =
+    parse_transfer_syntax_flag(&args.transfer_syntax)?;
 
-    Err(e) => Err(e),
+  // Setup write config
+  let write_config = P10WriteConfig {
+    zlib_compression_level: args.zlib_compression_level,
   };
 
-  match modify_result {
-    Ok(_) => Ok(()),
-    Err(e) => {
-      // Delete any partially written file
-      if args.output_filename != "-" {
-        let _ = std::fs::remove_file(&args.output_filename);
-      }
+  let input_stream = input_source.open_read_stream()?;
 
-      e.print(&format!("modifying file \"{}\"", args.input_filename));
-      Err(())
+  streaming_rewrite(
+    input_source,
+    input_stream,
+    tmp_output_filename.as_ref().unwrap_or(&output_filename),
+    write_config,
+    output_transfer_syntax,
+    filter_context,
+  )?;
+
+  // Rename the temporary file to the desired output filename
+  if output_filename != PathBuf::from("-") {
+    if let Some(tmp_output_filename) = tmp_output_filename {
+      std::fs::rename(&tmp_output_filename, &output_filename).map_err(|e| {
+        P10Error::FileError {
+          when: format!(
+            "Renaming '{}' to '{}'",
+            tmp_output_filename.display(),
+            output_filename.display()
+          ),
+          details: e.to_string(),
+        }
+      })?;
     }
   }
+
+  Ok(())
 }
 
 /// Detects and validates the value passed to --transfer-syntax, if present.
@@ -164,51 +247,34 @@ fn parse_transfer_syntax_flag(
 /// file.
 ///
 fn streaming_rewrite(
-  input_filename: &str,
-  output_filename: &str,
+  input_source: &InputSource,
+  mut input_stream: Box<dyn Read>,
+  output_filename: &PathBuf,
   write_config: P10WriteConfig,
   output_transfer_syntax: Option<&TransferSyntax>,
   mut filter_context: Option<P10FilterTransform>,
 ) -> Result<(), P10Error> {
-  // Check that the input and output filenames don't point to the same
-  // underlying file. In-place modification isn't supported because of the
-  // stream-based implementation.
-  if input_filename != "-" && output_filename != "-" {
-    if let Ok(true) = same_file::is_same_file(input_filename, output_filename) {
-      return Err(P10Error::OtherError {
-        error_type: "Filename error".to_string(),
-        details: "Input and output files must be different".to_string(),
-      });
-    }
-  }
-
-  // Open input stream
-  let mut input_stream: Box<dyn Read> = match input_filename {
-    "-" => Box::new(std::io::stdin()),
-    _ => match File::open(input_filename) {
-      Ok(file) => Box::new(file),
-      Err(e) => {
-        return Err(P10Error::FileError {
-          when: "Opening input file".to_string(),
-          details: e.to_string(),
-        });
-      }
-    },
-  };
-
   // Open output stream
-  let mut output_stream: Box<dyn Write> = match output_filename {
-    "-" => Box::new(std::io::stdout()),
-    _ => match File::create(output_filename) {
-      Ok(file) => Box::new(file),
-      Err(e) => {
-        return Err(P10Error::FileError {
-          when: format!("Opening output file \"{}\"", output_filename),
-          details: e.to_string(),
-        });
+  let mut output_stream: Box<dyn Write> =
+    if *output_filename == PathBuf::from("-") {
+      Box::new(std::io::stdout())
+    } else {
+      match File::create(output_filename) {
+        Ok(file) => {
+          println!("Modifying \"{input_source}\" …");
+          Box::new(file)
+        }
+        Err(e) => {
+          return Err(P10Error::FileError {
+            when: format!(
+              "Opening output file \"{}\"",
+              output_filename.display()
+            ),
+            details: e.to_string(),
+          });
+        }
       }
-    },
-  };
+    };
 
   // Create read and write contexts
   let mut p10_read_context = P10ReadContext::new();

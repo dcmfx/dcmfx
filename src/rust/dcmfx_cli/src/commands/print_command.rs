@@ -1,20 +1,22 @@
-use std::fs::File;
-use std::io::{Read, Write};
+use std::{io::Write, path::PathBuf};
 
 use clap::Args;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
 
-pub const ABOUT: &str = "Prints the content of a DICOM P10 file";
+use crate::InputSource;
+
+pub const ABOUT: &str = "Prints the content of DICOM P10 files";
 
 #[derive(Args)]
 pub struct PrintArgs {
   #[clap(
-    help = "The name of the file to print DICOM P10 content for. Specify '-' \
-      to read from stdin."
+    required = true,
+    help = "The names of the DICOM P10 files to print the content of. Specify \
+      '-' to read from stdin."
   )]
-  input_filename: String,
+  input_filenames: Vec<PathBuf>,
 
   #[arg(
     long,
@@ -39,6 +41,38 @@ pub struct PrintArgs {
 }
 
 pub fn run(args: &PrintArgs) -> Result<(), ()> {
+  let input_sources = crate::get_input_sources(&args.input_filenames);
+
+  let mut print_options = DataSetPrintOptions::default();
+  if let Some(max_width) = args.max_width {
+    print_options = print_options.max_width(max_width as usize);
+  }
+  if let Some(styled) = args.styled {
+    print_options = print_options.styled(styled);
+  }
+
+  for input_source in input_sources {
+    match print_input_source(&input_source, &print_options) {
+      Ok(()) => (),
+
+      Err(e) => {
+        e.print(&format!("printing \"{}\"", input_source));
+
+        return Err(());
+      }
+    }
+  }
+
+  Ok(())
+}
+
+fn print_input_source(
+  input_source: &InputSource,
+  print_options: &DataSetPrintOptions,
+) -> Result<(), P10Error> {
+  let mut stream = input_source.open_read_stream()?;
+
+  // Create read context
   let mut context = P10ReadContext::new();
 
   // Set a small max token size to keep memory usage low. 256 KiB is also plenty
@@ -49,48 +83,11 @@ pub fn run(args: &PrintArgs) -> Result<(), ()> {
     ..P10ReadConfig::default()
   });
 
-  // Apply any print option arguments
-  let mut print_options = DataSetPrintOptions::default();
-  if let Some(max_width) = args.max_width {
-    print_options = print_options.max_width(max_width as usize);
-  }
-  if let Some(styled) = args.styled {
-    print_options = print_options.styled(styled);
-  }
-
-  match perform_print(&args.input_filename, context, &print_options) {
-    Ok(()) => Ok(()),
-    Err(e) => {
-      e.print(&format!("printing file \"{}\"", args.input_filename));
-      Err(())
-    }
-  }
-}
-
-fn perform_print(
-  input_filename: &str,
-  mut context: P10ReadContext,
-  print_options: &DataSetPrintOptions,
-) -> Result<(), P10Error> {
-  // Open input stream
-  let mut input_stream: Box<dyn Read> = match input_filename {
-    "-" => Box::new(std::io::stdin()),
-    _ => match File::open(input_filename) {
-      Ok(file) => Box::new(file),
-      Err(e) => {
-        return Err(P10Error::FileError {
-          when: "Opening file".to_string(),
-          details: e.to_string(),
-        });
-      }
-    },
-  };
-
   let mut p10_print_transform = P10PrintTransform::new(print_options);
 
   loop {
     let tokens =
-      dcmfx::p10::read_tokens_from_stream(&mut input_stream, &mut context)?;
+      dcmfx::p10::read_tokens_from_stream(&mut stream, &mut context)?;
 
     for token in tokens.iter() {
       match token {

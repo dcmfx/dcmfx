@@ -1,0 +1,57 @@
+---
+source: dcmfx_cli/tests/cli_tests.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+[34m(0002,0001) [32mOB [0m[1mFile Meta Information Version        [36m[     2 bytes] [0m[00 01]
+[34m(0002,0002) [32mUI [0m[1mMedia Storage SOP Class UID          [36m[    26 bytes] [0m"1.2.840.10008.5.1.4.1.1.7" (Secondary Capture Image Storage)
+[34m(0002,0003) [32mUI [0m[1mMedia Storage SOP Instance UID       [36m[    54 bytes] [0m"1.2.276.0.7230010.3.1.4.8323329.1099.1521494048.423534"
+[34m(0002,0010) [32mUI [0m[1mTransfer Syntax UID                  [36m[    20 bytes] [0m"1.2.840.10008.1.2.1" (Explicit VR Little Endian)
+[34m(0002,0012) [32mUI [0m[1mImplementation Class UID             [36m[    28 bytes] [0m"1.2.276.0.7230010.3.0.3.6.1"
+[34m(0002,0013) [32mSH [0m[1mImplementation Version Name          [36m[    16 bytes] [0m"OFFIS_DCMTK_361"
+[34m(0008,0005) [32mCS [0m[1mSpecific Character Set               [36m[    10 bytes] [0m"ISO_IR 192"
+[34m(0008,0008) [32mCS [0m[1mImage Type                           [36m[    24 bytes] [0m"DERIVED", "SECONDARY", "OTHER"
+[34m(0008,0016) [32mUI [0m[1mSOP Class UID                        [36m[    26 bytes] [0m"1.2.840.10008.5.1.4.1.1.7" (Secondary Capture Image Storage)
+[34m(0008,0018) [32mUI [0m[1mSOP Instance UID                     [36m[    54 bytes] [0m"1.2.276.0.7230010.3.1.4.8323329.1099.1521494048.423534"
+[34m(0008,0020) [32mDA [0m[1mStudy Date                           [36m[     8 bytes] [0m2017-01-01
+[34m(0008,0023) [32mDA [0m[1mContent Date                         [36m[     0 bytes] [0m""
+[34m(0008,002A) [32mDT [0m[1mAcquisition DateTime                 [36m[     0 bytes] [0m""
+[34m(0008,0030) [32mTM [0m[1mStudy Time                           [36m[     6 bytes] [0m12:00:00
+[34m(0008,0033) [32mTM [0m[1mContent Time                         [36m[     0 bytes] [0m""
+[34m(0008,0050) [32mSH [0m[1mAccession Number                     [36m[     0 bytes] [0m""
+[34m(0008,0060) [32mCS [0m[1mModality                             [36m[     2 bytes] [0m"OT" (Other)
+[34m(0008,0064) [32mCS [0m[1mConversion Type                      [36m[     4 bytes] [0m"SYN" (Synthetic Image)
+[34m(0008,0090) [32mPN [0m[1mReferring Physician's Name           [36m[    14 bytes] [0m"Moriarty^James"
+[34m(0008,2111) [32mST [0m[1mDerivation Description               [36m[    12 bytes] [0m"Scaled image"
+[34m(0008,2112) [32mSQ [0m[1mSource Image Sequence[36m[0m
+  [34m(FFFE,E000) [0m[1mItem[36m[0m
+    [34m(0008,0016) [32mUI [0m[1mSOP Class UID                        [36m[    26 bytes] [0m"1.2.840.10008.5.1.4.1.1.7" (Secondary Capture Image Storage)
+    [34m(0008,0018) [32mUI [0m[1mSOP Instance UID                     [36m[    64 bytes] [0m"1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116"
+  [34m(FFFE,E00D) [0m[1mItem Delimitation Item[36m[0m
+[34m(FFFE,E0DD) [0m[1mSequence Delimitation Item[36m[0m
+[34m(0010,0010) [32mPN [0m[1mPatient's Name                       [36m[    10 bytes] [0m"Lestrade^G"
+[34m(0010,0020) [32mLO [0m[1mPatient ID                           [36m[     4 bytes] [0m"ID1"
+[34m(0010,0030) [32mDA [0m[1mPatient's Birth Date                 [36m[     0 bytes] [0m""
+[34m(0010,0040) [32mCS [0m[1mPatient's Sex                        [36m[     2 bytes] [0m"F" (Female)
+[34m(0010,1010) [32mAS [0m[1mPatient's Age                        [36m[     4 bytes] [0m24 years
+[34m(0018,5100) [32mCS [0m[1mPatient Position                     [36m[     0 bytes] [0m""
+[34m(0020,000D) [32mUI [0m[1mStudy Instance UID                   [36m[    64 bytes] [0m"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114"
+[34m(0020,000E) [32mUI [0m[1mSeries Instance UID                  [36m[    64 bytes] [0m"1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062"
+[34m(0020,0010) [32mSH [0m[1mStudy ID                             [36m[     2 bytes] [0m"1"
+[34m(0020,0011) [32mIS [0m[1mSeries Number                        [36m[     2 bytes] [0m"1"
+[34m(0020,0013) [32mIS [0m[1mInstance Number                      [36m[     2 bytes] [0m"1"
+[34m(0020,0020) [32mCS [0m[1mPatient Orientation                  [36m[     0 bytes] [0m""
+[34m(0020,0060) [32mCS [0m[1mLaterality                           [36m[     0 bytes] [0m""
+[34m(0020,4000) [32mLT [0m[1mImage Comments                       [36m[   268 bytes] [0m"Test Image with 10 rows of (255,0,0), 10 rows of (255,128,128), 10 rows of (0,255,0), 10 rows of (128,255,128), 10 rows of (0,0,25 …
+[34m(0028,0002) [32mUS [0m[1mSamples per Pixel                    [36m[     2 bytes] [0m3
+[34m(0028,0004) [32mCS [0m[1mPhotometric Interpretation           [36m[     4 bytes] [0m"RGB"
+[34m(0028,0006) [32mUS [0m[1mPlanar Configuration                 [36m[     2 bytes] [0m0
+[34m(0028,0008) [32mIS [0m[1mNumber of Frames                     [36m[     2 bytes] [0m"1"
+[34m(0028,0010) [32mUS [0m[1mRows                                 [36m[     2 bytes] [0m3
+[34m(0028,0011) [32mUS [0m[1mColumns                              [36m[     2 bytes] [0m3
+[34m(0028,0030) [32mDS [0m[1mPixel Spacing                        [36m[    20 bytes] [0m"33.333333", "33.333333"
+[34m(0028,0100) [32mUS [0m[1mBits Allocated                       [36m[     2 bytes] [0m8
+[34m(0028,0101) [32mUS [0m[1mBits Stored                          [36m[     2 bytes] [0m8
+[34m(0028,0102) [32mUS [0m[1mHigh Bit                             [36m[     2 bytes] [0m7
+[34m(0028,0103) [32mUS [0m[1mPixel Representation                 [36m[     2 bytes] [0m0
+[34m(7FE0,0010) [32mOW [0m[1mPixel Data                           [36m[    28 bytes] [0m[A6 8D 34 A6 8D 34 A6 8D 34 3F 57 B0 3F 57 B0 3F 57 B0 9E 9E 9E 9E 9E 9E 9E 9E 9E 00]

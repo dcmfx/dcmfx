@@ -1,3 +1,4 @@
+import dcmfx_cli/input_source.{type InputSource}
 import dcmfx_json/json_config.{type DicomJsonConfig, DicomJsonConfig}
 import dcmfx_json/json_error
 import dcmfx_json/transforms/p10_json_transform.{type P10JsonTransform}
@@ -6,12 +7,22 @@ import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext, P10ReadConfig}
 import dcmfx_p10/p10_token
 import file_streams/file_stream.{type FileStream}
+import gleam/io
 import gleam/list
+import gleam/option.{type Option}
 import gleam/result
 import glint
 
 fn command_help() {
-  "Converts a DICOM P10 file to a DICOM JSON file"
+  "Converts DICOM P10 files to DICOM JSON files"
+}
+
+fn output_filename_flag() {
+  glint.string_flag("output-filename")
+  |> glint.flag_help(
+    "The name of the output DICOM JSON file. This option is only valid "
+    <> "when a single input filename is specified.",
+  )
 }
 
 fn pretty_print_flag() {
@@ -25,69 +36,76 @@ fn pretty_print_flag() {
 
 fn store_encapsulated_pixel_data_flag() {
   glint.bool_flag("store-encapsulated-pixel-data")
-  |> glint.flag_default(False)
+  |> glint.flag_default(True)
   |> glint.flag_help(
     "Whether to extend DICOM JSON to store encapsulated pixel data as "
     <> "inline binaries",
   )
 }
 
+type ToJsonError {
+  ToJsonP10Error(e: P10Error)
+  ToJsonSerializeError(e: json_error.JsonSerializeError)
+}
+
 pub fn run() {
   use <- glint.command_help(command_help())
-  use input_filename <- glint.named_arg("input-filename")
-  use output_filename <- glint.named_arg("output-filename")
+  use <- glint.unnamed_args(glint.MinArgs(1))
+  use output_filename <- glint.flag(output_filename_flag())
   use pretty_print_flag <- glint.flag(pretty_print_flag())
   use store_encapsulated_pixel_data_flag <- glint.flag(
     store_encapsulated_pixel_data_flag(),
   )
-  use named_args, _, flags <- glint.command()
+  use _named_args, unnamed_args, flags <- glint.command()
 
-  let input_filename = input_filename(named_args)
-  let output_filename = output_filename(named_args)
-
+  let input_filenames = unnamed_args
+  let output_filename = output_filename(flags) |> option.from_result
   let assert Ok(pretty_print) = pretty_print_flag(flags)
   let assert Ok(store_encapsulated_pixel_data) =
     store_encapsulated_pixel_data_flag(flags)
 
   let config = DicomJsonConfig(store_encapsulated_pixel_data:, pretty_print:)
 
-  case perform_to_json(input_filename, output_filename, config) {
-    Ok(Nil) -> Ok(Nil)
+  let input_sources = input_source.get_input_sources(input_filenames)
 
-    Error(e) -> {
-      let task_description = "converting \"" <> input_filename <> "\" to JSON"
+  input_sources
+  |> list.try_each(fn(input_source) {
+    case input_source_to_json(input_source, output_filename, config) {
+      Ok(Nil) -> Ok(Nil)
 
-      case e {
-        ToJsonSerializeError(e) ->
-          json_error.print_serialize_error(e, task_description)
-        ToJsonP10Error(e) -> p10_error.print(e, task_description)
+      Error(e) -> {
+        let task_description = "converting \"" <> input_source <> "\""
+
+        case e {
+          ToJsonP10Error(e) -> p10_error.print(e, task_description)
+          ToJsonSerializeError(e) ->
+            json_error.print_serialize_error(e, task_description)
+        }
+
+        Error(Nil)
       }
-
-      Error(Nil)
     }
-  }
+  })
 }
 
-type ToJsonError {
-  ToJsonSerializeError(e: json_error.JsonSerializeError)
-  ToJsonP10Error(e: P10Error)
-}
-
-fn perform_to_json(
-  input_filename: String,
-  output_filename: String,
+fn input_source_to_json(
+  input_source: InputSource,
+  output_filename: Option(String),
   config: DicomJsonConfig,
 ) -> Result(Nil, ToJsonError) {
   // Open input stream
   let input_stream =
-    file_stream.open_read(input_filename)
-    |> result.map_error(fn(e) {
-      p10_error.FileStreamError("Opening input file", e)
-      |> ToJsonP10Error
-    })
+    input_source
+    |> input_source.open_read_stream
+    |> result.map_error(ToJsonP10Error)
   use input_stream <- result.try(input_stream)
 
+  let output_filename =
+    output_filename
+    |> option.unwrap(input_source.to_string(input_source) <> ".json")
+
   // Open output stream
+  io.println_error("Writing \"{" <> output_filename <> "}\" …")
   let output_stream =
     file_stream.open_write(output_filename)
     |> result.map_error(fn(e) {
@@ -106,10 +124,15 @@ fn perform_to_json(
   // Create transform for converting P10 tokens into bytes of JSON
   let json_transform = p10_json_transform.new(config)
 
-  perform_to_json_loop(input_stream, output_stream, context, json_transform)
+  convert_dicom_p10_file_loop(
+    input_stream,
+    output_stream,
+    context,
+    json_transform,
+  )
 }
 
-fn perform_to_json_loop(
+fn convert_dicom_p10_file_loop(
   input_stream: FileStream,
   output_stream: FileStream,
   context: P10ReadContext,
@@ -150,7 +173,7 @@ fn perform_to_json_loop(
               })
 
             False ->
-              perform_to_json_loop(
+              convert_dicom_p10_file_loop(
                 input_stream,
                 output_stream,
                 context,

@@ -25,7 +25,7 @@ fn dicom_rgb_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_rgb_to_png.png");
 }
@@ -44,7 +44,7 @@ fn dicom_ybr_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_ybr_to_png.png");
 }
@@ -65,7 +65,7 @@ fn dicom_rle_to_jpg() {
     .arg("2018")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_rle_to_jpg.jpg");
 }
@@ -84,7 +84,7 @@ fn dicom_rle_color_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_rle_color_to_png.png");
 }
@@ -105,7 +105,7 @@ fn dicom_to_jpg_with_custom_window() {
     .arg("2000")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_to_jpg_with_custom_window.jpg");
 }
@@ -124,7 +124,7 @@ fn dicom_without_voi_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_without_voi_to_png.png");
 }
@@ -142,7 +142,7 @@ fn dicom_jpg_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_jpg_to_png.png");
 }
@@ -160,7 +160,7 @@ fn dicom_palette_color_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_palette_color_to_png.png");
 }
@@ -182,7 +182,7 @@ fn dicom_jpeg_2000_single_channel_to_jpg() {
     .arg("2018")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_rle_to_jpg.jpg");
 }
@@ -201,7 +201,7 @@ fn dicom_jpeg_2000_color_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_jpeg_2000_color_to_png.png");
 }
@@ -221,7 +221,7 @@ fn dicom_jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg()
     .arg("jpg")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(
     output_file,
@@ -243,7 +243,7 @@ fn dicom_jpeg_ls_single_channel_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(
     output_file,
@@ -265,7 +265,7 @@ fn dicom_jpeg_ls_color_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_jpeg_ls_color_to_png.png");
 }
@@ -283,7 +283,7 @@ fn dicom_jpeg_lossless_12bit_to_jpg() {
     .arg("jpg")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_jpeg_lossless_12bit_to_jpg.jpg");
 }
@@ -301,7 +301,7 @@ fn dicom_jpeg_lossless_color_to_jpg() {
     .arg("jpg")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "dicom_jpeg_lossless_color_to_jpg.jpg");
 }
@@ -319,7 +319,7 @@ fn dicom_jpeg_extended_12bit_single_channel_to_png() {
     .arg("png")
     .assert()
     .success()
-    .stdout(format!("Writing \"{output_file}\" …\n"));
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(
     output_file,
@@ -354,4 +354,12 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   }
 
   true
+}
+
+fn to_native_path(path: &str) -> String {
+  #[cfg(windows)]
+  return path.replace("/", "\\");
+
+  #[cfg(not(windows))]
+  return path.to_string();
 }

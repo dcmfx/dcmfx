@@ -1,3 +1,4 @@
+import dcmfx_cli/input_source.{type InputSource}
 import dcmfx_core/data_error.{type DataError}
 import dcmfx_core/data_set
 import dcmfx_p10
@@ -11,64 +12,89 @@ import dcmfx_pixel_data/pixel_data_filter.{
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error.{type FileStreamError}
+import gleam/bool
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/option.{type Option}
 import gleam/result
 import gleam/string
 import glint
 
 fn command_help() {
-  "Extracts the pixel data from a DICOM P10 file and writes each frame "
-  <> "to a separate image file"
+  "Extracts pixel data from DICOM P10 files, writing each frame to an image "
+  <> "file"
 }
 
 fn output_prefix_flag() {
   glint.string_flag("output-prefix")
   |> glint.flag_help(
     "The prefix for output image files. It is suffixed with a 4-digit frame "
-    <> "number and an appropriate file extension. By default, the output "
+    <> "number and an appropriate file extension. This option is only valid "
+    <> "when a single input filename is specified. By default, the output "
     <> "prefix is the input filename.",
   )
 }
 
 pub fn run() {
   use <- glint.command_help(command_help())
-  use input_filename <- glint.named_arg("input-filename")
+  use <- glint.unnamed_args(glint.MinArgs(1))
   use output_prefix_flag <- glint.flag(output_prefix_flag())
-  use named_args, _, flags <- glint.command()
+  use _named_args, unnamed_args, flags <- glint.command()
 
-  let input_filename = input_filename(named_args)
-  let output_prefix = output_prefix_flag(flags) |> result.unwrap(input_filename)
+  let input_filenames = unnamed_args
+  let output_prefix = output_prefix_flag(flags) |> option.from_result
 
-  case perform_extract_pixel_data(input_filename, output_prefix) {
-    Ok(Nil) -> Ok(Nil)
-    Error(e) -> {
-      let task = "reading file \"" <> input_filename <> "\""
+  let input_sources = input_source.get_input_sources(input_filenames)
 
-      case e {
-        pixel_data_filter.DataError(e) -> data_error.print(e, task)
-        pixel_data_filter.P10Error(e) -> p10_error.print(e, task)
-      }
-
+  use <- bool.lazy_guard(
+    option.is_some(output_prefix) && list.length(input_sources) > 1,
+    fn() {
+      io.println_error(
+        "When there are multiple input files --output-prefix must not be "
+        <> "specified",
+      )
       Error(Nil)
+    },
+  )
+
+  input_sources
+  |> list.try_each(fn(input_source) {
+    case extract_pixel_data_from_input_source(input_source, output_prefix) {
+      Ok(Nil) -> Ok(Nil)
+      Error(e) -> {
+        let task_description =
+          "extracting pixel data from\""
+          <> input_source.to_string(input_source)
+          <> "\""
+
+        case e {
+          pixel_data_filter.DataError(e) ->
+            data_error.print(e, task_description)
+          pixel_data_filter.P10Error(e) -> p10_error.print(e, task_description)
+        }
+
+        Error(Nil)
+      }
     }
-  }
+  })
 }
 
-fn perform_extract_pixel_data(
-  input_filename: String,
-  output_prefix: String,
+fn extract_pixel_data_from_input_source(
+  input_source: InputSource,
+  output_prefix: Option(String),
 ) -> Result(Nil, PixelDataFilterError) {
   // Open input stream
   let input_stream =
-    file_stream.open_read(input_filename)
-    |> result.map_error(fn(e) {
-      pixel_data_filter.P10Error(p10_error.FileStreamError("Opening file", e))
-    })
+    input_source.open_read_stream(input_source)
+    |> result.map_error(pixel_data_filter.P10Error)
   use input_stream <- result.try(input_stream)
 
-  // Create read context
+  let output_prefix =
+    output_prefix
+    |> option.unwrap(input_source.to_string(input_source))
+
+  // Create read context with a small max token size to keep memory usage low
   let read_context =
     p10_read.new_read_context()
     |> p10_read.with_config(
@@ -78,17 +104,19 @@ fn perform_extract_pixel_data(
       ),
     )
 
-  do_perform_extract_pixel_data(
+  let pixel_data_filter = pixel_data_filter.new()
+
+  perform_extract_pixel_data_loop(
     input_stream,
     read_context,
-    pixel_data_filter.new(),
+    pixel_data_filter,
     output_prefix,
     "",
     0,
   )
 }
 
-fn do_perform_extract_pixel_data(
+fn perform_extract_pixel_data_loop(
   input_stream: FileStream,
   read_context: P10ReadContext,
   pixel_data_filter: PixelDataFilter,
@@ -155,7 +183,7 @@ fn do_perform_extract_pixel_data(
 
       case context {
         Ok(#(output_extension, pixel_data_filter, frame_number, False)) ->
-          do_perform_extract_pixel_data(
+          perform_extract_pixel_data_loop(
             input_stream,
             read_context,
             pixel_data_filter,

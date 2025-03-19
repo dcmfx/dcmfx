@@ -1,5 +1,4 @@
-use std::fs::File;
-use std::io::{Read, Write};
+use std::{fs::File, io::Write, path::PathBuf};
 
 use clap::Args;
 
@@ -7,21 +6,27 @@ use dcmfx::core::*;
 use dcmfx::json::*;
 use dcmfx::p10::*;
 
-pub const ABOUT: &str = "Converts a DICOM P10 file to a DICOM JSON file";
+use crate::InputSource;
+
+pub const ABOUT: &str = "Converts DICOM P10 files to DICOM JSON files";
 
 #[derive(Args)]
 pub struct ToJsonArgs {
   #[clap(
-    help = "The name of the file to read DICOM P10 content from. Specify '-' \
-      to read from stdin."
+    required = true,
+    help = "The names of the DICOM P10 files to convert to DICOM JSON files. \
+      Specify '-' to read from stdin."
   )]
-  input_filename: String,
+  input_filenames: Vec<PathBuf>,
 
   #[clap(
-    help = "The name of the file to write DICOM JSON content to. Specify '-' \
-      to write to stdout."
+    long,
+    short,
+    help = "The name of the output DICOM JSON file. This option is only valid \
+      when a single input filename is specified. Specify '-' to write to \
+      stdout."
   )]
-  output_filename: String,
+  output_filename: Option<PathBuf>,
 
   #[arg(
     long = "pretty",
@@ -33,73 +38,86 @@ pub struct ToJsonArgs {
 
   #[arg(
     long,
-    short = 'p',
     help = "Whether to extend DICOM JSON to store encapsulated pixel data as \
       inline binaries",
-    default_value_t = false
+    default_value_t = true
   )]
   store_encapsulated_pixel_data: bool,
 }
 
+enum ToJsonError {
+  P10Error(P10Error),
+  JsonSerializeError(JsonSerializeError),
+}
+
 pub fn run(args: &ToJsonArgs) -> Result<(), ()> {
+  let input_sources = crate::get_input_sources(&args.input_filenames);
+
+  if input_sources.len() > 1 && args.output_filename.is_some() {
+    eprintln!(
+      "When there are multiple input files --output-filename must not be \
+       specified"
+    );
+    return Err(());
+  }
+
   let config = DicomJsonConfig {
     pretty_print: args.pretty_print,
     store_encapsulated_pixel_data: args.store_encapsulated_pixel_data,
   };
 
-  match perform_to_json(&args.input_filename, &args.output_filename, &config) {
-    Ok(()) => Ok(()),
-    Err(e) => {
-      let task_description =
-        &format!("converting \"{}\" to JSON", args.input_filename);
+  for input_source in input_sources {
+    match input_source_to_json(&input_source, args, &config) {
+      Ok(()) => (),
 
-      match e {
-        ToJsonError::SerializeError(e) => e.print(task_description),
-        ToJsonError::P10Error(e) => e.print(task_description),
+      Err(e) => {
+        let task_description = format!("converting \"{}\"", input_source);
+
+        match e {
+          ToJsonError::P10Error(e) => e.print(&task_description),
+          ToJsonError::JsonSerializeError(e) => e.print(&task_description),
+        }
+
+        return Err(());
       }
-
-      Err(())
     }
   }
+
+  Ok(())
 }
 
-enum ToJsonError {
-  SerializeError(JsonSerializeError),
-  P10Error(P10Error),
-}
-
-fn perform_to_json(
-  input_filename: &str,
-  output_filename: &str,
+fn input_source_to_json(
+  input_source: &InputSource,
+  args: &ToJsonArgs,
   config: &DicomJsonConfig,
 ) -> Result<(), ToJsonError> {
-  // Open input stream
-  let mut input_stream: Box<dyn Read> = match input_filename {
-    "-" => Box::new(std::io::stdin()),
-    _ => match File::open(input_filename) {
-      Ok(file) => Box::new(file),
-      Err(e) => {
-        return Err(ToJsonError::P10Error(P10Error::FileError {
-          when: "Opening input file".to_string(),
-          details: e.to_string(),
-        }));
-      }
-    },
-  };
+  let mut input_stream = input_source
+    .open_read_stream()
+    .map_err(ToJsonError::P10Error)?;
+
+  let output_filename = args
+    .output_filename
+    .clone()
+    .unwrap_or_else(|| input_source.clone().append(".json"));
 
   // Open output stream
-  let mut output_stream: Box<dyn Write> = match output_filename {
-    "-" => Box::new(std::io::stdout()),
-    _ => match File::create(output_filename) {
-      Ok(file) => Box::new(file),
-      Err(e) => {
-        return Err(ToJsonError::P10Error(P10Error::FileError {
-          when: "Opening output file".to_string(),
-          details: e.to_string(),
-        }));
+  let mut output_stream: Box<dyn Write> =
+    if output_filename == PathBuf::from("-") {
+      Box::new(std::io::stdout())
+    } else {
+      match File::create(&output_filename) {
+        Ok(file) => {
+          println!("Writing \"{}\" …", output_filename.display());
+          Box::new(file)
+        }
+        Err(e) => {
+          return Err(ToJsonError::P10Error(P10Error::FileError {
+            when: "Opening output file".to_string(),
+            details: e.to_string(),
+          }));
+        }
       }
-    },
-  };
+    };
 
   // Create P10 read context and set max token size to 256 KiB
   let mut context = P10ReadContext::new();
@@ -132,7 +150,7 @@ fn perform_to_json(
             details: e.to_string(),
           }));
         }
-        Err(e) => return Err(ToJsonError::SerializeError(e)),
+        Err(e) => return Err(ToJsonError::JsonSerializeError(e)),
       };
 
       // When the end token has been written the conversion is complete

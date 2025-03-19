@@ -5,6 +5,7 @@ import dcmfx_cli/commands/modify_command
 import dcmfx_cli/commands/print_command
 import dcmfx_cli/commands/to_dcm_command
 import dcmfx_cli/commands/to_json_command
+import dcmfx_cli/utils
 import gleam/float
 import gleam/int
 import gleam/io
@@ -61,14 +62,10 @@ pub fn main() {
 
     case command_result {
       Ok(Nil) -> Nil
-      Error(Nil) -> exit_with_status(1)
+      Error(Nil) -> utils.exit_with_status(1)
     }
   })
 }
-
-@external(erlang, "erlang", "halt")
-@external(javascript, "node:process", "exit")
-fn exit_with_status(status: Int) -> Nil
 
 // TODO: determine if the `maximum` value mentioned in the docs can be made to
 // work

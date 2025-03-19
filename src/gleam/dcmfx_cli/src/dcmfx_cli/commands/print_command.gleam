@@ -1,3 +1,4 @@
+import dcmfx_cli/input_source.{type InputSource}
 import dcmfx_core/data_set
 import dcmfx_core/data_set_print.{type DataSetPrintOptions, DataSetPrintOptions}
 import dcmfx_p10
@@ -14,7 +15,7 @@ import snag
 import term_size
 
 fn command_help() {
-  "Prints the content of a DICOM P10 file"
+  "Prints the content of DICOM P10 files"
 }
 
 fn max_width_flag() {
@@ -45,16 +46,40 @@ fn styled_flag() {
 
 pub fn run() {
   use <- glint.command_help(command_help())
-  use input_filename <- glint.named_arg("input-filename")
+  use <- glint.unnamed_args(glint.MinArgs(1))
   use max_width_flag <- glint.flag(max_width_flag())
   use styled_flag <- glint.flag(styled_flag())
-  use named_args, _, flags <- glint.command()
-
-  let input_filename = input_filename(named_args)
+  use _named_args, unnamed_args, flags <- glint.command()
 
   let assert Ok(max_width) = max_width_flag(flags)
   let assert Ok(styled) = styled_flag(flags)
 
+  let input_sources = input_source.get_input_sources(unnamed_args)
+
+  let print_options = DataSetPrintOptions(max_width:, styled:)
+
+  input_sources
+  |> list.try_each(fn(input_source) {
+    case print_input_source(input_source, print_options) {
+      Ok(_) -> Ok(Nil)
+      Error(e) -> {
+        p10_error.print(
+          e,
+          "printing \"" <> input_source.to_string(input_source) <> "\"",
+        )
+        Error(Nil)
+      }
+    }
+  })
+}
+
+fn print_input_source(
+  input_source: InputSource,
+  print_options: DataSetPrintOptions,
+) -> Result(Nil, P10Error) {
+  use stream <- result.try(input_source.open_read_stream(input_source))
+
+  // Create read context
   let context = p10_read.new_read_context()
 
   // Set a small max token size to keep memory usage low. 256 KiB is also plenty
@@ -69,48 +94,12 @@ pub fn run() {
       ),
     )
 
-  // Construct print option arguments
-  let print_options = DataSetPrintOptions(max_width:, styled:)
-
-  case perform_print(input_filename, context, print_options) {
-    Ok(_) -> Ok(Nil)
-    Error(e) -> {
-      p10_error.print(e, "printing file \"" <> input_filename <> "\"")
-      Error(Nil)
-    }
-  }
-}
-
-fn perform_print(
-  input_filename: String,
-  context: P10ReadContext,
-  print_options: DataSetPrintOptions,
-) -> Result(Nil, P10Error) {
-  let input_stream =
-    input_filename
-    |> file_stream.open_read
-    |> result.map_error(fn(e) {
-      p10_error.FileStreamError(
-        "Opening input file \"" <> input_filename <> "\"",
-        e,
-      )
-    })
-  use input_stream <- result.try(input_stream)
-
   let p10_print_transform = p10_print_transform.new(print_options)
 
   let print_tokens_result =
-    do_perform_print(input_stream, context, p10_print_transform, print_options)
+    do_perform_print(stream, context, p10_print_transform, print_options)
 
-  let close_result =
-    file_stream.close(input_stream)
-    |> result.map_error(fn(e) {
-      p10_error.FileStreamError(
-        "Closing input file '" <> input_filename <> "'",
-        e,
-      )
-    })
-  use _ <- result.try(close_result)
+  let _ = file_stream.close(stream)
 
   print_tokens_result
 }

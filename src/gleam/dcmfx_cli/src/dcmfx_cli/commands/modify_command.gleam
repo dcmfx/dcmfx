@@ -1,6 +1,6 @@
 import dcmfx_anonymize
-import dcmfx_cli/utils
-import dcmfx_core/data_element_tag
+import dcmfx_cli/input_source.{type InputSource}
+import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_core/transfer_syntax.{type TransferSyntax}
@@ -12,17 +12,37 @@ import dcmfx_p10/p10_write.{type P10WriteConfig, P10WriteConfig}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import file_streams/file_stream.{type FileStream}
 import gleam/bool
+import gleam/int
+import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/string
 import glint
 import glint/constraint
 import simplifile
 import snag
 
 fn command_help() {
-  "Reads a DICOM P10 file, applies modifications, and writes out a new DICOM "
-  <> "P10 file"
+  "Modifies the content of DICOM P10 files"
+}
+
+fn output_filename_flag() {
+  glint.string_flag("output-filename")
+  |> glint.flag_help(
+    "The name of the output DICOM P10 file. This option is only valid when a "
+    <> "single input filename is specified.",
+  )
+}
+
+fn in_place_flag() {
+  glint.bool_flag("in-place")
+  |> glint.flag_default(False)
+  |> glint.flag_help(
+    "Whether to modify the input files in place, i.e. overwrite them with the "
+    <> "newly modified version rather than write it to a new file. WARNING: "
+    <> "this is a potentially irreversible operation.",
+  )
 }
 
 fn transfer_syntax_flag() {
@@ -87,25 +107,32 @@ fn delete_tags_flag() {
   )
 }
 
+type ModifyArgs {
+  ModifyArgs(
+    output_filename: Option(String),
+    in_place: Bool,
+    transfer_syntax: Option(String),
+    zlib_compression_level: Int,
+    anonymize: Bool,
+    tags_to_delete: List(DataElementTag),
+  )
+}
+
 pub fn run() {
   use <- glint.command_help(command_help())
-  use input_filename <- glint.named_arg("input-filename")
-  use output_filename <- glint.named_arg("output-filename")
+  use <- glint.unnamed_args(glint.MinArgs(1))
+  use output_filename <- glint.flag(output_filename_flag())
+  use in_place <- glint.flag(in_place_flag())
   use transfer_syntax_flag <- glint.flag(transfer_syntax_flag())
   use zlib_compression_level_flag <- glint.flag(zlib_compression_level_flag())
   use anonymize_flag <- glint.flag(anonymize_flag())
   use delete_tags_flag <- glint.flag(delete_tags_flag())
-  use named_args, _, flags <- glint.command()
+  use _named_args, unnamed_args, flags <- glint.command()
 
-  let input_filename = input_filename(named_args)
-  let output_filename = output_filename(named_args)
+  let input_filenames = unnamed_args
 
+  let assert Ok(in_place) = in_place(flags)
   let assert Ok(anonymize) = anonymize_flag(flags)
-
-  // Set the zlib compression level in the write config
-  let assert Ok(zlib_compression_level) = zlib_compression_level_flag(flags)
-  let write_config =
-    P10WriteConfig(zlib_compression_level: zlib_compression_level)
 
   // Get the list of tags to be deleted
   let assert Ok(tags_to_delete) =
@@ -114,66 +141,152 @@ pub fn run() {
     |> list.map(data_element_tag.from_hex_string)
     |> result.all
 
+  let args =
+    ModifyArgs(
+      output_filename: output_filename(flags) |> option.from_result,
+      in_place:,
+      transfer_syntax: transfer_syntax_flag(flags) |> option.from_result,
+      zlib_compression_level: zlib_compression_level_flag(flags)
+        |> option.from_result
+        |> option.unwrap(6),
+      anonymize:,
+      tags_to_delete:,
+    )
+
+  let input_sources = input_source.get_input_sources(input_filenames)
+
+  use <- bool.lazy_guard(
+    !bool.exclusive_or(in_place, option.is_some(args.output_filename)),
+    fn() {
+      io.println_error(
+        "Exactly one of --output-filename or --in-place must be specified",
+      )
+      Error(Nil)
+    },
+  )
+
+  use <- bool.lazy_guard(
+    list.length(input_sources) > 1 && option.is_some(args.output_filename),
+    fn() {
+      io.println_error(
+        "When there are multiple input files --output-filename must not be specified",
+      )
+      Error(Nil)
+    },
+  )
+
+  input_sources
+  |> list.try_each(fn(input_source) {
+    case modify_input_source(input_source, args) {
+      Ok(_) -> Ok(Nil)
+      Error(e) -> {
+        p10_error.print(
+          e,
+          "modifying \"" <> input_source.to_string(input_source) <> "\"",
+        )
+        Error(Nil)
+      }
+    }
+  })
+}
+
+fn modify_input_source(
+  input_source: InputSource,
+  args: ModifyArgs,
+) -> Result(Nil, P10Error) {
+  let output_filename =
+    args.output_filename
+    |> option.unwrap(input_source.to_string(input_source))
+
+  // Append a random suffix to get a unique name for a temporary output file
+  let tmp_output_filename = {
+    let random_suffix =
+      list.range(0, 15)
+      |> list.map(fn(_) {
+        let assert Ok(cp) = string.utf_codepoint(97 + int.random(26))
+        cp
+      })
+      |> string.from_utf_codepoints
+
+    output_filename <> "." <> random_suffix <> ".tmp"
+  }
+
   // Create a filter transform for anonymization and tag deletion if needed
-  let filter_context = case anonymize || !list.is_empty(tags_to_delete) {
+  let filter_context = case
+    args.anonymize || !list.is_empty(args.tags_to_delete)
+  {
     True ->
       p10_filter_transform.new(fn(tag, vr, _length, _location) {
-        { !anonymize || dcmfx_anonymize.filter_tag(tag, vr) }
-        && !list.contains(tags_to_delete, tag)
+        { !args.anonymize || dcmfx_anonymize.filter_tag(tag, vr) }
+        && !list.contains(args.tags_to_delete, tag)
       })
       |> Some
     False -> None
   }
 
-  let modify_result =
-    parse_transfer_syntax_flag(transfer_syntax_flag, flags)
-    |> result.then(fn(output_transfer_syntax) {
-      streaming_rewrite(
-        input_filename,
-        output_filename,
-        write_config,
-        output_transfer_syntax,
-        filter_context,
-      )
-    })
+  let output_transfer_syntax = parse_transfer_syntax_flag(args.transfer_syntax)
+  use output_transfer_syntax <- result.try(output_transfer_syntax)
 
-  case modify_result {
-    Ok(_) -> Ok(Nil)
-    Error(e) -> {
-      // Delete any partially written file
-      let _ = simplifile.delete(output_filename)
+  // Setup write config
+  let write_config =
+    P10WriteConfig(zlib_compression_level: args.zlib_compression_level)
 
-      p10_error.print(e, "modifying file \"" <> input_filename <> "\"")
-      Error(Nil)
-    }
+  let input_stream = input_source.open_read_stream(input_source)
+  use input_stream <- result.try(input_stream)
+
+  let rewrite_result =
+    streaming_rewrite(
+      input_source,
+      input_stream,
+      tmp_output_filename,
+      write_config,
+      output_transfer_syntax,
+      filter_context,
+    )
+
+  let _ = file_stream.close(input_stream)
+
+  case rewrite_result {
+    Ok(Nil) ->
+      // Rename the temporary file to the desired output filename
+      simplifile.rename(tmp_output_filename, output_filename)
+      |> result.map_error(fn(e) {
+        p10_error.OtherError(
+          error_type: "Renaming '"
+            <> tmp_output_filename
+            <> "' to '"
+            <> output_filename
+            <> "'",
+          details: simplifile.describe_error(e),
+        )
+      })
+
+    Error(e) -> Error(e)
   }
 }
 
 /// Detects and validates the value passed to --transfer-syntax, if present.
 ///
 fn parse_transfer_syntax_flag(
-  transfer_syntax_flag: fn(glint.Flags) -> Result(String, a),
-  flags: glint.Flags,
+  transfer_syntax: Option(String),
 ) -> Result(Option(TransferSyntax), P10Error) {
-  let output_transfer_syntax = transfer_syntax_flag(flags)
-
-  case output_transfer_syntax {
-    Ok("implicit-vr-little-endian") ->
+  case transfer_syntax {
+    Some("implicit-vr-little-endian") ->
       Ok(Some(transfer_syntax.implicit_vr_little_endian))
-    Ok("explicit-vr-little-endian") ->
+    Some("explicit-vr-little-endian") ->
       Ok(Some(transfer_syntax.explicit_vr_little_endian))
-    Ok("deflated-explicit-vr-little-endian") ->
+    Some("deflated-explicit-vr-little-endian") ->
       Ok(Some(transfer_syntax.deflated_explicit_vr_little_endian))
-    Ok("explicit-vr-big-endian") ->
+    Some("explicit-vr-big-endian") ->
       Ok(Some(transfer_syntax.explicit_vr_big_endian))
 
-    Ok(ts) ->
+    Some(ts) ->
       Error(p10_error.OtherError(
         "Unsupported transfer syntax conversion",
         "The transfer syntax '" <> ts <> "' is not recognized",
       ))
 
-    _ -> Ok(None)
+    None -> Ok(None)
   }
 }
 
@@ -181,33 +294,13 @@ fn parse_transfer_syntax_flag(
 /// file.
 ///
 fn streaming_rewrite(
-  input_filename: String,
+  input_source: InputSource,
+  input_stream: FileStream,
   output_filename: String,
   write_config: P10WriteConfig,
   output_transfer_syntax: Option(TransferSyntax),
   filter_context: Option(P10FilterTransform),
 ) -> Result(Nil, P10Error) {
-  // Check that the input and output filenames don't point to the same
-  // underlying file. In-place modification isn't supported because of the
-  // stream-based implementation.
-  use <- bool.guard(
-    utils.is_same_file(input_filename, output_filename) == Ok(True),
-    Error(p10_error.OtherError(
-      "Filename error",
-      "Input and output files must be different",
-    )),
-  )
-
-  // Open input stream
-  let input_stream =
-    input_filename
-    |> file_stream.open_read
-    |> result.map_error(p10_error.FileStreamError(
-      "Opening input file \"" <> input_filename <> "\"",
-      _,
-    ))
-  use input_stream <- result.try(input_stream)
-
   // Open output stream
   let output_stream =
     output_filename
@@ -217,6 +310,8 @@ fn streaming_rewrite(
       _,
     ))
   use output_stream <- result.try(output_stream)
+
+  io.println("Modifying \"" <> input_source.to_string(input_source) <> "\" …")
 
   // Create read and write contexts
   let read_config =
@@ -244,19 +339,13 @@ fn streaming_rewrite(
   // Close input stream
   let input_stream_close_result =
     file_stream.close(input_stream)
-    |> result.map_error(p10_error.FileStreamError(
-      "Closing input file '" <> input_filename <> "'",
-      _,
-    ))
+    |> result.map_error(p10_error.FileStreamError("Closing input file", _))
   use _ <- result.try(input_stream_close_result)
 
   // Close output stream
   let output_stream_close_result =
     file_stream.close(output_stream)
-    |> result.map_error(p10_error.FileStreamError(
-      "Closing output file '" <> output_filename <> "'",
-      _,
-    ))
+    |> result.map_error(p10_error.FileStreamError("Closing output file", _))
   use _ <- result.try(output_stream_close_result)
 
   rewrite_result
@@ -340,7 +429,7 @@ fn do_streaming_rewrite(
 ///
 fn change_transfer_syntax(
   data_set: DataSet,
-  output_transfer_syntax: TransferSyntax,
+  transfer_syntax: TransferSyntax,
 ) -> Result(DataSet, P10Error) {
   // Read the current transfer syntax, defaulting to 'Implicit VR Little Endian'
   let assert Ok(current_transfer_syntax) =
@@ -361,7 +450,7 @@ fn change_transfer_syntax(
       let assert Ok(data_set) =
         data_set
         |> data_set.insert_string_value(dictionary.transfer_syntax_uid, [
-          output_transfer_syntax.uid,
+          transfer_syntax.uid,
         ])
 
       Ok(data_set)

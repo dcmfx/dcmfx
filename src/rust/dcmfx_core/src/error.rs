@@ -29,6 +29,7 @@ pub trait DcmfxError {
 ///
 #[cfg(feature = "std")]
 pub fn print_error_lines(lines: &[String]) {
+  let _ = std::io::stdout().flush();
   let _ = std::io::stderr().flush();
 
   eprintln!();
