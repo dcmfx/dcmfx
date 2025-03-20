@@ -30,8 +30,8 @@ import gleam/result
 /// native pixel data where the size of each frame is not a whole number of
 /// bytes.
 ///
-pub opaque type PixelDataFilter {
-  PixelDataFilter(
+pub opaque type P10PixelDataFrameFilter {
+  P10PixelDataFrameFilter(
     is_encapsulated: Bool,
     // Extracts the value of relevant data elements from the stream
     details: P10CustomTypeTransform(PixelDataFilterDetails),
@@ -78,10 +78,10 @@ fn pixel_data_filter_details_from_data_set(
   ))
 }
 
-/// An error that occurred in the process of extract frames of pixel data from
-/// a stream of DICOM P10 tokens.
+/// An error that occurred in the process of extracting frames of pixel data
+/// from a stream of DICOM P10 tokens.
 ///
-pub type PixelDataFilterError {
+pub type P10PixelDataFrameFilterError {
   /// An error that occurred when adding a P10 token. This can happen when the
   /// stream of DICOM P10 tokens is invalid.
   P10Error(p10_error.P10Error)
@@ -94,7 +94,7 @@ pub type PixelDataFilterError {
 /// Creates a new P10 pixel data filter to extract frames of pixel data from a
 /// stream of DICOM P10 tokens.
 ///
-pub fn new() -> PixelDataFilter {
+pub fn new() -> P10PixelDataFrameFilter {
   let details =
     p10_custom_type_transform.new(
       [
@@ -110,7 +110,7 @@ pub fn new() -> PixelDataFilter {
       tag == dictionary.pixel_data.tag && location == []
     })
 
-  PixelDataFilter(
+  P10PixelDataFrameFilter(
     is_encapsulated: False,
     details:,
     pixel_data_filter:,
@@ -127,9 +127,12 @@ pub fn new() -> PixelDataFilter {
 /// now available.
 ///
 pub fn add_token(
-  filter: PixelDataFilter,
+  filter: P10PixelDataFrameFilter,
   token: P10Token,
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
+) -> Result(
+  #(List(PixelDataFrame), P10PixelDataFrameFilter),
+  P10PixelDataFrameFilterError,
+) {
   // Add the token into the details filter if it is still active
   let details =
     p10_custom_type_transform.add_token(filter.details, token)
@@ -141,14 +144,14 @@ pub fn add_token(
     })
   use details <- result.try(details)
 
-  let filter = PixelDataFilter(..filter, details:)
+  let filter = P10PixelDataFrameFilter(..filter, details:)
 
   use <- bool.guard(p10_token.is_header_token(token), Ok(#([], filter)))
 
   let #(is_pixel_data_token, pixel_data_filter) =
     p10_filter_transform.add_token(filter.pixel_data_filter, token)
 
-  let filter = PixelDataFilter(..filter, pixel_data_filter:)
+  let filter = P10PixelDataFrameFilter(..filter, pixel_data_filter:)
 
   use <- bool.guard(!is_pixel_data_token, Ok(#([], filter)))
 
@@ -156,9 +159,12 @@ pub fn add_token(
 }
 
 fn process_next_pixel_data_token(
-  filter: PixelDataFilter,
+  filter: P10PixelDataFrameFilter,
   token: P10Token,
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
+) -> Result(
+  #(List(PixelDataFrame), P10PixelDataFrameFilter),
+  P10PixelDataFrameFilterError,
+) {
   case token {
     // The start of native pixel data
     p10_token.DataElementHeader(length:, ..) -> {
@@ -186,7 +192,7 @@ fn process_next_pixel_data_token(
       }
 
       let filter =
-        PixelDataFilter(
+        P10PixelDataFrameFilter(
           ..filter,
           is_encapsulated: False,
           native_pixel_data_frame_size:,
@@ -197,7 +203,7 @@ fn process_next_pixel_data_token(
 
     // The start of encapsulated pixel data
     p10_token.SequenceStart(..) -> {
-      let filter = PixelDataFilter(..filter, is_encapsulated: True)
+      let filter = P10PixelDataFrameFilter(..filter, is_encapsulated: True)
 
       Ok(#([], filter))
     }
@@ -211,7 +217,7 @@ fn process_next_pixel_data_token(
         False -> {
           let frame_index = filter.next_frame_index
           let filter =
-            PixelDataFilter(..filter, next_frame_index: frame_index + 1)
+            P10PixelDataFrameFilter(..filter, next_frame_index: frame_index + 1)
 
           let frame =
             filter.pixel_data
@@ -246,7 +252,7 @@ fn process_next_pixel_data_token(
     // header is 8 bytes, and this needs to be included in the current offset.
     p10_token.PixelDataItem(..) -> {
       let filter =
-        PixelDataFilter(
+        P10PixelDataFrameFilter(
           ..filter,
           pixel_data_write_offset: filter.pixel_data_write_offset + 8,
         )
@@ -260,7 +266,7 @@ fn process_next_pixel_data_token(
         filter.pixel_data_write_offset + bit_array.byte_size(data)
 
       let filter =
-        PixelDataFilter(..filter, pixel_data:, pixel_data_write_offset:)
+        P10PixelDataFrameFilter(..filter, pixel_data:, pixel_data_write_offset:)
 
       case filter.is_encapsulated {
         True ->
@@ -284,8 +290,8 @@ fn process_next_pixel_data_token(
 /// Returns the value for *'(0028,0008) Number of Frames'* data element.
 ///
 fn get_number_of_frames(
-  filter: PixelDataFilter,
-) -> Result(Int, PixelDataFilterError) {
+  filter: P10PixelDataFrameFilter,
+) -> Result(Int, P10PixelDataFrameFilterError) {
   case p10_custom_type_transform.get_output(filter.details) {
     Some(PixelDataFilterDetails(number_of_frames: Some(number_of_frames), ..)) -> {
       let number_of_frames =
@@ -314,9 +320,12 @@ fn get_number_of_frames(
 /// them.
 ///
 fn get_pending_native_frames(
-  filter: PixelDataFilter,
+  filter: P10PixelDataFrameFilter,
   frames: List(PixelDataFrame),
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
+) -> Result(
+  #(List(PixelDataFrame), P10PixelDataFrameFilter),
+  P10PixelDataFrameFilterError,
+) {
   case
     filter.pixel_data_write_offset - filter.pixel_data_read_offset
     < filter.native_pixel_data_frame_size
@@ -325,7 +334,8 @@ fn get_pending_native_frames(
 
     False -> {
       let frame_index = filter.next_frame_index
-      let filter = PixelDataFilter(..filter, next_frame_index: frame_index + 1)
+      let filter =
+        P10PixelDataFrameFilter(..filter, next_frame_index: frame_index + 1)
 
       let #(frame, filter) =
         get_pending_native_frame(filter, pixel_data_frame.new(frame_index))
@@ -335,9 +345,9 @@ fn get_pending_native_frames(
 }
 
 fn get_pending_native_frame(
-  filter: PixelDataFilter,
+  filter: P10PixelDataFrameFilter,
   frame: PixelDataFrame,
-) -> #(PixelDataFrame, PixelDataFilter) {
+) -> #(PixelDataFrame, P10PixelDataFrameFilter) {
   let frame_size = filter.native_pixel_data_frame_size
   let frame_length = pixel_data_frame.length(frame)
 
@@ -347,7 +357,7 @@ fn get_pending_native_frame(
         filter.pixel_data |> deque.pop_front()
       let chunk_length = bit_array.byte_size(chunk)
 
-      let filter = PixelDataFilter(..filter, pixel_data:)
+      let filter = P10PixelDataFrameFilter(..filter, pixel_data:)
 
       case chunk_length <= frame_size - frame_length {
         // If the whole of this chunk is needed for the next frame then add it
@@ -356,7 +366,7 @@ fn get_pending_native_frame(
           let frame = pixel_data_frame.push_fragment(frame, chunk)
 
           let filter =
-            PixelDataFilter(
+            P10PixelDataFrameFilter(
               ..filter,
               pixel_data:,
               pixel_data_read_offset: filter.pixel_data_read_offset
@@ -381,7 +391,7 @@ fn get_pending_native_frame(
           let pixel_data = filter.pixel_data |> deque.push_front(chunk)
 
           let filter =
-            PixelDataFilter(
+            P10PixelDataFrameFilter(
               ..filter,
               pixel_data:,
               pixel_data_read_offset: filter.pixel_data_read_offset + length,
@@ -400,8 +410,11 @@ fn get_pending_native_frame(
 /// returns them.
 ///
 fn get_pending_encapsulated_frames(
-  filter: PixelDataFilter,
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
+  filter: P10PixelDataFrameFilter,
+) -> Result(
+  #(List(PixelDataFrame), P10PixelDataFrameFilter),
+  P10PixelDataFrameFilterError,
+) {
   case filter.offset_table {
     // If the Basic Offset Table hasn't been read yet, read it now that the
     // first pixel data item is complete
@@ -409,7 +422,7 @@ fn get_pending_encapsulated_frames(
       use offset_table <- result.try(read_offset_table(filter))
 
       let filter =
-        PixelDataFilter(
+        P10PixelDataFrameFilter(
           ..filter,
           pixel_data: deque.new(),
           pixel_data_write_offset: 0,
@@ -431,7 +444,10 @@ fn get_pending_encapsulated_frames(
             True -> {
               let frame_index = filter.next_frame_index
               let filter =
-                PixelDataFilter(..filter, next_frame_index: frame_index + 1)
+                P10PixelDataFrameFilter(
+                  ..filter,
+                  next_frame_index: frame_index + 1,
+                )
 
               let frame =
                 filter.pixel_data
@@ -444,7 +460,7 @@ fn get_pending_encapsulated_frames(
                 )
 
               let filter =
-                PixelDataFilter(
+                P10PixelDataFrameFilter(
                   ..filter,
                   pixel_data: deque.new(),
                   pixel_data_read_offset: filter.pixel_data_write_offset,
@@ -469,10 +485,13 @@ fn get_pending_encapsulated_frames(
 }
 
 fn get_pending_encapsulated_frames_using_offset_table(
-  filter: PixelDataFilter,
+  filter: P10PixelDataFrameFilter,
   offset_table: OffsetTable,
   frames: List(PixelDataFrame),
-) -> Result(#(List(PixelDataFrame), PixelDataFilter), PixelDataFilterError) {
+) -> Result(
+  #(List(PixelDataFrame), P10PixelDataFrameFilter),
+  P10PixelDataFrameFilterError,
+) {
   case offset_table {
     [#(_, frame_length), #(offset, _), ..] -> {
       use <- bool.guard(
@@ -481,7 +500,8 @@ fn get_pending_encapsulated_frames_using_offset_table(
       )
 
       let frame_index = filter.next_frame_index
-      let filter = PixelDataFilter(..filter, next_frame_index: frame_index + 1)
+      let filter =
+        P10PixelDataFrameFilter(..filter, next_frame_index: frame_index + 1)
 
       let #(frame, filter) =
         get_pending_encapsulated_frame(
@@ -492,7 +512,8 @@ fn get_pending_encapsulated_frames_using_offset_table(
 
       let assert Ok(offset_table) = list.rest(offset_table)
 
-      let filter = PixelDataFilter(..filter, offset_table: Some(offset_table))
+      let filter =
+        P10PixelDataFrameFilter(..filter, offset_table: Some(offset_table))
 
       // Check that the frame ended exactly on the expected offset
       use <- bool.guard(
@@ -522,10 +543,10 @@ fn get_pending_encapsulated_frames_using_offset_table(
 }
 
 fn get_pending_encapsulated_frame(
-  filter: PixelDataFilter,
+  filter: P10PixelDataFrameFilter,
   frame: PixelDataFrame,
   next_offset: Int,
-) -> #(PixelDataFrame, PixelDataFilter) {
+) -> #(PixelDataFrame, P10PixelDataFrameFilter) {
   case filter.pixel_data_read_offset < next_offset {
     True ->
       case deque.pop_front(filter.pixel_data) {
@@ -535,7 +556,11 @@ fn get_pending_encapsulated_frame(
             filter.pixel_data_read_offset + 8 + bit_array.byte_size(chunk)
 
           let filter =
-            PixelDataFilter(..filter, pixel_data:, pixel_data_read_offset:)
+            P10PixelDataFrameFilter(
+              ..filter,
+              pixel_data:,
+              pixel_data_read_offset:,
+            )
 
           get_pending_encapsulated_frame(filter, frame, next_offset)
         }
@@ -548,8 +573,8 @@ fn get_pending_encapsulated_frame(
 }
 
 fn read_offset_table(
-  filter: PixelDataFilter,
-) -> Result(OffsetTable, PixelDataFilterError) {
+  filter: P10PixelDataFrameFilter,
+) -> Result(OffsetTable, P10PixelDataFrameFilterError) {
   use basic_offset_table <- result.try(read_basic_offset_table(filter))
   use extended_offset_table <- result.try(read_extended_offset_table(filter))
 
@@ -575,8 +600,8 @@ fn read_offset_table(
 }
 
 fn read_basic_offset_table(
-  filter: PixelDataFilter,
-) -> Result(OffsetTable, PixelDataFilterError) {
+  filter: P10PixelDataFrameFilter,
+) -> Result(OffsetTable, P10PixelDataFrameFilterError) {
   // Read Basic Offset Table data into a buffer
   let offset_table_data =
     filter.pixel_data
@@ -621,8 +646,8 @@ fn read_basic_offset_table(
 }
 
 fn read_extended_offset_table(
-  filter: PixelDataFilter,
-) -> Result(Option(OffsetTable), PixelDataFilterError) {
+  filter: P10PixelDataFrameFilter,
+) -> Result(Option(OffsetTable), P10PixelDataFrameFilterError) {
   case p10_custom_type_transform.get_output(filter.details) {
     Some(PixelDataFilterDetails(
       extended_offset_table: Some(extended_offset_table),
@@ -735,7 +760,7 @@ fn read_extended_offset_table(
 fn apply_length_to_frame(
   frame: PixelDataFrame,
   frame_length: Int,
-) -> Result(PixelDataFrame, PixelDataFilterError) {
+) -> Result(PixelDataFrame, P10PixelDataFrameFilterError) {
   case pixel_data_frame.length(frame) {
     len if len == frame_length -> Ok(frame)
 

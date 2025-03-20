@@ -29,11 +29,12 @@ use crate::PixelDataFrame;
 /// native pixel data where the size of each frame is not a whole number of
 /// bytes.
 ///
-pub struct PixelDataFilter {
+pub struct P10PixelDataFrameFilter {
   is_encapsulated: bool,
 
-  // Extracts the value of relevant data elements from the stream
-  details: P10CustomTypeTransform<PixelDataFilterDetails>,
+  // Extracts the value of relevant data elements from the stream of DICOM P10
+  // tokens
+  details: P10CustomTypeTransform<PixelDataFrameFilterDetails>,
 
   // Filter used to extract only the '(7FE0,0010) Pixel Data' data element
   pixel_data_filter: P10FilterTransform,
@@ -61,13 +62,13 @@ pub struct PixelDataFilter {
 type OffsetTable = VecDeque<(u64, Option<u64>)>;
 
 #[derive(Clone, Debug, PartialEq)]
-struct PixelDataFilterDetails {
+struct PixelDataFrameFilterDetails {
   number_of_frames: Option<DataElementValue>,
   extended_offset_table: Option<DataElementValue>,
   extended_offset_table_lengths: Option<DataElementValue>,
 }
 
-impl PixelDataFilterDetails {
+impl PixelDataFrameFilterDetails {
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     Ok(Self {
       number_of_frames: data_set
@@ -90,7 +91,7 @@ impl PixelDataFilterDetails {
 /// from a stream of DICOM P10 tokens.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub enum PixelDataFilterError {
+pub enum P10PixelDataFrameFilterError {
   /// An error that occurred when adding a P10 token. This can happen when the
   /// stream of DICOM P10 tokens is invalid.
   P10Error(P10Error),
@@ -100,7 +101,7 @@ pub enum PixelDataFilterError {
   DataError(DataError),
 }
 
-impl core::fmt::Display for PixelDataFilterError {
+impl core::fmt::Display for P10PixelDataFrameFilterError {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     match self {
       Self::DataError(e) => e.fmt(f),
@@ -109,19 +110,20 @@ impl core::fmt::Display for PixelDataFilterError {
   }
 }
 
-impl PixelDataFilter {
+impl P10PixelDataFrameFilter {
   /// Creates a new P10 pixel data filter to extract frames of pixel data from a
   /// stream of DICOM P10 tokens.
   ///
   pub fn new() -> Self {
-    let details_filter = P10CustomTypeTransform::<PixelDataFilterDetails>::new(
-      &[
-        dictionary::NUMBER_OF_FRAMES.tag,
-        dictionary::EXTENDED_OFFSET_TABLE.tag,
-        dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag,
-      ],
-      PixelDataFilterDetails::from_data_set,
-    );
+    let details_filter =
+      P10CustomTypeTransform::<PixelDataFrameFilterDetails>::new(
+        &[
+          dictionary::NUMBER_OF_FRAMES.tag,
+          dictionary::EXTENDED_OFFSET_TABLE.tag,
+          dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag,
+        ],
+        PixelDataFrameFilterDetails::from_data_set,
+      );
 
     let pixel_data_filter =
       P10FilterTransform::new(Box::new(|tag, _vr, _length, location| {
@@ -147,22 +149,22 @@ impl PixelDataFilter {
   pub fn add_token(
     &mut self,
     token: &P10Token,
-  ) -> Result<Vec<PixelDataFrame>, PixelDataFilterError> {
+  ) -> Result<Vec<PixelDataFrame>, P10PixelDataFrameFilterError> {
     // Add the token into the details filter
     match self.details.add_token(token) {
       Ok(()) => (),
       Err(P10CustomTypeTransformError::P10Error(e)) => {
-        return Err(PixelDataFilterError::P10Error(e));
+        return Err(P10PixelDataFrameFilterError::P10Error(e));
       }
       Err(P10CustomTypeTransformError::DataError(e)) => {
-        return Err(PixelDataFilterError::DataError(e));
+        return Err(P10PixelDataFrameFilterError::DataError(e));
       }
     };
 
     if !token.is_header_token() && self.pixel_data_filter.add_token(token) {
       self
         .process_next_pixel_data_token(token)
-        .map_err(PixelDataFilterError::DataError)
+        .map_err(P10PixelDataFrameFilterError::DataError)
     } else {
       Ok(vec![])
     }
@@ -471,7 +473,7 @@ impl PixelDataFilter {
     &self,
   ) -> Result<Option<OffsetTable>, DataError> {
     match self.details.get_output() {
-      Some(PixelDataFilterDetails {
+      Some(PixelDataFrameFilterDetails {
         extended_offset_table: Some(extended_offset_table),
         extended_offset_table_lengths: Some(extended_offset_table_lengths),
         ..
@@ -576,7 +578,7 @@ impl PixelDataFilter {
   }
 }
 
-impl Default for PixelDataFilter {
+impl Default for P10PixelDataFrameFilter {
   fn default() -> Self {
     Self::new()
   }

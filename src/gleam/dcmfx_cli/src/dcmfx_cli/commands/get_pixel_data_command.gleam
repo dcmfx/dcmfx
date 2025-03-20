@@ -6,8 +6,8 @@ import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext}
 import dcmfx_p10/p10_token
 import dcmfx_pixel_data
-import dcmfx_pixel_data/pixel_data_filter.{
-  type PixelDataFilter, type PixelDataFilterError,
+import dcmfx_pixel_data/p10_pixel_data_frame_filter.{
+  type P10PixelDataFrameFilter, type P10PixelDataFrameFilterError,
 }
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
 import file_streams/file_stream.{type FileStream}
@@ -69,9 +69,10 @@ pub fn run() {
           <> "\""
 
         case e {
-          pixel_data_filter.DataError(e) ->
+          p10_pixel_data_frame_filter.DataError(e) ->
             data_error.print(e, task_description)
-          pixel_data_filter.P10Error(e) -> p10_error.print(e, task_description)
+          p10_pixel_data_frame_filter.P10Error(e) ->
+            p10_error.print(e, task_description)
         }
 
         Error(Nil)
@@ -83,11 +84,11 @@ pub fn run() {
 fn get_pixel_data_from_input_source(
   input_source: InputSource,
   output_prefix: Option(String),
-) -> Result(Nil, PixelDataFilterError) {
+) -> Result(Nil, P10PixelDataFrameFilterError) {
   // Open input stream
   let input_stream =
     input_source.open_read_stream(input_source)
-    |> result.map_error(pixel_data_filter.P10Error)
+    |> result.map_error(p10_pixel_data_frame_filter.P10Error)
   use input_stream <- result.try(input_stream)
 
   let output_prefix =
@@ -104,12 +105,12 @@ fn get_pixel_data_from_input_source(
       ),
     )
 
-  let pixel_data_filter = pixel_data_filter.new()
+  let pixel_data_frame_filter = p10_pixel_data_frame_filter.new()
 
   perform_get_pixel_data_loop(
     input_stream,
     read_context,
-    pixel_data_filter,
+    pixel_data_frame_filter,
     output_prefix,
     "",
     0,
@@ -119,19 +120,24 @@ fn get_pixel_data_from_input_source(
 fn perform_get_pixel_data_loop(
   input_stream: FileStream,
   read_context: P10ReadContext,
-  pixel_data_filter: PixelDataFilter,
+  pixel_data_frame_filter: P10PixelDataFrameFilter,
   output_prefix: String,
   output_extension: String,
   frame_number: Int,
-) -> Result(Nil, PixelDataFilterError) {
+) -> Result(Nil, P10PixelDataFrameFilterError) {
   // Read the next tokens from the input stream
   case dcmfx_p10.read_tokens_from_stream(input_stream, read_context) {
     Ok(#(tokens, read_context)) -> {
-      let context = #(output_extension, pixel_data_filter, frame_number, False)
+      let context = #(
+        output_extension,
+        pixel_data_frame_filter,
+        frame_number,
+        False,
+      )
 
       let context =
         list.try_fold(tokens, context, fn(context, token) {
-          let #(output_extension, pixel_data_filter, frame_number, ended) =
+          let #(output_extension, pixel_data_frame_filter, frame_number, ended) =
             context
 
           // Update output extension when the File Meta Information token is
@@ -146,8 +152,13 @@ fn perform_get_pixel_data_loop(
           }
 
           // Pass token through the pixel data filter
-          case pixel_data_filter.add_token(pixel_data_filter, token) {
-            Ok(#(frames, pixel_data_filter)) -> {
+          case
+            p10_pixel_data_frame_filter.add_token(
+              pixel_data_frame_filter,
+              token,
+            )
+          {
+            Ok(#(frames, pixel_data_frame_filter)) -> {
               // Write frames
               let frame_number =
                 frames
@@ -162,16 +173,20 @@ fn perform_get_pixel_data_loop(
                   |> result.replace(frame_number + 1)
                 })
                 |> result.map_error(fn(e) {
-                  pixel_data_filter.P10Error(p10_error.FileStreamError(
-                    "Writing pixel data frame",
-                    e,
-                  ))
+                  p10_pixel_data_frame_filter.P10Error(
+                    p10_error.FileStreamError("Writing pixel data frame", e),
+                  )
                 })
 
               case frame_number {
                 Ok(frame_number) -> {
                   let ended = ended || token == p10_token.End
-                  Ok(#(output_extension, pixel_data_filter, frame_number, ended))
+                  Ok(#(
+                    output_extension,
+                    pixel_data_frame_filter,
+                    frame_number,
+                    ended,
+                  ))
                 }
                 Error(e) -> Error(e)
               }
@@ -182,11 +197,11 @@ fn perform_get_pixel_data_loop(
         })
 
       case context {
-        Ok(#(output_extension, pixel_data_filter, frame_number, False)) ->
+        Ok(#(output_extension, pixel_data_frame_filter, frame_number, False)) ->
           perform_get_pixel_data_loop(
             input_stream,
             read_context,
-            pixel_data_filter,
+            pixel_data_frame_filter,
             output_prefix,
             output_extension,
             frame_number,
@@ -198,7 +213,7 @@ fn perform_get_pixel_data_loop(
       }
     }
 
-    Error(e) -> Error(pixel_data_filter.P10Error(e))
+    Error(e) -> Error(p10_pixel_data_frame_filter.P10Error(e))
   }
 }
 

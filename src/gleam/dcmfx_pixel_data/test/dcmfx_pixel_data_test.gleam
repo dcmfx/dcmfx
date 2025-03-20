@@ -4,7 +4,7 @@ import dcmfx_core/data_set
 import dcmfx_core/dictionary
 import dcmfx_core/value_representation
 import dcmfx_pixel_data
-import dcmfx_pixel_data/pixel_data_filter
+import dcmfx_pixel_data/p10_pixel_data_frame_filter
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
 import gleam/bit_array
 import gleam/list
@@ -84,7 +84,7 @@ pub fn read_native_multi_frame_malformed() {
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
     Error(
-      pixel_data_filter.DataError(data_error.new_value_invalid(
+      p10_pixel_data_frame_filter.DataError(data_error.new_value_invalid(
         "Multi-frame pixel data of length 4 does not divide evenly into 3 frames",
       )),
     ),

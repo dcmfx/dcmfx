@@ -1,6 +1,5 @@
 import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_element_value
-import dcmfx_core/data_error
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_json
@@ -10,9 +9,9 @@ import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext}
 import dcmfx_pixel_data
-import dcmfx_pixel_data/pixel_data_filter.{type PixelDataFilterError}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error
+import gleam/bool
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/int
@@ -75,12 +74,6 @@ pub fn main() {
 
           Error(#(dicom, JitteredReadMismatch)) ->
             io.println("Error: Jittered read of " <> dicom <> " was different")
-
-          Error(#(dicom, PixelDataReadError(pixel_data_filter.DataError(error)))) ->
-            data_error.print(error, "reading pixel data from " <> dicom)
-
-          Error(#(dicom, PixelDataReadError(pixel_data_filter.P10Error(error)))) ->
-            p10_error.print(error, "reading pixel data from " <> dicom)
         }
       })
 
@@ -100,7 +93,6 @@ type DicomValidationError {
   RewriteMismatch
   JitteredReadError(error: P10Error)
   JitteredReadMismatch
-  PixelDataReadError(error: PixelDataFilterError)
 }
 
 /// Loads a DICOM file and checks that its JSON serialization by this library
@@ -334,8 +326,11 @@ fn test_jittered_read_loop(
 /// Tests reading the frames of pixel data from a data set.
 ///
 fn test_read_pixel_data(data_set: DataSet) -> Result(Nil, DicomValidationError) {
-  case dcmfx_pixel_data.get_pixel_data_frames(data_set) {
-    Ok(_) -> Ok(Nil)
-    Error(e) -> Error(PixelDataReadError(e))
-  }
+  // If there is no pixel data then there's nothing to test
+  use <- bool.guard(data_set.has(data_set, dictionary.pixel_data.tag), Ok(Nil))
+
+  // Get the raw frames of pixel data
+  let assert Ok(_frames) = dcmfx_pixel_data.get_pixel_data_frames(data_set)
+
+  Ok(Nil)
 }

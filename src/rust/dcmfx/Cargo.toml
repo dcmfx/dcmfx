@@ -20,6 +20,7 @@ dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0", default-features = false
 dcmfx_pixel_data = { path = "../dcmfx_pixel_data", version = "0.0.0", default-features = false }
 
 [dev-dependencies]
+either = "1.15.0"
 image = "0.25.5"
 rand = { version = "0.9.0", features = ["small_rng"] }
 serde = "1.0.217"

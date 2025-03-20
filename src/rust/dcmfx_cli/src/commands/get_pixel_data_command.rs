@@ -188,7 +188,7 @@ fn get_pixel_data_from_input_source(
     ..P10ReadConfig::default()
   });
 
-  let mut pixel_data_filter = PixelDataFilter::new();
+  let mut p10_pixel_data_frame_filter = P10PixelDataFrameFilter::new();
 
   let mut pixel_data_renderer = P10CustomTypeTransform::new(
     &PixelDataRenderer::DATA_ELEMENT_TAGS,
@@ -233,16 +233,18 @@ fn get_pixel_data_from_input_source(
         };
       }
 
-      // Pass token through the pixel data filter
+      // Pass token through the pixel data frame filter
       let mut frames =
-        pixel_data_filter.add_token(token).map_err(|e| match e {
-          PixelDataFilterError::DataError(e) => {
-            ExtractPixelDataError::DataError(e)
-          }
-          PixelDataFilterError::P10Error(e) => {
-            ExtractPixelDataError::P10Error(e)
-          }
-        })?;
+        p10_pixel_data_frame_filter
+          .add_token(token)
+          .map_err(|e| match e {
+            P10PixelDataFrameFilterError::DataError(e) => {
+              ExtractPixelDataError::DataError(e)
+            }
+            P10PixelDataFrameFilterError::P10Error(e) => {
+              ExtractPixelDataError::P10Error(e)
+            }
+          })?;
 
       // Write frames
       for frame in frames.iter_mut() {

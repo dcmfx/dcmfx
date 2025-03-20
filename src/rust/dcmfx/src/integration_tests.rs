@@ -5,6 +5,7 @@ mod tests {
 
   use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path, rc::Rc};
 
+  use either::Either;
   use rand::rngs::SmallRng;
   use rand::{Rng, SeedableRng};
   use walkdir::WalkDir;
@@ -89,31 +90,16 @@ mod tests {
             eprintln!("Error: Jittered read of {:?} was different", dicom);
           }
 
-          Err((
-            dicom,
-            DicomValidationError::PixelDataFilterError { error },
-          )) => {
-            let task_description =
-              format!("reading pixel data from {:?}", dicom);
-
-            match error {
-              PixelDataFilterError::DataError(error) => {
-                error.print(&task_description)
+          Err((dicom, DicomValidationError::PixelDataRenderError(e))) => {
+            match e {
+              Either::Left(error) => {
+                error.print(&format!("rendering pixel data from {:?}", dicom))
               }
-              PixelDataFilterError::P10Error(error) => {
-                error.print(&task_description)
-              }
+              Either::Right(details) => eprintln!(
+                "Error: Pixel data read of {:?}, details: {}",
+                dicom, details
+              ),
             }
-          }
-
-          Err((
-            dicom,
-            DicomValidationError::PixelDataReadError { details },
-          )) => {
-            eprintln!(
-              "Error: Pixel data read of {:?}, details: {}",
-              dicom, details
-            );
           }
         }
       }
@@ -131,8 +117,7 @@ mod tests {
     RewriteMismatch,
     JitteredReadError { error: P10Error },
     JitteredReadMismatch,
-    PixelDataFilterError { error: PixelDataFilterError },
-    PixelDataReadError { details: String },
+    PixelDataRenderError(Either<DataError, String>),
   }
 
   /// Loads a DICOM file and checks that its JSON serialization by this library
@@ -424,9 +409,7 @@ mod tests {
     };
 
     // Get the raw frames of pixel data
-    let mut frames = data_set
-      .get_pixel_data_frames()
-      .map_err(|e| DicomValidationError::PixelDataFilterError { error: e })?;
+    let mut frames = data_set.get_pixel_data_frames().unwrap();
 
     // Test rendering of frames doesn't panic
     for frame in frames.iter_mut() {
@@ -448,13 +431,13 @@ mod tests {
     let expected_frames: Vec<serde_json::Value> =
       serde_json::from_str(&expected_pixel_data_json).unwrap();
     if frames.len() != expected_frames.len() {
-      return Err(DicomValidationError::PixelDataReadError {
-        details: format!(
+      return Err(DicomValidationError::PixelDataRenderError(Either::Right(
+        format!(
           "Expected {} frames but found {} frames",
           expected_frames.len(),
           frames.len()
         ),
-      });
+      )));
     }
 
     for (mut frame, expected_frame) in
@@ -465,8 +448,8 @@ mod tests {
       if pixel_data_renderer.definition.is_grayscale() {
         let mut image = pixel_data_renderer
           .render_single_channel_frame(&mut frame)
-          .map_err(|e| DicomValidationError::PixelDataFilterError {
-            error: PixelDataFilterError::DataError(e),
+          .map_err(|e| {
+            DicomValidationError::PixelDataRenderError(Either::Left(e))
           })?;
 
         image.invert_monochrome1_data(&pixel_data_renderer.definition);
@@ -483,20 +466,20 @@ mod tests {
           pixels.into_iter().zip(expected_pixels).enumerate()
         {
           if a != b {
-            return Err(DicomValidationError::PixelDataReadError {
-              details: format!(
+            return Err(DicomValidationError::PixelDataRenderError(
+              Either::Right(format!(
                 "Pixel data of frame {} is incorrect at index {}, expected {} \
                  but got {}",
                 frame_index, index, b, a
-              ),
-            });
+              )),
+            ));
           }
         }
       } else {
         let image = pixel_data_renderer
           .render_color_frame(&mut frame)
-          .map_err(|e| DicomValidationError::PixelDataFilterError {
-            error: PixelDataFilterError::DataError(e),
+          .map_err(|e| {
+            DicomValidationError::PixelDataRenderError(Either::Left(e))
           })?;
 
         let expected_pixels =
@@ -515,13 +498,13 @@ mod tests {
             || (a.0[1] - b[1] as f32).abs() > 0.005
             || (a.0[2] - b[2] as f32).abs() > 0.005
           {
-            return Err(DicomValidationError::PixelDataReadError {
-              details: format!(
+            return Err(DicomValidationError::PixelDataRenderError(
+              Either::Right(format!(
                 "Pixel data of frame {} is incorrect at index {}, expected \
                  {:?} but got {:?}",
                 frame_index, index, b, a.0
-              ),
-            });
+              )),
+            ));
           }
         }
       }

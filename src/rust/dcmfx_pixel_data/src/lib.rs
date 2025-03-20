@@ -13,8 +13,8 @@ use image::RgbImage;
 mod color_image;
 mod decode;
 mod luts;
+mod p10_pixel_data_frame_filter;
 mod pixel_data_definition;
-mod pixel_data_filter;
 mod pixel_data_frame;
 mod pixel_data_renderer;
 mod single_channel_image;
@@ -24,11 +24,13 @@ pub use luts::{
   ColorPalette, LookupTable, ModalityLut, StandardColorPalette, VoiLut,
   VoiLutFunction, VoiWindow,
 };
+pub use p10_pixel_data_frame_filter::{
+  P10PixelDataFrameFilter, P10PixelDataFrameFilterError,
+};
 pub use pixel_data_definition::{
   BitsAllocated, PhotometricInterpretation, PixelDataDefinition,
   PixelRepresentation, PlanarConfiguration, SamplesPerPixel,
 };
-pub use pixel_data_filter::{PixelDataFilter, PixelDataFilterError};
 pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_renderer::PixelDataRenderer;
 pub use single_channel_image::SingleChannelImage;
@@ -53,7 +55,7 @@ where
   ///
   fn get_pixel_data_frames(
     &self,
-  ) -> Result<Vec<PixelDataFrame>, PixelDataFilterError>;
+  ) -> Result<Vec<PixelDataFrame>, P10PixelDataFrameFilterError>;
 
   /// Returns the frames of pixel data in this data set as fully resolved RGB8
   /// images. Output image data may have been subjected to a lossy conversion to
@@ -70,7 +72,7 @@ where
   fn get_pixel_data_images(
     &self,
     color_palette: Option<&ColorPalette>,
-  ) -> Result<Vec<RgbImage>, PixelDataFilterError>;
+  ) -> Result<Vec<RgbImage>, P10PixelDataFrameFilterError>;
 
   /// Returns the frames of pixel data in this data set as
   /// [`SingleChannelImage`]s.
@@ -81,7 +83,7 @@ where
   ///
   fn get_pixel_data_single_channel_images(
     &self,
-  ) -> Result<Vec<SingleChannelImage>, PixelDataFilterError>;
+  ) -> Result<Vec<SingleChannelImage>, P10PixelDataFrameFilterError>;
 
   /// Returns the frames of pixel data in this data set as [`ColorImage`]s.
   ///
@@ -89,13 +91,13 @@ where
   ///
   fn get_pixel_data_color_images(
     &self,
-  ) -> Result<Vec<ColorImage>, PixelDataFilterError>;
+  ) -> Result<Vec<ColorImage>, P10PixelDataFrameFilterError>;
 }
 
 impl DataSetPixelDataExtensions for DataSet {
   fn get_pixel_data_frames(
     &self,
-  ) -> Result<Vec<PixelDataFrame>, PixelDataFilterError> {
+  ) -> Result<Vec<PixelDataFrame>, P10PixelDataFrameFilterError> {
     // Create a new data set containing only the data elements needed by the
     // pixel data filter. This avoids calling `DataSet::to_p10_tokens()` on the
     // whole data set.
@@ -113,10 +115,10 @@ impl DataSetPixelDataExtensions for DataSet {
 
     // Pass the cut down data set through a pixel data filter and collect all
     // emitted frames
-    let mut pixel_data_filter = PixelDataFilter::new();
+    let mut pixel_data_frame_filter = P10PixelDataFrameFilter::new();
     let mut frames = vec![];
     ds.to_p10_tokens(&mut |token| {
-      frames.extend_from_slice(&pixel_data_filter.add_token(token)?);
+      frames.extend_from_slice(&pixel_data_frame_filter.add_token(token)?);
       Ok(())
     })?;
 
@@ -126,7 +128,7 @@ impl DataSetPixelDataExtensions for DataSet {
   fn get_pixel_data_images(
     &self,
     color_palette: Option<&ColorPalette>,
-  ) -> Result<Vec<RgbImage>, PixelDataFilterError> {
+  ) -> Result<Vec<RgbImage>, P10PixelDataFrameFilterError> {
     get_pixel_data(self, |renderer, frame| {
       renderer.render_frame(frame, color_palette)
     })
@@ -134,7 +136,7 @@ impl DataSetPixelDataExtensions for DataSet {
 
   fn get_pixel_data_single_channel_images(
     &self,
-  ) -> Result<Vec<SingleChannelImage>, PixelDataFilterError> {
+  ) -> Result<Vec<SingleChannelImage>, P10PixelDataFrameFilterError> {
     get_pixel_data(self, |renderer, frame| {
       renderer.render_single_channel_frame(frame)
     })
@@ -142,7 +144,7 @@ impl DataSetPixelDataExtensions for DataSet {
 
   fn get_pixel_data_color_images(
     &self,
-  ) -> Result<Vec<ColorImage>, PixelDataFilterError> {
+  ) -> Result<Vec<ColorImage>, P10PixelDataFrameFilterError> {
     get_pixel_data(self, |renderer, frame| renderer.render_color_frame(frame))
   }
 }
@@ -150,12 +152,12 @@ impl DataSetPixelDataExtensions for DataSet {
 fn get_pixel_data<T, F>(
   data_set: &DataSet,
   mut process_frame: F,
-) -> Result<Vec<T>, PixelDataFilterError>
+) -> Result<Vec<T>, P10PixelDataFrameFilterError>
 where
   F: FnMut(&PixelDataRenderer, &mut PixelDataFrame) -> Result<T, DataError>,
 {
   let renderer = PixelDataRenderer::from_data_set(data_set)
-    .map_err(PixelDataFilterError::DataError)?;
+    .map_err(P10PixelDataFrameFilterError::DataError)?;
 
   let frames = data_set.get_pixel_data_frames()?;
 
@@ -163,7 +165,7 @@ where
     .into_iter()
     .map(|mut frame| {
       process_frame(&renderer, &mut frame)
-        .map_err(PixelDataFilterError::DataError)
+        .map_err(P10PixelDataFrameFilterError::DataError)
     })
     .collect()
 }
