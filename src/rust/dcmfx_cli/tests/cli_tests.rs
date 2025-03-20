@@ -1,5 +1,6 @@
 use assert_cmd::{Command, assert::Assert};
 use insta::assert_snapshot;
+use rand::Rng;
 
 #[test]
 fn print() {
@@ -51,9 +52,7 @@ fn print_multiple() {
 fn to_dcm_to_file() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm.json";
-
-  let temp_file = tempfile::NamedTempFile::new().unwrap();
-  let temp_path = temp_file.path().to_owned();
+  let temp_path = generate_temp_filename();
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
@@ -93,9 +92,7 @@ fn to_json_to_stdout() {
 fn to_json_to_file() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";
-
-  let temp_file = tempfile::NamedTempFile::new().unwrap();
-  let temp_path = temp_file.path().to_owned();
+  let temp_path = generate_temp_filename();
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
@@ -117,9 +114,7 @@ fn to_json_to_file() {
 #[test]
 fn modify() {
   let dicom_file = "../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm";
-
-  let temp_file = tempfile::NamedTempFile::new().unwrap();
-  let temp_path = temp_file.path().to_owned();
+  let temp_path = generate_temp_filename();
 
   let assert = Command::cargo_bin("dcmfx_cli")
     .unwrap()
@@ -155,9 +150,7 @@ fn modify() {
 #[test]
 fn modify_in_place() {
   let dicom_file = "../../../test/assets/fo-dicom/CR-MONO1-10-chest.dcm";
-
-  let temp_file = tempfile::NamedTempFile::new().unwrap();
-  let temp_path = temp_file.path().to_owned();
+  let temp_path = generate_temp_filename();
 
   std::fs::copy(dicom_file, &temp_path).unwrap();
 
@@ -188,6 +181,18 @@ fn modify_in_place() {
     .success();
 
   assert_snapshot!("modify_in_place_after", get_stdout(assert));
+}
+
+fn generate_temp_filename() -> std::path::PathBuf {
+  let temp_dir = std::env::temp_dir();
+
+  let mut rng = rand::rng();
+  let random_suffix: String = (0..16)
+    .map(|_| rng.sample(rand::distr::Alphanumeric) as char)
+    .collect();
+
+  let file_name = format!("dcmfx_{}", random_suffix);
+  temp_dir.join(file_name)
 }
 
 fn get_stdout(assert: Assert) -> String {

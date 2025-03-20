@@ -23,25 +23,29 @@ impl core::fmt::Display for InputSource {
 impl InputSource {
   /// Returns the input source as a `PathBuf`.
   ///
-  pub fn into_path(self) -> PathBuf {
+  pub fn path(&self) -> Option<&PathBuf> {
     match self {
-      InputSource::Stdin => PathBuf::new(),
-      InputSource::LocalFile { path } => path,
+      InputSource::Stdin => None,
+      InputSource::LocalFile { path } => Some(path),
     }
   }
 
   /// Returns the input source as a `PathBuf` wih the given string appended to
   /// the file name.
   ///
-  pub fn append(self, s: &str) -> PathBuf {
-    let mut path = self.into_path();
-    if let Some(file_name) = path.file_name() {
-      let new_file_name = format!("{}{s}", file_name.to_string_lossy());
-      path.set_file_name(new_file_name);
-      path
-    } else {
-      path
+  pub fn append(&self, s: &str) -> PathBuf {
+    if let Some(path) = self.path() {
+      let mut path = path.clone();
+
+      if let Some(file_name) = path.file_name() {
+        let new_file_name = format!("{}{s}", file_name.to_string_lossy());
+        path.set_file_name(new_file_name);
+      }
+
+      return path;
     }
+
+    PathBuf::new()
   }
 
   /// Opens the input source as a read stream.

@@ -2,6 +2,7 @@
 
 mod commands;
 mod input_source;
+mod utils;
 
 use clap::{Parser, Subcommand};
 

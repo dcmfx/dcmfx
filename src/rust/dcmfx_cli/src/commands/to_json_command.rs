@@ -1,4 +1,4 @@
-use std::{fs::File, io::Write, path::PathBuf};
+use std::{io::Write, path::PathBuf};
 
 use clap::Args;
 
@@ -6,7 +6,7 @@ use dcmfx::core::*;
 use dcmfx::json::*;
 use dcmfx::p10::*;
 
-use crate::InputSource;
+use crate::{InputSource, utils};
 
 pub const ABOUT: &str = "Converts DICOM P10 files to DICOM JSON files";
 
@@ -43,6 +43,14 @@ pub struct ToJsonArgs {
     default_value_t = true
   )]
   store_encapsulated_pixel_data: bool,
+
+  #[clap(
+    long = "force",
+    short = 'f',
+    help = "Overwrite files without prompting",
+    default_value_t = false
+  )]
+  force_overwrite: bool,
 }
 
 enum ToJsonError {
@@ -101,23 +109,12 @@ fn input_source_to_json(
     .unwrap_or_else(|| input_source.clone().append(".json"));
 
   // Open output stream
-  let mut output_stream: Box<dyn Write> =
-    if output_filename == PathBuf::from("-") {
-      Box::new(std::io::stdout())
-    } else {
-      match File::create(&output_filename) {
-        Ok(file) => {
-          println!("Writing \"{}\" …", output_filename.display());
-          Box::new(file)
-        }
-        Err(e) => {
-          return Err(ToJsonError::P10Error(P10Error::FileError {
-            when: "Opening output file".to_string(),
-            details: e.to_string(),
-          }));
-        }
-      }
-    };
+  let mut output_stream: Box<dyn Write> = utils::open_output_stream(
+    &output_filename,
+    Some(&output_filename),
+    args.force_overwrite,
+  )
+  .map_err(ToJsonError::P10Error)?;
 
   // Create P10 read context and set max token size to 256 KiB
   let mut context = P10ReadContext::new();

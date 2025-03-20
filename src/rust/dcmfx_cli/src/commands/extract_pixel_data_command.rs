@@ -179,7 +179,7 @@ fn extract_pixel_data_from_input_source(
   let output_prefix = args
     .output_prefix
     .clone()
-    .unwrap_or_else(|| input_source.clone().into_path());
+    .unwrap_or_else(|| input_source.path().unwrap().clone());
 
   // Create read context with a small max token size to keep memory usage low
   let mut read_context = P10ReadContext::new();

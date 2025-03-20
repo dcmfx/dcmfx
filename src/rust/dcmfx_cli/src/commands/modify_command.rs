@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 use std::io::{Read, Write};
-use std::{fs::File, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::Args;
 use rand::Rng;
@@ -8,7 +8,8 @@ use rand::Rng;
 use dcmfx::core::*;
 use dcmfx::p10::*;
 
-use crate::InputSource;
+use crate::utils::prompt_to_overwrite_if_exists;
+use crate::{InputSource, utils};
 
 pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
 
@@ -80,6 +81,14 @@ pub struct ModifyArgs {
     default_values_t = Vec::<DataElementTag>::new()
   )]
   delete_tags: Vec<DataElementTag>,
+
+  #[clap(
+    long = "force",
+    short = 'f',
+    help = "Overwrite files without prompting",
+    default_value_t = false
+  )]
+  force_overwrite: bool,
 }
 
 fn validate_data_element_tag_list(
@@ -136,7 +145,14 @@ fn modify_input_source(
   let output_filename = args
     .output_filename
     .clone()
-    .unwrap_or_else(|| input_source.clone().into_path());
+    .unwrap_or_else(|| input_source.path().unwrap().clone());
+
+  if output_filename != PathBuf::from("-")
+    && !args.in_place
+    && !args.force_overwrite
+  {
+    prompt_to_overwrite_if_exists(&output_filename);
+  }
 
   // Append a random suffix to get a unique name for a temporary output file.
   // This isn't needed when outputting to stdout.
@@ -172,9 +188,6 @@ fn modify_input_source(
     None
   };
 
-  let output_transfer_syntax =
-    parse_transfer_syntax_flag(&args.transfer_syntax)?;
-
   // Setup write config
   let write_config = P10WriteConfig {
     zlib_compression_level: args.zlib_compression_level,
@@ -187,8 +200,8 @@ fn modify_input_source(
     input_stream,
     tmp_output_filename.as_ref().unwrap_or(&output_filename),
     write_config,
-    output_transfer_syntax,
     filter_context,
+    args,
   )?;
 
   // Rename the temporary file to the desired output filename
@@ -251,30 +264,12 @@ fn streaming_rewrite(
   mut input_stream: Box<dyn Read>,
   output_filename: &PathBuf,
   write_config: P10WriteConfig,
-  output_transfer_syntax: Option<&TransferSyntax>,
   mut filter_context: Option<P10FilterTransform>,
+  args: &ModifyArgs,
 ) -> Result<(), P10Error> {
   // Open output stream
   let mut output_stream: Box<dyn Write> =
-    if *output_filename == PathBuf::from("-") {
-      Box::new(std::io::stdout())
-    } else {
-      match File::create(output_filename) {
-        Ok(file) => {
-          println!("Modifying \"{input_source}\" …");
-          Box::new(file)
-        }
-        Err(e) => {
-          return Err(P10Error::FileError {
-            when: format!(
-              "Opening output file \"{}\"",
-              output_filename.display()
-            ),
-            details: e.to_string(),
-          });
-        }
-      }
-    };
+    utils::open_output_stream(output_filename, input_source.path(), false)?;
 
   // Create read and write contexts
   let mut p10_read_context = P10ReadContext::new();
@@ -302,6 +297,9 @@ fn streaming_rewrite(
     } else {
       tokens
     };
+
+    let output_transfer_syntax =
+      parse_transfer_syntax_flag(&args.transfer_syntax)?;
 
     // If converting the transfer syntax then update the transfer syntax in the
     // File Meta Information token

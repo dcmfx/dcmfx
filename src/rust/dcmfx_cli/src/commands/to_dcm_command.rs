@@ -1,5 +1,4 @@
 use std::{
-  fs::File,
   io::{Read, Write},
   path::PathBuf,
 };
@@ -10,7 +9,7 @@ use dcmfx::core::*;
 use dcmfx::json::*;
 use dcmfx::p10::*;
 
-use crate::InputSource;
+use crate::{InputSource, utils};
 
 pub const ABOUT: &str = "Converts DICOM JSON files to DICOM P10 files";
 
@@ -31,6 +30,14 @@ pub struct ToDcmArgs {
       stdout."
   )]
   output_filename: Option<PathBuf>,
+
+  #[clap(
+    long = "force",
+    short = 'f',
+    help = "Overwrite files without prompting",
+    default_value_t = false
+  )]
+  force_overwrite: bool,
 }
 
 enum ToDcmError {
@@ -108,23 +115,12 @@ fn input_source_to_dcm(
     DataSet::from_json(json).map_err(ToDcmError::JsonDeserializeError)?;
 
   // Open output stream
-  let mut output_stream: Box<dyn Write> =
-    if output_filename == PathBuf::from("-") {
-      Box::new(std::io::stdout())
-    } else {
-      match File::create(&output_filename) {
-        Ok(file) => {
-          println!("Writing \"{}\" …", output_filename.display());
-          Box::new(file)
-        }
-        Err(e) => {
-          return Err(ToDcmError::P10Error(P10Error::FileError {
-            when: "Opening file".to_string(),
-            details: e.to_string(),
-          }));
-        }
-      }
-    };
+  let mut output_stream: Box<dyn Write> = utils::open_output_stream(
+    &output_filename,
+    Some(&output_filename),
+    args.force_overwrite,
+  )
+  .map_err(ToDcmError::P10Error)?;
 
   // Write P10 data to output stream
   data_set
