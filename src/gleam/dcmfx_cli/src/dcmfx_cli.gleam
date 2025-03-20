@@ -1,10 +1,10 @@
 import argv
 import birl
-import dcmfx_cli/commands/extract_pixel_data_command
+import dcmfx_cli/commands/dcm_to_json_command
+import dcmfx_cli/commands/get_pixel_data_command
+import dcmfx_cli/commands/json_to_dcm_command
 import dcmfx_cli/commands/modify_command
 import dcmfx_cli/commands/print_command
-import dcmfx_cli/commands/to_dcm_command
-import dcmfx_cli/commands/to_json_command
 import dcmfx_cli/utils
 import gleam/float
 import gleam/int
@@ -32,9 +32,9 @@ pub fn main() {
   |> glint.pretty_help(glint.default_pretty_help())
   |> glint.group_flag([], print_stats_flag())
   |> glint.add(["print"], print_command.run())
-  |> glint.add(["to-dcm"], to_dcm_command.run())
-  |> glint.add(["to-json"], to_json_command.run())
-  |> glint.add(["extract-pixel-data"], extract_pixel_data_command.run())
+  |> glint.add(["json-to-dcm"], json_to_dcm_command.run())
+  |> glint.add(["dcm-to-json"], dcm_to_json_command.run())
+  |> glint.add(["get-pixel-data"], get_pixel_data_command.run())
   |> glint.add(["modify"], modify_command.run())
   |> glint.run_and_handle(args, fn(command_result) {
     case list.contains(args, "--print-stats") {

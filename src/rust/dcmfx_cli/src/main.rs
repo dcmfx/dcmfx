@@ -7,8 +7,8 @@ mod utils;
 use clap::{Parser, Subcommand};
 
 use commands::{
-  extract_pixel_data_command, modify_command, print_command, to_dcm_command,
-  to_json_command,
+  dcm_to_json_command, get_pixel_data_command, json_to_dcm_command,
+  modify_command, print_command,
 };
 use input_source::{InputSource, get_input_sources};
 
@@ -34,8 +34,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-  #[command(about = extract_pixel_data_command::ABOUT)]
-  ExtractPixelData(extract_pixel_data_command::ExtractPixelDataArgs),
+  #[command(about = get_pixel_data_command::ABOUT)]
+  GetPixelData(get_pixel_data_command::ExtractPixelDataArgs),
 
   #[command(about = modify_command::ABOUT)]
   Modify(modify_command::ModifyArgs),
@@ -43,11 +43,11 @@ enum Commands {
   #[command(about = print_command::ABOUT)]
   Print(print_command::PrintArgs),
 
-  #[command(about = to_dcm_command::ABOUT)]
-  ToDcm(to_dcm_command::ToDcmArgs),
+  #[command(about = json_to_dcm_command::ABOUT)]
+  JsonToDcm(json_to_dcm_command::ToDcmArgs),
 
-  #[command(about = to_json_command::ABOUT)]
-  ToJson(to_json_command::ToJsonArgs),
+  #[command(about = dcm_to_json_command::ABOUT)]
+  DcmToJson(dcm_to_json_command::ToJsonArgs),
 }
 
 fn main() -> Result<(), ()> {
@@ -56,11 +56,11 @@ fn main() -> Result<(), ()> {
   let started_at = std::time::Instant::now();
 
   let r = match &cli.command {
-    Commands::ExtractPixelData(args) => extract_pixel_data_command::run(args),
+    Commands::GetPixelData(args) => get_pixel_data_command::run(args),
     Commands::Modify(args) => modify_command::run(args),
     Commands::Print(args) => print_command::run(args),
-    Commands::ToDcm(args) => to_dcm_command::run(args),
-    Commands::ToJson(args) => to_json_command::run(args),
+    Commands::JsonToDcm(args) => json_to_dcm_command::run(args),
+    Commands::DcmToJson(args) => dcm_to_json_command::run(args),
   };
 
   if cli.print_stats {

@@ -60,7 +60,7 @@ pub fn run() {
 
   input_sources
   |> list.try_each(fn(input_source) {
-    case extract_pixel_data_from_input_source(input_source, output_prefix) {
+    case get_pixel_data_from_input_source(input_source, output_prefix) {
       Ok(Nil) -> Ok(Nil)
       Error(e) -> {
         let task_description =
@@ -80,7 +80,7 @@ pub fn run() {
   })
 }
 
-fn extract_pixel_data_from_input_source(
+fn get_pixel_data_from_input_source(
   input_source: InputSource,
   output_prefix: Option(String),
 ) -> Result(Nil, PixelDataFilterError) {
@@ -106,7 +106,7 @@ fn extract_pixel_data_from_input_source(
 
   let pixel_data_filter = pixel_data_filter.new()
 
-  perform_extract_pixel_data_loop(
+  perform_get_pixel_data_loop(
     input_stream,
     read_context,
     pixel_data_filter,
@@ -116,7 +116,7 @@ fn extract_pixel_data_from_input_source(
   )
 }
 
-fn perform_extract_pixel_data_loop(
+fn perform_get_pixel_data_loop(
   input_stream: FileStream,
   read_context: P10ReadContext,
   pixel_data_filter: PixelDataFilter,
@@ -183,7 +183,7 @@ fn perform_extract_pixel_data_loop(
 
       case context {
         Ok(#(output_extension, pixel_data_filter, frame_number, False)) ->
-          perform_extract_pixel_data_loop(
+          perform_get_pixel_data_loop(
             input_stream,
             read_context,
             pixel_data_filter,

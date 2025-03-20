@@ -49,14 +49,14 @@ fn print_multiple() {
 }
 
 #[test]
-fn to_dcm_to_file() {
+fn json_to_dcm_to_file() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm.json";
   let temp_path = generate_temp_filename();
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("to-dcm")
+    .arg("json-to-dcm")
     .arg(dicom_file)
     .arg("--output-filename")
     .arg(&temp_path)
@@ -67,17 +67,17 @@ fn to_dcm_to_file() {
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   let assert = cmd.arg("print").arg(temp_path).assert();
 
-  assert_snapshot!("to_dcm_to_file", get_stdout(assert));
+  assert_snapshot!("json_to_dcm_to_file", get_stdout(assert));
 }
 
 #[test]
-fn to_json_to_stdout() {
+fn dcm_to_json_to_stdout() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   let assert = cmd
-    .arg("to-json")
+    .arg("dcm-to-json")
     .arg(dicom_file)
     .arg("--output-filename")
     .arg("-")
@@ -85,18 +85,18 @@ fn to_json_to_stdout() {
     .assert()
     .success();
 
-  assert_snapshot!("to_json_to_stdout", get_stdout(assert));
+  assert_snapshot!("dcm_to_json_to_stdout", get_stdout(assert));
 }
 
 #[test]
-fn to_json_to_file() {
+fn dcm_to_json_to_file() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";
   let temp_path = generate_temp_filename();
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("to-json")
+    .arg("dcm-to-json")
     .arg(dicom_file)
     .arg("--output-filename")
     .arg(&temp_path)
@@ -106,7 +106,7 @@ fn to_json_to_file() {
     .stdout(format!("Writing \"{}\" …\n", temp_path.display()));
 
   assert_snapshot!(
-    "to_json_to_file",
+    "dcm_to_json_to_file",
     std::fs::read_to_string(&temp_path).unwrap()
   );
 }

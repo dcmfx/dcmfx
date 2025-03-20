@@ -19,7 +19,7 @@ fn dicom_rgb_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")
@@ -38,7 +38,7 @@ fn dicom_ybr_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")
@@ -56,7 +56,7 @@ fn dicom_rle_to_jpg() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("jpg")
@@ -78,7 +78,7 @@ fn dicom_rle_color_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")
@@ -96,7 +96,7 @@ fn dicom_to_jpg_with_custom_window() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("jpg")
@@ -118,7 +118,7 @@ fn dicom_without_voi_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")
@@ -136,7 +136,7 @@ fn dicom_jpg_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")
@@ -154,7 +154,7 @@ fn dicom_palette_color_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")
@@ -173,7 +173,7 @@ fn dicom_jpeg_2000_single_channel_to_jpg() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("jpg")
@@ -195,7 +195,7 @@ fn dicom_jpeg_2000_color_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")
@@ -215,7 +215,7 @@ fn dicom_jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg()
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("jpg")
@@ -237,7 +237,7 @@ fn dicom_jpeg_ls_single_channel_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")
@@ -259,7 +259,7 @@ fn dicom_jpeg_ls_color_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")
@@ -277,7 +277,7 @@ fn dicom_jpeg_lossless_12bit_to_jpg() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("jpg")
@@ -295,7 +295,7 @@ fn dicom_jpeg_lossless_color_to_jpg() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("jpg")
@@ -313,7 +313,7 @@ fn dicom_jpeg_extended_12bit_single_channel_to_png() {
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
-    .arg("extract-pixel-data")
+    .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
     .arg("png")

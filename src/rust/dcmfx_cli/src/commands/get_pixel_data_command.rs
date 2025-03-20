@@ -139,7 +139,7 @@ pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
   }
 
   for input_source in input_sources {
-    match extract_pixel_data_from_input_source(&input_source, args) {
+    match get_pixel_data_from_input_source(&input_source, args) {
       Ok(()) => (),
 
       Err(e) => {
@@ -168,7 +168,7 @@ pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
   Ok(())
 }
 
-fn extract_pixel_data_from_input_source(
+fn get_pixel_data_from_input_source(
   input_source: &InputSource,
   args: &ExtractPixelDataArgs,
 ) -> Result<(), ExtractPixelDataError> {

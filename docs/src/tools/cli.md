@@ -69,13 +69,13 @@ DCMfx is a CLI tool for working with DICOM and DICOM JSON
 Usage: dcmfx [OPTIONS] <COMMAND>
 
 Commands:
-  extract-pixel-data  Extracts pixel data from DICOM P10 files, writing each
-                      frame to an image file
-  modify              Modifies the content of DICOM P10 files
-  print               Prints the content of DICOM P10 files
-  to-dcm              Converts DICOM JSON files to DICOM P10 files
-  to-json             Converts DICOM P10 files to DICOM JSON files
-  help                Print this message or the help of the given subcommand(s)
+  get-pixel-data  Extracts pixel data from DICOM P10 files, writing each frame
+                  to an image file
+  modify          Modifies the content of DICOM P10 files
+  print           Prints the content of DICOM P10 files
+  json-to-dcm     Converts DICOM JSON files to DICOM P10 files
+  dcm-to-json     Converts DICOM P10 files to DICOM JSON files
+  help            Print this message or the help of the given subcommand(s)
 
 Options:
       --print-stats  Write timing and memory stats to stderr on exit
@@ -94,40 +94,40 @@ Options:
 2. Convert a DICOM P10 file to a DICOM JSON file:
 
    ```sh
-   dcmfx to-json input.dcm
+   dcmfx dcm-to-json input.dcm
    ```
 
    To pretty-print the DICOM JSON directly to stdout:
 
    ```sh
-   dcmfx to-json --pretty --output-filename - input.dcm 
+   dcmfx dcm-to-json --pretty --output-filename - input.dcm 
    ```
 
 3. Convert a DICOM JSON file to a DICOM P10 file:
 
    ```sh
-   dcmfx to-dcm input.json
+   dcmfx json-to-dcm input.json
    ```
 
 4. Extract pixel data from a DICOM P10 file to one image file per frame:
 
    ```sh
-   dcmfx extract-pixel-data input.dcm
+   dcmfx get-pixel-data input.dcm
    ```
 
    Pixel data can also be decoded and converted to a PNG (or JPEG) file per
    frame:
 
    ```sh
-   dcmfx extract-pixel-data --format png input.dcm
-   dcmfx extract-pixel-data --format jpg --quality 70 input.dcm 
+   dcmfx get-pixel-data --format png input.dcm
+   dcmfx get-pixel-data --format jpg --quality 70 input.dcm 
    ```
 
    Single channel data can also specify a VOI window center and width and/or a
    well-known color palette:
 
    ```sh
-   dcmfx extract-pixel-data --format png --voi-window 500 2000 --color-palette hot-iron input.dcm
+   dcmfx get-pixel-data --format png --voi-window 500 2000 --color-palette hot-iron input.dcm
    ```
 
 5. Rewrite a DICOM P10 file. This will convert the specific character set to
