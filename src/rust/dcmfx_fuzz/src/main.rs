@@ -5,7 +5,7 @@ extern crate afl;
 
 use dcmfx::core::dictionary;
 use dcmfx::p10::DataSetP10Extensions;
-use dcmfx::pixel_data::{DataSetPixelDataExtensions, PixelDataReader};
+use dcmfx::pixel_data::{DataSetPixelDataExtensions, PixelDataRenderer};
 
 fn main() {
   fuzz!(|data: &[u8]| {
@@ -29,12 +29,12 @@ fn main() {
         panic!("Rewritten data set should be identical");
       }
 
-      // Read the pixel data. This should never panic.
+      // Render the pixel data. This should never panic.
       let frames = data_set.get_pixel_data_frames();
       if let Ok(frames) = frames {
-        if let Ok(reader) = PixelDataReader::from_data_set(&data_set) {
+        if let Ok(renderer) = PixelDataRenderer::from_data_set(&data_set) {
           for mut frame in frames {
-            let _ = reader.read_frame(&mut frame, None);
+            let _ = renderer.render_frame(&mut frame, None);
           }
         }
       }

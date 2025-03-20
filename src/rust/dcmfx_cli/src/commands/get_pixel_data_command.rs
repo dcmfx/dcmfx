@@ -190,9 +190,9 @@ fn get_pixel_data_from_input_source(
 
   let mut pixel_data_filter = PixelDataFilter::new();
 
-  let mut pixel_data_reader = P10CustomTypeTransform::new(
-    &PixelDataReader::DATA_ELEMENT_TAGS,
-    PixelDataReader::from_data_set,
+  let mut pixel_data_renderer = P10CustomTypeTransform::new(
+    &PixelDataRenderer::DATA_ELEMENT_TAGS,
+    PixelDataRenderer::from_data_set,
   );
 
   let mut output_extension = match args.format {
@@ -222,7 +222,7 @@ fn get_pixel_data_from_input_source(
 
       // Pass token through the pixel data definition filter
       if args.format != OutputFormat::Raw {
-        match pixel_data_reader.add_token(token) {
+        match pixel_data_renderer.add_token(token) {
           Ok(()) => (),
           Err(P10CustomTypeTransformError::DataError(e)) => {
             return Err(ExtractPixelDataError::DataError(e));
@@ -262,7 +262,7 @@ fn get_pixel_data_from_input_source(
           frame,
           args.format,
           args.quality,
-          pixel_data_reader.get_output_mut(),
+          pixel_data_renderer.get_output_mut(),
           &args.voi_window,
           args.color_palette.map(|c| c.color_palette()),
         )?;
@@ -282,7 +282,7 @@ fn write_frame(
   frame: &mut PixelDataFrame,
   format: OutputFormat,
   quality: u8,
-  pixel_data_reader: &mut Option<PixelDataReader>,
+  pixel_data_renderer: &mut Option<PixelDataRenderer>,
   voi_window_override: &Option<Vec<f32>>,
   color_palette: Option<&ColorPalette>,
 ) -> Result<(), ExtractPixelDataError> {
@@ -296,11 +296,11 @@ fn write_frame(
       })
     })?;
   } else {
-    match pixel_data_reader {
-      Some(pixel_data_reader) => {
+    match pixel_data_renderer {
+      Some(pixel_data_renderer) => {
         // Apply the VOI override if it's set
         if let Some(voi_window_override) = voi_window_override {
-          pixel_data_reader.voi_lut = VoiLut {
+          pixel_data_renderer.voi_lut = VoiLut {
             luts: vec![],
             windows: vec![VoiWindow::new(
               voi_window_override[0],
@@ -311,8 +311,8 @@ fn write_frame(
           };
         }
 
-        let img = pixel_data_reader
-          .read_frame(frame, color_palette)
+        let img = pixel_data_renderer
+          .render_frame(frame, color_palette)
           .map_err(ExtractPixelDataError::DataError)?;
 
         let output_file =

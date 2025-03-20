@@ -16,7 +16,7 @@ mod luts;
 mod pixel_data_definition;
 mod pixel_data_filter;
 mod pixel_data_frame;
-mod pixel_data_reader;
+mod pixel_data_renderer;
 mod single_channel_image;
 
 pub use color_image::ColorImage;
@@ -30,7 +30,7 @@ pub use pixel_data_definition::{
 };
 pub use pixel_data_filter::{PixelDataFilter, PixelDataFilterError};
 pub use pixel_data_frame::PixelDataFrame;
-pub use pixel_data_reader::PixelDataReader;
+pub use pixel_data_renderer::PixelDataRenderer;
 pub use single_channel_image::SingleChannelImage;
 
 use dcmfx_core::{
@@ -127,23 +127,23 @@ impl DataSetPixelDataExtensions for DataSet {
     &self,
     color_palette: Option<&ColorPalette>,
   ) -> Result<Vec<RgbImage>, PixelDataFilterError> {
-    get_pixel_data(self, |reader, frame| {
-      reader.read_frame(frame, color_palette)
+    get_pixel_data(self, |renderer, frame| {
+      renderer.render_frame(frame, color_palette)
     })
   }
 
   fn get_pixel_data_single_channel_images(
     &self,
   ) -> Result<Vec<SingleChannelImage>, PixelDataFilterError> {
-    get_pixel_data(self, |reader, frame| {
-      reader.read_single_channel_frame(frame)
+    get_pixel_data(self, |renderer, frame| {
+      renderer.render_single_channel_frame(frame)
     })
   }
 
   fn get_pixel_data_color_images(
     &self,
   ) -> Result<Vec<ColorImage>, PixelDataFilterError> {
-    get_pixel_data(self, |reader, frame| reader.read_color_frame(frame))
+    get_pixel_data(self, |renderer, frame| renderer.render_color_frame(frame))
   }
 }
 
@@ -152,9 +152,9 @@ fn get_pixel_data<T, F>(
   mut process_frame: F,
 ) -> Result<Vec<T>, PixelDataFilterError>
 where
-  F: FnMut(&PixelDataReader, &mut PixelDataFrame) -> Result<T, DataError>,
+  F: FnMut(&PixelDataRenderer, &mut PixelDataFrame) -> Result<T, DataError>,
 {
-  let reader = PixelDataReader::from_data_set(data_set)
+  let renderer = PixelDataRenderer::from_data_set(data_set)
     .map_err(PixelDataFilterError::DataError)?;
 
   let frames = data_set.get_pixel_data_frames()?;
@@ -162,7 +162,7 @@ where
   frames
     .into_iter()
     .map(|mut frame| {
-      process_frame(&reader, &mut frame)
+      process_frame(&renderer, &mut frame)
         .map_err(PixelDataFilterError::DataError)
     })
     .collect()

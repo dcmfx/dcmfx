@@ -415,22 +415,22 @@ mod tests {
       return Ok(());
     }
 
-    // Create a pixel data reader for the data set. If this fails then either
+    // Create a pixel data renderer for the data set. If this fails then either
     // the DICOM has no pixel data or the pixel data it has isn't supported
     // for reading, so skip further tests.
-    let pixel_data_reader = match PixelDataReader::from_data_set(data_set) {
-      Ok(reader) => reader,
+    let pixel_data_renderer = match PixelDataRenderer::from_data_set(data_set) {
+      Ok(renderer) => renderer,
       Err(_) => return Ok(()),
     };
 
-    // Read the raw frames of pixel data
+    // Get the raw frames of pixel data
     let mut frames = data_set
       .get_pixel_data_frames()
       .map_err(|e| DicomValidationError::PixelDataFilterError { error: e })?;
 
-    // Test decoding of frames doesn't panic
+    // Test rendering of frames doesn't panic
     for frame in frames.iter_mut() {
-      let _ = pixel_data_reader.read_frame(frame, None);
+      let _ = pixel_data_renderer.render_frame(frame, None);
     }
 
     // Check that a .pixel_array.json file exists
@@ -462,14 +462,14 @@ mod tests {
     {
       let frame_index = frame.index();
 
-      if pixel_data_reader.definition.is_grayscale() {
-        let mut image = pixel_data_reader
-          .read_single_channel_frame(&mut frame)
+      if pixel_data_renderer.definition.is_grayscale() {
+        let mut image = pixel_data_renderer
+          .render_single_channel_frame(&mut frame)
           .map_err(|e| DicomValidationError::PixelDataFilterError {
             error: PixelDataFilterError::DataError(e),
           })?;
 
-        image.invert_monochrome1_data(&pixel_data_reader.definition);
+        image.invert_monochrome1_data(&pixel_data_renderer.definition);
 
         let pixels = image.to_i64_pixels();
 
@@ -493,12 +493,11 @@ mod tests {
           }
         }
       } else {
-        let image =
-          pixel_data_reader
-            .read_color_frame(&mut frame)
-            .map_err(|e| DicomValidationError::PixelDataFilterError {
-              error: PixelDataFilterError::DataError(e),
-            })?;
+        let image = pixel_data_renderer
+          .render_color_frame(&mut frame)
+          .map_err(|e| DicomValidationError::PixelDataFilterError {
+            error: PixelDataFilterError::DataError(e),
+          })?;
 
         let expected_pixels =
           serde_json::from_value::<Vec<Vec<[f64; 3]>>>(expected_frame)
@@ -507,7 +506,7 @@ mod tests {
             .flatten();
 
         for (index, (a, b)) in image
-          .to_rgb_f32_image(&pixel_data_reader.definition)
+          .to_rgb_f32_image(&pixel_data_renderer.definition)
           .pixels()
           .zip(expected_pixels)
           .enumerate()

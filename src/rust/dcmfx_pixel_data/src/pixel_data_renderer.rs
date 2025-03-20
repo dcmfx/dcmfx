@@ -13,20 +13,20 @@ use crate::{
   SingleChannelImage, VoiLut, decode,
 };
 
-/// Defines a pixel data reader that can take a [`PixelDataFrame`] and decode it
-/// into an [`GrayImage`] or [`RgbImage`].
+/// Defines a pixel data renderer that can take a [`PixelDataFrame`] and render
+/// it into a [`SingleChannelImage`], [`ColorImage`], or [`RgbImage`].
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub struct PixelDataReader {
+pub struct PixelDataRenderer {
   pub transfer_syntax: &'static TransferSyntax,
   pub definition: PixelDataDefinition,
   pub modality_lut: ModalityLut,
   pub voi_lut: VoiLut,
 }
 
-impl PixelDataReader {
+impl PixelDataRenderer {
   /// The tags of the data elements that are read when creating a new
-  /// [`PixelDataReader`].
+  /// [`PixelDataRenderer`].
   ///
   pub const DATA_ELEMENT_TAGS: [DataElementTag; 28] = [
     dictionary::SAMPLES_PER_PIXEL.tag,
@@ -59,8 +59,11 @@ impl PixelDataReader {
     dictionary::VOILUT_FUNCTION.tag,
   ];
 
-  /// Creates a pixel data reader for reading frames of pixel data from a data
-  /// set containing the tags listed in [`Self::DATA_ELEMENT_TAGS`].
+  /// Creates a pixel data renderer for rendering frames of pixel data in a
+  /// data set into a [`SingleChannelImage`], [`ColorImage`], or [`RgbImage`].
+  ///
+  /// This references the data elements specified in
+  /// [`Self::DATA_ELEMENT_TAGS`].
   ///
   pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let transfer_syntax = if data_set.has(dictionary::TRANSFER_SYNTAX_UID.tag) {
@@ -73,7 +76,7 @@ impl PixelDataReader {
     let modality_lut = ModalityLut::from_data_set(data_set)?;
     let voi_lut = VoiLut::from_data_set(data_set)?;
 
-    Ok(PixelDataReader {
+    Ok(PixelDataRenderer {
       transfer_syntax,
       definition,
       modality_lut,
@@ -81,7 +84,7 @@ impl PixelDataReader {
     })
   }
 
-  /// Decodes a frame of pixel data to an RGB 8-bit image. The Modality LUT and
+  /// Renders a frame of pixel data to an RGB 8-bit image. The Modality LUT and
   /// VOI LUT are applied to single channel images, and resulting grayscale
   /// values are then expanded to RGB.
   ///
@@ -89,13 +92,13 @@ impl PixelDataReader {
   /// well-known color palettes defined in PS3.6 B.1 are provided in
   /// [`crate::luts::color_palettes`].
   ///
-  pub fn read_frame(
+  pub fn render_frame(
     &self,
     frame: &mut PixelDataFrame,
     color_palette: Option<&ColorPalette>,
   ) -> Result<RgbImage, DataError> {
     if self.definition.is_grayscale() {
-      let image = self.read_single_channel_frame(frame)?;
+      let image = self.render_single_channel_frame(frame)?;
 
       let mut voi_lut = &self.voi_lut;
 
@@ -134,17 +137,17 @@ impl PixelDataReader {
     } else {
       Ok(
         self
-          .read_color_frame(frame)?
+          .render_color_frame(frame)?
           .to_rgb_u8_image(&self.definition),
       )
     }
   }
 
-  /// Reads a frame of single channel pixel data into a [`SingleChannelImage`].
-  /// The returned image needs to have the Modality LUT and VOI LUT applied in
-  /// order to reach final grayscale display values.
+  /// Renders a frame of single channel pixel data into a
+  /// [`SingleChannelImage`]. The returned image needs to have the Modality LUT
+  /// and VOI LUT applied in order to reach final grayscale display values.
   ///
-  pub fn read_single_channel_frame(
+  pub fn render_single_channel_frame(
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<SingleChannelImage, DataError> {
@@ -201,9 +204,9 @@ impl PixelDataReader {
     Ok(image)
   }
 
-  /// Reads a frame of color pixel data into a [`ColorImage`].
+  /// Renders a frame of color pixel data into a [`ColorImage`].
   ///
-  pub fn read_color_frame(
+  pub fn render_color_frame(
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<ColorImage, DataError> {

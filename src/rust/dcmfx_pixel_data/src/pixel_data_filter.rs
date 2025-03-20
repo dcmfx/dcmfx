@@ -86,8 +86,8 @@ impl PixelDataFilterDetails {
   }
 }
 
-/// An error that occurred in the process of extract frames of pixel data from
-/// a stream of DICOM P10 tokens.
+/// An error that occurred in the process of extracting frames of pixel data
+/// from a stream of DICOM P10 tokens.
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub enum PixelDataFilterError {

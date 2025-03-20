@@ -4,11 +4,12 @@ use alloc::vec::Vec;
 use image::{GrayImage, ImageBuffer, Luma};
 
 use crate::{
-  ModalityLut, PhotometricInterpretation, PixelDataDefinition, VoiLut,
-  VoiWindow,
+  ModalityLut, PhotometricInterpretation, PixelDataDefinition,
+  PixelDataRenderer, VoiLut, VoiWindow,
 };
 
-/// A single channel image that stores an integer value for each pixel.
+/// A single channel image that stores an integer value for each pixel. Single
+/// channel images can be rendered from pixel data using [`PixelDataRenderer::render_single_channel_image`]
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub enum SingleChannelImage {
