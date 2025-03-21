@@ -19,7 +19,10 @@ pub type LocationEntry {
   LocationEntry(tag: DataElementTag, filter_result: Bool)
 }
 
-type PredicateFunction =
+/// Defines a function called by a `P10FilterTransform` that determines whether
+/// a data element should pass through the filter.
+///
+pub type PredicateFunction =
   fn(DataElementTag, ValueRepresentation, Option(Int), List(LocationEntry)) ->
     Bool
 

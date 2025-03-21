@@ -3,7 +3,9 @@ use alloc::boxed::Box;
 
 use dcmfx_core::{DataElementTag, DataError, DataSet};
 
-use crate::{DataSetBuilder, P10Error, P10FilterTransform, P10Token};
+use crate::{
+  DataSetBuilder, P10Error, P10FilterTransform, P10Token, PredicateFunction,
+};
 
 /// Transforms a stream of DICOM P10 tokens into a custom type. This is done by:
 ///
@@ -19,7 +21,7 @@ use crate::{DataSetBuilder, P10Error, P10FilterTransform, P10Token};
 ///
 pub struct P10CustomTypeTransform<T> {
   filter: Option<(P10FilterTransform, DataSetBuilder)>,
-  last_tag: DataElementTag,
+  highest_tag: DataElementTag,
   target_from_data_set: TargetFromDataSetFn<T>,
   target: Option<T>,
 }
@@ -42,7 +44,8 @@ pub enum P10CustomTypeTransformError {
 
 impl<T> P10CustomTypeTransform<T> {
   /// Creates a new transform for converting a stream of DICOM P10 tokens to
-  /// a custom type.
+  /// a custom type. The data elements needed by the custom type must be
+  /// specified.
   ///
   pub fn new(
     tags: &'static [DataElementTag],
@@ -53,11 +56,30 @@ impl<T> P10CustomTypeTransform<T> {
         tags.contains(&tag)
       }));
 
-    let last_tag = *tags.iter().max().unwrap_or(&DataElementTag::ZERO);
+    let highest_tag = *tags.iter().max().unwrap_or(&DataElementTag::ZERO);
 
     Self {
       filter: Some((filter, DataSetBuilder::new())),
-      last_tag,
+      highest_tag,
+      target_from_data_set,
+      target: None,
+    }
+  }
+
+  /// Creates a new transform for converting a stream of DICOM P10 tokens to
+  /// a custom type. The predicate function controls the data elements that
+  /// are needed by the custom type.
+  ///
+  pub fn new_with_predicate(
+    predicate: Box<PredicateFunction>,
+    highest_tag: DataElementTag,
+    target_from_data_set: TargetFromDataSetFn<T>,
+  ) -> Self {
+    let filter = P10FilterTransform::new(predicate);
+
+    Self {
+      filter: Some((filter, DataSetBuilder::new())),
+      highest_tag,
       target_from_data_set,
       target: None,
     }
@@ -83,14 +105,14 @@ impl<T> P10CustomTypeTransform<T> {
       let is_complete = is_at_root
         && match token {
           P10Token::DataElementHeader { tag, .. }
-          | P10Token::SequenceStart { tag, .. } => *tag > self.last_tag,
+          | P10Token::SequenceStart { tag, .. } => *tag > self.highest_tag,
 
           P10Token::DataElementValueBytes {
             tag,
             bytes_remaining: 0,
             ..
           }
-          | P10Token::SequenceDelimiter { tag } => *tag == self.last_tag,
+          | P10Token::SequenceDelimiter { tag } => *tag == self.highest_tag,
 
           P10Token::End => true,
 

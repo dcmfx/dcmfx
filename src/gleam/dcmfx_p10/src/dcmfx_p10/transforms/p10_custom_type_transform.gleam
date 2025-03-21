@@ -4,7 +4,9 @@ import dcmfx_core/data_set.{type DataSet}
 import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error
 import dcmfx_p10/p10_token.{type P10Token}
-import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
+import dcmfx_p10/transforms/p10_filter_transform.{
+  type P10FilterTransform, type PredicateFunction,
+}
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/order
@@ -24,7 +26,7 @@ import gleam/result
 pub opaque type P10CustomTypeTransform(a) {
   P10CustomTypeTransform(
     filter: Option(#(P10FilterTransform, DataSetBuilder)),
-    last_tag: DataElementTag,
+    highest_tag: DataElementTag,
     target_from_data_set: fn(DataSet) -> Result(a, data_error.DataError),
     target: Option(a),
   )
@@ -44,7 +46,8 @@ pub type P10CustomTypeTransformError {
 }
 
 /// Creates a new transform for converting a stream of DICOM P10 tokens to
-/// a custom type.
+/// a custom type. The data elements needed by the custom type must be
+/// specified.
 ///
 pub fn new(
   tags: List(DataElementTag),
@@ -55,14 +58,33 @@ pub fn new(
       list.contains(tags, tag)
     })
 
-  let last_tag =
+  let highest_tag =
     tags
     |> list.max(data_element_tag.compare)
     |> result.unwrap(data_element_tag.zero)
 
   P10CustomTypeTransform(
     filter: Some(#(filter, data_set_builder.new())),
-    last_tag:,
+    highest_tag:,
+    target_from_data_set:,
+    target: None,
+  )
+}
+
+/// Creates a new transform for converting a stream of DICOM P10 tokens to
+/// a custom type. The predicate function controls the data elements that
+/// are needed by the custom type.
+///
+pub fn new_with_predicate(
+  predicate: PredicateFunction,
+  highest_tag: DataElementTag,
+  target_from_data_set: fn(DataSet) -> Result(a, data_error.DataError),
+) -> P10CustomTypeTransform(a) {
+  let filter = p10_filter_transform.new(predicate)
+
+  P10CustomTypeTransform(
+    filter: Some(#(filter, data_set_builder.new())),
+    highest_tag:,
     target_from_data_set:,
     target: None,
   )
@@ -100,10 +122,10 @@ pub fn add_token(
         && case token {
           p10_token.DataElementHeader(tag:, ..)
           | p10_token.SequenceStart(tag:, ..) ->
-            data_element_tag.compare(tag, transform.last_tag) == order.Gt
+            data_element_tag.compare(tag, transform.highest_tag) == order.Gt
 
           p10_token.DataElementValueBytes(tag:, bytes_remaining: 0, ..)
-          | p10_token.SequenceDelimiter(tag:) -> tag == transform.last_tag
+          | p10_token.SequenceDelimiter(tag:) -> tag == transform.highest_tag
 
           p10_token.End -> True
 

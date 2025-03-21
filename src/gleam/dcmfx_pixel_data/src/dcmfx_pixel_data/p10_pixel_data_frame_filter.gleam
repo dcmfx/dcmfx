@@ -27,8 +27,9 @@ import gleam/result
 /// allowing for memory-efficient stream processing.
 ///
 /// All native and encapsulated pixel data is supported, with the exception of
-/// native pixel data where the size of each frame is not a whole number of
-/// bytes.
+/// native pixel data that stores 1 bit per pixel and has a number of pixels in
+/// each frame that is not divisible by eight. Such frames of pixel data do not
+/// consume a whole number of bytes.
 ///
 pub opaque type P10PixelDataFrameFilter {
   P10PixelDataFrameFilter(

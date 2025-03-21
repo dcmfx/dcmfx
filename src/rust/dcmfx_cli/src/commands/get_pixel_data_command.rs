@@ -56,7 +56,7 @@ pub struct ExtractPixelDataArgs {
 
   #[arg(
     long,
-    short,
+    short = 'w',
     num_args=2..=2,
     value_parser = clap::value_parser!(f32),
     value_names = ["WINDOW_CENTER", "WINDOW_WIDTH"],
@@ -68,13 +68,21 @@ pub struct ExtractPixelDataArgs {
 
   #[arg(
     long,
-    short,
     value_enum,
     help = "For grayscale DICOM P10 files, when the output image format is \
       'jpg' or 'png', specifies the well-known color palette to apply to \
       visualize the grayscale image in color."
   )]
   color_palette: Option<StandardColorPaletteArg>,
+
+  #[arg(
+    long = "overlays",
+    help = "Whether to render overlays present in the DICOM. Overlays are \
+      rendered on top of the pixel data. Each overlay is rendered using a \
+      different color",
+    default_value_t = false
+  )]
+  render_overlays: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
@@ -190,10 +198,24 @@ fn get_pixel_data_from_input_source(
 
   let mut p10_pixel_data_frame_filter = P10PixelDataFrameFilter::new();
 
-  let mut pixel_data_renderer = P10CustomTypeTransform::new(
-    &PixelDataRenderer::DATA_ELEMENT_TAGS,
-    PixelDataRenderer::from_data_set,
-  );
+  let mut pixel_data_renderer_transform = if args.format == OutputFormat::Raw {
+    None
+  } else {
+    Some(P10CustomTypeTransform::new(
+      &PixelDataRenderer::DATA_ELEMENT_TAGS,
+      PixelDataRenderer::from_data_set,
+    ))
+  };
+
+  let mut overlays_transform = if args.render_overlays {
+    Some(P10CustomTypeTransform::new_with_predicate(
+      Overlays::filter_predicate(),
+      Overlays::HIGHEST_TAG,
+      Overlays::from_data_set,
+    ))
+  } else {
+    None
+  };
 
   let mut output_extension = match args.format {
     OutputFormat::Raw => "",
@@ -220,9 +242,11 @@ fn get_pixel_data_from_input_source(
         }
       }
 
-      // Pass token through the pixel data definition filter
-      if args.format != OutputFormat::Raw {
-        match pixel_data_renderer.add_token(token) {
+      // Pass token through the pixel data renderer transform
+      if let Some(pixel_data_renderer_transform) =
+        pixel_data_renderer_transform.as_mut()
+      {
+        match pixel_data_renderer_transform.add_token(token) {
           Ok(()) => (),
           Err(P10CustomTypeTransformError::DataError(e)) => {
             return Err(ExtractPixelDataError::DataError(e));
@@ -232,6 +256,34 @@ fn get_pixel_data_from_input_source(
           }
         };
       }
+
+      // Pass token through the overlays transform filter
+      if let Some(overlays_transform) = overlays_transform.as_mut() {
+        match overlays_transform.add_token(token) {
+          Ok(()) => (),
+          Err(P10CustomTypeTransformError::DataError(e)) => {
+            return Err(ExtractPixelDataError::DataError(e));
+          }
+          Err(P10CustomTypeTransformError::P10Error(e)) => {
+            return Err(ExtractPixelDataError::P10Error(e));
+          }
+        };
+      }
+
+      let pixel_data_renderer = if let Some(pixel_data_renderer_transform) =
+        pixel_data_renderer_transform.as_mut()
+      {
+        pixel_data_renderer_transform.get_output_mut()
+      } else {
+        &mut None
+      };
+
+      let overlays =
+        if let Some(overlays_transform) = overlays_transform.as_mut() {
+          overlays_transform.get_output_mut()
+        } else {
+          &None
+        };
 
       // Pass token through the pixel data frame filter
       let mut frames =
@@ -264,7 +316,8 @@ fn get_pixel_data_from_input_source(
           frame,
           args.format,
           args.quality,
-          pixel_data_renderer.get_output_mut(),
+          pixel_data_renderer,
+          overlays,
           &args.voi_window,
           args.color_palette.map(|c| c.color_palette()),
         )?;
@@ -279,12 +332,14 @@ fn get_pixel_data_from_input_source(
 
 /// Writes the data for a single frame of pixel data to a file.
 ///
+#[allow(clippy::too_many_arguments)]
 fn write_frame(
   filename: &PathBuf,
   frame: &mut PixelDataFrame,
   format: OutputFormat,
   quality: u8,
   pixel_data_renderer: &mut Option<PixelDataRenderer>,
+  overlays: &Option<Overlays>,
   voi_window_override: &Option<Vec<f32>>,
   color_palette: Option<&ColorPalette>,
 ) -> Result<(), ExtractPixelDataError> {
@@ -298,41 +353,41 @@ fn write_frame(
       })
     })?;
   } else {
-    match pixel_data_renderer {
-      Some(pixel_data_renderer) => {
-        // Apply the VOI override if it's set
-        if let Some(voi_window_override) = voi_window_override {
-          pixel_data_renderer.voi_lut = VoiLut {
-            luts: vec![],
-            windows: vec![VoiWindow::new(
-              voi_window_override[0],
-              voi_window_override[1],
-              "".to_string(),
-              VoiLutFunction::LinearExact,
-            )],
-          };
-        }
+    let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
 
-        let img = pixel_data_renderer
-          .render_frame(frame, color_palette)
-          .map_err(ExtractPixelDataError::DataError)?;
+    // Apply the VOI override if it's set
+    if let Some(voi_window_override) = voi_window_override {
+      pixel_data_renderer.voi_lut = VoiLut {
+        luts: vec![],
+        windows: vec![VoiWindow::new(
+          voi_window_override[0],
+          voi_window_override[1],
+          "".to_string(),
+          VoiLutFunction::LinearExact,
+        )],
+      };
+    }
 
-        let output_file =
-          File::create(filename).expect("Failed to create output file");
-        let mut output_writer = std::io::BufWriter::new(output_file);
+    let mut img = pixel_data_renderer
+      .render_frame(frame, color_palette)
+      .map_err(ExtractPixelDataError::DataError)?;
 
-        if format == OutputFormat::Png {
-          img
-            .write_to(&mut output_writer, ImageFormat::Png)
-            .map_err(ExtractPixelDataError::ImageError)?;
-        } else {
-          JpegEncoder::new_with_quality(&mut output_writer, quality)
-            .encode_image(&img)
-            .map_err(ExtractPixelDataError::ImageError)?;
-        }
-      }
+    if let Some(overlays) = overlays {
+      overlays.render_to_rgb_image(&mut img, frame.index());
+    }
 
-      None => unreachable!(),
+    let output_file =
+      File::create(filename).expect("Failed to create output file");
+    let mut output_writer = std::io::BufWriter::new(output_file);
+
+    if format == OutputFormat::Png {
+      img
+        .write_to(&mut output_writer, ImageFormat::Png)
+        .map_err(ExtractPixelDataError::ImageError)?;
+    } else {
+      JpegEncoder::new_with_quality(&mut output_writer, quality)
+        .encode_image(&img)
+        .map_err(ExtractPixelDataError::ImageError)?;
     }
   }
 

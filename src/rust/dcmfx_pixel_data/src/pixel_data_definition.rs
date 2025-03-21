@@ -47,12 +47,10 @@ impl PixelDataDefinition {
     dictionary::SEGMENTED_BLUE_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
   ];
 
-  /// Creates a new `PixelDataDefinition` from the relevant data elements in
+  /// Creates a new [`PixelDataDefinition`] from the relevant data elements in
   /// the given data set.
   ///
-  pub fn from_data_set(
-    data_set: &DataSet,
-  ) -> Result<PixelDataDefinition, DataError> {
+  pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let samples_per_pixel = SamplesPerPixel::from_data_set(data_set)?;
 
     let photometric_interpretation =
@@ -84,7 +82,7 @@ impl PixelDataDefinition {
       )));
     }
 
-    Ok(PixelDataDefinition {
+    Ok(Self {
       samples_per_pixel,
       photometric_interpretation,
       rows,

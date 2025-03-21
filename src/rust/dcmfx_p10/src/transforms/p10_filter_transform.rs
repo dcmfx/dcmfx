@@ -19,7 +19,10 @@ pub struct LocationEntry {
   filter_result: bool,
 }
 
-type PredicateFunction = dyn FnMut(
+/// Defines a function called by a [`P10FilterTransform`] that determines
+/// whether a data element should pass through the filter.
+///
+pub type PredicateFunction = dyn FnMut(
   DataElementTag,
   ValueRepresentation,
   Option<u32>,

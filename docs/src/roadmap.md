@@ -5,8 +5,6 @@ following:
 
 - Decoding of JPEG-LS pixel data on WASM
 
-- Overlay rendering
-
 - Stream transcoding between a wider range of transfer syntaxes
 
 - DIMSE networking

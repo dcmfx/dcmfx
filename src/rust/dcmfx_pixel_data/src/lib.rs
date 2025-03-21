@@ -13,6 +13,7 @@ use image::RgbImage;
 mod color_image;
 mod decode;
 mod luts;
+mod overlays;
 mod p10_pixel_data_frame_filter;
 mod pixel_data_definition;
 mod pixel_data_frame;
@@ -24,6 +25,7 @@ pub use luts::{
   ColorPalette, LookupTable, ModalityLut, StandardColorPalette, VoiLut,
   VoiLutFunction, VoiWindow,
 };
+pub use overlays::{Overlay, OverlaySubtype, OverlayType, Overlays};
 pub use p10_pixel_data_frame_filter::{
   P10PixelDataFrameFilter, P10PixelDataFrameFilterError,
 };

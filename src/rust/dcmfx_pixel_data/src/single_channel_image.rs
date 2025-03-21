@@ -182,10 +182,6 @@ impl SingleChannelImage {
     modality_lut: &ModalityLut,
     voi_lut: &VoiLut,
   ) -> GrayImage {
-    if let SingleChannelImage::Uint8(img) = self {
-      return img;
-    }
-
     let mut gray_pixels = Vec::with_capacity(self.pixel_count());
 
     let i64_to_u8 = |pixel: i64| {
@@ -204,8 +200,10 @@ impl SingleChannelImage {
         }
       }
 
-      SingleChannelImage::Uint8(_) => {
-        unreachable!();
+      SingleChannelImage::Uint8(data) => {
+        for pixel in data.pixels() {
+          gray_pixels.push(i64_to_u8(pixel.0[0] as i64));
+        }
       }
 
       SingleChannelImage::Int16(data) => {

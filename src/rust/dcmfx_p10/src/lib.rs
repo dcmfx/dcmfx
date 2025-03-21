@@ -67,7 +67,9 @@ pub use p10_write::{P10WriteConfig, P10WriteContext};
 pub use transforms::p10_custom_type_transform::{
   P10CustomTypeTransform, P10CustomTypeTransformError,
 };
-pub use transforms::p10_filter_transform::P10FilterTransform;
+pub use transforms::p10_filter_transform::{
+  P10FilterTransform, PredicateFunction,
+};
 pub use transforms::p10_insert_transform::P10InsertTransform;
 pub use transforms::p10_print_transform::P10PrintTransform;
 

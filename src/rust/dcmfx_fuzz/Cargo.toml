@@ -5,3 +5,4 @@ edition = "2024"
 [dependencies]
 afl = "*"
 dcmfx = { path = "../dcmfx", version = "0.0.0" }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
