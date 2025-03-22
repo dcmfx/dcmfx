@@ -537,6 +537,17 @@ pub const smpte_st_2110_30_pcm_audio = TransferSyntax(
   is_encapsulated: False,
 )
 
+/// The 'Deflated Image Frame Compression' transfer syntax.
+///
+pub const deflated_image_frame_compression = TransferSyntax(
+  name: "Deflated Image Frame Compression",
+  uid: "1.2.840.10008.1.2.8.1",
+  vr_serialization: VrExplicit,
+  endianness: LittleEndian,
+  is_deflated: False,
+  is_encapsulated: True,
+)
+
 /// Returns a list of the supported transfer syntaxes.
 ///
 pub const all = [
@@ -585,6 +596,7 @@ pub const all = [
   smpte_st_2110_20_uncompressed_progressive_active_video,
   smpte_st_2110_20_uncompressed_interlaced_active_video,
   smpte_st_2110_30_pcm_audio,
+  deflated_image_frame_compression,
 ]
 
 /// Returns the transfer syntax with the given UID. If the UID isn't recognized
@@ -648,6 +660,7 @@ pub fn from_uid(uid: String) -> Result(TransferSyntax, Nil) {
     "1.2.840.10008.1.2.7.2" ->
       Ok(smpte_st_2110_20_uncompressed_interlaced_active_video)
     "1.2.840.10008.1.2.7.3" -> Ok(smpte_st_2110_30_pcm_audio)
+    "1.2.840.10008.1.2.8.1" -> Ok(deflated_image_frame_compression)
 
     _ -> Error(Nil)
   }

@@ -1,3 +1,5 @@
+use std::io::Read;
+
 #[cfg(not(feature = "std"))]
 use alloc::{format, vec, vec::Vec};
 
@@ -197,6 +199,13 @@ impl PixelDataRenderer {
         decode::charls::decode_single_channel(&self.definition, data)
       }
 
+      &DEFLATED_IMAGE_FRAME_COMPRESSION => {
+        decode::native::decode_single_channel(
+          &self.definition,
+          &inflate_frame_data(data)?,
+        )
+      }
+
       _ => Err(DataError::new_value_unsupported(format!(
         "Transfer syntax '{}' is not supported",
         self.transfer_syntax.name,
@@ -258,10 +267,30 @@ impl PixelDataRenderer {
         decode::charls::decode_color(&self.definition, data)
       }
 
+      &DEFLATED_IMAGE_FRAME_COMPRESSION => decode::native::decode_color(
+        &self.definition,
+        &inflate_frame_data(data)?,
+      ),
+
       _ => Err(DataError::new_value_unsupported(format!(
         "Transfer syntax '{}' is not supported",
         self.transfer_syntax.name
       ))),
     }
   }
+}
+
+/// Inflates deflated data. This is used by the 'Deflated Image Frame
+/// Compression' transfer syntax.
+///
+fn inflate_frame_data(data: &[u8]) -> Result<Vec<u8>, DataError> {
+  let mut decoder =
+    flate2::read::DeflateDecoder::new(std::io::Cursor::new(data));
+  let mut inflated_data = vec![];
+
+  decoder.read_to_end(&mut inflated_data).map_err(|_| {
+    DataError::new_value_invalid("Error inflating frame data".to_string())
+  })?;
+
+  Ok(inflated_data)
 }

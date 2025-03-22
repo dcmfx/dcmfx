@@ -475,6 +475,7 @@ dependencies = [
  "cc",
  "dcmfx_core",
  "dcmfx_p10",
+ "flate2",
  "glob",
  "image",
  "jpeg-decoder 0.3.1 (git+https://github.com/image-rs/jpeg-decoder.git?rev=95550d7)",
