@@ -380,15 +380,15 @@ pub fn decode_color(
             for i in 0..(pixel_count / 2) {
               let y0 = data[i * 4];
               let y1 = data[i * 4 + 1];
-              let b = data[i * 4 + 2];
-              let r = data[i * 4 + 3];
+              let cb = data[i * 4 + 2];
+              let cr = data[i * 4 + 3];
 
               pixels[i * 6] = y0;
-              pixels[i * 6 + 1] = b;
-              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 1] = cb;
+              pixels[i * 6 + 2] = cr;
               pixels[i * 6 + 3] = y1;
-              pixels[i * 6 + 4] = b;
-              pixels[i * 6 + 5] = r;
+              pixels[i * 6 + 4] = cb;
+              pixels[i * 6 + 5] = cr;
             }
 
             ybr_to_rgb::convert_u8(&mut pixels, definition);
@@ -404,15 +404,15 @@ pub fn decode_color(
             for i in 0..(pixel_count / 2) {
               let y0 = u16::from_le_bytes([data[i * 8], data[i * 8 + 1]]);
               let y1 = u16::from_le_bytes([data[i * 8 + 2], data[i * 8 + 3]]);
-              let b = u16::from_le_bytes([data[i * 8 + 4], data[i * 8 + 5]]);
-              let r = u16::from_le_bytes([data[i * 8 + 6], data[i * 8 + 7]]);
+              let cb = u16::from_le_bytes([data[i * 8 + 4], data[i * 8 + 5]]);
+              let cr = u16::from_le_bytes([data[i * 8 + 6], data[i * 8 + 7]]);
 
               pixels[i * 6] = y0;
-              pixels[i * 6 + 1] = b;
-              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 1] = cb;
+              pixels[i * 6 + 2] = cr;
               pixels[i * 6 + 3] = y1;
-              pixels[i * 6 + 4] = b;
-              pixels[i * 6 + 5] = r;
+              pixels[i * 6 + 4] = cb;
+              pixels[i * 6 + 5] = cr;
             }
 
             ybr_to_rgb::convert_u16(&mut pixels, definition);
@@ -438,13 +438,13 @@ pub fn decode_color(
                 data[i * 16 + 6],
                 data[i * 16 + 7],
               ]);
-              let b = u32::from_le_bytes([
+              let cb = u32::from_le_bytes([
                 data[i * 16 + 8],
                 data[i * 16 + 9],
                 data[i * 16 + 10],
                 data[i * 16 + 11],
               ]);
-              let r = u32::from_le_bytes([
+              let cr = u32::from_le_bytes([
                 data[i * 16 + 12],
                 data[i * 16 + 13],
                 data[i * 16 + 14],
@@ -452,11 +452,11 @@ pub fn decode_color(
               ]);
 
               pixels[i * 6] = y0;
-              pixels[i * 6 + 1] = b;
-              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 1] = cb;
+              pixels[i * 6 + 2] = cr;
               pixels[i * 6 + 3] = y1;
-              pixels[i * 6 + 4] = b;
-              pixels[i * 6 + 5] = r;
+              pixels[i * 6 + 4] = cb;
+              pixels[i * 6 + 5] = cr;
             }
 
             ybr_to_rgb::convert_u32(&mut pixels, definition);
@@ -472,15 +472,15 @@ pub fn decode_color(
             for i in 0..(pixel_count / 2) {
               let y0 = data[i * 2];
               let y1 = data[i * 2 + 1];
-              let b = data[pixel_count + i];
-              let r = data[pixel_count + pixel_count / 2 + i];
+              let cb = data[pixel_count + i];
+              let cr = data[pixel_count + pixel_count / 2 + i];
 
               pixels[i * 6] = y0;
-              pixels[i * 6 + 1] = b;
-              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 1] = cb;
+              pixels[i * 6 + 2] = cr;
               pixels[i * 6 + 3] = y1;
-              pixels[i * 6 + 4] = b;
-              pixels[i * 6 + 5] = r;
+              pixels[i * 6 + 4] = cb;
+              pixels[i * 6 + 5] = cr;
             }
 
             ybr_to_rgb::convert_u8(&mut pixels, definition);
@@ -496,21 +496,21 @@ pub fn decode_color(
             for i in 0..(pixel_count / 2) {
               let y0 = u16::from_le_bytes([data[i * 4], data[i * 4 + 1]]);
               let y1 = u16::from_le_bytes([data[i * 4 + 2], data[i * 4 + 3]]);
-              let b = u16::from_le_bytes([
+              let cb = u16::from_le_bytes([
                 data[(pixel_count + i) * 2],
                 data[(pixel_count + i) * 2 + 1],
               ]);
-              let r = u16::from_le_bytes([
+              let cr = u16::from_le_bytes([
                 data[(pixel_count + pixel_count / 2 + i) * 2],
                 data[(pixel_count + pixel_count / 2 + i) * 2 + 1],
               ]);
 
               pixels[i * 6] = y0;
-              pixels[i * 6 + 1] = b;
-              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 1] = cb;
+              pixels[i * 6 + 2] = cr;
               pixels[i * 6 + 3] = y1;
-              pixels[i * 6 + 4] = b;
-              pixels[i * 6 + 5] = r;
+              pixels[i * 6 + 4] = cb;
+              pixels[i * 6 + 5] = cr;
             }
 
             ybr_to_rgb::convert_u16(&mut pixels, definition);
@@ -536,13 +536,13 @@ pub fn decode_color(
                 data[i * 8 + 6],
                 data[i * 8 + 7],
               ]);
-              let b = u32::from_le_bytes([
+              let cb = u32::from_le_bytes([
                 data[(pixel_count + i) * 4],
                 data[(pixel_count + i) * 4 + 1],
                 data[(pixel_count + i) * 4 + 2],
                 data[(pixel_count + i) * 4 + 3],
               ]);
-              let r = u32::from_le_bytes([
+              let cr = u32::from_le_bytes([
                 data[(pixel_count + pixel_count / 2 + i) * 4],
                 data[(pixel_count + pixel_count / 2 + i) * 4 + 1],
                 data[(pixel_count + pixel_count / 2 + i) * 4 + 2],
@@ -550,11 +550,11 @@ pub fn decode_color(
               ]);
 
               pixels[i * 6] = y0;
-              pixels[i * 6 + 1] = b;
-              pixels[i * 6 + 2] = r;
+              pixels[i * 6 + 1] = cb;
+              pixels[i * 6 + 2] = cr;
               pixels[i * 6 + 3] = y1;
-              pixels[i * 6 + 4] = b;
-              pixels[i * 6 + 5] = r;
+              pixels[i * 6 + 4] = cb;
+              pixels[i * 6 + 5] = cr;
             }
 
             ybr_to_rgb::convert_u32(&mut pixels, definition);

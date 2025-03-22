@@ -228,31 +228,31 @@ fn modify_input_source(
 fn parse_transfer_syntax_flag(
   transfer_syntax_flag: &Option<String>,
 ) -> Result<Option<&TransferSyntax>, P10Error> {
-  if let Some(transfer_syntax_value) = transfer_syntax_flag {
-    match transfer_syntax_value.as_str() {
-      "implicit-vr-little-endian" => {
-        Ok(Some(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN))
-      }
-      "explicit-vr-little-endian" => {
-        Ok(Some(&transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN))
-      }
-      "deflated-explicit-vr-little-endian" => {
-        Ok(Some(&transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN))
-      }
-      "explicit-vr-big-endian" => {
-        Ok(Some(&transfer_syntax::EXPLICIT_VR_BIG_ENDIAN))
-      }
+  let Some(transfer_syntax_value) = transfer_syntax_flag else {
+    return Ok(None);
+  };
 
-      _ => Err(P10Error::OtherError {
-        error_type: "Unsupported transfer syntax conversion".to_string(),
-        details: format!(
-          "The transfer syntax '{}' is not recognized",
-          transfer_syntax_value
-        ),
-      }),
+  match transfer_syntax_value.as_str() {
+    "implicit-vr-little-endian" => {
+      Ok(Some(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN))
     }
-  } else {
-    Ok(None)
+    "explicit-vr-little-endian" => {
+      Ok(Some(&transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN))
+    }
+    "deflated-explicit-vr-little-endian" => {
+      Ok(Some(&transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN))
+    }
+    "explicit-vr-big-endian" => {
+      Ok(Some(&transfer_syntax::EXPLICIT_VR_BIG_ENDIAN))
+    }
+
+    _ => Err(P10Error::OtherError {
+      error_type: "Unsupported transfer syntax conversion".to_string(),
+      details: format!(
+        "The transfer syntax '{}' is not recognized",
+        transfer_syntax_value
+      ),
+    }),
   }
 }
 

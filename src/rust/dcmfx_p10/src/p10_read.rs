@@ -389,225 +389,223 @@ impl P10ReadContext {
   fn read_file_meta_information_token(
     &mut self,
   ) -> Result<Vec<P10Token>, P10Error> {
-    if let NextAction::ReadFileMetaInformation {
+    let NextAction::ReadFileMetaInformation {
       starts_at,
       ends_at,
       data_set: fmi_data_set,
     } = &mut self.next_action
-    {
-      loop {
-        // Check if the end of the File Meta Information has been reached
-        if let Some(ends_at) = ends_at {
-          if self.stream.bytes_read() >= *ends_at {
-            break;
-          }
-        }
+    else {
+      unreachable!();
+    };
 
-        // Peek the next 8 bytes that contain the group, element, VR, and two
-        // bytes that contain the value length if the VR has a 16-bit length
-        // field
-        let data = self.stream.peek(8).map_err(|e| {
-          map_byte_stream_error(
-            e,
-            "Reading File Meta Information",
-            &self.stream,
-            &self.path,
-          )
-        })?;
-
-        let group = byteorder::LittleEndian::read_u16(&data[0..2]);
-        let element = byteorder::LittleEndian::read_u16(&data[2..4]);
-        let tag = DataElementTag::new(group, element);
-
-        // If the FMI length isn't known and the group isn't 0x0002 then assume
-        // that this is the end of the File Meta Information
-        if tag.group != 0x0002 && ends_at.is_none() {
+    loop {
+      // Check if the end of the File Meta Information has been reached
+      if let Some(ends_at) = ends_at {
+        if self.stream.bytes_read() >= *ends_at {
           break;
         }
+      }
 
-        // If a data element is encountered in the File Meta Information that
-        // doesn't have a group of 0x0002 then the File Meta Information is
-        // invalid
-        if tag.group != 0x0002 && ends_at.is_some() {
-          return Err(P10Error::DataInvalid {
-            when: "Reading File Meta Information".to_string(),
-            details: "Data element in File Meta Information does not have the \
+      // Peek the next 8 bytes that contain the group, element, VR, and two
+      // bytes that contain the value length if the VR has a 16-bit length
+      // field
+      let data = self.stream.peek(8).map_err(|e| {
+        map_byte_stream_error(
+          e,
+          "Reading File Meta Information",
+          &self.stream,
+          &self.path,
+        )
+      })?;
+
+      let group = byteorder::LittleEndian::read_u16(&data[0..2]);
+      let element = byteorder::LittleEndian::read_u16(&data[2..4]);
+      let tag = DataElementTag::new(group, element);
+
+      // If the FMI length isn't known and the group isn't 0x0002 then assume
+      // that this is the end of the File Meta Information
+      if tag.group != 0x0002 && ends_at.is_none() {
+        break;
+      }
+
+      // If a data element is encountered in the File Meta Information that
+      // doesn't have a group of 0x0002 then the File Meta Information is
+      // invalid
+      if tag.group != 0x0002 && ends_at.is_some() {
+        return Err(P10Error::DataInvalid {
+          when: "Reading File Meta Information".to_string(),
+          details: "Data element in File Meta Information does not have the \
               group 0x0002"
-              .to_string(),
-            path: DataSetPath::new_with_data_element(tag),
-            offset: self.stream.bytes_read(),
-          });
+            .to_string(),
+          path: DataSetPath::new_with_data_element(tag),
+          offset: self.stream.bytes_read(),
+        });
+      }
+
+      // Get the VR for the data element
+      let vr = ValueRepresentation::from_bytes(&data[4..6]).map_err(|_| {
+        P10Error::DataInvalid {
+          when: "Reading File Meta Information".to_string(),
+          details: "Data element has invalid VR".to_string(),
+          path: DataSetPath::new_with_data_element(tag),
+          offset: self.stream.bytes_read(),
         }
+      })?;
 
-        // Get the VR for the data element
-        let vr =
-          ValueRepresentation::from_bytes(&data[4..6]).map_err(|_| {
-            P10Error::DataInvalid {
-              when: "Reading File Meta Information".to_string(),
-              details: "Data element has invalid VR".to_string(),
-              path: DataSetPath::new_with_data_element(tag),
-              offset: self.stream.bytes_read(),
-            }
-          })?;
+      // Check the VR isn't a sequence as these aren't allowed in the File
+      // Meta Information
+      if vr == ValueRepresentation::Sequence {
+        return Err(P10Error::DataInvalid {
+          when: "Reading File Meta Information".to_string(),
+          details: "Data element in File Meta Information is a sequence"
+            .to_string(),
+          path: DataSetPath::new_with_data_element(tag),
+          offset: self.stream.bytes_read(),
+        });
+      }
 
-        // Check the VR isn't a sequence as these aren't allowed in the File
-        // Meta Information
-        if vr == ValueRepresentation::Sequence {
-          return Err(P10Error::DataInvalid {
-            when: "Reading File Meta Information".to_string(),
-            details: "Data element in File Meta Information is a sequence"
-              .to_string(),
-            path: DataSetPath::new_with_data_element(tag),
-            offset: self.stream.bytes_read(),
-          });
-        }
-
-        // Read the value length based on whether the VR has a 16-bit or 32-bit
-        // length stored
-        let (value_offset, value_length) =
-          match DataElementHeader::value_length_size(vr) {
-            // 16-bit lengths are read out of the 8 bytes already read
-            ValueLengthSize::U16 => {
-              Ok((8, byteorder::LittleEndian::read_u16(&data[6..8]) as usize))
-            }
-
-            // 32-bit lengths require another 4 bytes to be read
-            ValueLengthSize::U32 => match self.stream.peek(12) {
-              Ok(data) => Ok((
-                12,
-                byteorder::LittleEndian::read_u32(&data[8..12]) as usize,
-              )),
-              Err(e) => Err(map_byte_stream_error(
-                e,
-                "Reading File Meta Information",
-                &self.stream,
-                &self.path,
-              )),
-            },
-          }?;
-
-        let data_element_size = value_offset + value_length;
-
-        // Check that the File Meta Information remains under the max token size
-        if fmi_data_set.total_byte_size() + data_element_size as u64
-          > self.config.max_token_size as u64
-        {
-          return Err(P10Error::MaximumExceeded {
-            details: format!(
-              "File Meta Information exceeds the max token size of {} bytes",
-              self.config.max_token_size
-            ),
-            path: DataSetPath::new_with_data_element(tag),
-            offset: self.stream.bytes_read(),
-          });
-        }
-
-        // Read the value bytes for the data element
-        let data = self.stream.read(data_element_size).map_err(|e| {
-          map_byte_stream_error(
-            e,
-            "Reading File Meta Information data element value",
-            &self.stream,
-            &self.path,
-          )
-        })?;
-
-        // Construct new data element value
-        let value = DataElementValue::new_binary_unchecked(
-          vr,
-          Rc::new(data[value_offset..].to_vec()),
-        );
-
-        // If this data element specifies the File Meta Information group's
-        // length then use it to calculate its end offset
-        if tag == dictionary::FILE_META_INFORMATION_GROUP_LENGTH.tag {
-          if ends_at.is_none() && fmi_data_set.is_empty() {
-            match value.get_int::<u32>() {
-              Ok(i) => *ends_at = Some(*starts_at + 12 + i as u64),
-              Err(_) => {
-                return Err(P10Error::DataInvalid {
-                  when: "Reading File Meta Information".to_string(),
-                  details: format!(
-                    "Group length is invalid: {:?}",
-                    value.to_string(DataElementTag::ZERO, 80)
-                  ),
-                  path: DataSetPath::new_with_data_element(tag),
-                  offset: self.stream.bytes_read(),
-                });
-              }
-            }
+      // Read the value length based on whether the VR has a 16-bit or 32-bit
+      // length stored
+      let (value_offset, value_length) =
+        match DataElementHeader::value_length_size(vr) {
+          // 16-bit lengths are read out of the 8 bytes already read
+          ValueLengthSize::U16 => {
+            Ok((8, byteorder::LittleEndian::read_u16(&data[6..8]) as usize))
           }
 
-          continue;
-        }
-
-        // If this data element specifies the transfer syntax to use then set it
-        // in the read context
-        if tag == dictionary::TRANSFER_SYNTAX_UID.tag {
-          self.transfer_syntax = match value.get_string() {
-            Ok(uid) => TransferSyntax::from_uid(uid).map_err(|_| {
-              P10Error::TransferSyntaxNotSupported {
-                transfer_syntax_uid: uid.to_string(),
-              }
-            }),
-
-            Err(e) => {
-              if e.is_tag_not_present() {
-                Ok(self.transfer_syntax)
-              } else {
-                Err(P10Error::DataInvalid {
-                  when: "Reading File Meta Information".to_string(),
-                  details: e.to_string(),
-                  path: DataSetPath::new_with_data_element(
-                    dictionary::TRANSFER_SYNTAX_UID.tag,
-                  ),
-                  offset: self.stream.bytes_read(),
-                })
-              }
+          // 32-bit lengths require another 4 bytes to be read
+          ValueLengthSize::U32 => match self.stream.peek(12) {
+            Ok(data) => {
+              Ok((12, byteorder::LittleEndian::read_u32(&data[8..12]) as usize))
             }
-          }?;
-        }
+            Err(e) => Err(map_byte_stream_error(
+              e,
+              "Reading File Meta Information",
+              &self.stream,
+              &self.path,
+            )),
+          },
+        }?;
 
-        fmi_data_set.insert(tag, value);
+      let data_element_size = value_offset + value_length;
+
+      // Check that the File Meta Information remains under the max token size
+      if fmi_data_set.total_byte_size() + data_element_size as u64
+        > self.config.max_token_size as u64
+      {
+        return Err(P10Error::MaximumExceeded {
+          details: format!(
+            "File Meta Information exceeds the max token size of {} bytes",
+            self.config.max_token_size
+          ),
+          path: DataSetPath::new_with_data_element(tag),
+          offset: self.stream.bytes_read(),
+        });
       }
 
-      // If the transfer syntax is deflated then all data following the File
-      // Meta Information needs to passed through zlib inflate before reading
-      if self.transfer_syntax.is_deflated {
-        match self.stream.start_zlib_inflate() {
-          Ok(_) => (),
-          Err(_) => {
-            return Err(P10Error::DataInvalid {
-              when: "Starting zlib decompression for deflated transfer syntax"
-                .to_string(),
-              details: "Zlib data is invalid".to_string(),
-              path: DataSetPath::new(),
-              offset: self.stream.bytes_read(),
-            });
+      // Read the value bytes for the data element
+      let data = self.stream.read(data_element_size).map_err(|e| {
+        map_byte_stream_error(
+          e,
+          "Reading File Meta Information data element value",
+          &self.stream,
+          &self.path,
+        )
+      })?;
+
+      // Construct new data element value
+      let value = DataElementValue::new_binary_unchecked(
+        vr,
+        Rc::new(data[value_offset..].to_vec()),
+      );
+
+      // If this data element specifies the File Meta Information group's
+      // length then use it to calculate its end offset
+      if tag == dictionary::FILE_META_INFORMATION_GROUP_LENGTH.tag {
+        if ends_at.is_none() && fmi_data_set.is_empty() {
+          match value.get_int::<u32>() {
+            Ok(i) => *ends_at = Some(*starts_at + 12 + i as u64),
+            Err(_) => {
+              return Err(P10Error::DataInvalid {
+                when: "Reading File Meta Information".to_string(),
+                details: format!(
+                  "Group length is invalid: {:?}",
+                  value.to_string(DataElementTag::ZERO, 80)
+                ),
+                path: DataSetPath::new_with_data_element(tag),
+                offset: self.stream.bytes_read(),
+              });
+            }
           }
         }
+
+        continue;
       }
 
-      // Set the final transfer syntax in the File Meta Information token
-      if self.transfer_syntax != &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN {
-        fmi_data_set
-          .insert_string_value(
-            &dictionary::TRANSFER_SYNTAX_UID,
-            &[self.transfer_syntax.uid],
-          )
-          .unwrap();
+      // If this data element specifies the transfer syntax to use then set it
+      // in the read context
+      if tag == dictionary::TRANSFER_SYNTAX_UID.tag {
+        self.transfer_syntax = match value.get_string() {
+          Ok(uid) => TransferSyntax::from_uid(uid).map_err(|_| {
+            P10Error::TransferSyntaxNotSupported {
+              transfer_syntax_uid: uid.to_string(),
+            }
+          }),
+
+          Err(e) => {
+            if e.is_tag_not_present() {
+              Ok(self.transfer_syntax)
+            } else {
+              Err(P10Error::DataInvalid {
+                when: "Reading File Meta Information".to_string(),
+                details: e.to_string(),
+                path: DataSetPath::new_with_data_element(
+                  dictionary::TRANSFER_SYNTAX_UID.tag,
+                ),
+                offset: self.stream.bytes_read(),
+              })
+            }
+          }
+        }?;
       }
 
-      let token = P10Token::FileMetaInformation {
-        data_set: core::mem::take(fmi_data_set),
-      };
-
-      self.next_action = NextAction::ReadDataElementHeader;
-
-      Ok(vec![token])
-    } else {
-      unreachable!();
+      fmi_data_set.insert(tag, value);
     }
+
+    // If the transfer syntax is deflated then all data following the File
+    // Meta Information needs to passed through zlib inflate before reading
+    if self.transfer_syntax.is_deflated {
+      match self.stream.start_zlib_inflate() {
+        Ok(_) => (),
+        Err(_) => {
+          return Err(P10Error::DataInvalid {
+            when: "Starting zlib decompression for deflated transfer syntax"
+              .to_string(),
+            details: "Zlib data is invalid".to_string(),
+            path: DataSetPath::new(),
+            offset: self.stream.bytes_read(),
+          });
+        }
+      }
+    }
+
+    // Set the final transfer syntax in the File Meta Information token
+    if self.transfer_syntax != &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN {
+      fmi_data_set
+        .insert_string_value(
+          &dictionary::TRANSFER_SYNTAX_UID,
+          &[self.transfer_syntax.uid],
+        )
+        .unwrap();
+    }
+
+    let token = P10Token::FileMetaInformation {
+      data_set: core::mem::take(fmi_data_set),
+    };
+
+    self.next_action = NextAction::ReadDataElementHeader;
+
+    Ok(vec![token])
   }
 
   fn read_data_element_header_token(
