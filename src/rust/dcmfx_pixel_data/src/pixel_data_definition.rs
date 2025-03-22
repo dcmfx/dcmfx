@@ -104,7 +104,8 @@ impl PixelDataDefinition {
       | PhotometricInterpretation::Rgb
       | PhotometricInterpretation::YbrFull
       | PhotometricInterpretation::YbrIct
-      | PhotometricInterpretation::YbrRct => {
+      | PhotometricInterpretation::YbrRct
+      | PhotometricInterpretation::Xyb => {
         usize::from(self.samples_per_pixel) * usize::from(self.bits_allocated)
       }
 
@@ -132,7 +133,8 @@ impl PixelDataDefinition {
       | PhotometricInterpretation::YbrFull
       | PhotometricInterpretation::YbrFull422
       | PhotometricInterpretation::YbrIct
-      | PhotometricInterpretation::YbrRct => false,
+      | PhotometricInterpretation::YbrRct
+      | PhotometricInterpretation::Xyb => false,
     }
   }
 
@@ -258,6 +260,17 @@ pub enum PhotometricInterpretation {
   /// used only when samples per pixel is three and the planar configuration is
   /// 0.
   YbrRct,
+
+  /// Pixel data represent a color image described by XYB, the long/medium/short
+  /// wavelength (LMS) based color model inspired by the human visual system,
+  /// facilitating perceptually uniform quantization. It uses a gamma of 3 for
+  /// computationally efficient decoding. The exact details of the XYB encoding
+  /// are defined as part of a specific image being encoded in order to optimize
+  /// image fidelity. Images in XYB transcoded to other Transfer Syntaxes will
+  /// use RGB or the appropriate equivalent (e.g., YBR_FULL_422 for JPEG).
+  ///
+  /// This is a possible color space used in JPEG XL [ISO/IEC 18181-1].
+  Xyb,
 }
 
 impl PhotometricInterpretation {
@@ -329,6 +342,8 @@ impl PhotometricInterpretation {
         )
       }
 
+      "XYB" => Ok(Self::Xyb),
+
       value => Err(
         DataError::new_value_invalid(format!(
           "Photometric interpretation '{}' is invalid",
@@ -346,7 +361,8 @@ impl PhotometricInterpretation {
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2
       | PhotometricInterpretation::PaletteColor { .. }
-      | PhotometricInterpretation::Rgb => false,
+      | PhotometricInterpretation::Rgb
+      | PhotometricInterpretation::Xyb => false,
 
       PhotometricInterpretation::YbrFull
       | PhotometricInterpretation::YbrFull422
@@ -367,6 +383,7 @@ impl core::fmt::Display for PhotometricInterpretation {
       PhotometricInterpretation::YbrFull422 => "YbrFull422",
       PhotometricInterpretation::YbrIct => "YbrIct",
       PhotometricInterpretation::YbrRct => "YbrRct",
+      PhotometricInterpretation::Xyb => "Xyb",
     };
 
     write!(f, "{}", s)

@@ -232,6 +232,14 @@ pub fn file_extension_for_transfer_syntax(ts: &TransferSyntax) -> &'static str {
       ".mp4"
     }
 
+    // JPEG XL uses the .jxl extension
+    ts if ts == &JPEG_XL_LOSSLESS
+      || ts == &JPEG_XL_JPEG_RECOMPRESSION
+      || ts == &JPEG_XL =>
+    {
+      ".jxl"
+    }
+
     // High-Throughput JPEG 2000 uses the .jph extension
     ts if ts == &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       || ts == &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY

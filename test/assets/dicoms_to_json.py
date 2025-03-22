@@ -49,6 +49,15 @@ def dicom_pixel_data_to_json(file, data_set):
     if not hasattr(data_set.file_meta, "TransferSyntaxUID"):
         data_set.file_meta.TransferSyntaxUID = "1.2.840.10008.1.2.1"
 
+    # pydicom doesn't support the JPEG XL transfer syntaxes added in DICOM
+    # 2024d, so skip them
+    if (
+        data_set.file_meta.TransferSyntaxUID == "1.2.840.10008.1.2.4.110"
+        or data_set.file_meta.TransferSyntaxUID == "1.2.840.10008.1.2.4.111"
+        or data_set.file_meta.TransferSyntaxUID == "1.2.840.10008.1.2.4.112"
+    ):
+        return
+
     if (
         not hasattr(data_set, "PixelData")
         or not hasattr(data_set, "SamplesPerPixel")
