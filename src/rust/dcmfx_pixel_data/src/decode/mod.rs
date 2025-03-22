@@ -2,6 +2,7 @@
 pub mod charls;
 pub mod jpeg;
 pub mod jpeg_decoder;
+pub mod jxl_oxide;
 pub mod libjpeg_12bit;
 pub mod native;
 pub mod openjpeg;

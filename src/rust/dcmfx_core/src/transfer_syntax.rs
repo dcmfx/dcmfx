@@ -424,6 +424,39 @@ pub const HEVC_H265_MAIN_10_PROFILE: TransferSyntax = TransferSyntax {
   is_encapsulated: true,
 };
 
+/// The 'JPEG XL Lossless' transfer syntax.
+///
+pub const JPEG_XL_LOSSLESS: TransferSyntax = TransferSyntax {
+  name: "JPEG XL Lossless",
+  uid: "1.2.840.10008.1.2.4.110",
+  vr_serialization: VrSerialization::VrExplicit,
+  endianness: Endianness::LittleEndian,
+  is_deflated: false,
+  is_encapsulated: true,
+};
+
+/// The 'JPEG XL JPEG Recompression' transfer syntax.
+///
+pub const JPEG_XL_JPEG_RECOMPRESSION: TransferSyntax = TransferSyntax {
+  name: "JPEG XL JPEG Recompression",
+  uid: "1.2.840.10008.1.2.4.111",
+  vr_serialization: VrSerialization::VrExplicit,
+  endianness: Endianness::LittleEndian,
+  is_deflated: false,
+  is_encapsulated: true,
+};
+
+/// The 'JPEG XL' transfer syntax.
+///
+pub const JPEG_XL: TransferSyntax = TransferSyntax {
+  name: "JPEG XL",
+  uid: "1.2.840.10008.1.2.4.112",
+  vr_serialization: VrSerialization::VrExplicit,
+  endianness: Endianness::LittleEndian,
+  is_deflated: false,
+  is_encapsulated: true,
+};
+
 /// The 'High-Throughput JPEG 2000 (Lossless Only)' transfer syntax.
 ///
 pub const HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY: TransferSyntax =
@@ -533,7 +566,7 @@ pub const SMPTE_ST_2110_30_PCM_AUDIO: TransferSyntax = TransferSyntax {
 
 /// A list of all supported transfer syntaxes.
 ///
-pub const ALL: [TransferSyntax; 42] = [
+pub const ALL: [TransferSyntax; 45] = [
   IMPLICIT_VR_LITTLE_ENDIAN,
   EXPLICIT_VR_LITTLE_ENDIAN,
   ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN,
@@ -567,6 +600,9 @@ pub const ALL: [TransferSyntax; 42] = [
   FRAGMENTABLE_MPEG4_AVC_H264_STEREO_HIGH_PROFILE,
   HEVC_H265_MAIN_PROFILE,
   HEVC_H265_MAIN_10_PROFILE,
+  JPEG_XL_LOSSLESS,
+  JPEG_XL_JPEG_RECOMPRESSION,
+  JPEG_XL,
   HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY,
   HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY,
   HIGH_THROUGHPUT_JPEG_2K,
@@ -640,6 +676,9 @@ impl TransferSyntax {
       }
       "1.2.840.10008.1.2.4.107" => Ok(&HEVC_H265_MAIN_PROFILE),
       "1.2.840.10008.1.2.4.108" => Ok(&HEVC_H265_MAIN_10_PROFILE),
+      "1.2.840.10008.1.2.4.110" => Ok(&JPEG_XL_LOSSLESS),
+      "1.2.840.10008.1.2.4.111" => Ok(&JPEG_XL_JPEG_RECOMPRESSION),
+      "1.2.840.10008.1.2.4.112" => Ok(&JPEG_XL),
       "1.2.840.10008.1.2.4.201" => Ok(&HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY),
       "1.2.840.10008.1.2.4.202" => {
         Ok(&HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY)
@@ -667,7 +706,7 @@ impl TransferSyntax {
 mod tests {
   use super::*;
 
-  const TRANSFER_SYNTAX_UIDS: [&str; 42] = [
+  const TRANSFER_SYNTAX_UIDS: [&str; 45] = [
     "1.2.840.10008.1.2",
     "1.2.840.10008.1.2.1",
     "1.2.840.10008.1.2.1.98",
@@ -701,6 +740,9 @@ mod tests {
     "1.2.840.10008.1.2.4.106.1",
     "1.2.840.10008.1.2.4.107",
     "1.2.840.10008.1.2.4.108",
+    "1.2.840.10008.1.2.4.110",
+    "1.2.840.10008.1.2.4.111",
+    "1.2.840.10008.1.2.4.112",
     "1.2.840.10008.1.2.4.201",
     "1.2.840.10008.1.2.4.202",
     "1.2.840.10008.1.2.4.203",

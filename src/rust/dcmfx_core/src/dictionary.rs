@@ -110394,6 +110394,9 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     }
     "1.2.840.10008.1.2.4.107" => Ok("HEVC/H.265 Main Profile / Level 5.1"),
     "1.2.840.10008.1.2.4.108" => Ok("HEVC/H.265 Main 10 Profile / Level 5.1"),
+    "1.2.840.10008.1.2.4.110" => Ok("JPEG XL Lossless"),
+    "1.2.840.10008.1.2.4.111" => Ok("JPEG XL JPEG Recompression"),
+    "1.2.840.10008.1.2.4.112" => Ok("JPEG XL"),
     "1.2.840.10008.1.2.4.201" => {
       Ok("High-Throughput JPEG 2000 Image Compression (Lossless Only)")
     }

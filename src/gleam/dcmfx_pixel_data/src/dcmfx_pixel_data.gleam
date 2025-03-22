@@ -116,6 +116,13 @@ pub fn file_extension_for_transfer_syntax(ts: TransferSyntax) -> String {
       || ts == transfer_syntax.hevc_h265_main_10_profile
     -> ".mp4"
 
+    // JPEG XL uses the .jxl extension
+    ts
+      if ts == transfer_syntax.jpeg_xl_lossless
+      || ts == transfer_syntax.jpeg_xl_jpeg_recompression
+      || ts == transfer_syntax.jpeg_xl
+    -> ".jxl"
+
     // High-Throughput JPEG 2000 uses the .jph extension
     ts
       if ts == transfer_syntax.high_throughput_jpeg_2k_lossless_only

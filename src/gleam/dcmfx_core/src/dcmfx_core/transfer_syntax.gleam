@@ -403,6 +403,39 @@ pub const hevc_h265_main_10_profile = TransferSyntax(
   is_encapsulated: True,
 )
 
+/// The 'JPEG XL Lossless' transfer syntax.
+///
+pub const jpeg_xl_lossless = TransferSyntax(
+  name: "JPEG XL Lossless",
+  uid: "1.2.840.10008.1.2.4.110",
+  vr_serialization: VrExplicit,
+  endianness: LittleEndian,
+  is_deflated: False,
+  is_encapsulated: True,
+)
+
+/// The 'JPEG XL JPEG Recompression' transfer syntax.
+///
+pub const jpeg_xl_jpeg_recompression = TransferSyntax(
+  name: "JPEG XL JPEG Recompression",
+  uid: "1.2.840.10008.1.2.4.111",
+  vr_serialization: VrExplicit,
+  endianness: LittleEndian,
+  is_deflated: False,
+  is_encapsulated: True,
+)
+
+/// The 'JPEG XL' transfer syntax.
+///
+pub const jpeg_xl = TransferSyntax(
+  name: "JPEG XL",
+  uid: "1.2.840.10008.1.2.4.112",
+  vr_serialization: VrExplicit,
+  endianness: LittleEndian,
+  is_deflated: False,
+  is_encapsulated: True,
+)
+
 /// The 'High-Throughput JPEG 2000 (Lossless Only)' transfer syntax.
 ///
 pub const high_throughput_jpeg_2k_lossless_only = TransferSyntax(
@@ -540,6 +573,9 @@ pub const all = [
   fragmentable_mpeg4_avc_h264_stereo_high_profile,
   hevc_h265_main_profile,
   hevc_h265_main_10_profile,
+  jpeg_xl_lossless,
+  jpeg_xl_jpeg_recompression,
+  jpeg_xl,
   high_throughput_jpeg_2k_lossless_only,
   high_throughput_jpeg_2k_with_rpcl_options_lossless_only,
   high_throughput_jpeg_2k,
@@ -596,6 +632,9 @@ pub fn from_uid(uid: String) -> Result(TransferSyntax, Nil) {
       Ok(fragmentable_mpeg4_avc_h264_stereo_high_profile)
     "1.2.840.10008.1.2.4.107" -> Ok(hevc_h265_main_profile)
     "1.2.840.10008.1.2.4.108" -> Ok(hevc_h265_main_10_profile)
+    "1.2.840.10008.1.2.4.110" -> Ok(jpeg_xl_lossless)
+    "1.2.840.10008.1.2.4.111" -> Ok(jpeg_xl_jpeg_recompression)
+    "1.2.840.10008.1.2.4.112" -> Ok(jpeg_xl)
     "1.2.840.10008.1.2.4.201" -> Ok(high_throughput_jpeg_2k_lossless_only)
     "1.2.840.10008.1.2.4.202" ->
       Ok(high_throughput_jpeg_2k_with_rpcl_options_lossless_only)

@@ -324,6 +324,42 @@ fn jpeg_extended_12bit_single_channel_to_png() {
 }
 
 #[test]
+fn jpeg_xl_single_channel_to_jpg() {
+  let dicom_file = "../../../test/assets/other/monochrome_jpeg_xl.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "jpeg_xl_single_channel_to_jpg.jpg");
+}
+
+#[test]
+fn jpeg_xl_color_to_jpg() {
+  let dicom_file = "../../../test/assets/other/ultrasound_jpeg_xl.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "jpeg_xl_color_to_jpg.jpg");
+}
+
+#[test]
 fn render_overlays() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/examples_overlay.dcm";

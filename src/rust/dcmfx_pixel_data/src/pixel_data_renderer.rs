@@ -188,6 +188,10 @@ impl PixelDataRenderer {
         decode::openjpeg::decode_single_channel(&self.definition, data)
       }
 
+      &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
+        decode::jxl_oxide::decode_single_channel(&self.definition, data)
+      }
+
       #[cfg(not(target_arch = "wasm32"))]
       &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
         decode::charls::decode_single_channel(&self.definition, data)
@@ -243,6 +247,10 @@ impl PixelDataRenderer {
       | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
         decode::openjpeg::decode_color(&self.definition, data)
+      }
+
+      &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
+        decode::jxl_oxide::decode_color(&self.definition, data)
       }
 
       #[cfg(not(target_arch = "wasm32"))]
