@@ -716,7 +716,7 @@ fn do_to_lines(
             callback(
               context,
               item_header
-                <> utils.inspect_bit_array(item, { value_max_width - 2 } / 3),
+                <> utils.inspect_bit_array(item, value_max_width / 3 - 1),
             )
           })
 

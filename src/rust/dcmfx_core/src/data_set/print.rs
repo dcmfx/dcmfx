@@ -163,7 +163,7 @@ pub fn data_set_to_lines(
 
         callback(format!(
           "{item_header}{}",
-          utils::inspect_u8_slice(item, (value_max_width - 2) / 3)
+          utils::inspect_u8_slice(item, value_max_width / 3 - 1)
         ));
       }
 
