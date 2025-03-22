@@ -14,6 +14,7 @@ keywords.workspace = true
 byteorder = "1.5.0"
 dcmfx_core = { path = "../dcmfx_core", version = "0.0.0", default-features = false }
 dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0", default-features = false }
+flate2 = "1.0.35"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 jpeg-decoder = { git = "https://github.com/image-rs/jpeg-decoder.git", rev = "95550d7" }
 jxl-oxide = "0.11.3"

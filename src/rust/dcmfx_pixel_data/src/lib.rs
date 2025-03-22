@@ -248,6 +248,9 @@ pub fn file_extension_for_transfer_syntax(ts: &TransferSyntax) -> &'static str {
       ".jph"
     }
 
+    // Deflated Image Frame Compression uses the .zz extension
+    ts if ts == &DEFLATED_IMAGE_FRAME_COMPRESSION => ".zz",
+
     // Everything else uses the .bin extension as there isn't a more meaningful
     // image extension to use
     _ => ".bin",

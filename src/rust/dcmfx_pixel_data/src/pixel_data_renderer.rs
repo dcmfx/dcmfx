@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::{format, vec, vec::Vec};
+use alloc::{format, string::ToString, vec, vec::Vec};
 
 use image::RgbImage;
 
@@ -197,6 +197,13 @@ impl PixelDataRenderer {
         decode::charls::decode_single_channel(&self.definition, data)
       }
 
+      &DEFLATED_IMAGE_FRAME_COMPRESSION => {
+        decode::native::decode_single_channel(
+          &self.definition,
+          &self.inflate_frame_data(data)?,
+        )
+      }
+
       _ => Err(DataError::new_value_unsupported(format!(
         "Transfer syntax '{}' is not supported",
         self.transfer_syntax.name,
@@ -258,10 +265,52 @@ impl PixelDataRenderer {
         decode::charls::decode_color(&self.definition, data)
       }
 
+      &DEFLATED_IMAGE_FRAME_COMPRESSION => decode::native::decode_color(
+        &self.definition,
+        &self.inflate_frame_data(data)?,
+      ),
+
       _ => Err(DataError::new_value_unsupported(format!(
         "Transfer syntax '{}' is not supported",
         self.transfer_syntax.name
       ))),
+    }
+  }
+
+  /// Inflates deflated data for a single frame. This is used by the 'Deflated
+  /// Image Frame Compression' transfer syntax.
+  ///
+  fn inflate_frame_data(&self, data: &[u8]) -> Result<Vec<u8>, DataError> {
+    let mut decompressor = flate2::Decompress::new(false);
+    let mut inflated_data = vec![0u8; self.definition.frame_size_in_bytes()];
+
+    match decompressor.decompress(
+      data,
+      &mut inflated_data,
+      flate2::FlushDecompress::Finish,
+    ) {
+      Ok(status) => {
+        if status != flate2::Status::StreamEnd {
+          return Err(DataError::new_value_invalid(
+            "Frame data inflate did not reach the end of the stream"
+              .to_string(),
+          ));
+        }
+
+        if decompressor.total_out() != inflated_data.len() as u64 {
+          return Err(DataError::new_value_invalid(format!(
+            "Frame data inflate produced {} bytes but {} bytes were expected",
+            decompressor.total_out(),
+            inflated_data.len()
+          )));
+        }
+
+        Ok(inflated_data)
+      }
+
+      Err(_) => Err(DataError::new_value_invalid(
+        "Frame data inflate failed".to_string(),
+      )),
     }
   }
 }

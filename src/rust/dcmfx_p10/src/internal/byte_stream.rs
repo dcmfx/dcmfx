@@ -280,7 +280,7 @@ impl ByteStream {
 
       match zlib_stream.decompress(
         input_slice,
-        output_buffer.as_mut_slice(),
+        &mut output_buffer,
         flate2::FlushDecompress::None,
       ) {
         Ok(status) => {

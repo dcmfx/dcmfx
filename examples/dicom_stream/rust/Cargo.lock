@@ -201,6 +201,7 @@ dependencies = [
  "cc",
  "dcmfx_core",
  "dcmfx_p10",
+ "flate2",
  "glob",
  "image",
  "jpeg-decoder",

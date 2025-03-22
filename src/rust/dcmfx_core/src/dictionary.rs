@@ -110469,6 +110469,7 @@ pub fn uid_name(uid: &str) -> Result<&'static str, ()> {
     "1.2.840.10008.1.2.4.94" => Ok("JPIP Referenced"),
     "1.2.840.10008.1.2.4.95" => Ok("JPIP Referenced Deflate"),
     "1.2.840.10008.1.2.5" => Ok("RLE Lossless"),
+    "1.2.840.10008.1.2.8.1" => Ok("Deflated Image Frame Compression"),
     "1.2.840.10008.1.2.6.1" => Ok("RFC 2557 MIME encapsulation"),
     "1.2.840.10008.1.2.6.2" => Ok("XML Encoding"),
     "1.2.840.10008.1.2.7.1" => {

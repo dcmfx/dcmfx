@@ -121,6 +121,17 @@ impl PixelDataDefinition {
     self.rows as usize * self.columns as usize
   }
 
+  /// Returns the number of bytes consumed by a single frame of image data.
+  ///
+  /// If the size of a single frame of image data is not a whole number of
+  /// bytes, which is possible when [`Self::bits_allocated`] is
+  /// [`BitsAllocated::One`], then the result is rounded up to a whole number of
+  /// bytes.
+  ///
+  pub fn frame_size_in_bytes(&self) -> usize {
+    (self.pixel_count() * self.pixel_size_in_bits() + 7) / 8
+  }
+
   /// Returns whether this pixel data definition defines grayscale pixel data.
   ///
   pub fn is_grayscale(&self) -> bool {

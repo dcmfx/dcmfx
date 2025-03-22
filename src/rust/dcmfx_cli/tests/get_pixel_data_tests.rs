@@ -360,6 +360,24 @@ fn jpeg_xl_color_to_jpg() {
 }
 
 #[test]
+fn deflated_image_frame_compression() {
+  let dicom_file = "../../../test/assets/other/SC_ybr_full_422_uncompressed.deflated_image_frame_compression.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "ybr_to_png.png");
+}
+
+#[test]
 fn render_overlays() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/examples_overlay.dcm";

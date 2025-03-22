@@ -564,9 +564,20 @@ pub const SMPTE_ST_2110_30_PCM_AUDIO: TransferSyntax = TransferSyntax {
   is_encapsulated: false,
 };
 
+/// The 'Deflated Image Frame Compression' transfer syntax.
+///
+pub const DEFLATED_IMAGE_FRAME_COMPRESSION: TransferSyntax = TransferSyntax {
+  name: "Deflated Image Frame Compression",
+  uid: "1.2.840.10008.1.2.8.1",
+  vr_serialization: VrSerialization::VrExplicit,
+  endianness: Endianness::LittleEndian,
+  is_deflated: false,
+  is_encapsulated: true,
+};
+
 /// A list of all supported transfer syntaxes.
 ///
-pub const ALL: [TransferSyntax; 45] = [
+pub const ALL: [TransferSyntax; 46] = [
   IMPLICIT_VR_LITTLE_ENDIAN,
   EXPLICIT_VR_LITTLE_ENDIAN,
   ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN,
@@ -612,6 +623,7 @@ pub const ALL: [TransferSyntax; 45] = [
   SMPTE_ST_2110_20_UNCOMPRESSED_PROGRESSIVE_ACTIVE_VIDEO,
   SMPTE_ST_2110_20_UNCOMPRESSED_INTERLACED_ACTIVE_VIDEO,
   SMPTE_ST_2110_30_PCM_AUDIO,
+  DEFLATED_IMAGE_FRAME_COMPRESSION,
 ];
 
 impl TransferSyntax {
@@ -696,6 +708,7 @@ impl TransferSyntax {
         Ok(&SMPTE_ST_2110_20_UNCOMPRESSED_INTERLACED_ACTIVE_VIDEO)
       }
       "1.2.840.10008.1.2.7.3" => Ok(&SMPTE_ST_2110_30_PCM_AUDIO),
+      "1.2.840.10008.1.2.8.1" => Ok(&DEFLATED_IMAGE_FRAME_COMPRESSION),
 
       _ => Err(()),
     }
@@ -706,7 +719,7 @@ impl TransferSyntax {
 mod tests {
   use super::*;
 
-  const TRANSFER_SYNTAX_UIDS: [&str; 45] = [
+  const TRANSFER_SYNTAX_UIDS: [&str; 46] = [
     "1.2.840.10008.1.2",
     "1.2.840.10008.1.2.1",
     "1.2.840.10008.1.2.1.98",
@@ -752,6 +765,7 @@ mod tests {
     "1.2.840.10008.1.2.7.1",
     "1.2.840.10008.1.2.7.2",
     "1.2.840.10008.1.2.7.3",
+    "1.2.840.10008.1.2.8.1",
   ];
 
   #[test]

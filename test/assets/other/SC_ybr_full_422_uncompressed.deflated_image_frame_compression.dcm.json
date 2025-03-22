@@ -1,0 +1,304 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.8.1"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "SECONDARY",
+      "OTHER"
+    ],
+    "vr": "CS"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.7"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.276.0.7230010.3.1.4.8323329.5846.1512159596.457896"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20170101"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "vr": "DA"
+  },
+  "0008002A": {
+    "vr": "DT"
+  },
+  "00080030": {
+    "Value": [
+      "120000"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "vr": "TM"
+  },
+  "00080050": {
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "OT"
+    ],
+    "vr": "CS"
+  },
+  "00080064": {
+    "Value": [
+      "SYN"
+    ],
+    "vr": "CS"
+  },
+  "00080090": {
+    "Value": [
+      {
+        "Alphabetic": "Moriarty^James"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00082111": {
+    "Value": [
+      "Lossy compression with JPEG baseline, IJG quality factor 90, compression ratio 21.521"
+    ],
+    "vr": "ST"
+  },
+  "00082112": {
+    "Value": [
+      {
+        "00081150": {
+          "Value": [
+            "1.2.840.10008.5.1.4.1.1.7"
+          ],
+          "vr": "UI"
+        },
+        "00081155": {
+          "Value": [
+            "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116"
+          ],
+          "vr": "UI"
+        },
+        "0040A170": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "121320"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "DCM"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Uncompressed predecessor"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00089215": {
+    "Value": [
+      {
+        "00080100": {
+          "Value": [
+            "113040"
+          ],
+          "vr": "SH"
+        },
+        "00080102": {
+          "Value": [
+            "DCM"
+          ],
+          "vr": "SH"
+        },
+        "00080104": {
+          "Value": [
+            "Lossy Compression"
+          ],
+          "vr": "LO"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "Lestrade^G"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "ID1"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "F"
+    ],
+    "vr": "CS"
+  },
+  "00101010": {
+    "Value": [
+      "024Y"
+    ],
+    "vr": "AS"
+  },
+  "00185100": {
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "1"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200020": {
+    "vr": "CS"
+  },
+  "00200060": {
+    "vr": "CS"
+  },
+  "00204000": {
+    "Value": [
+      "Test Image with 10 rows of (255,0,0), 10 rows of (255,128,128), 10 rows of (0,255,0), 10 rows of (128,255,128), 10 rows of (0,0,255), 10 rows of (128,128,255), 10 rows of (0,0,0), 10 rows of (64,64,64), 10 rows of (192,192,192), 10 rows of (255,255,255), uncompressed"
+    ],
+    "vr": "LT"
+  },
+  "00280002": {
+    "Value": [
+      3
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "YBR_FULL_422"
+    ],
+    "vr": "CS"
+  },
+  "00280006": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280010": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      100
+    ],
+    "vr": "US"
+  },
+  "00280030": {
+    "Value": [
+      1.0,
+      1.0
+    ],
+    "vr": "DS"
+  },
+  "00280100": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      8
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      7
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00282110": {
+    "Value": [
+      "01"
+    ],
+    "vr": "CS"
+  },
+  "00282112": {
+    "Value": [
+      21.521
+    ],
+    "vr": "DS"
+  },
+  "00282114": {
+    "Value": [
+      "ISO_10918_1"
+    ],
+    "vr": "CS"
+  },
+  "7FE00010": {
+    "InlineBinary": "/v8A4AQAAAAAAAAA/v8A4PQAAADt0jFSwkAYhmFyBkUbuICoZ6AnFTPIGUyijTM4FgzRPqRKbpBwioVNzZ1Yh9JSZ2fWfLzFc4D//b84XrgYAIBfW4qYS2jbF6shkdA0qVHQtkmnoGkyoyB0R3+yg4ZnEZmE3S7dK6iq+xsFdT0Zani81hC6oy/nbSkIvQdf7iRU1eRWQV0/XGk439J/x+My1vA0AwDgUo3HLgUA4A8SBaORe1VQlvZNxEpBUZh3BWXZrRRst0ZEJ8KKMCKshKI4fCiIonytYDDY5Bq+PjWE7uhLDngXRRpCd+QfP02nAACg76wFAAB95xz+k9NJQ+iOAOAuzDcA",
+    "vr": "OB"
+  }
+}
