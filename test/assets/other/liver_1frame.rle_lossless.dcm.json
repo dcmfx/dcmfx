@@ -1,0 +1,905 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2.5"
+    ],
+    "vr": "UI"
+  },
+  "00080008": {
+    "Value": [
+      "DERIVED",
+      "PRIMARY"
+    ],
+    "vr": "CS"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.66.4"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.276.0.7230010.3.1.4.0.42154.1458337731.665796"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20030417"
+    ],
+    "vr": "DA"
+  },
+  "00080021": {
+    "Value": [
+      "20160318"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "Value": [
+      "20160318"
+    ],
+    "vr": "DA"
+  },
+  "00080030": {
+    "Value": [
+      "104607"
+    ],
+    "vr": "TM"
+  },
+  "00080031": {
+    "Value": [
+      "174852"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "Value": [
+      "174852"
+    ],
+    "vr": "TM"
+  },
+  "00080050": {
+    "Value": [
+      "03086212"
+    ],
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "SEG"
+    ],
+    "vr": "CS"
+  },
+  "00080070": {
+    "Value": [
+      "QIICR"
+    ],
+    "vr": "LO"
+  },
+  "00080090": {
+    "vr": "PN"
+  },
+  "0008103E": {
+    "Value": [
+      "Liver Segmentation"
+    ],
+    "vr": "LO"
+  },
+  "00081090": {
+    "Value": [
+      "https://github.com/fedorov/dcmqi.git"
+    ],
+    "vr": "LO"
+  },
+  "00081115": {
+    "Value": [
+      {
+        "0008114A": {
+          "Value": [
+            {
+              "00081150": {
+                "Value": [
+                  "1.2.840.10008.5.1.4.1.1.2"
+                ],
+                "vr": "UI"
+              },
+              "00081155": {
+                "Value": [
+                  "1.2.392.200103.20080913.113635.2.2009.6.22.21.43.10.23433.1"
+                ],
+                "vr": "UI"
+              }
+            },
+            {
+              "00081150": {
+                "Value": [
+                  "1.2.840.10008.5.1.4.1.1.2"
+                ],
+                "vr": "UI"
+              },
+              "00081155": {
+                "Value": [
+                  "1.2.392.200103.20080913.113635.2.2009.6.22.21.43.10.23432.1"
+                ],
+                "vr": "UI"
+              }
+            },
+            {
+              "00081150": {
+                "Value": [
+                  "1.2.840.10008.5.1.4.1.1.2"
+                ],
+                "vr": "UI"
+              },
+              "00081155": {
+                "Value": [
+                  "1.2.392.200103.20080913.113635.2.2009.6.22.21.43.10.23431.1"
+                ],
+                "vr": "UI"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "0020000E": {
+          "Value": [
+            "1.2.392.200103.20080913.113635.1.2009.6.22.21.43.10.23430.1"
+          ],
+          "vr": "UI"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "JANCT000"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "99000"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "M"
+    ],
+    "vr": "CS"
+  },
+  "00101010": {
+    "Value": [
+      "060Y"
+    ],
+    "vr": "AS"
+  },
+  "00120050": {
+    "vr": "LO"
+  },
+  "00120060": {
+    "Value": [
+      "UIowa"
+    ],
+    "vr": "LO"
+  },
+  "00120071": {
+    "vr": "LO"
+  },
+  "00181000": {
+    "Value": [
+      "0"
+    ],
+    "vr": "LO"
+  },
+  "00181020": {
+    "Value": [
+      "0d533f1"
+    ],
+    "vr": "LO"
+  },
+  "0020000D": {
+    "Value": [
+      "1.2.392.200103.20080913.113635.0.2009.6.22.21.43.10.22941.1"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.2.276.0.7230010.3.1.3.0.42154.1458337731.665795"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "1"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200052": {
+    "Value": [
+      "1.2.392.200103.20080913.113635.3.2009.6.22.21.44.34.23882.1"
+    ],
+    "vr": "UI"
+  },
+  "00201040": {
+    "Value": [
+      "SN"
+    ],
+    "vr": "LO"
+  },
+  "00209221": {
+    "Value": [
+      {
+        "00209164": {
+          "Value": [
+            "1.3.6.1.4.1.43046.3.0.42154.1458337731.665797"
+          ],
+          "vr": "UI"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00209222": {
+    "Value": [
+      {
+        "00209164": {
+          "Value": [
+            "1.3.6.1.4.1.43046.3.0.42154.1458337731.665797"
+          ],
+          "vr": "UI"
+        },
+        "00209165": {
+          "Value": [
+            "0062000B"
+          ],
+          "vr": "AT"
+        },
+        "00209167": {
+          "Value": [
+            "0062000A"
+          ],
+          "vr": "AT"
+        },
+        "00209421": {
+          "Value": [
+            "ReferencedSegmentNumber"
+          ],
+          "vr": "LO"
+        }
+      },
+      {
+        "00209164": {
+          "Value": [
+            "1.3.6.1.4.1.43046.3.0.42154.1458337731.665797"
+          ],
+          "vr": "UI"
+        },
+        "00209165": {
+          "Value": [
+            "00200032"
+          ],
+          "vr": "AT"
+        },
+        "00209167": {
+          "Value": [
+            "00209113"
+          ],
+          "vr": "AT"
+        },
+        "00209421": {
+          "Value": [
+            "ImagePositionPatient"
+          ],
+          "vr": "LO"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00280002": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280004": {
+    "Value": [
+      "MONOCHROME2"
+    ],
+    "vr": "CS"
+  },
+  "00280010": {
+    "Value": [
+      512
+    ],
+    "vr": "US"
+  },
+  "00280011": {
+    "Value": [
+      512
+    ],
+    "vr": "US"
+  },
+  "00280100": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280101": {
+    "Value": [
+      1
+    ],
+    "vr": "US"
+  },
+  "00280102": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00280103": {
+    "Value": [
+      0
+    ],
+    "vr": "US"
+  },
+  "00282110": {
+    "Value": [
+      "00"
+    ],
+    "vr": "CS"
+  },
+  "00620001": {
+    "Value": [
+      "BINARY"
+    ],
+    "vr": "CS"
+  },
+  "00620002": {
+    "Value": [
+      {
+        "00620003": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "T-D0050"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "SRT"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Tissue"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "00620004": {
+          "Value": [
+            1
+          ],
+          "vr": "US"
+        },
+        "00620005": {
+          "Value": [
+            "Liver"
+          ],
+          "vr": "LO"
+        },
+        "00620008": {
+          "Value": [
+            "SEMIAUTOMATIC"
+          ],
+          "vr": "CS"
+        },
+        "00620009": {
+          "Value": [
+            "SlicerEditor"
+          ],
+          "vr": "LO"
+        },
+        "0062000D": {
+          "Value": [
+            41661,
+            41167,
+            40792
+          ],
+          "vr": "US"
+        },
+        "0062000F": {
+          "Value": [
+            {
+              "00080100": {
+                "Value": [
+                  "T-62000"
+                ],
+                "vr": "SH"
+              },
+              "00080102": {
+                "Value": [
+                  "SRT"
+                ],
+                "vr": "SH"
+              },
+              "00080104": {
+                "Value": [
+                  "Liver"
+                ],
+                "vr": "LO"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "00700080": {
+    "Value": [
+      "QIICR QIN IOWA"
+    ],
+    "vr": "CS"
+  },
+  "00700081": {
+    "Value": [
+      "Iowa QIN segmentation result"
+    ],
+    "vr": "LO"
+  },
+  "00700084": {
+    "vr": "PN"
+  },
+  "52009229": {
+    "Value": [
+      {
+        "00209116": {
+          "Value": [
+            {
+              "00200037": {
+                "Value": [
+                  1.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  0.0
+                ],
+                "vr": "DS"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "00289110": {
+          "Value": [
+            {
+              "00180050": {
+                "Value": [
+                  1.0
+                ],
+                "vr": "DS"
+              },
+              "00180088": {
+                "Value": [
+                  1.0
+                ],
+                "vr": "DS"
+              },
+              "00280030": {
+                "Value": [
+                  0.810547,
+                  0.810547
+                ],
+                "vr": "DS"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "52009230": {
+    "Value": [
+      {
+        "00089124": {
+          "Value": [
+            {
+              "00082112": {
+                "Value": [
+                  {
+                    "00081150": {
+                      "Value": [
+                        "1.2.840.10008.5.1.4.1.1.2"
+                      ],
+                      "vr": "UI"
+                    },
+                    "00081155": {
+                      "Value": [
+                        "1.2.392.200103.20080913.113635.2.2009.6.22.21.43.10.23433.1"
+                      ],
+                      "vr": "UI"
+                    },
+                    "0040A170": {
+                      "Value": [
+                        {
+                          "00080100": {
+                            "Value": [
+                              "121322"
+                            ],
+                            "vr": "SH"
+                          },
+                          "00080102": {
+                            "Value": [
+                              "DCM"
+                            ],
+                            "vr": "SH"
+                          },
+                          "00080104": {
+                            "Value": [
+                              "Source image for image processing operation"
+                            ],
+                            "vr": "LO"
+                          }
+                        }
+                      ],
+                      "vr": "SQ"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "00089215": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "113076"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Segmentation"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "00209111": {
+          "Value": [
+            {
+              "00209157": {
+                "Value": [
+                  1,
+                  1
+                ],
+                "vr": "UL"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "00209113": {
+          "Value": [
+            {
+              "00200032": {
+                "Value": [
+                  -235.2,
+                  -226.8,
+                  -128.69
+                ],
+                "vr": "DS"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "0062000A": {
+          "Value": [
+            {
+              "0062000B": {
+                "Value": [
+                  1
+                ],
+                "vr": "US"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      },
+      {
+        "00089124": {
+          "Value": [
+            {
+              "00082112": {
+                "Value": [
+                  {
+                    "00081150": {
+                      "Value": [
+                        "1.2.840.10008.5.1.4.1.1.2"
+                      ],
+                      "vr": "UI"
+                    },
+                    "00081155": {
+                      "Value": [
+                        "1.2.392.200103.20080913.113635.2.2009.6.22.21.43.10.23432.1"
+                      ],
+                      "vr": "UI"
+                    },
+                    "0040A170": {
+                      "Value": [
+                        {
+                          "00080100": {
+                            "Value": [
+                              "121322"
+                            ],
+                            "vr": "SH"
+                          },
+                          "00080102": {
+                            "Value": [
+                              "DCM"
+                            ],
+                            "vr": "SH"
+                          },
+                          "00080104": {
+                            "Value": [
+                              "Source image for image processing operation"
+                            ],
+                            "vr": "LO"
+                          }
+                        }
+                      ],
+                      "vr": "SQ"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "00089215": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "113076"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Segmentation"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "00209111": {
+          "Value": [
+            {
+              "00209157": {
+                "Value": [
+                  1,
+                  2
+                ],
+                "vr": "UL"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "00209113": {
+          "Value": [
+            {
+              "00200032": {
+                "Value": [
+                  -235.2,
+                  -226.8,
+                  -127.69
+                ],
+                "vr": "DS"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "0062000A": {
+          "Value": [
+            {
+              "0062000B": {
+                "Value": [
+                  1
+                ],
+                "vr": "US"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      },
+      {
+        "00089124": {
+          "Value": [
+            {
+              "00082112": {
+                "Value": [
+                  {
+                    "00081150": {
+                      "Value": [
+                        "1.2.840.10008.5.1.4.1.1.2"
+                      ],
+                      "vr": "UI"
+                    },
+                    "00081155": {
+                      "Value": [
+                        "1.2.392.200103.20080913.113635.2.2009.6.22.21.43.10.23431.1"
+                      ],
+                      "vr": "UI"
+                    },
+                    "0040A170": {
+                      "Value": [
+                        {
+                          "00080100": {
+                            "Value": [
+                              "121322"
+                            ],
+                            "vr": "SH"
+                          },
+                          "00080102": {
+                            "Value": [
+                              "DCM"
+                            ],
+                            "vr": "SH"
+                          },
+                          "00080104": {
+                            "Value": [
+                              "Source image for image processing operation"
+                            ],
+                            "vr": "LO"
+                          }
+                        }
+                      ],
+                      "vr": "SQ"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "00089215": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "113076"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Segmentation"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "00209111": {
+          "Value": [
+            {
+              "00209157": {
+                "Value": [
+                  1,
+                  3
+                ],
+                "vr": "UL"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "00209113": {
+          "Value": [
+            {
+              "00200032": {
+                "Value": [
+                  -235.2,
+                  -226.8,
+                  -126.69
+                ],
+                "vr": "DS"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "0062000A": {
+          "Value": [
+            {
+              "0062000B": {
+                "Value": [
+                  1
+                ],
+                "vr": "US"
+              }
+            }
+          ],
+          "vr": "SQ"
+        }
+      }
+    ],
+    "vr": "SQ"
+  },
+  "7FE00010": {
+    "InlineBinary": "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",
+    "vr": "OB"
+  }
+}

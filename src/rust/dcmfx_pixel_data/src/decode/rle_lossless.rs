@@ -28,12 +28,19 @@ pub fn decode_single_channel(
     ));
   }
 
+  let expected_segment_length =
+    if definition.bits_allocated == BitsAllocated::One {
+      definition.frame_size_in_bytes()
+    } else {
+      definition.pixel_count()
+    };
+
+  let segments = decode_rle_segments(data, expected_segment_length)?;
+
   let width = definition.columns as u32;
   let height = definition.rows as u32;
   let pixel_count = definition.pixel_count();
-
   let bits_allocated = usize::from(definition.bits_allocated);
-  let segments = decode_rle_segments(data, pixel_count)?;
 
   match (
     &definition.photometric_interpretation,
@@ -41,6 +48,42 @@ pub fn decode_single_channel(
     definition.bits_allocated,
     segments.as_slice(),
   ) {
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      PixelRepresentation::Signed,
+      BitsAllocated::One,
+      [segment],
+    ) => {
+      let mut pixels = vec![0i8; pixel_count];
+
+      for i in 0..pixel_count {
+        pixels[i] = -(((segment[i / 8] >> (i % 8)) & 1) as i8);
+      }
+
+      Ok(SingleChannelImage::Int8(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      PixelRepresentation::Unsigned,
+      BitsAllocated::One,
+      [segment],
+    ) => {
+      let mut pixels = vec![0u8; pixel_count];
+
+      for i in 0..pixel_count {
+        pixels[i] = (segment[i / 8] >> (i % 8)) & 1;
+      }
+
+      Ok(SingleChannelImage::Uint8(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
     (
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2,
@@ -152,7 +195,7 @@ pub fn decode_single_channel(
     }
 
     _ => Err(DataError::new_value_invalid(format!(
-      "RLE Lossless data is malformed with photometric interpretation \
+      "RLE Lossless decode not supported with photometric interpretation \
         '{}', bits allocated '{}', segment count '{}'",
       definition.photometric_interpretation,
       bits_allocated,

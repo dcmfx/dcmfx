@@ -71,6 +71,24 @@ fn rle_lossless_to_jpg() {
 }
 
 #[test]
+fn rle_lossless_bitmap_to_png() {
+  let dicom_file = "../../../test/assets/other/liver_1frame.rle_lossless.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "rle_lossless_bitmap_to_png.png");
+}
+
+#[test]
 fn rle_lossless_color_to_png() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_32bit.dcm";
