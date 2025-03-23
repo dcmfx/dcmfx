@@ -32,123 +32,131 @@ pub fn decode_single_channel(
   let height = definition.rows as u32;
   let pixel_count = definition.pixel_count();
 
-  match definition.photometric_interpretation {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2 => {
-      let bits_allocated = usize::from(definition.bits_allocated);
-      let segments = decode_rle_segments(data, pixel_count)?;
+  let bits_allocated = usize::from(definition.bits_allocated);
+  let segments = decode_rle_segments(data, pixel_count)?;
 
-      match (
-        definition.pixel_representation,
-        definition.bits_allocated,
-        segments.as_slice(),
-      ) {
-        (PixelRepresentation::Signed, BitsAllocated::Eight, [segment]) => {
-          let mut pixels = vec![0i8; pixel_count];
+  match (
+    &definition.photometric_interpretation,
+    definition.pixel_representation,
+    definition.bits_allocated,
+    segments.as_slice(),
+  ) {
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      PixelRepresentation::Signed,
+      BitsAllocated::Eight,
+      [segment],
+    ) => {
+      let mut pixels = vec![0i8; pixel_count];
 
-          for (i, pixel) in segment.iter().enumerate() {
-            pixels[i] = i8::from_le_bytes([*pixel]);
-          }
-
-          Ok(SingleChannelImage::Int8(
-            ImageBuffer::from_raw(width, height, pixels).unwrap(),
-          ))
-        }
-
-        (PixelRepresentation::Unsigned, BitsAllocated::Eight, [segment]) => {
-          Ok(SingleChannelImage::Uint8(
-            ImageBuffer::from_raw(width, height, segment.to_vec()).unwrap(),
-          ))
-        }
-
-        (
-          PixelRepresentation::Signed,
-          BitsAllocated::Sixteen,
-          [segment_0, segment_1],
-        ) => {
-          let mut pixels = vec![0i16; pixel_count];
-
-          for i in 0..pixel_count {
-            pixels[i] = i16::from_le_bytes([segment_1[i], segment_0[i]]);
-          }
-
-          Ok(SingleChannelImage::Int16(
-            ImageBuffer::from_raw(width, height, pixels).unwrap(),
-          ))
-        }
-
-        (
-          PixelRepresentation::Unsigned,
-          BitsAllocated::Sixteen,
-          [segment_0, segment_1],
-        ) => {
-          let mut pixels = vec![0u16; pixel_count];
-
-          for i in 0..pixel_count {
-            pixels[i] = u16::from_le_bytes([segment_1[i], segment_0[i]]);
-          }
-
-          Ok(SingleChannelImage::Uint16(
-            ImageBuffer::from_raw(width, height, pixels).unwrap(),
-          ))
-        }
-
-        (
-          PixelRepresentation::Signed,
-          BitsAllocated::ThirtyTwo,
-          [segment_0, segment_1, segment_2, segment_3],
-        ) => {
-          let mut pixels = vec![0i32; pixel_count];
-
-          for i in 0..pixel_count {
-            pixels[i] = i32::from_le_bytes([
-              segment_3[i],
-              segment_2[i],
-              segment_1[i],
-              segment_0[i],
-            ]);
-          }
-
-          Ok(SingleChannelImage::Int32(
-            ImageBuffer::from_raw(width, height, pixels).unwrap(),
-          ))
-        }
-
-        (
-          PixelRepresentation::Unsigned,
-          BitsAllocated::ThirtyTwo,
-          [segment_0, segment_1, segment_2, segment_3],
-        ) => {
-          let mut pixels = vec![0u32; pixel_count];
-
-          for i in 0..pixel_count {
-            pixels[i] = u32::from_le_bytes([
-              segment_3[i],
-              segment_2[i],
-              segment_1[i],
-              segment_0[i],
-            ]);
-          }
-
-          Ok(SingleChannelImage::Uint32(
-            ImageBuffer::from_raw(width, height, pixels).unwrap(),
-          ))
-        }
-
-        _ => Err(DataError::new_value_invalid(format!(
-          "RLE Lossless data is malformed with photometric interpretation \
-           '{}', bits allocated '{}', segment count '{}'",
-          definition.photometric_interpretation,
-          bits_allocated,
-          segments.len(),
-        ))),
+      for (i, pixel) in segment.iter().enumerate() {
+        pixels[i] = i8::from_be_bytes([*pixel]);
       }
+
+      Ok(SingleChannelImage::Int8(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      PixelRepresentation::Unsigned,
+      BitsAllocated::Eight,
+      [segment],
+    ) => Ok(SingleChannelImage::Uint8(
+      ImageBuffer::from_raw(width, height, segment.to_vec()).unwrap(),
+    )),
+
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      PixelRepresentation::Signed,
+      BitsAllocated::Sixteen,
+      [segment_0, segment_1],
+    ) => {
+      let mut pixels = vec![0i16; pixel_count];
+
+      for i in 0..pixel_count {
+        pixels[i] = i16::from_be_bytes([segment_0[i], segment_1[i]]);
+      }
+
+      Ok(SingleChannelImage::Int16(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      PixelRepresentation::Unsigned,
+      BitsAllocated::Sixteen,
+      [segment_0, segment_1],
+    ) => {
+      let mut pixels = vec![0u16; pixel_count];
+
+      for i in 0..pixel_count {
+        pixels[i] = u16::from_be_bytes([segment_0[i], segment_1[i]]);
+      }
+
+      Ok(SingleChannelImage::Uint16(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      PixelRepresentation::Signed,
+      BitsAllocated::ThirtyTwo,
+      [segment_0, segment_1, segment_2, segment_3],
+    ) => {
+      let mut pixels = vec![0i32; pixel_count];
+
+      for i in 0..pixel_count {
+        pixels[i] = i32::from_be_bytes([
+          segment_0[i],
+          segment_1[i],
+          segment_2[i],
+          segment_3[i],
+        ]);
+      }
+
+      Ok(SingleChannelImage::Int32(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      PixelRepresentation::Unsigned,
+      BitsAllocated::ThirtyTwo,
+      [segment_0, segment_1, segment_2, segment_3],
+    ) => {
+      let mut pixels = vec![0u32; pixel_count];
+
+      for i in 0..pixel_count {
+        pixels[i] = u32::from_be_bytes([
+          segment_0[i],
+          segment_1[i],
+          segment_2[i],
+          segment_3[i],
+        ]);
+      }
+
+      Ok(SingleChannelImage::Uint32(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
     }
 
     _ => Err(DataError::new_value_invalid(format!(
-      "Photometric interpretation '{}' is invalid for RLE Lossless grayscale \
-       pixel data",
-      definition.photometric_interpretation
+      "RLE Lossless data is malformed with photometric interpretation \
+        '{}', bits allocated '{}', segment count '{}'",
+      definition.photometric_interpretation,
+      bits_allocated,
+      segments.len(),
     ))),
   }
 }
@@ -161,134 +169,171 @@ pub fn decode_color(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  // Check that there are three samples per pixel
-  if !matches!(definition.samples_per_pixel, SamplesPerPixel::Three { .. }) {
-    return Err(DataError::new_value_invalid(
-      "Samples per pixel is not three for color pixel data".to_string(),
-    ));
-  }
-
   let width = definition.columns as u32;
   let height = definition.rows as u32;
   let pixel_count = definition.pixel_count();
 
-  match definition.photometric_interpretation {
-    PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull => {
-      let segments = decode_rle_segments(data, pixel_count)?;
+  let segments = decode_rle_segments(data, pixel_count)?;
 
-      match (definition.bits_allocated, segments.as_slice()) {
-        (BitsAllocated::Eight, [red_segment, green_segment, blue_segment]) => {
-          let mut pixels = vec![0u8; pixel_count * 3];
+  match (
+    &definition.photometric_interpretation,
+    definition.bits_allocated,
+    segments.as_slice(),
+  ) {
+    (
+      PhotometricInterpretation::PaletteColor { rgb_luts },
+      BitsAllocated::Eight,
+      [segment],
+    ) => {
+      let (red_lut, green_lut, blue_lut) = rgb_luts;
 
-          for i in 0..pixel_count {
-            pixels[i * 3] = red_segment[i];
-            pixels[i * 3 + 1] = green_segment[i];
-            pixels[i * 3 + 2] = blue_segment[i];
-          }
+      let mut pixels = vec![0u16; pixel_count * 3];
 
-          if definition.photometric_interpretation.is_ybr() {
-            ybr_to_rgb::convert_u8(&mut pixels, definition);
-          }
+      for i in 0..pixel_count {
+        let index = segment[i] as i64;
 
-          Ok(ColorImage::Uint8(
-            ImageBuffer::from_raw(width, height, pixels).unwrap(),
-          ))
-        }
-
-        (
-          BitsAllocated::Sixteen,
-          [
-            red_segment_0,
-            red_segment_1,
-            green_segment_0,
-            green_segment_1,
-            blue_segment_0,
-            blue_segment_1,
-          ],
-        ) => {
-          let mut pixels = vec![0u16; pixel_count * 3];
-
-          for i in 0..pixel_count {
-            pixels[i * 3] =
-              u16::from_le_bytes([red_segment_1[i], red_segment_0[i]]);
-            pixels[i * 3 + 1] =
-              u16::from_le_bytes([green_segment_1[i], green_segment_0[i]]);
-            pixels[i * 3 + 2] =
-              u16::from_le_bytes([blue_segment_1[i], blue_segment_0[i]]);
-          }
-
-          if definition.photometric_interpretation.is_ybr() {
-            ybr_to_rgb::convert_u16(&mut pixels, definition);
-          }
-
-          Ok(ColorImage::Uint16(
-            ImageBuffer::from_raw(width, height, pixels).unwrap(),
-          ))
-        }
-
-        (
-          BitsAllocated::ThirtyTwo,
-          [
-            red_segment_0,
-            red_segment_1,
-            red_segment_2,
-            red_segment_3,
-            green_segment_0,
-            green_segment_1,
-            green_segment_2,
-            green_segment_3,
-            blue_segment_0,
-            blue_segment_1,
-            blue_segment_2,
-            blue_segment_3,
-          ],
-        ) => {
-          let mut pixels = vec![0u32; pixel_count * 3];
-
-          for i in 0..pixel_count {
-            pixels[i * 3] = u32::from_le_bytes([
-              red_segment_3[i],
-              red_segment_2[i],
-              red_segment_1[i],
-              red_segment_0[i],
-            ]);
-            pixels[i * 3 + 1] = u32::from_le_bytes([
-              green_segment_3[i],
-              green_segment_2[i],
-              green_segment_1[i],
-              green_segment_0[i],
-            ]);
-            pixels[i * 3 + 2] = u32::from_le_bytes([
-              blue_segment_3[i],
-              blue_segment_2[i],
-              blue_segment_1[i],
-              blue_segment_0[i],
-            ]);
-          }
-
-          if definition.photometric_interpretation.is_ybr() {
-            ybr_to_rgb::convert_u32(&mut pixels, definition);
-          }
-
-          Ok(ColorImage::Uint32(
-            ImageBuffer::from_raw(width, height, pixels).unwrap(),
-          ))
-        }
-
-        _ => Err(DataError::new_value_invalid(format!(
-          "Photometric interpretation '{}' is invalid for RLE Lossless color \
-           pixel data when bits allocated is {} and there are {} segments",
-          definition.photometric_interpretation,
-          usize::from(definition.bits_allocated),
-          segments.len(),
-        ))),
+        pixels[i * 3] = red_lut.lookup(index);
+        pixels[i * 3 + 1] = green_lut.lookup(index);
+        pixels[i * 3 + 2] = blue_lut.lookup(index);
       }
+
+      Ok(ColorImage::Uint16(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
+    (
+      PhotometricInterpretation::PaletteColor { rgb_luts },
+      BitsAllocated::Sixteen,
+      [segment_0, segment_1],
+    ) => {
+      let (red_lut, green_lut, blue_lut) = rgb_luts;
+
+      let mut pixels = vec![0u16; pixel_count * 3];
+
+      for i in 0..pixel_count {
+        let index = u16::from_be_bytes([segment_0[i], segment_1[i]]) as i64;
+
+        pixels[i * 3] = red_lut.lookup(index);
+        pixels[i * 3 + 1] = green_lut.lookup(index);
+        pixels[i * 3 + 2] = blue_lut.lookup(index);
+      }
+
+      Ok(ColorImage::Uint16(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
+    (
+      PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull,
+      BitsAllocated::Eight,
+      [red_segment, green_segment, blue_segment],
+    ) => {
+      let mut pixels = vec![0u8; pixel_count * 3];
+
+      for i in 0..pixel_count {
+        pixels[i * 3] = red_segment[i];
+        pixels[i * 3 + 1] = green_segment[i];
+        pixels[i * 3 + 2] = blue_segment[i];
+      }
+
+      if definition.photometric_interpretation.is_ybr() {
+        ybr_to_rgb::convert_u8(&mut pixels, definition);
+      }
+
+      Ok(ColorImage::Uint8(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
+    (
+      PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull,
+      BitsAllocated::Sixteen,
+      [
+        red_segment_0,
+        red_segment_1,
+        green_segment_0,
+        green_segment_1,
+        blue_segment_0,
+        blue_segment_1,
+      ],
+    ) => {
+      let mut pixels = vec![0u16; pixel_count * 3];
+
+      for i in 0..pixel_count {
+        pixels[i * 3] =
+          u16::from_be_bytes([red_segment_0[i], red_segment_1[i]]);
+        pixels[i * 3 + 1] =
+          u16::from_be_bytes([green_segment_0[i], green_segment_1[i]]);
+        pixels[i * 3 + 2] =
+          u16::from_be_bytes([blue_segment_0[i], blue_segment_1[i]]);
+      }
+
+      if definition.photometric_interpretation.is_ybr() {
+        ybr_to_rgb::convert_u16(&mut pixels, definition);
+      }
+
+      Ok(ColorImage::Uint16(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
+    }
+
+    (
+      PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull,
+      BitsAllocated::ThirtyTwo,
+      [
+        red_segment_0,
+        red_segment_1,
+        red_segment_2,
+        red_segment_3,
+        green_segment_0,
+        green_segment_1,
+        green_segment_2,
+        green_segment_3,
+        blue_segment_0,
+        blue_segment_1,
+        blue_segment_2,
+        blue_segment_3,
+      ],
+    ) => {
+      let mut pixels = vec![0u32; pixel_count * 3];
+
+      for i in 0..pixel_count {
+        pixels[i * 3] = u32::from_be_bytes([
+          red_segment_0[i],
+          red_segment_1[i],
+          red_segment_2[i],
+          red_segment_3[i],
+        ]);
+        pixels[i * 3 + 1] = u32::from_be_bytes([
+          green_segment_0[i],
+          green_segment_1[i],
+          green_segment_2[i],
+          green_segment_3[i],
+        ]);
+        pixels[i * 3 + 2] = u32::from_be_bytes([
+          blue_segment_0[i],
+          blue_segment_1[i],
+          blue_segment_2[i],
+          blue_segment_3[i],
+        ]);
+      }
+
+      if definition.photometric_interpretation.is_ybr() {
+        ybr_to_rgb::convert_u32(&mut pixels, definition);
+      }
+
+      Ok(ColorImage::Uint32(
+        ImageBuffer::from_raw(width, height, pixels).unwrap(),
+      ))
     }
 
     _ => Err(DataError::new_value_invalid(format!(
-      "Photometric interpretation '{}' is invalid for RLE Lossless color pixel \
-       data",
-      definition.photometric_interpretation
+      "Photometric interpretation '{}' is invalid for RLE Lossless color \
+       pixel data when bits allocated is {} and there are {} segments",
+      definition.photometric_interpretation,
+      usize::from(definition.bits_allocated),
+      segments.len(),
     ))),
   }
 }
@@ -326,7 +371,7 @@ fn decode_rle_segments(
 
   let mut segments = Vec::with_capacity(number_of_segments);
 
-  // Create an iterator for each segment
+  // Decode all the segments
   for i in 0..number_of_segments {
     let segment_offset = segment_offsets[i] as usize;
 

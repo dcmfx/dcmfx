@@ -1,12 +1,12 @@
 # DCMfx - Test Assets
 
-This folder contains assets used by the integration tests for the DCMfx
-libraries. These test many different types of DICOM files and check the result
-against a known-correct piece of output, e.g. JSON.
+This folder contains assets used by DCMfx' integration tests. These test many
+different types of DICOM files and check the result against a known-correct
+pieces of output, e.g. JSON.
 
 Most files were sourced from the test suites used by other DICOM
-implementations, specifically `pydicom` and `fo-dicom`. A small number came from
-other publicly available sources.
+implementations, specifically `pydicom` and `fo-dicom`. Others came from
+publicly available sources or were created from scratch.
 
 Known-correct JSON is generated with `pydicom` using the `dicoms_to_json.py`
 script. Note that in some cases issues in `pydicom` cause its JSON output to be

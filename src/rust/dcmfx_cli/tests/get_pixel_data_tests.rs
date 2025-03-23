@@ -50,7 +50,7 @@ fn ybr_to_png() {
 }
 
 #[test]
-fn rle_to_jpg() {
+fn rle_lossless_to_jpg() {
   let dicom_file = "../../../test/assets/pydicom/test_files/MR_small_RLE.dcm";
   let output_file = format!("{}.0000.jpg", dicom_file);
 
@@ -67,11 +67,11 @@ fn rle_to_jpg() {
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(output_file, "rle_to_jpg.jpg");
+  assert_image_snapshot!(output_file, "rle_lossless_to_jpg.jpg");
 }
 
 #[test]
-fn rle_color_to_png() {
+fn rle_lossless_color_to_png() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_32bit.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
@@ -86,7 +86,26 @@ fn rle_color_to_png() {
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(output_file, "rle_color_to_png.png");
+  assert_image_snapshot!(output_file, "rle_lossless_color_to_png.png");
+}
+
+#[test]
+fn rle_lossless_color_palette_to_jpg() {
+  let dicom_file =
+    "../../../test/assets/other/TestPattern_Palette.rle_lossless.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "rle_lossless_color_palette_to_jpg.jpg");
 }
 
 #[test]
@@ -184,7 +203,7 @@ fn jpeg_2000_single_channel_to_jpg() {
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(output_file, "rle_to_jpg.jpg");
+  assert_image_snapshot!(output_file, "rle_lossless_to_jpg.jpg");
 }
 
 #[test]
@@ -465,13 +484,17 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
     .try_into()
     .unwrap();
 
-  let image_2: RgbImage =
-    image::ImageReader::open(format!("tests/snapshots/{snapshot}"))
-      .unwrap()
-      .decode()
-      .unwrap()
-      .try_into()
-      .unwrap();
+  let image_snapshot_path = format!("tests/snapshots/{snapshot}");
+  if !std::path::PathBuf::from(&image_snapshot_path).exists() {
+    panic!("Snapshot file is missing: {image_snapshot_path}");
+  }
+
+  let image_2: RgbImage = image::ImageReader::open(image_snapshot_path)
+    .unwrap()
+    .decode()
+    .unwrap()
+    .try_into()
+    .unwrap();
 
   // Check that the pixels are the same within a small epsilon
   for (a, b) in image_1.pixels().zip(image_2.pixels()) {

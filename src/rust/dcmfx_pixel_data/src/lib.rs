@@ -12,6 +12,7 @@ use image::RgbImage;
 
 mod color_image;
 mod decode;
+mod encode;
 mod luts;
 mod overlays;
 mod p10_pixel_data_frame_filter;

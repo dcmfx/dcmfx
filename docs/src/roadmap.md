@@ -7,7 +7,6 @@ following:
   - Decoding of 1-bit native pixel data where the number of pixels isn't a
     multiple of 8
   - Decoding of 1-bit 'RLE Lossless' pixel data
-  - Decoding of palette color 'RLE Lossless' pixel data
   - Decoding of 1-bit and 38-bit 'JPEG 2000' pixel data
   - Decoding of 'JPEG-LS' pixel data on WASM
 
