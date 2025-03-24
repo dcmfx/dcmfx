@@ -1,8 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec, vec::Vec};
 
-use image::ImageBuffer;
-
 use dcmfx_core::DataError;
 
 use super::vec_cast;
@@ -19,74 +17,50 @@ pub fn decode_single_channel(
 ) -> Result<SingleChannelImage, DataError> {
   let pixels = decode(definition, data)?;
 
+  let width = definition.columns;
+  let height = definition.rows;
+
   match (definition.pixel_representation, definition.bits_allocated) {
     (_, BitsAllocated::One) => unreachable!(),
 
     (PixelRepresentation::Unsigned, BitsAllocated::Eight) => {
-      Ok(SingleChannelImage::Uint8(
-        ImageBuffer::from_raw(
-          definition.columns as u32,
-          definition.rows as u32,
-          pixels,
-        )
-        .unwrap(),
-      ))
+      Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap())
     }
 
-    (PixelRepresentation::Signed, BitsAllocated::Eight) => {
-      Ok(SingleChannelImage::Int8(
-        ImageBuffer::from_raw(
-          definition.columns as u32,
-          definition.rows as u32,
-          unsafe { vec_cast::<u8, i8>(pixels) },
-        )
-        .unwrap(),
-      ))
-    }
+    (PixelRepresentation::Signed, BitsAllocated::Eight) => Ok(
+      SingleChannelImage::new_i8(width, height, unsafe {
+        vec_cast::<u8, i8>(pixels)
+      })
+      .unwrap(),
+    ),
 
-    (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
-      Ok(SingleChannelImage::Uint16(
-        ImageBuffer::from_raw(
-          definition.columns as u32,
-          definition.rows as u32,
-          unsafe { vec_cast::<u8, u16>(pixels) },
-        )
-        .unwrap(),
-      ))
-    }
+    (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => Ok(
+      SingleChannelImage::new_u16(width, height, unsafe {
+        vec_cast::<u8, u16>(pixels)
+      })
+      .unwrap(),
+    ),
 
-    (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
-      Ok(SingleChannelImage::Int16(
-        ImageBuffer::from_raw(
-          definition.columns as u32,
-          definition.rows as u32,
-          unsafe { vec_cast::<u8, i16>(pixels) },
-        )
-        .unwrap(),
-      ))
-    }
+    (PixelRepresentation::Signed, BitsAllocated::Sixteen) => Ok(
+      SingleChannelImage::new_i16(width, height, unsafe {
+        vec_cast::<u8, i16>(pixels)
+      })
+      .unwrap(),
+    ),
 
-    (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
-      Ok(SingleChannelImage::Uint32(
-        ImageBuffer::from_raw(
-          definition.columns as u32,
-          definition.rows as u32,
-          unsafe { vec_cast::<u8, u32>(pixels) },
-        )
-        .unwrap(),
-      ))
-    }
+    (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => Ok(
+      SingleChannelImage::new_u32(width, height, unsafe {
+        vec_cast::<u8, u32>(pixels)
+      })
+      .unwrap(),
+    ),
 
-    (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
-      Ok(SingleChannelImage::Int32(
-        ImageBuffer::from_raw(
-          definition.columns as u32,
-          definition.rows as u32,
-          unsafe { vec_cast::<u8, i32>(pixels) },
-        )
-        .unwrap(),
-      ))
-    }
+    (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => Ok(
+      SingleChannelImage::new_i32(width, height, unsafe {
+        vec_cast::<u8, i32>(pixels)
+      })
+      .unwrap(),
+    ),
   }
 }
 
@@ -101,32 +75,23 @@ pub fn decode_color(
   match definition.bits_allocated {
     BitsAllocated::One => unreachable!(),
 
-    BitsAllocated::Eight => Ok(ColorImage::Uint8(
-      ImageBuffer::from_raw(
-        definition.columns as u32,
-        definition.rows as u32,
-        pixels,
-      )
-      .unwrap(),
-    )),
+    BitsAllocated::Eight => Ok(
+      ColorImage::new_u8(definition.columns, definition.rows, pixels).unwrap(),
+    ),
 
-    BitsAllocated::Sixteen => Ok(ColorImage::Uint16(
-      ImageBuffer::from_raw(
-        definition.columns as u32,
-        definition.rows as u32,
-        unsafe { vec_cast::<u8, u16>(pixels) },
-      )
+    BitsAllocated::Sixteen => Ok(
+      ColorImage::new_u16(definition.columns, definition.rows, unsafe {
+        vec_cast::<u8, u16>(pixels)
+      })
       .unwrap(),
-    )),
+    ),
 
-    BitsAllocated::ThirtyTwo => Ok(ColorImage::Uint32(
-      ImageBuffer::from_raw(
-        definition.columns as u32,
-        definition.rows as u32,
-        unsafe { vec_cast::<u8, u32>(pixels) },
-      )
+    BitsAllocated::ThirtyTwo => Ok(
+      ColorImage::new_u32(definition.columns, definition.rows, unsafe {
+        vec_cast::<u8, u32>(pixels)
+      })
       .unwrap(),
-    )),
+    ),
   }
 }
 
@@ -140,8 +105,8 @@ fn decode(
     ));
   }
 
-  let width = definition.columns as u32;
-  let height = definition.rows as u32;
+  let width = definition.columns;
+  let height = definition.rows;
   let samples_per_pixel = usize::from(definition.samples_per_pixel) as u32;
   let bits_allocated = usize::from(definition.bits_allocated) as u32;
   let mut pixel_representation =
@@ -161,8 +126,8 @@ fn decode(
     ffi::openjpeg_decode(
       data.as_ptr(),
       data.len() as u64,
-      width,
-      height,
+      width as u32,
+      height as u32,
       samples_per_pixel,
       bits_allocated,
       &mut pixel_representation,

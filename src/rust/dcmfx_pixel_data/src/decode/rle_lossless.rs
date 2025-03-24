@@ -2,7 +2,6 @@
 use alloc::{format, string::ToString, vec, vec::Vec};
 
 use byteorder::ByteOrder;
-use image::ImageBuffer;
 
 use dcmfx_core::DataError;
 
@@ -37,8 +36,8 @@ pub fn decode_single_channel(
 
   let segments = decode_rle_segments(data, expected_segment_length)?;
 
-  let width = definition.columns as u32;
-  let height = definition.rows as u32;
+  let width = definition.columns;
+  let height = definition.rows;
   let pixel_count = definition.pixel_count();
   let bits_allocated = usize::from(definition.bits_allocated);
 
@@ -61,9 +60,7 @@ pub fn decode_single_channel(
         pixels[i] = -(((segment[i / 8] >> (i % 8)) & 1) as i8);
       }
 
-      Ok(SingleChannelImage::Int8(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(SingleChannelImage::new_i8(width, height, pixels).unwrap())
     }
 
     (
@@ -79,9 +76,7 @@ pub fn decode_single_channel(
         pixels[i] = (segment[i / 8] >> (i % 8)) & 1;
       }
 
-      Ok(SingleChannelImage::Uint8(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap())
     }
 
     (
@@ -97,9 +92,7 @@ pub fn decode_single_channel(
         pixels[i] = i8::from_be_bytes([*pixel]);
       }
 
-      Ok(SingleChannelImage::Int8(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(SingleChannelImage::new_i8(width, height, pixels).unwrap())
     }
 
     (
@@ -108,9 +101,9 @@ pub fn decode_single_channel(
       PixelRepresentation::Unsigned,
       BitsAllocated::Eight,
       [segment],
-    ) => Ok(SingleChannelImage::Uint8(
-      ImageBuffer::from_raw(width, height, segment.to_vec()).unwrap(),
-    )),
+    ) => {
+      Ok(SingleChannelImage::new_u8(width, height, segment.to_vec()).unwrap())
+    }
 
     (
       PhotometricInterpretation::Monochrome1
@@ -125,9 +118,7 @@ pub fn decode_single_channel(
         pixels[i] = i16::from_be_bytes([segment_0[i], segment_1[i]]);
       }
 
-      Ok(SingleChannelImage::Int16(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(SingleChannelImage::new_i16(width, height, pixels).unwrap())
     }
 
     (
@@ -143,9 +134,7 @@ pub fn decode_single_channel(
         pixels[i] = u16::from_be_bytes([segment_0[i], segment_1[i]]);
       }
 
-      Ok(SingleChannelImage::Uint16(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(SingleChannelImage::new_u16(width, height, pixels).unwrap())
     }
 
     (
@@ -166,9 +155,7 @@ pub fn decode_single_channel(
         ]);
       }
 
-      Ok(SingleChannelImage::Int32(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(SingleChannelImage::new_i32(width, height, pixels).unwrap())
     }
 
     (
@@ -189,9 +176,7 @@ pub fn decode_single_channel(
         ]);
       }
 
-      Ok(SingleChannelImage::Uint32(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(SingleChannelImage::new_u32(width, height, pixels).unwrap())
     }
 
     _ => Err(DataError::new_value_invalid(format!(
@@ -212,8 +197,8 @@ pub fn decode_color(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let width = definition.columns as u32;
-  let height = definition.rows as u32;
+  let width = definition.columns;
+  let height = definition.rows;
   let pixel_count = definition.pixel_count();
 
   let segments = decode_rle_segments(data, pixel_count)?;
@@ -240,9 +225,7 @@ pub fn decode_color(
         pixels[i * 3 + 2] = blue_lut.lookup(index);
       }
 
-      Ok(ColorImage::Uint16(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(ColorImage::new_u16(width, height, pixels).unwrap())
     }
 
     (
@@ -262,9 +245,7 @@ pub fn decode_color(
         pixels[i * 3 + 2] = blue_lut.lookup(index);
       }
 
-      Ok(ColorImage::Uint16(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(ColorImage::new_u16(width, height, pixels).unwrap())
     }
 
     (
@@ -284,9 +265,7 @@ pub fn decode_color(
         ybr_to_rgb::convert_u8(&mut pixels, definition);
       }
 
-      Ok(ColorImage::Uint8(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(ColorImage::new_u8(width, height, pixels).unwrap())
     }
 
     (
@@ -316,9 +295,7 @@ pub fn decode_color(
         ybr_to_rgb::convert_u16(&mut pixels, definition);
       }
 
-      Ok(ColorImage::Uint16(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(ColorImage::new_u16(width, height, pixels).unwrap())
     }
 
     (
@@ -366,9 +343,7 @@ pub fn decode_color(
         ybr_to_rgb::convert_u32(&mut pixels, definition);
       }
 
-      Ok(ColorImage::Uint32(
-        ImageBuffer::from_raw(width, height, pixels).unwrap(),
-      ))
+      Ok(ColorImage::new_u32(width, height, pixels).unwrap())
     }
 
     _ => Err(DataError::new_value_invalid(format!(

@@ -1,8 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec, vec::Vec};
 
-use image::ImageBuffer;
-
 use dcmfx_core::DataError;
 
 use super::vec_cast;
@@ -19,24 +17,22 @@ pub fn decode_single_channel(
   let pixels = decode(data, definition)?;
 
   let pixel_count = definition.pixel_count();
-  let width = definition.columns as u32;
-  let height = definition.rows as u32;
+  let width = definition.columns;
+  let height = definition.rows;
 
   if definition.bits_allocated == BitsAllocated::Eight
     && pixels.len() == pixel_count
   {
-    Ok(SingleChannelImage::Uint8(
-      ImageBuffer::from_raw(width, height, pixels).unwrap(),
-    ))
+    Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap())
   } else if definition.bits_allocated == BitsAllocated::Sixteen
     && pixels.len() == pixel_count * 2
   {
-    Ok(SingleChannelImage::Uint16(
-      ImageBuffer::from_raw(width, height, unsafe {
+    Ok(
+      SingleChannelImage::new_u16(width, height, unsafe {
         vec_cast::<u8, u16>(pixels)
       })
       .unwrap(),
-    ))
+    )
   } else {
     Err(DataError::new_value_invalid(
       "JPEG LS pixel data is not single channel".to_string(),
@@ -53,22 +49,18 @@ pub fn decode_color(
   let pixels = decode(data, definition)?;
 
   let pixel_count = definition.pixel_count();
-  let width = definition.columns as u32;
-  let height = definition.rows as u32;
+  let width = definition.columns;
+  let height = definition.rows;
 
   if definition.bits_allocated == BitsAllocated::Eight
     && pixels.len() == pixel_count * 3
   {
-    Ok(ColorImage::Uint8(
-      ImageBuffer::from_raw(width, height, pixels).unwrap(),
-    ))
+    Ok(ColorImage::new_u8(width, height, pixels).unwrap())
   } else if definition.bits_allocated == BitsAllocated::Sixteen
     && pixels.len() == pixel_count * 6
   {
     let data = unsafe { vec_cast::<u8, u16>(pixels) };
-    Ok(ColorImage::Uint16(
-      ImageBuffer::from_raw(width, height, data).unwrap(),
-    ))
+    Ok(ColorImage::new_u16(width, height, data).unwrap())
   } else {
     Err(DataError::new_value_invalid(
       "JPEG LS pixel data is not color".to_string(),

@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use image::{GrayImage, ImageBuffer, Luma};
+use image::GrayImage;
 
 use crate::{
   ModalityLut, PhotometricInterpretation, PixelDataDefinition, VoiLut,
@@ -11,53 +11,129 @@ use crate::{
 /// A single channel image that stores an integer value for each pixel.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub enum SingleChannelImage {
-  Int8(ImageBuffer<Luma<i8>, Vec<i8>>),
-  Uint8(ImageBuffer<Luma<u8>, Vec<u8>>),
-  Int16(ImageBuffer<Luma<i16>, Vec<i16>>),
-  Uint16(ImageBuffer<Luma<u16>, Vec<u16>>),
-  Int32(ImageBuffer<Luma<i32>, Vec<i32>>),
-  Uint32(ImageBuffer<Luma<u32>, Vec<u32>>),
+pub struct SingleChannelImage {
+  width: u16,
+  height: u16,
+  data: SingleChannelImageData,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+enum SingleChannelImageData {
+  I8(Vec<i8>),
+  U8(Vec<u8>),
+  I16(Vec<i16>),
+  U16(Vec<u16>),
+  I32(Vec<i32>),
+  U32(Vec<u32>),
 }
 
 impl SingleChannelImage {
+  /// Creates a new single channel image with `i8` data.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn new_i8(width: u16, height: u16, data: Vec<i8>) -> Result<Self, ()> {
+    if data.len() != width as usize * height as usize {
+      return Err(());
+    }
+
+    Ok(Self {
+      width,
+      height,
+      data: SingleChannelImageData::I8(data),
+    })
+  }
+
+  /// Creates a new single channel image with `u8` data.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn new_u8(width: u16, height: u16, data: Vec<u8>) -> Result<Self, ()> {
+    if data.len() != width as usize * height as usize {
+      return Err(());
+    }
+
+    Ok(Self {
+      width,
+      height,
+      data: SingleChannelImageData::U8(data),
+    })
+  }
+
+  /// Creates a new single channel image with `i16` data.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn new_i16(width: u16, height: u16, data: Vec<i16>) -> Result<Self, ()> {
+    if data.len() != width as usize * height as usize {
+      return Err(());
+    }
+
+    Ok(Self {
+      width,
+      height,
+      data: SingleChannelImageData::I16(data),
+    })
+  }
+
+  /// Creates a new single channel image with `u16` data.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn new_u16(width: u16, height: u16, data: Vec<u16>) -> Result<Self, ()> {
+    if data.len() != width as usize * height as usize {
+      return Err(());
+    }
+
+    Ok(Self {
+      width,
+      height,
+      data: SingleChannelImageData::U16(data),
+    })
+  }
+
+  /// Creates a new single channel image with `i32` data.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn new_i32(width: u16, height: u16, data: Vec<i32>) -> Result<Self, ()> {
+    if data.len() != width as usize * height as usize {
+      return Err(());
+    }
+
+    Ok(Self {
+      width,
+      height,
+      data: SingleChannelImageData::I32(data),
+    })
+  }
+
+  /// Creates a new single channel image with `u32` data.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn new_u32(width: u16, height: u16, data: Vec<u32>) -> Result<Self, ()> {
+    if data.len() != width as usize * height as usize {
+      return Err(());
+    }
+
+    Ok(Self {
+      width,
+      height,
+      data: SingleChannelImageData::U32(data),
+    })
+  }
+
   /// Returns whether this single channel image is empty, i.e. it has no pixels.
   ///
   pub fn is_empty(&self) -> bool {
-    match self {
-      SingleChannelImage::Int8(data) => data.is_empty(),
-      SingleChannelImage::Uint8(data) => data.is_empty(),
-      SingleChannelImage::Int16(data) => data.is_empty(),
-      SingleChannelImage::Uint16(data) => data.is_empty(),
-      SingleChannelImage::Int32(data) => data.is_empty(),
-      SingleChannelImage::Uint32(data) => data.is_empty(),
-    }
+    self.width == 0 || self.height == 0
   }
 
   /// Returns the width in pixels of this single channel image.
   ///
-  pub fn width(&self) -> u32 {
-    match self {
-      SingleChannelImage::Int8(data) => data.width(),
-      SingleChannelImage::Uint8(data) => data.width(),
-      SingleChannelImage::Int16(data) => data.width(),
-      SingleChannelImage::Uint16(data) => data.width(),
-      SingleChannelImage::Int32(data) => data.width(),
-      SingleChannelImage::Uint32(data) => data.width(),
-    }
+  pub fn width(&self) -> u16 {
+    self.width
   }
 
   /// Returns the height in pixels of this single channel image.
   ///
-  pub fn height(&self) -> u32 {
-    match self {
-      SingleChannelImage::Int8(data) => data.height(),
-      SingleChannelImage::Uint8(data) => data.height(),
-      SingleChannelImage::Int16(data) => data.height(),
-      SingleChannelImage::Uint16(data) => data.height(),
-      SingleChannelImage::Int32(data) => data.height(),
-      SingleChannelImage::Uint32(data) => data.height(),
-    }
+  pub fn height(&self) -> u16 {
+    self.height
   }
 
   /// Returns the total number of pixels in this single channel image.
@@ -76,24 +152,24 @@ impl SingleChannelImage {
       })
     }
 
-    match self {
-      SingleChannelImage::Int8(data) => {
-        min_max(data.pixels().map(|x| x.0[0] as i64))
+    match &self.data {
+      SingleChannelImageData::I8(data) => {
+        min_max(data.iter().map(|pixel| *pixel as i64))
       }
-      SingleChannelImage::Uint8(data) => {
-        min_max(data.pixels().map(|x| x.0[0] as i64))
+      SingleChannelImageData::U8(data) => {
+        min_max(data.iter().map(|pixel| *pixel as i64))
       }
-      SingleChannelImage::Int16(data) => {
-        min_max(data.pixels().map(|x| x.0[0] as i64))
+      SingleChannelImageData::I16(data) => {
+        min_max(data.iter().map(|pixel| *pixel as i64))
       }
-      SingleChannelImage::Uint16(data) => {
-        min_max(data.pixels().map(|x| x.0[0] as i64))
+      SingleChannelImageData::U16(data) => {
+        min_max(data.iter().map(|pixel| *pixel as i64))
       }
-      SingleChannelImage::Int32(data) => {
-        min_max(data.pixels().map(|x| x.0[0] as i64))
+      SingleChannelImageData::I32(data) => {
+        min_max(data.iter().map(|pixel| *pixel as i64))
       }
-      SingleChannelImage::Uint32(data) => {
-        min_max(data.pixels().map(|x| x.0[0] as i64))
+      SingleChannelImageData::U32(data) => {
+        min_max(data.iter().map(|pixel| *pixel as i64))
       }
     }
   }
@@ -129,45 +205,45 @@ impl SingleChannelImage {
       (1i64 << definition.bits_stored) - 1
     };
 
-    match self {
-      SingleChannelImage::Int8(data) => {
-        for i in data.pixels_mut() {
-          i.0[0] = (-(i.0[0] as i64) + offset)
+    match &mut self.data {
+      SingleChannelImageData::I8(data) => {
+        for pixel in data.iter_mut() {
+          *pixel = (-(*pixel as i64) + offset)
             .clamp(i8::MIN as i64, i8::MAX as i64) as i8;
         }
       }
 
-      SingleChannelImage::Uint8(data) => {
-        for i in data.pixels_mut() {
-          i.0[0] = (-(i.0[0] as i64) + offset)
+      SingleChannelImageData::U8(data) => {
+        for pixel in data.iter_mut() {
+          *pixel = (-(*pixel as i64) + offset)
             .clamp(u8::MIN as i64, u8::MAX as i64) as u8;
         }
       }
 
-      SingleChannelImage::Int16(data) => {
-        for i in data.pixels_mut() {
-          i.0[0] = (-(i.0[0] as i64) + offset)
+      SingleChannelImageData::I16(data) => {
+        for pixel in data.iter_mut() {
+          *pixel = (-(*pixel as i64) + offset)
             .clamp(i16::MIN as i64, i16::MAX as i64) as i16;
         }
       }
 
-      SingleChannelImage::Uint16(data) => {
-        for i in data.pixels_mut() {
-          i.0[0] = (-(i.0[0] as i64) + offset)
+      SingleChannelImageData::U16(data) => {
+        for pixel in data.iter_mut() {
+          *pixel = (-(*pixel as i64) + offset)
             .clamp(u16::MIN as i64, u16::MAX as i64) as u16;
         }
       }
 
-      SingleChannelImage::Int32(data) => {
-        for i in data.pixels_mut() {
-          i.0[0] = (-(i.0[0] as i64) + offset)
+      SingleChannelImageData::I32(data) => {
+        for pixel in data.iter_mut() {
+          *pixel = (-(*pixel as i64) + offset)
             .clamp(i32::MIN as i64, i32::MAX as i64) as i32;
         }
       }
 
-      SingleChannelImage::Uint32(data) => {
-        for i in data.pixels_mut() {
-          i.0[0] = (-(i.0[0] as i64) + offset)
+      SingleChannelImageData::U32(data) => {
+        for pixel in data.iter_mut() {
+          *pixel = (-(*pixel as i64) + offset)
             .clamp(u32::MIN as i64, u32::MAX as i64) as u32;
         }
       }
@@ -193,68 +269,69 @@ impl SingleChannelImage {
       (x * 255.0).clamp(0.0, 255.0) as u8
     };
 
-    match &self {
-      SingleChannelImage::Int8(data) => {
-        for pixel in data.pixels() {
-          gray_pixels.push(i64_to_u8(pixel.0[0] as i64));
+    match &self.data {
+      SingleChannelImageData::I8(data) => {
+        for pixel in data.iter() {
+          gray_pixels.push(i64_to_u8(*pixel as i64));
         }
       }
 
-      SingleChannelImage::Uint8(data) => {
-        for pixel in data.pixels() {
-          gray_pixels.push(i64_to_u8(pixel.0[0] as i64));
+      SingleChannelImageData::U8(data) => {
+        for pixel in data.iter() {
+          gray_pixels.push(i64_to_u8(*pixel as i64));
         }
       }
 
-      SingleChannelImage::Int16(data) => {
-        for pixel in data.pixels() {
-          gray_pixels.push(i64_to_u8(pixel.0[0] as i64));
+      SingleChannelImageData::I16(data) => {
+        for pixel in data.iter() {
+          gray_pixels.push(i64_to_u8(*pixel as i64));
         }
       }
 
-      SingleChannelImage::Uint16(data) => {
-        for pixel in data.pixels() {
-          gray_pixels.push(i64_to_u8(pixel.0[0] as i64));
+      SingleChannelImageData::U16(data) => {
+        for pixel in data.iter() {
+          gray_pixels.push(i64_to_u8(*pixel as i64));
         }
       }
 
-      SingleChannelImage::Int32(data) => {
-        for pixel in data.pixels() {
-          gray_pixels.push(i64_to_u8(pixel.0[0] as i64));
+      SingleChannelImageData::I32(data) => {
+        for pixel in data.iter() {
+          gray_pixels.push(i64_to_u8(*pixel as i64));
         }
       }
 
-      SingleChannelImage::Uint32(data) => {
-        for pixel in data.pixels() {
-          gray_pixels.push(i64_to_u8(pixel.0[0] as i64));
+      SingleChannelImageData::U32(data) => {
+        for pixel in data.iter() {
+          gray_pixels.push(i64_to_u8(*pixel as i64));
         }
       }
     }
 
-    GrayImage::from_raw(self.width(), self.height(), gray_pixels).unwrap()
+    GrayImage::from_raw(self.width.into(), self.height.into(), gray_pixels)
+      .unwrap()
   }
 
   /// Converts this single channel image to a [`Vec<i64>`].
   ///
   pub fn to_i64_pixels(&self) -> Vec<i64> {
-    match self {
-      SingleChannelImage::Int8(data) => {
-        data.pixels().map(|x| x.0[0] as i64).collect()
+    match &self.data {
+      SingleChannelImageData::I8(data) => {
+        data.iter().map(|pixel| *pixel as i64).collect()
       }
-      SingleChannelImage::Uint8(data) => {
-        data.pixels().map(|x| x.0[0] as i64).collect()
+      SingleChannelImageData::U8(data) => {
+        data.iter().map(|pixel| *pixel as i64).collect()
       }
-      SingleChannelImage::Int16(data) => {
-        data.pixels().map(|x| x.0[0] as i64).collect()
+      SingleChannelImageData::I16(data) => {
+        data.iter().map(|pixel| *pixel as i64).collect()
       }
-      SingleChannelImage::Uint16(data) => {
-        data.pixels().map(|x| x.0[0] as i64).collect()
+      SingleChannelImageData::U16(data) => {
+        data.iter().map(|pixel| *pixel as i64).collect()
       }
-      SingleChannelImage::Int32(data) => {
-        data.pixels().map(|x| x.0[0] as i64).collect()
+      SingleChannelImageData::I32(data) => {
+        data.iter().map(|pixel| *pixel as i64).collect()
       }
-      SingleChannelImage::Uint32(data) => {
-        data.pixels().map(|x| x.0[0] as i64).collect()
+      SingleChannelImageData::U32(data) => {
+        data.iter().map(|pixel| *pixel as i64).collect()
       }
     }
   }

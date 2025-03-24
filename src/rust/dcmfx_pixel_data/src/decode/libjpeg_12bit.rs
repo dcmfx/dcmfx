@@ -1,8 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec, vec::Vec};
 
-use image::ImageBuffer;
-
 use crate::{ColorImage, PixelDataDefinition, SingleChannelImage};
 use dcmfx_core::DataError;
 
@@ -15,9 +13,7 @@ pub fn decode_single_channel(
   let (width, height, channels, pixel_data) = decode(definition, data)?;
 
   if channels == 1 && pixel_data.len() == definition.pixel_count() {
-    Ok(SingleChannelImage::Uint16(
-      ImageBuffer::from_raw(width, height, pixel_data).unwrap(),
-    ))
+    Ok(SingleChannelImage::new_u16(width, height, pixel_data).unwrap())
   } else {
     Err(DataError::new_value_invalid(
       "JPEG Extended pixel data is not single channel".to_string(),
@@ -34,9 +30,7 @@ pub fn decode_color(
   let (width, height, channels, pixel_data) = decode(definition, data)?;
 
   if channels == 3 && pixel_data.len() == definition.pixel_count() * 3 {
-    Ok(ColorImage::Uint16(
-      ImageBuffer::from_raw(width, height, pixel_data).unwrap(),
-    ))
+    Ok(ColorImage::new_u16(width, height, pixel_data).unwrap())
   } else {
     Err(DataError::new_value_invalid(
       "JPEG 12-bit pixel data is not color".to_string(),
@@ -47,7 +41,7 @@ pub fn decode_color(
 fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
-) -> Result<(u32, u32, usize, Vec<u16>), DataError> {
+) -> Result<(u16, u16, usize, Vec<u16>), DataError> {
   let mut width: u32 = 0;
   let mut height: u32 = 0;
   let mut channels: u32 = 0;
@@ -91,7 +85,12 @@ fn decode(
     ));
   }
 
-  Ok((width, height, channels as usize, output_buffer))
+  Ok((
+    width as u16,
+    height as u16,
+    channels as usize,
+    output_buffer,
+  ))
 }
 
 mod ffi {

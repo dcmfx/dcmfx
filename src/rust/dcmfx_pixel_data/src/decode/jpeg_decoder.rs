@@ -1,8 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec::Vec};
 
-use image::ImageBuffer;
-
 use crate::{ColorImage, PixelDataDefinition, SingleChannelImage};
 use dcmfx_core::DataError;
 
@@ -15,15 +13,13 @@ pub fn decode_single_channel(
   let (image_info, pixel_data) = decode(definition, data)?;
 
   let pixel_count = definition.pixel_count();
-  let width = definition.columns as u32;
-  let height = definition.rows as u32;
+  let width = definition.columns;
+  let height = definition.rows;
 
   if image_info.pixel_format == jpeg_decoder::PixelFormat::L8
     && pixel_data.len() == pixel_count
   {
-    Ok(SingleChannelImage::Uint8(
-      ImageBuffer::from_raw(width, height, pixel_data).unwrap(),
-    ))
+    Ok(SingleChannelImage::new_u8(width, height, pixel_data).unwrap())
   } else if image_info.pixel_format == jpeg_decoder::PixelFormat::L16
     && pixel_data.len() == pixel_count * 2
   {
@@ -32,9 +28,7 @@ pub fn decode_single_channel(
       data.push(u16::from_le_bytes([chunk[0], chunk[1]]));
     }
 
-    Ok(SingleChannelImage::Uint16(
-      ImageBuffer::from_raw(width, height, data).unwrap(),
-    ))
+    Ok(SingleChannelImage::new_u16(width, height, data).unwrap())
   } else {
     Err(DataError::new_value_invalid(
       "JPEG pixel data is not single channel".to_string(),
@@ -51,15 +45,13 @@ pub fn decode_color(
   let (image_info, pixel_data) = decode(definition, data)?;
 
   let pixel_count = definition.pixel_count();
-  let width = definition.columns as u32;
-  let height = definition.rows as u32;
+  let width = definition.columns;
+  let height = definition.rows;
 
   if image_info.pixel_format == jpeg_decoder::PixelFormat::RGB24
     && pixel_data.len() == pixel_count * 3
   {
-    Ok(ColorImage::Uint8(
-      ImageBuffer::from_raw(width, height, pixel_data).unwrap(),
-    ))
+    Ok(ColorImage::new_u8(width, height, pixel_data).unwrap())
   } else {
     Err(DataError::new_value_invalid(
       "JPEG pixel data is not color".to_string(),

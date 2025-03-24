@@ -13,8 +13,13 @@ pub fn decode_single_channel(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
+  let width = definition.columns;
+  let height = definition.rows;
+
   match decode(definition, data)? {
-    DynamicImage::ImageLuma8(gray) => Ok(SingleChannelImage::Uint8(gray)),
+    DynamicImage::ImageLuma8(gray) => {
+      Ok(SingleChannelImage::new_u8(width, height, gray.into_vec()).unwrap())
+    }
 
     _ => Err(DataError::new_value_invalid(
       "JPEG pixel data is not single channel".to_string(),
@@ -28,8 +33,13 @@ pub fn decode_color(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
+  let width = definition.columns;
+  let height = definition.rows;
+
   match decode(definition, data)? {
-    DynamicImage::ImageRgb8(gray) => Ok(ColorImage::Uint8(gray)),
+    DynamicImage::ImageRgb8(gray) => {
+      Ok(ColorImage::new_u8(width, height, gray.into_vec()).unwrap())
+    }
 
     _ => Err(DataError::new_value_invalid(
       "JPEG pixel data is not RGB".to_string(),
