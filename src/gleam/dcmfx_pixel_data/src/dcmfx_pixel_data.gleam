@@ -28,6 +28,9 @@ pub fn get_pixel_data_frames(
   let ds =
     [
       dictionary.number_of_frames.tag,
+      dictionary.rows.tag,
+      dictionary.columns.tag,
+      dictionary.bits_allocated.tag,
       dictionary.extended_offset_table.tag,
       dictionary.extended_offset_table_lengths.tag,
       dictionary.pixel_data.tag,

@@ -26,10 +26,7 @@ import gleam/result
 /// data it contains. Each frame is returned with no copying of pixel data,
 /// allowing for memory-efficient stream processing.
 ///
-/// All native and encapsulated pixel data is supported, with the exception of
-/// native pixel data that stores 1 bit per pixel and has a number of pixels in
-/// each frame that is not divisible by eight. Such frames of pixel data do not
-/// consume a whole number of bytes.
+/// All native and encapsulated pixel data is supported.
 ///
 pub opaque type P10PixelDataFrameFilter {
   P10PixelDataFrameFilter(
@@ -38,7 +35,7 @@ pub opaque type P10PixelDataFrameFilter {
     details: P10CustomTypeTransform(PixelDataFilterDetails),
     // Filter used to extract only the '(7FE0,0010) Pixel Data' data element
     pixel_data_filter: P10FilterTransform,
-    // When reading native pixel data, the size of a single frame in bytes
+    // When reading native pixel data, the size of a single frame in bits
     native_pixel_data_frame_size: Int,
     // Chunks of pixel data that have not yet been emitted as part of a frame
     pixel_data: Deque(BitArray),
@@ -57,7 +54,10 @@ type OffsetTable =
 
 type PixelDataFilterDetails {
   PixelDataFilterDetails(
-    number_of_frames: Option(DataElementValue),
+    number_of_frames: Int,
+    rows: Int,
+    columns: Int,
+    bits_allocated: Int,
     extended_offset_table: Option(DataElementValue),
     extended_offset_table_lengths: Option(DataElementValue),
   )
@@ -66,16 +66,52 @@ type PixelDataFilterDetails {
 fn pixel_data_filter_details_from_data_set(
   data_set: DataSet,
 ) -> Result(PixelDataFilterDetails, data_error.DataError) {
+  let number_of_frames = case
+    data_set.has(data_set, dictionary.number_of_frames.tag)
+  {
+    True -> data_set.get_int(data_set, dictionary.number_of_frames.tag)
+    False -> Ok(1)
+  }
+  use number_of_frames <- result.try(number_of_frames)
+
+  let rows = data_set.get_int(data_set, dictionary.rows.tag)
+  use rows <- result.try(rows)
+
+  let columns = data_set.get_int(data_set, dictionary.columns.tag)
+  use columns <- result.try(columns)
+
+  let bits_allocated = data_set.get_int(data_set, dictionary.bits_allocated.tag)
+  use bits_allocated <- result.try(bits_allocated)
+
+  let extended_offset_table = case
+    data_set.has(data_set, dictionary.extended_offset_table.tag)
+  {
+    True ->
+      data_set.get_value(data_set, dictionary.extended_offset_table.tag)
+      |> result.map(Some)
+
+    False -> Ok(None)
+  }
+  use extended_offset_table <- result.try(extended_offset_table)
+
+  let extended_offset_table_lengths = case
+    data_set.has(data_set, dictionary.extended_offset_table_lengths.tag)
+  {
+    True ->
+      data_set.get_value(data_set, dictionary.extended_offset_table_lengths.tag)
+      |> result.map(Some)
+
+    False -> Ok(None)
+  }
+  use extended_offset_table_lengths <- result.try(extended_offset_table_lengths)
+
   Ok(PixelDataFilterDetails(
-    number_of_frames: data_set.delete(data_set, dictionary.number_of_frames.tag).0,
-    extended_offset_table: data_set.delete(
-      data_set,
-      dictionary.extended_offset_table.tag,
-    ).0,
-    extended_offset_table_lengths: data_set.delete(
-      data_set,
-      dictionary.extended_offset_table_lengths.tag,
-    ).0,
+    number_of_frames:,
+    rows:,
+    columns:,
+    bits_allocated:,
+    extended_offset_table:,
+    extended_offset_table_lengths:,
   ))
 }
 
@@ -100,6 +136,9 @@ pub fn new() -> P10PixelDataFrameFilter {
     p10_custom_type_transform.new(
       [
         dictionary.number_of_frames.tag,
+        dictionary.rows.tag,
+        dictionary.columns.tag,
+        dictionary.bits_allocated.tag,
         dictionary.extended_offset_table.tag,
         dictionary.extended_offset_table_lengths.tag,
       ],
@@ -157,6 +196,7 @@ pub fn add_token(
   use <- bool.guard(!is_pixel_data_token, Ok(#([], filter)))
 
   process_next_pixel_data_token(filter, token)
+  |> result.map_error(DataError)
 }
 
 fn process_next_pixel_data_token(
@@ -164,42 +204,69 @@ fn process_next_pixel_data_token(
   token: P10Token,
 ) -> Result(
   #(List(PixelDataFrame), P10PixelDataFrameFilter),
-  P10PixelDataFrameFilterError,
+  data_error.DataError,
 ) {
   case token {
     // The start of native pixel data
     p10_token.DataElementHeader(length:, ..) -> {
       // Check that the pixel data length divides evenly into the number of
       // frames
-      use number_of_frames <- result.try(get_number_of_frames(filter))
+      let number_of_frames = get_number_of_frames(filter)
 
-      use <- bool.guard(
-        number_of_frames != 0 && length % number_of_frames != 0,
-        Error(
-          DataError(data_error.new_value_invalid(
-            "Multi-frame pixel data of length "
-            <> int.to_string(length)
-            <> " bytes does not divide evenly into "
-            <> int.to_string(number_of_frames)
-            <> " frames",
-          )),
-        ),
-      )
+      case number_of_frames > 0 {
+        True -> {
+          let assert Some(details) =
+            p10_custom_type_transform.get_output(filter.details)
 
-      // Store the size of native pixel data frames
-      let native_pixel_data_frame_size = case number_of_frames == 0 {
-        True -> 0
-        False -> length / number_of_frames
+          // Validate the pixel data length and store the size in bits of native
+          // pixel data frames
+          let native_pixel_data_frame_size = case details.bits_allocated == 1 {
+            True -> {
+              let pixel_count = details.rows * details.columns
+              let expected_length = { pixel_count * number_of_frames + 7 } / 8
+
+              case length == expected_length {
+                True -> Ok(pixel_count)
+                False ->
+                  Error(data_error.new_value_invalid(
+                    "Bitmap pixel data has length "
+                    <> int.to_string(length)
+                    <> " bytes but "
+                    <> int.to_string(expected_length)
+                    <> " bytes were expected",
+                  ))
+              }
+            }
+
+            False ->
+              case length % number_of_frames {
+                0 -> Ok({ length / number_of_frames } * 8)
+                _ ->
+                  Error(data_error.new_value_invalid(
+                    "Multi-frame pixel data of length "
+                    <> int.to_string(length)
+                    <> " bytes does not divide evenly into "
+                    <> int.to_string(number_of_frames)
+                    <> " frames",
+                  ))
+              }
+          }
+          use native_pixel_data_frame_size <- result.try(
+            native_pixel_data_frame_size,
+          )
+
+          Ok(#(
+            [],
+            P10PixelDataFrameFilter(
+              ..filter,
+              is_encapsulated: False,
+              native_pixel_data_frame_size:,
+            ),
+          ))
+        }
+
+        False -> Ok(#([], filter))
       }
-
-      let filter =
-        P10PixelDataFrameFilter(
-          ..filter,
-          is_encapsulated: False,
-          native_pixel_data_frame_size:,
-        )
-
-      Ok(#([], filter))
     }
 
     // The start of encapsulated pixel data
@@ -255,7 +322,7 @@ fn process_next_pixel_data_token(
       let filter =
         P10PixelDataFrameFilter(
           ..filter,
-          pixel_data_write_offset: filter.pixel_data_write_offset + 8,
+          pixel_data_write_offset: filter.pixel_data_write_offset + 64,
         )
 
       Ok(#([], filter))
@@ -264,7 +331,7 @@ fn process_next_pixel_data_token(
     p10_token.DataElementValueBytes(data:, bytes_remaining:, ..) -> {
       let pixel_data = filter.pixel_data |> deque.push_back(data)
       let pixel_data_write_offset =
-        filter.pixel_data_write_offset + bit_array.byte_size(data)
+        filter.pixel_data_write_offset + bit_array.byte_size(data) * 8
 
       let filter =
         P10PixelDataFrameFilter(..filter, pixel_data:, pixel_data_write_offset:)
@@ -290,30 +357,10 @@ fn process_next_pixel_data_token(
 
 /// Returns the value for *'(0028,0008) Number of Frames'* data element.
 ///
-fn get_number_of_frames(
-  filter: P10PixelDataFrameFilter,
-) -> Result(Int, P10PixelDataFrameFilterError) {
+fn get_number_of_frames(filter: P10PixelDataFrameFilter) -> Int {
   case p10_custom_type_transform.get_output(filter.details) {
-    Some(PixelDataFilterDetails(number_of_frames: Some(number_of_frames), ..)) -> {
-      let number_of_frames =
-        data_element_value.get_int(number_of_frames)
-        |> result.map_error(DataError)
-      use number_of_frames <- result.try(number_of_frames)
-
-      use <- bool.guard(
-        number_of_frames < 0,
-        Error(
-          DataError(data_error.new_value_invalid(
-            "Invalid number of frames value: "
-            <> int.to_string(number_of_frames),
-          )),
-        ),
-      )
-
-      Ok(number_of_frames)
-    }
-
-    _ -> Ok(1)
+    Some(details) -> details.number_of_frames
+    _ -> 1
   }
 }
 
@@ -325,7 +372,7 @@ fn get_pending_native_frames(
   frames: List(PixelDataFrame),
 ) -> Result(
   #(List(PixelDataFrame), P10PixelDataFrameFilter),
-  P10PixelDataFrameFilterError,
+  data_error.DataError,
 ) {
   case
     filter.pixel_data_write_offset - filter.pixel_data_read_offset
@@ -338,8 +385,9 @@ fn get_pending_native_frames(
       let filter =
         P10PixelDataFrameFilter(..filter, next_frame_index: frame_index + 1)
 
-      let #(frame, filter) =
-        get_pending_native_frame(filter, pixel_data_frame.new(frame_index))
+      let frame = pixel_data_frame.new(frame_index)
+      let #(frame, filter) = get_pending_native_frame(filter, frame)
+
       get_pending_native_frames(filter, [frame, ..frames])
     }
   }
@@ -350,13 +398,13 @@ fn get_pending_native_frame(
   frame: PixelDataFrame,
 ) -> #(PixelDataFrame, P10PixelDataFrameFilter) {
   let frame_size = filter.native_pixel_data_frame_size
-  let frame_length = pixel_data_frame.length(frame)
+  let frame_length = pixel_data_frame.length_in_bits(frame)
 
-  case pixel_data_frame.length(frame) < frame_size {
+  case frame_length < frame_size {
     True -> {
       let assert Ok(#(chunk, pixel_data)) =
         filter.pixel_data |> deque.pop_front()
-      let chunk_length = bit_array.byte_size(chunk)
+      let chunk_length = bit_array.bit_size(chunk)
 
       let filter = P10PixelDataFrameFilter(..filter, pixel_data:)
 
@@ -382,13 +430,12 @@ fn get_pending_native_frame(
         False -> {
           let length = frame_size - frame_length
 
-          let assert Ok(fragment) = bit_array.slice(chunk, 0, length)
+          let assert <<fragment:bits-size(length), _:bits>> = chunk
           let frame = frame |> pixel_data_frame.push_fragment(fragment)
 
           // Put the unused token of the chunk back on so it can be used by the
           // next frame
-          let assert Ok(chunk) =
-            bit_array.slice(chunk, length, chunk_length - length)
+          let assert <<_:bits-size(length), chunk:bits>> = chunk
           let pixel_data = filter.pixel_data |> deque.push_front(chunk)
 
           let filter =
@@ -414,7 +461,7 @@ fn get_pending_encapsulated_frames(
   filter: P10PixelDataFrameFilter,
 ) -> Result(
   #(List(PixelDataFrame), P10PixelDataFrameFilter),
-  P10PixelDataFrameFilterError,
+  data_error.DataError,
 ) {
   case filter.offset_table {
     // If the Basic Offset Table hasn't been read yet, read it now that the
@@ -437,7 +484,7 @@ fn get_pending_encapsulated_frames(
     Some(offset_table) ->
       case offset_table {
         [] -> {
-          use number_of_frames <- result.map(get_number_of_frames(filter))
+          let number_of_frames = get_number_of_frames(filter)
 
           // If the offset table is empty and there is more than one frame
           // then each pixel data item is treated as a single frame
@@ -467,10 +514,10 @@ fn get_pending_encapsulated_frames(
                   pixel_data_read_offset: filter.pixel_data_write_offset,
                 )
 
-              #([frame], filter)
+              Ok(#([frame], filter))
             }
 
-            False -> #([], filter)
+            False -> Ok(#([], filter))
           }
         }
 
@@ -491,12 +538,12 @@ fn get_pending_encapsulated_frames_using_offset_table(
   frames: List(PixelDataFrame),
 ) -> Result(
   #(List(PixelDataFrame), P10PixelDataFrameFilter),
-  P10PixelDataFrameFilterError,
+  data_error.DataError,
 ) {
   case offset_table {
     [#(_, frame_length), #(offset, _), ..] -> {
       use <- bool.guard(
-        filter.pixel_data_write_offset < offset,
+        filter.pixel_data_write_offset < offset * 8,
         Ok(#(frames, filter)),
       )
 
@@ -508,7 +555,7 @@ fn get_pending_encapsulated_frames_using_offset_table(
         get_pending_encapsulated_frame(
           filter,
           pixel_data_frame.new(frame_index),
-          offset,
+          offset * 8,
         )
 
       let assert Ok(offset_table) = list.rest(offset_table)
@@ -518,12 +565,10 @@ fn get_pending_encapsulated_frames_using_offset_table(
 
       // Check that the frame ended exactly on the expected offset
       use <- bool.guard(
-        filter.pixel_data_read_offset != offset,
-        Error(
-          DataError(data_error.new_value_invalid(
-            "Pixel data offset table is malformed",
-          )),
-        ),
+        filter.pixel_data_read_offset != offset * 8,
+        Error(data_error.new_value_invalid(
+          "Pixel data offset table is malformed",
+        )),
       )
 
       // If this frame has a length specified then validate and apply it
@@ -554,7 +599,9 @@ fn get_pending_encapsulated_frame(
         Ok(#(chunk, pixel_data)) -> {
           let frame = frame |> pixel_data_frame.push_fragment(chunk)
           let pixel_data_read_offset =
-            filter.pixel_data_read_offset + 8 + bit_array.byte_size(chunk)
+            filter.pixel_data_read_offset
+            + { 8 + bit_array.byte_size(chunk) }
+            * 8
 
           let filter =
             P10PixelDataFrameFilter(
@@ -575,7 +622,7 @@ fn get_pending_encapsulated_frame(
 
 fn read_offset_table(
   filter: P10PixelDataFrameFilter,
-) -> Result(OffsetTable, P10PixelDataFrameFilterError) {
+) -> Result(OffsetTable, data_error.DataError) {
   use basic_offset_table <- result.try(read_basic_offset_table(filter))
   use extended_offset_table <- result.try(read_extended_offset_table(filter))
 
@@ -587,12 +634,10 @@ fn read_offset_table(
       // Validate that the Extended Offset Table is empty. Ref: PS3.5 A.4.
       use <- bool.guard(
         option.is_some(extended_offset_table),
-        Error(
-          DataError(data_error.new_value_invalid(
-            "Extended Offset Table must be absent when there is a Basic Offset "
-            <> "Table",
-          )),
-        ),
+        Error(data_error.new_value_invalid(
+          "Extended Offset Table must be absent when there is a Basic Offset "
+          <> "Table",
+        )),
       )
 
       Ok(basic_offset_table)
@@ -602,7 +647,7 @@ fn read_offset_table(
 
 fn read_basic_offset_table(
   filter: P10PixelDataFrameFilter,
-) -> Result(OffsetTable, P10PixelDataFrameFilterError) {
+) -> Result(OffsetTable, data_error.DataError) {
   // Read Basic Offset Table data into a buffer
   let offset_table_data =
     filter.pixel_data
@@ -615,30 +660,26 @@ fn read_basic_offset_table(
   let offsets =
     bit_array_utils.to_uint32_list(offset_table_data)
     |> result.map_error(fn(_) {
-      DataError(data_error.new_value_invalid(
+      data_error.new_value_invalid(
         "Basic Offset Table length is not a multiple of 4",
-      ))
+      )
     })
   use offsets <- result.try(offsets)
 
   // Check that the first offset is zero. Ref: PS3.5 A.4.
   use <- bool.guard(
     list.first(offsets) != Ok(0),
-    Error(
-      DataError(data_error.new_value_invalid(
-        "Basic Offset Table first value must be zero",
-      )),
-    ),
+    Error(data_error.new_value_invalid(
+      "Basic Offset Table first value must be zero",
+    )),
   )
 
   // Check that the offsets are sorted
   use <- bool.guard(
     !is_list_sorted(offsets),
-    Error(
-      DataError(data_error.new_value_invalid(
-        "Basic Offset Table values are not sorted",
-      )),
-    ),
+    Error(data_error.new_value_invalid(
+      "Basic Offset Table values are not sorted",
+    )),
   )
 
   offsets
@@ -648,7 +689,7 @@ fn read_basic_offset_table(
 
 fn read_extended_offset_table(
   filter: P10PixelDataFrameFilter,
-) -> Result(Option(OffsetTable), P10PixelDataFrameFilterError) {
+) -> Result(Option(OffsetTable), data_error.DataError) {
   case p10_custom_type_transform.get_output(filter.details) {
     Some(PixelDataFilterDetails(
       extended_offset_table: Some(extended_offset_table),
@@ -668,18 +709,6 @@ fn read_extended_offset_table(
             "Extended Offset Table has invalid size",
           ))
         })
-        |> result.map_error(DataError)
-      use extended_offset_table <- result.try(extended_offset_table)
-
-      let extended_offset_table =
-        extended_offset_table
-        |> list.map(bigi.to_int)
-        |> result.all
-        |> result.replace_error(
-          DataError(data_error.new_value_invalid(
-            "Extended Offset Table has a value greater than 2^53 - 1",
-          )),
-        )
       use extended_offset_table <- result.try(extended_offset_table)
 
       // Get the value of the '(0x7FE0,0002) Extended Offset Table Lengths' data
@@ -695,20 +724,26 @@ fn read_extended_offset_table(
             "Extended Offset Table Lengths has invalid size",
           ))
         })
-        |> result.map_error(DataError)
       use extended_offset_table_lengths <- result.try(
         extended_offset_table_lengths,
       )
+
+      let extended_offset_table =
+        extended_offset_table
+        |> list.map(bigi.to_int)
+        |> result.all
+        |> result.replace_error(data_error.new_value_invalid(
+          "Extended Offset Table has a value greater than 2^53 - 1",
+        ))
+      use extended_offset_table <- result.try(extended_offset_table)
 
       let extended_offset_table_lengths =
         extended_offset_table_lengths
         |> list.map(bigi.to_int)
         |> result.all
-        |> result.replace_error(
-          DataError(data_error.new_value_invalid(
-            "Extended Offset Table Lengths has a value greater than 2^53 - 1",
-          )),
-        )
+        |> result.replace_error(data_error.new_value_invalid(
+          "Extended Offset Table Lengths has a value greater than 2^53 - 1",
+        ))
       use extended_offset_table_lengths <- result.try(
         extended_offset_table_lengths,
       )
@@ -717,31 +752,25 @@ fn read_extended_offset_table(
       use <- bool.guard(
         list.length(extended_offset_table)
           != list.length(extended_offset_table_lengths),
-        Error(
-          DataError(data_error.new_value_invalid(
-            "Extended Offset Table and Lengths don't have the same number of items",
-          )),
-        ),
+        Error(data_error.new_value_invalid(
+          "Extended Offset Table and Lengths don't have the same number of items",
+        )),
       )
 
       // Check that the first offset is zero
       use <- bool.guard(
         list.first(extended_offset_table) |> result.unwrap(0) != 0,
-        Error(
-          DataError(data_error.new_value_invalid(
-            "Extended Offset Table first value must be zero",
-          )),
-        ),
+        Error(data_error.new_value_invalid(
+          "Extended Offset Table first value must be zero",
+        )),
       )
 
       // Check that the offsets are sorted
       use <- bool.guard(
         !is_list_sorted(extended_offset_table),
-        Error(
-          DataError(data_error.new_value_invalid(
-            "Extended Offset Table values are not sorted",
-          )),
-        ),
+        Error(data_error.new_value_invalid(
+          "Extended Offset Table values are not sorted",
+        )),
       )
 
       // Return the offset table
@@ -761,7 +790,7 @@ fn read_extended_offset_table(
 fn apply_length_to_frame(
   frame: PixelDataFrame,
   frame_length: Int,
-) -> Result(PixelDataFrame, P10PixelDataFrameFilterError) {
+) -> Result(PixelDataFrame, data_error.DataError) {
   case pixel_data_frame.length(frame) {
     len if len == frame_length -> Ok(frame)
 
@@ -776,7 +805,6 @@ fn apply_length_to_frame(
         <> int.to_string(pixel_data_frame.length(frame))
         <> "'",
       )
-      |> DataError
       |> Error
   }
 }

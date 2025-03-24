@@ -12,6 +12,41 @@ macro_rules! assert_image_snapshot {
 }
 
 #[test]
+fn single_bit_unaligned_to_raw() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm";
+  let output_files = [
+    format!("{}.0000.bin", dicom_file),
+    format!("{}.0001.bin", dicom_file),
+    format!("{}.0002.bin", dicom_file),
+  ];
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .assert()
+    .success()
+    .stdout(format!(
+      "Writing \"{}\" …\nWriting \"{}\" …\n\
+       Writing \"{}\" …\n",
+      to_native_path(&output_files[0]),
+      to_native_path(&output_files[1]),
+      to_native_path(&output_files[2])
+    ));
+
+  for i in 0..3 {
+    let filename =
+      format!("get_pixel_data_tests__single_bit_unaligned_to_raw.000{i}.bin");
+
+    assert_eq!(
+      std::fs::read(&output_files[i]).unwrap(),
+      std::fs::read(&format!("tests/snapshots/{filename}")).unwrap()
+    );
+  }
+}
+
+#[test]
 fn rgb_to_png() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";

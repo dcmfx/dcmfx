@@ -17,46 +17,55 @@ pub fn main() {
 }
 
 pub fn read_native_empty_frame_test() {
-  let pixel_data =
-    data_element_value.new_binary_unchecked(
-      value_representation.OtherByteString,
-      <<>>,
-    )
+  let assert Ok(rows) = data_element_value.new_unsigned_short([0])
+  let assert Ok(columns) = data_element_value.new_unsigned_short([0])
+  let assert Ok(bits_allocated) = data_element_value.new_unsigned_short([8])
+  let assert Ok(pixel_data) =
+    data_element_value.new_binary(value_representation.OtherByteString, <<>>)
 
   data_set.new()
+  |> data_set.insert(dictionary.rows.tag, rows)
+  |> data_set.insert(dictionary.columns.tag, columns)
+  |> data_set.insert(dictionary.bits_allocated.tag, bits_allocated)
   |> data_set.insert(dictionary.pixel_data.tag, pixel_data)
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(Ok([]))
 }
 
 pub fn read_native_single_frame_test() {
-  let pixel_data =
-    data_element_value.new_binary_unchecked(
-      value_representation.OtherByteString,
-      <<1, 2, 3, 4>>,
-    )
+  let assert Ok(rows) = data_element_value.new_unsigned_short([2])
+  let assert Ok(columns) = data_element_value.new_unsigned_short([2])
+  let assert Ok(bits_allocated) = data_element_value.new_unsigned_short([8])
+  let assert Ok(pixel_data) =
+    data_element_value.new_binary(value_representation.OtherByteString, <<
+      1, 2, 3, 4,
+    >>)
 
   data_set.new()
+  |> data_set.insert(dictionary.rows.tag, rows)
+  |> data_set.insert(dictionary.columns.tag, columns)
+  |> data_set.insert(dictionary.bits_allocated.tag, bits_allocated)
   |> data_set.insert(dictionary.pixel_data.tag, pixel_data)
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(Ok([frame_with_fragments(0, [<<1, 2, 3, 4>>])]))
 }
 
 pub fn read_native_multi_frame_test() {
+  let assert Ok(number_of_frames) = data_element_value.new_integer_string([2])
+  let assert Ok(rows) = data_element_value.new_unsigned_short([1])
+  let assert Ok(columns) = data_element_value.new_unsigned_short([2])
+  let assert Ok(bits_allocated) = data_element_value.new_unsigned_short([8])
+  let assert Ok(pixel_data) =
+    data_element_value.new_binary(value_representation.OtherByteString, <<
+      1, 2, 3, 4,
+    >>)
+
   data_set.new()
-  |> data_set.insert(
-    dictionary.pixel_data.tag,
-    data_element_value.new_binary_unchecked(
-      value_representation.OtherByteString,
-      <<1, 2, 3, 4>>,
-    ),
-  )
-  |> data_set.insert(
-    dictionary.number_of_frames.tag,
-    data_element_value.new_binary_unchecked(value_representation.IntegerString, <<
-      "2",
-    >>),
-  )
+  |> data_set.insert(dictionary.number_of_frames.tag, number_of_frames)
+  |> data_set.insert(dictionary.rows.tag, rows)
+  |> data_set.insert(dictionary.columns.tag, columns)
+  |> data_set.insert(dictionary.bits_allocated.tag, bits_allocated)
+  |> data_set.insert(dictionary.pixel_data.tag, pixel_data)
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
     Ok([
@@ -66,26 +75,54 @@ pub fn read_native_multi_frame_test() {
   )
 }
 
-pub fn read_native_multi_frame_malformed() {
+pub fn read_native_multi_frame_with_one_bit_allocated_test() {
+  let assert Ok(number_of_frames) = data_element_value.new_integer_string([3])
+  let assert Ok(rows) = data_element_value.new_unsigned_short([3])
+  let assert Ok(columns) = data_element_value.new_unsigned_short([5])
+  let assert Ok(bits_allocated) = data_element_value.new_unsigned_short([1])
+  let assert Ok(pixel_data) =
+    data_element_value.new_binary(value_representation.OtherByteString, <<
+      1, 2, 3, 4, 5, 6,
+    >>)
+
   data_set.new()
-  |> data_set.insert(
-    dictionary.pixel_data.tag,
-    data_element_value.new_binary_unchecked(
-      value_representation.OtherByteString,
-      <<1, 2, 3, 4>>,
-    ),
+  |> data_set.insert(dictionary.number_of_frames.tag, number_of_frames)
+  |> data_set.insert(dictionary.rows.tag, rows)
+  |> data_set.insert(dictionary.columns.tag, columns)
+  |> data_set.insert(dictionary.bits_allocated.tag, bits_allocated)
+  |> data_set.insert(dictionary.pixel_data.tag, pixel_data)
+  |> dcmfx_pixel_data.get_pixel_data_frames
+  |> should.equal(
+    Ok([
+      frame_with_fragments(0, [<<1, 1:size(7)>>]),
+      frame_with_fragments(1, [<<1, 65:size(7)>>]),
+      frame_with_fragments(2, [<<1, 32:size(7)>>]),
+    ]),
   )
-  |> data_set.insert(
-    dictionary.number_of_frames.tag,
-    data_element_value.new_binary_unchecked(value_representation.IntegerString, <<
-      "3",
-    >>),
-  )
+}
+
+pub fn read_native_multi_frame_malformed_test() {
+  let assert Ok(number_of_frames) = data_element_value.new_integer_string([3])
+  let assert Ok(rows) = data_element_value.new_unsigned_short([1])
+  let assert Ok(columns) = data_element_value.new_unsigned_short([1])
+  let assert Ok(bits_allocated) = data_element_value.new_unsigned_short([8])
+  let assert Ok(pixel_data) =
+    data_element_value.new_binary(value_representation.OtherByteString, <<
+      1, 2, 3, 4,
+    >>)
+
+  data_set.new()
+  |> data_set.insert(dictionary.number_of_frames.tag, number_of_frames)
+  |> data_set.insert(dictionary.rows.tag, rows)
+  |> data_set.insert(dictionary.columns.tag, columns)
+  |> data_set.insert(dictionary.bits_allocated.tag, bits_allocated)
+  |> data_set.insert(dictionary.pixel_data.tag, pixel_data)
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
     Error(
       p10_pixel_data_frame_filter.DataError(data_error.new_value_invalid(
-        "Multi-frame pixel data of length 4 does not divide evenly into 3 frames",
+        "Multi-frame pixel data of length 4 bytes does not divide evenly into "
+        <> "3 frames",
       )),
     ),
   )
@@ -130,6 +167,9 @@ pub fn read_encapsulated_multiple_fragments_into_multiple_frames_test() {
 
 // This test is taken from the DICOM standard. Ref: PS3.5 Table A.4-2.
 pub fn read_encapsulated_using_basic_offset_table_test() {
+  let assert Ok(rows) = data_element_value.new_unsigned_short([1])
+  let assert Ok(columns) = data_element_value.new_unsigned_short([1])
+  let assert Ok(bits_allocated) = data_element_value.new_unsigned_short([8])
   let assert Ok(pixel_data) =
     data_element_value.new_encapsulated_pixel_data(
       value_representation.OtherByteString,
@@ -142,6 +182,9 @@ pub fn read_encapsulated_using_basic_offset_table_test() {
     )
 
   data_set.new()
+  |> data_set.insert(dictionary.rows.tag, rows)
+  |> data_set.insert(dictionary.columns.tag, columns)
+  |> data_set.insert(dictionary.bits_allocated.tag, bits_allocated)
   |> data_set.insert(dictionary.pixel_data.tag, pixel_data)
   |> dcmfx_pixel_data.get_pixel_data_frames
   |> should.equal(
@@ -201,6 +244,9 @@ fn frame_with_fragments(index: Int, fragments: List(BitArray)) -> PixelDataFrame
 }
 
 fn data_set_with_three_fragments() {
+  let assert Ok(rows) = data_element_value.new_unsigned_short([1])
+  let assert Ok(columns) = data_element_value.new_unsigned_short([1])
+  let assert Ok(bits_allocated) = data_element_value.new_unsigned_short([8])
   let assert Ok(pixel_data) =
     data_element_value.new_encapsulated_pixel_data(
       value_representation.OtherByteString,
@@ -213,5 +259,8 @@ fn data_set_with_three_fragments() {
     )
 
   data_set.new()
+  |> data_set.insert(dictionary.rows.tag, rows)
+  |> data_set.insert(dictionary.columns.tag, columns)
+  |> data_set.insert(dictionary.bits_allocated.tag, bits_allocated)
   |> data_set.insert(dictionary.pixel_data.tag, pixel_data)
 }

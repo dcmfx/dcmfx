@@ -402,8 +402,12 @@ fn write_fragments(
 ) -> Result<(), std::io::Error> {
   let mut stream = File::create(filename)?;
 
-  for fragment in frame.fragments() {
-    stream.write_all(fragment)?;
+  if frame.bit_offset() == 0 {
+    for fragment in frame.fragments() {
+      stream.write_all(fragment)?;
+    }
+  } else {
+    stream.write_all(&frame.to_bytes())?;
   }
 
   stream.flush()

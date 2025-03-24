@@ -151,6 +151,7 @@ impl PixelDataRenderer {
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<SingleChannelImage, DataError> {
+    let frame_bit_offset = frame.bit_offset();
     let data = frame.combine_fragments();
 
     use transfer_syntax::*;
@@ -160,9 +161,11 @@ impl PixelDataRenderer {
       | &EXPLICIT_VR_LITTLE_ENDIAN
       | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
       | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-      | &EXPLICIT_VR_BIG_ENDIAN => {
-        decode::native::decode_single_channel(&self.definition, data)
-      }
+      | &EXPLICIT_VR_BIG_ENDIAN => decode::native::decode_single_channel(
+        &self.definition,
+        data,
+        frame_bit_offset,
+      ),
 
       &RLE_LOSSLESS => {
         decode::rle_lossless::decode_single_channel(&self.definition, data)
@@ -201,6 +204,7 @@ impl PixelDataRenderer {
         decode::native::decode_single_channel(
           &self.definition,
           &self.inflate_frame_data(data)?,
+          0,
         )
       }
 

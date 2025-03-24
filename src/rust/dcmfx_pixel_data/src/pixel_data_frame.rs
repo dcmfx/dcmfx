@@ -23,17 +23,37 @@ pub struct PixelDataFrame {
   frame_index: usize,
   fragments: Vec<(Rc<Vec<u8>>, Range<usize>)>,
   length: usize,
+  bit_offset: usize,
 }
 
 impl PixelDataFrame {
   /// Creates a new empty frame of pixel data.
   ///
-  pub(crate) fn new(frame_index: usize) -> Self {
+  pub fn new(frame_index: usize) -> Self {
     PixelDataFrame {
       frame_index,
       fragments: vec![],
       length: 0,
+      bit_offset: 0,
     }
+  }
+
+  /// Returns the bit offset for this frame.
+  ///
+  /// The bit offset is only relevant to native multi-frame pixel data that has
+  /// a *'(0028,0010) Bits Allocated'* value of 1, where it specifies how many
+  /// high bits in this frame's first byte should be ignored when reading its
+  /// data. In all other cases it is zero and is unused.
+  ///
+  pub fn bit_offset(&self) -> usize {
+    self.bit_offset
+  }
+
+  /// Sets this frame's pixel data bit offset. See [`Self::bit_offset()`] for
+  /// details.
+  ///
+  pub fn set_bit_offset(&mut self, bit_offset: usize) {
+    self.bit_offset = bit_offset.clamp(0, 7);
   }
 
   /// Returns the index of this frame, i.e. 0 for the first frame in its DICOM
@@ -66,6 +86,14 @@ impl PixelDataFrame {
   ///
   pub fn len(&self) -> usize {
     self.length
+  }
+
+  /// The size in bits of this frame of pixel data. This takes into account the
+  /// frame's bit offset, i.e. the number of high bits in the first byte that
+  /// aren't used.
+  ///
+  pub fn length_in_bits(&self) -> usize {
+    (self.length * 8).saturating_sub(self.bit_offset)
   }
 
   /// Returns whether this frame of pixel data is empty.
@@ -123,10 +151,12 @@ impl PixelDataFrame {
   ///
   pub fn to_bytes(&self) -> Rc<Vec<u8>> {
     // If there's a single fragment with all the data then return it and avoid a
-    // copy
-    if let Some(first) = self.fragments.first() {
-      if first.0.len() == self.len() && first.1.start == 0 {
-        return first.0.clone();
+    // copy. This isn't possible when there's a non-zero bit offset.
+    if self.bit_offset == 0 {
+      if let Some(first) = self.fragments.first() {
+        if first.0.len() == self.len() && first.1.start == 0 {
+          return first.0.clone();
+        }
       }
     }
 
@@ -134,6 +164,17 @@ impl PixelDataFrame {
     let mut buffer = Vec::with_capacity(self.len());
     for item in self.fragments.iter() {
       buffer.extend_from_slice(&item.0[item.1.clone()]);
+    }
+
+    // Correct for any bit offset by left shifting the whole buffer. This is
+    // only used by 1bpp pixel data frames that have a pixel count that's not a
+    // multiple of eight.
+    if self.bit_offset != 0 {
+      for i in 0..buffer.len() {
+        let next_byte = buffer.get(i + 1).unwrap_or(&0);
+        buffer[i] =
+          (buffer[i] << self.bit_offset) | (next_byte >> (8 - self.bit_offset));
+      }
     }
 
     Rc::new(buffer)

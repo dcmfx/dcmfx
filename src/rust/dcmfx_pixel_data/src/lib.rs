@@ -107,6 +107,9 @@ impl DataSetPixelDataExtensions for DataSet {
     let mut ds = DataSet::new();
     for tag in [
       dictionary::NUMBER_OF_FRAMES.tag,
+      dictionary::ROWS.tag,
+      dictionary::COLUMNS.tag,
+      dictionary::BITS_ALLOCATED.tag,
       dictionary::EXTENDED_OFFSET_TABLE.tag,
       dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag,
       dictionary::PIXEL_DATA.tag,
@@ -272,6 +275,10 @@ mod tests {
   #[test]
   fn read_native_empty_frame() {
     let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::ROWS, &[0]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[0]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
+      .unwrap();
     ds.insert(
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
@@ -287,6 +294,10 @@ mod tests {
   #[test]
   fn read_native_single_frame() {
     let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::ROWS, &[2]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[2]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
+      .unwrap();
     ds.insert(
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
@@ -307,6 +318,10 @@ mod tests {
     let mut ds = DataSet::new();
     ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[2])
       .unwrap();
+    ds.insert_int_value(&dictionary::ROWS, &[1]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[2]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
+      .unwrap();
     ds.insert(
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
@@ -326,10 +341,51 @@ mod tests {
   }
 
   #[test]
+  fn read_native_multi_frame_with_one_bit_allocated() {
+    let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[3])
+      .unwrap();
+    ds.insert_int_value(&dictionary::ROWS, &[3]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[5]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[1])
+      .unwrap();
+    ds.insert(
+      dictionary::PIXEL_DATA.tag,
+      DataElementValue::new_binary(
+        ValueRepresentation::OtherByteString,
+        Rc::new(vec![
+          0b00110001, 0b00011011, 0b10100011, 0b01000101, 0b00010101,
+          0b00000110,
+        ]),
+      )
+      .unwrap(),
+    );
+
+    let frames = ds.get_pixel_data_frames().unwrap();
+    assert_eq!(*frames[0].to_bytes(), vec![0b00110001, 0b00011011]);
+    assert_eq!(
+      *frames[1].to_bytes(),
+      vec![0b11010001, 0b10100010, 0b10000000]
+    );
+    assert_eq!(
+      *frames[2].to_bytes(),
+      vec![0b01000101, 0b01000001, 0b10000000]
+    );
+    assert_eq!(frames[0].bit_offset(), 0);
+    assert_eq!(frames[1].bit_offset(), 7);
+    assert_eq!(frames[2].bit_offset(), 6);
+  }
+
+  #[test]
   fn read_native_multi_frame_malformed() {
     let mut ds = DataSet::new();
     ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[3])
       .unwrap();
+    ds.insert_int_value(&dictionary::ROWS, &[1]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[1]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
+      .unwrap();
+
     ds.insert(
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
@@ -393,6 +449,10 @@ mod tests {
   #[test]
   fn read_encapsulated_using_basic_offset_table() {
     let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::ROWS, &[0]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[0]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
+      .unwrap();
     ds.insert(
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_encapsulated_pixel_data(
@@ -483,6 +543,10 @@ mod tests {
 
   fn data_set_with_three_fragments() -> DataSet {
     let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::ROWS, &[0]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[0]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
+      .unwrap();
     ds.insert(
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_encapsulated_pixel_data(

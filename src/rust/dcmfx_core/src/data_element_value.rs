@@ -256,18 +256,20 @@ impl DataElementValue {
         },
 
         ValueRepresentation::SignedVeryLong
-        | ValueRepresentation::UnsignedVeryLong => match self.get_big_ints() {
-          Ok(ints) => Ok((
-            ints
-              .iter()
-              .take(output_list_max_size)
-              .map(|i| i.to_string())
-              .collect::<Vec<String>>()
-              .join(", "),
-            None,
-          )),
-          Err(_) => Err(()),
-        },
+        | ValueRepresentation::UnsignedVeryLong => {
+          match self.get_big_ints::<i128>() {
+            Ok(ints) => Ok((
+              ints
+                .iter()
+                .take(output_list_max_size)
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", "),
+              None,
+            )),
+            Err(_) => Err(()),
+          }
+        }
 
         _ => Err(()),
       },
@@ -1152,7 +1154,9 @@ impl DataElementValue {
   /// supported for value representations that contain big integer data and when
   /// exactly one big integer is present.
   ///
-  pub fn get_big_int(&self) -> Result<i128, DataError> {
+  pub fn get_big_int<T: num_traits::PrimInt + TryFrom<i128>>(
+    &self,
+  ) -> Result<T, DataError> {
     let ints = self.get_big_ints()?;
 
     match ints.as_slice() {
@@ -1164,7 +1168,27 @@ impl DataElementValue {
   /// Returns the big integers contained in a data element value. This is only
   /// supported for value representations that contain big integer data.
   ///
-  pub fn get_big_ints(&self) -> Result<Vec<i128>, DataError> {
+  pub fn get_big_ints<T: num_traits::PrimInt + TryFrom<i128>>(
+    &self,
+  ) -> Result<Vec<T>, DataError> {
+    // Converts an integer value to the target integer type, erroring if the
+    // conversion is out of bounds
+    fn convert_int<
+      U: num_traits::PrimInt + Into<i128> + core::fmt::Display,
+      T: num_traits::PrimInt + TryFrom<i128>,
+    >(
+      i: U,
+    ) -> Result<T, DataError> {
+      match T::try_from(i.into()) {
+        Ok(i) => Ok(i),
+        Err(_) => Err(DataError::new_value_invalid(format!(
+          "Value '{}' is out of range for the target integer type '{}'",
+          i,
+          core::any::type_name::<T>()
+        ))),
+      }
+    }
+
     match &self.0 {
       RawDataElementValue::BinaryValue {
         vr: ValueRepresentation::SignedVeryLong,
@@ -1178,7 +1202,8 @@ impl DataElementValue {
 
         let mut values = Vec::with_capacity(bytes.len() / 8);
         for i64_bytes in bytes.chunks_exact(8) {
-          values.push(byteorder::LittleEndian::read_i64(i64_bytes) as i128);
+          values
+            .push(convert_int(byteorder::LittleEndian::read_i64(i64_bytes))?);
         }
 
         Ok(values)
@@ -1196,7 +1221,8 @@ impl DataElementValue {
 
         let mut values = Vec::with_capacity(bytes.len() / 8);
         for u64_bytes in bytes.chunks_exact(8) {
-          values.push(byteorder::LittleEndian::read_u64(u64_bytes) as i128);
+          values
+            .push(convert_int(byteorder::LittleEndian::read_u64(u64_bytes))?);
         }
 
         Ok(values)
@@ -1882,14 +1908,14 @@ mod tests {
     assert_eq!(
       DataElementValue::new_unsigned_very_long(&[1234, 1234])
         .unwrap()
-        .get_big_int(),
+        .get_big_int::<u64>(),
       Err(DataError::new_multiplicity_mismatch())
     );
 
     assert_eq!(
       DataElementValue::new_long_text("123".to_string())
         .unwrap()
-        .get_big_int(),
+        .get_big_int::<u64>(),
       Err(DataError::new_value_not_present())
     );
   }
@@ -1908,7 +1934,7 @@ mod tests {
         ValueRepresentation::SignedVeryLong,
         Rc::new(vec![0])
       )
-      .get_big_ints(),
+      .get_big_ints::<u64>(),
       Err(DataError::new_value_invalid(
         "Invalid Int64 data".to_string(),
       ))
@@ -1926,7 +1952,7 @@ mod tests {
         ValueRepresentation::UnsignedVeryLong,
         Rc::new(vec![0])
       )
-      .get_big_ints(),
+      .get_big_ints::<u64>(),
       Err(DataError::new_value_invalid(
         "Invalid Uint64 data".to_string(),
       ))
@@ -1935,14 +1961,14 @@ mod tests {
     assert_eq!(
       DataElementValue::new_floating_point_single(&[123.0])
         .unwrap()
-        .get_big_ints(),
+        .get_big_ints::<u64>(),
       Err(DataError::new_value_not_present())
     );
 
     assert_eq!(
       DataElementValue::new_long_text("123".to_string())
         .unwrap()
-        .get_big_ints(),
+        .get_big_ints::<u64>(),
       Err(DataError::new_value_not_present())
     );
   }

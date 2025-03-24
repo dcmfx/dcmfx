@@ -784,7 +784,10 @@ impl DataSet {
   /// If the data element with the specified tag does not hold exactly one big
   /// integer value then an error is returned.
   ///
-  pub fn get_big_int(&self, tag: DataElementTag) -> Result<i128, DataError> {
+  pub fn get_big_int<T: num_traits::PrimInt + TryFrom<i128>>(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<T, DataError> {
     self
       .get_value(tag)?
       .get_big_int()
@@ -795,10 +798,10 @@ impl DataSet {
   /// the data element with the specified tag is not of a type that supports
   /// multiple big integer values then an error is returned.
   ///
-  pub fn get_big_ints(
+  pub fn get_big_ints<T: num_traits::PrimInt + TryFrom<i128>>(
     &self,
     tag: DataElementTag,
-  ) -> Result<Vec<i128>, DataError> {
+  ) -> Result<Vec<T>, DataError> {
     self
       .get_value(tag)?
       .get_big_ints()

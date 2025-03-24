@@ -327,7 +327,11 @@ fn test_jittered_read_loop(
 ///
 fn test_read_pixel_data(data_set: DataSet) -> Result(Nil, DicomValidationError) {
   // If there is no pixel data then there's nothing to test
-  use <- bool.guard(data_set.has(data_set, dictionary.pixel_data.tag), Ok(Nil))
+  use <- bool.guard(
+    !data_set.has(data_set, dictionary.rows.tag)
+      || !data_set.has(data_set, dictionary.pixel_data.tag),
+    Ok(Nil),
+  )
 
   // Get the raw frames of pixel data
   let assert Ok(_frames) = dcmfx_pixel_data.get_pixel_data_frames(data_set)

@@ -22,6 +22,7 @@ use crate::{
 pub fn decode_single_channel(
   definition: &PixelDataDefinition,
   data: &[u8],
+  data_bit_offset: usize,
 ) -> Result<SingleChannelImage, DataError> {
   // Check that there is one sample per pixel
   if definition.samples_per_pixel != SamplesPerPixel::One {
@@ -43,8 +44,9 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::One) => {
           let mut pixels = vec![0i8; pixel_count];
 
-          for i in 0..pixel_count {
-            pixels[i] = -(((data[i / 8] >> (i % 8)) & 1) as i8);
+          for (i, pixel) in pixels.iter_mut().enumerate() {
+            let index = i + data_bit_offset;
+            *pixel = -(((data[index / 8] >> (index % 8)) & 1) as i8);
           }
 
           Ok(SingleChannelImage::Int8(
@@ -55,8 +57,9 @@ pub fn decode_single_channel(
         (PixelRepresentation::Unsigned, BitsAllocated::One) => {
           let mut pixels = vec![0u8; pixel_count];
 
-          for i in 0..pixel_count {
-            pixels[i] = (data[i / 8] >> (i % 8)) & 1;
+          for (i, pixel) in pixels.iter_mut().enumerate() {
+            let index = i + data_bit_offset;
+            *pixel = (data[index / 8] >> (index % 8)) & 1;
           }
 
           Ok(SingleChannelImage::Uint8(
@@ -623,7 +626,7 @@ mod tests {
     let data = [0, 1, 2, 3];
 
     assert_eq!(
-      decode_single_channel(&definition, &data).unwrap(),
+      decode_single_channel(&definition, &data, 0).unwrap(),
       SingleChannelImage::Uint8(
         ImageBuffer::<Luma<u8>, Vec<u8>>::from_raw(2, 2, vec![0, 1, 2, 3])
           .unwrap()

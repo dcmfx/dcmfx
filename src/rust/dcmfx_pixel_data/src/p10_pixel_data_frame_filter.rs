@@ -25,10 +25,7 @@ use crate::PixelDataFrame;
 /// data it contains. Each frame is returned with no copying of pixel data,
 /// allowing for memory-efficient stream processing.
 ///
-/// All native and encapsulated pixel data is supported, with the exception of
-/// native pixel data that stores 1 bit per pixel and has a number of pixels in
-/// each frame that is not divisible by eight. Such frames of pixel data do not
-/// consume a whole number of bytes.
+/// All native and encapsulated pixel data is supported.
 ///
 pub struct P10PixelDataFrameFilter {
   is_encapsulated: bool,
@@ -40,7 +37,7 @@ pub struct P10PixelDataFrameFilter {
   // Filter used to extract only the '(7FE0,0010) Pixel Data' data element
   pixel_data_filter: P10FilterTransform,
 
-  // When reading native pixel data, the size of a single frame in bytes
+  // When reading native pixel data, the size of a single frame in bits
   native_pixel_data_frame_size: usize,
 
   // Chunks of pixel data that have not yet been emitted as part of a frame. The
@@ -64,18 +61,28 @@ type OffsetTable = VecDeque<(u64, Option<u64>)>;
 
 #[derive(Clone, Debug, PartialEq)]
 struct PixelDataFrameFilterDetails {
-  number_of_frames: Option<DataElementValue>,
+  number_of_frames: usize,
+  rows: u16,
+  columns: u16,
+  bits_allocated: u16,
   extended_offset_table: Option<DataElementValue>,
   extended_offset_table_lengths: Option<DataElementValue>,
 }
 
 impl PixelDataFrameFilterDetails {
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
+    let number_of_frames = if data_set.has(dictionary::NUMBER_OF_FRAMES.tag) {
+      data_set.get_int::<usize>(dictionary::NUMBER_OF_FRAMES.tag)?
+    } else {
+      1
+    };
+
     Ok(Self {
-      number_of_frames: data_set
-        .get_value(dictionary::NUMBER_OF_FRAMES.tag)
-        .ok()
-        .cloned(),
+      number_of_frames,
+      rows: data_set.get_int::<u16>(dictionary::ROWS.tag)?,
+      columns: data_set.get_int::<u16>(dictionary::COLUMNS.tag)?,
+      bits_allocated: data_set
+        .get_int::<u16>(dictionary::BITS_ALLOCATED.tag)?,
       extended_offset_table: data_set
         .get_value(dictionary::EXTENDED_OFFSET_TABLE.tag)
         .ok()
@@ -120,6 +127,9 @@ impl P10PixelDataFrameFilter {
       P10CustomTypeTransform::<PixelDataFrameFilterDetails>::new(
         &[
           dictionary::NUMBER_OF_FRAMES.tag,
+          dictionary::ROWS.tag,
+          dictionary::COLUMNS.tag,
+          dictionary::BITS_ALLOCATED.tag,
           dictionary::EXTENDED_OFFSET_TABLE.tag,
           dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag,
         ],
@@ -182,20 +192,37 @@ impl P10PixelDataFrameFilter {
 
         // Check that the pixel data length divides evenly into the number of
         // frames
-        let number_of_frames = self.get_number_of_frames()?;
+        let number_of_frames = self.get_number_of_frames();
 
         if number_of_frames > 0 {
-          if *length as usize % number_of_frames != 0 {
-            return Err(DataError::new_value_invalid(format!(
-              "Multi-frame pixel data of length {} bytes does not divide evenly \
-              into {} frames",
-              *length, number_of_frames
-            )));
-          }
+          let details = self.details.get_output().as_ref().unwrap();
 
-          // Store the size of native pixel data frames
-          self.native_pixel_data_frame_size =
-            (*length as usize) / number_of_frames;
+          // Validate the pixel data length and store the size in bits of native
+          // pixel data frames
+          self.native_pixel_data_frame_size = if details.bits_allocated == 1 {
+            let pixel_count = details.rows as usize * details.columns as usize;
+            let expected_length = (pixel_count * number_of_frames + 7) / 8;
+
+            if *length as usize != expected_length {
+              return Err(DataError::new_value_invalid(format!(
+                "Bitmap pixel data has length {} bytes but {} bytes were \
+                 expected",
+                *length, expected_length
+              )));
+            }
+
+            pixel_count
+          } else {
+            if *length as usize % number_of_frames != 0 {
+              return Err(DataError::new_value_invalid(format!(
+                "Multi-frame pixel data of length {} bytes does not divide \
+                evenly into {} frames",
+                *length, number_of_frames
+              )));
+            }
+
+            (*length as usize * 8) / number_of_frames
+          };
         }
 
         Ok(vec![])
@@ -234,7 +261,7 @@ impl P10PixelDataFrameFilter {
       // The start of a new encapsulated pixel data item. The size of an item
       // header is 8 bytes, and this needs to be included in the current offset.
       P10Token::PixelDataItem { .. } => {
-        self.pixel_data_write_offset += 8;
+        self.pixel_data_write_offset += 64;
         Ok(vec![])
       }
 
@@ -244,7 +271,7 @@ impl P10PixelDataFrameFilter {
         ..
       } => {
         self.pixel_data.push_back((data.clone(), 0));
-        self.pixel_data_write_offset += data.len() as u64;
+        self.pixel_data_write_offset += data.len() as u64 * 8;
 
         if self.is_encapsulated {
           if *bytes_remaining == 0 {
@@ -265,14 +292,10 @@ impl P10PixelDataFrameFilter {
 
   /// Returns the value for *'(0028,0008) Number of Frames'* data element.
   ///
-  fn get_number_of_frames(&self) -> Result<usize, DataError> {
+  fn get_number_of_frames(&self) -> usize {
     match self.details.get_output() {
-      Some(details) => match &details.number_of_frames {
-        Some(value) => Ok(value.get_int::<usize>()?),
-        None => Ok(1),
-      },
-
-      None => Ok(1),
+      Some(details) => details.number_of_frames,
+      None => 1,
     }
   }
 
@@ -290,32 +313,37 @@ impl P10PixelDataFrameFilter {
       <= self.pixel_data_write_offset
     {
       let mut frame = PixelDataFrame::new(self.next_frame_index);
+
+      frame.set_bit_offset(self.pixel_data_read_offset as usize % 8);
+
       self.next_frame_index += 1;
 
-      while frame.len() < frame_size {
+      while frame.length_in_bits() < frame_size {
         let (chunk, chunk_offset) = self.pixel_data.pop_front().unwrap();
 
         // If the whole of this chunk is needed for the next frame then add it
         // to the frame
-        if chunk.len() - chunk_offset <= frame_size - frame.len() {
-          frame.push_fragment(chunk.clone(), chunk_offset..chunk.len());
-          self.pixel_data_read_offset += (chunk.len() - chunk_offset) as u64;
+        if chunk.len() * 8 - chunk_offset <= frame_size - frame.length_in_bits()
+        {
+          frame.push_fragment(chunk.clone(), (chunk_offset / 8)..chunk.len());
+          self.pixel_data_read_offset +=
+            (chunk.len() * 8 - chunk_offset) as u64;
         }
-        // Otherwise, take just the part of this chunk of pixel data needed
-        // for the frame
+        // Otherwise, take just the part of this chunk of pixel data needed for
+        // the frame
         else {
-          let length = frame_size - frame.len();
+          let length_in_bits = frame_size - frame.length_in_bits();
           frame.push_fragment(
             chunk.clone(),
-            chunk_offset..(chunk_offset + length),
+            (chunk_offset / 8)..((chunk_offset + length_in_bits + 7) / 8),
           );
 
           // Put the unused part of the chunk back on so it can be used by the
           // next frame
           self
             .pixel_data
-            .push_front((chunk.clone(), chunk_offset + length));
-          self.pixel_data_read_offset += length as u64;
+            .push_front((chunk.clone(), chunk_offset + length_in_bits));
+          self.pixel_data_read_offset += length_in_bits as u64;
         }
       }
 
@@ -349,7 +377,7 @@ impl P10PixelDataFrameFilter {
         if offset_table.is_empty() {
           // If the offset table is empty and there is more than one frame
           // then each pixel data item is treated as a single frame
-          if self.get_number_of_frames()? > 1 {
+          if self.get_number_of_frames() > 1 {
             let mut frame = PixelDataFrame::new(self.next_frame_index);
             self.next_frame_index += 1;
 
@@ -365,17 +393,17 @@ impl P10PixelDataFrameFilter {
         } else {
           // Use the offset table to determine what frames to emit
           while let Some((offset, _)) = offset_table.get(1).cloned() {
-            if self.pixel_data_write_offset < offset {
+            if self.pixel_data_write_offset < offset * 8 {
               break;
             }
             let mut frame = PixelDataFrame::new(self.next_frame_index);
             self.next_frame_index += 1;
 
-            while self.pixel_data_read_offset < offset {
+            while self.pixel_data_read_offset < offset * 8 {
               if let Some((chunk, _)) = self.pixel_data.pop_front() {
                 let chunk_len = chunk.len();
                 frame.push_fragment(chunk, 0..chunk_len);
-                self.pixel_data_read_offset += 8 + chunk_len as u64;
+                self.pixel_data_read_offset += (8 + chunk_len as u64) * 8;
               } else {
                 break;
               }
@@ -384,7 +412,7 @@ impl P10PixelDataFrameFilter {
             let (_, frame_length) = offset_table.pop_front().unwrap();
 
             // Check that the frame ended exactly on the expected offset
-            if self.pixel_data_read_offset != offset {
+            if self.pixel_data_read_offset != offset * 8 {
               return Err(DataError::new_value_invalid(
                 "Pixel data offset table is malformed".to_string(),
               ));
