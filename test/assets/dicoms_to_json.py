@@ -68,6 +68,14 @@ def dicom_pixel_data_to_json(file, data_set):
     ):
         return 
 
+    # pydicom < 3.1.0 can't decode packed 1-bit per pixel bitmaps that aren't
+    # byte aligned
+    if (
+        data_set.file_meta.TransferSyntaxUID == "1.2.840.10008.1.2.5"
+        and data_set.BitsAllocated == 1
+    ):
+        return 
+
     if (
         not hasattr(data_set, "PixelData")
         or not hasattr(data_set, "SamplesPerPixel")

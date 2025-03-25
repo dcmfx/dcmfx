@@ -342,7 +342,7 @@ impl P10PixelDataFrameFilter {
           // next frame
           self
             .pixel_data
-            .push_front((chunk.clone(), chunk_offset + length_in_bits));
+            .push_front((chunk, chunk_offset + length_in_bits));
           self.pixel_data_read_offset += length_in_bits as u64;
         }
       }

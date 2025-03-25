@@ -39,26 +39,26 @@ pub fn decode_single_channel(
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2 => {
       match (definition.pixel_representation, definition.bits_allocated) {
-        (PixelRepresentation::Signed, BitsAllocated::One) => {
-          let mut pixels = vec![0i8; pixel_count];
+        (_, BitsAllocated::One) => {
+          let is_signed = definition.pixel_representation.is_signed();
+          let mut data = data.to_vec();
 
-          for (i, pixel) in pixels.iter_mut().enumerate() {
-            let index = i + data_bit_offset;
-            *pixel = -(((data[index / 8] >> (index % 8)) & 1) as i8);
+          if data_bit_offset > 0 {
+            for i in 0..data.len() {
+              let next_byte = data.get(i + 1).unwrap_or(&0);
+              data[i] = (data[i] >> data_bit_offset)
+                | (next_byte << (8 - data_bit_offset));
+            }
+
+            // It's possible there will be an unneeded trailing byte after
+            // adjusting for the bit offset, so remove it if present
+            data.resize_with((definition.pixel_count() + 7) / 8, || 0);
           }
 
-          Ok(SingleChannelImage::new_i8(width, height, pixels).unwrap())
-        }
-
-        (PixelRepresentation::Unsigned, BitsAllocated::One) => {
-          let mut pixels = vec![0u8; pixel_count];
-
-          for (i, pixel) in pixels.iter_mut().enumerate() {
-            let index = i + data_bit_offset;
-            *pixel = (data[index / 8] >> (index % 8)) & 1;
-          }
-
-          Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap())
+          Ok(
+            SingleChannelImage::new_bitmap(width, height, data, is_signed)
+              .unwrap(),
+          )
         }
 
         (PixelRepresentation::Signed, BitsAllocated::Eight) => {

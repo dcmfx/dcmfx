@@ -4,7 +4,6 @@ DCMfx has no formal roadmap, but future additions are likely to include the
 following:
 
 - Pixel data decoding
-  - Avoid expanding 1-bit data to 8-bit when decoding
   - Defer evaluation of pixel data that uses color palettes
   - Decoding of 1-bit and 38-bit 'JPEG 2000' pixel data
   - Decoding of 'JPEG-LS' pixel data on WASM

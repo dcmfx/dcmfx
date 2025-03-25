@@ -38,24 +38,6 @@ impl PixelDataFrame {
     }
   }
 
-  /// Returns the bit offset for this frame.
-  ///
-  /// The bit offset is only relevant to native multi-frame pixel data that has
-  /// a *'(0028,0010) Bits Allocated'* value of 1, where it specifies how many
-  /// high bits in this frame's first byte should be ignored when reading its
-  /// data. In all other cases it is zero and is unused.
-  ///
-  pub fn bit_offset(&self) -> usize {
-    self.bit_offset
-  }
-
-  /// Sets this frame's pixel data bit offset. See [`Self::bit_offset()`] for
-  /// details.
-  ///
-  pub fn set_bit_offset(&mut self, bit_offset: usize) {
-    self.bit_offset = bit_offset.clamp(0, 7);
-  }
-
   /// Returns the index of this frame, i.e. 0 for the first frame in its DICOM
   /// data set, 1 for the second frame, etc.
   ///
@@ -94,6 +76,24 @@ impl PixelDataFrame {
   ///
   pub fn length_in_bits(&self) -> usize {
     (self.length * 8).saturating_sub(self.bit_offset)
+  }
+
+  /// Returns the bit offset for this frame.
+  ///
+  /// The bit offset is only relevant to native multi-frame pixel data that has
+  /// a *'(0028,0010) Bits Allocated'* value of 1, where it specifies how many
+  /// high bits in this frame's first byte should be ignored when reading its
+  /// data. In all other cases it is zero and is unused.
+  ///
+  pub fn bit_offset(&self) -> usize {
+    self.bit_offset
+  }
+
+  /// Sets this frame's pixel data bit offset. See [`Self::bit_offset()`] for
+  /// details.
+  ///
+  pub fn set_bit_offset(&mut self, bit_offset: usize) {
+    self.bit_offset = bit_offset.clamp(0, 7);
   }
 
   /// Returns whether this frame of pixel data is empty.
@@ -173,7 +173,7 @@ impl PixelDataFrame {
       for i in 0..buffer.len() {
         let next_byte = buffer.get(i + 1).unwrap_or(&0);
         buffer[i] =
-          (buffer[i] << self.bit_offset) | (next_byte >> (8 - self.bit_offset));
+          (buffer[i] >> self.bit_offset) | (next_byte << (8 - self.bit_offset));
       }
     }
 

@@ -37,8 +37,11 @@ pub opaque type P10PixelDataFrameFilter {
     pixel_data_filter: P10FilterTransform,
     // When reading native pixel data, the size of a single frame in bits
     native_pixel_data_frame_size: Int,
-    // Chunks of pixel data that have not yet been emitted as part of a frame
-    pixel_data: Deque(BitArray),
+    // Chunks of pixel data that have not yet been emitted as part of a frame.
+    // The second value is an offset into the Vec<u8> where the un-emitted frame
+    // data begins, which is only used for native pixel data and not for
+    // encapsulated pixel data.
+    pixel_data: Deque(#(BitArray, Int)),
     pixel_data_write_offset: Int,
     pixel_data_read_offset: Int,
     // The offset table used with encapsulated pixel data. This can come from
@@ -292,7 +295,12 @@ fn process_next_pixel_data_token(
             |> deque.to_list
             |> list.fold(
               pixel_data_frame.new(frame_index),
-              pixel_data_frame.push_fragment,
+              fn(frame, pixel_data) {
+                let offset = pixel_data.1
+                let assert <<_:size(offset), fragment:bits>> = pixel_data.0
+
+                pixel_data_frame.push_fragment(frame, fragment)
+              },
             )
 
           // If the frame has a length specified then apply it
@@ -329,7 +337,7 @@ fn process_next_pixel_data_token(
     }
 
     p10_token.DataElementValueBytes(data:, bytes_remaining:, ..) -> {
-      let pixel_data = filter.pixel_data |> deque.push_back(data)
+      let pixel_data = filter.pixel_data |> deque.push_back(#(data, 0))
       let pixel_data_write_offset =
         filter.pixel_data_write_offset + bit_array.byte_size(data) * 8
 
@@ -385,7 +393,10 @@ fn get_pending_native_frames(
       let filter =
         P10PixelDataFrameFilter(..filter, next_frame_index: frame_index + 1)
 
-      let frame = pixel_data_frame.new(frame_index)
+      let frame =
+        pixel_data_frame.new(frame_index)
+        |> pixel_data_frame.set_bit_offset(filter.pixel_data_read_offset % 8)
+
       let #(frame, filter) = get_pending_native_frame(filter, frame)
 
       get_pending_native_frames(filter, [frame, ..frames])
@@ -402,24 +413,27 @@ fn get_pending_native_frame(
 
   case frame_length < frame_size {
     True -> {
-      let assert Ok(#(chunk, pixel_data)) =
+      let assert Ok(#(#(chunk, chunk_offset), pixel_data)) =
         filter.pixel_data |> deque.pop_front()
-      let chunk_length = bit_array.bit_size(chunk)
+      let chunk_length = bit_array.byte_size(chunk)
 
       let filter = P10PixelDataFrameFilter(..filter, pixel_data:)
 
-      case chunk_length <= frame_size - frame_length {
+      case chunk_length * 8 - chunk_offset <= frame_size - frame_length {
         // If the whole of this chunk is needed for the next frame then add it
         // to the frame
         True -> {
-          let frame = pixel_data_frame.push_fragment(frame, chunk)
+          let assert <<_:size(chunk_offset), fragment:bits>> = chunk
+          let frame = pixel_data_frame.push_fragment(frame, fragment)
 
           let filter =
             P10PixelDataFrameFilter(
               ..filter,
               pixel_data:,
               pixel_data_read_offset: filter.pixel_data_read_offset
-                + chunk_length,
+                + chunk_length
+                * 8
+                - chunk_offset,
             )
 
           get_pending_native_frame(filter, frame)
@@ -428,21 +442,31 @@ fn get_pending_native_frame(
         // Otherwise, take just the part of this chunk of pixel data needed for
         // the frame
         False -> {
-          let length = frame_size - frame_length
+          let length_in_bits = frame_size - frame_length
+          let chunk_offset_in_bytes = chunk_offset / 8
+          let fragment_length_in_bytes =
+            { { chunk_offset + length_in_bits + 7 } / 8 }
+            - chunk_offset_in_bytes
+          let assert <<
+            _:bytes-size(chunk_offset_in_bytes),
+            fragment:bytes-size(fragment_length_in_bytes),
+            _:bits,
+          >> = chunk
 
-          let assert <<fragment:bits-size(length), _:bits>> = chunk
           let frame = frame |> pixel_data_frame.push_fragment(fragment)
 
           // Put the unused token of the chunk back on so it can be used by the
           // next frame
-          let assert <<_:bits-size(length), chunk:bits>> = chunk
-          let pixel_data = filter.pixel_data |> deque.push_front(chunk)
+          let pixel_data =
+            filter.pixel_data
+            |> deque.push_front(#(chunk, chunk_offset + length_in_bits))
 
           let filter =
             P10PixelDataFrameFilter(
               ..filter,
               pixel_data:,
-              pixel_data_read_offset: filter.pixel_data_read_offset + length,
+              pixel_data_read_offset: filter.pixel_data_read_offset
+                + length_in_bits,
             )
 
           #(frame, filter)
@@ -503,7 +527,7 @@ fn get_pending_encapsulated_frames(
                 |> list.fold(
                   pixel_data_frame.new(frame_index),
                   fn(frame, chunk) {
-                    pixel_data_frame.push_fragment(frame, chunk)
+                    pixel_data_frame.push_fragment(frame, chunk.0)
                   },
                 )
 
@@ -596,7 +620,7 @@ fn get_pending_encapsulated_frame(
   case filter.pixel_data_read_offset < next_offset {
     True ->
       case deque.pop_front(filter.pixel_data) {
-        Ok(#(chunk, pixel_data)) -> {
+        Ok(#(#(chunk, _), pixel_data)) -> {
           let frame = frame |> pixel_data_frame.push_fragment(chunk)
           let pixel_data_read_offset =
             filter.pixel_data_read_offset
@@ -652,6 +676,7 @@ fn read_basic_offset_table(
   let offset_table_data =
     filter.pixel_data
     |> deque.to_list
+    |> list.map(fn(chunk) { chunk.0 })
     |> bit_array.concat
 
   use <- bool.guard(offset_table_data == <<>>, Ok([]))

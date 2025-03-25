@@ -12,7 +12,6 @@ import dcmfx_pixel_data/p10_pixel_data_frame_filter.{
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error.{type FileStreamError}
-import gleam/bit_array
 import gleam/bool
 import gleam/int
 import gleam/io
@@ -228,9 +227,9 @@ fn write_frame(
 
   use stream <- result.try(file_stream.open_write(filename))
 
-  let fragments = case pixel_data_frame.is_byte_aligned(frame) {
-    True -> pixel_data_frame.fragments(frame)
-    False -> [pixel_data_frame.to_bytes(frame) |> bit_array.pad_to_bytes]
+  let fragments = case pixel_data_frame.bit_offset(frame) {
+    0 -> pixel_data_frame.fragments(frame)
+    _ -> [pixel_data_frame.to_bytes(frame)]
   }
 
   let write_result =

@@ -19,6 +19,7 @@ pub struct SingleChannelImage {
 
 #[derive(Clone, Debug, PartialEq)]
 enum SingleChannelImageData {
+  Bitmap { data: Vec<u8>, is_signed: bool },
   I8(Vec<i8>),
   U8(Vec<u8>),
   I16(Vec<i16>),
@@ -28,6 +29,26 @@ enum SingleChannelImageData {
 }
 
 impl SingleChannelImage {
+  /// Creates a new single channel image with bitmap 1bpp data.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn new_bitmap(
+    width: u16,
+    height: u16,
+    data: Vec<u8>,
+    is_signed: bool,
+  ) -> Result<Self, ()> {
+    if data.len() != (width as usize * height as usize + 7) / 8 {
+      return Err(());
+    }
+
+    Ok(Self {
+      width,
+      height,
+      data: SingleChannelImageData::Bitmap { data, is_signed },
+    })
+  }
+
   /// Creates a new single channel image with `i8` data.
   ///
   #[allow(clippy::result_unit_err)]
@@ -153,21 +174,38 @@ impl SingleChannelImage {
     }
 
     match &self.data {
+      SingleChannelImageData::Bitmap { data, is_signed } => {
+        if data.iter().any(|pixel| *pixel != 0) {
+          if *is_signed {
+            Some((-1, 0))
+          } else {
+            Some((0, 1))
+          }
+        } else {
+          Some((0, 0))
+        }
+      }
+
       SingleChannelImageData::I8(data) => {
         min_max(data.iter().map(|pixel| *pixel as i64))
       }
+
       SingleChannelImageData::U8(data) => {
         min_max(data.iter().map(|pixel| *pixel as i64))
       }
+
       SingleChannelImageData::I16(data) => {
         min_max(data.iter().map(|pixel| *pixel as i64))
       }
+
       SingleChannelImageData::U16(data) => {
         min_max(data.iter().map(|pixel| *pixel as i64))
       }
+
       SingleChannelImageData::I32(data) => {
         min_max(data.iter().map(|pixel| *pixel as i64))
       }
+
       SingleChannelImageData::U32(data) => {
         min_max(data.iter().map(|pixel| *pixel as i64))
       }
@@ -206,6 +244,12 @@ impl SingleChannelImage {
     };
 
     match &mut self.data {
+      SingleChannelImageData::Bitmap { data, .. } => {
+        for pixel in data.iter_mut() {
+          *pixel = !*pixel;
+        }
+      }
+
       SingleChannelImageData::I8(data) => {
         for pixel in data.iter_mut() {
           *pixel = (-(*pixel as i64) + offset)
@@ -270,6 +314,23 @@ impl SingleChannelImage {
     };
 
     match &self.data {
+      SingleChannelImageData::Bitmap { data, is_signed } => {
+        for pixel in data.iter() {
+          for b in 0..8 {
+            if gray_pixels.len() == gray_pixels.capacity() {
+              break;
+            }
+
+            let mut value = ((*pixel >> b) & 1) as i64;
+            if *is_signed {
+              value = -value;
+            }
+
+            gray_pixels.push(i64_to_u8(value));
+          }
+        }
+      }
+
       SingleChannelImageData::I8(data) => {
         for pixel in data.iter() {
           gray_pixels.push(i64_to_u8(*pixel as i64));
@@ -315,21 +376,47 @@ impl SingleChannelImage {
   ///
   pub fn to_i64_pixels(&self) -> Vec<i64> {
     match &self.data {
+      SingleChannelImageData::Bitmap { data, is_signed } => {
+        let mut i64_pixels = Vec::with_capacity(self.pixel_count());
+
+        for pixel in data.iter() {
+          for b in 0..8 {
+            if i64_pixels.len() == i64_pixels.capacity() {
+              break;
+            }
+
+            let mut value = ((*pixel >> b) & 1) as i64;
+            if *is_signed {
+              value = -value;
+            }
+
+            i64_pixels.push(value);
+          }
+        }
+
+        i64_pixels
+      }
+
       SingleChannelImageData::I8(data) => {
         data.iter().map(|pixel| *pixel as i64).collect()
       }
+
       SingleChannelImageData::U8(data) => {
         data.iter().map(|pixel| *pixel as i64).collect()
       }
+
       SingleChannelImageData::I16(data) => {
         data.iter().map(|pixel| *pixel as i64).collect()
       }
+
       SingleChannelImageData::U16(data) => {
         data.iter().map(|pixel| *pixel as i64).collect()
       }
+
       SingleChannelImageData::I32(data) => {
         data.iter().map(|pixel| *pixel as i64).collect()
       }
+
       SingleChannelImageData::U32(data) => {
         data.iter().map(|pixel| *pixel as i64).collect()
       }

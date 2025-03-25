@@ -34,7 +34,7 @@ pub fn decode_single_channel(
       definition.pixel_count()
     };
 
-  let segments = decode_rle_segments(data, expected_segment_length)?;
+  let mut segments = decode_rle_segments(data, expected_segment_length)?;
 
   let width = definition.columns;
   let height = definition.rows;
@@ -50,15 +50,28 @@ pub fn decode_single_channel(
     (
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2,
-      PixelRepresentation::Signed,
+      _,
       BitsAllocated::One,
-      [segment],
+      [_],
     ) => {
-      let mut pixels = vec![0i8; pixel_count];
+      let segment = segments.pop().unwrap();
+      let is_signed = definition.pixel_representation.is_signed();
 
-      for i in 0..pixel_count {
-        pixels[i] = -(((segment[i / 8] >> (i % 8)) & 1) as i8);
-      }
+      Ok(
+        SingleChannelImage::new_bitmap(width, height, segment, is_signed)
+          .unwrap(),
+      )
+    }
+
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      PixelRepresentation::Signed,
+      BitsAllocated::Eight,
+      [_],
+    ) => {
+      let segment = segments.pop().unwrap();
+      let pixels = unsafe { super::vec_cast::<u8, i8>(segment) };
 
       Ok(SingleChannelImage::new_i8(width, height, pixels).unwrap())
     }
@@ -67,42 +80,11 @@ pub fn decode_single_channel(
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2,
       PixelRepresentation::Unsigned,
-      BitsAllocated::One,
-      [segment],
+      BitsAllocated::Eight,
+      [_],
     ) => {
-      let mut pixels = vec![0u8; pixel_count];
-
-      for i in 0..pixel_count {
-        pixels[i] = (segment[i / 8] >> (i % 8)) & 1;
-      }
-
+      let pixels = segments.pop().unwrap();
       Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap())
-    }
-
-    (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      PixelRepresentation::Signed,
-      BitsAllocated::Eight,
-      [segment],
-    ) => {
-      let mut pixels = vec![0i8; pixel_count];
-
-      for (i, pixel) in segment.iter().enumerate() {
-        pixels[i] = i8::from_be_bytes([*pixel]);
-      }
-
-      Ok(SingleChannelImage::new_i8(width, height, pixels).unwrap())
-    }
-
-    (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      PixelRepresentation::Unsigned,
-      BitsAllocated::Eight,
-      [segment],
-    ) => {
-      Ok(SingleChannelImage::new_u8(width, height, segment.to_vec()).unwrap())
     }
 
     (

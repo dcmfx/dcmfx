@@ -354,7 +354,7 @@ mod tests {
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
         Rc::new(vec![
-          0b00110001, 0b00011011, 0b10100011, 0b01000101, 0b00010101,
+          0b00110001, 0b00011011, 0b10100011, 0b01100101, 0b00010101,
           0b00000110,
         ]),
       )
@@ -363,14 +363,8 @@ mod tests {
 
     let frames = ds.get_pixel_data_frames().unwrap();
     assert_eq!(*frames[0].to_bytes(), vec![0b00110001, 0b00011011]);
-    assert_eq!(
-      *frames[1].to_bytes(),
-      vec![0b11010001, 0b10100010, 0b10000000]
-    );
-    assert_eq!(
-      *frames[2].to_bytes(),
-      vec![0b01000101, 0b01000001, 0b10000000]
-    );
+    assert_eq!(*frames[1].to_bytes(), vec![0b01000110, 0b11001011, 0]);
+    assert_eq!(*frames[2].to_bytes(), vec![0b01010101, 0b00011000, 0]);
     assert_eq!(frames[0].bit_offset(), 0);
     assert_eq!(frames[1].bit_offset(), 7);
     assert_eq!(frames[2].bit_offset(), 6);
