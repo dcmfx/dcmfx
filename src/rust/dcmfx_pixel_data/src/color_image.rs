@@ -1,9 +1,12 @@
+#[cfg(feature = "std")]
+use std::rc::Rc;
+
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+use alloc::{rc::Rc, vec::Vec};
 
 use image::{ImageBuffer, Rgb, RgbImage};
 
-use crate::{PhotometricInterpretation, PixelDataDefinition};
+use crate::{PixelDataDefinition, RgbLookupTables};
 
 /// A color image that stores integer RGB color values for each pixel.
 ///
@@ -20,6 +23,8 @@ enum ColorImageData {
   U16(Vec<u16>),
   U32(Vec<u32>),
   F32(Vec<f32>),
+  PaletteU8(Vec<u8>, Rc<RgbLookupTables>),
+  PaletteU16(Vec<u16>, Rc<RgbLookupTables>),
 }
 
 impl ColorImage {
@@ -83,6 +88,46 @@ impl ColorImage {
     })
   }
 
+  /// Creates a new color palette image with `u8` data.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn new_palette8(
+    width: u16,
+    height: u16,
+    data: Vec<u8>,
+    palette: Rc<RgbLookupTables>,
+  ) -> Result<Self, ()> {
+    if data.len() != width as usize * height as usize {
+      return Err(());
+    }
+
+    Ok(Self {
+      width,
+      height,
+      data: ColorImageData::PaletteU8(data, palette),
+    })
+  }
+
+  /// Creates a new color palette image with `u16` data.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn new_palette16(
+    width: u16,
+    height: u16,
+    data: Vec<u16>,
+    palette: Rc<RgbLookupTables>,
+  ) -> Result<Self, ()> {
+    if data.len() != width as usize * height as usize {
+      return Err(());
+    }
+
+    Ok(Self {
+      width,
+      height,
+      data: ColorImageData::PaletteU16(data, palette),
+    })
+  }
+
   /// Returns whether this color image is empty, i.e. it has no pixels.
   ///
   pub fn is_empty(&self) -> bool {
@@ -131,26 +176,10 @@ impl ColorImage {
       }
 
       ColorImageData::U16(data) => {
-        if let PhotometricInterpretation::PaletteColor { rgb_luts } =
-          &definition.photometric_interpretation
-        {
-          let (red_lut, green_lut, blue_lut) = rgb_luts;
-
-          for pixel in data.chunks_exact(3) {
-            let r = pixel[0] as f32 * red_lut.normalization_scale * 255.0;
-            let g = pixel[1] as f32 * green_lut.normalization_scale * 255.0;
-            let b = pixel[2] as f32 * blue_lut.normalization_scale * 255.0;
-
-            rgb_pixels.push(r.min(255.0) as u8);
-            rgb_pixels.push(g.min(255.0) as u8);
-            rgb_pixels.push(b.min(255.0) as u8);
-          }
-        } else {
-          for pixel in data.chunks_exact(3) {
-            rgb_pixels.push((pixel[0] as f32 * scale).min(255.0) as u8);
-            rgb_pixels.push((pixel[1] as f32 * scale).min(255.0) as u8);
-            rgb_pixels.push((pixel[2] as f32 * scale).min(255.0) as u8);
-          }
+        for pixel in data.chunks_exact(3) {
+          rgb_pixels.push((pixel[0] as f32 * scale).min(255.0) as u8);
+          rgb_pixels.push((pixel[1] as f32 * scale).min(255.0) as u8);
+          rgb_pixels.push((pixel[2] as f32 * scale).min(255.0) as u8);
         }
       }
 
@@ -167,6 +196,26 @@ impl ColorImage {
           rgb_pixels.push((pixel[0].clamp(0.0, 1.0) * 255.0) as u8);
           rgb_pixels.push((pixel[1].clamp(0.0, 1.0) * 255.0) as u8);
           rgb_pixels.push((pixel[2].clamp(0.0, 1.0) * 255.0) as u8);
+        }
+      }
+
+      ColorImageData::PaletteU8(data, palette) => {
+        for pixel in data {
+          let [r, g, b] = palette.lookup_normalized(*pixel as i64);
+
+          rgb_pixels.push((r * 255.0) as u8);
+          rgb_pixels.push((g * 255.0) as u8);
+          rgb_pixels.push((b * 255.0) as u8);
+        }
+      }
+
+      ColorImageData::PaletteU16(data, palette) => {
+        for pixel in data {
+          let [r, g, b] = palette.lookup_normalized(*pixel as i64);
+
+          rgb_pixels.push((r * 255.0) as u8);
+          rgb_pixels.push((g * 255.0) as u8);
+          rgb_pixels.push((b * 255.0) as u8);
         }
       }
     }
@@ -196,22 +245,10 @@ impl ColorImage {
       }
 
       ColorImageData::U16(data) => {
-        if let PhotometricInterpretation::PaletteColor { rgb_luts } =
-          &definition.photometric_interpretation
-        {
-          let (red_lut, green_lut, blue_lut) = rgb_luts;
-
-          for pixel in data.chunks_exact(3) {
-            rgb_pixels.push(pixel[0] as f32 * red_lut.normalization_scale);
-            rgb_pixels.push(pixel[1] as f32 * green_lut.normalization_scale);
-            rgb_pixels.push(pixel[2] as f32 * blue_lut.normalization_scale);
-          }
-        } else {
-          for pixel in data.chunks_exact(3) {
-            rgb_pixels.push((pixel[0] as f64 * scale) as f32);
-            rgb_pixels.push((pixel[1] as f64 * scale) as f32);
-            rgb_pixels.push((pixel[2] as f64 * scale) as f32);
-          }
+        for pixel in data.chunks_exact(3) {
+          rgb_pixels.push((pixel[0] as f64 * scale) as f32);
+          rgb_pixels.push((pixel[1] as f64 * scale) as f32);
+          rgb_pixels.push((pixel[2] as f64 * scale) as f32);
         }
       }
 
@@ -228,6 +265,20 @@ impl ColorImage {
           rgb_pixels.push(pixel[0].clamp(0.0, 1.0));
           rgb_pixels.push(pixel[1].clamp(0.0, 1.0));
           rgb_pixels.push(pixel[2].clamp(0.0, 1.0));
+        }
+      }
+
+      ColorImageData::PaletteU8(data, palette) => {
+        for pixel in data {
+          rgb_pixels
+            .extend_from_slice(&palette.lookup_normalized(*pixel as i64));
+        }
+      }
+
+      ColorImageData::PaletteU16(data, palette) => {
+        for pixel in data {
+          rgb_pixels
+            .extend_from_slice(&palette.lookup_normalized(*pixel as i64));
         }
       }
     }

@@ -1,11 +1,14 @@
 //! Specifies values of data elements relevant to parsing pixel data.
 
+#[cfg(feature = "std")]
+use std::rc::Rc;
+
 #[cfg(not(feature = "std"))]
-use alloc::{format, string::ToString};
+use alloc::{format, rc::Rc, string::ToString};
 
 use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath, dictionary};
 
-use crate::LookupTable;
+use crate::RgbLookupTables;
 
 /// Holds values of all of the data elements relevant to decoding and
 /// decompressing pixel data.
@@ -236,9 +239,7 @@ pub enum PhotometricInterpretation {
   /// Pixel data describe a color image with a single sample per pixel (single
   /// image plane). The pixel value is used as an index into each of the Red,
   /// Blue, and Green Palette Color Lookup Tables.
-  PaletteColor {
-    rgb_luts: (LookupTable, LookupTable, LookupTable),
-  },
+  PaletteColor { palette: Rc<RgbLookupTables> },
 
   /// Pixel data represent a color image described by red, green, and blue image
   /// planes. The minimum sample value for each color plane represents minimum
@@ -294,35 +295,9 @@ impl PhotometricInterpretation {
     match data_set.get_string(tag)? {
       "MONOCHROME1" => Ok(Self::Monochrome1),
       "MONOCHROME2" => Ok(Self::Monochrome2),
-      "PALETTE COLOR" => {
-        let red_palette = LookupTable::from_data_set(
-          data_set,
-          dictionary::RED_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
-          dictionary::RED_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
-          Some(dictionary::SEGMENTED_RED_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag),
-          None,
-        )?;
-
-        let green_palette = LookupTable::from_data_set(
-          data_set,
-          dictionary::GREEN_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
-          dictionary::GREEN_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
-          Some(dictionary::SEGMENTED_GREEN_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag),
-          None,
-        )?;
-
-        let blue_palette = LookupTable::from_data_set(
-          data_set,
-          dictionary::BLUE_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
-          dictionary::BLUE_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
-          Some(dictionary::SEGMENTED_BLUE_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag),
-          None,
-        )?;
-
-        Ok(Self::PaletteColor {
-          rgb_luts: (red_palette, green_palette, blue_palette),
-        })
-      }
+      "PALETTE COLOR" => Ok(Self::PaletteColor {
+        palette: Rc::new(RgbLookupTables::from_data_set(data_set)?),
+      }),
       "RGB" => Ok(Self::Rgb),
       "YBR_FULL" => Ok(Self::YbrFull),
       "YBR_FULL_422" => Ok(Self::YbrFull422),

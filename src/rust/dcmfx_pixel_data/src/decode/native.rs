@@ -156,39 +156,27 @@ pub fn decode_color(
       definition.bits_allocated,
     ) {
       (
-        PhotometricInterpretation::PaletteColor { rgb_luts },
+        PhotometricInterpretation::PaletteColor { palette },
         BitsAllocated::Eight,
-      ) => {
-        let (red_lut, green_lut, blue_lut) = rgb_luts;
-
-        let mut pixels = vec![0u16; pixel_count * 3];
-
-        for i in 0..pixel_count {
-          let index = data[i] as i64;
-
-          pixels[i * 3] = red_lut.lookup(index);
-          pixels[i * 3 + 1] = green_lut.lookup(index);
-          pixels[i * 3 + 2] = blue_lut.lookup(index);
-        }
-
-        Ok(ColorImage::new_u16(width, height, pixels).unwrap())
-      }
+      ) => Ok(
+        ColorImage::new_palette8(width, height, data.to_vec(), palette.clone())
+          .unwrap(),
+      ),
 
       (
-        PhotometricInterpretation::PaletteColor { rgb_luts },
+        PhotometricInterpretation::PaletteColor { palette },
         BitsAllocated::Sixteen,
       ) => {
         let mut pixels = vec![0u16; pixel_count * 3];
 
         for i in 0..pixel_count {
-          let index = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]) as i64;
-
-          pixels[i * 3] = rgb_luts.0.lookup(index);
-          pixels[i * 3 + 1] = rgb_luts.1.lookup(index);
-          pixels[i * 3 + 2] = rgb_luts.2.lookup(index);
+          pixels.push(u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]));
         }
 
-        Ok(ColorImage::new_u16(width, height, pixels).unwrap())
+        Ok(
+          ColorImage::new_palette16(width, height, pixels, palette.clone())
+            .unwrap(),
+        )
       }
 
       (photometric_interpretation, bits_allocated) => {

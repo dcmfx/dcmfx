@@ -27,7 +27,7 @@ pub struct LookupTable {
   data: Vec<u16>,
 
   /// Scale factor that converts a lookup table value into the range 0-1.
-  pub normalization_scale: f32,
+  normalization_scale: f32,
 }
 
 impl LookupTable {
