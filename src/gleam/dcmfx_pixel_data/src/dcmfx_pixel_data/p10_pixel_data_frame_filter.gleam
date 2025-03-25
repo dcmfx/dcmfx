@@ -399,7 +399,19 @@ fn get_pending_native_frames(
 
       let #(frame, filter) = get_pending_native_frame(filter, frame)
 
-      get_pending_native_frames(filter, [frame, ..frames])
+      // For native frame data, don't emit more frames than is specified by the
+      // '(0028,0008) Number of Frames' data element. This is important in the
+      // case of 1bpp pixel data when there are unused bits at the end of the
+      // data and there are enough unused bits to contain data for one or more
+      // frames. This can occur when the size of a single frame is <= 7 bits.
+      let frames = case
+        pixel_data_frame.index(frame) < get_number_of_frames(filter)
+      {
+        True -> [frame, ..frames]
+        False -> frames
+      }
+
+      get_pending_native_frames(filter, frames)
     }
   }
 }
@@ -455,7 +467,7 @@ fn get_pending_native_frame(
 
           let frame = frame |> pixel_data_frame.push_fragment(fragment)
 
-          // Put the unused token of the chunk back on so it can be used by the
+          // Put the unused part of the chunk back on so it can be used by the
           // next frame
           let pixel_data =
             filter.pixel_data

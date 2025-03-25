@@ -113,6 +113,48 @@ pub fn read_native_multi_frame_with_one_bit_allocated_test() {
   |> should.equal([0, 7, 6])
 }
 
+pub fn read_native_multi_frame_with_one_bit_allocated_and_multiple_frames_in_one_byte_test() {
+  let assert Ok(number_of_frames) = data_element_value.new_integer_string([4])
+  let assert Ok(rows) = data_element_value.new_unsigned_short([1])
+  let assert Ok(columns) = data_element_value.new_unsigned_short([3])
+  let assert Ok(bits_allocated) = data_element_value.new_unsigned_short([1])
+  let assert Ok(pixel_data) =
+    data_element_value.new_binary(value_representation.OtherByteString, <<
+      0b01010001, 0b00001101,
+    >>)
+
+  let assert Ok(frames) =
+    data_set.new()
+    |> data_set.insert(dictionary.number_of_frames.tag, number_of_frames)
+    |> data_set.insert(dictionary.rows.tag, rows)
+    |> data_set.insert(dictionary.columns.tag, columns)
+    |> data_set.insert(dictionary.bits_allocated.tag, bits_allocated)
+    |> data_set.insert(dictionary.pixel_data.tag, pixel_data)
+    |> dcmfx_pixel_data.get_pixel_data_frames
+
+  let assert [frame_0, frame_1, frame_2, frame_3] = frames
+
+  frame_0
+  |> pixel_data_frame.to_bytes
+  |> should.equal(<<0b01010001>>)
+
+  frame_1
+  |> pixel_data_frame.to_bytes
+  |> should.equal(<<0b00001010>>)
+
+  frame_2
+  |> pixel_data_frame.to_bytes
+  |> should.equal(<<0b00110101, 0>>)
+
+  frame_3
+  |> pixel_data_frame.to_bytes
+  |> should.equal(<<0b00000110>>)
+
+  frames
+  |> list.map(pixel_data_frame.bit_offset)
+  |> should.equal([0, 3, 6, 1])
+}
+
 pub fn read_native_multi_frame_malformed_test() {
   let assert Ok(number_of_frames) = data_element_value.new_integer_string([3])
   let assert Ok(rows) = data_element_value.new_unsigned_short([1])

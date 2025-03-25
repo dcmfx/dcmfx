@@ -371,6 +371,37 @@ mod tests {
   }
 
   #[test]
+  fn read_native_multi_frame_with_one_bit_allocated_and_multiple_frames_in_one_byte()
+   {
+    let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[4])
+      .unwrap();
+    ds.insert_int_value(&dictionary::ROWS, &[1]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[3]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[1])
+      .unwrap();
+    ds.insert(
+      dictionary::PIXEL_DATA.tag,
+      DataElementValue::new_binary(
+        ValueRepresentation::OtherByteString,
+        Rc::new(vec![0b01010001, 0b00001101]),
+      )
+      .unwrap(),
+    );
+
+    let frames = ds.get_pixel_data_frames().unwrap();
+    assert_eq!(frames.len(), 4);
+    assert_eq!(frames[0].to_bytes()[0] & 7, 0b001);
+    assert_eq!(frames[1].to_bytes()[0] & 7, 0b010);
+    assert_eq!(frames[2].to_bytes()[0] & 7, 0b101);
+    assert_eq!(frames[3].to_bytes()[0] & 7, 0b110);
+    assert_eq!(frames[0].bit_offset(), 0);
+    assert_eq!(frames[1].bit_offset(), 3);
+    assert_eq!(frames[2].bit_offset(), 6);
+    assert_eq!(frames[3].bit_offset(), 1);
+  }
+
+  #[test]
   fn read_native_multi_frame_malformed() {
     let mut ds = DataSet::new();
     ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[3])

@@ -347,7 +347,14 @@ impl P10PixelDataFrameFilter {
         }
       }
 
-      frames.push(frame);
+      // For native frame data, don't emit more frames than is specified by the
+      // '(0028,0008) Number of Frames' data element. This is important in the
+      // case of 1bpp pixel data when there are unused bits at the end of the
+      // data and there are enough unused bits to contain data for one or more
+      // frames. This can occur when the size of a single frame is <= 7 bits.
+      if frame.index() < self.get_number_of_frames() {
+        frames.push(frame);
+      }
     }
 
     Ok(frames)
