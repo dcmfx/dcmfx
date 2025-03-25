@@ -216,7 +216,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
 
   // Copy decoded pixels into the output data
   if (image->numcomps == 1) {
-    if (bits_allocated == 8) {
+    if (bits_allocated == 1 || bits_allocated == 8) {
       if (output_data_size != width * height) {
         cleanup(stream, codec, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
@@ -274,7 +274,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
     OPJ_INT32 *green_data = image->comps[1].data;
     OPJ_INT32 *blue_data = image->comps[2].data;
 
-    if (bits_allocated == 8) {
+    if (bits_allocated == 1 || bits_allocated == 8) {
       if (output_data_size != width * height * 3) {
         cleanup(stream, codec, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);

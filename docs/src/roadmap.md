@@ -3,9 +3,7 @@
 DCMfx has no formal roadmap, but future additions are likely to include the
 following:
 
-- Pixel data decoding
-  - Decoding of 1-bit and 38-bit 'JPEG 2000' pixel data
-  - Decoding of 'JPEG-LS' pixel data on WASM
+- Decoding of 'JPEG-LS' pixel data on WASM
 
 - Stream transcoding between a wider range of transfer syntaxes
 

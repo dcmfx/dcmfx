@@ -21,13 +21,15 @@ pub fn decode_single_channel(
   let height = definition.rows;
 
   match (definition.pixel_representation, definition.bits_allocated) {
-    (_, BitsAllocated::One) => unreachable!(),
+    (
+      PixelRepresentation::Unsigned,
+      BitsAllocated::One | BitsAllocated::Eight,
+    ) => Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap()),
 
-    (PixelRepresentation::Unsigned, BitsAllocated::Eight) => {
-      Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap())
-    }
-
-    (PixelRepresentation::Signed, BitsAllocated::Eight) => Ok(
+    (
+      PixelRepresentation::Signed,
+      BitsAllocated::One | BitsAllocated::Eight,
+    ) => Ok(
       SingleChannelImage::new_i8(width, height, unsafe {
         vec_cast::<u8, i8>(pixels)
       })
@@ -73,9 +75,7 @@ pub fn decode_color(
   let pixels = decode(definition, data)?;
 
   match definition.bits_allocated {
-    BitsAllocated::One => unreachable!(),
-
-    BitsAllocated::Eight => Ok(
+    BitsAllocated::One | BitsAllocated::Eight => Ok(
       ColorImage::new_u8(definition.columns, definition.rows, pixels).unwrap(),
     ),
 
@@ -99,16 +99,10 @@ fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<Vec<u8>, DataError> {
-  if definition.bits_allocated == BitsAllocated::One {
-    return Err(DataError::new_value_invalid(
-      "OpenJPEG does not support 1-bit pixel data".to_string(),
-    ));
-  }
-
   let width = definition.columns;
   let height = definition.rows;
   let samples_per_pixel = usize::from(definition.samples_per_pixel) as u32;
-  let bits_allocated = usize::from(definition.bits_allocated) as u32;
+  let bits_allocated = (usize::from(definition.bits_allocated) as u32).max(8);
   let mut pixel_representation =
     usize::from(definition.pixel_representation) as u32;
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
@@ -176,7 +170,7 @@ fn convert_unsigned_values_to_signed_values(
   data: &mut [u8],
 ) {
   match definition.bits_allocated {
-    BitsAllocated::One => unreachable!(),
+    BitsAllocated::One => (),
 
     BitsAllocated::Eight => {
       let threshold = 2i16.pow(definition.bits_stored as u32 - 1);
