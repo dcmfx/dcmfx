@@ -327,6 +327,28 @@ fn jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg() {
 }
 
 #[test]
+fn jpeg_2000_single_channel_2bpp_to_png() {
+  let dicom_file =
+    "../../../test/assets/other/examples_jpeg2k.monochrome_2bpp.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(
+    output_file,
+    "jpeg_2000_single_channel_2bpp_to_png.png"
+  );
+}
+
+#[test]
 fn jpeg_ls_single_channel_to_png() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm";
