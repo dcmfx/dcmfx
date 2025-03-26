@@ -649,9 +649,9 @@ fn read_file_meta_information_data_set(
           })
 
         Error(e) ->
-          case data_error.is_tag_not_present(e) {
-            True -> Ok(context.transfer_syntax)
-            False ->
+          case e {
+            data_error.TagNotPresent(..) -> Ok(context.transfer_syntax)
+            _ ->
               Error(p10_error.DataInvalid(
                 when: "Reading File Meta Information",
                 details: data_error.to_string(e),

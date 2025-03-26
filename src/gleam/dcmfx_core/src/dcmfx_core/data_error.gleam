@@ -12,7 +12,7 @@ import gleam/option.{type Option, None, Some}
 
 /// An error that occurred when retrieving or creating data elements.
 ///
-pub opaque type DataError {
+pub type DataError {
   /// When retrieving a value, the requested tag was not present in the data
   /// set.
   TagNotPresent(path: DataSetPath)
@@ -132,15 +132,6 @@ pub fn path(error: DataError) -> Option(DataSetPath) {
     | ValueInvalid(path:, ..)
     | ValueLengthInvalid(path:, ..)
     | ValueUnsupported(path:, ..) -> path
-  }
-}
-
-/// Returns whether a data error is a 'Tag not present' error.
-///
-pub fn is_tag_not_present(error: DataError) -> Bool {
-  case error {
-    TagNotPresent(..) -> True
-    _ -> False
   }
 }
 

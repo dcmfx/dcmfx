@@ -51,10 +51,7 @@ use alloc::{
 ///    is not supported by this library.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub struct DataError(RawDataError);
-
-#[derive(Clone, Debug, PartialEq)]
-enum RawDataError {
+pub enum DataError {
   TagNotPresent {
     path: DataSetPath,
   },
@@ -89,31 +86,31 @@ impl core::fmt::Display for DataError {
         .unwrap_or("<unknown>".to_string())
     }
 
-    let error = match &self.0 {
-      RawDataError::TagNotPresent { path } => {
+    let error = match &self {
+      Self::TagNotPresent { path } => {
         format!("Tag not present at {}", path.to_detailed_string())
       }
-      RawDataError::ValueNotPresent { path } => {
+      Self::ValueNotPresent { path } => {
         format!("Value not present at {}", optional_path_to_string(path))
       }
-      RawDataError::MultiplicityMismatch { path } => {
+      Self::MultiplicityMismatch { path } => {
         format!("Multiplicity mismatch at {}", optional_path_to_string(path))
       }
-      RawDataError::ValueInvalid { details, path } => {
+      Self::ValueInvalid { details, path } => {
         format!(
           "Invalid value at {}, details: {}",
           optional_path_to_string(path),
           details
         )
       }
-      RawDataError::ValueLengthInvalid { details, path, .. } => {
+      Self::ValueLengthInvalid { details, path, .. } => {
         format!(
           "Invalid value length at {}, details: {}",
           optional_path_to_string(path),
           details
         )
       }
-      RawDataError::ValueUnsupported { details, .. } => {
+      Self::ValueUnsupported { details, .. } => {
         format!("Value unsupported, details: {details}",)
       }
     };
@@ -126,30 +123,30 @@ impl DataError {
   /// Constructs a new 'Tag not present' data error.
   ///
   pub fn new_tag_not_present() -> Self {
-    Self(RawDataError::TagNotPresent {
+    Self::TagNotPresent {
       path: DataSetPath::new(),
-    })
+    }
   }
 
   /// Constructs a new 'Value not present' data error.
   ///
   pub fn new_value_not_present() -> Self {
-    Self(RawDataError::ValueNotPresent { path: None })
+    Self::ValueNotPresent { path: None }
   }
 
   /// Constructs a new 'Multiplicity mismatch' data error.
   ///
   pub fn new_multiplicity_mismatch() -> Self {
-    Self(RawDataError::MultiplicityMismatch { path: None })
+    Self::MultiplicityMismatch { path: None }
   }
 
   /// Constructs a new 'Value invalid' data error.
   ///
   pub fn new_value_invalid(details: String) -> Self {
-    Self(RawDataError::ValueInvalid {
+    Self::ValueInvalid {
       details,
       path: None,
-    })
+    }
   }
 
   /// Constructs a new 'Value length invalid' data error.
@@ -159,40 +156,34 @@ impl DataError {
     length: usize,
     details: String,
   ) -> Self {
-    Self(RawDataError::ValueLengthInvalid {
+    Self::ValueLengthInvalid {
       vr,
       length,
       details,
       path: None,
-    })
+    }
   }
 
   /// Constructs a new 'Value not supported' data error.
   ///
   pub fn new_value_unsupported(details: String) -> Self {
-    Self(RawDataError::ValueUnsupported {
+    Self::ValueUnsupported {
       details,
       path: None,
-    })
+    }
   }
 
   /// Returns the data set path for a data error.
   ///
   pub fn path(&self) -> Option<&DataSetPath> {
-    match &self.0 {
-      RawDataError::TagNotPresent { path } => Some(path),
-      RawDataError::ValueNotPresent { path }
-      | RawDataError::MultiplicityMismatch { path }
-      | RawDataError::ValueInvalid { path, .. }
-      | RawDataError::ValueLengthInvalid { path, .. }
-      | RawDataError::ValueUnsupported { path, .. } => path.as_ref(),
+    match &self {
+      Self::TagNotPresent { path } => Some(path),
+      Self::ValueNotPresent { path }
+      | Self::MultiplicityMismatch { path }
+      | Self::ValueInvalid { path, .. }
+      | Self::ValueLengthInvalid { path, .. }
+      | Self::ValueUnsupported { path, .. } => path.as_ref(),
     }
-  }
-
-  /// Returns whether a data error is a 'Tag not present' error.
-  ///
-  pub fn is_tag_not_present(&self) -> bool {
-    matches!(self.0, RawDataError::TagNotPresent { .. })
   }
 
   /// Adds a data set path to a data error. This indicates the exact location
@@ -200,56 +191,46 @@ impl DataError {
   /// possible to make troubleshooting easier.
   ///
   pub fn with_path(self, path: &DataSetPath) -> Self {
-    match self.0 {
-      RawDataError::TagNotPresent { .. } => {
-        Self(RawDataError::TagNotPresent { path: path.clone() })
-      }
-      RawDataError::ValueNotPresent { .. } => {
-        Self(RawDataError::ValueNotPresent {
-          path: Some(path.clone()),
-        })
-      }
-      RawDataError::MultiplicityMismatch { .. } => {
-        Self(RawDataError::MultiplicityMismatch {
-          path: Some(path.clone()),
-        })
-      }
-      RawDataError::ValueInvalid { details, .. } => {
-        Self(RawDataError::ValueInvalid {
-          details,
-          path: Some(path.clone()),
-        })
-      }
-      RawDataError::ValueLengthInvalid {
+    match self {
+      Self::TagNotPresent { .. } => Self::TagNotPresent { path: path.clone() },
+      Self::ValueNotPresent { .. } => Self::ValueNotPresent {
+        path: Some(path.clone()),
+      },
+      Self::MultiplicityMismatch { .. } => Self::MultiplicityMismatch {
+        path: Some(path.clone()),
+      },
+      Self::ValueInvalid { details, .. } => Self::ValueInvalid {
+        details,
+        path: Some(path.clone()),
+      },
+      Self::ValueLengthInvalid {
         vr,
         length,
         details,
         ..
-      } => Self(RawDataError::ValueLengthInvalid {
+      } => Self::ValueLengthInvalid {
         vr,
         length,
         details,
         path: Some(path.clone()),
-      }),
-      RawDataError::ValueUnsupported { details, .. } => {
-        Self(RawDataError::ValueUnsupported {
-          details,
-          path: Some(path.clone()),
-        })
-      }
+      },
+      Self::ValueUnsupported { details, .. } => Self::ValueUnsupported {
+        details,
+        path: Some(path.clone()),
+      },
     }
   }
 
   /// Returns the name of a data error as a human-readable string.
   ///
   pub fn name(&self) -> &'static str {
-    match &self.0 {
-      RawDataError::TagNotPresent { .. } => "Tag not present",
-      RawDataError::ValueNotPresent { .. } => "Value not present",
-      RawDataError::MultiplicityMismatch { .. } => "Multiplicity mismatch",
-      RawDataError::ValueInvalid { .. } => "Invalid value",
-      RawDataError::ValueLengthInvalid { .. } => "Invalid value length",
-      RawDataError::ValueUnsupported { .. } => "Unsupported value",
+    match &self {
+      Self::TagNotPresent { .. } => "Tag not present",
+      Self::ValueNotPresent { .. } => "Value not present",
+      Self::MultiplicityMismatch { .. } => "Multiplicity mismatch",
+      Self::ValueInvalid { .. } => "Invalid value",
+      Self::ValueLengthInvalid { .. } => "Invalid value length",
+      Self::ValueUnsupported { .. } => "Unsupported value",
     }
   }
 }
@@ -265,18 +246,18 @@ impl DcmfxError for DataError {
       format!("  Error: {}", self.name()),
     ];
 
-    match &self.0 {
-      RawDataError::TagNotPresent { path, .. }
-      | RawDataError::ValueNotPresent {
+    match &self {
+      Self::TagNotPresent { path, .. }
+      | Self::ValueNotPresent {
         path: Some(path), ..
       }
-      | RawDataError::MultiplicityMismatch {
+      | Self::MultiplicityMismatch {
         path: Some(path), ..
       }
-      | RawDataError::ValueInvalid {
+      | Self::ValueInvalid {
         path: Some(path), ..
       }
-      | RawDataError::ValueLengthInvalid {
+      | Self::ValueLengthInvalid {
         path: Some(path), ..
       } => {
         if let Ok(tag) = path.final_data_element() {
@@ -289,11 +270,11 @@ impl DcmfxError for DataError {
       _ => (),
     };
 
-    match &self.0 {
-      RawDataError::ValueInvalid { details, .. } => {
+    match &self {
+      Self::ValueInvalid { details, .. } => {
         lines.push(format!("  Details: {}", details))
       }
-      RawDataError::ValueLengthInvalid {
+      Self::ValueLengthInvalid {
         vr,
         length,
         details,
@@ -303,7 +284,7 @@ impl DcmfxError for DataError {
         lines.push(format!("  Length: {} bytes", length));
         lines.push(format!("  Details: {}", details));
       }
-      RawDataError::ValueUnsupported { details, .. } => {
+      Self::ValueUnsupported { details, .. } => {
         lines.push(format!("  Details: {}", details))
       }
       _ => (),

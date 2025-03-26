@@ -23,8 +23,8 @@ use alloc::{boxed::Box, format, rc::Rc, string::ToString, vec, vec::Vec};
 use byteorder::ByteOrder;
 
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataSet, DataSetPath, TransferSyntax,
-  ValueRepresentation, dictionary, transfer_syntax,
+  DataElementTag, DataElementValue, DataError, DataSet, DataSetPath,
+  TransferSyntax, ValueRepresentation, dictionary, transfer_syntax,
 };
 
 use crate::internal::byte_stream::{ByteStream, ByteStreamError};
@@ -553,7 +553,7 @@ impl P10ReadContext {
           }),
 
           Err(e) => {
-            if e.is_tag_not_present() {
+            if let DataError::TagNotPresent { .. } = e {
               Ok(self.transfer_syntax)
             } else {
               Err(P10Error::DataInvalid {
