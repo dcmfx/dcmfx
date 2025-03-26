@@ -112,7 +112,7 @@ fn decode(
     ));
   }
 
-  let image = JxlImage::read_with_defaults(data).map_err(|e| {
+  let mut image = JxlImage::read_with_defaults(data).map_err(|e| {
     DataError::new_value_invalid(format!("JPEG XL decode failed with '{}'", e))
   })?;
 
@@ -121,6 +121,13 @@ fn decode(
   {
     return Err(DataError::new_value_invalid(
       "JPEG XL pixel data has incorrect dimensions".to_string(),
+    ));
+  }
+
+  // Convert CMYK to sRGB
+  if image.pixel_format().has_black() {
+    image.request_color_encoding(jxl_oxide::EnumColourEncoding::srgb(
+      jxl_oxide::RenderingIntent::Relative,
     ));
   }
 

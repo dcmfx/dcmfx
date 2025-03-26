@@ -17,7 +17,7 @@ dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0", default-features = false
 flate2 = "1.0.35"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 jpeg-decoder = { git = "https://github.com/image-rs/jpeg-decoder.git", rev = "95550d7" }
-jxl-oxide = "0.11.3"
+jxl-oxide = { git = "https://github.com/dcmfx/jxl-oxide.git", rev = "6c2975e" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm32-unknown-unknown-openbsd-libc = "0.2"
