@@ -1,0 +1,73 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (Ultrasound Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    48 bytes] "1.3.6.1.4.1.5962.1.1.13.1.2.20 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG 2000 Image Compression (Lossless Only))
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0.1.3680043.10.1462.2.0"
+(0002,0013) SH Implementation Version Name          [    12 bytes] "DCMfx 0.0.0"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "CLUNIE1"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    28 bytes] "DERIVED", "PRIMARY", "SMALL PA …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2004-08-26
+(0008,0013) TM Instance Creation Time               [     6 bytes] 18:58:40
+(0008,0014) UI Instance Creator UID                 [    18 bytes] "1.3.6.1.4.1.5962.3"
+(0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Ultrasound Image Storage)
+(0008,0018) UI SOP Instance UID                     [    48 bytes] "1.3.6.1.4.1.5962.1.1.13.1.2.20 …
+(0008,0020) DA Study Date                           [     8 bytes] 2004-08-26
+(0008,0030) TM Study Time                           [     6 bytes] 18:50:59
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "US" (Ultrasound)
+(0008,0070) LO Manufacturer                         [    20 bytes] "G.E. Medical Systems"
+(0008,0080) LO Institution Name                     [    16 bytes] "BAPTIST MED CTR"
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,0201) SH Timezone Offset From UTC             [     6 bytes] "-0400"
+(0008,1010) SH Station Name                         [     6 bytes] "mvme22"
+(0008,1090) LO Manufacturer's Model Name            [    10 bytes] "LOGIQ 700"
+(0008,2111) ST Derivation Description               [    32 bytes] "JPEG 2000 reversible (lossless)"
+(0008,2112) SQ Source Image Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    28 bytes] "1.2.840 … (Ultrasound Image Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    48 bytes] "1.3.6.1.4.1.5962.1.1.13.1. …
+    (0040,A170) SQ Purpose of Reference Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     6 bytes] "121320"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+        (0008,0104) LO Code Meaning                         [    24 bytes] "Uncompressed predecess …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,2122) IS Stage Number                         [     2 bytes] "0"
+(0008,2124) IS Number of Stages                     [     2 bytes] "1"
+(0008,2128) IS View Number                          [     2 bytes] "0"
+(0008,212A) IS Number of Views in Stage             [     2 bytes] "1"
+(0010,0010) PN Patient's Name                       [    22 bytes] "CompressedSamples^US1"
+(0010,0020) LO Patient ID                           [     6 bytes] "13US1"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0032) TM Patient's Birth Time                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     2 bytes] "M" (Male)
+(0010,1020) DS Patient's Size                       [     8 bytes] "0.000000"
+(0010,1030) DS Patient's Weight                     [     8 bytes] "0.000000"
+(0010,21B0) LT Additional Patient History           [     0 bytes] ""
+(0018,1000) LO Device Serial Number                 [     8 bytes] "4121885"
+(0018,1020) LO Software Versions                    [     6 bytes] "R1.0.D"
+(0020,000D) UI Study Instance UID                   [    44 bytes] "1.3.6.1.4.1.5962.1.2.13.200408 …
+(0020,000E) UI Series Instance UID                  [    46 bytes] "1.3.6.1.4.1.5962.1.3.13.1.2004 …
+(0020,0010) SH Study ID                             [     6 bytes] "13US1"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "2"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,4000) LT Image Comments                       [    32 bytes] "JPEG 2000 reversible (lossless)"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0006) US Planar Configuration                 [     2 bytes] 0
+(0028,0010) US Rows                                 [     2 bytes] 480
+(0028,0011) US Columns                              [     2 bytes] 640
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 2
+(0028,0102) US High Bit                             [     2 bytes] 1
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     4 bytes] [00 00 00 00]
+  (FFFE,E000) Item                                    [ 15006 bytes] [00 00 00 0C 6A 50 20 20 0D …]
+(FFFE,E0DD) Sequence Delimitation Item

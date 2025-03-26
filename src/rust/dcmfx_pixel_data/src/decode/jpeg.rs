@@ -18,7 +18,7 @@ pub fn decode_single_channel(
 
   match decode(definition, data)? {
     DynamicImage::ImageLuma8(gray) => {
-      Ok(SingleChannelImage::new_u8(width, height, gray.into_vec()).unwrap())
+      SingleChannelImage::new_u8(width, height, gray.into_vec())
     }
 
     _ => Err(DataError::new_value_invalid(
@@ -38,7 +38,7 @@ pub fn decode_color(
 
   match decode(definition, data)? {
     DynamicImage::ImageRgb8(gray) => {
-      Ok(ColorImage::new_u8(width, height, gray.into_vec()).unwrap())
+      ColorImage::new_u8(width, height, gray.into_vec())
     }
 
     _ => Err(DataError::new_value_invalid(

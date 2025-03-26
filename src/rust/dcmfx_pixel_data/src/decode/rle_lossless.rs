@@ -57,10 +57,7 @@ pub fn decode_single_channel(
       let segment = segments.pop().unwrap();
       let is_signed = definition.pixel_representation.is_signed();
 
-      Ok(
-        SingleChannelImage::new_bitmap(width, height, segment, is_signed)
-          .unwrap(),
-      )
+      SingleChannelImage::new_bitmap(width, height, segment, is_signed)
     }
 
     (
@@ -73,7 +70,7 @@ pub fn decode_single_channel(
       let segment = segments.pop().unwrap();
       let pixels = unsafe { super::vec_cast::<u8, i8>(segment) };
 
-      Ok(SingleChannelImage::new_i8(width, height, pixels).unwrap())
+      SingleChannelImage::new_i8(width, height, pixels)
     }
 
     (
@@ -84,7 +81,7 @@ pub fn decode_single_channel(
       [_],
     ) => {
       let pixels = segments.pop().unwrap();
-      Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap())
+      SingleChannelImage::new_u8(width, height, pixels)
     }
 
     (
@@ -100,7 +97,7 @@ pub fn decode_single_channel(
         pixels[i] = i16::from_be_bytes([segment_0[i], segment_1[i]]);
       }
 
-      Ok(SingleChannelImage::new_i16(width, height, pixels).unwrap())
+      SingleChannelImage::new_i16(width, height, pixels)
     }
 
     (
@@ -116,7 +113,7 @@ pub fn decode_single_channel(
         pixels[i] = u16::from_be_bytes([segment_0[i], segment_1[i]]);
       }
 
-      Ok(SingleChannelImage::new_u16(width, height, pixels).unwrap())
+      SingleChannelImage::new_u16(width, height, pixels)
     }
 
     (
@@ -137,7 +134,7 @@ pub fn decode_single_channel(
         ]);
       }
 
-      Ok(SingleChannelImage::new_i32(width, height, pixels).unwrap())
+      SingleChannelImage::new_i32(width, height, pixels)
     }
 
     (
@@ -158,7 +155,7 @@ pub fn decode_single_channel(
         ]);
       }
 
-      Ok(SingleChannelImage::new_u32(width, height, pixels).unwrap())
+      SingleChannelImage::new_u32(width, height, pixels)
     }
 
     _ => Err(DataError::new_value_invalid(format!(
@@ -196,10 +193,7 @@ pub fn decode_color(
       [_],
     ) => {
       let data = segments.pop().unwrap();
-
-      Ok(
-        ColorImage::new_palette8(width, height, data, palette.clone()).unwrap(),
-      )
+      ColorImage::new_palette8(width, height, data, palette.clone())
     }
 
     (
@@ -213,10 +207,7 @@ pub fn decode_color(
         pixels.push(u16::from_be_bytes([segment_0[i], segment_1[i]]));
       }
 
-      Ok(
-        ColorImage::new_palette16(width, height, pixels, palette.clone())
-          .unwrap(),
-      )
+      ColorImage::new_palette16(width, height, pixels, palette.clone())
     }
 
     (
@@ -236,7 +227,7 @@ pub fn decode_color(
         ybr_to_rgb::convert_u8(&mut pixels, definition);
       }
 
-      Ok(ColorImage::new_u8(width, height, pixels).unwrap())
+      ColorImage::new_u8(width, height, pixels)
     }
 
     (
@@ -266,7 +257,7 @@ pub fn decode_color(
         ybr_to_rgb::convert_u16(&mut pixels, definition);
       }
 
-      Ok(ColorImage::new_u16(width, height, pixels).unwrap())
+      ColorImage::new_u16(width, height, pixels)
     }
 
     (
@@ -314,7 +305,7 @@ pub fn decode_color(
         ybr_to_rgb::convert_u32(&mut pixels, definition);
       }
 
-      Ok(ColorImage::new_u32(width, height, pixels).unwrap())
+      ColorImage::new_u32(width, height, pixels)
     }
 
     _ => Err(DataError::new_value_invalid(format!(

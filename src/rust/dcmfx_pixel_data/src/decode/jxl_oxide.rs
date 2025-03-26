@@ -16,6 +16,7 @@ pub fn decode_single_channel(
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
   let (jxl_image, jxl_render) = decode(definition, data)?;
+
   let width = definition.columns;
   let height = definition.rows;
 
@@ -27,7 +28,7 @@ pub fn decode_single_channel(
       let mut buffer = vec![0u8; definition.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 
-      Ok(SingleChannelImage::new_u8(width, height, buffer).unwrap())
+      SingleChannelImage::new_u8(width, height, buffer)
     }
 
     (
@@ -39,7 +40,7 @@ pub fn decode_single_channel(
       let mut buffer = vec![0u16; definition.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 
-      Ok(SingleChannelImage::new_u16(width, height, buffer).unwrap())
+      SingleChannelImage::new_u16(width, height, buffer)
     }
 
     _ => Err(DataError::new_value_invalid(
@@ -73,7 +74,7 @@ pub fn decode_color(
       let mut buffer = vec![0u8; definition.pixel_count() * 3];
       render_samples(&jxl_render, &mut buffer)?;
 
-      Ok(ColorImage::new_u8(width, height, buffer).unwrap())
+      ColorImage::new_u8(width, height, buffer)
     }
 
     (
@@ -85,14 +86,14 @@ pub fn decode_color(
       let mut buffer = vec![0u16; definition.pixel_count() * 3];
       render_samples(&jxl_render, &mut buffer)?;
 
-      Ok(ColorImage::new_u16(width, height, buffer).unwrap())
+      ColorImage::new_u16(width, height, buffer)
     }
 
     (BitsAllocated::ThirtyTwo, BitDepth::FloatSample { .. }) => {
       let mut buffer = vec![0.0; definition.pixel_count() * 3];
       render_samples(&jxl_render, &mut buffer)?;
 
-      Ok(ColorImage::new_f32(width, height, buffer).unwrap())
+      ColorImage::new_f32(width, height, buffer)
     }
 
     _ => Err(DataError::new_value_invalid(

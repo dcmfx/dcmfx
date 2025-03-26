@@ -16,23 +16,15 @@ pub fn decode_single_channel(
 ) -> Result<SingleChannelImage, DataError> {
   let pixels = decode(data, definition)?;
 
-  let pixel_count = definition.pixel_count();
   let width = definition.columns;
   let height = definition.rows;
 
-  if definition.bits_allocated == BitsAllocated::Eight
-    && pixels.len() == pixel_count
-  {
-    Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap())
-  } else if definition.bits_allocated == BitsAllocated::Sixteen
-    && pixels.len() == pixel_count * 2
-  {
-    Ok(
-      SingleChannelImage::new_u16(width, height, unsafe {
-        vec_cast::<u8, u16>(pixels)
-      })
-      .unwrap(),
-    )
+  if definition.bits_allocated == BitsAllocated::Eight {
+    SingleChannelImage::new_u8(width, height, pixels)
+  } else if definition.bits_allocated == BitsAllocated::Sixteen {
+    SingleChannelImage::new_u16(width, height, unsafe {
+      vec_cast::<u8, u16>(pixels)
+    })
   } else {
     Err(DataError::new_value_invalid(
       "JPEG LS pixel data is not single channel".to_string(),
@@ -48,19 +40,14 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(data, definition)?;
 
-  let pixel_count = definition.pixel_count();
   let width = definition.columns;
   let height = definition.rows;
 
-  if definition.bits_allocated == BitsAllocated::Eight
-    && pixels.len() == pixel_count * 3
-  {
-    Ok(ColorImage::new_u8(width, height, pixels).unwrap())
-  } else if definition.bits_allocated == BitsAllocated::Sixteen
-    && pixels.len() == pixel_count * 6
-  {
+  if definition.bits_allocated == BitsAllocated::Eight {
+    ColorImage::new_u8(width, height, pixels)
+  } else if definition.bits_allocated == BitsAllocated::Sixteen {
     let data = unsafe { vec_cast::<u8, u16>(pixels) };
-    Ok(ColorImage::new_u16(width, height, data).unwrap())
+    ColorImage::new_u16(width, height, data)
   } else {
     Err(DataError::new_value_invalid(
       "JPEG LS pixel data is not color".to_string(),

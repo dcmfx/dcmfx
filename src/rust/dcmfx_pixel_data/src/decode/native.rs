@@ -55,10 +55,7 @@ pub fn decode_single_channel(
             data.resize_with((definition.pixel_count() + 7) / 8, || 0);
           }
 
-          Ok(
-            SingleChannelImage::new_bitmap(width, height, data, is_signed)
-              .unwrap(),
-          )
+          SingleChannelImage::new_bitmap(width, height, data, is_signed)
         }
 
         (PixelRepresentation::Signed, BitsAllocated::Eight) => {
@@ -68,11 +65,11 @@ pub fn decode_single_channel(
             pixels[i] = i8::from_le_bytes([data[i]]);
           }
 
-          Ok(SingleChannelImage::new_i8(width, height, pixels).unwrap())
+          SingleChannelImage::new_i8(width, height, pixels)
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::Eight) => {
-          Ok(SingleChannelImage::new_u8(width, height, data.to_vec()).unwrap())
+          SingleChannelImage::new_u8(width, height, data.to_vec())
         }
 
         (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
@@ -82,7 +79,7 @@ pub fn decode_single_channel(
             pixels[i] = i16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
           }
 
-          Ok(SingleChannelImage::new_i16(width, height, pixels).unwrap())
+          SingleChannelImage::new_i16(width, height, pixels)
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
@@ -92,7 +89,7 @@ pub fn decode_single_channel(
             pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
           }
 
-          Ok(SingleChannelImage::new_u16(width, height, pixels).unwrap())
+          SingleChannelImage::new_u16(width, height, pixels)
         }
 
         (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
@@ -107,7 +104,7 @@ pub fn decode_single_channel(
             ]);
           }
 
-          Ok(SingleChannelImage::new_i32(width, height, pixels).unwrap())
+          SingleChannelImage::new_i32(width, height, pixels)
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
@@ -122,7 +119,7 @@ pub fn decode_single_channel(
             ]);
           }
 
-          Ok(SingleChannelImage::new_u32(width, height, pixels).unwrap())
+          SingleChannelImage::new_u32(width, height, pixels)
         }
       }
     }
@@ -158,10 +155,9 @@ pub fn decode_color(
       (
         PhotometricInterpretation::PaletteColor { palette },
         BitsAllocated::Eight,
-      ) => Ok(
+      ) => {
         ColorImage::new_palette8(width, height, data.to_vec(), palette.clone())
-          .unwrap(),
-      ),
+      }
 
       (
         PhotometricInterpretation::PaletteColor { palette },
@@ -173,10 +169,7 @@ pub fn decode_color(
           pixels.push(u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]));
         }
 
-        Ok(
-          ColorImage::new_palette16(width, height, pixels, palette.clone())
-            .unwrap(),
-        )
+        ColorImage::new_palette16(width, height, pixels, palette.clone())
       }
 
       (photometric_interpretation, bits_allocated) => {
@@ -206,7 +199,7 @@ pub fn decode_color(
               ybr_to_rgb::convert_u8(&mut pixels, definition);
             }
 
-            Ok(ColorImage::new_u8(width, height, pixels).unwrap())
+            ColorImage::new_u8(width, height, pixels)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
@@ -220,7 +213,7 @@ pub fn decode_color(
               ybr_to_rgb::convert_u16(&mut pixels, definition);
             }
 
-            Ok(ColorImage::new_u16(width, height, pixels).unwrap())
+            ColorImage::new_u16(width, height, pixels)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
@@ -239,7 +232,7 @@ pub fn decode_color(
               ybr_to_rgb::convert_u32(&mut pixels, definition);
             }
 
-            Ok(ColorImage::new_u32(width, height, pixels).unwrap())
+            ColorImage::new_u32(width, height, pixels)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Eight) => {
@@ -255,7 +248,7 @@ pub fn decode_color(
               ybr_to_rgb::convert_u8(&mut pixels, definition);
             }
 
-            Ok(ColorImage::new_u8(width, height, pixels).unwrap())
+            ColorImage::new_u8(width, height, pixels)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Sixteen) => {
@@ -280,7 +273,7 @@ pub fn decode_color(
               ybr_to_rgb::convert_u16(&mut pixels, definition);
             }
 
-            Ok(ColorImage::new_u16(width, height, pixels).unwrap())
+            ColorImage::new_u16(width, height, pixels)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::ThirtyTwo) => {
@@ -313,7 +306,7 @@ pub fn decode_color(
               ybr_to_rgb::convert_u32(&mut pixels, definition);
             }
 
-            Ok(ColorImage::new_u32(width, height, pixels).unwrap())
+            ColorImage::new_u32(width, height, pixels)
           }
         }
       }
@@ -350,7 +343,7 @@ pub fn decode_color(
 
             ybr_to_rgb::convert_u8(&mut pixels, definition);
 
-            Ok(ColorImage::new_u8(width, height, pixels).unwrap())
+            ColorImage::new_u8(width, height, pixels)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
@@ -372,7 +365,7 @@ pub fn decode_color(
 
             ybr_to_rgb::convert_u16(&mut pixels, definition);
 
-            Ok(ColorImage::new_u16(width, height, pixels).unwrap())
+            ColorImage::new_u16(width, height, pixels)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
@@ -414,7 +407,7 @@ pub fn decode_color(
 
             ybr_to_rgb::convert_u32(&mut pixels, definition);
 
-            Ok(ColorImage::new_u32(width, height, pixels).unwrap())
+            ColorImage::new_u32(width, height, pixels)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Eight) => {
@@ -436,7 +429,7 @@ pub fn decode_color(
 
             ybr_to_rgb::convert_u8(&mut pixels, definition);
 
-            Ok(ColorImage::new_u8(width, height, pixels).unwrap())
+            ColorImage::new_u8(width, height, pixels)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Sixteen) => {
@@ -464,7 +457,7 @@ pub fn decode_color(
 
             ybr_to_rgb::convert_u16(&mut pixels, definition);
 
-            Ok(ColorImage::new_u16(width, height, pixels).unwrap())
+            ColorImage::new_u16(width, height, pixels)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::ThirtyTwo) => {
@@ -506,7 +499,7 @@ pub fn decode_color(
 
             ybr_to_rgb::convert_u32(&mut pixels, definition);
 
-            Ok(ColorImage::new_u32(width, height, pixels).unwrap())
+            ColorImage::new_u32(width, height, pixels)
           }
         }
       }

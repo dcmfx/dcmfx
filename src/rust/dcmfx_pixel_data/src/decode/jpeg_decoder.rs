@@ -4,6 +4,8 @@ use alloc::{format, string::ToString, vec::Vec};
 use crate::{ColorImage, PixelDataDefinition, SingleChannelImage};
 use dcmfx_core::DataError;
 
+use super::vec_cast;
+
 /// Decodes single channel pixel data using jpeg-decoder.
 ///
 pub fn decode_single_channel(
@@ -12,23 +14,14 @@ pub fn decode_single_channel(
 ) -> Result<SingleChannelImage, DataError> {
   let (image_info, pixel_data) = decode(definition, data)?;
 
-  let pixel_count = definition.pixel_count();
   let width = definition.columns;
   let height = definition.rows;
 
-  if image_info.pixel_format == jpeg_decoder::PixelFormat::L8
-    && pixel_data.len() == pixel_count
-  {
-    Ok(SingleChannelImage::new_u8(width, height, pixel_data).unwrap())
-  } else if image_info.pixel_format == jpeg_decoder::PixelFormat::L16
-    && pixel_data.len() == pixel_count * 2
-  {
-    let mut data = Vec::with_capacity(pixel_count);
-    for chunk in pixel_data.chunks_exact(2) {
-      data.push(u16::from_le_bytes([chunk[0], chunk[1]]));
-    }
-
-    Ok(SingleChannelImage::new_u16(width, height, data).unwrap())
+  if image_info.pixel_format == jpeg_decoder::PixelFormat::L8 {
+    SingleChannelImage::new_u8(width, height, pixel_data)
+  } else if image_info.pixel_format == jpeg_decoder::PixelFormat::L16 {
+    let data = unsafe { vec_cast::<u8, u16>(pixel_data) };
+    SingleChannelImage::new_u16(width, height, data)
   } else {
     Err(DataError::new_value_invalid(
       "JPEG pixel data is not single channel".to_string(),
@@ -44,14 +37,11 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let (image_info, pixel_data) = decode(definition, data)?;
 
-  let pixel_count = definition.pixel_count();
   let width = definition.columns;
   let height = definition.rows;
 
-  if image_info.pixel_format == jpeg_decoder::PixelFormat::RGB24
-    && pixel_data.len() == pixel_count * 3
-  {
-    Ok(ColorImage::new_u8(width, height, pixel_data).unwrap())
+  if image_info.pixel_format == jpeg_decoder::PixelFormat::RGB24 {
+    ColorImage::new_u8(width, height, pixel_data)
   } else {
     Err(DataError::new_value_invalid(
       "JPEG pixel data is not color".to_string(),
@@ -66,7 +56,10 @@ fn decode(
   let mut decoder = jpeg_decoder::Decoder::new(data);
 
   let pixels = decoder.decode().map_err(|e| {
-    DataError::new_value_invalid(format!("Failed reading JPEG data: {}", e))
+    DataError::new_value_invalid(format!(
+      "Failed reading JPEG data with '{}'",
+      e
+    ))
   })?;
 
   let image_info = decoder.info().unwrap();

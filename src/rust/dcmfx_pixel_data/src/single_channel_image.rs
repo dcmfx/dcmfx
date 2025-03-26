@@ -1,7 +1,9 @@
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+use alloc::{string::ToString, vec::Vec};
 
 use image::GrayImage;
+
+use dcmfx_core::DataError;
 
 use crate::{
   ModalityLut, PhotometricInterpretation, PixelDataDefinition, VoiLut,
@@ -37,9 +39,11 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<u8>,
     is_signed: bool,
-  ) -> Result<Self, ()> {
+  ) -> Result<Self, DataError> {
     if data.len() != (width as usize * height as usize + 7) / 8 {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Single channel image bitmap data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -52,9 +56,15 @@ impl SingleChannelImage {
   /// Creates a new single channel image with `i8` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_i8(width: u16, height: u16, data: Vec<i8>) -> Result<Self, ()> {
+  pub fn new_i8(
+    width: u16,
+    height: u16,
+    data: Vec<i8>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Single channel image i8 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -67,9 +77,15 @@ impl SingleChannelImage {
   /// Creates a new single channel image with `u8` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_u8(width: u16, height: u16, data: Vec<u8>) -> Result<Self, ()> {
+  pub fn new_u8(
+    width: u16,
+    height: u16,
+    data: Vec<u8>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Single channel image u8 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -82,9 +98,15 @@ impl SingleChannelImage {
   /// Creates a new single channel image with `i16` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_i16(width: u16, height: u16, data: Vec<i16>) -> Result<Self, ()> {
+  pub fn new_i16(
+    width: u16,
+    height: u16,
+    data: Vec<i16>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Single channel image i16 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -97,9 +119,15 @@ impl SingleChannelImage {
   /// Creates a new single channel image with `u16` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_u16(width: u16, height: u16, data: Vec<u16>) -> Result<Self, ()> {
+  pub fn new_u16(
+    width: u16,
+    height: u16,
+    data: Vec<u16>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Single channel image u16 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -112,9 +140,15 @@ impl SingleChannelImage {
   /// Creates a new single channel image with `i32` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_i32(width: u16, height: u16, data: Vec<i32>) -> Result<Self, ()> {
+  pub fn new_i32(
+    width: u16,
+    height: u16,
+    data: Vec<i32>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Single channel image i32 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -127,9 +161,15 @@ impl SingleChannelImage {
   /// Creates a new single channel image with `u32` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_u32(width: u16, height: u16, data: Vec<u32>) -> Result<Self, ()> {
+  pub fn new_u32(
+    width: u16,
+    height: u16,
+    data: Vec<u32>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Single channel image u32 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {

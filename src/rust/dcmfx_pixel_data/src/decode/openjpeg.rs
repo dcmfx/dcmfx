@@ -24,45 +24,38 @@ pub fn decode_single_channel(
     (
       PixelRepresentation::Unsigned,
       BitsAllocated::One | BitsAllocated::Eight,
-    ) => Ok(SingleChannelImage::new_u8(width, height, pixels).unwrap()),
+    ) => SingleChannelImage::new_u8(width, height, pixels),
 
     (
       PixelRepresentation::Signed,
       BitsAllocated::One | BitsAllocated::Eight,
-    ) => Ok(
-      SingleChannelImage::new_i8(width, height, unsafe {
-        vec_cast::<u8, i8>(pixels)
-      })
-      .unwrap(),
-    ),
+    ) => SingleChannelImage::new_i8(width, height, unsafe {
+      vec_cast::<u8, i8>(pixels)
+    }),
 
-    (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => Ok(
+    (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
       SingleChannelImage::new_u16(width, height, unsafe {
         vec_cast::<u8, u16>(pixels)
       })
-      .unwrap(),
-    ),
+    }
 
-    (PixelRepresentation::Signed, BitsAllocated::Sixteen) => Ok(
+    (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
       SingleChannelImage::new_i16(width, height, unsafe {
         vec_cast::<u8, i16>(pixels)
       })
-      .unwrap(),
-    ),
+    }
 
-    (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => Ok(
+    (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
       SingleChannelImage::new_u32(width, height, unsafe {
         vec_cast::<u8, u32>(pixels)
       })
-      .unwrap(),
-    ),
+    }
 
-    (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => Ok(
+    (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
       SingleChannelImage::new_i32(width, height, unsafe {
         vec_cast::<u8, i32>(pixels)
       })
-      .unwrap(),
-    ),
+    }
   }
 }
 
@@ -78,26 +71,20 @@ pub fn decode_color(
   let height = definition.rows;
 
   match (
-    definition.photometric_interpretation,
+    &definition.photometric_interpretation,
     definition.bits_allocated,
   ) {
     (
       PhotometricInterpretation::PaletteColor { palette },
       BitsAllocated::Eight,
-    ) => Ok(
-      ColorImage::new_palette8(width, height, pixels, palette.clone()).unwrap(),
-    ),
+    ) => ColorImage::new_palette8(width, height, pixels, palette.clone()),
 
     (
       PhotometricInterpretation::PaletteColor { palette },
       BitsAllocated::Sixteen,
     ) => {
       let data = unsafe { vec_cast::<u8, u16>(pixels) };
-
-      Ok(
-        ColorImage::new_palette16(width, height, data, palette.clone())
-          .unwrap(),
-      )
+      ColorImage::new_palette16(width, height, data, palette.clone())
     }
 
     (PhotometricInterpretation::PaletteColor { .. }, _) => {
@@ -108,17 +95,17 @@ pub fn decode_color(
     }
 
     (_, BitsAllocated::One | BitsAllocated::Eight) => {
-      Ok(ColorImage::new_u8(width, height, pixels).unwrap())
+      ColorImage::new_u8(width, height, pixels)
     }
 
     (_, BitsAllocated::Sixteen) => {
       let data = unsafe { vec_cast::<u8, u16>(pixels) };
-      Ok(ColorImage::new_u16(width, height, data).unwrap())
+      ColorImage::new_u16(width, height, data)
     }
 
     (_, BitsAllocated::ThirtyTwo) => {
       let data = unsafe { vec_cast::<u8, u32>(pixels) };
-      Ok(ColorImage::new_u32(width, height, data).unwrap())
+      ColorImage::new_u32(width, height, data)
     }
   }
 }

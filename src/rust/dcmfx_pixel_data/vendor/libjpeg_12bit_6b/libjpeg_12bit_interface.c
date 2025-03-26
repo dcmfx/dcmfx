@@ -34,8 +34,8 @@ static void skip_input_data(j_decompress_ptr dinfo, long num_bytes) {
 static void term_source(j_decompress_ptr _dinfo) {}
 
 // Decodes the given bytes as a 12-bit JPEG.
-int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
-                         uint32_t *width, uint32_t *height, uint32_t *channels,
+int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size, uint32_t width,
+                         uint32_t height, uint32_t samples_per_pixel,
                          uint16_t *output_buffer, uint64_t output_buffer_size,
                          char error_message[JMSG_LENGTH_MAX]) {
   struct jpeg_decompress_struct dinfo;
@@ -97,12 +97,17 @@ int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
     return -1;
   }
 
-  // Get image dimensions and allocate output buffer
-  *width = dinfo.output_width;
-  *height = dinfo.output_height;
-  *channels = dinfo.output_components;
-  if (output_buffer_size !=
-      (uint64_t)*width * (uint64_t)*height * (uint64_t)*channels) {
+  // Check image dimensions
+  if (dinfo.output_width != width || dinfo.output_height != height ||
+      dinfo.output_components != (int)samples_per_pixel) {
+    strcpy(error_message,
+           "Image does not have the expected width, height, or samples per pixel");
+    (void)jpeg_destroy_decompress(&dinfo);
+    return -1;
+  };
+
+  // Check output buffer size
+  if (output_buffer_size != width * height * samples_per_pixel) {
     strcpy(error_message, "Output buffer has incorrect size");
     (void)jpeg_destroy_decompress(&dinfo);
     return -1;

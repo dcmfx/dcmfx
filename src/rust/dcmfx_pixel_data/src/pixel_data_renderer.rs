@@ -209,7 +209,7 @@ impl PixelDataRenderer {
       }
 
       _ => Err(DataError::new_value_unsupported(format!(
-        "Transfer syntax '{}' is not supported",
+        "Transfer syntax '{}' is not able to be decoded",
         self.transfer_syntax.name,
       ))),
     }?;
@@ -275,7 +275,7 @@ impl PixelDataRenderer {
       ),
 
       _ => Err(DataError::new_value_unsupported(format!(
-        "Transfer syntax '{}' is not supported",
+        "Transfer syntax '{}' is not able to be decoded",
         self.transfer_syntax.name
       ))),
     }

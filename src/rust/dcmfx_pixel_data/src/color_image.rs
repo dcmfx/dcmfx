@@ -2,9 +2,11 @@
 use std::rc::Rc;
 
 #[cfg(not(feature = "std"))]
-use alloc::{rc::Rc, vec::Vec};
+use alloc::{rc::Rc, string::ToString, vec::Vec};
 
 use image::{ImageBuffer, Rgb, RgbImage};
+
+use dcmfx_core::DataError;
 
 use crate::{PixelDataDefinition, RgbLookupTables};
 
@@ -31,9 +33,15 @@ impl ColorImage {
   /// Creates a new color image with `u8` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_u8(width: u16, height: u16, data: Vec<u8>) -> Result<Self, ()> {
+  pub fn new_u8(
+    width: u16,
+    height: u16,
+    data: Vec<u8>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize * 3 {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Color image u8 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -46,9 +54,15 @@ impl ColorImage {
   /// Creates a new color image with `u8` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_u16(width: u16, height: u16, data: Vec<u16>) -> Result<Self, ()> {
+  pub fn new_u16(
+    width: u16,
+    height: u16,
+    data: Vec<u16>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize * 3 {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Color image u16 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -61,9 +75,15 @@ impl ColorImage {
   /// Creates a new color image with `u32` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_u32(width: u16, height: u16, data: Vec<u32>) -> Result<Self, ()> {
+  pub fn new_u32(
+    width: u16,
+    height: u16,
+    data: Vec<u32>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize * 3 {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Color image u32 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -76,9 +96,15 @@ impl ColorImage {
   /// Creates a new color image with `f32` data.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn new_f32(width: u16, height: u16, data: Vec<f32>) -> Result<Self, ()> {
+  pub fn new_f32(
+    width: u16,
+    height: u16,
+    data: Vec<f32>,
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize * 3 {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Color image f32 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -96,9 +122,11 @@ impl ColorImage {
     height: u16,
     data: Vec<u8>,
     palette: Rc<RgbLookupTables>,
-  ) -> Result<Self, ()> {
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Color image palette8 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {
@@ -116,9 +144,11 @@ impl ColorImage {
     height: u16,
     data: Vec<u16>,
     palette: Rc<RgbLookupTables>,
-  ) -> Result<Self, ()> {
+  ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
-      return Err(());
+      return Err(DataError::new_value_invalid(
+        "Color image palette16 data size is incorrect".to_string(),
+      ));
     }
 
     Ok(Self {

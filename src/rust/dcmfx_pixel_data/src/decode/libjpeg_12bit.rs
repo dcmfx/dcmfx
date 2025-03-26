@@ -1,7 +1,9 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec, vec::Vec};
 
-use crate::{ColorImage, PixelDataDefinition, SingleChannelImage};
+use crate::{
+  BitsAllocated, ColorImage, PixelDataDefinition, SingleChannelImage,
+};
 use dcmfx_core::DataError;
 
 /// Decodes single channel pixel data using libjpeg_12bit.
@@ -10,14 +12,19 @@ pub fn decode_single_channel(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
-  let (width, height, channels, pixel_data) = decode(definition, data)?;
+  let pixels = decode(definition, data)?;
 
-  if channels == 1 && pixel_data.len() == definition.pixel_count() {
-    Ok(SingleChannelImage::new_u16(width, height, pixel_data).unwrap())
-  } else {
-    Err(DataError::new_value_invalid(
+  let width = definition.columns;
+  let height = definition.rows;
+
+  match definition.bits_allocated {
+    BitsAllocated::Sixteen => {
+      SingleChannelImage::new_u16(width, height, pixels)
+    }
+
+    _ => Err(DataError::new_value_invalid(
       "JPEG Extended pixel data is not single channel".to_string(),
-    ))
+    )),
   }
 }
 
@@ -27,24 +34,24 @@ pub fn decode_color(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let (width, height, channels, pixel_data) = decode(definition, data)?;
+  let pixels = decode(definition, data)?;
 
-  if channels == 3 && pixel_data.len() == definition.pixel_count() * 3 {
-    Ok(ColorImage::new_u16(width, height, pixel_data).unwrap())
-  } else {
-    Err(DataError::new_value_invalid(
+  let width = definition.columns;
+  let height = definition.rows;
+
+  match definition.bits_allocated {
+    BitsAllocated::Sixteen => ColorImage::new_u16(width, height, pixels),
+
+    _ => Err(DataError::new_value_invalid(
       "JPEG 12-bit pixel data is not color".to_string(),
-    ))
+    )),
   }
 }
 
 fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
-) -> Result<(u16, u16, usize, Vec<u16>), DataError> {
-  let mut width: u32 = 0;
-  let mut height: u32 = 0;
-  let mut channels: u32 = 0;
+) -> Result<Vec<u16>, DataError> {
   let mut error_message = [0 as ::core::ffi::c_char; 200];
 
   // Allocate output buffer
@@ -59,9 +66,9 @@ fn decode(
     ffi::libjpeg_12bit_decode(
       data.as_ptr(),
       data.len() as u64,
-      &mut width,
-      &mut height,
-      &mut channels,
+      definition.columns as u32,
+      definition.rows as u32,
+      usize::from(definition.samples_per_pixel) as u32,
       output_buffer.as_mut_ptr(),
       output_buffer.len() as u64,
       error_message.as_mut_ptr(),
@@ -79,18 +86,7 @@ fn decode(
     )));
   }
 
-  if width != definition.columns.into() || height != definition.rows.into() {
-    return Err(DataError::new_value_invalid(
-      "JPEG 12-bit pixel data has incorrect dimensions".to_string(),
-    ));
-  }
-
-  Ok((
-    width as u16,
-    height as u16,
-    channels as usize,
-    output_buffer,
-  ))
+  Ok(output_buffer)
 }
 
 mod ffi {
@@ -98,9 +94,9 @@ mod ffi {
     pub fn libjpeg_12bit_decode(
       jpeg_data: *const u8,
       jpeg_size: u64,
-      width: *mut u32,
-      height: *mut u32,
-      channels: *mut u32,
+      width: u32,
+      height: u32,
+      channels: u32,
       output_buffer: *mut u16,
       output_buffer_size: u64,
       error_message: *mut ::core::ffi::c_char,
