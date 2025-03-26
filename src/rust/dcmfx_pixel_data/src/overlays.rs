@@ -10,7 +10,7 @@ use dcmfx_core::{
   DataElementTag, DataError, DataSet, DataSetPath, ValueRepresentation,
   dictionary,
 };
-use dcmfx_p10::PredicateFunction;
+use dcmfx_p10::{P10CustomTypeTransform, PredicateFunction};
 use image::{Rgb, RgbImage};
 
 /// Defines a set of overlays where each overlay is a bitmap that can be
@@ -25,6 +25,17 @@ use image::{Rgb, RgbImage};
 pub struct Overlays(Vec<Overlay>);
 
 impl Overlays {
+  /// Returns a [`P10CustomTypeTransform`] that extracts an [`Overlays`] from a
+  /// stream of DICOM P10 tokens.
+  ///
+  pub fn custom_type_transform() -> P10CustomTypeTransform<Self> {
+    P10CustomTypeTransform::new_with_predicate(
+      Self::filter_predicate(),
+      Self::HIGHEST_TAG,
+      Self::from_data_set,
+    )
+  }
+
   /// Returns a filter predicate that returns true for data elements that are
   /// relevant to overlays.
   ///

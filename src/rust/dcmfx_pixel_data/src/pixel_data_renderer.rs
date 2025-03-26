@@ -8,6 +8,8 @@ use dcmfx_core::{
   transfer_syntax,
 };
 
+use dcmfx_p10::P10CustomTypeTransform;
+
 use crate::{
   ColorImage, ColorPalette, ModalityLut, PixelDataDefinition, PixelDataFrame,
   SingleChannelImage, VoiLut, decode,
@@ -25,6 +27,13 @@ pub struct PixelDataRenderer {
 }
 
 impl PixelDataRenderer {
+  /// Returns a [`P10CustomTypeTransform`] that extracts a [`PixelDataRenderer`]
+  /// from a stream of DICOM P10 tokens.
+  ///
+  pub fn custom_type_transform() -> P10CustomTypeTransform<Self> {
+    P10CustomTypeTransform::new(&Self::DATA_ELEMENT_TAGS, Self::from_data_set)
+  }
+
   /// The tags of the data elements that are read when creating a new
   /// [`PixelDataRenderer`].
   ///

@@ -201,18 +201,11 @@ fn get_pixel_data_from_input_source(
   let mut pixel_data_renderer_transform = if args.format == OutputFormat::Raw {
     None
   } else {
-    Some(P10CustomTypeTransform::new(
-      &PixelDataRenderer::DATA_ELEMENT_TAGS,
-      PixelDataRenderer::from_data_set,
-    ))
+    Some(PixelDataRenderer::custom_type_transform())
   };
 
   let mut overlays_transform = if args.render_overlays {
-    Some(P10CustomTypeTransform::new_with_predicate(
-      Overlays::filter_predicate(),
-      Overlays::HIGHEST_TAG,
-      Overlays::from_data_set,
-    ))
+    Some(Overlays::custom_type_transform())
   } else {
     None
   };
