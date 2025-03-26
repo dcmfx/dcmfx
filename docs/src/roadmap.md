@@ -5,7 +5,9 @@ following:
 
 - Decoding of 'JPEG-LS' pixel data on WASM
 
-- Stream transcoding between a wider range of transfer syntaxes
+- Pixel data encoding
+
+- Transcoding between a wider range of transfer syntaxes
 
 - DIMSE networking
 
