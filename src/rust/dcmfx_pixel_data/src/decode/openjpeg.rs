@@ -5,8 +5,8 @@ use dcmfx_core::DataError;
 
 use super::vec_cast;
 use crate::{
-  BitsAllocated, ColorImage, PixelDataDefinition, PixelRepresentation,
-  SingleChannelImage,
+  BitsAllocated, ColorImage, PhotometricInterpretation, PixelDataDefinition,
+  PixelRepresentation, SingleChannelImage,
 };
 
 /// Decodes single channel pixel data using OpenJPEG.
@@ -74,24 +74,52 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(definition, data)?;
 
-  match definition.bits_allocated {
-    BitsAllocated::One | BitsAllocated::Eight => Ok(
-      ColorImage::new_u8(definition.columns, definition.rows, pixels).unwrap(),
+  let width = definition.columns;
+  let height = definition.rows;
+
+  match (
+    definition.photometric_interpretation,
+    definition.bits_allocated,
+  ) {
+    (
+      PhotometricInterpretation::PaletteColor { palette },
+      BitsAllocated::Eight,
+    ) => Ok(
+      ColorImage::new_palette8(width, height, pixels, palette.clone()).unwrap(),
     ),
 
-    BitsAllocated::Sixteen => Ok(
-      ColorImage::new_u16(definition.columns, definition.rows, unsafe {
-        vec_cast::<u8, u16>(pixels)
-      })
-      .unwrap(),
-    ),
+    (
+      PhotometricInterpretation::PaletteColor { palette },
+      BitsAllocated::Sixteen,
+    ) => {
+      let data = unsafe { vec_cast::<u8, u16>(pixels) };
 
-    BitsAllocated::ThirtyTwo => Ok(
-      ColorImage::new_u32(definition.columns, definition.rows, unsafe {
-        vec_cast::<u8, u32>(pixels)
-      })
-      .unwrap(),
-    ),
+      Ok(
+        ColorImage::new_palette16(width, height, data, palette.clone())
+          .unwrap(),
+      )
+    }
+
+    (PhotometricInterpretation::PaletteColor { .. }, _) => {
+      Err(DataError::new_value_invalid(format!(
+        "OpenJPEG palette color data has invalid bits allocated '{}'",
+        usize::from(definition.bits_allocated)
+      )))
+    }
+
+    (_, BitsAllocated::One | BitsAllocated::Eight) => {
+      Ok(ColorImage::new_u8(width, height, pixels).unwrap())
+    }
+
+    (_, BitsAllocated::Sixteen) => {
+      let data = unsafe { vec_cast::<u8, u16>(pixels) };
+      Ok(ColorImage::new_u16(width, height, data).unwrap())
+    }
+
+    (_, BitsAllocated::ThirtyTwo) => {
+      let data = unsafe { vec_cast::<u8, u32>(pixels) };
+      Ok(ColorImage::new_u32(width, height, data).unwrap())
+    }
   }
 }
 
