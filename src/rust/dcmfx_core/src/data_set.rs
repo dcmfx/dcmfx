@@ -752,6 +752,25 @@ impl DataSet {
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
   }
 
+  /// Returns the singular integer value for a data element in a data set. If
+  /// the data element with the specified tag does not hold exactly one integer
+  /// value then an error is returned.
+  ///
+  /// If the data element is not in the data set then the specified default
+  /// value is returned.
+  ///
+  pub fn get_int_with_default<T: num_traits::PrimInt + TryFrom<i64>>(
+    &self,
+    tag: DataElementTag,
+    default: T,
+  ) -> Result<T, DataError> {
+    if self.has(tag) {
+      self.get_int(tag)
+    } else {
+      Ok(default)
+    }
+  }
+
   /// Returns all of the integer values for a data element in a data set. If the
   /// data element with the specified tag is not of a type that supports
   /// multiple integer values then an error is returned.
@@ -817,6 +836,25 @@ impl DataSet {
       .get_value(tag)?
       .get_float()
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
+  }
+
+  /// Returns the singular floating point value for a data element in a data
+  /// set. If the data element with the specified tag does not hold exactly one
+  /// floating point value then an error is returned.
+  ///
+  /// If the data element is not in the data set then the specified default
+  /// value is returned.
+  ///
+  pub fn get_float_with_default(
+    &self,
+    tag: DataElementTag,
+    default: f64,
+  ) -> Result<f64, DataError> {
+    if self.has(tag) {
+      self.get_float(tag)
+    } else {
+      Ok(default)
+    }
   }
 
   /// Returns all of the floating point values for a data element in a data set.

@@ -69,12 +69,8 @@ type PixelDataFilterDetails {
 fn pixel_data_filter_details_from_data_set(
   data_set: DataSet,
 ) -> Result(PixelDataFilterDetails, data_error.DataError) {
-  let number_of_frames = case
-    data_set.has(data_set, dictionary.number_of_frames.tag)
-  {
-    True -> data_set.get_int(data_set, dictionary.number_of_frames.tag)
-    False -> Ok(1)
-  }
+  let number_of_frames =
+    data_set.get_int_with_default(data_set, dictionary.number_of_frames.tag, 1)
   use number_of_frames <- result.try(number_of_frames)
 
   let rows = data_set.get_int(data_set, dictionary.rows.tag)

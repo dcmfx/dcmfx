@@ -44,6 +44,18 @@ pub fn is_private_creator(tag: DataElementTag) -> Bool {
   int.is_odd(tag.group) && tag.element >= 0x10 && tag.element <= 0xFF
 }
 
+/// Returns a copy of the tag with an updated group value.
+///
+pub fn with_group(tag: DataElementTag, group: Int) -> DataElementTag {
+  DataElementTag(group:, element: tag.element)
+}
+
+/// Returns a copy of the tag with an updated element value.
+///
+pub fn with_element(tag: DataElementTag, element: Int) -> DataElementTag {
+  DataElementTag(group: tag.group, element:)
+}
+
 /// Converts a tag to a single 32-bit integer where the group is in the high 16
 /// bits and the element is in the low 16 bits.
 ///

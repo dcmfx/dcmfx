@@ -71,6 +71,24 @@ impl DataElementTag {
     self.is_private() && (0x10..=0xFF).contains(&self.element)
   }
 
+  /// Returns a copy of this tag with an updated group value.
+  ///
+  pub fn with_group(&self, group: u16) -> Self {
+    Self {
+      group,
+      element: self.element,
+    }
+  }
+
+  /// Returns a copy of this tag with an updated element value.
+  ///
+  pub fn with_element(&self, element: u16) -> Self {
+    Self {
+      group: self.group,
+      element,
+    }
+  }
+
   /// Converts a tag to a single 32-bit integer where the group is in the high
   /// 16 bits and the element is in the low 16 bits.
   ///

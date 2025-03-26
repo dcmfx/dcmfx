@@ -71,11 +71,8 @@ struct PixelDataFrameFilterDetails {
 
 impl PixelDataFrameFilterDetails {
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
-    let number_of_frames = if data_set.has(dictionary::NUMBER_OF_FRAMES.tag) {
-      data_set.get_int::<usize>(dictionary::NUMBER_OF_FRAMES.tag)?
-    } else {
-      1
-    };
+    let number_of_frames = data_set
+      .get_int_with_default::<usize>(dictionary::NUMBER_OF_FRAMES.tag, 1)?;
 
     Ok(Self {
       number_of_frames,

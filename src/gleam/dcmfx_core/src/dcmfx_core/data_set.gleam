@@ -919,6 +919,24 @@ pub fn get_int(data_set: DataSet, tag: DataElementTag) -> Result(Int, DataError)
   ))
 }
 
+/// Returns the singular integer value for a data element in a data set. If the
+/// data element with the specified tag does not hold exactly one integer value
+/// then an error is returned.
+/// 
+/// If the data element is not in the data set then the specified default value
+/// is returned.
+///
+pub fn get_int_with_default(
+  data_set: DataSet,
+  tag: DataElementTag,
+  default: Int,
+) -> Result(Int, DataError) {
+  case has(data_set, tag) {
+    True -> get_int(data_set, tag)
+    False -> Ok(default)
+  }
+}
+
 /// Returns all of the integer values for a data element in a data set. If the
 /// data element with the specified tag is not of a type that supports multiple
 /// integer values then an error is returned.
@@ -1002,6 +1020,24 @@ pub fn get_float(
     _,
     data_set_path.new_with_data_element(tag),
   ))
+}
+
+/// Returns the singular floating point value for a data element in a data set.
+/// If the data element with the specified tag does not hold exactly one
+/// floating point value then an error is returned.
+///
+/// If the data element is not in the data set then the specified default value
+/// is returned.
+///
+pub fn get_float_with_default(
+  data_set: DataSet,
+  tag: DataElementTag,
+  default: Float,
+) -> Result(IEEEFloat, DataError) {
+  case has(data_set, tag) {
+    True -> get_float(data_set, tag)
+    False -> Ok(ieee_float.finite(default))
+  }
 }
 
 /// Returns all of the floating point values for a data element in a data set.

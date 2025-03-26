@@ -68,10 +68,7 @@ impl Overlays {
     for i in 0..16 {
       let tag_group = 0x6000 + i * 2;
 
-      if !data_set.has(DataElementTag::new(
-        tag_group,
-        dictionary::OVERLAY_DATA.tag.element,
-      )) {
+      if !data_set.has(dictionary::OVERLAY_DATA.tag.with_group(tag_group)) {
         continue;
       }
 
@@ -189,8 +186,7 @@ impl Overlay {
       );
     }
 
-    let data_tag =
-      DataElementTag::new(tag_group, dictionary::OVERLAY_DATA.tag.element);
+    let data_tag = dictionary::OVERLAY_DATA.tag.with_group(tag_group);
     let data = data_set
       .get_value_vr_bytes(
         data_tag,
@@ -201,78 +197,61 @@ impl Overlay {
       )?
       .clone();
 
-    let description_tag = DataElementTag::new(
-      tag_group,
-      dictionary::OVERLAY_DESCRIPTION.tag.element,
-    );
+    let description_tag =
+      dictionary::OVERLAY_DESCRIPTION.tag.with_group(tag_group);
     let description = if data_set.has(description_tag) {
       Some(data_set.get_string(description_tag)?.to_string())
     } else {
       None
     };
 
-    let subtype_tag =
-      DataElementTag::new(tag_group, dictionary::OVERLAY_SUBTYPE.tag.element);
+    let subtype_tag = dictionary::OVERLAY_SUBTYPE.tag.with_group(tag_group);
     let subtype = if data_set.has(subtype_tag) {
       Some(OverlaySubtype::from_data_set(data_set, tag_group)?)
     } else {
       None
     };
 
-    let label_tag =
-      DataElementTag::new(tag_group, dictionary::OVERLAY_LABEL.tag.element);
+    let label_tag = dictionary::OVERLAY_LABEL.tag.with_group(tag_group);
     let label = if data_set.has(label_tag) {
       Some(data_set.get_string(label_tag)?.to_string())
     } else {
       None
     };
 
-    let roi_area_tag =
-      DataElementTag::new(tag_group, dictionary::ROI_AREA.tag.element);
+    let roi_area_tag = dictionary::ROI_AREA.tag.with_group(tag_group);
     let roi_area = if data_set.has(roi_area_tag) {
       Some(data_set.get_int::<u64>(roi_area_tag)?)
     } else {
       None
     };
 
-    let roi_mean_tag =
-      DataElementTag::new(tag_group, dictionary::ROI_MEAN.tag.element);
+    let roi_mean_tag = dictionary::ROI_MEAN.tag.with_group(tag_group);
     let roi_mean = if data_set.has(roi_mean_tag) {
       Some(data_set.get_float(roi_mean_tag)?)
     } else {
       None
     };
 
-    let roi_standard_deviation_tag = DataElementTag::new(
-      tag_group,
-      dictionary::ROI_STANDARD_DEVIATION.tag.element,
-    );
+    let roi_standard_deviation_tag =
+      dictionary::ROI_STANDARD_DEVIATION.tag.with_group(tag_group);
     let roi_standard_deviation = if data_set.has(roi_standard_deviation_tag) {
       Some(data_set.get_float(roi_standard_deviation_tag)?)
     } else {
       None
     };
 
-    let number_of_frames_in_overlay_tag = DataElementTag::new(
-      tag_group,
-      dictionary::NUMBER_OF_FRAMES_IN_OVERLAY.tag.element,
-    );
-    let number_of_frames_in_overlay =
-      if data_set.has(number_of_frames_in_overlay_tag) {
-        data_set.get_int::<usize>(number_of_frames_in_overlay_tag)?
-      } else {
-        1
-      };
+    let number_of_frames_in_overlay = data_set.get_int_with_default::<usize>(
+      dictionary::NUMBER_OF_FRAMES_IN_OVERLAY
+        .tag
+        .with_group(tag_group),
+      1,
+    )?;
 
-    let image_frame_origin_tag = DataElementTag::new(
-      tag_group,
-      dictionary::IMAGE_FRAME_ORIGIN.tag.element,
-    );
-    let image_frame_origin = if data_set.has(image_frame_origin_tag) {
-      data_set.get_int::<usize>(image_frame_origin_tag)?
-    } else {
-      1
-    };
+    let image_frame_origin = data_set.get_int_with_default::<usize>(
+      dictionary::IMAGE_FRAME_ORIGIN.tag.with_group(tag_group),
+      1,
+    )?;
 
     let expected_data_length =
       (rows as usize * columns as usize * number_of_frames_in_overlay + 7) / 8;
