@@ -61,8 +61,23 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::Eight) => {
           let mut pixels = vec![0i8; pixel_count];
 
-          for i in 0..pixel_count {
-            pixels[i] = i8::from_le_bytes([data[i]]);
+          if (definition.bits_stored as usize)
+            < usize::from(definition.bits_allocated)
+          {
+            let threshold = 2i8.pow(definition.bits_stored as u32 - 1);
+
+            for i in 0..pixel_count {
+              pixels[i] = i8::from_le_bytes([data[i]]);
+
+              if pixels[i] >= threshold {
+                pixels[i] -= threshold;
+                pixels[i] -= threshold;
+              }
+            }
+          } else {
+            for i in 0..pixel_count {
+              pixels[i] = i8::from_le_bytes([data[i]]);
+            }
           }
 
           SingleChannelImage::new_i8(width, height, pixels)
@@ -75,8 +90,23 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
           let mut pixels = vec![0i16; pixel_count];
 
-          for i in 0..pixel_count {
-            pixels[i] = i16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
+          if (definition.bits_stored as usize)
+            < usize::from(definition.bits_allocated)
+          {
+            let threshold = 2i16.pow(definition.bits_stored as u32 - 1);
+
+            for i in 0..pixel_count {
+              pixels[i] = i16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
+
+              if pixels[i] >= threshold {
+                pixels[i] -= threshold;
+                pixels[i] -= threshold;
+              }
+            }
+          } else {
+            for i in 0..pixel_count {
+              pixels[i] = i16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
+            }
           }
 
           SingleChannelImage::new_i16(width, height, pixels)
@@ -95,13 +125,33 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
           let mut pixels = vec![0i32; pixel_count];
 
-          for i in 0..pixel_count {
-            pixels[i] = i32::from_le_bytes([
-              data[i * 4],
-              data[i * 4 + 1],
-              data[i * 4 + 2],
-              data[i * 4 + 3],
-            ]);
+          if (definition.bits_stored as usize)
+            < usize::from(definition.bits_allocated)
+          {
+            let threshold = 2i32.pow(definition.bits_stored as u32 - 1);
+
+            for i in 0..pixel_count {
+              pixels[i] = i32::from_le_bytes([
+                data[i * 4],
+                data[i * 4 + 1],
+                data[i * 4 + 2],
+                data[i * 4 + 3],
+              ]);
+
+              if pixels[i] >= threshold {
+                pixels[i] -= threshold;
+                pixels[i] -= threshold;
+              }
+            }
+          } else {
+            for i in 0..pixel_count {
+              pixels[i] = i32::from_le_bytes([
+                data[i * 4],
+                data[i * 4 + 1],
+                data[i * 4 + 2],
+                data[i * 4 + 3],
+              ]);
+            }
           }
 
           SingleChannelImage::new_i32(width, height, pixels)
@@ -544,7 +594,7 @@ mod tests {
   use crate::PixelRepresentation;
 
   #[test]
-  fn decode_monochrome_16bit_unsigned() {
+  fn decode_monochrome_8_bit_unsigned() {
     let definition = PixelDataDefinition {
       samples_per_pixel: SamplesPerPixel::One,
       photometric_interpretation: PhotometricInterpretation::Monochrome2,
@@ -559,13 +609,56 @@ mod tests {
     let data = [0, 1, 2, 3];
 
     assert_eq!(
-      decode_single_channel(&definition, &data, 0).unwrap(),
-      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3]).unwrap()
+      decode_single_channel(&definition, &data, 0),
+      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3])
     );
   }
 
   #[test]
-  fn decode_rgb_8bit_interleaved() {
+  fn decode_monochrome_8_bit_signed_with_7_bits_stored() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::One,
+      photometric_interpretation: PhotometricInterpretation::Monochrome2,
+      rows: 8,
+      columns: 16,
+      bits_allocated: BitsAllocated::Eight,
+      bits_stored: 7,
+      high_bit: 6,
+      pixel_representation: PixelRepresentation::Signed,
+    };
+
+    let data: Vec<_> = (0..=127).collect();
+
+    assert_eq!(
+      decode_single_channel(&definition, &data, 0),
+      SingleChannelImage::new_i8(16, 8, (0..64).chain(-64..0).collect())
+    );
+  }
+
+  #[test]
+  fn decode_monochrome_16_bit_signed_with_12_bits_stored() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::One,
+      photometric_interpretation: PhotometricInterpretation::Monochrome2,
+      rows: 64,
+      columns: 64,
+      bits_allocated: BitsAllocated::Sixteen,
+      bits_stored: 12,
+      high_bit: 11,
+      pixel_representation: PixelRepresentation::Signed,
+    };
+
+    let data: Vec<_> =
+      (0..4096u16).map(|i| i.to_le_bytes()).flatten().collect();
+
+    assert_eq!(
+      decode_single_channel(&definition, &data, 0),
+      SingleChannelImage::new_i16(64, 64, (0..2048).chain(-2048..0).collect())
+    );
+  }
+
+  #[test]
+  fn decode_rgb_8_bit_interleaved() {
     let definition = PixelDataDefinition {
       samples_per_pixel: SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Interleaved,
@@ -582,14 +675,13 @@ mod tests {
     let data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
     assert_eq!(
-      decode_color(&definition, &data).unwrap(),
+      decode_color(&definition, &data),
       ColorImage::new_u8(2, 2, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
-        .unwrap()
     );
   }
 
   #[test]
-  fn decode_rgb_16bit_separate() {
+  fn decode_rgb_16_bit_separate() {
     let definition = PixelDataDefinition {
       samples_per_pixel: SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Separate,
@@ -608,14 +700,13 @@ mod tests {
     ];
 
     assert_eq!(
-      decode_color(&definition, &data).unwrap(),
+      decode_color(&definition, &data),
       ColorImage::new_u16(2, 2, vec![0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11,])
-        .unwrap()
     );
   }
 
   #[test]
-  fn decode_ybr_full_8bit() {
+  fn decode_ybr_full_8_bit() {
     let definition = PixelDataDefinition {
       samples_per_pixel: SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Interleaved,
@@ -632,18 +723,17 @@ mod tests {
     let data = [142, 122, 111, 148, 118, 122, 101, 123, 127, 116, 133, 142];
 
     assert_eq!(
-      decode_color(&definition, &data).unwrap(),
+      decode_color(&definition, &data),
       ColorImage::new_u8(
         2,
         2,
         vec![118, 155, 132, 140, 155, 131, 100, 102, 93, 136, 103, 125]
       )
-      .unwrap()
     );
   }
 
   #[test]
-  fn decode_ybr_full_422_8bit() {
+  fn decode_ybr_full_422_8_bit() {
     let definition = PixelDataDefinition {
       samples_per_pixel: SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Interleaved,
@@ -660,13 +750,12 @@ mod tests {
     let data = [142, 122, 111, 148, 118, 122, 101, 123];
 
     assert_eq!(
-      decode_color(&definition, &data).unwrap(),
+      decode_color(&definition, &data),
       ColorImage::new_u8(
         2,
         2,
         vec![170, 133, 112, 150, 113, 92, 111, 130, 71, 115, 134, 75]
       )
-      .unwrap()
     );
   }
 }

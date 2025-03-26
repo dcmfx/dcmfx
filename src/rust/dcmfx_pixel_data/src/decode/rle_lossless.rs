@@ -68,7 +68,20 @@ pub fn decode_single_channel(
       [_],
     ) => {
       let segment = segments.pop().unwrap();
-      let pixels = unsafe { super::vec_cast::<u8, i8>(segment) };
+      let mut pixels = unsafe { super::vec_cast::<u8, i8>(segment) };
+
+      if (definition.bits_stored as usize)
+        < usize::from(definition.bits_allocated)
+      {
+        let threshold = 2i8.pow(definition.bits_stored as u32 - 1);
+
+        for pixel in pixels.iter_mut() {
+          if *pixel >= threshold {
+            *pixel -= threshold;
+            *pixel -= threshold;
+          }
+        }
+      }
 
       SingleChannelImage::new_i8(width, height, pixels)
     }
@@ -93,8 +106,23 @@ pub fn decode_single_channel(
     ) => {
       let mut pixels = vec![0i16; pixel_count];
 
-      for i in 0..pixel_count {
-        pixels[i] = i16::from_be_bytes([segment_0[i], segment_1[i]]);
+      if (definition.bits_stored as usize)
+        < usize::from(definition.bits_allocated)
+      {
+        let threshold = 2i16.pow(definition.bits_stored as u32 - 1);
+
+        for i in 0..pixel_count {
+          pixels[i] = i16::from_be_bytes([segment_0[i], segment_1[i]]);
+
+          if pixels[i] >= threshold {
+            pixels[i] -= threshold;
+            pixels[i] -= threshold;
+          }
+        }
+      } else {
+        for i in 0..pixel_count {
+          pixels[i] = i16::from_be_bytes([segment_0[i], segment_1[i]]);
+        }
       }
 
       SingleChannelImage::new_i16(width, height, pixels)
@@ -125,13 +153,33 @@ pub fn decode_single_channel(
     ) => {
       let mut pixels = vec![0i32; pixel_count];
 
-      for i in 0..pixel_count {
-        pixels[i] = i32::from_be_bytes([
-          segment_0[i],
-          segment_1[i],
-          segment_2[i],
-          segment_3[i],
-        ]);
+      if (definition.bits_stored as usize)
+        < usize::from(definition.bits_allocated)
+      {
+        let threshold = 2i32.pow(definition.bits_stored as u32 - 1);
+
+        for i in 0..pixel_count {
+          pixels[i] = i32::from_be_bytes([
+            segment_0[i],
+            segment_1[i],
+            segment_2[i],
+            segment_3[i],
+          ]);
+
+          if pixels[i] >= threshold {
+            pixels[i] -= threshold;
+            pixels[i] -= threshold;
+          }
+        }
+      } else {
+        for i in 0..pixel_count {
+          pixels[i] = i32::from_be_bytes([
+            segment_0[i],
+            segment_1[i],
+            segment_2[i],
+            segment_3[i],
+          ]);
+        }
       }
 
       SingleChannelImage::new_i32(width, height, pixels)
@@ -159,8 +207,8 @@ pub fn decode_single_channel(
     }
 
     _ => Err(DataError::new_value_invalid(format!(
-      "RLE Lossless decode not supported with photometric interpretation \
-        '{}', bits allocated '{}', segment count '{}'",
+      "RLE Lossless decode not supported with photometric interpretation '{}', \
+       bits allocated '{}', segment count '{}'",
       definition.photometric_interpretation,
       bits_allocated,
       segments.len(),
@@ -431,5 +479,78 @@ fn decode_rle_segment(
     else {
       rle_data = &rle_data[1..];
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  use crate::encode::rle_lossless::encode_segments;
+
+  #[test]
+  pub fn decode_monochrome_8_bit_unsigned() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::One,
+      photometric_interpretation: PhotometricInterpretation::Monochrome2,
+      rows: 2,
+      columns: 2,
+      bits_allocated: BitsAllocated::Eight,
+      bits_stored: 8,
+      high_bit: 7,
+      pixel_representation: PixelRepresentation::Unsigned,
+    };
+
+    let data = encode_segments(&[&[0, 1, 2, 3]], 2).unwrap();
+
+    assert_eq!(
+      decode_single_channel(&definition, &data),
+      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3])
+    );
+  }
+
+  #[test]
+  fn decode_monochrome_8_bit_signed_with_7_bits_stored() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::One,
+      photometric_interpretation: PhotometricInterpretation::Monochrome2,
+      rows: 8,
+      columns: 16,
+      bits_allocated: BitsAllocated::Eight,
+      bits_stored: 7,
+      high_bit: 6,
+      pixel_representation: PixelRepresentation::Signed,
+    };
+
+    let data: Vec<_> = (0..=127).collect();
+    let data = encode_segments(&[&data], 8).unwrap();
+
+    assert_eq!(
+      decode_single_channel(&definition, &data),
+      SingleChannelImage::new_i8(16, 8, (0..64).chain(-64..0).collect())
+    );
+  }
+
+  #[test]
+  fn decode_monochrome_16_bit_signed_with_12_bits_stored() {
+    let definition = PixelDataDefinition {
+      samples_per_pixel: SamplesPerPixel::One,
+      photometric_interpretation: PhotometricInterpretation::Monochrome2,
+      rows: 64,
+      columns: 64,
+      bits_allocated: BitsAllocated::Sixteen,
+      bits_stored: 12,
+      high_bit: 11,
+      pixel_representation: PixelRepresentation::Signed,
+    };
+
+    let segment_0: Vec<_> = (0..4096u16).map(|i| i.to_be_bytes()[0]).collect();
+    let segment_1: Vec<_> = (0..4096u16).map(|i| i.to_be_bytes()[1]).collect();
+    let data = encode_segments(&[&segment_0, &segment_1], 64).unwrap();
+
+    assert_eq!(
+      decode_single_channel(&definition, &data),
+      SingleChannelImage::new_i16(64, 64, (0..2048).chain(-2048..0).collect())
+    );
   }
 }

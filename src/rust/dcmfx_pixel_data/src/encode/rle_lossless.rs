@@ -1,6 +1,68 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
+/// RLE encodes the data for a set of segments where each row of the image data
+/// has the given size.
+///
+/// The returned data includes the RLE Lossless header that specifies the number
+/// of segments and their size.
+///
+/// Ref: PS3.5 G.3.1, PS3.5 G.4, PS3.5 G.5.
+///
+#[allow(dead_code)]
+pub fn encode_segments(
+  segments: &[&[u8]],
+  row_size: usize,
+) -> Result<Vec<u8>, ()> {
+  // The maximum number of segments allowed by RLE Lossless is 15
+  if segments.len() > 15 {
+    return Err(());
+  }
+
+  let mut encoded_segments = Vec::with_capacity(segments.len());
+  let mut total_segment_length = 0;
+
+  // RLE encode all segments
+  for segment in segments {
+    let mut data: Vec<u8> = encode_segment(segment, row_size)?;
+
+    // Ensure encoded segment has even length
+    if data.len() % 2 == 1 {
+      data.push(0)
+    }
+
+    total_segment_length += data.len();
+    encoded_segments.push(data);
+  }
+
+  // Check total output size doesn't exceed a u32
+  if 64 + total_segment_length > u32::MAX as usize {
+    return Err(());
+  }
+
+  let mut output: Vec<u8> = Vec::with_capacity(64 + total_segment_length);
+
+  // Append number of segments
+  output.extend_from_slice(&(segments.len() as u32).to_le_bytes());
+
+  // Append segment offsets
+  let mut offset = 64;
+  for segment in encoded_segments.iter() {
+    output.extend_from_slice(&(offset as u32).to_le_bytes());
+    offset += segment.len();
+  }
+
+  // Pad header to 64 bytes
+  output.resize(64, 0);
+
+  // Append encoded segment data
+  for segment in encoded_segments.iter() {
+    output.extend_from_slice(segment);
+  }
+
+  Ok(output)
+}
+
 /// RLE encodes the data for a single segment where each row of the image data
 /// has the given size.
 ///
@@ -9,8 +71,7 @@ use alloc::{vec, vec::Vec};
 ///
 /// Ref: PS3.5 G.3.1.
 ///
-#[allow(dead_code)]
-pub fn encode_segment(data: &[u8], row_size: usize) -> Result<Vec<u8>, ()> {
+fn encode_segment(data: &[u8], row_size: usize) -> Result<Vec<u8>, ()> {
   let mut output = vec![];
 
   if row_size == 0 || data.len() % row_size != 0 {
