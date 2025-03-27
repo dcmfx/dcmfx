@@ -113,7 +113,10 @@ fn decode(
   }
 
   let mut image = JxlImage::read_with_defaults(data).map_err(|e| {
-    DataError::new_value_invalid(format!("JPEG XL decode failed with '{}'", e))
+    DataError::new_value_invalid(format!(
+      "JPEG XL pixel data decoding failed with '{}'",
+      e
+    ))
   })?;
 
   if image.width() != definition.columns as u32
@@ -132,7 +135,10 @@ fn decode(
   }
 
   let render = image.render_frame(0).map_err(|e| {
-    DataError::new_value_invalid(format!("JPEG XL render failed with '{}'", e))
+    DataError::new_value_invalid(format!(
+      "JPEG XL pixel data decoding failed with '{}'",
+      e
+    ))
   })?;
 
   Ok((image, render))
@@ -146,7 +152,7 @@ fn render_samples<Sample: FrameBufferSample>(
 
   if sample_count != buffer.len() {
     return Err(DataError::new_value_invalid(format!(
-      "JPEG XL decode returned {} samples instead of {} samples",
+      "JPEG XL pixel data decoding returned {} samples instead of {} samples",
       sample_count,
       buffer.len(),
     )));

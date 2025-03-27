@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::{format, string::ToString, vec, vec::Vec};
+use alloc::{format, vec, vec::Vec};
 
 use crate::{
   BitsAllocated, ColorImage, PixelDataDefinition, SingleChannelImage,
@@ -13,19 +13,7 @@ pub fn decode_single_channel(
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
   let pixels = decode(definition, data)?;
-
-  let width = definition.columns;
-  let height = definition.rows;
-
-  match definition.bits_allocated {
-    BitsAllocated::Sixteen => {
-      SingleChannelImage::new_u16(width, height, pixels)
-    }
-
-    _ => Err(DataError::new_value_invalid(
-      "JPEG Extended pixel data is not single channel".to_string(),
-    )),
-  }
+  SingleChannelImage::new_u16(definition.columns, definition.rows, pixels)
 }
 
 /// Decodes color pixel data using libjpeg_12bit.
@@ -35,23 +23,20 @@ pub fn decode_color(
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(definition, data)?;
-
-  let width = definition.columns;
-  let height = definition.rows;
-
-  match definition.bits_allocated {
-    BitsAllocated::Sixteen => ColorImage::new_u16(width, height, pixels),
-
-    _ => Err(DataError::new_value_invalid(
-      "JPEG 12-bit pixel data is not color".to_string(),
-    )),
-  }
+  ColorImage::new_u16(definition.columns, definition.rows, pixels)
 }
 
 fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<Vec<u16>, DataError> {
+  if definition.bits_allocated != BitsAllocated::Sixteen {
+    return Err(DataError::new_value_invalid(format!(
+      "JPEG 12-bit pixel data must have 16 bits allocated but has {}",
+      usize::from(definition.bits_allocated)
+    )));
+  }
+
   let mut error_message = [0 as ::core::ffi::c_char; 200];
 
   // Allocate output buffer
@@ -82,7 +67,7 @@ fn decode(
     let error_str = error_c_str.to_str().unwrap_or("<invalid error>");
 
     return Err(DataError::new_value_invalid(format!(
-      "JPEG 12-bit decode failed with '{error_str}'"
+      "JPEG 12-bit pixel data decoding failed with '{error_str}'"
     )));
   }
 

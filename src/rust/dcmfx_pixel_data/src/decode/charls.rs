@@ -94,7 +94,7 @@ fn decode(
       .unwrap_or("<invalid error>");
 
     return Err(DataError::new_value_invalid(format!(
-      "CharLS decode failed with '{error}'"
+      "JPEG LS pixel data decoding failed with '{error}'"
     )));
   }
 

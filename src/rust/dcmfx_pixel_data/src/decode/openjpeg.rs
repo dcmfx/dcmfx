@@ -154,7 +154,7 @@ fn decode(
       .unwrap_or("<invalid error>");
 
     return Err(DataError::new_value_invalid(format!(
-      "OpenJPEG decode failed with '{error}'"
+      "JPEG 2000 pixel data decoding failed with '{error}'"
     )));
   }
 

@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::{string::ToString, vec::Vec};
+use alloc::{format, string::ToString, vec::Vec};
 
 use dcmfx_core::DataError;
 
@@ -31,8 +31,11 @@ fn decode(
 ) -> Result<Vec<u8>, DataError> {
   let mut decoder = zune_jpeg::JpegDecoder::new(data);
 
-  let img = decoder.decode().map_err(|_| {
-    DataError::new_value_invalid("JPEG pixel data decoding failed".to_string())
+  decoder.decode_headers().map_err(|e| {
+    DataError::new_value_invalid(format!(
+      "JPEG Lossless pixel data decoding failed with '{}'",
+      e
+    ))
   })?;
 
   if decoder.info().unwrap().width != definition.columns
@@ -43,5 +46,10 @@ fn decode(
     ));
   }
 
-  Ok(img)
+  decoder.decode().map_err(|e| {
+    DataError::new_value_invalid(format!(
+      "JPEG pixel data decoding failed with '{}'",
+      e
+    ))
+  })
 }
