@@ -433,14 +433,9 @@ fn decode_rle_segment(
   mut rle_data: &[u8],
   expected_length: usize,
 ) -> Result<Vec<u8>, ()> {
-  let mut result = vec![];
+  let mut result = Vec::with_capacity(expected_length);
 
   loop {
-    // If the RLE segment is longer than expected then stop decoding
-    if result.len() > expected_length {
-      return Err(());
-    }
-
     if rle_data.len() < 2 {
       if result.len() == expected_length {
         return Ok(result);
@@ -457,6 +452,11 @@ fn decode_rle_segment(
       let length = n as usize + 1;
 
       if let Some(slice) = rle_data.get(1..(1 + length)) {
+        // Check expected length won't be exceeded
+        if result.len() + length > expected_length {
+          return Err(());
+        }
+
         result.extend_from_slice(slice);
         rle_data = &rle_data[(1 + length)..];
       } else {
@@ -469,6 +469,12 @@ fn decode_rle_segment(
       let repeated_byte = rle_data[1];
 
       let length = 257 - n as usize;
+
+      // Check expected length won't be exceeded
+      if result.len() + length > expected_length {
+        return Err(());
+      }
+
       for _ in 0..length {
         result.push(repeated_byte);
       }

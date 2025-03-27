@@ -9,7 +9,7 @@ use alloc::{vec, vec::Vec};
 ///
 /// Ref: PS3.5 G.3.1, PS3.5 G.4, PS3.5 G.5.
 ///
-#[allow(dead_code)]
+#[allow(dead_code, clippy::result_unit_err)]
 pub fn encode_segments(
   segments: &[&[u8]],
   row_size: usize,
@@ -71,6 +71,7 @@ pub fn encode_segments(
 ///
 /// Ref: PS3.5 G.3.1.
 ///
+#[allow(clippy::result_unit_err)]
 fn encode_segment(data: &[u8], row_size: usize) -> Result<Vec<u8>, ()> {
   let mut output = vec![];
 
@@ -87,6 +88,7 @@ fn encode_segment(data: &[u8], row_size: usize) -> Result<Vec<u8>, ()> {
 
 /// RLE encodes the data for a single row.
 ///
+#[allow(clippy::result_unit_err)]
 fn encode_row(mut data: &[u8], output: &mut Vec<u8>) {
   while !data.is_empty() {
     let mut run_length = 1;
