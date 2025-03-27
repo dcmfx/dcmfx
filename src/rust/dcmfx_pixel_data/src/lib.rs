@@ -8,8 +8,6 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
-use image::RgbImage;
-
 mod color_image;
 mod decode;
 mod encode;
@@ -75,7 +73,7 @@ where
   fn get_pixel_data_images(
     &self,
     color_palette: Option<&ColorPalette>,
-  ) -> Result<Vec<RgbImage>, P10PixelDataFrameFilterError>;
+  ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameFilterError>;
 
   /// Returns the frames of pixel data in this data set as
   /// [`SingleChannelImage`]s.
@@ -134,7 +132,7 @@ impl DataSetPixelDataExtensions for DataSet {
   fn get_pixel_data_images(
     &self,
     color_palette: Option<&ColorPalette>,
-  ) -> Result<Vec<RgbImage>, P10PixelDataFrameFilterError> {
+  ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameFilterError> {
     get_pixel_data(self, |renderer, frame| {
       renderer.render_frame(frame, color_palette)
     })

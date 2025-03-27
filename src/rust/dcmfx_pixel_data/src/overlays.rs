@@ -11,7 +11,6 @@ use dcmfx_core::{
   dictionary,
 };
 use dcmfx_p10::{P10CustomTypeTransform, PredicateFunction};
-use image::{Rgb, RgbImage};
 
 /// Defines a set of overlays where each overlay is a bitmap that can be
 /// rendered on top of pixel data. Overlays are used to defined ROIs and other
@@ -94,7 +93,7 @@ impl Overlays {
   ///
   pub fn render_to_rgb_image(
     &self,
-    rgb_image: &mut RgbImage,
+    rgb_image: &mut image::RgbImage,
     frame_index: usize,
   ) {
     self.render_to_rgb_image_using_colors(
@@ -108,9 +107,9 @@ impl Overlays {
   ///
   pub fn render_to_rgb_image_using_colors(
     &self,
-    rgb_image: &mut RgbImage,
+    rgb_image: &mut image::RgbImage,
     frame_index: usize,
-    colors: &[Rgb<u8>; 16],
+    colors: &[image::Rgb<u8>; 16],
   ) {
     for (i, overlay) in self.0.iter().enumerate() {
       overlay.render_to_rgb_image(rgb_image, frame_index, colors[i]);
@@ -120,23 +119,23 @@ impl Overlays {
   /// The default set of colors used to render overlays. The maximum number of
   /// overlays allowed is 16.
   ///
-  pub const DEFAULT_COLORS: [Rgb<u8>; 16] = [
-    Rgb([255, 255, 255]), // White
-    Rgb([0, 191, 255]),   // Electric blue
-    Rgb([50, 205, 50]),   // Lime green
-    Rgb([255, 215, 0]),   // Sunflower yellow
-    Rgb([178, 34, 34]),   // Crimson red
-    Rgb([255, 105, 180]), // Hot pink
-    Rgb([255, 140, 0]),   // Tangerine orange
-    Rgb([0, 128, 0]),     // Emerald green
-    Rgb([102, 0, 204]),   // Royal purple
-    Rgb([64, 224, 208]),  // Turquoise
-    Rgb([255, 0, 255]),   // Magenta
-    Rgb([0, 71, 171]),    // Cobalt blue
-    Rgb([255, 255, 102]), // Canary yellow
-    Rgb([148, 0, 211]),   // Violet
-    Rgb([0, 128, 128]),   // Teal
-    Rgb([255, 127, 80]),  // Coral
+  pub const DEFAULT_COLORS: [image::Rgb<u8>; 16] = [
+    image::Rgb([255, 255, 255]), // White
+    image::Rgb([0, 191, 255]),   // Electric blue
+    image::Rgb([50, 205, 50]),   // Lime green
+    image::Rgb([255, 215, 0]),   // Sunflower yellow
+    image::Rgb([178, 34, 34]),   // Crimson red
+    image::Rgb([255, 105, 180]), // Hot pink
+    image::Rgb([255, 140, 0]),   // Tangerine orange
+    image::Rgb([0, 128, 0]),     // Emerald green
+    image::Rgb([102, 0, 204]),   // Royal purple
+    image::Rgb([64, 224, 208]),  // Turquoise
+    image::Rgb([255, 0, 255]),   // Magenta
+    image::Rgb([0, 71, 171]),    // Cobalt blue
+    image::Rgb([255, 255, 102]), // Canary yellow
+    image::Rgb([148, 0, 211]),   // Violet
+    image::Rgb([0, 128, 128]),   // Teal
+    image::Rgb([255, 127, 80]),  // Coral
   ];
 }
 
@@ -300,9 +299,9 @@ impl Overlay {
   ///
   pub fn render_to_rgb_image(
     &self,
-    rgb_image: &mut RgbImage,
+    rgb_image: &mut image::RgbImage,
     frame_index: usize,
-    color: Rgb<u8>,
+    color: image::Rgb<u8>,
   ) {
     // Check whether there is overlay data for this frame based on its index
     if (frame_index + 1) < self.image_frame_origin
@@ -365,7 +364,7 @@ impl Overlay {
             rgb_image.put_pixel(
               pixel_x as u32,
               pixel_y as u32,
-              Rgb([
+              image::Rgb([
                 (color.0[0] as f64 * alpha + rgb.0[0] as f64 * (1.0 - alpha))
                   as u8,
                 (color.0[1] as f64 * alpha + rgb.0[1] as f64 * (1.0 - alpha))

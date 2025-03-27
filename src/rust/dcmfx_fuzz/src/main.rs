@@ -3,8 +3,6 @@
 #[macro_use]
 extern crate afl;
 
-use image::RgbImage;
-
 use dcmfx::core::dictionary;
 use dcmfx::p10::DataSetP10Extensions;
 use dcmfx::pixel_data::{
@@ -46,7 +44,7 @@ fn main() {
       // Render the overlays. This should never panic.
       if let Ok(overlays) = Overlays::from_data_set(&data_set) {
         if let Ok(definition) = PixelDataDefinition::from_data_set(&data_set) {
-          let mut rgb_image = RgbImage::from_raw(
+          let mut rgb_image = image::RgbImage::from_raw(
             definition.rows as u32,
             definition.columns as u32,
             vec![

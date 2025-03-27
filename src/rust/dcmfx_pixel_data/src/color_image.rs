@@ -4,8 +4,6 @@ use std::rc::Rc;
 #[cfg(not(feature = "std"))]
 use alloc::{rc::Rc, string::ToString, vec::Vec};
 
-use image::{ImageBuffer, Rgb, RgbImage};
-
 use dcmfx_core::DataError;
 
 use crate::{PixelDataDefinition, RgbLut};
@@ -184,11 +182,18 @@ impl ColorImage {
 
   /// Converts this color image to an RGB8 image.
   ///
-  pub fn to_rgb_u8_image(self, definition: &PixelDataDefinition) -> RgbImage {
+  pub fn to_rgb_u8_image(
+    self,
+    definition: &PixelDataDefinition,
+  ) -> image::RgbImage {
     if definition.bits_stored == 8 {
       if let ColorImageData::U8(data) = self.data {
-        return RgbImage::from_raw(self.width.into(), self.height.into(), data)
-          .unwrap();
+        return image::RgbImage::from_raw(
+          self.width.into(),
+          self.height.into(),
+          data,
+        )
+        .unwrap();
       }
     }
 
@@ -250,7 +255,7 @@ impl ColorImage {
       }
     }
 
-    RgbImage::from_raw(self.width.into(), self.height.into(), rgb_pixels)
+    image::RgbImage::from_raw(self.width.into(), self.height.into(), rgb_pixels)
       .unwrap()
   }
 
@@ -260,7 +265,7 @@ impl ColorImage {
   pub fn to_rgb_f32_image(
     self,
     definition: &PixelDataDefinition,
-  ) -> ImageBuffer<Rgb<f32>, Vec<f32>> {
+  ) -> image::ImageBuffer<image::Rgb<f32>, Vec<f32>> {
     let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
 
     let scale = 1.0 / (((1u64 << definition.bits_stored as u64) - 1) as f64);
@@ -313,7 +318,11 @@ impl ColorImage {
       }
     }
 
-    ImageBuffer::from_raw(self.width.into(), self.height.into(), rgb_pixels)
-      .unwrap()
+    image::ImageBuffer::from_raw(
+      self.width.into(),
+      self.height.into(),
+      rgb_pixels,
+    )
+    .unwrap()
   }
 }

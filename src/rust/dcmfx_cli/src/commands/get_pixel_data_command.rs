@@ -1,8 +1,6 @@
 use std::{ffi::OsStr, fs::File, io::Write, path::PathBuf};
 
 use clap::{Args, ValueEnum};
-use image::codecs::jpeg::JpegEncoder;
-use image::{ImageError, ImageFormat};
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
@@ -126,7 +124,7 @@ impl StandardColorPaletteArg {
 enum GetPixelDataError {
   P10Error(P10Error),
   DataError(DataError),
-  ImageError(ImageError),
+  ImageError(image::ImageError),
 }
 
 pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
@@ -396,12 +394,15 @@ fn write_frame(
 
     if format == OutputFormat::Png {
       img
-        .write_to(&mut output_writer, ImageFormat::Png)
+        .write_to(&mut output_writer, image::ImageFormat::Png)
         .map_err(GetPixelDataError::ImageError)?;
     } else {
-      JpegEncoder::new_with_quality(&mut output_writer, quality)
-        .encode_image(&img)
-        .map_err(GetPixelDataError::ImageError)?;
+      image::codecs::jpeg::JpegEncoder::new_with_quality(
+        &mut output_writer,
+        quality,
+      )
+      .encode_image(&img)
+      .map_err(GetPixelDataError::ImageError)?;
     }
   }
 

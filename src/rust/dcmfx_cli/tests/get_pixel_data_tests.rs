@@ -1,5 +1,4 @@
 use assert_cmd::Command;
-use image::RgbImage;
 
 // Macro to compare an image file to a snapshot
 macro_rules! assert_image_snapshot {
@@ -578,7 +577,7 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   path1: P,
   snapshot: &str,
 ) -> Result<(), String> {
-  let image_1: RgbImage = image::ImageReader::open(path1)
+  let image_1: image::RgbImage = image::ImageReader::open(path1)
     .unwrap()
     .decode()
     .unwrap()
@@ -590,7 +589,7 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
     panic!("Snapshot file is missing: {image_snapshot_path}");
   }
 
-  let image_2: RgbImage = image::ImageReader::open(image_snapshot_path)
+  let image_2: image::RgbImage = image::ImageReader::open(image_snapshot_path)
     .unwrap()
     .decode()
     .unwrap()

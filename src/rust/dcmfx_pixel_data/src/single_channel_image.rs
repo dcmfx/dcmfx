@@ -1,8 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{string::ToString, vec::Vec};
 
-use image::GrayImage;
-
 use dcmfx_core::DataError;
 
 use crate::{
@@ -341,7 +339,7 @@ impl SingleChannelImage {
     &self,
     modality_lut: &ModalityLut,
     voi_lut: &VoiLut,
-  ) -> GrayImage {
+  ) -> image::GrayImage {
     let mut gray_pixels = Vec::with_capacity(self.pixel_count());
 
     let i64_to_u8 = |pixel: i64| {
@@ -408,8 +406,12 @@ impl SingleChannelImage {
       }
     }
 
-    GrayImage::from_raw(self.width.into(), self.height.into(), gray_pixels)
-      .unwrap()
+    image::GrayImage::from_raw(
+      self.width.into(),
+      self.height.into(),
+      gray_pixels,
+    )
+    .unwrap()
   }
 
   /// Converts this single channel image to a [`Vec<i64>`].

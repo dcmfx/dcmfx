@@ -1,8 +1,3 @@
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-
-use image::{GrayImage, RgbImage};
-
 /// Defines a color palette that converts a grayscale value to a color.
 ///
 #[derive(Clone, Debug, PartialEq)]
@@ -30,20 +25,6 @@ impl ColorPalette {
       self.data[index + 1] as f32 / 255.0,
       self.data[index + 2] as f32 / 255.0,
     ]
-  }
-
-  /// Applies this color palette to a `GrayImage` to produce an `RgbImage`.
-  ///
-  pub fn apply_to_image(&self, image: GrayImage) -> RgbImage {
-    let mut pixels =
-      Vec::with_capacity(image.width() as usize * image.height() as usize * 3);
-
-    for pixel in image.pixels() {
-      let color = self.lookup(pixel.0[0]);
-      pixels.extend_from_slice(&color);
-    }
-
-    RgbImage::from_raw(image.width(), image.height(), pixels).unwrap()
   }
 }
 

@@ -1,8 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec, vec::Vec};
 
-use image::RgbImage;
-
 use dcmfx_core::{
   DataElementTag, DataError, DataSet, TransferSyntax, dictionary,
   transfer_syntax,
@@ -16,7 +14,7 @@ use crate::{
 };
 
 /// Defines a pixel data renderer that can take a [`PixelDataFrame`] and render
-/// it into a [`SingleChannelImage`], [`ColorImage`], or [`RgbImage`].
+/// it into a [`SingleChannelImage`], [`ColorImage`], or [`image::RgbImage`].
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct PixelDataRenderer {
@@ -105,7 +103,7 @@ impl PixelDataRenderer {
     &self,
     frame: &mut PixelDataFrame,
     color_palette: Option<&ColorPalette>,
-  ) -> Result<RgbImage, DataError> {
+  ) -> Result<image::RgbImage, DataError> {
     if self.definition.is_grayscale() {
       let image = self.decode_single_channel_frame(frame)?;
       Ok(self.render_single_channel_image(&image, color_palette))
@@ -127,7 +125,7 @@ impl PixelDataRenderer {
     &self,
     image: &SingleChannelImage,
     color_palette: Option<&ColorPalette>,
-  ) -> RgbImage {
+  ) -> image::RgbImage {
     let image = image.to_gray_image(&self.modality_lut, &self.voi_lut);
 
     let mut pixels =
@@ -145,7 +143,7 @@ impl PixelDataRenderer {
       }
     }
 
-    RgbImage::from_raw(image.width(), image.height(), pixels).unwrap()
+    image::RgbImage::from_raw(image.width(), image.height(), pixels).unwrap()
   }
 
   /// Decodes a frame of single channel pixel data into a
