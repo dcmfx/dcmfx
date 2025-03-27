@@ -8,7 +8,7 @@ use alloc::{format, rc::Rc, string::ToString};
 
 use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath, dictionary};
 
-use crate::RgbLookupTables;
+use crate::RgbLut;
 
 /// Holds values of all of the data elements relevant to decoding and
 /// decompressing pixel data.
@@ -239,7 +239,7 @@ pub enum PhotometricInterpretation {
   /// Pixel data describe a color image with a single sample per pixel (single
   /// image plane). The pixel value is used as an index into each of the Red,
   /// Blue, and Green Palette Color Lookup Tables.
-  PaletteColor { palette: Rc<RgbLookupTables> },
+  PaletteColor { palette: Rc<RgbLut> },
 
   /// Pixel data represent a color image described by red, green, and blue image
   /// planes. The minimum sample value for each color plane represents minimum
@@ -296,7 +296,7 @@ impl PhotometricInterpretation {
       "MONOCHROME1" => Ok(Self::Monochrome1),
       "MONOCHROME2" => Ok(Self::Monochrome2),
       "PALETTE COLOR" => Ok(Self::PaletteColor {
-        palette: Rc::new(RgbLookupTables::from_data_set(data_set)?),
+        palette: Rc::new(RgbLut::from_data_set(data_set)?),
       }),
       "RGB" => Ok(Self::Rgb),
       "YBR_FULL" => Ok(Self::YbrFull),

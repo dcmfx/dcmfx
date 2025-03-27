@@ -23,8 +23,8 @@ mod single_channel_image;
 
 pub use color_image::ColorImage;
 pub use luts::{
-  ColorPalette, LookupTable, ModalityLut, RgbLookupTables,
-  StandardColorPalette, VoiLut, VoiLutFunction, VoiWindow,
+  ColorPalette, LookupTable, ModalityLut, RgbLut, StandardColorPalette, VoiLut,
+  VoiLutFunction, VoiWindow,
 };
 pub use overlays::{Overlay, OverlaySubtype, OverlayType, Overlays};
 pub use p10_pixel_data_frame_filter::{

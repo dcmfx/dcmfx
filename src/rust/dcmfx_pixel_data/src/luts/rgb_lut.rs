@@ -7,15 +7,14 @@ use crate::LookupTable;
 /// `"PALETTE_COLOR"` photometric interpretation.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub struct RgbLookupTables {
+pub struct RgbLut {
   red: LookupTable,
   green: LookupTable,
   blue: LookupTable,
 }
 
-impl RgbLookupTables {
-  /// The tags of the data elements relevant to construction of
-  /// [`RgbLookupTables`].
+impl RgbLut {
+  /// The tags of the data elements relevant to construction of [`RgbLut`].
   ///
   pub const DATA_ELEMENT_TAGS: [DataElementTag; 9] = [
     dictionary::RED_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
@@ -29,8 +28,8 @@ impl RgbLookupTables {
     dictionary::SEGMENTED_BLUE_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
   ];
 
-  /// Creates a new `RgbLookupTables` from the given data set, using the data
-  /// elements specified in [`Self::DATA_ELEMENT_TAGS`].
+  /// Creates a new [`RgbLut`] from the given data set, using the data elements
+  /// specified in [`Self::DATA_ELEMENT_TAGS`].
   ///
   pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let red_lut = LookupTable::from_data_set(

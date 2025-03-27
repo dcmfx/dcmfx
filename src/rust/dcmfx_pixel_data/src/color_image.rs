@@ -8,7 +8,7 @@ use image::{ImageBuffer, Rgb, RgbImage};
 
 use dcmfx_core::DataError;
 
-use crate::{PixelDataDefinition, RgbLookupTables};
+use crate::{PixelDataDefinition, RgbLut};
 
 /// A color image that stores integer RGB color values for each pixel.
 ///
@@ -25,8 +25,8 @@ enum ColorImageData {
   U16(Vec<u16>),
   U32(Vec<u32>),
   F32(Vec<f32>),
-  PaletteU8(Vec<u8>, Rc<RgbLookupTables>),
-  PaletteU16(Vec<u16>, Rc<RgbLookupTables>),
+  PaletteU8(Vec<u8>, Rc<RgbLut>),
+  PaletteU16(Vec<u16>, Rc<RgbLut>),
 }
 
 impl ColorImage {
@@ -121,7 +121,7 @@ impl ColorImage {
     width: u16,
     height: u16,
     data: Vec<u8>,
-    palette: Rc<RgbLookupTables>,
+    palette: Rc<RgbLut>,
   ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
       return Err(DataError::new_value_invalid(
@@ -143,7 +143,7 @@ impl ColorImage {
     width: u16,
     height: u16,
     data: Vec<u16>,
-    palette: Rc<RgbLookupTables>,
+    palette: Rc<RgbLut>,
   ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize {
       return Err(DataError::new_value_invalid(
