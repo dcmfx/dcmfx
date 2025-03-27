@@ -97,7 +97,7 @@ impl PixelDataRenderer {
   /// VOI LUT are applied to single channel images, and resulting grayscale
   /// values are then expanded to RGB.
   ///
-  /// Grayscale values can optionally be visualized using a color palette. The
+  /// Grayscale frames can optionally be visualized using a color palette. The
   /// well-known color palettes defined in PS3.6 B.1 are provided in
   /// [`crate::luts::color_palettes`].
   ///
@@ -107,56 +107,52 @@ impl PixelDataRenderer {
     color_palette: Option<&ColorPalette>,
   ) -> Result<RgbImage, DataError> {
     if self.definition.is_grayscale() {
-      let image = self.render_single_channel_frame(frame)?;
-
-      let mut voi_lut = &self.voi_lut;
-
-      // If the VOI LUT is empty then fall back to using a VOI window that
-      // covers the entire range of values in the image
-      let mut fallback_voi_lut = VoiLut {
-        luts: vec![],
-        windows: vec![],
-      };
-      if voi_lut.is_empty() {
-        if let Some(voi_window) = image.fallback_voi_window() {
-          fallback_voi_lut.windows.push(voi_window);
-          voi_lut = &fallback_voi_lut;
-        }
-      }
-
-      let image = image.to_gray_image(&self.modality_lut, voi_lut);
-
-      let mut pixels = Vec::with_capacity(
-        image.width() as usize * image.height() as usize * 3,
-      );
-
-      if let Some(color_palette) = color_palette {
-        for pixel in image.pixels() {
-          pixels.extend_from_slice(&color_palette.lookup(pixel.0[0]));
-        }
-      } else {
-        for pixel in image.pixels() {
-          pixels.push(pixel.0[0]);
-          pixels.push(pixel.0[0]);
-          pixels.push(pixel.0[0]);
-        }
-      }
-
-      Ok(RgbImage::from_raw(image.width(), image.height(), pixels).unwrap())
+      let image = self.decode_single_channel_frame(frame)?;
+      Ok(self.render_single_channel_image(&image, color_palette))
     } else {
-      Ok(
-        self
-          .render_color_frame(frame)?
-          .to_rgb_u8_image(&self.definition),
-      )
+      let image = self.decode_color_frame(frame)?;
+      Ok(image.to_rgb_u8_image(&self.definition))
     }
   }
 
-  /// Renders a frame of single channel pixel data into a
+  /// Renders a [`SingleChannelImage`] to an RGB 8-bit image. The Modality LUT
+  /// and VOI LUT are applied, and resulting grayscale values are then expanded
+  /// to RGB.
+  ///
+  /// The result can optionally be visualized using a color palette. The
+  /// well-known color palettes defined in PS3.6 B.1 are provided in
+  /// [`crate::luts::color_palettes`].
+  ///
+  pub fn render_single_channel_image(
+    &self,
+    image: &SingleChannelImage,
+    color_palette: Option<&ColorPalette>,
+  ) -> RgbImage {
+    let image = image.to_gray_image(&self.modality_lut, &self.voi_lut);
+
+    let mut pixels =
+      Vec::with_capacity(image.width() as usize * image.height() as usize * 3);
+
+    if let Some(color_palette) = color_palette {
+      for pixel in image.pixels() {
+        pixels.extend_from_slice(&color_palette.lookup(pixel.0[0]));
+      }
+    } else {
+      for pixel in image.pixels() {
+        pixels.push(pixel.0[0]);
+        pixels.push(pixel.0[0]);
+        pixels.push(pixel.0[0]);
+      }
+    }
+
+    RgbImage::from_raw(image.width(), image.height(), pixels).unwrap()
+  }
+
+  /// Decodes a frame of single channel pixel data into a
   /// [`SingleChannelImage`]. The returned image needs to have the Modality LUT
   /// and VOI LUT applied in order to reach final grayscale display values.
   ///
-  pub fn render_single_channel_frame(
+  pub fn decode_single_channel_frame(
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<SingleChannelImage, DataError> {
@@ -228,9 +224,9 @@ impl PixelDataRenderer {
     Ok(image)
   }
 
-  /// Renders a frame of color pixel data into a [`ColorImage`].
+  /// Decodes a frame of color pixel data into a [`ColorImage`].
   ///
-  pub fn render_color_frame(
+  pub fn decode_color_frame(
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<ColorImage, DataError> {

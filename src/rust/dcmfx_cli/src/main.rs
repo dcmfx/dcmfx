@@ -35,7 +35,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
   #[command(about = get_pixel_data_command::ABOUT)]
-  GetPixelData(get_pixel_data_command::ExtractPixelDataArgs),
+  GetPixelData(get_pixel_data_command::GetPixelDataArgs),
 
   #[command(about = modify_command::ABOUT)]
   Modify(modify_command::ModifyArgs),

@@ -144,14 +144,14 @@ impl DataSetPixelDataExtensions for DataSet {
     &self,
   ) -> Result<Vec<SingleChannelImage>, P10PixelDataFrameFilterError> {
     get_pixel_data(self, |renderer, frame| {
-      renderer.render_single_channel_frame(frame)
+      renderer.decode_single_channel_frame(frame)
     })
   }
 
   fn get_pixel_data_color_images(
     &self,
   ) -> Result<Vec<ColorImage>, P10PixelDataFrameFilterError> {
-    get_pixel_data(self, |renderer, frame| renderer.render_color_frame(frame))
+    get_pixel_data(self, |renderer, frame| renderer.decode_color_frame(frame))
   }
 }
 

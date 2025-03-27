@@ -14,7 +14,7 @@ pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing \
   each frame to an image file";
 
 #[derive(Args)]
-pub struct ExtractPixelDataArgs {
+pub struct GetPixelDataArgs {
   #[clap(
     required = true,
     help = "The names of the DICOM P10 files to extract pixel data from. \
@@ -123,13 +123,13 @@ impl StandardColorPaletteArg {
 }
 
 #[allow(clippy::enum_variant_names)]
-enum ExtractPixelDataError {
+enum GetPixelDataError {
   P10Error(P10Error),
   DataError(DataError),
   ImageError(ImageError),
 }
 
-pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
+pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
   let input_sources = crate::get_input_sources(&args.input_filenames);
 
   if input_sources.contains(&InputSource::Stdin) && args.output_prefix.is_none()
@@ -155,9 +155,9 @@ pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
           format!("extracting pixel data from \"{}\"", input_source);
 
         match e {
-          ExtractPixelDataError::DataError(e) => e.print(&task_description),
-          ExtractPixelDataError::P10Error(e) => e.print(&task_description),
-          ExtractPixelDataError::ImageError(e) => {
+          GetPixelDataError::DataError(e) => e.print(&task_description),
+          GetPixelDataError::P10Error(e) => e.print(&task_description),
+          GetPixelDataError::ImageError(e) => {
             let lines = vec![
               format!("DICOM image error {}", task_description),
               "".to_string(),
@@ -178,11 +178,11 @@ pub fn run(args: &ExtractPixelDataArgs) -> Result<(), ()> {
 
 fn get_pixel_data_from_input_source(
   input_source: &InputSource,
-  args: &ExtractPixelDataArgs,
-) -> Result<(), ExtractPixelDataError> {
+  args: &GetPixelDataArgs,
+) -> Result<(), GetPixelDataError> {
   let mut stream = input_source
     .open_read_stream()
-    .map_err(ExtractPixelDataError::P10Error)?;
+    .map_err(GetPixelDataError::P10Error)?;
 
   let output_prefix = args
     .output_prefix
@@ -220,7 +220,7 @@ fn get_pixel_data_from_input_source(
     // Read the next tokens from the input stream
     let tokens =
       dcmfx::p10::read_tokens_from_stream(&mut stream, &mut read_context)
-        .map_err(ExtractPixelDataError::P10Error)?;
+        .map_err(GetPixelDataError::P10Error)?;
 
     for token in tokens.iter() {
       if args.format == OutputFormat::Raw {
@@ -242,10 +242,10 @@ fn get_pixel_data_from_input_source(
         match pixel_data_renderer_transform.add_token(token) {
           Ok(()) => (),
           Err(P10CustomTypeTransformError::DataError(e)) => {
-            return Err(ExtractPixelDataError::DataError(e));
+            return Err(GetPixelDataError::DataError(e));
           }
           Err(P10CustomTypeTransformError::P10Error(e)) => {
-            return Err(ExtractPixelDataError::P10Error(e));
+            return Err(GetPixelDataError::P10Error(e));
           }
         };
       }
@@ -255,10 +255,10 @@ fn get_pixel_data_from_input_source(
         match overlays_transform.add_token(token) {
           Ok(()) => (),
           Err(P10CustomTypeTransformError::DataError(e)) => {
-            return Err(ExtractPixelDataError::DataError(e));
+            return Err(GetPixelDataError::DataError(e));
           }
           Err(P10CustomTypeTransformError::P10Error(e)) => {
-            return Err(ExtractPixelDataError::P10Error(e));
+            return Err(GetPixelDataError::P10Error(e));
           }
         };
       }
@@ -284,10 +284,10 @@ fn get_pixel_data_from_input_source(
           .add_token(token)
           .map_err(|e| match e {
             P10PixelDataFrameFilterError::DataError(e) => {
-              ExtractPixelDataError::DataError(e)
+              GetPixelDataError::DataError(e)
             }
             P10PixelDataFrameFilterError::P10Error(e) => {
-              ExtractPixelDataError::P10Error(e)
+              GetPixelDataError::P10Error(e)
             }
           })?;
 
@@ -335,12 +335,12 @@ fn write_frame(
   overlays: &Option<Overlays>,
   voi_window_override: &Option<Vec<f32>>,
   color_palette: Option<&ColorPalette>,
-) -> Result<(), ExtractPixelDataError> {
+) -> Result<(), GetPixelDataError> {
   println!("Writing \"{}\" …", filename.display());
 
   if format == OutputFormat::Raw {
     write_fragments(filename, frame).map_err(|e| {
-      ExtractPixelDataError::P10Error(P10Error::FileError {
+      GetPixelDataError::P10Error(P10Error::FileError {
         when: "Writing pixel data frame".to_string(),
         details: e.to_string(),
       })
@@ -348,22 +348,43 @@ fn write_frame(
   } else {
     let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
 
-    // Apply the VOI override if it's set
-    if let Some(voi_window_override) = voi_window_override {
-      pixel_data_renderer.voi_lut = VoiLut {
-        luts: vec![],
-        windows: vec![VoiWindow::new(
-          voi_window_override[0],
-          voi_window_override[1],
-          "".to_string(),
-          VoiLutFunction::LinearExact,
-        )],
-      };
-    }
+    let mut img = if pixel_data_renderer.definition.is_grayscale() {
+      let single_channel_image = pixel_data_renderer
+        .decode_single_channel_frame(frame)
+        .map_err(GetPixelDataError::DataError)?;
 
-    let mut img = pixel_data_renderer
-      .render_frame(frame, color_palette)
-      .map_err(ExtractPixelDataError::DataError)?;
+      // Apply the VOI override if it's set
+      if let Some(voi_window_override) = voi_window_override {
+        pixel_data_renderer.voi_lut = VoiLut {
+          luts: vec![],
+          windows: vec![VoiWindow::new(
+            voi_window_override[0],
+            voi_window_override[1],
+            "".to_string(),
+            VoiLutFunction::LinearExact,
+          )],
+        };
+      }
+      // If there's no VOI LUT in the DICOM or specified on the command line
+      // then automatically derive one from the content of the first frame and
+      // use it for all remaining frames.
+      else if pixel_data_renderer.voi_lut.is_empty() {
+        let image = pixel_data_renderer
+          .decode_single_channel_frame(frame)
+          .map_err(GetPixelDataError::DataError)?;
+
+        if let Some(fallback) = image.fallback_voi_window() {
+          pixel_data_renderer.voi_lut.windows.push(fallback);
+        }
+      }
+
+      pixel_data_renderer
+        .render_single_channel_image(&single_channel_image, color_palette)
+    } else {
+      pixel_data_renderer
+        .render_frame(frame, None)
+        .map_err(GetPixelDataError::DataError)?
+    };
 
     if let Some(overlays) = overlays {
       overlays.render_to_rgb_image(&mut img, frame.index());
@@ -376,11 +397,11 @@ fn write_frame(
     if format == OutputFormat::Png {
       img
         .write_to(&mut output_writer, ImageFormat::Png)
-        .map_err(ExtractPixelDataError::ImageError)?;
+        .map_err(GetPixelDataError::ImageError)?;
     } else {
       JpegEncoder::new_with_quality(&mut output_writer, quality)
         .encode_image(&img)
-        .map_err(ExtractPixelDataError::ImageError)?;
+        .map_err(GetPixelDataError::ImageError)?;
     }
   }
 

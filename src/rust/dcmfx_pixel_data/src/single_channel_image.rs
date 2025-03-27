@@ -338,7 +338,7 @@ impl SingleChannelImage {
   /// values through the given Modality LUT and VOI LUT.
   ///
   pub fn to_gray_image(
-    self,
+    &self,
     modality_lut: &ModalityLut,
     voi_lut: &VoiLut,
   ) -> GrayImage {

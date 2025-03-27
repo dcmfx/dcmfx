@@ -447,7 +447,7 @@ mod tests {
 
       if pixel_data_renderer.definition.is_grayscale() {
         let mut image = pixel_data_renderer
-          .render_single_channel_frame(&mut frame)
+          .decode_single_channel_frame(&mut frame)
           .map_err(|e| {
             DicomValidationError::PixelDataRenderError(Either::Left(e))
           })?;
@@ -477,7 +477,7 @@ mod tests {
         }
       } else {
         let image = pixel_data_renderer
-          .render_color_frame(&mut frame)
+          .decode_color_frame(&mut frame)
           .map_err(|e| {
             DicomValidationError::PixelDataRenderError(Either::Left(e))
           })?;
