@@ -16,8 +16,10 @@ dcmfx_core = { path = "../dcmfx_core", version = "0.0.0", default-features = fal
 dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0", default-features = false }
 flate2 = "1.0.35"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
-jpeg-decoder = { git = "https://github.com/image-rs/jpeg-decoder.git", rev = "95550d7" }
-jxl-oxide = { git = "https://github.com/dcmfx/jxl-oxide.git", rev = "6c2975e" }
+jpeg-decoder = { git = "https://github.com/image-rs/jpeg-decoder.git", rev = "95550d7", default-features = false }
+jxl-oxide = { git = "https://github.com/dcmfx/jxl-oxide.git", branch = "v0.11.x-dcmfx" }
+zune-core = { git = "https://github.com/dcmfx/zune-image.git", branch = "0.4.x-dcmfx" }
+zune-jpeg = { git = "https://github.com/dcmfx/zune-image.git", branch = "0.4.x-dcmfx" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm32-unknown-unknown-openbsd-libc = "0.2"

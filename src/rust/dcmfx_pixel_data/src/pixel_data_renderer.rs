@@ -177,7 +177,7 @@ impl PixelDataRenderer {
       }
 
       &JPEG_BASELINE_8BIT => {
-        decode::jpeg::decode_single_channel(&self.definition, data)
+        decode::zune_jpeg::decode_single_channel(&self.definition, data)
       }
 
       &JPEG_EXTENDED_12BIT => {
@@ -247,7 +247,9 @@ impl PixelDataRenderer {
         decode::rle_lossless::decode_color(&self.definition, data)
       }
 
-      &JPEG_BASELINE_8BIT => decode::jpeg::decode_color(&self.definition, data),
+      &JPEG_BASELINE_8BIT => {
+        decode::zune_jpeg::decode_color(&self.definition, data)
+      }
 
       &JPEG_EXTENDED_12BIT => {
         decode::libjpeg_12bit::decode_color(&self.definition, data)

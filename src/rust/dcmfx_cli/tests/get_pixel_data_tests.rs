@@ -4,10 +4,10 @@ use image::RgbImage;
 // Macro to compare an image file to a snapshot
 macro_rules! assert_image_snapshot {
   ($left:expr, $right:expr) => {
-    assert!(image_matches_snapshot(
-      $left,
-      &format!("{}__{}", module_path!(), $right)
-    ))
+    assert_eq!(
+      image_matches_snapshot($left, &format!("{}__{}", module_path!(), $right)),
+      Ok(())
+    )
   };
 }
 
@@ -444,21 +444,21 @@ fn jpeg_extended_12bit_single_channel_to_png() {
 }
 
 #[test]
-fn jpeg_xl_single_channel_to_jpg() {
+fn jpeg_xl_single_channel_to_png() {
   let dicom_file = "../../../test/assets/other/monochrome_jpeg_xl.dcm";
-  let output_file = format!("{}.0000.jpg", dicom_file);
+  let output_file = format!("{}.0000.png", dicom_file);
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
     .arg("-f")
-    .arg("jpg")
+    .arg("png")
     .assert()
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(output_file, "jpeg_xl_single_channel_to_jpg.jpg");
+  assert_image_snapshot!(output_file, "jpeg_xl_single_channel_to_png.png");
 }
 
 #[test]
@@ -577,7 +577,7 @@ fn render_overlays_multiframe_unaligned() {
 fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   path1: P,
   snapshot: &str,
-) -> bool {
+) -> Result<(), String> {
   let image_1: RgbImage = image::ImageReader::open(path1)
     .unwrap()
     .decode()
@@ -597,14 +597,30 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
     .try_into()
     .unwrap();
 
+  if image_1.width() != image_2.width() || image_1.height() != image_2.height()
+  {
+    return Err(format!("Image dimensions don't match snapshot"));
+  }
+
   // Check that the pixels are the same within a small epsilon
-  for (a, b) in image_1.pixels().zip(image_2.pixels()) {
-    if (a[2] as i16 - b[2] as i16).abs() > 1 {
-      return false;
+  for y in 0..image_1.height() {
+    for x in 0..image_1.width() {
+      let a = image_1.get_pixel(x, y);
+      let b = image_2.get_pixel(x, y);
+
+      if (a[0] as i16 - b[0] as i16).abs() > 2
+        || (a[1] as i16 - b[1] as i16).abs() > 2
+        || (a[2] as i16 - b[2] as i16).abs() > 2
+      {
+        return Err(format!(
+          "Image differs at pixel {},{}: expected {:?} but got {:?}",
+          x, y, b, a
+        ));
+      }
     }
   }
 
-  true
+  Ok(())
 }
 
 fn to_native_path(path: &str) -> String {
