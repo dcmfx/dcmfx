@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec::Vec};
 
-use crate::{ColorImage, PixelDataDefinition, SingleChannelImage};
+use crate::{ColorImage, ColorSpace, PixelDataDefinition, SingleChannelImage};
 use dcmfx_core::DataError;
 
 use super::vec_cast;
@@ -42,7 +42,7 @@ pub fn decode_color(
   let height = definition.rows;
 
   if pixel_format == jpeg_decoder::PixelFormat::RGB24 {
-    ColorImage::new_u8(width, height, pixels)
+    ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
   } else {
     Err(DataError::new_value_invalid(format!(
       "JPEG Lossless pixel format '{:?}' is not supported for color images",

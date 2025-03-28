@@ -5,8 +5,8 @@ use dcmfx_core::DataError;
 
 use super::vec_cast;
 use crate::{
-  BitsAllocated, ColorImage, PhotometricInterpretation, PixelDataDefinition,
-  PixelRepresentation, SingleChannelImage,
+  BitsAllocated, ColorImage, ColorSpace, PhotometricInterpretation,
+  PixelDataDefinition, PixelRepresentation, SingleChannelImage,
 };
 
 /// Decodes single channel pixel data using OpenJPEG.
@@ -95,17 +95,17 @@ pub fn decode_color(
     }
 
     (_, BitsAllocated::One | BitsAllocated::Eight) => {
-      ColorImage::new_u8(width, height, pixels)
+      ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
     }
 
     (_, BitsAllocated::Sixteen) => {
       let data = unsafe { vec_cast::<u8, u16>(pixels) };
-      ColorImage::new_u16(width, height, data)
+      ColorImage::new_u16(width, height, data, ColorSpace::RGB)
     }
 
     (_, BitsAllocated::ThirtyTwo) => {
       let data = unsafe { vec_cast::<u8, u32>(pixels) };
-      ColorImage::new_u32(width, height, data)
+      ColorImage::new_u32(width, height, data, ColorSpace::RGB)
     }
   }
 }

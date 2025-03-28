@@ -489,14 +489,14 @@ mod tests {
             .flatten();
 
         for (index, (a, b)) in image
-          .to_rgb_f32_image(&pixel_data_renderer.definition)
+          .to_rgb_f64_image(&pixel_data_renderer.definition)
           .pixels()
           .zip(expected_pixels)
           .enumerate()
         {
-          if (a.0[0] - b[0] as f32).abs() > 0.005
-            || (a.0[1] - b[1] as f32).abs() > 0.005
-            || (a.0[2] - b[2] as f32).abs() > 0.005
+          if (a.0[0] - b[0]).abs() > 0.005
+            || (a.0[1] - b[1]).abs() > 0.005
+            || (a.0[2] - b[2]).abs() > 0.005
           {
             return Err(DicomValidationError::PixelDataRenderError(
               Either::Right(format!(

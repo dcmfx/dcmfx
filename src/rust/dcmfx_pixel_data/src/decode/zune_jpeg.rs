@@ -3,7 +3,7 @@ use alloc::{format, string::ToString, vec::Vec};
 
 use dcmfx_core::DataError;
 
-use crate::{ColorImage, PixelDataDefinition, SingleChannelImage};
+use crate::{ColorImage, ColorSpace, PixelDataDefinition, SingleChannelImage};
 
 /// Decodes single channel JPEG pixel data using zune-jpeg.
 ///
@@ -22,7 +22,12 @@ pub fn decode_color(
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(definition, data)?;
-  ColorImage::new_u8(definition.columns, definition.rows, pixels)
+  ColorImage::new_u8(
+    definition.columns,
+    definition.rows,
+    pixels,
+    ColorSpace::RGB,
+  )
 }
 
 fn decode(

@@ -6,7 +6,8 @@ use jxl_oxide::{FrameBufferSample, JxlImage, Render, image::BitDepth};
 use dcmfx_core::DataError;
 
 use crate::{
-  BitsAllocated, ColorImage, PixelDataDefinition, SingleChannelImage,
+  BitsAllocated, ColorImage, ColorSpace, PixelDataDefinition,
+  SingleChannelImage,
 };
 
 /// Decodes single channel pixel data using jxl-oxide.
@@ -74,7 +75,7 @@ pub fn decode_color(
       let mut buffer = vec![0u8; definition.pixel_count() * 3];
       render_samples(&jxl_render, &mut buffer)?;
 
-      ColorImage::new_u8(width, height, buffer)
+      ColorImage::new_u8(width, height, buffer, ColorSpace::RGB)
     }
 
     (
@@ -86,7 +87,7 @@ pub fn decode_color(
       let mut buffer = vec![0u16; definition.pixel_count() * 3];
       render_samples(&jxl_render, &mut buffer)?;
 
-      ColorImage::new_u16(width, height, buffer)
+      ColorImage::new_u16(width, height, buffer, ColorSpace::RGB)
     }
 
     (BitsAllocated::ThirtyTwo, BitDepth::FloatSample { .. }) => {

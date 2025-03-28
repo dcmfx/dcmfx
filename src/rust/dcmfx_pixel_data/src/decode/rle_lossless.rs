@@ -6,9 +6,8 @@ use byteorder::ByteOrder;
 use dcmfx_core::DataError;
 
 use crate::{
-  BitsAllocated, PixelDataDefinition, PixelRepresentation, SingleChannelImage,
-  color_image::ColorImage,
-  decode::ybr_to_rgb,
+  BitsAllocated, ColorImage, ColorSpace, PixelDataDefinition,
+  PixelRepresentation, SingleChannelImage,
   pixel_data_definition::{PhotometricInterpretation, SamplesPerPixel},
 };
 
@@ -228,6 +227,12 @@ pub fn decode_color(
   let height = definition.rows;
   let pixel_count = definition.pixel_count();
 
+  let color_space = if definition.photometric_interpretation.is_ybr() {
+    ColorSpace::YBR
+  } else {
+    ColorSpace::RGB
+  };
+
   let mut segments = decode_rle_segments(data, pixel_count)?;
 
   match (
@@ -271,11 +276,7 @@ pub fn decode_color(
         pixels[i * 3 + 2] = blue_segment[i];
       }
 
-      if definition.photometric_interpretation.is_ybr() {
-        ybr_to_rgb::convert_u8(&mut pixels, definition);
-      }
-
-      ColorImage::new_u8(width, height, pixels)
+      ColorImage::new_u8(width, height, pixels, color_space)
     }
 
     (
@@ -301,11 +302,7 @@ pub fn decode_color(
           u16::from_be_bytes([blue_segment_0[i], blue_segment_1[i]]);
       }
 
-      if definition.photometric_interpretation.is_ybr() {
-        ybr_to_rgb::convert_u16(&mut pixels, definition);
-      }
-
-      ColorImage::new_u16(width, height, pixels)
+      ColorImage::new_u16(width, height, pixels, color_space)
     }
 
     (
@@ -349,11 +346,7 @@ pub fn decode_color(
         ]);
       }
 
-      if definition.photometric_interpretation.is_ybr() {
-        ybr_to_rgb::convert_u32(&mut pixels, definition);
-      }
-
-      ColorImage::new_u32(width, height, pixels)
+      ColorImage::new_u32(width, height, pixels, color_space)
     }
 
     _ => Err(DataError::new_value_invalid(format!(

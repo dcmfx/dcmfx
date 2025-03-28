@@ -5,7 +5,8 @@ use dcmfx_core::DataError;
 
 use super::vec_cast;
 use crate::{
-  BitsAllocated, ColorImage, PixelDataDefinition, SingleChannelImage,
+  BitsAllocated, ColorImage, ColorSpace, PixelDataDefinition,
+  SingleChannelImage,
 };
 
 /// Decodes single channel pixel data using CharLS.
@@ -44,10 +45,10 @@ pub fn decode_color(
   let height = definition.rows;
 
   if definition.bits_allocated == BitsAllocated::Eight {
-    ColorImage::new_u8(width, height, pixels)
+    ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
   } else if definition.bits_allocated == BitsAllocated::Sixteen {
     let data = unsafe { vec_cast::<u8, u16>(pixels) };
-    ColorImage::new_u16(width, height, data)
+    ColorImage::new_u16(width, height, data, ColorSpace::RGB)
   } else {
     Err(DataError::new_value_invalid(
       "JPEG LS pixel data is not color".to_string(),

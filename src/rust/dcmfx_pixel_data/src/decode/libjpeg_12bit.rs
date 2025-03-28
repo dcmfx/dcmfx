@@ -2,7 +2,8 @@
 use alloc::{format, vec, vec::Vec};
 
 use crate::{
-  BitsAllocated, ColorImage, PixelDataDefinition, SingleChannelImage,
+  BitsAllocated, ColorImage, ColorSpace, PixelDataDefinition,
+  SingleChannelImage,
 };
 use dcmfx_core::DataError;
 
@@ -23,7 +24,12 @@ pub fn decode_color(
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(definition, data)?;
-  ColorImage::new_u16(definition.columns, definition.rows, pixels)
+  ColorImage::new_u16(
+    definition.columns,
+    definition.rows,
+    pixels,
+    ColorSpace::RGB,
+  )
 }
 
 fn decode(

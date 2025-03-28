@@ -6,7 +6,6 @@ pub mod libjpeg_12bit;
 pub mod native;
 pub mod openjpeg;
 pub mod rle_lossless;
-pub mod ybr_to_rgb;
 pub mod zune_jpeg;
 
 #[cfg(not(feature = "std"))]

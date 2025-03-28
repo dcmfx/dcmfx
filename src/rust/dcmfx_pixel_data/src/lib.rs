@@ -19,7 +19,7 @@ mod pixel_data_frame;
 mod pixel_data_renderer;
 mod single_channel_image;
 
-pub use color_image::ColorImage;
+pub use color_image::{ColorImage, ColorSpace};
 pub use luts::{
   ColorPalette, LookupTable, ModalityLut, RgbLut, StandardColorPalette, VoiLut,
   VoiLutFunction, VoiWindow,

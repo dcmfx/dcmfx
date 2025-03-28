@@ -8,7 +8,7 @@ use dcmfx_core::DataError;
 
 use crate::{PixelDataDefinition, RgbLut};
 
-/// A color image that stores integer RGB color values for each pixel.
+/// A color image that stores RGB or YBR color values for each pixel.
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColorImage {
@@ -19,12 +19,38 @@ pub struct ColorImage {
 
 #[derive(Clone, Debug, PartialEq)]
 enum ColorImageData {
-  U8(Vec<u8>),
-  U16(Vec<u16>),
-  U32(Vec<u32>),
-  F32(Vec<f32>),
-  PaletteU8(Vec<u8>, Rc<RgbLut>),
-  PaletteU16(Vec<u16>, Rc<RgbLut>),
+  U8 {
+    data: Vec<u8>,
+    color_space: ColorSpace,
+  },
+  U16 {
+    data: Vec<u16>,
+    color_space: ColorSpace,
+  },
+  U32 {
+    data: Vec<u32>,
+    color_space: ColorSpace,
+  },
+  F32 {
+    data: Vec<f32>,
+  },
+  PaletteU8 {
+    data: Vec<u8>,
+    palette: Rc<RgbLut>,
+  },
+  PaletteU16 {
+    data: Vec<u16>,
+    palette: Rc<RgbLut>,
+  },
+}
+
+/// The color space of the color image's data. This is used when unsigned
+/// integer data is being stored,a s it can be either YBR or RGB.
+///
+#[derive(Clone, Debug, PartialEq)]
+pub enum ColorSpace {
+  RGB,
+  YBR,
 }
 
 impl ColorImage {
@@ -35,6 +61,7 @@ impl ColorImage {
     width: u16,
     height: u16,
     data: Vec<u8>,
+    color_space: ColorSpace,
   ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize * 3 {
       return Err(DataError::new_value_invalid(
@@ -45,7 +72,7 @@ impl ColorImage {
     Ok(Self {
       width,
       height,
-      data: ColorImageData::U8(data),
+      data: ColorImageData::U8 { data, color_space },
     })
   }
 
@@ -56,6 +83,7 @@ impl ColorImage {
     width: u16,
     height: u16,
     data: Vec<u16>,
+    color_space: ColorSpace,
   ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize * 3 {
       return Err(DataError::new_value_invalid(
@@ -66,7 +94,7 @@ impl ColorImage {
     Ok(Self {
       width,
       height,
-      data: ColorImageData::U16(data),
+      data: ColorImageData::U16 { data, color_space },
     })
   }
 
@@ -77,6 +105,7 @@ impl ColorImage {
     width: u16,
     height: u16,
     data: Vec<u32>,
+    color_space: ColorSpace,
   ) -> Result<Self, DataError> {
     if data.len() != width as usize * height as usize * 3 {
       return Err(DataError::new_value_invalid(
@@ -87,7 +116,7 @@ impl ColorImage {
     Ok(Self {
       width,
       height,
-      data: ColorImageData::U32(data),
+      data: ColorImageData::U32 { data, color_space },
     })
   }
 
@@ -108,7 +137,7 @@ impl ColorImage {
     Ok(Self {
       width,
       height,
-      data: ColorImageData::F32(data),
+      data: ColorImageData::F32 { data },
     })
   }
 
@@ -130,7 +159,7 @@ impl ColorImage {
     Ok(Self {
       width,
       height,
-      data: ColorImageData::PaletteU8(data, palette),
+      data: ColorImageData::PaletteU8 { data, palette },
     })
   }
 
@@ -152,7 +181,7 @@ impl ColorImage {
     Ok(Self {
       width,
       height,
-      data: ColorImageData::PaletteU16(data, palette),
+      data: ColorImageData::PaletteU16 { data, palette },
     })
   }
 
@@ -183,50 +212,77 @@ impl ColorImage {
   /// Converts this color image to an RGB8 image.
   ///
   pub fn to_rgb_u8_image(
-    self,
+    &self,
     definition: &PixelDataDefinition,
   ) -> image::RgbImage {
-    if definition.bits_stored == 8 {
-      if let ColorImageData::U8(data) = self.data {
-        return image::RgbImage::from_raw(
-          self.width.into(),
-          self.height.into(),
-          data,
-        )
-        .unwrap();
+    let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
+
+    fn unsigned_data_to_rgb_pixels<T>(
+      data: &[T],
+      color_space: &ColorSpace,
+      rgb_pixels: &mut Vec<u8>,
+      definition: &PixelDataDefinition,
+    ) where
+      T: Copy + Into<f64>,
+    {
+      match color_space {
+        ColorSpace::RGB => {
+          let scale =
+            255.0 / (((1u64 << definition.bits_stored as u64) - 1) as f64);
+
+          for rgb in data.chunks_exact(3) {
+            let r: f64 = rgb[0].into();
+            let g: f64 = rgb[1].into();
+            let b: f64 = rgb[2].into();
+
+            rgb_pixels.push((r * scale).min(255.0) as u8);
+            rgb_pixels.push((g * scale).min(255.0) as u8);
+            rgb_pixels.push((b * scale).min(255.0) as u8);
+          }
+        }
+
+        ColorSpace::YBR => {
+          let scale =
+            1.0 / (((1u64 << definition.bits_stored as u64) - 1) as f64);
+
+          for ybr in data.chunks_exact(3) {
+            let rgb = ybr_to_rgb(
+              ybr[0].into() * scale,
+              ybr[1].into() * scale,
+              ybr[2].into() * scale,
+            );
+
+            rgb_pixels.push((rgb[0] * 255.0).clamp(0.0, 255.0) as u8);
+            rgb_pixels.push((rgb[1] * 255.0).clamp(0.0, 255.0) as u8);
+            rgb_pixels.push((rgb[2] * 255.0).clamp(0.0, 255.0) as u8);
+          }
+        }
       }
     }
 
-    let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
-
-    let scale = 255.0 / (((1u64 << definition.bits_stored as u64) - 1) as f32);
-
     match &self.data {
-      ColorImageData::U8(data) => {
-        for pixel in data.chunks_exact(3) {
-          rgb_pixels.push((pixel[0] as f32 * scale).min(255.0) as u8);
-          rgb_pixels.push((pixel[1] as f32 * scale).min(255.0) as u8);
-          rgb_pixels.push((pixel[2] as f32 * scale).min(255.0) as u8);
-        }
-      }
+      ColorImageData::U8 { data, color_space } => unsigned_data_to_rgb_pixels(
+        data,
+        color_space,
+        &mut rgb_pixels,
+        definition,
+      ),
 
-      ColorImageData::U16(data) => {
-        for pixel in data.chunks_exact(3) {
-          rgb_pixels.push((pixel[0] as f32 * scale).min(255.0) as u8);
-          rgb_pixels.push((pixel[1] as f32 * scale).min(255.0) as u8);
-          rgb_pixels.push((pixel[2] as f32 * scale).min(255.0) as u8);
-        }
-      }
+      ColorImageData::U16 { data, color_space } => unsigned_data_to_rgb_pixels(
+        data,
+        color_space,
+        &mut rgb_pixels,
+        definition,
+      ),
 
-      ColorImageData::U32(data) => {
-        for pixel in data.chunks_exact(3) {
-          rgb_pixels.push((pixel[0] as f32 * scale).min(255.0) as u8);
-          rgb_pixels.push((pixel[1] as f32 * scale).min(255.0) as u8);
-          rgb_pixels.push((pixel[2] as f32 * scale).min(255.0) as u8);
-        }
-      }
+      ColorImageData::U32 { data, color_space } => unsigned_data_to_rgb_pixels(
+        data,
+        color_space,
+        &mut rgb_pixels,
+        definition,
+      ),
 
-      ColorImageData::F32(data) => {
+      ColorImageData::F32 { data } => {
         for pixel in data.chunks_exact(3) {
           rgb_pixels.push((pixel[0].clamp(0.0, 1.0) * 255.0) as u8);
           rgb_pixels.push((pixel[1].clamp(0.0, 1.0) * 255.0) as u8);
@@ -234,7 +290,7 @@ impl ColorImage {
         }
       }
 
-      ColorImageData::PaletteU8(data, palette) => {
+      ColorImageData::PaletteU8 { data, palette } => {
         for pixel in data {
           let [r, g, b] = palette.lookup_normalized(*pixel as i64);
 
@@ -244,7 +300,7 @@ impl ColorImage {
         }
       }
 
-      ColorImageData::PaletteU16(data, palette) => {
+      ColorImageData::PaletteU16 { data, palette } => {
         for pixel in data {
           let [r, g, b] = palette.lookup_normalized(*pixel as i64);
 
@@ -259,61 +315,93 @@ impl ColorImage {
       .unwrap()
   }
 
-  /// Converts this color image to an RGB F32 image where each value is in the
+  /// Converts this color image to an RGB F64 image where each value is in the
   /// range 0-1.
   ///
-  pub fn to_rgb_f32_image(
-    self,
+  pub fn to_rgb_f64_image(
+    &self,
     definition: &PixelDataDefinition,
-  ) -> image::ImageBuffer<image::Rgb<f32>, Vec<f32>> {
+  ) -> image::ImageBuffer<image::Rgb<f64>, Vec<f64>> {
     let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
 
-    let scale = 1.0 / (((1u64 << definition.bits_stored as u64) - 1) as f64);
+    fn unsigned_data_to_rgb_pixels<T>(
+      data: &[T],
+      color_space: &ColorSpace,
+      rgb_pixels: &mut Vec<f64>,
+      definition: &PixelDataDefinition,
+    ) where
+      T: Copy + Into<f64>,
+    {
+      let scale = 1.0 / (((1u64 << definition.bits_stored as u64) - 1) as f64);
+
+      match color_space {
+        ColorSpace::RGB => {
+          for rgb in data.chunks_exact(3) {
+            rgb_pixels.push(rgb[0].into() * scale);
+            rgb_pixels.push(rgb[1].into() * scale);
+            rgb_pixels.push(rgb[2].into() * scale);
+          }
+        }
+
+        ColorSpace::YBR => {
+          for ybr in data.chunks_exact(3) {
+            let rgb = ybr_to_rgb(
+              ybr[0].into() * scale,
+              ybr[1].into() * scale,
+              ybr[2].into() * scale,
+            );
+
+            rgb_pixels.extend_from_slice(&rgb);
+          }
+        }
+      }
+    }
 
     match &self.data {
-      ColorImageData::U8(data) => {
-        for pixel in data.chunks_exact(3) {
-          rgb_pixels.push((pixel[0] as f64 * scale) as f32);
-          rgb_pixels.push((pixel[1] as f64 * scale) as f32);
-          rgb_pixels.push((pixel[2] as f64 * scale) as f32);
+      ColorImageData::U8 { data, color_space } => unsigned_data_to_rgb_pixels(
+        data,
+        color_space,
+        &mut rgb_pixels,
+        definition,
+      ),
+
+      ColorImageData::U16 { data, color_space } => unsigned_data_to_rgb_pixels(
+        data,
+        color_space,
+        &mut rgb_pixels,
+        definition,
+      ),
+
+      ColorImageData::U32 { data, color_space } => unsigned_data_to_rgb_pixels(
+        data,
+        color_space,
+        &mut rgb_pixels,
+        definition,
+      ),
+
+      ColorImageData::F32 { data } => {
+        for i in data {
+          rgb_pixels.push(*i as f64);
         }
       }
 
-      ColorImageData::U16(data) => {
-        for pixel in data.chunks_exact(3) {
-          rgb_pixels.push((pixel[0] as f64 * scale) as f32);
-          rgb_pixels.push((pixel[1] as f64 * scale) as f32);
-          rgb_pixels.push((pixel[2] as f64 * scale) as f32);
-        }
-      }
-
-      ColorImageData::U32(data) => {
-        for pixel in data.chunks_exact(3) {
-          rgb_pixels.push((pixel[0] as f64 * scale) as f32);
-          rgb_pixels.push((pixel[1] as f64 * scale) as f32);
-          rgb_pixels.push((pixel[2] as f64 * scale) as f32);
-        }
-      }
-
-      ColorImageData::F32(data) => {
-        for pixel in data.chunks_exact(3) {
-          rgb_pixels.push(pixel[0].clamp(0.0, 1.0));
-          rgb_pixels.push(pixel[1].clamp(0.0, 1.0));
-          rgb_pixels.push(pixel[2].clamp(0.0, 1.0));
-        }
-      }
-
-      ColorImageData::PaletteU8(data, palette) => {
+      ColorImageData::PaletteU8 { data, palette } => {
         for pixel in data {
-          rgb_pixels
-            .extend_from_slice(&palette.lookup_normalized(*pixel as i64));
+          let [r, g, b] = palette.lookup_normalized(*pixel as i64);
+
+          rgb_pixels.push(r as f64);
+          rgb_pixels.push(g as f64);
+          rgb_pixels.push(b as f64);
         }
       }
 
-      ColorImageData::PaletteU16(data, palette) => {
+      ColorImageData::PaletteU16 { data, palette } => {
         for pixel in data {
-          rgb_pixels
-            .extend_from_slice(&palette.lookup_normalized(*pixel as i64));
+          let [r, g, b] = palette.lookup_normalized(*pixel as i64);
+
+          rgb_pixels.push(r as f64);
+          rgb_pixels.push(g as f64);
+          rgb_pixels.push(b as f64);
         }
       }
     }
@@ -325,4 +413,14 @@ impl ColorImage {
     )
     .unwrap()
   }
+}
+
+/// Converts a YBR color into RGB.
+///
+pub fn ybr_to_rgb(y: f64, cb: f64, cr: f64) -> [f64; 3] {
+  let r = y + 1.402 * (cr - 0.5);
+  let g = y - 0.3441362862 * (cb - 0.5) - 0.7141362862 * (cr - 0.5);
+  let b = y + 1.772 * (cb - 0.5);
+
+  [r.clamp(0.0, 1.0), g.clamp(0.0, 1.0), b.clamp(0.0, 1.0)]
 }
