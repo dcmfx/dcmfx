@@ -323,7 +323,7 @@ source = "git+https://github.com/image-rs/jpeg-decoder.git?rev=95550d7#95550d7ee
 [[package]]
 name = "jxl-bitstream"
 version = "0.6.0"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "tracing",
 ]
@@ -331,7 +331,7 @@ dependencies = [
 [[package]]
 name = "jxl-coding"
 version = "0.6.0"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "jxl-bitstream",
  "tracing",
@@ -340,7 +340,7 @@ dependencies = [
 [[package]]
 name = "jxl-color"
 version = "0.10.1"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "jxl-bitstream",
  "jxl-coding",
@@ -353,7 +353,7 @@ dependencies = [
 [[package]]
 name = "jxl-frame"
 version = "0.12.0"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "jxl-bitstream",
  "jxl-coding",
@@ -369,7 +369,7 @@ dependencies = [
 [[package]]
 name = "jxl-grid"
 version = "0.5.3"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "tracing",
 ]
@@ -377,7 +377,7 @@ dependencies = [
 [[package]]
 name = "jxl-image"
 version = "0.12.0"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "jxl-bitstream",
  "jxl-color",
@@ -389,7 +389,7 @@ dependencies = [
 [[package]]
 name = "jxl-jbr"
 version = "0.1.1"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "brotli-decompressor",
  "jxl-bitstream",
@@ -406,7 +406,7 @@ dependencies = [
 [[package]]
 name = "jxl-modular"
 version = "0.10.0"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "jxl-bitstream",
  "jxl-coding",
@@ -419,7 +419,7 @@ dependencies = [
 [[package]]
 name = "jxl-oxide"
 version = "0.11.3"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "brotli-decompressor",
  "jxl-bitstream",
@@ -437,7 +437,7 @@ dependencies = [
 [[package]]
 name = "jxl-oxide-common"
 version = "0.2.0"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "jxl-bitstream",
 ]
@@ -445,7 +445,7 @@ dependencies = [
 [[package]]
 name = "jxl-render"
 version = "0.11.2"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "bytemuck",
  "jxl-bitstream",
@@ -464,7 +464,7 @@ dependencies = [
 [[package]]
 name = "jxl-threadpool"
 version = "0.1.2"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "rayon",
  "rayon-core",
@@ -474,7 +474,7 @@ dependencies = [
 [[package]]
 name = "jxl-vardct"
 version = "0.10.0"
-source = "git+https://github.com/dcmfx/jxl-oxide.git?branch=v0.11.x-dcmfx#6c2975e82ac6e5585135878d500434d1a7962ab1"
+source = "git+https://github.com/tirr-c/jxl-oxide.git?branch=v0.11.x#d254549bcb5644f3b93a864a6200ba3560cfec02"
 dependencies = [
  "jxl-bitstream",
  "jxl-coding",
