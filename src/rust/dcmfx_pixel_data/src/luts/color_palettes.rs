@@ -9,7 +9,7 @@ impl ColorPalette {
   /// Looks up a grayscale value in this color palette.
   ///
   pub fn lookup(&self, grayscale_value: u8) -> [u8; 3] {
-    let index = grayscale_value as usize * 3;
+    let index = usize::from(grayscale_value) * 3;
 
     [self.data[index], self.data[index + 1], self.data[index + 2]]
   }
@@ -21,9 +21,9 @@ impl ColorPalette {
     let index = (grayscale_value * 255.0).clamp(0.0, 255.0) as usize * 3;
 
     [
-      self.data[index] as f32 / 255.0,
-      self.data[index + 1] as f32 / 255.0,
-      self.data[index + 2] as f32 / 255.0,
+      f32::from(self.data[index]) / 255.0,
+      f32::from(self.data[index + 1]) / 255.0,
+      f32::from(self.data[index + 2]) / 255.0,
     ]
   }
 }

@@ -117,7 +117,7 @@ static void cleanup(opj_stream_t stream, opj_codec_t *codec, opj_image_t *image,
 
 int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
                     uint32_t width, uint32_t height, uint32_t samples_per_pixel,
-                    uint32_t bits_allocated, uint32_t *pixel_representation,
+                    uint32_t bits_allocated, uint8_t *pixel_representation,
                     uint8_t *output_data, uint64_t output_data_size,
                     char *error_buffer, uint32_t error_buffer_size) {
   // Determine codec by looking at the initial bytes of the input data
@@ -188,7 +188,7 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
   }
 
   // Return the pixel representation of the data being read
-  *pixel_representation = image->comps[0].sgnd;
+  *pixel_representation = (uint8_t)image->comps[0].sgnd;
 
   // Validate that each component has a valid precision
   for (uint32_t i = 0; i < image->numcomps; i++) {

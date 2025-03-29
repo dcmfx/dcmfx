@@ -32,7 +32,7 @@ pub struct DataSetPrintOptions {
 fn terminal_width() -> Option<usize> {
   if let Some((terminal_size::Width(width), _)) = terminal_size::terminal_size()
   {
-    Some(width as usize)
+    Some(width.into())
   } else {
     None
   }

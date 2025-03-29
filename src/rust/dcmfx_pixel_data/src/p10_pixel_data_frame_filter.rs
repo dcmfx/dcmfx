@@ -496,7 +496,7 @@ impl P10PixelDataFrameFilter {
 
     let mut offset_table = VecDeque::new();
     for offset in offsets {
-      offset_table.push_back((offset as u64, None));
+      offset_table.push_back((u64::from(offset), None));
     }
 
     Ok(offset_table)

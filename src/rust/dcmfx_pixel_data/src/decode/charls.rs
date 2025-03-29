@@ -17,12 +17,12 @@ pub fn decode_single_channel(
 ) -> Result<SingleChannelImage, DataError> {
   let pixels = decode(data, definition)?;
 
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
 
-  if definition.bits_allocated == BitsAllocated::Eight {
+  if definition.bits_allocated() == BitsAllocated::Eight {
     SingleChannelImage::new_u8(width, height, pixels)
-  } else if definition.bits_allocated == BitsAllocated::Sixteen {
+  } else if definition.bits_allocated() == BitsAllocated::Sixteen {
     SingleChannelImage::new_u16(width, height, unsafe {
       vec_cast::<u8, u16>(pixels)
     })
@@ -41,12 +41,12 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(data, definition)?;
 
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
 
-  if definition.bits_allocated == BitsAllocated::Eight {
+  if definition.bits_allocated() == BitsAllocated::Eight {
     ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
-  } else if definition.bits_allocated == BitsAllocated::Sixteen {
+  } else if definition.bits_allocated() == BitsAllocated::Sixteen {
     let data = unsafe { vec_cast::<u8, u16>(pixels) };
     ColorImage::new_u16(width, height, data, ColorSpace::RGB)
   } else {
@@ -60,28 +60,28 @@ fn decode(
   data: &[u8],
   definition: &PixelDataDefinition,
 ) -> Result<Vec<u8>, DataError> {
-  let width = definition.columns as u32;
-  let height = definition.rows as u32;
-  let samples_per_pixel = usize::from(definition.samples_per_pixel) as u32;
-  let bits_allocated = usize::from(definition.bits_allocated) as u32;
+  let width = definition.columns();
+  let height = definition.rows();
+  let samples_per_pixel = u8::from(definition.samples_per_pixel());
+  let bits_allocated = u8::from(definition.bits_allocated());
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
 
   // Allocate output buffer
   let mut output_buffer = vec![
     0u8;
     definition.pixel_count()
-      * samples_per_pixel as usize
-      * (bits_allocated / 8) as usize
+      * usize::from(samples_per_pixel)
+      * usize::from(bits_allocated / 8)
   ];
 
   let result = unsafe {
     ffi::charls_decode(
       data.as_ptr(),
       data.len() as u64,
-      width,
-      height,
-      samples_per_pixel,
-      bits_allocated,
+      width.into(),
+      height.into(),
+      samples_per_pixel.into(),
+      bits_allocated.into(),
       output_buffer.as_mut_ptr(),
       output_buffer.len() as u64,
       error_buffer.as_mut_ptr(),

@@ -264,7 +264,9 @@ impl Overlay {
     )?;
 
     let expected_data_length =
-      (rows as usize * columns as usize * number_of_frames_in_overlay + 7) / 8;
+      (usize::from(rows) * usize::from(columns) * number_of_frames_in_overlay
+        + 7)
+        / 8;
     if data.len() != expected_data_length {
       return Err(
         DataError::new_value_length_invalid(
@@ -282,7 +284,7 @@ impl Overlay {
       rows,
       columns,
       overlay_type,
-      origin: [origin_value[0] as i32, origin_value[1] as i32],
+      origin: [i32::from(origin_value[0]), i32::from(origin_value[1])],
       data,
       description,
       subtype,
@@ -312,8 +314,8 @@ impl Overlay {
     }
 
     // Get the data for this frame
-    let overlay_data_offset = self.rows as usize
-      * self.columns as usize
+    let overlay_data_offset = usize::from(self.rows)
+      * usize::from(self.columns)
       * ((frame_index + 1) - self.image_frame_origin);
 
     let alphas = [
@@ -329,20 +331,21 @@ impl Overlay {
     ];
 
     for y in 0..self.rows {
-      let pt_y = self.origin[1] + y as i32 - 1;
+      let pt_y = self.origin[1] + i32::from(y) - 1;
       if pt_y < 0 || pt_y as u32 >= rgb_image.height() {
         continue;
       }
 
       for x in 0..self.columns {
-        let pt_x = self.origin[0] + x as i32 - 1;
+        let pt_x = self.origin[0] + i32::from(x) - 1;
         if pt_x < 0 || pt_x as u32 >= rgb_image.width() {
           continue;
         }
 
         // Check whether this pixel in the overlay bitmap is set
-        let data_offset =
-          overlay_data_offset + y as usize * self.columns as usize + x as usize;
+        let data_offset = overlay_data_offset
+          + usize::from(y) * usize::from(self.columns)
+          + usize::from(x);
         let byte = self.data[data_offset / 8];
         if (byte >> (data_offset % 8)) & 1 == 0 {
           continue;
@@ -365,12 +368,12 @@ impl Overlay {
               pixel_x as u32,
               pixel_y as u32,
               image::Rgb([
-                (color.0[0] as f64 * alpha + rgb.0[0] as f64 * (1.0 - alpha))
-                  as u8,
-                (color.0[1] as f64 * alpha + rgb.0[1] as f64 * (1.0 - alpha))
-                  as u8,
-                (color.0[2] as f64 * alpha + rgb.0[2] as f64 * (1.0 - alpha))
-                  as u8,
+                (f64::from(color.0[0]) * alpha
+                  + f64::from(rgb.0[0]) * (1.0 - alpha)) as u8,
+                (f64::from(color.0[1]) * alpha
+                  + f64::from(rgb.0[1]) * (1.0 - alpha)) as u8,
+                (f64::from(color.0[2]) * alpha
+                  + f64::from(rgb.0[2]) * (1.0 - alpha)) as u8,
               ]),
             );
           }

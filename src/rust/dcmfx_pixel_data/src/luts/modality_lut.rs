@@ -122,12 +122,13 @@ impl ModalityLut {
     }
   }
 
-  /// Looks up a stored value in this Modality LUT and returns the result. The
-  /// type of the resulting value is given by [`Self::output_type()`].
+  /// Applies this Modality LUT to an integer stored value and returns the
+  /// result. The type of the resulting value is given by
+  /// [`Self::output_type()`].
   ///
-  pub fn apply(&self, stored_value: i64) -> f32 {
+  pub fn apply_to_stored_value(&self, stored_value: i64) -> f32 {
     match self {
-      Self::LookupTable { lut, .. } => lut.lookup(stored_value) as f32,
+      Self::LookupTable { lut, .. } => lut.lookup(stored_value).into(),
 
       Self::Rescale {
         rescale_intercept,

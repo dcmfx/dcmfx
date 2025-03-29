@@ -198,7 +198,7 @@ mod tests {
 
     assert_eq!(window.compute(0.0), 0.0);
     assert_eq!(window.compute(4095.0), 1.0);
-    assert_eq!(window.compute(2000.0), 0.4884004884004884);
+    assert_eq!(window.compute(2000.0), 0.4884005);
   }
 
   #[test]

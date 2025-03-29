@@ -83,4 +83,15 @@ impl RgbLut {
       self.blue.lookup_normalized(stored_value),
     ]
   }
+
+  /// Looks up a value in the RGB lookup table and normalizes the result into
+  /// the 0-255 range.
+  ///
+  pub fn lookup_normalized_u8(&self, stored_value: i64) -> [u8; 3] {
+    [
+      self.red.lookup_normalized_u8(stored_value),
+      self.green.lookup_normalized_u8(stored_value),
+      self.blue.lookup_normalized_u8(stored_value),
+    ]
+  }
 }

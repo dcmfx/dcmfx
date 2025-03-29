@@ -505,7 +505,7 @@ impl P10WriteContext {
           // All other VRs use a 16-bit length. Check that the data length fits
           // inside this constraint.
           ValueLengthSize::U16 => {
-            if length > u16::MAX as u32 {
+            if length > u16::MAX.into() {
               return Err(P10Error::DataInvalid {
                 when: "Serializing data element header".to_string(),
                 details: format!(

@@ -57,17 +57,17 @@ fn single_bit_unaligned_to_raw() {
       to_native_path(&output_files[2].1)
     ));
 
-  for i in 0..3 {
+  for (i, output_file) in output_files.iter().enumerate() {
     let filename =
       format!("get_pixel_data_tests__single_bit_unaligned_to_raw.000{i}.bin");
 
     assert_eq!(
-      std::fs::read(&output_files[i].0).unwrap(),
-      std::fs::read(&format!("tests/snapshots/{filename}")).unwrap()
+      std::fs::read(&output_file.0).unwrap(),
+      std::fs::read(format!("tests/snapshots/{filename}")).unwrap()
     );
 
     let filename = format!("single_bit_unaligned_to_raw.000{i}.png");
-    assert_image_snapshot!(&output_files[i].1, &filename);
+    assert_image_snapshot!(&output_file.1, &filename);
   }
 }
 
@@ -581,8 +581,7 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
     .unwrap()
     .decode()
     .unwrap()
-    .try_into()
-    .unwrap();
+    .into();
 
   let image_snapshot_path = format!("tests/snapshots/{snapshot}");
   if !std::path::PathBuf::from(&image_snapshot_path).exists() {
@@ -593,12 +592,11 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
     .unwrap()
     .decode()
     .unwrap()
-    .try_into()
-    .unwrap();
+    .into();
 
   if image_1.width() != image_2.width() || image_1.height() != image_2.height()
   {
-    return Err(format!("Image dimensions don't match snapshot"));
+    return Err("Image dimensions don't match snapshot".to_string());
   }
 
   // Check that the pixels are the same within a small epsilon
@@ -607,9 +605,9 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
       let a = image_1.get_pixel(x, y);
       let b = image_2.get_pixel(x, y);
 
-      if (a[0] as i16 - b[0] as i16).abs() > 2
-        || (a[1] as i16 - b[1] as i16).abs() > 2
-        || (a[2] as i16 - b[2] as i16).abs() > 2
+      if (i16::from(a[0]) - i16::from(b[0])).abs() > 2
+        || (i16::from(a[1]) - i16::from(b[1])).abs() > 2
+        || (i16::from(a[2]) - i16::from(b[2])).abs() > 2
       {
         return Err(format!(
           "Image differs at pixel {},{}: expected {:?} but got {:?}",

@@ -19,7 +19,7 @@ pub fn decode_single_channel(
   data_bit_offset: usize,
 ) -> Result<SingleChannelImage, DataError> {
   // Check that there is one sample per pixel
-  if definition.samples_per_pixel != SamplesPerPixel::One {
+  if definition.samples_per_pixel() != SamplesPerPixel::One {
     return Err(DataError::new_value_invalid(
       "Samples per pixel is not one for grayscale pixel data".to_string(),
     ));
@@ -27,16 +27,19 @@ pub fn decode_single_channel(
 
   validate_data_length(definition, data)?;
 
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
   let pixel_count = definition.pixel_count();
 
-  match definition.photometric_interpretation {
+  match definition.photometric_interpretation() {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2 => {
-      match (definition.pixel_representation, definition.bits_allocated) {
+      match (
+        definition.pixel_representation(),
+        definition.bits_allocated(),
+      ) {
         (_, BitsAllocated::One) => {
-          let is_signed = definition.pixel_representation.is_signed();
+          let is_signed = definition.pixel_representation().is_signed();
           let mut data = data.to_vec();
 
           if data_bit_offset > 0 {
@@ -57,10 +60,8 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::Eight) => {
           let mut pixels = vec![0i8; pixel_count];
 
-          if (definition.bits_stored as usize)
-            < usize::from(definition.bits_allocated)
-          {
-            let threshold = 2i8.pow(definition.bits_stored as u32 - 1);
+          if definition.has_unused_high_bits() {
+            let threshold = 2i8.pow(u32::from(definition.bits_stored()) - 1u32);
 
             for i in 0..pixel_count {
               pixels[i] = i8::from_le_bytes([data[i]]);
@@ -86,10 +87,8 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
           let mut pixels = vec![0i16; pixel_count];
 
-          if (definition.bits_stored as usize)
-            < usize::from(definition.bits_allocated)
-          {
-            let threshold = 2i16.pow(definition.bits_stored as u32 - 1);
+          if definition.has_unused_high_bits() {
+            let threshold = 2i16.pow(u32::from(definition.bits_stored()) - 1);
 
             for i in 0..pixel_count {
               pixels[i] = i16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
@@ -121,10 +120,8 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
           let mut pixels = vec![0i32; pixel_count];
 
-          if (definition.bits_stored as usize)
-            < usize::from(definition.bits_allocated)
-          {
-            let threshold = 2i32.pow(definition.bits_stored as u32 - 1);
+          if definition.has_unused_high_bits() {
+            let threshold = 2i32.pow(u32::from(definition.bits_stored()) - 1);
 
             for i in 0..pixel_count {
               pixels[i] = i32::from_le_bytes([
@@ -173,7 +170,7 @@ pub fn decode_single_channel(
     _ => Err(DataError::new_value_invalid(format!(
       "Photometric interpretation '{}' is invalid for grayscale pixel data \
        when samples per pixel is one",
-      definition.photometric_interpretation
+      definition.photometric_interpretation()
     ))),
   }
 }
@@ -189,20 +186,20 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   validate_data_length(definition, data)?;
 
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
   let pixel_count = definition.pixel_count();
 
-  let color_space = if definition.photometric_interpretation.is_ybr() {
+  let color_space = if definition.photometric_interpretation().is_ybr() {
     ColorSpace::YBR
   } else {
     ColorSpace::RGB
   };
 
-  match definition.samples_per_pixel {
+  match definition.samples_per_pixel() {
     SamplesPerPixel::One => match (
-      &definition.photometric_interpretation,
-      definition.bits_allocated,
+      &definition.photometric_interpretation(),
+      definition.bits_allocated(),
     ) {
       (
         PhotometricInterpretation::PaletteColor { palette },
@@ -229,16 +226,16 @@ pub fn decode_color(
           "Photometric interpretation '{}' is invalid for color pixel data \
            when samples per pixel is one and bits allocated is '{}'",
           photometric_interpretation,
-          usize::from(bits_allocated)
+          u8::from(bits_allocated)
         )))
       }
     },
 
     SamplesPerPixel::Three {
       planar_configuration,
-    } => match definition.photometric_interpretation {
+    } => match definition.photometric_interpretation() {
       PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull => {
-        match (planar_configuration, definition.bits_allocated) {
+        match (planar_configuration, definition.bits_allocated()) {
           (_, BitsAllocated::One) => Err(DataError::new_value_invalid(
             "Bits allocated value '1' is not supported for color data"
               .to_string(),
@@ -339,13 +336,13 @@ pub fn decode_color(
       }
 
       PhotometricInterpretation::YbrFull422 => {
-        if definition.columns % 2 == 1 {
+        if definition.columns() % 2 == 1 {
           return Err(DataError::new_value_invalid(
             "YBR_FULL_222 pixel data width is odd".to_string(),
           ));
         }
 
-        match (planar_configuration, definition.bits_allocated) {
+        match (planar_configuration, definition.bits_allocated()) {
           (_, BitsAllocated::One) => Err(DataError::new_value_invalid(
             "Bits allocated value '1' is not supported for color data"
               .to_string(),
@@ -522,7 +519,7 @@ pub fn decode_color(
       _ => Err(DataError::new_value_invalid(format!(
         "Photometric interpretation '{}' is invalid for color pixel data \
            when samples per pixel is three",
-        definition.photometric_interpretation
+        definition.photometric_interpretation()
       ))),
     },
   }
@@ -560,16 +557,17 @@ mod tests {
 
   #[test]
   fn decode_monochrome_8_bit_unsigned() {
-    let definition = PixelDataDefinition {
-      samples_per_pixel: SamplesPerPixel::One,
-      photometric_interpretation: PhotometricInterpretation::Monochrome2,
-      rows: 2,
-      columns: 2,
-      bits_allocated: BitsAllocated::Eight,
-      bits_stored: 8,
-      high_bit: 7,
-      pixel_representation: PixelRepresentation::Unsigned,
-    };
+    let definition = PixelDataDefinition::new(
+      SamplesPerPixel::One,
+      PhotometricInterpretation::Monochrome2,
+      2,
+      2,
+      BitsAllocated::Eight,
+      8,
+      7,
+      PixelRepresentation::Unsigned,
+    )
+    .unwrap();
 
     let data = [0, 1, 2, 3];
 
@@ -581,16 +579,17 @@ mod tests {
 
   #[test]
   fn decode_monochrome_8_bit_signed_with_7_bits_stored() {
-    let definition = PixelDataDefinition {
-      samples_per_pixel: SamplesPerPixel::One,
-      photometric_interpretation: PhotometricInterpretation::Monochrome2,
-      rows: 8,
-      columns: 16,
-      bits_allocated: BitsAllocated::Eight,
-      bits_stored: 7,
-      high_bit: 6,
-      pixel_representation: PixelRepresentation::Signed,
-    };
+    let definition = PixelDataDefinition::new(
+      SamplesPerPixel::One,
+      PhotometricInterpretation::Monochrome2,
+      8,
+      16,
+      BitsAllocated::Eight,
+      7,
+      6,
+      PixelRepresentation::Signed,
+    )
+    .unwrap();
 
     let data: Vec<_> = (0..=127).collect();
 
@@ -602,19 +601,19 @@ mod tests {
 
   #[test]
   fn decode_monochrome_16_bit_signed_with_12_bits_stored() {
-    let definition = PixelDataDefinition {
-      samples_per_pixel: SamplesPerPixel::One,
-      photometric_interpretation: PhotometricInterpretation::Monochrome2,
-      rows: 64,
-      columns: 64,
-      bits_allocated: BitsAllocated::Sixteen,
-      bits_stored: 12,
-      high_bit: 11,
-      pixel_representation: PixelRepresentation::Signed,
-    };
+    let definition = PixelDataDefinition::new(
+      SamplesPerPixel::One,
+      PhotometricInterpretation::Monochrome2,
+      64,
+      64,
+      BitsAllocated::Sixteen,
+      12,
+      11,
+      PixelRepresentation::Signed,
+    )
+    .unwrap();
 
-    let data: Vec<_> =
-      (0..4096u16).map(|i| i.to_le_bytes()).flatten().collect();
+    let data: Vec<_> = (0..4096u16).flat_map(|i| i.to_le_bytes()).collect();
 
     assert_eq!(
       decode_single_channel(&definition, &data, 0),
@@ -624,18 +623,19 @@ mod tests {
 
   #[test]
   fn decode_rgb_8_bit_interleaved() {
-    let definition = PixelDataDefinition {
-      samples_per_pixel: SamplesPerPixel::Three {
+    let definition = PixelDataDefinition::new(
+      SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Interleaved,
       },
-      photometric_interpretation: PhotometricInterpretation::Rgb,
-      rows: 2,
-      columns: 2,
-      bits_allocated: BitsAllocated::Eight,
-      bits_stored: 8,
-      high_bit: 7,
-      pixel_representation: PixelRepresentation::Unsigned,
-    };
+      PhotometricInterpretation::Rgb,
+      2,
+      2,
+      BitsAllocated::Eight,
+      8,
+      7,
+      PixelRepresentation::Unsigned,
+    )
+    .unwrap();
 
     let data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
@@ -652,18 +652,19 @@ mod tests {
 
   #[test]
   fn decode_rgb_16_bit_separate() {
-    let definition = PixelDataDefinition {
-      samples_per_pixel: SamplesPerPixel::Three {
+    let definition = PixelDataDefinition::new(
+      SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Separate,
       },
-      photometric_interpretation: PhotometricInterpretation::Rgb,
-      rows: 2,
-      columns: 2,
-      bits_allocated: BitsAllocated::Sixteen,
-      bits_stored: 16,
-      high_bit: 15,
-      pixel_representation: PixelRepresentation::Unsigned,
-    };
+      PhotometricInterpretation::Rgb,
+      2,
+      2,
+      BitsAllocated::Sixteen,
+      16,
+      15,
+      PixelRepresentation::Unsigned,
+    )
+    .unwrap();
 
     let data = vec![
       0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0, 11, 0,
@@ -682,18 +683,19 @@ mod tests {
 
   #[test]
   fn decode_ybr_full_8_bit() {
-    let definition = PixelDataDefinition {
-      samples_per_pixel: SamplesPerPixel::Three {
+    let definition = PixelDataDefinition::new(
+      SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Interleaved,
       },
-      photometric_interpretation: PhotometricInterpretation::YbrFull,
-      rows: 2,
-      columns: 2,
-      bits_allocated: BitsAllocated::Eight,
-      bits_stored: 8,
-      high_bit: 7,
-      pixel_representation: PixelRepresentation::Unsigned,
-    };
+      PhotometricInterpretation::YbrFull,
+      2,
+      2,
+      BitsAllocated::Eight,
+      8,
+      7,
+      PixelRepresentation::Unsigned,
+    )
+    .unwrap();
 
     let data = vec![142, 122, 111, 148, 118, 122, 101, 123, 127, 116, 133, 142];
 
@@ -705,18 +707,19 @@ mod tests {
 
   #[test]
   fn decode_ybr_full_422_8_bit() {
-    let definition = PixelDataDefinition {
-      samples_per_pixel: SamplesPerPixel::Three {
+    let definition = PixelDataDefinition::new(
+      SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Interleaved,
       },
-      photometric_interpretation: PhotometricInterpretation::YbrFull422,
-      rows: 2,
-      columns: 2,
-      bits_allocated: BitsAllocated::Eight,
-      bits_stored: 8,
-      high_bit: 7,
-      pixel_representation: PixelRepresentation::Unsigned,
-    };
+      PhotometricInterpretation::YbrFull422,
+      2,
+      2,
+      BitsAllocated::Eight,
+      8,
+      7,
+      PixelRepresentation::Unsigned,
+    )
+    .unwrap();
 
     let data = vec![142, 122, 111, 148, 118, 122, 101, 123];
 

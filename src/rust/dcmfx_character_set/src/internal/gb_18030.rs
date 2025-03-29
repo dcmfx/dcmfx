@@ -7,7 +7,7 @@ pub fn decode_next_codepoint(bytes: &[u8]) -> Result<(char, &[u8]), ()> {
     // Single-byte GB 18030 characters have a first (and only) byte value <=
     // 0x7F that maps directly to a Unicode codepoint
     [byte_0, rest @ ..] if *byte_0 <= 0x7F => {
-      let codepoint = *byte_0 as u32;
+      let codepoint = u32::from(*byte_0);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }
@@ -19,9 +19,10 @@ pub fn decode_next_codepoint(bytes: &[u8]) -> Result<(char, &[u8]), ()> {
       if (0x81..=0xFE).contains(byte_0) && (0x40..=0xFE).contains(byte_1) =>
     {
       // Calculate lookup table index
-      let index = (*byte_0 as usize - 0x81) * 0xBF + (*byte_1 as usize - 0x40);
+      let index =
+        (usize::from(*byte_0) - 0x81) * 0xBF + (usize::from(*byte_1) - 0x40);
 
-      let codepoint = GBK_LOOKUP_TABLE[index] as u32;
+      let codepoint = u32::from(GBK_LOOKUP_TABLE[index]);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }
@@ -37,10 +38,10 @@ pub fn decode_next_codepoint(bytes: &[u8]) -> Result<(char, &[u8]), ()> {
         && (0x30..=0x39).contains(byte_3) =>
     {
       // Calculate index
-      let byte_0 = *byte_0 as u32 - 0x81;
-      let byte_1 = *byte_1 as u32 - 0x30;
-      let byte_2 = *byte_2 as u32 - 0x81;
-      let byte_3 = *byte_3 as u32 - 0x30;
+      let byte_0 = u32::from(*byte_0) - 0x81;
+      let byte_1 = u32::from(*byte_1) - 0x30;
+      let byte_2 = u32::from(*byte_2) - 0x81;
+      let byte_3 = u32::from(*byte_3) - 0x30;
       let index = ((byte_0 * 10 + byte_1) * 126 + byte_2) * 10 + byte_3;
 
       let codepoint = match index {
@@ -266,10 +267,10 @@ pub fn decode_next_codepoint(bytes: &[u8]) -> Result<(char, &[u8]), ()> {
         && (0x30..=0x39).contains(byte_3) =>
     {
       // Calculate codepoint
-      let byte_0 = *byte_0 as u32 - 0x90;
-      let byte_1 = *byte_1 as u32 - 0x30;
-      let byte_2 = *byte_2 as u32 - 0x81;
-      let byte_3 = *byte_3 as u32 - 0x30;
+      let byte_0 = u32::from(*byte_0) - 0x90;
+      let byte_1 = u32::from(*byte_1) - 0x30;
+      let byte_2 = u32::from(*byte_2) - 0x81;
+      let byte_3 = u32::from(*byte_3) - 0x30;
       let codepoint =
         ((byte_0 * 10 + byte_1) * 126 + byte_2) * 10 + byte_3 + 0x10000;
 

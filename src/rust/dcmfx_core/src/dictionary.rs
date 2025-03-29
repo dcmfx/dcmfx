@@ -5,7 +5,7 @@
 //! Well-known privately defined data elements can also be looked up by
 //! providing the relevant 'Private Creator' name.
 
-#![allow(clippy::result_unit_err)]
+#![allow(clippy::items_after_test_module, clippy::result_unit_err)]
 
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::String};

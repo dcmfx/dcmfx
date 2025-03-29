@@ -5,45 +5,46 @@ use crate::internal::utils;
 pub fn decode_next_codepoint(bytes: &[u8]) -> Result<(char, &[u8]), ()> {
   match bytes {
     // 1-byte UTF-8 character
-    [b0, rest @ ..] if *b0 <= 0x7F => {
-      let codepoint = *b0 as u32;
+    [byte_0, rest @ ..] if *byte_0 <= 0x7F => {
+      let codepoint = u32::from(*byte_0);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }
 
     // 2-byte UTF-8 character
-    [b0, b1, rest @ ..]
-      if (0xC0..=0xDF).contains(b0) && (0x80..=0xBF).contains(b1) =>
+    [byte_0, byte_1, rest @ ..]
+      if (0xC0..=0xDF).contains(byte_0) && (0x80..=0xBF).contains(byte_1) =>
     {
-      let codepoint = ((*b0 as u32 & 0x1F) << 6) | (*b1 as u32 & 0x3F);
+      let codepoint =
+        ((u32::from(*byte_0) & 0x1F) << 6) | (u32::from(*byte_1) & 0x3F);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }
 
     // 3-byte UTF-8 character
-    [b0, b1, b2, rest @ ..]
-      if (0xE0..=0xEF).contains(b0)
-        && (0x80..=0xBF).contains(b1)
-        && (0x80..=0xBF).contains(b2) =>
+    [byte_0, byte_1, byte_2, rest @ ..]
+      if (0xE0..=0xEF).contains(byte_0)
+        && (0x80..=0xBF).contains(byte_1)
+        && (0x80..=0xBF).contains(byte_2) =>
     {
-      let codepoint = ((*b0 as u32 & 0x0F) << 12)
-        | ((*b1 as u32 & 0x3F) << 6)
-        | (*b2 as u32 & 0x3F);
+      let codepoint = ((u32::from(*byte_0) & 0x0F) << 12)
+        | ((u32::from(*byte_1) & 0x3F) << 6)
+        | (u32::from(*byte_2) & 0x3F);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }
 
     // 4-byte UTF-8 character
-    [b0, b1, b2, b3, rest @ ..]
-      if (0xF0..=0xF7).contains(b0)
-        && (0x80..=0xBF).contains(b1)
-        && (0x80..=0xBF).contains(b2)
-        && (0x80..=0xBF).contains(b3) =>
+    [byte_0, byte_1, byte_2, byte_3, rest @ ..]
+      if (0xF0..=0xF7).contains(byte_0)
+        && (0x80..=0xBF).contains(byte_1)
+        && (0x80..=0xBF).contains(byte_2)
+        && (0x80..=0xBF).contains(byte_3) =>
     {
-      let codepoint = ((*b0 as u32 & 0x07) << 18)
-        | ((*b1 as u32 & 0x3F) << 12)
-        | ((*b2 as u32 & 0x3F) << 6)
-        | (*b3 as u32 & 0x3F);
+      let codepoint = ((u32::from(*byte_0) & 0x07) << 18)
+        | ((u32::from(*byte_1) & 0x3F) << 12)
+        | ((u32::from(*byte_2) & 0x3F) << 6)
+        | (u32::from(*byte_3) & 0x3F);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }

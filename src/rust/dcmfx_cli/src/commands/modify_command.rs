@@ -161,7 +161,7 @@ fn modify_input_source(
   } else {
     let mut rng = rand::rng();
     let random_suffix: String = (0..16)
-      .map(|_| rng.sample(rand::distr::Alphanumeric) as char)
+      .map(|_| char::from(rng.sample(rand::distr::Alphanumeric)))
       .collect();
 
     let file_name = output_filename.file_name().unwrap_or(OsStr::new(""));

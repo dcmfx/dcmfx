@@ -12,7 +12,7 @@ pub fn decode_next_codepoint<'a>(
 ) -> Result<(char, &'a [u8]), ()> {
   match bytes {
     [byte_0, rest @ ..] => {
-      let codepoint = lookup_table[*byte_0 as usize] as u32;
+      let codepoint = u32::from(lookup_table[usize::from(*byte_0)]);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }

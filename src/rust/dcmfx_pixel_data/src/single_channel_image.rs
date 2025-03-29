@@ -38,7 +38,7 @@ impl SingleChannelImage {
     data: Vec<u8>,
     is_signed: bool,
   ) -> Result<Self, DataError> {
-    if data.len() != (width as usize * height as usize + 7) / 8 {
+    if data.len() != (usize::from(width) * usize::from(height) + 7) / 8 {
       return Err(DataError::new_value_invalid(
         "Single channel image bitmap data size is incorrect".to_string(),
       ));
@@ -59,7 +59,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<i8>,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize {
+    if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
         "Single channel image i8 data size is incorrect".to_string(),
       ));
@@ -80,7 +80,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<u8>,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize {
+    if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
         "Single channel image u8 data size is incorrect".to_string(),
       ));
@@ -101,7 +101,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<i16>,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize {
+    if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
         "Single channel image i16 data size is incorrect".to_string(),
       ));
@@ -122,7 +122,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<u16>,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize {
+    if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
         "Single channel image u16 data size is incorrect".to_string(),
       ));
@@ -143,7 +143,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<i32>,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize {
+    if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
         "Single channel image i32 data size is incorrect".to_string(),
       ));
@@ -164,7 +164,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<u32>,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize {
+    if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
         "Single channel image u32 data size is incorrect".to_string(),
       ));
@@ -198,7 +198,7 @@ impl SingleChannelImage {
   /// Returns the total number of pixels in this single channel image.
   ///
   pub fn pixel_count(&self) -> usize {
-    self.width() as usize * self.height() as usize
+    usize::from(self.width()) * usize::from(self.height())
   }
 
   /// Returns the minimum and maximum values in this single channel image.
@@ -225,27 +225,27 @@ impl SingleChannelImage {
       }
 
       SingleChannelImageData::I8(data) => {
-        min_max(data.iter().map(|pixel| *pixel as i64))
+        min_max(data.iter().map(|pixel| (*pixel).into()))
       }
 
       SingleChannelImageData::U8(data) => {
-        min_max(data.iter().map(|pixel| *pixel as i64))
+        min_max(data.iter().map(|pixel| (*pixel).into()))
       }
 
       SingleChannelImageData::I16(data) => {
-        min_max(data.iter().map(|pixel| *pixel as i64))
+        min_max(data.iter().map(|pixel| (*pixel).into()))
       }
 
       SingleChannelImageData::U16(data) => {
-        min_max(data.iter().map(|pixel| *pixel as i64))
+        min_max(data.iter().map(|pixel| (*pixel).into()))
       }
 
       SingleChannelImageData::I32(data) => {
-        min_max(data.iter().map(|pixel| *pixel as i64))
+        min_max(data.iter().map(|pixel| (*pixel).into()))
       }
 
       SingleChannelImageData::U32(data) => {
-        min_max(data.iter().map(|pixel| *pixel as i64))
+        min_max(data.iter().map(|pixel| (*pixel).into()))
       }
     }
   }
@@ -267,18 +267,18 @@ impl SingleChannelImage {
   /// Converts Monochrome1 pixel data to Monochrome2.
   ///
   pub fn invert_monochrome1_data(&mut self, definition: &PixelDataDefinition) {
-    if definition.photometric_interpretation
-      != PhotometricInterpretation::Monochrome1
+    if definition.photometric_interpretation()
+      != &PhotometricInterpretation::Monochrome1
     {
       return;
     }
 
     // Calculate the offset to add after negating the stored pixel value in
     // order to convert to Monochrome2
-    let offset = if definition.pixel_representation.is_signed() {
+    let offset: i64 = if definition.pixel_representation().is_signed() {
       -1
     } else {
-      (1i64 << definition.bits_stored) - 1
+      definition.int_max().into()
     };
 
     match &mut self.data {
@@ -290,42 +290,42 @@ impl SingleChannelImage {
 
       SingleChannelImageData::I8(data) => {
         for pixel in data.iter_mut() {
-          *pixel = (-(*pixel as i64) + offset)
+          *pixel = (-i64::from(*pixel) + offset)
             .clamp(i8::MIN as i64, i8::MAX as i64) as i8;
         }
       }
 
       SingleChannelImageData::U8(data) => {
         for pixel in data.iter_mut() {
-          *pixel = (-(*pixel as i64) + offset)
+          *pixel = (-i64::from(*pixel) + offset)
             .clamp(u8::MIN as i64, u8::MAX as i64) as u8;
         }
       }
 
       SingleChannelImageData::I16(data) => {
         for pixel in data.iter_mut() {
-          *pixel = (-(*pixel as i64) + offset)
+          *pixel = (-i64::from(*pixel) + offset)
             .clamp(i16::MIN as i64, i16::MAX as i64) as i16;
         }
       }
 
       SingleChannelImageData::U16(data) => {
         for pixel in data.iter_mut() {
-          *pixel = (-(*pixel as i64) + offset)
+          *pixel = (-i64::from(*pixel) + offset)
             .clamp(u16::MIN as i64, u16::MAX as i64) as u16;
         }
       }
 
       SingleChannelImageData::I32(data) => {
         for pixel in data.iter_mut() {
-          *pixel = (-(*pixel as i64) + offset)
+          *pixel = (-i64::from(*pixel) + offset)
             .clamp(i32::MIN as i64, i32::MAX as i64) as i32;
         }
       }
 
       SingleChannelImageData::U32(data) => {
         for pixel in data.iter_mut() {
-          *pixel = (-(*pixel as i64) + offset)
+          *pixel = (-i64::from(*pixel) + offset)
             .clamp(u32::MIN as i64, u32::MAX as i64) as u32;
         }
       }
@@ -344,7 +344,7 @@ impl SingleChannelImage {
 
     let i64_to_u8 = |pixel: i64| {
       // Apply LUTs
-      let x = modality_lut.apply(pixel);
+      let x = modality_lut.apply_to_stored_value(pixel);
       let x = voi_lut.apply(x);
 
       // Convert to u8
@@ -359,7 +359,7 @@ impl SingleChannelImage {
               break;
             }
 
-            let mut value = ((*pixel >> b) & 1) as i64;
+            let mut value = i64::from((*pixel >> b) & 1);
             if *is_signed {
               value = -value;
             }
@@ -371,37 +371,37 @@ impl SingleChannelImage {
 
       SingleChannelImageData::I8(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8(*pixel as i64));
+          gray_pixels.push(i64_to_u8((*pixel).into()));
         }
       }
 
       SingleChannelImageData::U8(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8(*pixel as i64));
+          gray_pixels.push(i64_to_u8((*pixel).into()));
         }
       }
 
       SingleChannelImageData::I16(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8(*pixel as i64));
+          gray_pixels.push(i64_to_u8((*pixel).into()));
         }
       }
 
       SingleChannelImageData::U16(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8(*pixel as i64));
+          gray_pixels.push(i64_to_u8((*pixel).into()));
         }
       }
 
       SingleChannelImageData::I32(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8(*pixel as i64));
+          gray_pixels.push(i64_to_u8((*pixel).into()));
         }
       }
 
       SingleChannelImageData::U32(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8(*pixel as i64));
+          gray_pixels.push(i64_to_u8((*pixel).into()));
         }
       }
     }
@@ -427,7 +427,7 @@ impl SingleChannelImage {
               break;
             }
 
-            let mut value = ((*pixel >> b) & 1) as i64;
+            let mut value = i64::from((*pixel >> b) & 1);
             if *is_signed {
               value = -value;
             }
@@ -440,27 +440,27 @@ impl SingleChannelImage {
       }
 
       SingleChannelImageData::I8(data) => {
-        data.iter().map(|pixel| *pixel as i64).collect()
+        data.iter().map(|pixel| (*pixel).into()).collect()
       }
 
       SingleChannelImageData::U8(data) => {
-        data.iter().map(|pixel| *pixel as i64).collect()
+        data.iter().map(|pixel| (*pixel).into()).collect()
       }
 
       SingleChannelImageData::I16(data) => {
-        data.iter().map(|pixel| *pixel as i64).collect()
+        data.iter().map(|pixel| (*pixel).into()).collect()
       }
 
       SingleChannelImageData::U16(data) => {
-        data.iter().map(|pixel| *pixel as i64).collect()
+        data.iter().map(|pixel| (*pixel).into()).collect()
       }
 
       SingleChannelImageData::I32(data) => {
-        data.iter().map(|pixel| *pixel as i64).collect()
+        data.iter().map(|pixel| (*pixel).into()).collect()
       }
 
       SingleChannelImageData::U32(data) => {
-        data.iter().map(|pixel| *pixel as i64).collect()
+        data.iter().map(|pixel| (*pixel).into()).collect()
       }
     }
   }

@@ -14,7 +14,7 @@ pub fn decode_single_channel(
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
   let pixels = decode(definition, data)?;
-  SingleChannelImage::new_u16(definition.columns, definition.rows, pixels)
+  SingleChannelImage::new_u16(definition.columns(), definition.rows(), pixels)
 }
 
 /// Decodes color pixel data using libjpeg_12bit.
@@ -25,8 +25,8 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(definition, data)?;
   ColorImage::new_u16(
-    definition.columns,
-    definition.rows,
+    definition.columns(),
+    definition.rows(),
     pixels,
     ColorSpace::RGB,
   )
@@ -36,30 +36,31 @@ fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<Vec<u16>, DataError> {
-  if definition.bits_allocated != BitsAllocated::Sixteen {
+  if definition.bits_allocated() != BitsAllocated::Sixteen {
     return Err(DataError::new_value_invalid(format!(
       "JPEG 12-bit pixel data must have 16 bits allocated but has {}",
-      usize::from(definition.bits_allocated)
+      u8::from(definition.bits_allocated())
     )));
   }
 
   let mut error_message = [0 as ::core::ffi::c_char; 200];
 
   // Allocate output buffer
-  let mut output_buffer = vec![
-    0u16;
-    definition.pixel_count()
-      * usize::from(definition.samples_per_pixel)
-  ];
+  let mut output_buffer =
+    vec![
+      0u16;
+      definition.pixel_count()
+        * usize::from(u8::from(definition.samples_per_pixel()))
+    ];
 
   // Make FFI call into libjpeg_12bit to perform the decompression
   let result = unsafe {
     ffi::libjpeg_12bit_decode(
       data.as_ptr(),
       data.len() as u64,
-      definition.columns as u32,
-      definition.rows as u32,
-      usize::from(definition.samples_per_pixel) as u32,
+      definition.columns().into(),
+      definition.rows().into(),
+      u8::from(definition.samples_per_pixel()).into(),
       output_buffer.as_mut_ptr(),
       output_buffer.len() as u64,
       error_message.as_mut_ptr(),

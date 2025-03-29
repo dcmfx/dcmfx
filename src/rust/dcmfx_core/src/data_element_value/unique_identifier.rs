@@ -55,7 +55,7 @@ pub fn new(prefix: &str) -> Result<String, ()> {
 
   let mut rng = rand::rng();
   let mut random_character = |range: core::ops::Range<u8>| -> char {
-    char::from_u32(rng.random_range(range) as u32).unwrap()
+    char::from_u32(rng.random_range(range).into()).unwrap()
   };
 
   new_using_rng(prefix, &mut random_character)

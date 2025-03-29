@@ -469,9 +469,10 @@ impl P10ReadContext {
       let (value_offset, value_length) =
         match DataElementHeader::value_length_size(vr) {
           // 16-bit lengths are read out of the 8 bytes already read
-          ValueLengthSize::U16 => {
-            Ok((8, byteorder::LittleEndian::read_u16(&data[6..8]) as usize))
-          }
+          ValueLengthSize::U16 => Ok((
+            8,
+            usize::from(byteorder::LittleEndian::read_u16(&data[6..8])),
+          )),
 
           // 32-bit lengths require another 4 bytes to be read
           ValueLengthSize::U32 => match self.stream.peek(12) {
@@ -491,7 +492,7 @@ impl P10ReadContext {
 
       // Check that the File Meta Information remains under the max token size
       if fmi_data_set.total_byte_size() + data_element_size as u64
-        > self.config.max_token_size as u64
+        > u64::from(self.config.max_token_size)
       {
         return Err(P10Error::MaximumExceeded {
           details: format!(
@@ -524,7 +525,7 @@ impl P10ReadContext {
       if tag == dictionary::FILE_META_INFORMATION_GROUP_LENGTH.tag {
         if ends_at.is_none() && fmi_data_set.is_empty() {
           match value.get_int::<u32>() {
-            Ok(i) => *ends_at = Some(*starts_at + 12 + i as u64),
+            Ok(i) => *ends_at = Some(*starts_at + 12 + u64::from(i)),
             Err(_) => {
               return Err(P10Error::DataInvalid {
                 when: "Reading File Meta Information".to_string(),
@@ -646,7 +647,7 @@ impl P10ReadContext {
 
         let ends_at = match header.length {
           ValueLength::Defined { length } => {
-            Some(self.stream.bytes_read() + length as u64)
+            Some(self.stream.bytes_read() + u64::from(length))
           }
           ValueLength::Undefined => None,
         };
@@ -690,7 +691,7 @@ impl P10ReadContext {
 
         let ends_at = match header.length {
           ValueLength::Defined { length } => {
-            Some(self.stream.bytes_read() + length as u64)
+            Some(self.stream.bytes_read() + u64::from(length))
           }
           ValueLength::Undefined => None,
         };
@@ -1068,10 +1069,10 @@ impl P10ReadContext {
           },
           _ => match self.active_transfer_syntax().endianness {
             transfer_syntax::Endianness::LittleEndian => {
-              byteorder::LittleEndian::read_u16(&data[6..8]) as u32
+              byteorder::LittleEndian::read_u16(&data[6..8]).into()
             }
             transfer_syntax::Endianness::BigEndian => {
-              byteorder::BigEndian::read_u16(&data[6..8]) as u32
+              byteorder::BigEndian::read_u16(&data[6..8]).into()
             }
           },
         };

@@ -93,7 +93,7 @@ impl DataElementTag {
   /// 16 bits and the element is in the low 16 bits.
   ///
   pub fn to_int(&self) -> u32 {
-    ((self.group as u32) << 16) | self.element as u32
+    (u32::from(self.group) << 16) | u32::from(self.element)
   }
 
   /// Formats a data element tag as `"$GROUP$ELEMENT"`, e.g.`"0008002D"`.
@@ -111,14 +111,14 @@ impl DataElementTag {
     static HEX_DIGITS: &[u8; 16] = b"0123456789ABCDEF";
 
     [
-      HEX_DIGITS[(self.group >> 12) as usize],
-      HEX_DIGITS[(self.group >> 8) as usize & 0xF],
-      HEX_DIGITS[(self.group >> 4) as usize & 0xF],
-      HEX_DIGITS[(self.group) as usize & 0xF],
-      HEX_DIGITS[(self.element >> 12) as usize],
-      HEX_DIGITS[(self.element >> 8) as usize & 0xF],
-      HEX_DIGITS[(self.element >> 4) as usize & 0xF],
-      HEX_DIGITS[(self.element) as usize & 0xF],
+      HEX_DIGITS[usize::from(self.group >> 12)],
+      HEX_DIGITS[usize::from(self.group >> 8) & 0xF],
+      HEX_DIGITS[usize::from(self.group >> 4) & 0xF],
+      HEX_DIGITS[usize::from(self.group) & 0xF],
+      HEX_DIGITS[usize::from(self.element >> 12)],
+      HEX_DIGITS[usize::from(self.element >> 8) & 0xF],
+      HEX_DIGITS[usize::from(self.element >> 4) & 0xF],
+      HEX_DIGITS[usize::from(self.element) & 0xF],
     ]
   }
 

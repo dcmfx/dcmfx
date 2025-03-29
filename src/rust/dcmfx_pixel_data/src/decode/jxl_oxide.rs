@@ -18,11 +18,11 @@ pub fn decode_single_channel(
 ) -> Result<SingleChannelImage, DataError> {
   let (jxl_image, jxl_render) = decode(definition, data)?;
 
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
 
   match (
-    definition.bits_allocated,
+    definition.bits_allocated(),
     jxl_image.image_header().metadata.bit_depth,
   ) {
     (BitsAllocated::Eight, BitDepth::IntegerSample { bits_per_sample: 8 }) => {
@@ -57,18 +57,18 @@ pub fn decode_color(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  if definition.bits_allocated == BitsAllocated::One {
+  if definition.bits_allocated() == BitsAllocated::One {
     return Err(DataError::new_value_invalid(
       "JPEG XL does not support 1-bit pixel data".to_string(),
     ));
   }
 
   let (jxl_image, jxl_render) = decode(definition, data)?;
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
 
   match (
-    definition.bits_allocated,
+    definition.bits_allocated(),
     jxl_image.image_header().metadata.bit_depth,
   ) {
     (BitsAllocated::Eight, BitDepth::IntegerSample { bits_per_sample: 8 }) => {
@@ -90,13 +90,6 @@ pub fn decode_color(
       ColorImage::new_u16(width, height, buffer, ColorSpace::RGB)
     }
 
-    (BitsAllocated::ThirtyTwo, BitDepth::FloatSample { .. }) => {
-      let mut buffer = vec![0.0; definition.pixel_count() * 3];
-      render_samples(&jxl_render, &mut buffer)?;
-
-      ColorImage::new_f32(width, height, buffer)
-    }
-
     _ => Err(DataError::new_value_invalid(
       "JPEG XL pixel data does not contain a supported color image".to_string(),
     )),
@@ -107,7 +100,7 @@ fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<(JxlImage, Render), DataError> {
-  if definition.pixel_representation.is_signed() {
+  if definition.pixel_representation().is_signed() {
     return Err(DataError::new_value_invalid(
       "JPEG XL decoding of signed pixel data is not supported".to_string(),
     ));
@@ -120,8 +113,8 @@ fn decode(
     ))
   })?;
 
-  if image.width() != definition.columns as u32
-    || image.height() != definition.rows as u32
+  if image.width() != definition.columns().into()
+    || image.height() != definition.rows().into()
   {
     return Err(DataError::new_value_invalid(
       "JPEG XL pixel data has incorrect dimensions".to_string(),

@@ -45,11 +45,11 @@ fn main() {
       if let Ok(overlays) = Overlays::from_data_set(&data_set) {
         if let Ok(definition) = PixelDataDefinition::from_data_set(&data_set) {
           let mut rgb_image = image::RgbImage::from_raw(
-            definition.rows as u32,
-            definition.columns as u32,
+            definition.rows.into(),
+            definition.columns.into(),
             vec![
               0u8;
-              definition.rows as usize * definition.columns as usize * 3
+              usize::from(definition.rows) * usize::from(definition.columns) * 3
             ],
           )
           .unwrap();

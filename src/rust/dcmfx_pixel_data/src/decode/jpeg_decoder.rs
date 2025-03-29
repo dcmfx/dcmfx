@@ -14,8 +14,8 @@ pub fn decode_single_channel(
 ) -> Result<SingleChannelImage, DataError> {
   let (pixels, pixel_format) = decode(definition, data)?;
 
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
 
   if pixel_format == jpeg_decoder::PixelFormat::L8 {
     SingleChannelImage::new_u8(width, height, pixels)
@@ -38,8 +38,8 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let (pixels, pixel_format) = decode(definition, data)?;
 
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
 
   if pixel_format == jpeg_decoder::PixelFormat::RGB24 {
     ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
@@ -66,8 +66,8 @@ fn decode(
 
   let image_info = decoder.info().unwrap();
 
-  if image_info.width != definition.columns
-    || image_info.height != definition.rows
+  if image_info.width != definition.columns()
+    || image_info.height != definition.rows()
   {
     return Err(DataError::new_value_invalid(
       "JPEG Lossless pixel data has incorrect dimensions".to_string(),

@@ -126,10 +126,9 @@ impl PixelDataRenderer {
     image: &SingleChannelImage,
     color_palette: Option<&ColorPalette>,
   ) -> image::RgbImage {
-    let image = image.to_gray_image(&self.modality_lut, &self.voi_lut);
+    let mut pixels = Vec::with_capacity(image.pixel_count() * 3);
 
-    let mut pixels =
-      Vec::with_capacity(image.width() as usize * image.height() as usize * 3);
+    let image = image.to_gray_image(&self.modality_lut, &self.voi_lut);
 
     if let Some(color_palette) = color_palette {
       for pixel in image.pixels() {

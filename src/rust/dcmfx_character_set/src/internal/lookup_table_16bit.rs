@@ -15,7 +15,7 @@ pub fn decode_next_codepoint<'a>(
 ) -> Result<(char, &'a [u8]), ()> {
   match bytes {
     [byte_0, rest @ ..] if *byte_0 <= 0x20 => {
-      let codepoint = *byte_0 as u32;
+      let codepoint = u32::from(*byte_0);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }
@@ -24,9 +24,10 @@ pub fn decode_next_codepoint<'a>(
       if (0x21..=0x7E).contains(byte_0) && (0x21..=0x7E).contains(byte_1) =>
     {
       // Calculate lookup table index
-      let index = (*byte_0 as usize - 0x21) * 0x5E + (*byte_1 as usize - 0x21);
+      let index =
+        (usize::from(*byte_0) - 0x21) * 0x5E + (usize::from(*byte_1) - 0x21);
 
-      let codepoint = lookup_table[index] as u32;
+      let codepoint = u32::from(lookup_table[index]);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }

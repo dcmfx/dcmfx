@@ -15,14 +15,14 @@ use crate::RgbLut;
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct PixelDataDefinition {
-  pub samples_per_pixel: SamplesPerPixel,
-  pub photometric_interpretation: PhotometricInterpretation,
-  pub rows: u16,
-  pub columns: u16,
-  pub bits_allocated: BitsAllocated,
-  pub bits_stored: u16,
-  pub high_bit: u16,
-  pub pixel_representation: PixelRepresentation,
+  samples_per_pixel: SamplesPerPixel,
+  photometric_interpretation: PhotometricInterpretation,
+  rows: u16,
+  columns: u16,
+  bits_allocated: BitsAllocated,
+  bits_stored: u16,
+  high_bit: u16,
+  pixel_representation: PixelRepresentation,
 }
 
 impl PixelDataDefinition {
@@ -50,35 +50,33 @@ impl PixelDataDefinition {
     dictionary::SEGMENTED_BLUE_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
   ];
 
-  /// Creates a new [`PixelDataDefinition`] from the relevant data elements in
-  /// the given data set.
+  /// Creates a new pixel data definition with the given values. A number of
+  /// validations are performed to ensure the definition is internally
+  /// consistent.
   ///
-  pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
-    let samples_per_pixel = SamplesPerPixel::from_data_set(data_set)?;
-
-    let photometric_interpretation =
-      PhotometricInterpretation::from_data_set(data_set)?;
-
-    let pixel_representation = PixelRepresentation::from_data_set(data_set)?;
-
-    let rows = data_set.get_int::<u16>(dictionary::ROWS.tag)?;
-    let columns = data_set.get_int::<u16>(dictionary::COLUMNS.tag)?;
-    let bits_allocated = BitsAllocated::from_data_set(data_set)?;
-    let bits_stored = data_set.get_int::<u16>(dictionary::BITS_STORED.tag)?;
-    let high_bit = data_set.get_int::<u16>(dictionary::HIGH_BIT.tag)?;
-
+  #[allow(clippy::too_many_arguments)]
+  pub fn new(
+    samples_per_pixel: SamplesPerPixel,
+    photometric_interpretation: PhotometricInterpretation,
+    rows: u16,
+    columns: u16,
+    bits_allocated: BitsAllocated,
+    bits_stored: u16,
+    high_bit: u16,
+    pixel_representation: PixelRepresentation,
+  ) -> Result<Self, DataError> {
     // Check that the number of bits stored does not exceed the number of bits
     // allocated
-    if bits_stored == 0 || bits_stored as usize > usize::from(bits_allocated) {
+    if bits_stored == 0 || bits_stored > u8::from(bits_allocated).into() {
       return Err(DataError::new_value_invalid(format!(
         "Bits stored '{}' is invalid for bits allocated '{}'",
         bits_stored,
-        usize::from(bits_allocated),
+        u8::from(bits_allocated),
       )));
     }
 
     // Check that the high bit is one less than the bits stored
-    if high_bit as usize + 1 != bits_stored as usize {
+    if high_bit + 1 != bits_stored {
       return Err(DataError::new_value_invalid(format!(
         "High bit '{}' is not one less than the bits stored '{}'",
         high_bit, bits_stored
@@ -97,6 +95,86 @@ impl PixelDataDefinition {
     })
   }
 
+  /// Creates a new [`PixelDataDefinition`] from the relevant data elements in
+  /// the given data set.
+  ///
+  pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
+    let samples_per_pixel = SamplesPerPixel::from_data_set(data_set)?;
+
+    let photometric_interpretation =
+      PhotometricInterpretation::from_data_set(data_set)?;
+
+    let pixel_representation = PixelRepresentation::from_data_set(data_set)?;
+
+    let rows = data_set.get_int::<u16>(dictionary::ROWS.tag)?;
+    let columns = data_set.get_int::<u16>(dictionary::COLUMNS.tag)?;
+    let bits_allocated = BitsAllocated::from_data_set(data_set)?;
+    let bits_stored = data_set.get_int::<u16>(dictionary::BITS_STORED.tag)?;
+    let high_bit = data_set.get_int::<u16>(dictionary::HIGH_BIT.tag)?;
+
+    Self::new(
+      samples_per_pixel,
+      photometric_interpretation,
+      rows,
+      columns,
+      bits_allocated,
+      bits_stored,
+      high_bit,
+      pixel_representation,
+    )
+  }
+
+  /// Returns this pixel data definition's number of samples per pixel.
+  ///
+  pub fn samples_per_pixel(&self) -> SamplesPerPixel {
+    self.samples_per_pixel
+  }
+
+  /// Returns this pixel data definition's photometric interpretation.
+  ///
+  pub fn photometric_interpretation(&self) -> &PhotometricInterpretation {
+    &self.photometric_interpretation
+  }
+
+  /// Returns this pixel data definition's number of rows, i.e. its height.
+  ///
+  pub fn rows(&self) -> u16 {
+    self.rows
+  }
+
+  /// Returns this pixel data definition's number of columns, i.e. its width.
+  ///
+  pub fn columns(&self) -> u16 {
+    self.columns
+  }
+
+  /// Returns this pixel data definition's number of bits allocated per pixel.
+  ///
+  pub fn bits_allocated(&self) -> BitsAllocated {
+    self.bits_allocated
+  }
+
+  /// Returns this pixel data definition's number of bits stored per pixel.
+  /// This will never exceed the number of bits allocated per pixel.
+  ///
+  pub fn bits_stored(&self) -> u16 {
+    self.bits_stored
+  }
+
+  /// Returns this pixel data definition's high bit. This is always equal to
+  /// the number of bits stored per pixel minus one.
+  ///
+  pub fn high_bit(&self) -> u16 {
+    self.high_bit
+  }
+
+  /// Returns this pixel data definition's pixel representation, i.e. whether
+  /// it stores signed or unsigned values.
+  ///
+  pub fn pixel_representation(&self) -> PixelRepresentation {
+    self.pixel_representation
+  }
+
   /// Returns the number of bits consumed by a single pixel.
   ///
   pub fn pixel_size_in_bits(&self) -> usize {
@@ -109,11 +187,12 @@ impl PixelDataDefinition {
       | PhotometricInterpretation::YbrIct
       | PhotometricInterpretation::YbrRct
       | PhotometricInterpretation::Xyb => {
-        usize::from(self.samples_per_pixel) * usize::from(self.bits_allocated)
+        usize::from(u8::from(self.samples_per_pixel))
+          * usize::from(u8::from(self.bits_allocated))
       }
 
       PhotometricInterpretation::YbrFull422 => {
-        2 * usize::from(self.bits_allocated)
+        usize::from(u8::from(self.bits_allocated)) * 2
       }
     }
   }
@@ -121,7 +200,7 @@ impl PixelDataDefinition {
   /// Returns the number of pixels.
   ///
   pub fn pixel_count(&self) -> usize {
-    self.rows as usize * self.columns as usize
+    usize::from(self.rows) * usize::from(self.columns)
   }
 
   /// Returns the number of bytes consumed by a single frame of image data.
@@ -156,6 +235,32 @@ impl PixelDataDefinition {
   ///
   pub fn is_rgb(&self) -> bool {
     !self.is_grayscale()
+  }
+
+  /// Returns the smallest valid integer value for integer pixel data.
+  ///
+  pub fn int_min(&self) -> i32 {
+    match self.pixel_representation {
+      PixelRepresentation::Signed => -(1i64 << (self.bits_stored - 1)) as i32,
+      PixelRepresentation::Unsigned => 0,
+    }
+  }
+
+  /// Returns the largest valid integer value for integer pixel data.
+  ///
+  pub fn int_max(&self) -> u32 {
+    match self.pixel_representation {
+      PixelRepresentation::Signed => (1u32 << (self.bits_stored - 1)) - 1,
+      PixelRepresentation::Unsigned => ((1u64 << self.bits_stored) - 1) as u32,
+    }
+  }
+
+  /// Returns whether the pixel definition has unused high bits in its
+  /// components, i.e. whether the number of bits stored is less than the number
+  /// of bits allocated.
+  ///
+  pub fn has_unused_high_bits(&self) -> bool {
+    self.bits_stored < u8::from(self.bits_allocated).into()
   }
 }
 
@@ -205,8 +310,8 @@ impl SamplesPerPixel {
   }
 }
 
-impl From<SamplesPerPixel> for usize {
-  fn from(samples_per_pixel: SamplesPerPixel) -> usize {
+impl From<SamplesPerPixel> for u8 {
+  fn from(samples_per_pixel: SamplesPerPixel) -> u8 {
     match samples_per_pixel {
       SamplesPerPixel::One => 1,
       SamplesPerPixel::Three { .. } => 3,
@@ -447,8 +552,8 @@ impl BitsAllocated {
   }
 }
 
-impl From<BitsAllocated> for usize {
-  fn from(samples_per_pixel: BitsAllocated) -> usize {
+impl From<BitsAllocated> for u8 {
+  fn from(samples_per_pixel: BitsAllocated) -> u8 {
     match samples_per_pixel {
       BitsAllocated::One => 1,
       BitsAllocated::Eight => 8,
@@ -499,11 +604,46 @@ impl PixelRepresentation {
   }
 }
 
-impl From<PixelRepresentation> for usize {
-  fn from(pixel_representation: PixelRepresentation) -> usize {
+impl From<PixelRepresentation> for u8 {
+  fn from(pixel_representation: PixelRepresentation) -> u8 {
     match pixel_representation {
       PixelRepresentation::Unsigned => 0,
       PixelRepresentation::Signed => 1,
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn int_ranges_test() {
+    let mut definition = PixelDataDefinition::new(
+      SamplesPerPixel::One,
+      PhotometricInterpretation::Monochrome2,
+      1,
+      1,
+      BitsAllocated::Sixteen,
+      12,
+      11,
+      PixelRepresentation::Unsigned,
+    )
+    .unwrap();
+
+    assert_eq!(definition.int_max(), 4095);
+
+    definition.pixel_representation = PixelRepresentation::Signed;
+    assert_eq!(definition.int_min(), -2048);
+    assert_eq!(definition.int_max(), 2047);
+
+    definition.bits_allocated = BitsAllocated::ThirtyTwo;
+    definition.bits_stored = 32;
+    assert_eq!(definition.int_min(), i32::MIN);
+    assert_eq!(definition.int_max(), i32::MAX as u32);
+
+    definition.pixel_representation = PixelRepresentation::Unsigned;
+    assert_eq!(definition.int_min(), 0);
+    assert_eq!(definition.int_max(), u32::MAX);
   }
 }

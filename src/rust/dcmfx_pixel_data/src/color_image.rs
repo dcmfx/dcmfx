@@ -31,9 +31,6 @@ enum ColorImageData {
     data: Vec<u32>,
     color_space: ColorSpace,
   },
-  F32 {
-    data: Vec<f32>,
-  },
   PaletteU8 {
     data: Vec<u8>,
     palette: Rc<RgbLut>,
@@ -63,7 +60,7 @@ impl ColorImage {
     data: Vec<u8>,
     color_space: ColorSpace,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize * 3 {
+    if data.len() != usize::from(width) * usize::from(height) * 3 {
       return Err(DataError::new_value_invalid(
         "Color image u8 data size is incorrect".to_string(),
       ));
@@ -85,7 +82,7 @@ impl ColorImage {
     data: Vec<u16>,
     color_space: ColorSpace,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize * 3 {
+    if data.len() != usize::from(width) * usize::from(height) * 3 {
       return Err(DataError::new_value_invalid(
         "Color image u16 data size is incorrect".to_string(),
       ));
@@ -107,7 +104,7 @@ impl ColorImage {
     data: Vec<u32>,
     color_space: ColorSpace,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize * 3 {
+    if data.len() != usize::from(width) * usize::from(height) * 3 {
       return Err(DataError::new_value_invalid(
         "Color image u32 data size is incorrect".to_string(),
       ));
@@ -120,27 +117,6 @@ impl ColorImage {
     })
   }
 
-  /// Creates a new color image with `f32` data.
-  ///
-  #[allow(clippy::result_unit_err)]
-  pub fn new_f32(
-    width: u16,
-    height: u16,
-    data: Vec<f32>,
-  ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize * 3 {
-      return Err(DataError::new_value_invalid(
-        "Color image f32 data size is incorrect".to_string(),
-      ));
-    }
-
-    Ok(Self {
-      width,
-      height,
-      data: ColorImageData::F32 { data },
-    })
-  }
-
   /// Creates a new color palette image with `u8` data.
   ///
   #[allow(clippy::result_unit_err)]
@@ -150,7 +126,7 @@ impl ColorImage {
     data: Vec<u8>,
     palette: Rc<RgbLut>,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize {
+    if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
         "Color image palette8 data size is incorrect".to_string(),
       ));
@@ -172,7 +148,7 @@ impl ColorImage {
     data: Vec<u16>,
     palette: Rc<RgbLut>,
   ) -> Result<Self, DataError> {
-    if data.len() != width as usize * height as usize {
+    if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
         "Color image palette16 data size is incorrect".to_string(),
       ));
@@ -206,7 +182,7 @@ impl ColorImage {
   /// Returns the total number of pixels in this color image.
   ///
   pub fn pixel_count(&self) -> usize {
-    self.width as usize * self.height as usize
+    usize::from(self.width) * usize::from(self.height)
   }
 
   /// Converts this color image to an RGB8 image.
@@ -223,34 +199,32 @@ impl ColorImage {
       rgb_pixels: &mut Vec<u8>,
       definition: &PixelDataDefinition,
     ) where
-      T: Copy + Into<f64>,
+      T: Copy + Into<f64> + Into<u64>,
     {
       match color_space {
         ColorSpace::RGB => {
-          let scale =
-            255.0 / (((1u64 << definition.bits_stored as u64) - 1) as f64);
+          let max_value: u64 = definition.int_max().into();
 
           for rgb in data.chunks_exact(3) {
-            let r: f64 = rgb[0].into();
-            let g: f64 = rgb[1].into();
-            let b: f64 = rgb[2].into();
+            let r: u64 = rgb[0].into();
+            let g: u64 = rgb[1].into();
+            let b: u64 = rgb[2].into();
 
-            rgb_pixels.push((r * scale).min(255.0) as u8);
-            rgb_pixels.push((g * scale).min(255.0) as u8);
-            rgb_pixels.push((b * scale).min(255.0) as u8);
+            rgb_pixels.push((r * 255 / max_value).min(0xFF) as u8);
+            rgb_pixels.push((g * 255 / max_value).min(0xFF) as u8);
+            rgb_pixels.push((b * 255 / max_value).min(0xFF) as u8);
           }
         }
 
         ColorSpace::YBR => {
-          let scale =
-            1.0 / (((1u64 << definition.bits_stored as u64) - 1) as f64);
+          let scale = 1.0 / f64::from(definition.int_max());
 
           for ybr in data.chunks_exact(3) {
-            let rgb = ybr_to_rgb(
-              ybr[0].into() * scale,
-              ybr[1].into() * scale,
-              ybr[2].into() * scale,
-            );
+            let y: f64 = ybr[0].into();
+            let cb: f64 = ybr[1].into();
+            let cr: f64 = ybr[2].into();
+
+            let rgb = ybr_to_rgb(y * scale, cb * scale, cr * scale);
 
             rgb_pixels.push((rgb[0] * 255.0).clamp(0.0, 255.0) as u8);
             rgb_pixels.push((rgb[1] * 255.0).clamp(0.0, 255.0) as u8);
@@ -261,6 +235,13 @@ impl ColorImage {
     }
 
     match &self.data {
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::RGB,
+      } if definition.bits_stored() == 8 => {
+        rgb_pixels.extend_from_slice(data);
+      }
+
       ColorImageData::U8 { data, color_space } => unsigned_data_to_rgb_pixels(
         data,
         color_space,
@@ -282,31 +263,17 @@ impl ColorImage {
         definition,
       ),
 
-      ColorImageData::F32 { data } => {
-        for pixel in data.chunks_exact(3) {
-          rgb_pixels.push((pixel[0].clamp(0.0, 1.0) * 255.0) as u8);
-          rgb_pixels.push((pixel[1].clamp(0.0, 1.0) * 255.0) as u8);
-          rgb_pixels.push((pixel[2].clamp(0.0, 1.0) * 255.0) as u8);
-        }
-      }
-
       ColorImageData::PaletteU8 { data, palette } => {
         for pixel in data {
-          let [r, g, b] = palette.lookup_normalized(*pixel as i64);
-
-          rgb_pixels.push((r * 255.0) as u8);
-          rgb_pixels.push((g * 255.0) as u8);
-          rgb_pixels.push((b * 255.0) as u8);
+          let rgb = palette.lookup_normalized_u8((*pixel).into());
+          rgb_pixels.extend_from_slice(&rgb);
         }
       }
 
       ColorImageData::PaletteU16 { data, palette } => {
         for pixel in data {
-          let [r, g, b] = palette.lookup_normalized(*pixel as i64);
-
-          rgb_pixels.push((r * 255.0) as u8);
-          rgb_pixels.push((g * 255.0) as u8);
-          rgb_pixels.push((b * 255.0) as u8);
+          let rgb = palette.lookup_normalized_u8((*pixel).into());
+          rgb_pixels.extend_from_slice(&rgb);
         }
       }
     }
@@ -332,7 +299,7 @@ impl ColorImage {
     ) where
       T: Copy + Into<f64>,
     {
-      let scale = 1.0 / (((1u64 << definition.bits_stored as u64) - 1) as f64);
+      let scale = 1.0 / f64::from(definition.int_max());
 
       match color_space {
         ColorSpace::RGB => {
@@ -379,29 +346,23 @@ impl ColorImage {
         definition,
       ),
 
-      ColorImageData::F32 { data } => {
-        for i in data {
-          rgb_pixels.push(*i as f64);
-        }
-      }
-
       ColorImageData::PaletteU8 { data, palette } => {
         for pixel in data {
-          let [r, g, b] = palette.lookup_normalized(*pixel as i64);
+          let [r, g, b] = palette.lookup_normalized((*pixel).into());
 
-          rgb_pixels.push(r as f64);
-          rgb_pixels.push(g as f64);
-          rgb_pixels.push(b as f64);
+          rgb_pixels.push(f64::from(r));
+          rgb_pixels.push(f64::from(g));
+          rgb_pixels.push(f64::from(b));
         }
       }
 
       ColorImageData::PaletteU16 { data, palette } => {
         for pixel in data {
-          let [r, g, b] = palette.lookup_normalized(*pixel as i64);
+          let [r, g, b] = palette.lookup_normalized((*pixel).into());
 
-          rgb_pixels.push(r as f64);
-          rgb_pixels.push(g as f64);
-          rgb_pixels.push(b as f64);
+          rgb_pixels.push(f64::from(r));
+          rgb_pixels.push(f64::from(g));
+          rgb_pixels.push(f64::from(b));
         }
       }
     }

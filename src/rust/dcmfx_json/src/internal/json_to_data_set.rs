@@ -277,13 +277,57 @@ fn read_dicom_json_primitive_value(
         let bits_per_entry = ints[2];
 
         let mut bytes = Vec::with_capacity(6);
-        bytes.extend_from_slice(&(entry_count as u16).to_le_bytes());
-        if vr == ValueRepresentation::SignedShort {
-          bytes.extend_from_slice(&(first_input_value as i16).to_le_bytes());
+
+        if let Ok(entry_count) = TryInto::<u16>::try_into(entry_count) {
+          bytes.extend_from_slice(&entry_count.to_le_bytes());
         } else {
-          bytes.extend_from_slice(&(first_input_value as u16).to_le_bytes());
+          return Err(JsonDeserializeError::JsonInvalid {
+            details: "LUT Descriptor entry count is out of range".to_string(),
+            path: path.clone(),
+          });
         }
-        bytes.extend_from_slice(&(bits_per_entry as u16).to_le_bytes());
+
+        if vr == ValueRepresentation::SignedShort {
+          if let Ok(first_input_value) =
+            TryInto::<i16>::try_into(first_input_value)
+          {
+            bytes.extend_from_slice(&first_input_value.to_le_bytes());
+          } else {
+            return Err(JsonDeserializeError::JsonInvalid {
+              details: "LUT Descriptor first input value is out of range"
+                .to_string(),
+              path: path.clone(),
+            });
+          }
+        } else if vr == ValueRepresentation::UnsignedShort {
+          if let Ok(first_input_value) =
+            TryInto::<u16>::try_into(first_input_value)
+          {
+            bytes.extend_from_slice(&first_input_value.to_le_bytes());
+          } else {
+            return Err(JsonDeserializeError::JsonInvalid {
+              details: "LUT Descriptor first input value is out of range"
+                .to_string(),
+              path: path.clone(),
+            });
+          }
+        } else {
+          return Err(JsonDeserializeError::JsonInvalid {
+            details: "LUT Descriptor first input value VR is invalid"
+              .to_string(),
+            path: path.clone(),
+          });
+        }
+
+        if let Ok(bits_per_entry) = TryInto::<u16>::try_into(bits_per_entry) {
+          bytes.extend_from_slice(&bits_per_entry.to_le_bytes());
+        } else {
+          return Err(JsonDeserializeError::JsonInvalid {
+            details: "LUT Descriptor bits per entry value is out of range"
+              .to_string(),
+            path: path.clone(),
+          });
+        }
 
         Ok(DataElementValue::new_lookup_table_descriptor_unchecked(
           vr,
@@ -294,8 +338,8 @@ fn read_dicom_json_primitive_value(
 
         if vr == ValueRepresentation::SignedShort {
           for i in ints {
-            if i >= i16::MIN as i64 && i <= i16::MAX as i64 {
-              bytes.extend_from_slice(&(i as i16).to_le_bytes());
+            if let Ok(i) = TryInto::<i16>::try_into(i) {
+              bytes.extend_from_slice(&i.to_le_bytes());
             } else {
               return Err(JsonDeserializeError::JsonInvalid {
                 details: "SignedShort value is out of range".to_string(),
@@ -305,8 +349,8 @@ fn read_dicom_json_primitive_value(
           }
         } else {
           for i in ints {
-            if i >= u16::MIN as i64 && i <= u16::MAX as i64 {
-              bytes.extend_from_slice(&(i as u16).to_le_bytes());
+            if let Ok(i) = TryInto::<u16>::try_into(i) {
+              bytes.extend_from_slice(&i.to_le_bytes());
             } else {
               return Err(JsonDeserializeError::JsonInvalid {
                 details: "UnsignedShort value is out of range".to_string(),
@@ -338,8 +382,8 @@ fn read_dicom_json_primitive_value(
          bytes: &mut Vec<u8>,
          path: &DataSetPath|
          -> Result<(), JsonDeserializeError> {
-          if i >= i64::MIN as i128 && i <= i64::MAX as i128 {
-            bytes.extend_from_slice(&(i as i64).to_le_bytes());
+          if let Ok(i) = TryInto::<i64>::try_into(i) {
+            bytes.extend_from_slice(&i.to_le_bytes());
             Ok(())
           } else {
             Err(JsonDeserializeError::JsonInvalid {
@@ -353,8 +397,8 @@ fn read_dicom_json_primitive_value(
          bytes: &mut Vec<u8>,
          path: &DataSetPath|
          -> Result<(), JsonDeserializeError> {
-          if i >= u64::MIN as i128 && i <= u64::MAX as i128 {
-            bytes.extend_from_slice(&(i as u64).to_le_bytes());
+          if let Ok(i) = TryInto::<u64>::try_into(i) {
+            bytes.extend_from_slice(&i.to_le_bytes());
             Ok(())
           } else {
             Err(JsonDeserializeError::JsonInvalid {
@@ -370,9 +414,9 @@ fn read_dicom_json_primitive_value(
       for int in ints {
         if let serde_json::Value::Number(n) = int {
           if let Some(i) = n.as_i64() {
-            append_int(i as i128, &mut bytes, path)?;
+            append_int(i128::from(i), &mut bytes, path)?;
           } else if let Some(i) = n.as_u64() {
-            append_int(i as i128, &mut bytes, path)?;
+            append_int(i128::from(i), &mut bytes, path)?;
           } else {
             return Err(JsonDeserializeError::JsonInvalid {
               details: "Very long value is invalid".to_string(),
@@ -381,9 +425,9 @@ fn read_dicom_json_primitive_value(
           }
         } else if let serde_json::Value::String(s) = int {
           if let Ok(i) = s.parse::<i64>() {
-            append_int(i as i128, &mut bytes, path)?;
+            append_int(i128::from(i), &mut bytes, path)?;
           } else if let Ok(i) = s.parse::<u64>() {
-            append_int(i as i128, &mut bytes, path)?;
+            append_int(i128::from(i), &mut bytes, path)?;
           } else {
             return Err(JsonDeserializeError::JsonInvalid {
               details: "Very long value is invalid".to_string(),

@@ -171,9 +171,6 @@ mod tests {
 
   #[test]
   fn test_maximum_rle_run_length() {
-    assert_eq!(
-      encode_segment(&vec![99; 129], 129),
-      Ok(vec![129, 99, 0, 99])
-    );
+    assert_eq!(encode_segment(&[99; 129], 129), Ok(vec![129, 99, 0, 99]));
   }
 }

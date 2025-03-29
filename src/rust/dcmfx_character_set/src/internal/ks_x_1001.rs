@@ -8,9 +8,10 @@ pub fn decode_next_codepoint(bytes: &[u8]) -> Result<(char, &[u8]), ()> {
       if (0xA1..=0xFE).contains(byte_0) && (0xA1..=0xFE).contains(byte_1) =>
     {
       // Calculate lookup table index
-      let index = (*byte_0 as usize - 0xA1) * 0x5E + (*byte_1 as usize - 0xA1);
+      let index =
+        (usize::from(*byte_0) - 0xA1) * 0x5E + (usize::from(*byte_1) - 0xA1);
 
-      let codepoint = LOOKUP_TABLE[index] as u32;
+      let codepoint = u32::from(LOOKUP_TABLE[index]);
 
       Ok((utils::codepoint_to_char(codepoint), rest))
     }

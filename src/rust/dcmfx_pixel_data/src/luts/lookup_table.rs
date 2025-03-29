@@ -18,13 +18,17 @@ pub struct LookupTable {
   /// the first entry in the LUT data.
   ///
   /// Taken from the *'(0028,3002) LUT Descriptor'* data element.
-  first_input_value: i32,
+  first_input_value: i64,
 
   /// Free form text explanation of the meaning of the LUT.
   explanation: Option<String>,
 
   /// The raw data for the LUT.
   data: Vec<u16>,
+
+  /// The largest number that can be stored in the LUT. This is calculated using
+  /// the `bits_per_entry` value.
+  int_max: u32,
 
   /// Scale factor that converts a lookup table value into the range 0-1.
   normalization_scale: f32,
@@ -47,7 +51,7 @@ impl LookupTable {
     let entry_count = if entry_count == 0 {
       65536usize
     } else {
-      entry_count as usize
+      usize::from(entry_count)
     };
 
     // Validate the bits per entry value
@@ -68,7 +72,7 @@ impl LookupTable {
           byteorder::LittleEndian::read_u16_into(data, &mut buffer);
           buffer
         } else if data.len() == entry_count && bits_per_entry == 8 {
-          data.iter().map(|i| *i as u16).collect()
+          data.iter().map(|i| u16::from(*i)).collect()
         } else {
           return Err(
             DataError::new_value_invalid(
@@ -107,13 +111,16 @@ impl LookupTable {
       None
     };
 
+    let int_max = (1u32 << bits_per_entry) - 1;
+
     // Scale factor that converts a lookup table value into the range 0-1
-    let normalization_scale = 1.0 / (((1 << bits_per_entry) - 1) as f32);
+    let normalization_scale = 1.0 / (int_max as f32);
 
     Ok(Self {
-      first_input_value,
+      first_input_value: first_input_value.into(),
       explanation,
       data,
+      int_max,
       normalization_scale,
     })
   }
@@ -133,7 +140,10 @@ impl LookupTable {
       data_set.get_value_bytes(segmented_lut_data_tag)?;
 
     let segment_data = if bits_per_entry == 8 {
-      segmented_lut_data_bytes.iter().map(|i| *i as u16).collect()
+      segmented_lut_data_bytes
+        .iter()
+        .map(|i| u16::from(*i))
+        .collect()
     } else if segmented_lut_data_bytes.len() % 2 == 0 {
       let mut buffer = vec![0u16; segmented_lut_data_bytes.len() / 2];
       byteorder::LittleEndian::read_u16_into(
@@ -150,22 +160,24 @@ impl LookupTable {
 
     while offset + 1 < segment_data.len() {
       let opcode = segment_data[offset];
-      let length = segment_data[offset + 1] as usize;
+      let length = segment_data[offset + 1];
 
       offset += 2;
 
       match opcode {
         // Discrete segment. Ref: PS3.3 C.7.9.2.1.
         0 => {
-          if offset + length > segment_data.len() {
+          if let Some(segment) =
+            segment_data.get(offset..(offset + usize::from(length)))
+          {
+            lut.extend_from_slice(segment);
+            offset += segment.len();
+          } else {
             return Err(DataError::new_value_invalid(format!(
               "Discrete segment in segmented palette lookup table has invalid \
               length '{length}')",
             )));
           }
-
-          lut.extend_from_slice(&segment_data[offset..(offset + length)]);
-          offset += length;
         }
 
         // Linear segment. Ref: PS3.3 C.7.9.2.2.
@@ -192,11 +204,11 @@ impl LookupTable {
           offset += 1;
 
           // Evaluate the linear segment
-          let step = (y1 - y0) as f32 / length as f32;
+          let step = f32::from(y1 - y0) / f32::from(length);
           for i in 0..length {
-            let f = y0 as f32 + (i + 1) as f32 * step;
+            let f = f32::from(y0) + f32::from(i + 1) * step;
 
-            lut.push(f.round().clamp(u16::MIN as f32, u16::MAX as f32) as u16);
+            lut.push(f.round().clamp(u16::MIN.into(), u16::MAX.into()) as u16);
           }
         }
 
@@ -226,7 +238,7 @@ impl LookupTable {
   /// Looks up a value in this lookup table.
   ///
   pub fn lookup(&self, stored_value: i64) -> u16 {
-    let index = stored_value - self.first_input_value as i64;
+    let index = stored_value - self.first_input_value;
     let clamped_index = index.clamp(0, self.data.len() as i64 - 1);
 
     self.data[clamped_index as usize]
@@ -236,7 +248,16 @@ impl LookupTable {
   /// 0-1 range.
   ///
   pub fn lookup_normalized(&self, stored_value: i64) -> f32 {
-    self.lookup(stored_value) as f32 * self.normalization_scale
+    f32::from(self.lookup(stored_value)) * self.normalization_scale
+  }
+
+  /// Looks up a value in this lookup table and normalizes the result into the
+  /// 0-255 range.
+  ///
+  pub fn lookup_normalized_u8(&self, stored_value: i64) -> u8 {
+    let x: u32 = self.lookup(stored_value).into();
+
+    (x * 255 / self.int_max).min(0xFF) as u8
   }
 }
 
@@ -335,6 +356,7 @@ mod tests {
       first_input_value: 50,
       explanation: None,
       data: vec![1, 4, 9, 16, 64],
+      int_max: 255,
       normalization_scale: 1.0 / 255.0,
     };
 

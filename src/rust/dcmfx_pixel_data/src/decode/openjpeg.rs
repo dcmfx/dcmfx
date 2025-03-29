@@ -17,10 +17,13 @@ pub fn decode_single_channel(
 ) -> Result<SingleChannelImage, DataError> {
   let pixels = decode(definition, data)?;
 
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
 
-  match (definition.pixel_representation, definition.bits_allocated) {
+  match (
+    definition.pixel_representation(),
+    definition.bits_allocated(),
+  ) {
     (
       PixelRepresentation::Unsigned,
       BitsAllocated::One | BitsAllocated::Eight,
@@ -67,12 +70,12 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(definition, data)?;
 
-  let width = definition.columns;
-  let height = definition.rows;
+  let width = definition.columns();
+  let height = definition.rows();
 
   match (
-    &definition.photometric_interpretation,
-    definition.bits_allocated,
+    &definition.photometric_interpretation(),
+    definition.bits_allocated(),
   ) {
     (
       PhotometricInterpretation::PaletteColor { palette },
@@ -90,7 +93,7 @@ pub fn decode_color(
     (PhotometricInterpretation::PaletteColor { .. }, _) => {
       Err(DataError::new_value_invalid(format!(
         "OpenJPEG palette color data has invalid bits allocated '{}'",
-        usize::from(definition.bits_allocated)
+        u8::from(definition.bits_allocated())
       )))
     }
 
@@ -114,20 +117,19 @@ fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<Vec<u8>, DataError> {
-  let width = definition.columns;
-  let height = definition.rows;
-  let samples_per_pixel = usize::from(definition.samples_per_pixel) as u32;
-  let bits_allocated = (usize::from(definition.bits_allocated) as u32).max(8);
-  let mut pixel_representation =
-    usize::from(definition.pixel_representation) as u32;
+  let width = definition.columns();
+  let height = definition.rows();
+  let samples_per_pixel = u8::from(definition.samples_per_pixel());
+  let bits_allocated = u8::from(definition.bits_allocated()).max(8);
+  let mut pixel_representation = u8::from(definition.pixel_representation());
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
 
   // Allocate output buffer
   let mut output_buffer = vec![
     0u8;
     definition.pixel_count()
-      * samples_per_pixel as usize
-      * (bits_allocated / 8) as usize
+      * usize::from(samples_per_pixel)
+      * usize::from(bits_allocated / 8)
   ];
 
   // Make FFI call into openjpeg to perform the decompression
@@ -135,10 +137,10 @@ fn decode(
     ffi::openjpeg_decode(
       data.as_ptr(),
       data.len() as u64,
-      width as u32,
-      height as u32,
-      samples_per_pixel,
-      bits_allocated,
+      width.into(),
+      height.into(),
+      samples_per_pixel.into(),
+      bits_allocated.into(),
       &mut pixel_representation,
       output_buffer.as_mut_ptr(),
       output_buffer.len() as u64,
@@ -158,12 +160,11 @@ fn decode(
     )));
   }
 
-  if pixel_representation != usize::from(definition.pixel_representation) as u32
-  {
+  if pixel_representation != u8::from(definition.pixel_representation()) {
     // If the data returned by OpenJPEG is unsigned, but signed data is expected
     // to be returned, then reinterpret it as signed two's complement integer
     // data
-    if definition.pixel_representation == PixelRepresentation::Signed {
+    if definition.pixel_representation() == PixelRepresentation::Signed {
       convert_unsigned_values_to_signed_values(definition, &mut output_buffer);
     } else {
       return Err(DataError::new_value_invalid(
@@ -184,11 +185,11 @@ fn convert_unsigned_values_to_signed_values(
   definition: &PixelDataDefinition,
   data: &mut [u8],
 ) {
-  match definition.bits_allocated {
+  match definition.bits_allocated() {
     BitsAllocated::One => (),
 
     BitsAllocated::Eight => {
-      let threshold = 2i16.pow(definition.bits_stored as u32 - 1);
+      let threshold = 2i16.pow(definition.bits_stored() as u32 - 1);
 
       for i in data.iter_mut() {
         if *i as i16 >= threshold {
@@ -199,7 +200,7 @@ fn convert_unsigned_values_to_signed_values(
     }
 
     BitsAllocated::Sixteen => {
-      let threshold = 2i32.pow(definition.bits_stored as u32 - 1);
+      let threshold = 2i32.pow(definition.bits_stored() as u32 - 1);
 
       for chunk in data.chunks_exact_mut(2) {
         let value = u16::from_ne_bytes([chunk[0], chunk[1]]);
@@ -212,13 +213,13 @@ fn convert_unsigned_values_to_signed_values(
     }
 
     BitsAllocated::ThirtyTwo => {
-      let threshold = 2i64.pow(definition.bits_stored as u32 - 1);
+      let threshold = 2i64.pow(definition.bits_stored() as u32 - 1);
 
       for chunk in data.chunks_exact_mut(4) {
         let value =
           u32::from_ne_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
-        if value as i64 >= threshold {
-          let bytes = ((value as i64 - threshold * 2) as i32).to_ne_bytes();
+        if i64::from(value) >= threshold {
+          let bytes = ((i64::from(value) - threshold * 2) as i32).to_ne_bytes();
           chunk[0] = bytes[0];
           chunk[1] = bytes[1];
           chunk[2] = bytes[2];
@@ -238,7 +239,7 @@ mod ffi {
       height: u32,
       samples_per_pixel: u32,
       bits_allocated: u32,
-      pixel_representation: *mut u32,
+      pixel_representation: *mut u8,
       output_data: *mut u8,
       output_data_size: u64,
       error_buffer: *mut ::core::ffi::c_char,

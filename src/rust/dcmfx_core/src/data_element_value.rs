@@ -1130,11 +1130,12 @@ impl DataElementValue {
 
           // Use the lookup table descriptor value's VR to determine how to
           // interpret the second 16-bit integer it contains
-          let first_input_value = if *vr == ValueRepresentation::SignedShort {
-            byteorder::LittleEndian::read_i16(&bytes[2..4]) as i32
-          } else {
-            byteorder::LittleEndian::read_u16(&bytes[2..4]) as i32
-          };
+          let first_input_value: i32 =
+            if *vr == ValueRepresentation::SignedShort {
+              byteorder::LittleEndian::read_i16(&bytes[2..4]).into()
+            } else {
+              byteorder::LittleEndian::read_u16(&bytes[2..4]).into()
+            };
 
           let bits_per_entry = byteorder::LittleEndian::read_u16(&bytes[4..6]);
 
@@ -1286,7 +1287,7 @@ impl DataElementValue {
 
         let mut values = Vec::with_capacity(bytes.len() / 4);
         for f32_bytes in bytes.chunks_exact(4) {
-          values.push(byteorder::LittleEndian::read_f32(f32_bytes) as f64);
+          values.push(f64::from(byteorder::LittleEndian::read_f32(f32_bytes)));
         }
 
         Ok(values)
@@ -1765,8 +1766,8 @@ mod tests {
     assert_eq!(
       DataElementValue::new_signed_long(&[i32::MIN, i32::MAX])
         .unwrap()
-        .get_ints(),
-      Ok(vec![i32::MIN as i64, i32::MAX as i64])
+        .get_ints::<i32>(),
+      Ok(vec![i32::MIN, i32::MAX])
     );
 
     assert_eq!(
@@ -1783,8 +1784,8 @@ mod tests {
     assert_eq!(
       DataElementValue::new_signed_short(&[i16::MIN, i16::MAX])
         .unwrap()
-        .get_ints(),
-      Ok(vec![i16::MIN as i64, i16::MAX as i64])
+        .get_ints::<i16>(),
+      Ok(vec![i16::MIN, i16::MAX])
     );
 
     assert_eq!(
@@ -1801,8 +1802,8 @@ mod tests {
     assert_eq!(
       DataElementValue::new_unsigned_long(&[u32::MIN, u32::MAX])
         .unwrap()
-        .get_ints(),
-      Ok(vec![u32::MIN as i64, u32::MAX as i64])
+        .get_ints::<u32>(),
+      Ok(vec![u32::MIN, u32::MAX])
     );
 
     assert_eq!(
@@ -1819,8 +1820,8 @@ mod tests {
     assert_eq!(
       DataElementValue::new_unsigned_short(&[u16::MIN, u16::MAX])
         .unwrap()
-        .get_ints(),
-      Ok(vec![u16::MIN as i64, u16::MAX as i64])
+        .get_ints::<u16>(),
+      Ok(vec![u16::MIN, u16::MAX])
     );
 
     assert_eq!(
@@ -1894,15 +1895,15 @@ mod tests {
     assert_eq!(
       DataElementValue::new_signed_very_long(&[i64::MIN])
         .unwrap()
-        .get_big_int(),
-      Ok(i64::MIN as i128)
+        .get_big_int::<i64>(),
+      Ok(i64::MIN)
     );
 
     assert_eq!(
       DataElementValue::new_signed_very_long(&[i64::MAX])
         .unwrap()
-        .get_big_int(),
-      Ok(i64::MAX as i128)
+        .get_big_int::<i64>(),
+      Ok(i64::MAX)
     );
 
     assert_eq!(
@@ -1925,8 +1926,8 @@ mod tests {
     assert_eq!(
       DataElementValue::new_signed_very_long(&[i64::MIN, i64::MAX])
         .unwrap()
-        .get_big_ints(),
-      Ok(vec![i64::MIN as i128, i64::MAX as i128])
+        .get_big_ints::<i64>(),
+      Ok(vec![i64::MIN.into(), i64::MAX.into()])
     );
 
     assert_eq!(
@@ -1943,8 +1944,8 @@ mod tests {
     assert_eq!(
       DataElementValue::new_unsigned_very_long(&[u64::MIN, u64::MAX])
         .unwrap()
-        .get_big_ints(),
-      Ok(vec![u64::MIN as i128, u64::MAX as i128])
+        .get_big_ints::<u64>(),
+      Ok(vec![u64::MIN, u64::MAX])
     );
 
     assert_eq!(
