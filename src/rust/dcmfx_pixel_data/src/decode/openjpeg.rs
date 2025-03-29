@@ -117,8 +117,6 @@ fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<Vec<u8>, DataError> {
-  let width = definition.columns();
-  let height = definition.rows();
   let samples_per_pixel = u8::from(definition.samples_per_pixel());
   let bits_allocated = u8::from(definition.bits_allocated()).max(8);
   let mut pixel_representation = u8::from(definition.pixel_representation());
@@ -137,8 +135,8 @@ fn decode(
     ffi::openjpeg_decode(
       data.as_ptr(),
       data.len() as u64,
-      width.into(),
-      height.into(),
+      definition.columns().into(),
+      definition.rows().into(),
       samples_per_pixel.into(),
       bits_allocated.into(),
       &mut pixel_representation,

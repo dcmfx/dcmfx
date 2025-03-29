@@ -77,26 +77,6 @@ pub extern "C" fn realloc(ptr: *mut u8, new_size: usize) -> *mut u8 {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn posix_memalign(
-  ptr: *mut *mut u8,
-  _alignment: usize,
-  size: usize,
-) -> i32 {
-  // TODO: respect aligned allocation requests
-
-  let new_ptr = malloc(size);
-  if new_ptr.is_null() {
-    return 12; // ENOMEM
-  }
-
-  unsafe {
-    *ptr = new_ptr;
-  }
-
-  0
-}
-
-#[unsafe(no_mangle)]
 pub extern "C" fn free(ptr: *mut u8) {
   if ptr.is_null() {
     return;

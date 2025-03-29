@@ -148,6 +148,7 @@ static INLINE void *opj_aligned_realloc_n(void *ptr, size_t alignment,
         void *oldmem;
         OPJ_UINT8 *newmem;
         size_t overhead = alignment + sizeof(void *);
+        size_t old_offset;
 
         /* let's be extra careful */
         assert(alignment <= (SIZE_MAX - sizeof(void *)));
@@ -158,6 +159,8 @@ static INLINE void *opj_aligned_realloc_n(void *ptr, size_t alignment,
         }
 
         oldmem = ((void**) ptr)[-1];
+        old_offset = (size_t)((OPJ_UINT8*)ptr - (OPJ_UINT8*)oldmem);
+
         newmem = (OPJ_UINT8*)realloc(oldmem, new_size + overhead);
         if (newmem == NULL) {
             return newmem;
@@ -166,11 +169,9 @@ static INLINE void *opj_aligned_realloc_n(void *ptr, size_t alignment,
         if (newmem == oldmem) {
             r_ptr = ptr;
         } else {
-            size_t old_offset;
             size_t new_offset;
 
             /* realloc created a new copy, realign the copied memory block */
-            old_offset = (size_t)((OPJ_UINT8*)ptr - (OPJ_UINT8*)oldmem);
 
             /* offset = ((alignment + 1U) - ((size_t)(mem + sizeof(void*)) & alignment)) & alignment; */
             /* Use the fact that alignment + 1U is a power of 2 */

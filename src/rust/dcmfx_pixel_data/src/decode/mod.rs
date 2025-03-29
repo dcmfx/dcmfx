@@ -9,9 +9,6 @@ pub mod rle_lossless;
 pub mod zune_jpeg;
 
 #[cfg(not(feature = "std"))]
-mod no_std_allocator;
-
-#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 /// Turns a `Vec<T>` into a Vec<U> using an unsafe cast.

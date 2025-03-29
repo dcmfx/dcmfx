@@ -8,6 +8,9 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
+#[cfg(not(feature = "std"))]
+mod no_std_allocator;
+
 mod color_image;
 mod decode;
 mod encode;

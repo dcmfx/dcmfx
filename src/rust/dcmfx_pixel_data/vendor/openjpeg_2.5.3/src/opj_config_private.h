@@ -29,7 +29,7 @@
 /* check if function `memalign` exists */
 /* #undef OPJ_HAVE_MEMALIGN */
 /* check if function `posix_memalign` exists */
-#define OPJ_HAVE_POSIX_MEMALIGN
+/* #define OPJ_HAVE_POSIX_MEMALIGN */
 #endif
 
 #if !defined(_POSIX_C_SOURCE)

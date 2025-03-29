@@ -45,12 +45,9 @@ fn main() {
       if let Ok(overlays) = Overlays::from_data_set(&data_set) {
         if let Ok(definition) = PixelDataDefinition::from_data_set(&data_set) {
           let mut rgb_image = image::RgbImage::from_raw(
-            definition.rows.into(),
-            definition.columns.into(),
-            vec![
-              0u8;
-              usize::from(definition.rows) * usize::from(definition.columns) * 3
-            ],
+            definition.rows().into(),
+            definition.columns().into(),
+            vec![0u8; definition.pixel_count() * 3],
           )
           .unwrap();
 
@@ -61,7 +58,7 @@ fn main() {
   });
 }
 
-fn prepare_data_set_for_comparison(ds: &mut dcmfx::core::DataSet) {
+fn prepare_data_set_for_comparison(data_set: &mut dcmfx::core::DataSet) {
   let tags_to_remove = vec![
     dictionary::FILE_META_INFORMATION_VERSION.tag,
     dictionary::IMPLEMENTATION_CLASS_UID.tag,
@@ -74,6 +71,6 @@ fn prepare_data_set_for_comparison(ds: &mut dcmfx::core::DataSet) {
   ];
 
   for tag in tags_to_remove {
-    ds.delete(tag);
+    data_set.delete(tag);
   }
 }
