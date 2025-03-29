@@ -1,4 +1,7 @@
+mod utils;
+
 use assert_cmd::Command;
+use utils::to_native_path;
 
 // Macro to compare an image file to a snapshot
 macro_rules! assert_image_snapshot {
@@ -618,12 +621,4 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   }
 
   Ok(())
-}
-
-fn to_native_path(path: &str) -> String {
-  #[cfg(windows)]
-  return path.replace("/", "\\");
-
-  #[cfg(not(windows))]
-  return path.to_string();
 }

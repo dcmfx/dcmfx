@@ -198,6 +198,24 @@ fn modify_input_source(
     args.output_filename
     |> option.unwrap(input_source.to_string(input_source))
 
+  case args.in_place {
+    True ->
+      io.println(
+        "Modifying \""
+        <> input_source.to_string(input_source)
+        <> "\" in place …",
+      )
+    False ->
+      io.println(
+        "Modifying \""
+        <> input_source.to_string(input_source)
+        <> "\" "
+        <> " => \""
+        <> output_filename
+        <> "\" …",
+      )
+  }
+
   // Append a random suffix to get a unique name for a temporary output file
   let tmp_output_filename = {
     let random_suffix =
@@ -236,7 +254,6 @@ fn modify_input_source(
 
   let rewrite_result =
     streaming_rewrite(
-      input_source,
       input_stream,
       tmp_output_filename,
       write_config,
@@ -294,7 +311,6 @@ fn parse_transfer_syntax_flag(
 /// file.
 ///
 fn streaming_rewrite(
-  input_source: InputSource,
   input_stream: FileStream,
   output_filename: String,
   write_config: P10WriteConfig,
@@ -310,8 +326,6 @@ fn streaming_rewrite(
       _,
     ))
   use output_stream <- result.try(output_stream)
-
-  io.println("Modifying \"" <> input_source.to_string(input_source) <> "\" …")
 
   // Create read and write contexts
   let read_config =

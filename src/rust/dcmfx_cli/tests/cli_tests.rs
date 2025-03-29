@@ -1,6 +1,9 @@
+mod utils;
+
 use assert_cmd::{Command, assert::Assert};
 use insta::assert_snapshot;
 use rand::Rng;
+use utils::to_native_path;
 
 #[test]
 fn print() {
@@ -135,7 +138,12 @@ fn modify() {
     .arg("--output-filename")
     .arg(&temp_path)
     .assert()
-    .success();
+    .success()
+    .stdout(format!(
+      "Modifying \"{}\" => \"{}\" …\n",
+      to_native_path(&dicom_file),
+      temp_path.display()
+    ));
 
   let assert = Command::cargo_bin("dcmfx_cli")
     .unwrap()
@@ -171,7 +179,11 @@ fn modify_in_place() {
     .arg("--in-place")
     .arg(&temp_path)
     .assert()
-    .success();
+    .success()
+    .stdout(format!(
+      "Modifying \"{}\" in place …\n",
+      temp_path.display()
+    ));
 
   let assert = Command::cargo_bin("dcmfx_cli")
     .unwrap()

@@ -147,11 +147,20 @@ fn modify_input_source(
     .clone()
     .unwrap_or_else(|| input_source.path().unwrap().clone());
 
-  if output_filename != PathBuf::from("-")
-    && !args.in_place
-    && !args.force_overwrite
-  {
-    prompt_to_overwrite_if_exists(&output_filename);
+  if output_filename != PathBuf::from("-") {
+    if args.in_place {
+      println!("Modifying \"{}\" in place …", input_source,);
+    } else {
+      println!(
+        "Modifying \"{}\" => \"{}\" …",
+        input_source,
+        output_filename.display()
+      );
+    }
+
+    if !args.in_place && !args.force_overwrite {
+      prompt_to_overwrite_if_exists(&output_filename);
+    }
   }
 
   // Append a random suffix to get a unique name for a temporary output file.
@@ -196,7 +205,6 @@ fn modify_input_source(
   let input_stream = input_source.open_read_stream()?;
 
   streaming_rewrite(
-    input_source,
     input_stream,
     tmp_output_filename.as_ref().unwrap_or(&output_filename),
     write_config,
@@ -260,7 +268,6 @@ fn parse_transfer_syntax_flag(
 /// file.
 ///
 fn streaming_rewrite(
-  input_source: &InputSource,
   mut input_stream: Box<dyn Read>,
   output_filename: &PathBuf,
   write_config: P10WriteConfig,
@@ -269,7 +276,7 @@ fn streaming_rewrite(
 ) -> Result<(), P10Error> {
   // Open output stream
   let mut output_stream: Box<dyn Write> =
-    utils::open_output_stream(output_filename, input_source.path(), false)?;
+    utils::open_output_stream(output_filename, None, false)?;
 
   // Create read and write contexts
   let mut p10_read_context = P10ReadContext::new();

@@ -20,15 +20,16 @@ pub fn open_output_stream(
   if *path == PathBuf::from("-") {
     Ok(Box::new(std::io::stdout()))
   } else {
+    if let Some(display_path) = display_path {
+      println!("Writing \"{}\" …", display_path.display());
+    }
+
     if !force_overwrite {
       prompt_to_overwrite_if_exists(path);
     }
 
     match File::create(path) {
-      Ok(file) => {
-        println!("Writing \"{}\" …", display_path.unwrap_or(path).display());
-        Ok(Box::new(file))
-      }
+      Ok(file) => Ok(Box::new(file)),
 
       Err(e) => Err(P10Error::FileError {
         when: "Opening file".to_string(),
