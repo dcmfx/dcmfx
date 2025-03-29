@@ -76,7 +76,7 @@ impl PixelDataDefinition {
     }
 
     // Check that the high bit is one less than the bits stored
-    if high_bit + 1 != bits_stored {
+    if high_bit != bits_stored - 1 {
       return Err(DataError::new_value_invalid(format!(
         "High bit '{}' is not one less than the bits stored '{}'",
         high_bit, bits_stored
