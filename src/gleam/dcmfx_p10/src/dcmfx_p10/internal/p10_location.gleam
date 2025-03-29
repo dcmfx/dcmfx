@@ -422,7 +422,7 @@ fn update_specific_character_set_clarifying_data_element(
     |> dcmfx_character_set.from_string
     |> result.map_error(fn(_) {
       p10_error.SpecificCharacterSetInvalid(
-        string.slice(specific_character_set, 0, 100),
+        string.slice(specific_character_set, 0, 64),
         "",
       )
     })

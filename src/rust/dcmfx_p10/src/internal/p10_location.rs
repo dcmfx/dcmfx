@@ -474,9 +474,7 @@ impl P10Location {
       specific_character_set,
     )
     .map_err(|_| P10Error::SpecificCharacterSetInvalid {
-      specific_character_set: specific_character_set
-        [..specific_character_set.len().min(100)]
-        .to_string(),
+      specific_character_set: specific_character_set.chars().take(64).collect(),
       details: "".to_string(),
     })?;
 
