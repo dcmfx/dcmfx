@@ -954,7 +954,7 @@ dependencies = [
 [[package]]
 name = "zune-core"
 version = "0.4.11"
-source = "git+https://github.com/dcmfx/zune-image.git?branch=0.4.x-dcmfx#108a523216190fa07f6bcb6c755737984c35285b"
+source = "git+https://github.com/dcmfx/zune-image.git?branch=0.4.x-dcmfx#2b27da0fc52444d600dc8513773030ab76949856"
 
 [[package]]
 name = "zune-core"
@@ -974,7 +974,7 @@ dependencies = [
 [[package]]
 name = "zune-jpeg"
 version = "0.4.14"
-source = "git+https://github.com/dcmfx/zune-image.git?branch=0.4.x-dcmfx#108a523216190fa07f6bcb6c755737984c35285b"
+source = "git+https://github.com/dcmfx/zune-image.git?branch=0.4.x-dcmfx#2b27da0fc52444d600dc8513773030ab76949856"
 dependencies = [
  "zune-core 0.4.11",
 ]

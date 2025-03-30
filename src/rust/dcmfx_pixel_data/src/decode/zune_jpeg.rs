@@ -11,7 +11,9 @@ pub fn decode_single_channel(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
-  let pixels = decode(definition, data)?;
+  let pixels =
+    decode(definition, data, zune_core::colorspace::ColorSpace::Luma)?;
+
   SingleChannelImage::new_u8(definition.columns(), definition.rows(), pixels)
 }
 
@@ -21,7 +23,9 @@ pub fn decode_color(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let pixels = decode(definition, data)?;
+  let pixels =
+    decode(definition, data, zune_core::colorspace::ColorSpace::RGB)?;
+
   ColorImage::new_u8(
     definition.columns(),
     definition.rows(),
@@ -33,12 +37,16 @@ pub fn decode_color(
 fn decode(
   definition: &PixelDataDefinition,
   data: &[u8],
+  color_space: zune_core::colorspace::ColorSpace,
 ) -> Result<Vec<u8>, DataError> {
   let mut decoder = zune_jpeg::JpegDecoder::new(data);
 
+  decoder
+    .set_options(decoder.get_options().jpeg_set_out_colorspace(color_space));
+
   decoder.decode_headers().map_err(|e| {
     DataError::new_value_invalid(format!(
-      "JPEG Lossless pixel data decoding failed with '{}'",
+      "JPEG pixel data decoding failed with '{}'",
       e
     ))
   })?;
