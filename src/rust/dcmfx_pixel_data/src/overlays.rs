@@ -21,7 +21,9 @@ use dcmfx_p10::{P10CustomTypeTransform, PredicateFunction};
 /// Ref: PS3.3 C.9.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub struct Overlays(Vec<Overlay>);
+pub struct Overlays {
+  overlays: Vec<Overlay>,
+}
 
 impl Overlays {
   /// Returns a [`P10CustomTypeTransform`] that extracts an [`Overlays`] from a
@@ -85,7 +87,19 @@ impl Overlays {
       overlays.push(Overlay::from_data_set(data_set, tag_group)?);
     }
 
-    Ok(Overlays(overlays))
+    Ok(Overlays { overlays })
+  }
+
+  /// Returns whether the internal list of overlays is empty.
+  ///
+  pub fn is_empty(&self) -> bool {
+    self.overlays.is_empty()
+  }
+
+  /// Returns an iterator over the individual overlays.
+  ///
+  pub fn iter(&self) -> core::slice::Iter<'_, Overlay> {
+    self.overlays.iter()
   }
 
   /// Renders all overlays onto an [`RgbImage`] using the default overlay
@@ -96,7 +110,7 @@ impl Overlays {
     rgb_image: &mut image::RgbImage,
     frame_index: usize,
   ) {
-    self.render_to_rgb_image_using_colors(
+    self.render_to_rgb_image_with_colors(
       rgb_image,
       frame_index,
       &Self::DEFAULT_COLORS,
@@ -105,13 +119,13 @@ impl Overlays {
 
   /// Renders all overlays onto an [`RgbImage`] using the specified colors.
   ///
-  pub fn render_to_rgb_image_using_colors(
+  pub fn render_to_rgb_image_with_colors(
     &self,
     rgb_image: &mut image::RgbImage,
     frame_index: usize,
     colors: &[image::Rgb<u8>; 16],
   ) {
-    for (i, overlay) in self.0.iter().enumerate() {
+    for (i, overlay) in self.iter().enumerate() {
       overlay.render_to_rgb_image(rgb_image, frame_index, colors[i]);
     }
   }

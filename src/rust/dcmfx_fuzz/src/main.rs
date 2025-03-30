@@ -43,15 +43,20 @@ fn main() {
 
       // Render the overlays. This should never panic.
       if let Ok(overlays) = Overlays::from_data_set(&data_set) {
-        if let Ok(definition) = PixelDataDefinition::from_data_set(&data_set) {
-          let mut rgb_image = image::RgbImage::from_raw(
-            definition.rows().into(),
-            definition.columns().into(),
-            vec![0u8; definition.pixel_count() * 3],
-          )
-          .unwrap();
+        if !overlays.is_empty() {
+          if let Ok(definition) = PixelDataDefinition::from_data_set(&data_set) {
+            if definition.pixel_count() <= 4096 * 4096 {
+              // Allocate output image
+              let mut rgb_image = image::RgbImage::from_raw(
+                definition.rows().into(),
+                definition.columns().into(),
+                vec![0u8; definition.pixel_count() * 3],
+              )
+              .unwrap();
 
-          overlays.render_to_rgb_image(&mut rgb_image, 0);
+              overlays.render_to_rgb_image(&mut rgb_image, 0);
+            }
+          }
         }
       }
     }
