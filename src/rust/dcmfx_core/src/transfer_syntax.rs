@@ -245,7 +245,7 @@ pub const MPEG2_MAIN_PROFILE_MAIN_LEVEL: TransferSyntax = TransferSyntax {
 ///
 pub const FRAGMENTABLE_MPEG2_MAIN_PROFILE_MAIN_LEVEL: TransferSyntax =
   TransferSyntax {
-    name: "MPEG2 Main Profile @ Main Level",
+    name: "Fragmentable MPEG2 Main Profile @ Main Level",
     uid: "1.2.840.10008.1.2.4.100.1",
     vr_serialization: VrSerialization::VrExplicit,
     endianness: Endianness::LittleEndian,
