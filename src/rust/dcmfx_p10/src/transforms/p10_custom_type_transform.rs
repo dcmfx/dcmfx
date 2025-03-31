@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
 
-use dcmfx_core::{DataElementTag, DataError, DataSet};
+use dcmfx_core::{DataElementTag, DataError, DataSet, IodModule};
 
 use crate::{
   DataSetBuilder, P10Error, P10FilterTransform, P10Token, PredicateFunction,
@@ -83,6 +83,16 @@ impl<T> P10CustomTypeTransform<T> {
       target_from_data_set,
       target: None,
     }
+  }
+
+  /// Creates a new transform for converting a stream of DICOM P10 tokens into
+  /// a custom type that implements [`IodModule`].
+  ///
+  pub fn new_for_iod_module() -> Self
+  where
+    T: IodModule,
+  {
+    Self::new(T::iod_module_data_element_tags(), T::from_data_set)
   }
 
   /// Adds the next token in the DICOM P10 token stream.
