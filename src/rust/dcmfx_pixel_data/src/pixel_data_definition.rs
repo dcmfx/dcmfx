@@ -50,7 +50,7 @@ impl PixelDataDefinition {
     dictionary::SEGMENTED_BLUE_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
   ];
 
-  /// Creates a new pixel data definition with the given values. A number of
+  /// Creates a new [`PixelDataDefinition`] with the given values. A number of
   /// validations are performed to ensure the definition is internally
   /// consistent.
   ///

@@ -14,6 +14,7 @@ mod no_std_allocator;
 mod color_image;
 mod decode;
 mod encode;
+pub mod iods;
 mod luts;
 mod overlays;
 mod p10_pixel_data_frame_filter;
