@@ -1073,6 +1073,23 @@ pub fn get_age(
   ))
 }
 
+/// Returns the attribute tags value for a data element in a data set. If the
+/// data element does not hold an `AttributeTag` value then an error is
+/// returned.
+///
+pub fn get_attribute_tags(
+  data_set: DataSet,
+  tag: DataElementTag,
+) -> Result(List(DataElementTag), DataError) {
+  data_set
+  |> get_value(tag)
+  |> result.then(data_element_value.get_attribute_tags)
+  |> result.map_error(data_error.with_path(
+    _,
+    data_set_path.new_with_data_element(tag),
+  ))
+}
+
 /// Returns the date value for a data element in a data set. If the data element
 /// does not hold a `Date` value then an error is returned.
 ///

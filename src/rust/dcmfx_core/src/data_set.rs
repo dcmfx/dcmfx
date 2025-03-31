@@ -881,6 +881,20 @@ impl DataSet {
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
   }
 
+  /// Returns the attribute tags value for a data element in a data set. If the
+  /// data element does not hold an `AttributeTag` value then an error is
+  /// returned.
+  ///
+  pub fn get_attribute_tags(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<Vec<DataElementTag>, DataError> {
+    self
+      .get_value(tag)?
+      .get_attribute_tags()
+      .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
+  }
+
   /// Returns the date value for a data element in a data set. If the data
   /// element does not hold a `Date` value then an error is returned.
   ///
