@@ -1,6 +1,6 @@
 name: Release
 
-on: workflow_dispatch
+on: push # workflow_dispatch
 
 permissions:
   checks: read
@@ -39,52 +39,56 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Wait for tests to complete
-        if: steps.semantic-release.outputs.new_release_published == 'true'
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: ${{ github.sha }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          check-regexp: Test
+      # - name: Wait for tests to complete
+      #   if: steps.semantic-release.outputs.new_release_published == 'true'
+      #   uses: lewagon/wait-on-check-action@v1.3.4
+      #   with:
+      #     ref: ${{ github.sha }}
+      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
+      #     check-regexp: Test
 
   build_rust_cli_tool:
     name: Build Rust CLI tool
-    timeout-minutes: 10
+    timeout-minutes: 120
 
     needs: check_semantic_release
-    if: needs.check_semantic_release.outputs.new_release_published == 'true'
+    # if: needs.check_semantic_release.outputs.new_release_published == 'true'
 
     strategy:
       matrix:
         target:
-          - aarch64-apple-darwin
+          # - aarch64-apple-darwin
           - aarch64-unknown-linux-musl
-          - x86_64-apple-darwin
-          - x86_64-pc-windows-msvc
-          - x86_64-unknown-linux-musl
+          # - x86_64-apple-darwin
+          # - x86_64-pc-windows-gnu
+          # - x86_64-unknown-linux-musl
         include:
-          - runs-on: macos-14
-            target: aarch64-apple-darwin
-            cargo-tool: cargo
+          # - runs-on: macos-14
+          #   shell: bash
+          #   target: aarch64-apple-darwin
           - runs-on: ubuntu-24.04
+            shell: bash
             target: aarch64-unknown-linux-musl
-            cargo-tool: cross
             rust-flags: -C link-arg=-Wl,--build-id
-          - runs-on: macos-13
-            target: x86_64-apple-darwin
-            cargo-tool: cargo
-          - runs-on: windows-2022
-            target: x86_64-pc-windows-msvc
-            cargo-tool: cargo
-          - runs-on: ubuntu-24.04
-            target: x86_64-unknown-linux-musl
-            cargo-tool: cross
-            rust-flags: -C link-arg=-Wl,--build-id
+          # - runs-on: macos-13
+          #   shell: bash
+          #   target: x86_64-apple-darwin
+          # - runs-on: windows-2022
+          #   shell: msys2 {0}
+          #   target: x86_64-pc-windows-gnu
+          # - runs-on: ubuntu-24.04
+          #   shell: bash
+          #   target: x86_64-unknown-linux-musl
+          #   rust-flags: -C link-arg=-Wl,--build-id
 
     runs-on: ${{ matrix.runs-on }}
 
     env:
       CARGO_TERM_COLOR: always
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
 
     steps:
       - name: Checkout repository
@@ -94,13 +98,99 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: 1.86
-          target: ${{ matrix.target }}
+          cache-workspaces: src/rust
+          override: false
 
-      - name: Enable Rust dependency caching
-        uses: Swatinem/rust-cache@v2
+      - name: Setup MSYS2 (Windows)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        uses: msys2/setup-msys2@v2
         with:
-          key: v1-${{ matrix.target }}
-          workspaces: rust
+          release: false
+
+      - name: Setup Cargo in MSYS2 (Windows)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: |
+          echo 'export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"' >> ~/.bash_profile
+          source ~/.bash_profile
+          rustup install 1.86-${{ matrix.target }}
+          rustup default 1.86-${{ matrix.target }}
+  
+      - name: Add Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install platform-specific dependencies (macOS)
+        if: matrix.target == 'aarch64-apple-darwin' || matrix.target == 'x86_64-apple-darwin'
+        run: brew install nasm
+
+      - name: Setup musl toolchain (Linux)
+        if: matrix.target == 'aarch64-unknown-linux-musl' || matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt install nasm
+
+          if [ "${{ matrix.target }}" = "x86_64-unknown-linux-musl" ]; then
+            MUSL_ARCH=x86_64
+          else
+            MUSL_ARCH=aarch64
+          fi
+
+          wget -q https://musl.cc/$MUSL_ARCH-linux-musl-cross.tgz
+          tar -xzf $MUSL_ARCH-linux-musl-cross.tgz
+          mv $MUSL_ARCH-linux-musl-cross /opt/musl-cross
+          echo "/opt/musl-cross/bin" >> $GITHUB_PATH
+
+          ln -s /opt/musl-cross/bin/$MUSL_ARCH-linux-musl-gcc-ar /opt/musl-cross/bin/musl-ar
+          ln -s /opt/musl-cross/bin/$MUSL_ARCH-linux-musl-g++ /opt/musl-cross/bin/musl-g++
+          ln -s /opt/musl-cross/bin/$MUSL_ARCH-linux-musl-gcc /opt/musl-cross/bin/musl-gcc
+          ln -s /opt/musl-cross/bin/$MUSL_ARCH-linux-musl-gcc-nm /opt/musl-cross/bin/musl-nm
+          ln -s /opt/musl-cross/bin/$MUSL_ARCH-linux-musl-gcc-ranlib /opt/musl-cross/bin/musl-ranlib
+          ln -s $(which pkg-config) /opt/musl-cross/bin/musl-pkg-config
+
+          echo "PKG_CONFIG_PATH=/opt/musl-cross/$MUSL_ARCH-linux-musl/lib/pkgconfig" >> $GITHUB_ENV
+
+      - name: Install platform-specific dependencies (Windows)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: |
+          pacman -S --noconfirm --needed autotools cmake git mingw-w64-x86_64-gcc mingw-w64-x86_64-clang-libs nasm
+          cp /mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mm_malloc.h /mingw64/include
+
+      # - uses: mxschmitt/action-tmate@v3
+      #   if: matrix.target == 'aarch64-unknown-linux-musl'
+
+      - name: Build libx264
+        run: |
+          cd ..
+          git clone --branch stable https://code.videolan.org/videolan/x264.git
+          cd x264
+
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+            PREFIX=/mingw64
+          elif [[ "${{ matrix.target }}" = "aarch64-apple-darwin" || "${{ matrix.target }}" = "x86_64-apple-darwin" ]]; then
+            PREFIX=/usr/local
+          else
+            export AR=musl-ar
+            export CC=musl-gcc
+
+            if [ "${{ matrix.target }}" = "x86_64-unknown-linux-musl" ]; then
+              PREFIX=/opt/musl-cross/x86_64-linux-musl
+              EXTRA_CONFIGURE_ARGS="--host=x86_64-linux-musl"
+            else
+              PREFIX=/opt/musl-cross/aarch64-linux-musl
+              EXTRA_CONFIGURE_ARGS="--host=aarch64-linux-musl"
+            fi
+          fi
+
+          ./configure \
+            --enable-static --enable-pic --disable-cli --disable-swscale \
+            --disable-lavf --disable-ffms --disable-gpac --disable-avs  \
+            --disable-lsmash --disable-opencl --extra-cflags=-O3 \
+            --prefix=$PREFIX $EXTRA_CONFIGURE_ARGS
+          make -j$(nproc)
+
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+            make install
+          else
+            sudo make install
+          fi
 
       - name: Fetch dependencies
         working-directory: src/rust
@@ -108,29 +198,25 @@ jobs:
 
       - name: Set version number in Cargo.toml files
         working-directory: src/rust
-        shell: bash
-        run: find . -name "Cargo.toml" -exec sed -i'' -E "s/version = \"0.0.0\"/version = \"${{ needs.check_semantic_release.outputs.new_release_version }}\"/" {} +
+        run: find . -name "Cargo.toml" -exec sed -i'' -E "s/version = \"0.0.0\"/version = \"0.15.0\"/" {} +
 
       - name: Build release binary
-        uses: clechasseur/rs-cargo@v3
+        working-directory: src/rust
         env:
           RUSTFLAGS: ${{ matrix.rust-flags }}
-        with:
-          working-directory: src/rust
-          command: build
-          args: --release --offline --target ${{ matrix.target }} --package dcmfx_cli
-          tool: ${{ matrix.cargo-tool }}
+        run: |
+          pkg-config --libs --static x264
+          cargo build --release --offline --target ${{ matrix.target }} --package dcmfx_cli
 
       - name: Package
-        shell: bash
         run: |
-          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
             BINARY_SUFFIX=".exe"
           else
             BINARY_SUFFIX=""
           fi
 
-          ARCHIVE="dcmfx-v${{ needs.check_semantic_release.outputs.new_release_version }}-${{ matrix.target }}.tar.gz"
+          ARCHIVE="dcmfx-v0.15.0-${{ matrix.target }}.tar.gz"
           cp src/rust/target/${{ matrix.target }}/release/dcmfx_cli$BINARY_SUFFIX dcmfx$BINARY_SUFFIX
           tar -czvf "$ARCHIVE" dcmfx$BINARY_SUFFIX
 
@@ -147,362 +233,362 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  build_linux_packages:
-    name: Build Linux packages
-    timeout-minutes: 10
-    runs-on: ubuntu-24.04
-
-    needs:
-      - check_semantic_release
-      - build_rust_cli_tool
-
-    strategy:
-      matrix:
-        target:
-          - aarch64-unknown-linux-musl
-          - x86_64-unknown-linux-musl
-        include:
-          - architecture-deb: arm64
-            architecture-rpm: aarch64
-            target: aarch64-unknown-linux-musl
-          - architecture-deb: amd64
-            architecture-rpm: x86_64
-            target: x86_64-unknown-linux-musl
-
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dcmfx-${{ matrix.target }}
-
-      - name: Extract binary
-        run: tar xzf dcmfx-v${{ needs.check_semantic_release.outputs.new_release_version }}-${{ matrix.target }}.tar.gz
-
-      - name: Create .deb package structure
-        run: |
-          mkdir -p package/DEBIAN
-          mkdir -p package/usr/bin
-
-          echo "
-          Package:      dcmfx
-          Version:      ${{ needs.check_semantic_release.outputs.new_release_version }}
-          Architecture: ${{ matrix.architecture-deb }}
-          Section:      utils
-          Maintainer:   Richard Viney <richard.viney@gmail.com>
-          Description:  CLI tool for working with DICOM and DICOM JSON
-          Homepage:     https://dcmfx.github.io
-          " > package/DEBIAN/control
-
-          cp dcmfx package/usr/bin
-
-      - name: Build .deb package
-        run: |
-          DEB_PACKAGE="dcmfx_${{ needs.check_semantic_release.outputs.new_release_version }}_${{ matrix.architecture-deb }}.deb"
-
-          dpkg-deb --build package $DEB_PACKAGE
-          openssl dgst -r -sha256 -out "$DEB_PACKAGE".sha256 "$DEB_PACKAGE"
-
-          echo "DEB_PACKAGE=$DEB_PACKAGE" >> $GITHUB_ENV
-
-      - name: Create .rpm spec
-        run: |
-          echo "
-          Name:     dcmfx
-          Version:  ${{ needs.check_semantic_release.outputs.new_release_version }}
-          Release:  1%{?dist}
-          Summary:  CLI tool for working with DICOM and DICOM JSON
-          License:  AGPL-3.0-only
-          Packager: Richard Viney <richard.viney@gmail.com>
-          URL:      https://dcmfx.github.io
-
-          # Disable post-install stripping of binaries as it fails for the
-          # aarch64 RPM when built on an x86_64 GitHub Actions runner
-          %define __os_install_post %{nil}
-
-          %description
-          CLI tool for working with DICOM and DICOM JSON.
-
-          %prep
-
-          %build
-
-          %install
-          mkdir -p %{buildroot}/%{_bindir}
-          install -m 0755 %{name} %{buildroot}/%{_bindir}/%{name}
-
-          %files
-          %{_bindir}/%{name}
-          " > dcmfx.spec
-
-      - name: Build .rpm package
-        run: |
-          rpmbuild -bb --build-in-place --target ${{ matrix.architecture-rpm }} dcmfx.spec
-
-          RPM_PACKAGE="dcmfx-${{ needs.check_semantic_release.outputs.new_release_version }}-1.${{ matrix.architecture-rpm }}.rpm"
-
-          cp ~/rpmbuild/RPMS/${{ matrix.architecture-rpm }}/$RPM_PACKAGE $RPM_PACKAGE
-          openssl dgst -r -sha256 -out "$RPM_PACKAGE".sha256 "$RPM_PACKAGE"
-
-          echo "RPM_PACKAGE=$RPM_PACKAGE" >> $GITHUB_ENV
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dcmfx-linux-packages-${{ matrix.target }}
-          path: |
-            ${{ env.DEB_PACKAGE }}
-            ${{ env.DEB_PACKAGE }}.sha256
-            ${{ env.RPM_PACKAGE }}
-            ${{ env.RPM_PACKAGE }}.sha256
-          if-no-files-found: error
-          retention-days: 1
-
-  release:
-    name: Release on GitHub
-    timeout-minutes: 10
-    runs-on: ubuntu-24.04
-
-    needs:
-      - build_rust_cli_tool
-      - build_linux_packages
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Semantic release
-        id: semantic-release
-        uses: cycjimmy/semantic-release-action@v4
-        with:
-          extra_plugins: conventional-changelog-conventionalcommits
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  update_homebrew_tap:
-    name: Update Homebrew tap
-    timeout-minutes: 10
-    runs-on: ubuntu-24.04
-    environment: release
-
-    needs:
-      - check_semantic_release
-      - release
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          repository: dcmfx/homebrew-tap
-          token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Update formula with latest version and hashes
-        run: |
-          VERSION=${{ needs.check_semantic_release.outputs.new_release_version }}
-
-          read -r AARCH64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-aarch64-unknown-linux-musl/dcmfx-v$VERSION-aarch64-unknown-linux-musl.tar.gz.sha256)
-          read -r X86_64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-x86_64-unknown-linux-musl/dcmfx-v$VERSION-x86_64-unknown-linux-musl.tar.gz.sha256)
-          read -r AARCH64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-aarch64-apple-darwin/dcmfx-v$VERSION-aarch64-apple-darwin.tar.gz.sha256)
-          read -r X86_64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-x86_64-apple-darwin/dcmfx-v$VERSION-x86_64-apple-darwin.tar.gz.sha256)
-
-          sed \
-            -i \
-            -e 's/VERSION = ".*"/VERSION = "'"$VERSION"'"/' \
-            -e 's/"aarch64-unknown-linux-musl" => ".*"/"aarch64-unknown-linux-musl" => "'"$AARCH64_UNKNOWN_LINUX_MUSL_SHA"'"/' \
-            -e 's/"x86_64-unknown-linux-musl" => ".*"/"x86_64-unknown-linux-musl" => "'"$X86_64_UNKNOWN_LINUX_MUSL_SHA"'"/' \
-            -e 's/"aarch64-apple-darwin" => ".*"/"aarch64-apple-darwin" => "'"$AARCH64_APPLE_DARWIN_SHA"'"/' \
-            -e 's/"x86_64-apple-darwin" => ".*"/"x86_64-apple-darwin" => "'"$X86_64_APPLE_DARWIN_SHA"'"/' \
-            Formula/dcmfx.rb
-
-          cat Formula/dcmfx.rb
-
-      - name: Commit and push changes
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add Formula/dcmfx.rb
-          git commit -m "chore: Release v${{ needs.check_semantic_release.outputs.new_release_version }}"
-          git push
-
-  update_apt_repository:
-    name: Update APT repository
-    timeout-minutes: 10
-    runs-on: ubuntu-24.04
-    environment: release
-
-    needs:
-      - check_semantic_release
-      - release
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          repository: dcmfx/apt-repository
-          token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dcmfx-linux-packages-*
-
-      - name: Update repository with latest packages
-        run: |
-          mkdir -p pool/main
-          find dcmfx-linux-packages-* -type f -name "*.deb" -exec cp {} pool/main \;
-
-          mkdir -p dists/stable/main/binary-{amd64,arm64}
-          apt-ftparchive generate -c=aptftp.conf aptgenerate.conf
-          apt-ftparchive release -c=aptftp.conf dists/stable > dists/stable/Release
-
-      - name: Commit and push changes
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add pool dists
-          git commit -m "chore: Release v${{ needs.check_semantic_release.outputs.new_release_version }}"
-          git push
-
-  update_yum_repository:
-    name: Update YUM repository
-    timeout-minutes: 10
-    runs-on: ubuntu-24.04
-    environment: release
-
-    needs:
-      - check_semantic_release
-      - release
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          repository: dcmfx/yum-repository
-          token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dcmfx-linux-packages-*
-
-      - name: Update repository with latest packages
-        run: |
-          find dcmfx-linux-packages-* -type f -name "*.rpm" -exec cp {} . \;
-
-          sudo apt install createrepo-c
-          createrepo_c .
-
-      - name: Commit and push changes
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add *.rpm repodata
-          git commit -m "chore: Release v${{ needs.check_semantic_release.outputs.new_release_version }}"
-          git push
-
-  update_arch_user_repository:
-    name: Update Arch User Repository
-    timeout-minutes: 10
-    runs-on: ubuntu-24.04
-    environment: release
-
-    needs:
-      - check_semantic_release
-      - release
-
-    steps:
-      - name: Setup SSH key for the Arch User Repository (AUR)
-        run: |
-          echo "${{ secrets.ARCH_USER_REPOSITORY_SSH_KEY }}" > ~/aur_ssh.key
-          chmod 600 ~/aur_ssh.key
-          echo "GIT_SSH_COMMAND=ssh -i ~/aur_ssh.key -o StrictHostKeyChecking=no" >> $GITHUB_ENV
-
-      - name: Clone AUR repository for DCMfx
-        run: git clone ssh://aur@aur.archlinux.org/dcmfx.git
-
-      - name: Update PKGBUILD and .SRCINFO for new release
-        working-directory: dcmfx
-        run: |
-          VERSION=${{ needs.check_semantic_release.outputs.new_release_version }}
-
-          curl -L https://github.com/dcmfx/dcmfx/archive/v$VERSION.tar.gz -o dcmfx.tar.gz
-          ARCHIVE_SHA=$(openssl dgst -r -sha256 dcmfx.tar.gz | awk '{print $1}')
-
-          sed \
-            -i \
-            -e 's/pkgver=.*/pkgver='$VERSION'/' \
-            -e "s/sha256sums=.*/sha256sums=('$ARCHIVE_SHA')/" \
-            PKGBUILD
-
-          cat PKGBUILD
-
-          # It would be better to update .SRCINFO with makepkg --printsrcinfo,
-          # but the current version in APT crashes immediately when run
-          sed \
-            -i \
-            -e 's/pkgver = .*/pkgver = '$VERSION'/' \
-            -e "s/source = dcmfx-.*/source = dcmfx-$VERSION.tar.gz::https:\/\/github.com\/dcmfx\/dcmfx\/archive\/v$VERSION.tar.gz/" \
-            -e "s/sha256sums = .*/sha256sums = $ARCHIVE_SHA/" \
-            .SRCINFO
-
-          cat .SRCINFO
-
-      - name: Commit and push changes
-        working-directory: dcmfx
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add PKGBUILD .SRCINFO
-          git commit -m "chore: Release v${{ needs.check_semantic_release.outputs.new_release_version }}"
-          git push
-
-  release_docs:
-    name: Release docs
-    timeout-minutes: 10
-    runs-on: ubuntu-24.04
-    environment: release
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          path: dcmfx
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.14
-
-      - name: Install dependencies
-        uses: bahmutov/npm-install@v1
-        with:
-          working-directory: dcmfx/docs
-
-      - name: Build with VitePress
-        working-directory: dcmfx/docs
-        run: npm run build
-
-      - name: Checkout dcmfx.github.io
-        uses: actions/checkout@v4
-        with:
-          repository: dcmfx/dcmfx.github.io
-          path: dcmfx.github.io
-          token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
-
-      - name: Push docs to dcmfx.github.io repository
-        working-directory: dcmfx.github.io
-        run: |
-          rm -rf *.html *.json images
-          cp -r ../dcmfx/docs/.vitepress/dist/* .
-
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-
-          git add .
-          git commit -m "chore: Update docs"
-          git push
+  # build_linux_packages:
+  #   name: Build Linux packages
+  #   timeout-minutes: 10
+  #   runs-on: ubuntu-24.04
+
+  #   needs:
+  #     - check_semantic_release
+  #     - build_rust_cli_tool
+
+  #   strategy:
+  #     matrix:
+  #       target:
+  #         - aarch64-unknown-linux-musl
+  #         - x86_64-unknown-linux-musl
+  #       include:
+  #         - architecture-deb: arm64
+  #           architecture-rpm: aarch64
+  #           target: aarch64-unknown-linux-musl
+  #         - architecture-deb: amd64
+  #           architecture-rpm: x86_64
+  #           target: x86_64-unknown-linux-musl
+
+  #   steps:
+  #     - name: Download build artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: dcmfx-${{ matrix.target }}
+
+  #     - name: Extract binary
+  #       run: tar xzf dcmfx-v0.15.0-${{ matrix.target }}.tar.gz
+
+  #     - name: Create .deb package structure
+  #       run: |
+  #         mkdir -p package/DEBIAN
+  #         mkdir -p package/usr/bin
+
+  #         echo "
+  #         Package:      dcmfx
+  #         Version:      0.15.0
+  #         Architecture: ${{ matrix.architecture-deb }}
+  #         Section:      utils
+  #         Maintainer:   Richard Viney <richard.viney@gmail.com>
+  #         Description:  CLI tool for working with DICOM and DICOM JSON
+  #         Homepage:     https://dcmfx.github.io
+  #         " > package/DEBIAN/control
+
+  #         cp dcmfx package/usr/bin
+
+  #     - name: Build .deb package
+  #       run: |
+  #         DEB_PACKAGE="dcmfx_0.15.0_${{ matrix.architecture-deb }}.deb"
+
+  #         dpkg-deb --build package $DEB_PACKAGE
+  #         openssl dgst -r -sha256 -out "$DEB_PACKAGE".sha256 "$DEB_PACKAGE"
+
+  #         echo "DEB_PACKAGE=$DEB_PACKAGE" >> $GITHUB_ENV
+
+  #     - name: Create .rpm spec
+  #       run: |
+  #         echo "
+  #         Name:     dcmfx
+  #         Version:  0.15.0
+  #         Release:  1%{?dist}
+  #         Summary:  CLI tool for working with DICOM and DICOM JSON
+  #         License:  AGPL-3.0-only
+  #         Packager: Richard Viney <richard.viney@gmail.com>
+  #         URL:      https://dcmfx.github.io
+
+  #         # Disable post-install stripping of binaries as it fails for the
+  #         # aarch64 RPM when built on an x86_64 GitHub Actions runner
+  #         %define __os_install_post %{nil}
+
+  #         %description
+  #         CLI tool for working with DICOM and DICOM JSON.
+
+  #         %prep
+
+  #         %build
+
+  #         %install
+  #         mkdir -p %{buildroot}/%{_bindir}
+  #         install -m 0755 %{name} %{buildroot}/%{_bindir}/%{name}
+
+  #         %files
+  #         %{_bindir}/%{name}
+  #         " > dcmfx.spec
+
+  #     - name: Build .rpm package
+  #       run: |
+  #         rpmbuild -bb --build-in-place --target ${{ matrix.architecture-rpm }} dcmfx.spec
+
+  #         RPM_PACKAGE="dcmfx-0.15.0-1.${{ matrix.architecture-rpm }}.rpm"
+
+  #         cp ~/rpmbuild/RPMS/${{ matrix.architecture-rpm }}/$RPM_PACKAGE $RPM_PACKAGE
+  #         openssl dgst -r -sha256 -out "$RPM_PACKAGE".sha256 "$RPM_PACKAGE"
+
+  #         echo "RPM_PACKAGE=$RPM_PACKAGE" >> $GITHUB_ENV
+
+  #     - name: Upload build artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: dcmfx-linux-packages-${{ matrix.target }}
+  #         path: |
+  #           ${{ env.DEB_PACKAGE }}
+  #           ${{ env.DEB_PACKAGE }}.sha256
+  #           ${{ env.RPM_PACKAGE }}
+  #           ${{ env.RPM_PACKAGE }}.sha256
+  #         if-no-files-found: error
+  #         retention-days: 1
+
+  # release:
+  #   name: Release on GitHub
+  #   timeout-minutes: 10
+  #   runs-on: ubuntu-24.04
+
+  #   needs:
+  #     - build_rust_cli_tool
+  #     - build_linux_packages
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Download build artifacts
+  #       uses: actions/download-artifact@v4
+
+  #     - name: Semantic release
+  #       id: semantic-release
+  #       uses: cycjimmy/semantic-release-action@v4
+  #       with:
+  #         extra_plugins: conventional-changelog-conventionalcommits
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # update_homebrew_tap:
+  #   name: Update Homebrew tap
+  #   timeout-minutes: 10
+  #   runs-on: ubuntu-24.04
+  #   environment: release
+
+  #   needs:
+  #     - check_semantic_release
+  #     - release
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: dcmfx/homebrew-tap
+  #         token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
+
+  #     - name: Download build artifacts
+  #       uses: actions/download-artifact@v4
+
+  #     - name: Update formula with latest version and hashes
+  #       run: |
+  #         VERSION=0.15.0
+
+  #         read -r AARCH64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-aarch64-unknown-linux-musl/dcmfx-v$VERSION-aarch64-unknown-linux-musl.tar.gz.sha256)
+  #         read -r X86_64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-x86_64-unknown-linux-musl/dcmfx-v$VERSION-x86_64-unknown-linux-musl.tar.gz.sha256)
+  #         read -r AARCH64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-aarch64-apple-darwin/dcmfx-v$VERSION-aarch64-apple-darwin.tar.gz.sha256)
+  #         read -r X86_64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-x86_64-apple-darwin/dcmfx-v$VERSION-x86_64-apple-darwin.tar.gz.sha256)
+
+  #         sed \
+  #           -i \
+  #           -e 's/VERSION = ".*"/VERSION = "'"$VERSION"'"/' \
+  #           -e 's/"aarch64-unknown-linux-musl" => ".*"/"aarch64-unknown-linux-musl" => "'"$AARCH64_UNKNOWN_LINUX_MUSL_SHA"'"/' \
+  #           -e 's/"x86_64-unknown-linux-musl" => ".*"/"x86_64-unknown-linux-musl" => "'"$X86_64_UNKNOWN_LINUX_MUSL_SHA"'"/' \
+  #           -e 's/"aarch64-apple-darwin" => ".*"/"aarch64-apple-darwin" => "'"$AARCH64_APPLE_DARWIN_SHA"'"/' \
+  #           -e 's/"x86_64-apple-darwin" => ".*"/"x86_64-apple-darwin" => "'"$X86_64_APPLE_DARWIN_SHA"'"/' \
+  #           Formula/dcmfx.rb
+
+  #         cat Formula/dcmfx.rb
+
+  #     - name: Commit and push changes
+  #       run: |
+  #         git config user.name "GitHub Actions"
+  #         git config user.email "actions@github.com"
+  #         git add Formula/dcmfx.rb
+  #         git commit -m "chore: Release v0.15.0"
+  #         git push
+
+  # update_apt_repository:
+  #   name: Update APT repository
+  #   timeout-minutes: 10
+  #   runs-on: ubuntu-24.04
+  #   environment: release
+
+  #   needs:
+  #     - check_semantic_release
+  #     - release
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: dcmfx/apt-repository
+  #         token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
+
+  #     - name: Download build artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         pattern: dcmfx-linux-packages-*
+
+  #     - name: Update repository with latest packages
+  #       run: |
+  #         mkdir -p pool/main
+  #         find dcmfx-linux-packages-* -type f -name "*.deb" -exec cp {} pool/main \;
+
+  #         mkdir -p dists/stable/main/binary-{amd64,arm64}
+  #         apt-ftparchive generate -c=aptftp.conf aptgenerate.conf
+  #         apt-ftparchive release -c=aptftp.conf dists/stable > dists/stable/Release
+
+  #     - name: Commit and push changes
+  #       run: |
+  #         git config user.name "GitHub Actions"
+  #         git config user.email "actions@github.com"
+  #         git add pool dists
+  #         git commit -m "chore: Release v0.15.0"
+  #         git push
+
+  # update_yum_repository:
+  #   name: Update YUM repository
+  #   timeout-minutes: 10
+  #   runs-on: ubuntu-24.04
+  #   environment: release
+
+  #   needs:
+  #     - check_semantic_release
+  #     - release
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: dcmfx/yum-repository
+  #         token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
+
+  #     - name: Download build artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         pattern: dcmfx-linux-packages-*
+
+  #     - name: Update repository with latest packages
+  #       run: |
+  #         find dcmfx-linux-packages-* -type f -name "*.rpm" -exec cp {} . \;
+
+  #         sudo apt install createrepo-c
+  #         createrepo_c .
+
+  #     - name: Commit and push changes
+  #       run: |
+  #         git config user.name "GitHub Actions"
+  #         git config user.email "actions@github.com"
+  #         git add *.rpm repodata
+  #         git commit -m "chore: Release v0.15.0"
+  #         git push
+
+  # update_arch_user_repository:
+  #   name: Update Arch User Repository
+  #   timeout-minutes: 10
+  #   runs-on: ubuntu-24.04
+  #   environment: release
+
+  #   needs:
+  #     - check_semantic_release
+  #     - release
+
+  #   steps:
+  #     - name: Setup SSH key for the Arch User Repository (AUR)
+  #       run: |
+  #         echo "${{ secrets.ARCH_USER_REPOSITORY_SSH_KEY }}" > ~/aur_ssh.key
+  #         chmod 600 ~/aur_ssh.key
+  #         echo "GIT_SSH_COMMAND=ssh -i ~/aur_ssh.key -o StrictHostKeyChecking=no" >> $GITHUB_ENV
+
+  #     - name: Clone AUR repository for DCMfx
+  #       run: git clone ssh://aur@aur.archlinux.org/dcmfx.git
+
+  #     - name: Update PKGBUILD and .SRCINFO for new release
+  #       working-directory: dcmfx
+  #       run: |
+  #         VERSION=0.15.0
+
+  #         curl -L https://github.com/dcmfx/dcmfx/archive/v$VERSION.tar.gz -o dcmfx.tar.gz
+  #         ARCHIVE_SHA=$(openssl dgst -r -sha256 dcmfx.tar.gz | awk '{print $1}')
+
+  #         sed \
+  #           -i \
+  #           -e 's/pkgver=.*/pkgver='$VERSION'/' \
+  #           -e "s/sha256sums=.*/sha256sums=('$ARCHIVE_SHA')/" \
+  #           PKGBUILD
+
+  #         cat PKGBUILD
+
+  #         # It would be better to update .SRCINFO with makepkg --printsrcinfo,
+  #         # but the current version in APT crashes immediately when run
+  #         sed \
+  #           -i \
+  #           -e 's/pkgver = .*/pkgver = '$VERSION'/' \
+  #           -e "s/source = dcmfx-.*/source = dcmfx-$VERSION.tar.gz::https:\/\/github.com\/dcmfx\/dcmfx\/archive\/v$VERSION.tar.gz/" \
+  #           -e "s/sha256sums = .*/sha256sums = $ARCHIVE_SHA/" \
+  #           .SRCINFO
+
+  #         cat .SRCINFO
+
+  #     - name: Commit and push changes
+  #       working-directory: dcmfx
+  #       run: |
+  #         git config user.name "GitHub Actions"
+  #         git config user.email "actions@github.com"
+  #         git add PKGBUILD .SRCINFO
+  #         git commit -m "chore: Release v0.15.0"
+  #         git push
+
+  # release_docs:
+  #   name: Release docs
+  #   timeout-minutes: 10
+  #   runs-on: ubuntu-24.04
+  #   environment: release
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         path: dcmfx
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 22.14
+
+  #     - name: Install dependencies
+  #       uses: bahmutov/npm-install@v1
+  #       with:
+  #         working-directory: dcmfx/docs
+
+  #     - name: Build with VitePress
+  #       working-directory: dcmfx/docs
+  #       run: npm run build
+
+  #     - name: Checkout dcmfx.github.io
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: dcmfx/dcmfx.github.io
+  #         path: dcmfx.github.io
+  #         token: ${{ secrets.DCMFX_CI_GITHUB_TOKEN }}
+
+  #     - name: Push docs to dcmfx.github.io repository
+  #       working-directory: dcmfx.github.io
+  #       run: |
+  #         rm -rf *.html *.json images
+  #         cp -r ../dcmfx/docs/.vitepress/dist/* .
+
+  #         git config user.name "GitHub Actions"
+  #         git config user.email "actions@github.com"
+
+  #         git add .
+  #         git commit -m "chore: Update docs"
+  #         git push

@@ -23,3 +23,6 @@ keywords = ["dicom"]
 
 [profile.release]
 lto = true
+
+[patch.crates-io]
+ffmpeg-sys-next = { git = "https://github.com/dcmfx/rust-ffmpeg-sys.git", branch = "dcmfx" }

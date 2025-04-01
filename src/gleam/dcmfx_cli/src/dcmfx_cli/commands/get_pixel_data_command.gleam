@@ -22,17 +22,17 @@ import gleam/string
 import glint
 
 fn command_help() {
-  "Extracts pixel data from DICOM P10 files, writing each frame to an image "
-  <> "file"
+  "Extracts pixel data from DICOM P10 files, writing it to image and video "
+  <> "files"
 }
 
 fn output_prefix_flag() {
   glint.string_flag("output-prefix")
   |> glint.flag_help(
-    "The prefix for output image files. It is suffixed with a 4-digit frame "
-    <> "number and an appropriate file extension. This option is only valid "
-    <> "when a single input filename is specified. By default, the output "
-    <> "prefix is the input filename.",
+    "The prefix for output image files. When writing individual frames this "
+    <> "is suffixed with a 4-digit frame number, and an appropriate file "
+    <> "extension. This option is only valid when a single input filename is "
+    <> "specified. By default, the output prefix is the input filename.",
   )
 }
 
@@ -140,8 +140,7 @@ fn perform_get_pixel_data_loop(
           let #(output_extension, pixel_data_frame_filter, frame_number, ended) =
             context
 
-          // Update output extension when the File Meta Information token is
-          // received
+          // Determine the output extension from the transfer syntax
           let output_extension = case token {
             p10_token.FileMetaInformation(data_set:) ->
               data_set

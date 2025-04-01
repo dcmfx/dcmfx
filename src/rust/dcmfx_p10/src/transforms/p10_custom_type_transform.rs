@@ -148,8 +148,8 @@ impl<T> P10CustomTypeTransform<T> {
   /// the required data elements have been gathered from the stream of DICOM P10
   /// tokens and successfully constructed into the custom type.
   ///
-  pub fn get_output(&self) -> &Option<T> {
-    &self.target
+  pub fn get_output(&self) -> Option<&T> {
+    self.target.as_ref()
   }
 
   /// Returns the custom type created by this transform. This is set once all

@@ -19,4 +19,5 @@ erl_crash.dump
 /test/assets/**/*.bin
 /test/assets/**/*.jpg
 /test/assets/**/*.png
+/test/assets/**/*.mp4
 /test/assets/**/*.validation_failure.*

@@ -195,6 +195,10 @@ fn modify_in_place() {
   assert_snapshot!("modify_in_place_after", get_stdout(assert));
 }
 
+fn get_stdout(assert: Assert) -> String {
+  String::from_utf8(assert.get_output().stdout.clone()).unwrap()
+}
+
 fn generate_temp_filename() -> std::path::PathBuf {
   let temp_dir = std::env::temp_dir();
 
@@ -205,8 +209,4 @@ fn generate_temp_filename() -> std::path::PathBuf {
 
   let file_name = format!("dcmfx_{}", random_suffix);
   temp_dir.join(file_name)
-}
-
-fn get_stdout(assert: Assert) -> String {
-  String::from_utf8(assert.get_output().stdout.clone()).unwrap()
 }

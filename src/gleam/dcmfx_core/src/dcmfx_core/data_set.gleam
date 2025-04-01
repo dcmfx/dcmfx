@@ -922,7 +922,7 @@ pub fn get_int(data_set: DataSet, tag: DataElementTag) -> Result(Int, DataError)
 /// Returns the singular integer value for a data element in a data set. If the
 /// data element with the specified tag does not hold exactly one integer value
 /// then an error is returned.
-/// 
+///
 /// If the data element is not in the data set then the specified default value
 /// is returned.
 ///
