@@ -198,7 +198,7 @@ impl P10PixelDataFrameFilter {
           // pixel data frames
           self.native_pixel_data_frame_size = if details.bits_allocated == 1 {
             let pixel_count = details.rows as usize * details.columns as usize;
-            let expected_length = (pixel_count * number_of_frames + 7) / 8;
+            let expected_length = (pixel_count * number_of_frames).div_ceil(8);
 
             if *length as usize != expected_length {
               return Err(DataError::new_value_invalid(format!(
@@ -332,7 +332,7 @@ impl P10PixelDataFrameFilter {
           let length_in_bits = frame_size - frame.length_in_bits();
           frame.push_fragment(
             chunk.clone(),
-            (chunk_offset / 8)..((chunk_offset + length_in_bits + 7) / 8),
+            (chunk_offset / 8)..(chunk_offset + length_in_bits).div_ceil(8),
           );
 
           // Put the unused part of the chunk back on so it can be used by the

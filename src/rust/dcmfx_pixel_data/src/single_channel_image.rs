@@ -38,7 +38,7 @@ impl SingleChannelImage {
     data: Vec<u8>,
     is_signed: bool,
   ) -> Result<Self, DataError> {
-    if data.len() != (usize::from(width) * usize::from(height) + 7) / 8 {
+    if data.len() != (usize::from(width) * usize::from(height)).div_ceil(8) {
       return Err(DataError::new_value_invalid(
         "Single channel image bitmap data size is incorrect".to_string(),
       ));

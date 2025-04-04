@@ -211,7 +211,7 @@ impl PixelDataDefinition {
   /// bytes.
   ///
   pub fn frame_size_in_bytes(&self) -> usize {
-    (self.pixel_count() * self.pixel_size_in_bits() + 7) / 8
+    (self.pixel_count() * self.pixel_size_in_bits()).div_ceil(8)
   }
 
   /// Returns whether this pixel data definition defines grayscale pixel data.

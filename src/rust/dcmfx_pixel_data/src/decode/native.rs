@@ -51,7 +51,7 @@ pub fn decode_single_channel(
 
             // It's possible there will be an unneeded trailing byte after
             // adjusting for the bit offset, so remove it if present
-            data.resize_with((definition.pixel_count() + 7) / 8, || 0);
+            data.resize_with(definition.pixel_count().div_ceil(8), || 0);
           }
 
           SingleChannelImage::new_bitmap(width, height, data, is_signed)

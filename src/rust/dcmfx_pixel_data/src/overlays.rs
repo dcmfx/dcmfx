@@ -278,9 +278,8 @@ impl Overlay {
     )?;
 
     let expected_data_length =
-      (usize::from(rows) * usize::from(columns) * number_of_frames_in_overlay
-        + 7)
-        / 8;
+      (usize::from(rows) * usize::from(columns) * number_of_frames_in_overlay)
+        .div_ceil(8);
     if data.len() != expected_data_length {
       return Err(
         DataError::new_value_length_invalid(
