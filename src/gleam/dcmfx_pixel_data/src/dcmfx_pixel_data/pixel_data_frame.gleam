@@ -1,5 +1,5 @@
 //// Defines a single frame of pixel data in its raw form.
-//// 
+////
 //// The data will be native, RLE encoded, or using an encapsulated transfer
 //// syntax, but the details of how it is encoded are not a concern of
 //// `PixelDataFrame`.

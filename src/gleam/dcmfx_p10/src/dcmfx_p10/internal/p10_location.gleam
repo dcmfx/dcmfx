@@ -179,7 +179,7 @@ pub fn bits_allocated(location: P10Location) -> Option(Int) {
 }
 
 /// Swaps endianness of the value bytes for a given data element tag and VR.
-/// 
+///
 /// This function handles the unusual behavior of pixel data and waveform data
 /// that has a VR of OW but a bits allocated value of 32 or 64. This is a
 /// special case for endian swapping because it is actually storing 32/64-bit

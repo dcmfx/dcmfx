@@ -100,7 +100,7 @@ Options:
    To pretty-print the DICOM JSON directly to stdout:
 
    ```sh
-   dcmfx dcm-to-json --pretty --output-filename - input.dcm 
+   dcmfx dcm-to-json --pretty --output-filename - input.dcm
    ```
 
 3. Convert a DICOM JSON file to a DICOM P10 file:
@@ -120,7 +120,7 @@ Options:
 
    ```sh
    dcmfx get-pixel-data --format png input.dcm
-   dcmfx get-pixel-data --format jpg --quality 70 input.dcm 
+   dcmfx get-pixel-data --format jpg --quality 70 input.dcm
    ```
 
    Single channel data can also specify a VOI window center and width and/or a
