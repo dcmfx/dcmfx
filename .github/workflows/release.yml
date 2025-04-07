@@ -2,11 +2,6 @@ name: Release
 
 on: workflow_dispatch
 
-permissions:
-  checks: read
-  contents: write
-  issues: write
-
 concurrency:
   group: release
   cancel-in-progress: false
@@ -284,7 +279,6 @@ jobs:
   build_linux_packages:
     name: Build Linux packages
     timeout-minutes: 10
-    runs-on: ubuntu-24.04
 
     needs:
       - check_semantic_release
@@ -296,12 +290,16 @@ jobs:
           - aarch64-unknown-linux-musl
           - x86_64-unknown-linux-musl
         include:
-          - architecture-deb: arm64
-            architecture-rpm: aarch64
-            target: aarch64-unknown-linux-musl
-          - architecture-deb: amd64
-            architecture-rpm: x86_64
-            target: x86_64-unknown-linux-musl
+          - target: aarch64-unknown-linux-musl
+            deb-arch: arm64
+            rpm-arch: aarch64
+            runs-on: ubuntu-24.04
+          - target: x86_64-unknown-linux-musl
+            deb-arch: amd64
+            rpm-arch: x86_64
+            runs-on: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runs-on }}
 
     steps:
       - name: Download build artifacts
@@ -320,7 +318,7 @@ jobs:
           echo "
           Package:      dcmfx
           Version:      ${{ needs.check_semantic_release.outputs.new_release_version }}
-          Architecture: ${{ matrix.architecture-deb }}
+          Architecture: ${{ matrix.deb-arch }}
           Section:      utils
           Maintainer:   Richard Viney <richard.viney@gmail.com>
           Description:  CLI tool for working with DICOM and DICOM JSON
@@ -331,7 +329,7 @@ jobs:
 
       - name: Build .deb package
         run: |
-          DEB_PACKAGE="dcmfx_${{ needs.check_semantic_release.outputs.new_release_version }}_${{ matrix.architecture-deb }}.deb"
+          DEB_PACKAGE="dcmfx_${{ needs.check_semantic_release.outputs.new_release_version }}_${{ matrix.deb-arch }}.deb"
 
           dpkg-deb --build package $DEB_PACKAGE
           openssl dgst -r -sha256 -out "$DEB_PACKAGE".sha256 "$DEB_PACKAGE"
@@ -348,10 +346,6 @@ jobs:
           License:  AGPL-3.0-only
           Packager: Richard Viney <richard.viney@gmail.com>
           URL:      https://dcmfx.github.io
-
-          # Disable post-install stripping of binaries as it fails for the
-          # aarch64 RPM when built on an x86_64 GitHub Actions runner
-          %define __os_install_post %{nil}
 
           %description
           CLI tool for working with DICOM and DICOM JSON.
@@ -370,11 +364,11 @@ jobs:
 
       - name: Build .rpm package
         run: |
-          rpmbuild -bb --build-in-place --target ${{ matrix.architecture-rpm }} dcmfx.spec
+          rpmbuild -bb --build-in-place --target ${{ matrix.rpm-arch }} dcmfx.spec
 
-          RPM_PACKAGE="dcmfx-${{ needs.check_semantic_release.outputs.new_release_version }}-1.${{ matrix.architecture-rpm }}.rpm"
+          RPM_PACKAGE="dcmfx-${{ needs.check_semantic_release.outputs.new_release_version }}-1.${{ matrix.rpm-arch }}.rpm"
 
-          cp ~/rpmbuild/RPMS/${{ matrix.architecture-rpm }}/$RPM_PACKAGE $RPM_PACKAGE
+          cp ~/rpmbuild/RPMS/${{ matrix.rpm-arch }}/$RPM_PACKAGE $RPM_PACKAGE
           openssl dgst -r -sha256 -out "$RPM_PACKAGE".sha256 "$RPM_PACKAGE"
 
           echo "RPM_PACKAGE=$RPM_PACKAGE" >> $GITHUB_ENV
@@ -395,6 +389,9 @@ jobs:
     name: Release on GitHub
     timeout-minutes: 10
     runs-on: ubuntu-24.04
+
+    permissions:
+      contents: write
 
     needs:
       - build_rust_cli_tool
@@ -640,3 +637,23 @@ jobs:
           git add .
           git commit -m "chore: Update docs"
           git push
+
+  trigger_test_release_channels_workflow:
+    name: Trigger 'Test Release Channels' workflow
+
+    permissions:
+      actions: write
+
+    needs:
+      - release
+      - update_apt_repository
+      - update_arch_user_repository
+      - update_homebrew_tap
+      - update_yum_repository
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run test_release_channels.yml --repo ${{ github.repository }}

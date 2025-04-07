@@ -32,8 +32,8 @@ brew install dcmfx
 
 ---
 
-- For Red Hat, Fedora, Amazon Linux, SUSE, and other RPM-based distributions, a
-  YUM repository is provided:
+- For Red Hat, Fedora, Amazon Linux, and other RPM-based distributions, a YUM
+  repository is provided:
 
   ```sh
   echo -e "[dcmfx]\nname=DCMfx\nbaseurl=http://dcmfx.github.io/yum-repository\nenabled=1\ngpgcheck=0" | sudo tee /etc/yum.repos.d/dcmfx.repo
