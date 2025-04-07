@@ -102,32 +102,62 @@ impl Overlays {
     self.overlays.iter()
   }
 
-  /// Renders all overlays onto an [`RgbImage`] using the default overlay
-  /// colors specified by [`Self::DEFAULT_COLORS`].
+  /// Renders all overlays onto an RGB image using the default overlay colors
+  /// specified by [`Self::DEFAULT_COLORS`]. The RGB image must be 8-bit or
+  /// 16-bit.
   ///
+  #[allow(clippy::result_unit_err)]
   pub fn render_to_rgb_image(
     &self,
-    rgb_image: &mut image::RgbImage,
+    rgb_image: &mut image::DynamicImage,
     frame_index: usize,
-  ) {
+  ) -> Result<(), ()> {
     self.render_to_rgb_image_with_colors(
       rgb_image,
       frame_index,
       &Self::DEFAULT_COLORS,
-    );
+    )
   }
 
-  /// Renders all overlays onto an [`RgbImage`] using the specified colors.
+  /// Renders all overlays onto an RGB image using the specified colors. The RGB
+  /// image must be 8-bit or 16-bit.
   ///
+  #[allow(clippy::result_unit_err)]
   pub fn render_to_rgb_image_with_colors(
     &self,
-    rgb_image: &mut image::RgbImage,
+    rgb_image: &mut image::DynamicImage,
     frame_index: usize,
     colors: &[image::Rgb<u8>; 16],
-  ) {
+  ) -> Result<(), ()> {
     for (i, overlay) in self.iter().enumerate() {
-      overlay.render_to_rgb_image(rgb_image, frame_index, colors[i]);
+      match rgb_image {
+        image::DynamicImage::ImageRgb8(rgb_image) => overlay
+          .render_to_rgb_image(
+            rgb_image.width(),
+            rgb_image.height(),
+            rgb_image.as_mut(),
+            frame_index,
+            colors[i],
+          ),
+
+        image::DynamicImage::ImageRgb16(rgb_image) => overlay
+          .render_to_rgb_image(
+            rgb_image.width(),
+            rgb_image.height(),
+            rgb_image.as_mut(),
+            frame_index,
+            image::Rgb::<u16>([
+              colors[i].0[0] as u16 * 257,
+              colors[i].0[1] as u16 * 257,
+              colors[i].0[2] as u16 * 257,
+            ]),
+          ),
+
+        _ => return Err(()),
+      }
     }
+
+    Ok(())
   }
 
   /// The default set of colors used to render overlays. The maximum number of
@@ -310,14 +340,18 @@ impl Overlay {
     })
   }
 
-  /// Renders this overlay onto an [`RgbImage`] using the specified color.
+  /// Renders this overlay onto an RGB image using the specified color.
   ///
-  pub fn render_to_rgb_image(
+  pub fn render_to_rgb_image<T>(
     &self,
-    rgb_image: &mut image::RgbImage,
+    width: u32,
+    height: u32,
+    rgb_data: &mut [T],
     frame_index: usize,
-    color: image::Rgb<u8>,
-  ) {
+    color: image::Rgb<T>,
+  ) where
+    T: Copy + Into<f64> + num_traits::FromPrimitive,
+  {
     // Check whether there is overlay data for this frame based on its index
     if (frame_index + 1) < self.image_frame_origin
       || (frame_index + 1)
@@ -331,6 +365,8 @@ impl Overlay {
       * usize::from(self.columns)
       * ((frame_index + 1) - self.image_frame_origin);
 
+    // Alphas that apply some blurring over a 3x3 area where the overlay is
+    // present to make it have a less blocky appearance
     let alphas = [
       1.0 / 8.0,
       1.0 / 4.0,
@@ -345,13 +381,13 @@ impl Overlay {
 
     for y in 0..self.rows {
       let pt_y = self.origin[1] + i32::from(y) - 1;
-      if pt_y < 0 || pt_y as u32 >= rgb_image.height() {
+      if pt_y < 0 || pt_y as u32 >= height {
         continue;
       }
 
       for x in 0..self.columns {
         let pt_x = self.origin[0] + i32::from(x) - 1;
-        if pt_x < 0 || pt_x as u32 >= rgb_image.width() {
+        if pt_x < 0 || pt_x as u32 >= width {
           continue;
         }
 
@@ -371,24 +407,20 @@ impl Overlay {
           let pixel_y = pt_y + i as i32 / 3 - 1;
 
           if pixel_x > 0
-            && pixel_x < rgb_image.width() as i32
+            && pixel_x < width as i32
             && pixel_y > 0
-            && pixel_y < rgb_image.height() as i32
+            && pixel_y < height as i32
           {
-            let rgb = rgb_image.get_pixel(pixel_x as u32, pixel_y as u32);
+            let offset =
+              (pixel_y as usize * width as usize + pixel_x as usize) * 3;
+            let rgb = &mut rgb_data[offset..(offset + 3)];
 
-            rgb_image.put_pixel(
-              pixel_x as u32,
-              pixel_y as u32,
-              image::Rgb([
-                (f64::from(color.0[0]) * alpha
-                  + f64::from(rgb.0[0]) * (1.0 - alpha)) as u8,
-                (f64::from(color.0[1]) * alpha
-                  + f64::from(rgb.0[1]) * (1.0 - alpha)) as u8,
-                (f64::from(color.0[2]) * alpha
-                  + f64::from(rgb.0[2]) * (1.0 - alpha)) as u8,
-              ]),
-            );
+            for (i, c) in rgb.iter_mut().enumerate() {
+              let a = Into::<f64>::into(color.0[i]);
+              let b = Into::<f64>::into(*c);
+
+              *c = T::from_f64(a * alpha + b * (1.0 - alpha)).unwrap();
+            }
           }
         }
       }

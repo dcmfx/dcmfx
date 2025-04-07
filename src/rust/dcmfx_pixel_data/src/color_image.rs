@@ -185,101 +185,241 @@ impl ColorImage {
     usize::from(self.width) * usize::from(self.height)
   }
 
-  /// Converts this color image to an RGB8 image.
+  /// Converts this color image to an 8-bit RGB image.
   ///
-  pub fn to_rgb_u8_image(
-    &self,
+  pub fn into_rgb_u8_image(
+    self,
     definition: &PixelDataDefinition,
-  ) -> image::RgbImage {
-    let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
-
-    fn unsigned_data_to_rgb_pixels<T>(
-      data: &[T],
-      color_space: &ColorSpace,
-      rgb_pixels: &mut Vec<u8>,
-      definition: &PixelDataDefinition,
-    ) where
-      T: Copy + Into<f64> + Into<u64>,
-    {
-      match color_space {
-        ColorSpace::RGB => {
-          let max_value: u64 = definition.int_max().into();
-
-          for rgb in data.chunks_exact(3) {
-            let r: u64 = rgb[0].into();
-            let g: u64 = rgb[1].into();
-            let b: u64 = rgb[2].into();
-
-            rgb_pixels.push((r * 255 / max_value).min(0xFF) as u8);
-            rgb_pixels.push((g * 255 / max_value).min(0xFF) as u8);
-            rgb_pixels.push((b * 255 / max_value).min(0xFF) as u8);
-          }
-        }
-
-        ColorSpace::YBR => {
-          let scale = 1.0 / f64::from(definition.int_max());
-
-          for ybr in data.chunks_exact(3) {
-            let y: f64 = ybr[0].into();
-            let cb: f64 = ybr[1].into();
-            let cr: f64 = ybr[2].into();
-
-            let rgb = ybr_to_rgb(y * scale, cb * scale, cr * scale);
-
-            rgb_pixels.push((rgb[0] * 255.0).clamp(0.0, 255.0) as u8);
-            rgb_pixels.push((rgb[1] * 255.0).clamp(0.0, 255.0) as u8);
-            rgb_pixels.push((rgb[2] * 255.0).clamp(0.0, 255.0) as u8);
-          }
-        }
-      }
-    }
-
-    match &self.data {
+  ) -> image::ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+    match self.data {
+      // If this color image is already in RGB8 then return it directly,
+      // avoiding a copy
       ColorImageData::U8 {
         data,
         color_space: ColorSpace::RGB,
-      } if definition.bits_stored() == 8 => {
-        rgb_pixels.extend_from_slice(data);
-      }
-
-      ColorImageData::U8 { data, color_space } => unsigned_data_to_rgb_pixels(
+      } if definition.bits_stored() == 8 => image::ImageBuffer::from_raw(
+        self.width.into(),
+        self.height.into(),
         data,
-        color_space,
-        &mut rgb_pixels,
-        definition,
-      ),
+      )
+      .unwrap(),
 
-      ColorImageData::U16 { data, color_space } => unsigned_data_to_rgb_pixels(
-        data,
-        color_space,
-        &mut rgb_pixels,
-        definition,
-      ),
+      _ => {
+        let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
 
-      ColorImageData::U32 { data, color_space } => unsigned_data_to_rgb_pixels(
-        data,
-        color_space,
-        &mut rgb_pixels,
-        definition,
-      ),
+        fn unsigned_data_to_rgb_pixels<T>(
+          data: Vec<T>,
+          color_space: ColorSpace,
+          rgb_pixels: &mut Vec<u8>,
+          definition: &PixelDataDefinition,
+        ) where
+          T: Copy + Into<f64> + Into<u64>,
+        {
+          match color_space {
+            ColorSpace::RGB => {
+              let max_value: u64 = definition.int_max().into();
 
-      ColorImageData::PaletteU8 { data, palette } => {
-        for pixel in data {
-          let rgb = palette.lookup_normalized_u8((*pixel).into());
-          rgb_pixels.extend_from_slice(&rgb);
+              for rgb in data.chunks_exact(3) {
+                let r: u64 = rgb[0].into();
+                let g: u64 = rgb[1].into();
+                let b: u64 = rgb[2].into();
+
+                rgb_pixels.push((r * 255 / max_value).min(255) as u8);
+                rgb_pixels.push((g * 255 / max_value).min(255) as u8);
+                rgb_pixels.push((b * 255 / max_value).min(255) as u8);
+              }
+            }
+
+            ColorSpace::YBR => {
+              let scale = 1.0 / f64::from(definition.int_max());
+
+              for ybr in data.chunks_exact(3) {
+                let y: f64 = ybr[0].into();
+                let cb: f64 = ybr[1].into();
+                let cr: f64 = ybr[2].into();
+
+                let rgb = ybr_to_rgb(y * scale, cb * scale, cr * scale);
+
+                rgb_pixels.push((rgb[0] * 255.0).clamp(0.0, 255.0) as u8);
+                rgb_pixels.push((rgb[1] * 255.0).clamp(0.0, 255.0) as u8);
+                rgb_pixels.push((rgb[2] * 255.0).clamp(0.0, 255.0) as u8);
+              }
+            }
+          }
         }
-      }
 
-      ColorImageData::PaletteU16 { data, palette } => {
-        for pixel in data {
-          let rgb = palette.lookup_normalized_u8((*pixel).into());
-          rgb_pixels.extend_from_slice(&rgb);
+        match self.data {
+          ColorImageData::U8 { data, color_space } => {
+            unsigned_data_to_rgb_pixels(
+              data,
+              color_space,
+              &mut rgb_pixels,
+              definition,
+            )
+          }
+
+          ColorImageData::U16 { data, color_space } => {
+            unsigned_data_to_rgb_pixels(
+              data,
+              color_space,
+              &mut rgb_pixels,
+              definition,
+            )
+          }
+
+          ColorImageData::U32 { data, color_space } => {
+            unsigned_data_to_rgb_pixels(
+              data,
+              color_space,
+              &mut rgb_pixels,
+              definition,
+            )
+          }
+
+          ColorImageData::PaletteU8 { data, palette } => {
+            for pixel in data {
+              let rgb = palette.lookup_normalized_u8(pixel.into());
+              rgb_pixels.extend_from_slice(&rgb);
+            }
+          }
+
+          ColorImageData::PaletteU16 { data, palette } => {
+            for pixel in data {
+              let rgb = palette.lookup_normalized_u8(pixel.into());
+              rgb_pixels.extend_from_slice(&rgb);
+            }
+          }
         }
+
+        image::RgbImage::from_raw(
+          self.width.into(),
+          self.height.into(),
+          rgb_pixels,
+        )
+        .unwrap()
       }
     }
+  }
 
-    image::RgbImage::from_raw(self.width.into(), self.height.into(), rgb_pixels)
-      .unwrap()
+  /// Converts this color image to a 16-bit RGB image.
+  ///
+  pub fn into_rgb_u16_image(
+    self,
+    definition: &PixelDataDefinition,
+  ) -> image::ImageBuffer<image::Rgb<u16>, Vec<u16>> {
+    match self.data {
+      // If this color image is already in RGB16 then return it directly,
+      // avoiding a copy
+      ColorImageData::U16 {
+        color_space: ColorSpace::RGB,
+        data,
+      } if definition.bits_stored() == 16 => image::ImageBuffer::from_raw(
+        self.width.into(),
+        self.height.into(),
+        data,
+      )
+      .unwrap(),
+
+      _ => {
+        let mut rgb_pixels: Vec<u16> =
+          Vec::with_capacity(self.pixel_count() * 3);
+
+        fn unsigned_data_to_rgb_pixels<T>(
+          data: Vec<T>,
+          color_space: ColorSpace,
+          rgb_pixels: &mut Vec<u16>,
+          definition: &PixelDataDefinition,
+        ) where
+          T: Copy + Into<f64> + Into<u64>,
+        {
+          match color_space {
+            ColorSpace::RGB => {
+              let max_value: u64 = definition.int_max().into();
+
+              for rgb in data.chunks_exact(3) {
+                let r: u64 = rgb[0].into();
+                let g: u64 = rgb[1].into();
+                let b: u64 = rgb[2].into();
+
+                rgb_pixels.push((r * 65535 / max_value).min(65535) as u16);
+                rgb_pixels.push((g * 65535 / max_value).min(65535) as u16);
+                rgb_pixels.push((b * 65535 / max_value).min(65535) as u16);
+              }
+            }
+
+            ColorSpace::YBR => {
+              let scale = 1.0 / f64::from(definition.int_max());
+
+              for ybr in data.chunks_exact(3) {
+                let y: f64 = ybr[0].into();
+                let cb: f64 = ybr[1].into();
+                let cr: f64 = ybr[2].into();
+
+                let rgb = ybr_to_rgb(y * scale, cb * scale, cr * scale);
+
+                rgb_pixels.push((rgb[0] * 65535.0).clamp(0.0, 65535.0) as u16);
+                rgb_pixels.push((rgb[1] * 65535.0).clamp(0.0, 65535.0) as u16);
+                rgb_pixels.push((rgb[2] * 65535.0).clamp(0.0, 65535.0) as u16);
+              }
+            }
+          }
+        }
+
+        match self.data {
+          ColorImageData::U8 { data, color_space } => {
+            unsigned_data_to_rgb_pixels(
+              data,
+              color_space,
+              &mut rgb_pixels,
+              definition,
+            )
+          }
+
+          ColorImageData::U16 { data, color_space } => {
+            unsigned_data_to_rgb_pixels(
+              data,
+              color_space,
+              &mut rgb_pixels,
+              definition,
+            )
+          }
+
+          ColorImageData::U32 { data, color_space } => {
+            unsigned_data_to_rgb_pixels(
+              data,
+              color_space,
+              &mut rgb_pixels,
+              definition,
+            )
+          }
+
+          ColorImageData::PaletteU8 { data, palette } => {
+            for pixel in data {
+              let rgb = palette.lookup_normalized_u8(pixel.into());
+              rgb_pixels.push(rgb[0] as u16 * 257);
+              rgb_pixels.push(rgb[1] as u16 * 257);
+              rgb_pixels.push(rgb[2] as u16 * 257);
+            }
+          }
+
+          ColorImageData::PaletteU16 { data, palette } => {
+            for pixel in data {
+              let rgb = palette.lookup_normalized_u8(pixel.into());
+              rgb_pixels.push(rgb[0] as u16 * 257);
+              rgb_pixels.push(rgb[1] as u16 * 257);
+              rgb_pixels.push(rgb[2] as u16 * 257);
+            }
+          }
+        }
+
+        image::ImageBuffer::from_raw(
+          self.width.into(),
+          self.height.into(),
+          rgb_pixels,
+        )
+        .unwrap()
+      }
+    }
   }
 
   /// Converts this color image to an RGB F64 image where each value is in the

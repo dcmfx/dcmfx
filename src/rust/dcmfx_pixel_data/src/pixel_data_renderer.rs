@@ -109,7 +109,7 @@ impl PixelDataRenderer {
       Ok(self.render_single_channel_image(&image, color_palette))
     } else {
       let image = self.decode_color_frame(frame)?;
-      Ok(image.to_rgb_u8_image(&self.definition))
+      Ok(image.into_rgb_u8_image(&self.definition))
     }
   }
 
@@ -128,21 +128,22 @@ impl PixelDataRenderer {
   ) -> image::RgbImage {
     let mut pixels = Vec::with_capacity(image.pixel_count() * 3);
 
-    let image = image.to_gray_image(&self.modality_lut, &self.voi_lut);
+    let gray_image = image.to_gray_u8_image(&self.modality_lut, &self.voi_lut);
 
     if let Some(color_palette) = color_palette {
-      for pixel in image.pixels() {
+      for pixel in gray_image.pixels() {
         pixels.extend_from_slice(&color_palette.lookup(pixel.0[0]));
       }
     } else {
-      for pixel in image.pixels() {
+      for pixel in gray_image.pixels() {
         pixels.push(pixel.0[0]);
         pixels.push(pixel.0[0]);
         pixels.push(pixel.0[0]);
       }
     }
 
-    image::RgbImage::from_raw(image.width(), image.height(), pixels).unwrap()
+    image::RgbImage::from_raw(gray_image.width(), gray_image.height(), pixels)
+      .unwrap()
   }
 
   /// Decodes a frame of single channel pixel data into a

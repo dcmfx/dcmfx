@@ -225,10 +225,10 @@ impl Mp4EncoderConfig {
 ///
 #[derive(Clone, Copy, Debug, PartialEq, ValueEnum)]
 pub enum Mp4Codec {
-  /// The libx264 encoder that encodes H.264/AVC video.
+  /// The libx264 encoder which encodes H.264/AVC video.
   Libx264,
 
-  /// The libx265 encoder that encodes H.265/HEVC video.
+  /// The libx265 encoder which encodes H.265/HEVC video.
   Libx265,
 }
 

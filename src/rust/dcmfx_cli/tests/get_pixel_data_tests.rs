@@ -309,6 +309,32 @@ fn jpeg_2000_single_channel_to_jpg() {
 }
 
 #[test]
+fn jpeg_2000_single_channel_to_png_16bit() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/MR_small_jp2klossless.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--force")
+    .arg("-f")
+    .arg("png16")
+    .arg("--voi-window")
+    .arg("1136")
+    .arg("2018")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(
+    output_file,
+    "jpeg_2000_single_channel_to_png_16bit.png"
+  );
+}
+
+#[test]
 fn jpeg_2000_color_to_png() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/GDCMJ2K_TextGBR.dcm";
@@ -699,22 +725,22 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   path1: P,
   snapshot: &str,
 ) -> Result<(), String> {
-  let image_1: image::RgbImage = image::ImageReader::open(path1)
+  let image_1 = image::ImageReader::open(path1)
     .unwrap()
     .decode()
     .unwrap()
-    .into();
+    .to_rgb16();
 
   let image_snapshot_path = format!("tests/snapshots/{snapshot}");
   if !std::path::PathBuf::from(&image_snapshot_path).exists() {
     panic!("Snapshot file is missing: {image_snapshot_path}");
   }
 
-  let image_2: image::RgbImage = image::ImageReader::open(image_snapshot_path)
+  let image_2 = image::ImageReader::open(image_snapshot_path)
     .unwrap()
     .decode()
     .unwrap()
-    .into();
+    .to_rgb16();
 
   if image_1.width() != image_2.width() || image_1.height() != image_2.height()
   {
@@ -727,9 +753,9 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
       let a = image_1.get_pixel(x, y);
       let b = image_2.get_pixel(x, y);
 
-      if (i16::from(a[0]) - i16::from(b[0])).abs() > 2
-        || (i16::from(a[1]) - i16::from(b[1])).abs() > 2
-        || (i16::from(a[2]) - i16::from(b[2])).abs() > 2
+      if (i32::from(a[0]) - i32::from(b[0])).abs() > 128
+        || (i32::from(a[1]) - i32::from(b[1])).abs() > 128
+        || (i32::from(a[2]) - i32::from(b[2])).abs() > 128
       {
         return Err(format!(
           "Image differs at pixel {},{}: expected {:?} but got {:?}",
@@ -744,7 +770,7 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
 
 /// Returns details on the video stream of a video file.
 ///
-pub fn get_video_stream_details(
+fn get_video_stream_details(
   path: &Path,
 ) -> Result<VideoStreamDetails, ffmpeg::Error> {
   ffmpeg::init()?;

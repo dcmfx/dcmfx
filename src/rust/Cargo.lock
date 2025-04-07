@@ -519,6 +519,7 @@ dependencies = [
  "image",
  "jpeg-decoder 0.3.1 (git+https://github.com/image-rs/jpeg-decoder.git?rev=95550d7)",
  "jxl-oxide",
+ "num-traits",
  "wasm32-unknown-unknown-openbsd-libc",
  "zune-core 0.4.11",
  "zune-jpeg 0.4.14 (git+https://github.com/dcmfx/zune-image.git?branch=0.4.x-dcmfx)",

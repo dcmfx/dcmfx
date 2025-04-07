@@ -332,23 +332,46 @@ impl SingleChannelImage {
     }
   }
 
-  /// Converts this single channel image to a grayscale image by passing its
-  /// values through the given Modality LUT and VOI LUT.
+  /// Converts this single channel image to an 8-bit grayscale image by passing
+  /// its values through the given Modality LUT and VOI LUT.
   ///
-  pub fn to_gray_image(
+  pub fn to_gray_u8_image(
     &self,
     modality_lut: &ModalityLut,
     voi_lut: &VoiLut,
   ) -> image::GrayImage {
+    self.to_gray_image(modality_lut, voi_lut, |pixel: f32| {
+      (pixel * 255.0).clamp(0.0, 255.0) as u8
+    })
+  }
+
+  /// Converts this single channel image to a 16-bit grayscale image by passing
+  /// its values through the given Modality LUT and VOI LUT.
+  ///
+  pub fn to_gray_u16_image(
+    &self,
+    modality_lut: &ModalityLut,
+    voi_lut: &VoiLut,
+  ) -> image::ImageBuffer<image::Luma<u16>, Vec<u16>> {
+    self.to_gray_image(modality_lut, voi_lut, |pixel: f32| {
+      (pixel * 65535.0).clamp(0.0, 65535.0) as u16
+    })
+  }
+
+  fn to_gray_image<T: image::Primitive>(
+    &self,
+    modality_lut: &ModalityLut,
+    voi_lut: &VoiLut,
+    pixel_to_gray: impl Fn(f32) -> T,
+  ) -> image::ImageBuffer<image::Luma<T>, Vec<T>> {
     let mut gray_pixels = Vec::with_capacity(self.pixel_count());
 
-    let i64_to_u8 = |pixel: i64| {
+    let stored_value_to_gray = |stored_value: i64| {
       // Apply LUTs
-      let x = modality_lut.apply_to_stored_value(pixel);
+      let x = modality_lut.apply_to_stored_value(stored_value);
       let x = voi_lut.apply(x);
 
-      // Convert to u8
-      (x * 255.0).clamp(0.0, 255.0) as u8
+      pixel_to_gray(x)
     };
 
     match &self.data {
@@ -364,49 +387,49 @@ impl SingleChannelImage {
               value = -value;
             }
 
-            gray_pixels.push(i64_to_u8(value));
+            gray_pixels.push(stored_value_to_gray(value));
           }
         }
       }
 
       SingleChannelImageData::I8(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8((*pixel).into()));
+          gray_pixels.push(stored_value_to_gray((*pixel).into()));
         }
       }
 
       SingleChannelImageData::U8(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8((*pixel).into()));
+          gray_pixels.push(stored_value_to_gray((*pixel).into()));
         }
       }
 
       SingleChannelImageData::I16(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8((*pixel).into()));
+          gray_pixels.push(stored_value_to_gray((*pixel).into()));
         }
       }
 
       SingleChannelImageData::U16(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8((*pixel).into()));
+          gray_pixels.push(stored_value_to_gray((*pixel).into()));
         }
       }
 
       SingleChannelImageData::I32(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8((*pixel).into()));
+          gray_pixels.push(stored_value_to_gray((*pixel).into()));
         }
       }
 
       SingleChannelImageData::U32(data) => {
         for pixel in data.iter() {
-          gray_pixels.push(i64_to_u8((*pixel).into()));
+          gray_pixels.push(stored_value_to_gray((*pixel).into()));
         }
       }
     }
 
-    image::GrayImage::from_raw(
+    image::ImageBuffer::from_raw(
       self.width.into(),
       self.height.into(),
       gray_pixels,

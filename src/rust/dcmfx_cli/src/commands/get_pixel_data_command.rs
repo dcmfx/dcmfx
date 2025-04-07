@@ -42,12 +42,7 @@ pub struct GetPixelDataArgs {
     long,
     short,
     value_enum,
-    help = "The output format. 'raw' causes the pixel data for each frame to \
-      be written exactly as it is stored in the DICOM P10 file. 'png' and \
-      'jpg' cause the pixel data to be decoded, passed through any active LUTs \
-      such as a Modality LUT and VOI Window LUT, then written out as a PNG/JPG \
-      image. 'mp4' is similar, but individual frames are encoded into a video \
-      and written to an MP4 file.",
+    help = "The output format for the pixel data.",
     default_value_t = OutputFormat::Raw
   )]
   format: OutputFormat,
@@ -58,7 +53,7 @@ pub struct GetPixelDataArgs {
       the range 0-100.",
     default_value_t = 85
   )]
-  jpeg_quality: u8,
+  jpg_quality: u8,
 
   #[arg(
     long,
@@ -105,7 +100,8 @@ pub struct GetPixelDataArgs {
     help_heading = "MP4 Encoding",
     help = "When the output format is 'mp4', specifies the frame rate of the \
       MP4 file. This overrides any frame rate or frame duration information \
-      contained in the Cine Module IOD in the input DICOM P10 file."
+      contained in the Cine Module IOD in the input DICOM P10 file. The \
+      fallback frame rate is 1 frame per second."
   )]
   mp4_frame_rate: Option<f64>,
 
@@ -158,10 +154,33 @@ pub struct GetPixelDataArgs {
 
 #[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
 enum OutputFormat {
+  /// Reads the pixel data for each frame and writes it out exactly as it is
+  /// stored in the DICOM P10 file without any alteration. A sensible file
+  /// extension is selected based on the file's DICOM transfer syntax.
   Raw,
+
+  /// Decodes the pixel data and writes each frame to a PNG image.
   Png,
+
+  /// Decodes the pixel data and writes each frame to a PNG image. If the pixel
+  /// data bit depth is greater than 8-bit then the PNG will be written with
+  /// 16-bit color depth.
+  Png16,
+
+  /// Decodes the pixel data and writes each frame to a JPG image. The JPG
+  /// quality can be controlled with the --jpg-quality argument.
   Jpg,
+
+  /// Decodes the pixel data and writes the frames to an MP4 file. The MP4
+  /// codec, quality, preset, and other settings can be controlled with the
+  /// --mp4-* arguments.
   Mp4,
+}
+
+impl OutputFormat {
+  fn is_16bit(&self) -> bool {
+    *self == Self::Png16
+  }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
@@ -304,7 +323,7 @@ fn get_pixel_data_from_input_source(
 
   let mut output_extension = match args.format {
     OutputFormat::Raw => "",
-    OutputFormat::Png => ".png",
+    OutputFormat::Png | OutputFormat::Png16 => ".png",
     OutputFormat::Jpg => ".jpg",
     OutputFormat::Mp4 => ".mp4",
   };
@@ -405,12 +424,9 @@ fn get_pixel_data_from_input_source(
           write_frame_to_image_file(
             &filename,
             frame,
-            args.format,
-            args.jpeg_quality,
             pixel_data_renderer,
             overlays,
-            &args.voi_window,
-            args.color_palette.map(|c| c.color_palette()),
+            args,
           )?;
         }
       }
@@ -432,20 +448,16 @@ fn get_pixel_data_from_input_source(
 
 /// Writes the data for a single frame of pixel data to an image file.
 ///
-#[allow(clippy::too_many_arguments)]
 fn write_frame_to_image_file(
   filename: &PathBuf,
   frame: &mut PixelDataFrame,
-  format: OutputFormat,
-  quality: u8,
   pixel_data_renderer: &mut Option<PixelDataRenderer>,
   overlays: Option<&Overlays>,
-  voi_window_override: &Option<Vec<f32>>,
-  color_palette: Option<&ColorPalette>,
+  args: &GetPixelDataArgs,
 ) -> Result<(), GetPixelDataError> {
   println!("Writing \"{}\" …", filename.display());
 
-  if format == OutputFormat::Raw {
+  if args.format == OutputFormat::Raw {
     write_fragments(filename, frame).map_err(|e| {
       GetPixelDataError::P10Error(P10Error::FileError {
         when: "Writing pixel data frame".to_string(),
@@ -455,28 +467,22 @@ fn write_frame_to_image_file(
   } else {
     let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
 
-    let rgb_image = frame_to_rgb_image(
-      frame,
-      pixel_data_renderer,
-      overlays,
-      voi_window_override,
-      color_palette,
-    )?;
+    let image = frame_to_image(frame, pixel_data_renderer, overlays, args)?;
 
     let output_file =
       File::create(filename).expect("Failed to create output file");
     let mut output_writer = std::io::BufWriter::new(output_file);
 
-    match format {
-      OutputFormat::Png => rgb_image
+    match args.format {
+      OutputFormat::Png | OutputFormat::Png16 => image
         .write_to(&mut output_writer, image::ImageFormat::Png)
         .map_err(GetPixelDataError::ImageError)?,
 
       OutputFormat::Jpg => image::codecs::jpeg::JpegEncoder::new_with_quality(
         &mut output_writer,
-        quality,
+        args.jpg_quality,
       )
-      .encode_image(&rgb_image)
+      .encode_image(&image)
       .map_err(GetPixelDataError::ImageError)?,
 
       OutputFormat::Raw | OutputFormat::Mp4 => unreachable!(),
@@ -505,56 +511,108 @@ fn write_fragments(
   stream.flush()
 }
 
-fn frame_to_rgb_image(
+fn frame_to_image(
   frame: &mut PixelDataFrame,
   pixel_data_renderer: &mut PixelDataRenderer,
   overlays: Option<&Overlays>,
-  voi_window_override: &Option<Vec<f32>>,
-  color_palette: Option<&ColorPalette>,
-) -> Result<image::RgbImage, GetPixelDataError> {
-  let mut img = if pixel_data_renderer.definition.is_grayscale() {
-    let single_channel_image = pixel_data_renderer
-      .decode_single_channel_frame(frame)
-      .map_err(GetPixelDataError::DataError)?;
-
-    // Apply the VOI override if it's set
-    if let Some(voi_window_override) = voi_window_override {
-      pixel_data_renderer.voi_lut = VoiLut {
-        luts: vec![],
-        windows: vec![VoiWindow::new(
-          voi_window_override[0],
-          voi_window_override[1],
-          "".to_string(),
-          VoiLutFunction::LinearExact,
-        )],
-      };
-    }
-    // If there's no VOI LUT in the DICOM or specified on the command line
-    // then automatically derive one from the content of the first frame and
-    // use it for all subsequent frames.
-    else if pixel_data_renderer.voi_lut.is_empty() {
-      let image = pixel_data_renderer
+  args: &GetPixelDataArgs,
+) -> Result<image::DynamicImage, GetPixelDataError> {
+  let mut image: image::DynamicImage =
+    if pixel_data_renderer.definition.is_grayscale() {
+      let single_channel_image = pixel_data_renderer
         .decode_single_channel_frame(frame)
         .map_err(GetPixelDataError::DataError)?;
 
-      if let Some(fallback) = image.fallback_voi_window() {
-        pixel_data_renderer.voi_lut.windows.push(fallback);
+      // Apply the VOI override if it's set
+      if let Some(voi_window_override) = &args.voi_window {
+        pixel_data_renderer.voi_lut = VoiLut {
+          luts: vec![],
+          windows: vec![VoiWindow::new(
+            voi_window_override[0],
+            voi_window_override[1],
+            "".to_string(),
+            VoiLutFunction::LinearExact,
+          )],
+        };
       }
-    }
+      // If there's no VOI LUT in the DICOM or specified on the command line
+      // then automatically derive one from the content of the first frame and
+      // use it for all subsequent frames.
+      else if pixel_data_renderer.voi_lut.is_empty() {
+        let image = pixel_data_renderer
+          .decode_single_channel_frame(frame)
+          .map_err(GetPixelDataError::DataError)?;
 
-    pixel_data_renderer
-      .render_single_channel_image(&single_channel_image, color_palette)
-  } else {
-    pixel_data_renderer
-      .render_frame(frame, None)
-      .map_err(GetPixelDataError::DataError)?
-  };
+        if let Some(fallback) = image.fallback_voi_window() {
+          pixel_data_renderer.voi_lut.windows.push(fallback);
+        }
+      }
+
+      // For 16-bit outputs emit a Luma16 buffer if the pixel data can make use
+      // of it. A color palette implies 8-bit output as color palettes always
+      // output 8-bit.
+      if args.format.is_16bit()
+        && pixel_data_renderer.definition.bits_stored() > 8
+        && args.color_palette.is_none()
+      {
+        single_channel_image
+          .to_gray_u16_image(
+            &pixel_data_renderer.modality_lut,
+            &pixel_data_renderer.voi_lut,
+          )
+          .into()
+      }
+      // If there is an active color palette then use it and output the
+      // resulting RGB8
+      else if let Some(color_palette) = args.color_palette {
+        pixel_data_renderer
+          .render_single_channel_image(
+            &single_channel_image,
+            Some(color_palette.color_palette()),
+          )
+          .into()
+      }
+      // Otherwise, emit a Luma8 image
+      else {
+        single_channel_image
+          .to_gray_u8_image(
+            &pixel_data_renderer.modality_lut,
+            &pixel_data_renderer.voi_lut,
+          )
+          .into()
+      }
+    } else {
+      let image = pixel_data_renderer
+        .decode_color_frame(frame)
+        .map_err(GetPixelDataError::DataError)?;
+
+      if args.format.is_16bit()
+        && pixel_data_renderer.definition.bits_stored() > 8
+      {
+        image
+          .into_rgb_u16_image(&pixel_data_renderer.definition)
+          .into()
+      } else {
+        image
+          .into_rgb_u8_image(&pixel_data_renderer.definition)
+          .into()
+      }
+    };
 
   if let Some(overlays) = overlays {
-    overlays.render_to_rgb_image(&mut img, frame.index());
+    // Expand Luma images to RGB because overlays can only be rendered to RGB
+    if image.color() == image::ColorType::L8 {
+      image = image.to_rgb8().into();
+    } else if image.color() == image::ColorType::L16 {
+      image = image.to_rgb16().into();
+    }
+
+    overlays
+      .render_to_rgb_image(&mut image, frame.index())
+      .unwrap();
   }
 
-  Ok(img)
+  Ok(image)
 }
 
 /// Creates an [`Mp4Encoder`] for a given input source
@@ -635,20 +693,14 @@ fn write_frame_to_mp4_file(
       .unwrap_or(Duration::from_secs(1))
   };
 
-  // Convert the raw frame into an 8-bit RGB image
-  let rgb_image = frame_to_rgb_image(
-    frame,
-    pixel_data_renderer,
-    overlays,
-    &args.voi_window,
-    args.color_palette.map(|c| c.color_palette()),
-  )?;
+  // Convert the raw frame into an image
+  let image = frame_to_image(frame, pixel_data_renderer, overlays, args)?;
 
   // Add the frame to the MP4 encoder
   mp4_encoder
     .as_mut()
     .unwrap()
-    .add_frame(&rgb_image, frame_duration)
+    .add_frame(&image.into_rgb8(), frame_duration)
     .map_err(GetPixelDataError::FFmpegError)
 }
 

@@ -237,7 +237,8 @@ impl PixelDataDefinition {
     !self.is_grayscale()
   }
 
-  /// Returns the smallest valid integer value for integer pixel data.
+  /// Returns the smallest valid integer value for integer pixel data. This is
+  /// determined by the pixel representation and the bits stored value.
   ///
   pub fn int_min(&self) -> i32 {
     match self.pixel_representation {
@@ -246,7 +247,8 @@ impl PixelDataDefinition {
     }
   }
 
-  /// Returns the largest valid integer value for integer pixel data.
+  /// Returns the largest valid integer value for integer pixel data. This is
+  /// determined by the pixel representation and the bits stored value.
   ///
   pub fn int_max(&self) -> u32 {
     match self.pixel_representation {
