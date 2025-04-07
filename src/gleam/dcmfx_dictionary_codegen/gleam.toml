@@ -5,8 +5,8 @@ gleam = ">= 1.9.0"
 
 [dependencies]
 gleam_json = ">= 2.3.0 and < 3.0.0"
-gleam_stdlib = ">= 0.57.0 and < 2.0.0"
-simplifile = ">= 2.2.0 and < 3.0.0"
+gleam_stdlib = ">= 0.59.0 and < 2.0.0"
+simplifile = ">= 2.2.1 and < 3.0.0"
 
 [javascript]
 deno = { allow_read = true }
