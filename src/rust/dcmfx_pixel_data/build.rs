@@ -23,24 +23,21 @@ fn build_c_code() {
 fn build_cpp_code() {
   let mut build = cc::Build::new();
 
+  build.cpp(true);
+
   shared_build_config(&mut build, "vendor/**/*.cpp", "vendor/**/*.hpp");
   build.include("vendor/charls_2.4.2/include");
   build.define("CHARLS_STATIC", "1");
 
   // Explicitly specify C++14 as this is what CharLS 2.x targets
-  if !std::env::var("TARGET").unwrap().contains("msvc") {
-    build.flag("-std=c++14");
-  }
+  build.flag("-std=c++14");
 
   build.compile("dcmfx_pixel_data_cpp_libs");
 
-  // Link to C++ standard library
-  if let Ok(inner) = std::env::var("CARGO_CFG_TARGET_OS") {
-    match inner.as_str() {
-      "linux" => println!("cargo:rustc-link-lib=stdc++"),
-      "macos" => println!("cargo:rustc-link-lib=c++"),
-      _ => {}
-    }
+  // Link the C++ standard library statically on Windows
+  if std::env::var("CARGO_CFG_TARGET_OS").unwrap().as_str() == "windows" {
+    println!("cargo:rustc-link-search=native=C:/msys64/mingw64/lib");
+    println!("cargo:rustc-link-lib=static=stdc++");
   }
 }
 
@@ -50,11 +47,9 @@ fn shared_build_config(
   header_glob_path: &str,
 ) {
   // Silence build warnings
-  if !std::env::var("TARGET").unwrap().contains("msvc") {
-    build.flag("-Wno-unused-but-set-variable");
-    build.flag("-Wno-unused-parameter");
-    build.flag("-Wno-implicit-fallthrough");
-  }
+  build.flag("-Wno-unused-but-set-variable");
+  build.flag("-Wno-unused-parameter");
+  build.flag("-Wno-implicit-fallthrough");
 
   // Optimize builds
   build.define("NDEBUG", "1");

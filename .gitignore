@@ -17,6 +17,11 @@ erl_crash.dump
 /src/rust/dcmfx_fuzz/outputs
 
 /test/assets/**/*.bin
+/test/assets/**/*.jls
 /test/assets/**/*.jpg
+/test/assets/**/*.jph
+/test/assets/**/*.jxl
+/test/assets/**/*.mp2
+/test/assets/**/*.mp4
 /test/assets/**/*.png
 /test/assets/**/*.validation_failure.*

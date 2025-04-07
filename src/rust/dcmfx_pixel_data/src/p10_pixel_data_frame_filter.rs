@@ -192,7 +192,7 @@ impl P10PixelDataFrameFilter {
         let number_of_frames = self.get_number_of_frames();
 
         if number_of_frames > 0 {
-          let details = self.details.get_output().as_ref().unwrap();
+          let details = self.details.get_output().unwrap();
 
           // Validate the pixel data length and store the size in bits of native
           // pixel data frames

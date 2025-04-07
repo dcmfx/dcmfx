@@ -49,7 +49,7 @@ jobs:
 
   build_rust_cli_tool:
     name: Build Rust CLI tool
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     needs: check_semantic_release
     if: needs.check_semantic_release.outputs.new_release_published == 'true'
@@ -60,31 +60,40 @@ jobs:
           - aarch64-apple-darwin
           - aarch64-unknown-linux-musl
           - x86_64-apple-darwin
-          - x86_64-pc-windows-msvc
+          - x86_64-pc-windows-gnu
           - x86_64-unknown-linux-musl
         include:
-          - runs-on: macos-14
-            target: aarch64-apple-darwin
-            cargo-tool: cargo
-          - runs-on: ubuntu-24.04
-            target: aarch64-unknown-linux-musl
-            cargo-tool: cross
-            rust-flags: -C link-arg=-Wl,--build-id
-          - runs-on: macos-13
-            target: x86_64-apple-darwin
-            cargo-tool: cargo
-          - runs-on: windows-2022
-            target: x86_64-pc-windows-msvc
-            cargo-tool: cargo
-          - runs-on: ubuntu-24.04
-            target: x86_64-unknown-linux-musl
-            cargo-tool: cross
-            rust-flags: -C link-arg=-Wl,--build-id
+          - target: aarch64-apple-darwin
+            toolchain: aarch64-apple-darwin
+            runs-on: macos-14
+            shell: bash
+          - target: aarch64-unknown-linux-musl
+            toolchain: x86_64-unknown-linux-gnu
+            musl-target: aarch64-linux-musl
+            runs-on: ubuntu-24.04
+            shell: bash
+          - target: x86_64-apple-darwin
+            toolchain: x86_64-apple-darwin
+            runs-on: macos-13
+            shell: bash
+          - target: x86_64-pc-windows-gnu
+            toolchain: x86_64-pc-windows-gnu
+            runs-on: windows-2022
+            shell: msys2 {0}
+          - target: x86_64-unknown-linux-musl
+            toolchain: x86_64-unknown-linux-gnu
+            musl-target: x86_64-linux-musl
+            runs-on: ubuntu-24.04
+            shell: bash
 
     runs-on: ${{ matrix.runs-on }}
 
     env:
       CARGO_TERM_COLOR: always
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
 
     steps:
       - name: Checkout repository
@@ -93,14 +102,147 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.86
+          toolchain: 1.86-${{ matrix.toolchain }}
+          cache-workspaces: src/rust
           target: ${{ matrix.target }}
 
-      - name: Enable Rust dependency caching
-        uses: Swatinem/rust-cache@v2
+      - name: Setup MSYS2 (Windows)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        uses: msys2/setup-msys2@v2
         with:
-          key: v1-${{ matrix.target }}
-          workspaces: rust
+          release: false
+          install: >-
+            git
+            mingw-w64-x86_64-autotools
+            mingw-w64-x86_64-clang-libs
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-nasm
+
+      - name: Add Cargo to MSYS2 path (Windows)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: |
+          echo 'export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"' >> ~/.bash_profile
+
+          # Copy mm_malloc.h into place. Why is it not there by default?
+          cp /mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mm_malloc.h /mingw64/include
+
+      - name: Install platform-specific dependencies (macOS)
+        if: matrix.target == 'aarch64-apple-darwin' || matrix.target == 'x86_64-apple-darwin'
+        run: brew install nasm
+
+      - name: Setup musl toolchain (Linux)
+        if: matrix.target == 'aarch64-unknown-linux-musl' || matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get install nasm
+
+          # Download and install the musl toolchain into /opt/musl-cross
+          wget -q https://musl.cc/${{ matrix.musl-target }}-cross.tgz
+          tar -xzf ${{ matrix.musl-target }}-cross.tgz
+          mv ${{ matrix.musl-target }}-cross /opt/musl-cross
+          echo "/opt/musl-cross/bin" >> $GITHUB_PATH
+
+          # Create musl-* symlinks for the toolchain
+          ln -s /opt/musl-cross/bin/${{ matrix.musl-target }}-ar /opt/musl-cross/bin/musl-ar
+          ln -s /opt/musl-cross/bin/${{ matrix.musl-target }}-g++ /opt/musl-cross/bin/musl-g++
+          ln -s /opt/musl-cross/bin/${{ matrix.musl-target }}-gcc /opt/musl-cross/bin/musl-gcc
+          ln -s /opt/musl-cross/bin/${{ matrix.musl-target }}-ld /opt/musl-cross/bin/musl-ld
+          ln -s /opt/musl-cross/bin/${{ matrix.musl-target }}-nm /opt/musl-cross/bin/musl-nm
+          ln -s /opt/musl-cross/bin/${{ matrix.musl-target }}-ranlib /opt/musl-cross/bin/musl-ranlib
+          ln -s /opt/musl-cross/bin/${{ matrix.musl-target }}-strings /opt/musl-cross/bin/musl-strings
+          ln -s /opt/musl-cross/bin/${{ matrix.musl-target }}-strip /opt/musl-cross/bin/musl-strip
+
+          # Set the musl sysroot
+          MUSL_SYSROOT=/opt/musl-cross/${{ matrix.musl-target }}
+          echo "MUSL_SYSROOT=$MUSL_SYSROOT" >> $GITHUB_ENV
+
+          # Set pkgconfig path to point at the musl toolchain
+          echo "PKG_CONFIG_PATH=$MUSL_SYSROOT/lib/pkgconfig" >> $GITHUB_ENV
+
+          # Tell the fork of rust-ffmpeg-sys the sysroot to use for its bindgen
+          echo "RUST_BINDGEN_SYSROOT=$MUSL_SYSROOT" >> $GITHUB_ENV
+
+          # Override Cargo linker for the cross-compilation target
+          RUST_TARGET=${{ matrix.target }}
+          RUST_TARGET="${RUST_TARGET//-/_}"
+          RUST_TARGET="${RUST_TARGET^^}"
+          echo "CARGO_TARGET_${RUST_TARGET}_LINKER=musl-ld" >> $GITHUB_ENV
+
+      - name: Build libx264
+        run: |
+          cd ..
+          git clone --branch stable https://code.videolan.org/videolan/x264.git
+          cd x264
+
+          SUDO=sudo
+
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+            EXTRA_CONFIGURE_FLAGS="--prefix=/mingw64"
+            SUDO=
+          elif [[ "${{ matrix.target }}" = *"-apple-darwin" ]]; then
+            EXTRA_CONFIGURE_FLAGS="--prefix=/usr/local"
+          else
+            EXTRA_CONFIGURE_FLAGS=" \
+              --prefix=$MUSL_SYSROOT --cross-prefix=/opt/musl-cross/bin/musl- \
+              --host=${{ matrix.musl-target }}"
+          fi
+
+          ./configure \
+            --enable-static --enable-pic --disable-cli --disable-swscale \
+            --disable-lavf --disable-ffms --disable-gpac --disable-avs  \
+            --disable-lsmash --disable-opencl --extra-cflags=-O3 \
+            $EXTRA_CONFIGURE_FLAGS
+
+          make -j$(nproc)
+          $SUDO make install
+
+      - name: Build libx265
+        run: |
+          cd ..
+          git clone --branch Release_4.1 https://bitbucket.org/multicoreware/x265_git.git
+          cd x265_git/source
+
+          SUDO=sudo
+          MAKE=make
+
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+            EXTRA_CMAKE_FLAGS="-DCMAKE_INSTALL_PREFIX=/mingw64"
+            SUDO=
+            MAKE=ninja
+          elif [[ "${{ matrix.target }}" = *"-linux-musl" ]]; then
+            MUSL_ARCH=${{ matrix.musl-target }}
+            MUSL_ARCH=${MUSL_ARCH%%-*}
+
+            EXTRA_CMAKE_FLAGS=" \
+              -DCMAKE_C_COMPILER=$(which musl-gcc) \
+              -DCMAKE_CXX_COMPILER=$(which musl-g++) \
+              -DCMAKE_AR=$(which musl-ar) \
+              -DCMAKE_RANLIB=$(which musl-ranlib) \
+              -DCMAKE_SYSTEM_NAME=Linux \
+              -DCMAKE_SYSTEM_PROCESSOR=$MUSL_ARCH \
+              -DCMAKE_SYSROOT=$MUSL_SYSROOT \
+              -DCMAKE_INSTALL_PREFIX=$MUSL_SYSROOT"
+
+            if [ "$MUSL_ARCH" = "aarch64" ]; then
+              EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DENABLE_NEON_I8MM=OFF"
+            fi
+          fi
+
+          cmake . \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_SHARED=OFF \
+            -DENABLE_CLI=OFF \
+            -DSTATIC_LINK_CRT=ON \
+            $EXTRA_CMAKE_FLAGS
+
+          $MAKE -j$(nproc)
+
+          # For linux-musl, remove unwanted references to -lgcc and -lgcc_s
+          if [[ "${{ matrix.target }}" == *"-linux-musl" ]]; then
+            sudo sed -i -e 's/-lgcc //g' -e 's/-lgcc_s //g' x265.pc
+          fi
+
+          $SUDO $MAKE install
 
       - name: Fetch dependencies
         working-directory: src/rust
@@ -108,23 +250,15 @@ jobs:
 
       - name: Set version number in Cargo.toml files
         working-directory: src/rust
-        shell: bash
         run: find . -name "Cargo.toml" -exec sed -i'' -E "s/version = \"0.0.0\"/version = \"${{ needs.check_semantic_release.outputs.new_release_version }}\"/" {} +
 
       - name: Build release binary
-        uses: clechasseur/rs-cargo@v3
-        env:
-          RUSTFLAGS: ${{ matrix.rust-flags }}
-        with:
-          working-directory: src/rust
-          command: build
-          args: --release --offline --target ${{ matrix.target }} --package dcmfx_cli
-          tool: ${{ matrix.cargo-tool }}
+        working-directory: src/rust
+        run: cargo build --release --offline --target ${{ matrix.target }} --package dcmfx_cli
 
       - name: Package
-        shell: bash
         run: |
-          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
             BINARY_SUFFIX=".exe"
           else
             BINARY_SUFFIX=""
@@ -394,7 +528,7 @@ jobs:
         run: |
           find dcmfx-linux-packages-* -type f -name "*.rpm" -exec cp {} . \;
 
-          sudo apt install createrepo-c
+          sudo apt-get install createrepo-c
           createrepo_c .
 
       - name: Commit and push changes

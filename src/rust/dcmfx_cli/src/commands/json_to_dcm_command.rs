@@ -33,7 +33,6 @@ pub struct ToDcmArgs {
 
   #[clap(
     long = "force",
-    short = 'f',
     help = "Overwrite files without prompting",
     default_value_t = false
   )]

@@ -2,8 +2,7 @@ mod utils;
 
 use assert_cmd::{Command, assert::Assert};
 use insta::assert_snapshot;
-use rand::Rng;
-use utils::to_native_path;
+use utils::{generate_temp_filename, to_native_path};
 
 #[test]
 fn print() {
@@ -193,18 +192,6 @@ fn modify_in_place() {
     .success();
 
   assert_snapshot!("modify_in_place_after", get_stdout(assert));
-}
-
-fn generate_temp_filename() -> std::path::PathBuf {
-  let temp_dir = std::env::temp_dir();
-
-  let mut rng = rand::rng();
-  let random_suffix: String = (0..16)
-    .map(|_| char::from(rng.sample(rand::distr::Alphanumeric)))
-    .collect();
-
-  let file_name = format!("dcmfx_{}", random_suffix);
-  temp_dir.join(file_name)
 }
 
 fn get_stdout(assert: Assert) -> String {

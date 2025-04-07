@@ -60,3 +60,18 @@ pub fn prompt_to_overwrite_if_exists(path: &Path) {
     std::process::exit(1)
   }
 }
+
+/// Appends a suffix to a path.
+///
+pub fn path_append(mut path: PathBuf, suffix: &str) -> PathBuf {
+  path.set_file_name(format!(
+    "{}{}",
+    path
+      .file_name()
+      .unwrap_or(std::ffi::OsStr::new(""))
+      .to_string_lossy(),
+    suffix
+  ));
+
+  path
+}

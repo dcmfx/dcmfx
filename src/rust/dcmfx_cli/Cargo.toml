@@ -14,13 +14,22 @@ keywords.workspace = true
 [dependencies]
 clap = { version = "4.5.27", features = ["derive", "wrap_help"] }
 dcmfx = { path = "../dcmfx", version = "0.0.0" }
-flate2 = { version = "1.0.35", default-features = false, features = ["zlib-ng"] }
+ffmpeg-next = { version = "7.1.0", default-features = false, features = [
+  "build-license-gpl",
+  "codec",
+  "format",
+  "software-scaling",
+  "static",
+  "build-lib-x264",
+  "build-lib-x265",
+] }
 glob = "0.3.2"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 rand = "0.9.0"
 tempfile = "3.19.0"
 
 [target.'cfg(not(windows))'.dependencies]
+flate2 = { version = "1.0.35", default-features = false, features = ["zlib-ng"] }
 libc = "0.2.170"
 
 [package.metadata.cargo-machete]

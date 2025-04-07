@@ -50,29 +50,37 @@ jobs:
 
   test_dcmfx_rust:
     name: Test DCMfx (Rust)
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     strategy:
       matrix:
-        target:
+        rust-target:
           - aarch64-apple-darwin
           - x86_64-apple-darwin
-          - x86_64-pc-windows-msvc
-          - x86_64-unknown-linux-musl
+          - x86_64-pc-windows-gnu
+          - x86_64-unknown-linux-gnu
         include:
-          - runs-on: macos-14
-            target: aarch64-apple-darwin
-          - runs-on: macos-13
-            target: x86_64-apple-darwin
-          - runs-on: windows-2022
-            target: x86_64-pc-windows-msvc
-          - runs-on: ubuntu-24.04
-            target: x86_64-unknown-linux-musl
+          - rust-target: aarch64-apple-darwin
+            runs-on: macos-14
+            shell: bash
+          - rust-target: x86_64-apple-darwin
+            runs-on: macos-13
+            shell: bash
+          - rust-target: x86_64-pc-windows-gnu
+            runs-on: windows-2022
+            shell: msys2 {0}
+          - rust-target: x86_64-unknown-linux-gnu
+            runs-on: ubuntu-24.04
+            shell: bash
 
     runs-on: ${{ matrix.runs-on }}
 
     env:
       CARGO_TERM_COLOR: always
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
 
     steps:
       - name: Checkout repository
@@ -81,25 +89,47 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.86
+          toolchain: 1.86-${{ matrix.rust-target }}
           components: clippy, rustfmt
+          cache-workspaces: src/rust
 
-      - name: Enable Rust dependency caching
-        uses: Swatinem/rust-cache@v2
+      - name: Install MSYS2 (Windows)
+        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
+        uses: msys2/setup-msys2@v2
         with:
-          workspaces: src/rust
+          release: false
+          install: >-
+            git
+            mingw-w64-x86_64-autotools
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-libx264
+            mingw-w64-x86_64-nasm
+            mingw-w64-x86_64-x265
+
+      - name: Add Cargo to MSYS2 path (Windows)
+        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
+        run: echo 'export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"' >> ~/.bash_profile
+
+      - name: Install platform-specific dependencies (macOS)
+        if: matrix.rust-target == 'aarch64-apple-darwin' || matrix.rust-target == 'x86_64-apple-darwin'
+        run: brew install nasm x264 x265
+
+      - name: Install platform-specific dependencies (Linux)
+        if: matrix.rust-target == 'x86_64-unknown-linux-gnu'
+        run: sudo apt-get install libnuma-dev libx264-dev libx265-dev nasm
 
       - name: Check code formatting
         working-directory: src/rust
         run: cargo fmt --check
 
-      - name: Run linter
-        working-directory: src/rust
-        run: cargo clippy -- --deny warnings
-
       - name: Fetch dependencies
         working-directory: src/rust
         run: cargo fetch --locked
+
+      - name: Run linter
+        working-directory: src/rust
+        run: cargo clippy -- --deny warnings
 
       - name: Run tests
         working-directory: src/rust
@@ -122,13 +152,8 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: 1.86
-          components: clippy, rustfmt
           target: wasm32-unknown-unknown
-
-      - name: Enable Rust dependency caching
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src/rust
+          cache-workspaces: src/rust
 
       - name: Fetch dependencies
         working-directory: src/rust
@@ -159,11 +184,7 @@ jobs:
         with:
           toolchain: 1.86
           components: clippy, rustfmt
-
-      - name: Enable Rust dependency caching
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: examples/*/rust
+          cache-workspaces: examples/*/rust
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

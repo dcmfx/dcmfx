@@ -1,7 +1,15 @@
 mod utils;
 
+use std::{
+  path::{Path, PathBuf},
+  str::FromStr,
+};
+
 use assert_cmd::Command;
-use utils::to_native_path;
+use ffmpeg_next as ffmpeg;
+
+use dcmfx_cli::utils::path_append;
+use utils::{generate_temp_filename, to_native_path};
 
 // Macro to compare an image file to a snapshot
 macro_rules! assert_image_snapshot {
@@ -36,6 +44,7 @@ fn single_bit_unaligned_to_raw() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .assert()
     .success()
     .stdout(format!(
@@ -49,6 +58,7 @@ fn single_bit_unaligned_to_raw() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -84,6 +94,7 @@ fn rgb_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -103,6 +114,7 @@ fn ybr_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -121,6 +133,7 @@ fn rle_lossless_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .arg("--voi-window")
@@ -142,6 +155,7 @@ fn rle_lossless_bitmap_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -161,6 +175,7 @@ fn rle_lossless_color_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -180,6 +195,7 @@ fn rle_lossless_color_palette_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .assert()
@@ -198,6 +214,7 @@ fn to_jpg_with_custom_window() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .arg("--voi-window")
@@ -220,6 +237,7 @@ fn missing_voi_lut_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -238,6 +256,7 @@ fn jpg_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -256,6 +275,7 @@ fn palette_color_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -275,6 +295,7 @@ fn jpeg_2000_single_channel_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .arg("--voi-window")
@@ -297,6 +318,7 @@ fn jpeg_2000_color_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -316,6 +338,7 @@ fn jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .assert()
@@ -338,6 +361,7 @@ fn jpeg_2000_single_channel_2bpp_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -360,6 +384,7 @@ fn jpeg_ls_single_channel_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -379,6 +404,7 @@ fn jpeg_ls_color_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -397,6 +423,7 @@ fn jpeg_lossless_12bit_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .assert()
@@ -415,6 +442,7 @@ fn jpeg_lossless_color_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .assert()
@@ -433,6 +461,7 @@ fn jpeg_extended_12bit_single_channel_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -454,6 +483,7 @@ fn jpeg_xl_single_channel_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -472,6 +502,7 @@ fn jpeg_xl_color_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .assert()
@@ -490,6 +521,7 @@ fn deflated_image_frame_compression() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("png")
     .assert()
@@ -509,6 +541,7 @@ fn render_overlays() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .arg("--overlays")
@@ -528,6 +561,7 @@ fn render_overlays_out_of_bounds() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .arg("--overlays")
@@ -552,6 +586,7 @@ fn render_overlays_multiframe_unaligned() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--force")
     .arg("-f")
     .arg("jpg")
     .arg("--overlays")
@@ -573,6 +608,90 @@ fn render_overlays_multiframe_unaligned() {
   assert_image_snapshot!(
     &output_files[2],
     "render_overlays_multiframe_unaligned.0002.jpg"
+  );
+}
+
+#[test]
+fn single_bit_unaligned_to_mp4_h264() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm";
+  let output_file = &format!("{}.mp4", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--force")
+    .arg("-f")
+    .arg("mp4")
+    .arg("--mp4-preset")
+    .arg("veryslow")
+    .assert()
+    .success()
+    .stdout(format!(
+      "\rWriting \"{0}\" … 33.3%\r\
+       Writing \"{0}\" … 66.7%\r\
+       Writing \"{0}\" … 100.0%\n",
+      to_native_path(output_file),
+    ));
+
+  assert_eq!(
+    get_video_stream_details(&PathBuf::from_str(output_file).unwrap()),
+    Ok(VideoStreamDetails {
+      codec: "h264",
+      profile: 100,
+      width: 510,
+      height: 510,
+      frame_count: 3,
+      frame_rate: (1, 1),
+    })
+  );
+}
+
+#[test]
+fn single_bit_unaligned_to_mp4_h265() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm";
+  let output_file = generate_temp_filename();
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--output-prefix")
+    .arg(&output_file)
+    .arg("--force")
+    .arg("-f")
+    .arg("mp4")
+    .arg("--mp4-codec")
+    .arg("libx265")
+    .arg("--mp4-crf")
+    .arg("4")
+    .arg("--mp4-preset")
+    .arg("veryslow")
+    .arg("--mp4-pixel-format")
+    .arg("yuv422p")
+    .arg("--mp4-frame-rate")
+    .arg("2")
+    .assert()
+    .success()
+    .stdout(format!(
+      "\rWriting \"{0}.mp4\" … 33.3%\r\
+       Writing \"{0}.mp4\" … 66.7%\r\
+       Writing \"{0}.mp4\" … 100.0%\n",
+      output_file.display(),
+    ));
+
+  assert_eq!(
+    get_video_stream_details(&path_append(output_file, ".mp4")),
+    Ok(VideoStreamDetails {
+      codec: "hevc",
+      profile: 4,
+      width: 510,
+      height: 510,
+      frame_count: 3,
+      frame_rate: (2, 1),
+    })
   );
 }
 
@@ -621,4 +740,48 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   }
 
   Ok(())
+}
+
+/// Returns details on the video stream of a video file.
+///
+pub fn get_video_stream_details(
+  path: &Path,
+) -> Result<VideoStreamDetails, ffmpeg::Error> {
+  ffmpeg::init()?;
+
+  // Open the input file
+  let input = ffmpeg::format::input(path)?;
+
+  // Find the first video stream
+  let video_stream = input
+    .streams()
+    .find(|stream| stream.parameters().medium() == ffmpeg::media::Type::Video)
+    .ok_or_else(|| ffmpeg::Error::StreamNotFound)?;
+
+  // Gather stream details
+  let codec = video_stream.parameters().id();
+  let profile = unsafe { (*video_stream.parameters().as_ptr()).profile };
+  let width = unsafe { (*video_stream.parameters().as_ptr()).width };
+  let height = unsafe { (*video_stream.parameters().as_ptr()).height };
+  let frame_count = video_stream.frames();
+  let frame_rate = video_stream.rate();
+
+  Ok(VideoStreamDetails {
+    codec: codec.name(),
+    profile,
+    width,
+    height,
+    frame_count,
+    frame_rate: (frame_rate.numerator(), frame_rate.denominator()),
+  })
+}
+
+#[derive(Debug, PartialEq)]
+pub struct VideoStreamDetails {
+  pub codec: &'static str,
+  pub profile: i32,
+  pub width: i32,
+  pub height: i32,
+  pub frame_count: i64,
+  pub frame_rate: (i32, i32),
 }

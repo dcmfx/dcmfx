@@ -3,7 +3,7 @@ use alloc::{format, string::String, vec::Vec};
 
 /// Inspects a byte slice in hexadecimal, e.g. `[1A 2B 3C 4D]`. If the number of
 /// bytes in the slice exceeds `max_length` then not all bytes will be
-/// shown and a trailing ellipsis will be appended, e.g. `[1A 2B 3C 4D ...]`.
+/// shown and a trailing ellipsis will be appended, e.g. `[1A 2B 3C 4D …]`.
 ///
 pub fn inspect_u8_slice(bytes: &[u8], max_length: usize) -> String {
   let byte_count = core::cmp::min(max_length, bytes.len());

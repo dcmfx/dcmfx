@@ -100,7 +100,7 @@ Options:
    To pretty-print the DICOM JSON directly to stdout:
 
    ```sh
-   dcmfx dcm-to-json --pretty --output-filename - input.dcm
+   dcmfx dcm-to-json input.dcm --pretty --output-filename -
    ```
 
 3. Convert a DICOM JSON file to a DICOM P10 file:
@@ -119,26 +119,36 @@ Options:
    frame:
 
    ```sh
-   dcmfx get-pixel-data --format png input.dcm
-   dcmfx get-pixel-data --format jpg --quality 70 input.dcm
+   dcmfx get-pixel-data input.dcm --format png
+   dcmfx get-pixel-data input.dcm --format jpg --jpeg-quality 70
    ```
 
    Single channel data can also specify a VOI window center and width and/or a
    well-known color palette:
 
    ```sh
-   dcmfx get-pixel-data --format png --voi-window 500 2000 --color-palette hot-iron input.dcm
+   dcmfx get-pixel-data input.dcm --format png --voi-window 500 2000 \
+     --color-palette hot-iron
    ```
 
-5. Rewrite a DICOM P10 file. This will convert the specific character set to
+5. Extract pixel data from a DICOM P10 file to an MP4 H.264 video:
+
+   ```sh
+   dcmfx get-pixel-data input.dcm --format mp4
+   ```
+
+   Additional options are available to specify the codec, video quality, encoder
+   preset, pixel format, frame rate override, and so on.
+
+6. Rewrite a DICOM P10 file. This will convert the specific character set to
    UTF-8, change sequences and items to undefined length, and correct invalid
    files where possible:
 
    ```sh
-   dcmfx modify --output-filename output.dcm input.dcm
+   dcmfx modify input.dcm --output-filename output.dcm
    ```
 
-6. Modify a DICOM P10 file to use the 'Deflated Explicit VR Little Endian'
+7. Modify a DICOM P10 file to use the 'Deflated Explicit VR Little Endian'
    transfer syntax with maximum compression:
 
    ```sh
@@ -157,27 +167,27 @@ Options:
 
    Conversion between other transfer syntaxes is not supported.
 
-7. Anonymize a DICOM P10 file in-place by removing all identifying data
+8. Anonymize a DICOM P10 file in-place by removing all identifying data
    elements and private data elements:
 
    ```sh
-   dcmfx modify --in-place --anonymize input.dcm
+   dcmfx modify input.dcm --in-place --anonymize
    ```
 
    Note that this does not remove any identifying information baked into pixel
    data or other binary data elements.
 
-8. Remove the top-level *'(7FE0,0010) Pixel Data'* data element from a DICOM P10
+9. Remove the top-level *'(7FE0,0010) Pixel Data'* data element from a DICOM P10
    file:
 
    ```sh
-   dcmfx modify --in-place --delete-tags 7FE00010 input.dcm
+   dcmfx modify input.dcm --in-place --delete-tags 7FE00010
    ```
 
    Multiple data elements can be deleted by using a comma as a separator:
 
    ```sh
-   dcmfx modify --in-place --delete-tags 00100010,00100030 input.dcm
+   dcmfx modify input.dcm --in-place --delete-tags 00100010,00100030
    ```
 
 ## Gleam CLI
