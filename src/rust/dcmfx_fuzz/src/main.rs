@@ -47,14 +47,12 @@ fn main() {
           if let Ok(definition) = PixelDataDefinition::from_data_set(&data_set) {
             if definition.pixel_count() <= 4096 * 4096 {
               // Allocate output image
-              let mut rgb_image = image::RgbImage::from_raw(
+              let mut rgb_image = image::DynamicImage::new_rgb8(
                 definition.rows().into(),
                 definition.columns().into(),
-                vec![0u8; definition.pixel_count() * 3],
-              )
-              .unwrap();
+              );
 
-              overlays.render_to_rgb_image(&mut rgb_image, 0);
+              overlays.render_to_rgb_image(&mut rgb_image, 0).unwrap();
             }
           }
         }

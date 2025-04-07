@@ -14,8 +14,8 @@ keywords.workspace = true
 byteorder = "1.5.0"
 dcmfx_core = { path = "../dcmfx_core", version = "0.0.0", default-features = false }
 dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0", default-features = false }
-flate2 = "1.0.35"
-image = { version = "0.25", default-features = false, features = ["jpeg"] }
+flate2 = "1.1.1"
+image = { version = "0.25.6", default-features = false, features = ["jpeg"] }
 jpeg-decoder = { git = "https://github.com/image-rs/jpeg-decoder.git", rev = "95550d7", default-features = false }
 jxl-oxide = "0.11.4"
 num-traits = "0.2.19"
@@ -26,7 +26,7 @@ zune-jpeg = { git = "https://github.com/dcmfx/zune-image.git", branch = "0.4.x-d
 wasm32-unknown-unknown-openbsd-libc = "0.2"
 
 [build-dependencies]
-cc = "1.0"
+cc = "1.2.18"
 glob = "0.3.2"
 
 [features]
