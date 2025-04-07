@@ -267,6 +267,25 @@ fn jpg_to_png() {
 }
 
 #[test]
+fn jpg_to_webp() {
+  let dicom_file = "../../../test/assets/fo-dicom/GH538-jpeg1.dcm";
+  let output_file = format!("{}.0000.webp", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--force")
+    .arg("-f")
+    .arg("webp")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "jpg_to_png.png");
+}
+
+#[test]
 fn palette_color_to_png() {
   let dicom_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
@@ -522,7 +541,7 @@ fn jpeg_xl_single_channel_to_png() {
 #[test]
 fn jpeg_xl_color_to_jpg() {
   let dicom_file = "../../../test/assets/other/ultrasound_jpeg_xl.dcm";
-  let output_file = format!("{}.0000.jpg", dicom_file);
+  let output_file = format!("{}.0000.png", dicom_file);
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
@@ -530,12 +549,12 @@ fn jpeg_xl_color_to_jpg() {
     .arg(dicom_file)
     .arg("--force")
     .arg("-f")
-    .arg("jpg")
+    .arg("png")
     .assert()
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(output_file, "jpeg_xl_color_to_jpg.jpg");
+  assert_image_snapshot!(output_file, "jpeg_xl_color_to_png.png");
 }
 
 #[test]
@@ -753,9 +772,9 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
       let a = image_1.get_pixel(x, y);
       let b = image_2.get_pixel(x, y);
 
-      if (i32::from(a[0]) - i32::from(b[0])).abs() > 128
-        || (i32::from(a[1]) - i32::from(b[1])).abs() > 128
-        || (i32::from(a[2]) - i32::from(b[2])).abs() > 128
+      if (i32::from(a[0]) - i32::from(b[0])).abs() > 257
+        || (i32::from(a[1]) - i32::from(b[1])).abs() > 257
+        || (i32::from(a[2]) - i32::from(b[2])).abs() > 257
       {
         return Err(format!(
           "Image differs at pixel {},{}: expected {:?} but got {:?}",

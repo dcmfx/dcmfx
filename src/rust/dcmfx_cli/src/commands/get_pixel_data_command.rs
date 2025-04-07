@@ -159,12 +159,12 @@ enum OutputFormat {
   /// extension is selected based on the file's DICOM transfer syntax.
   Raw,
 
-  /// Decodes the pixel data and writes each frame to a PNG image.
+  /// Decodes the pixel data and writes each frame to an 8-bit PNG image.
   Png,
 
   /// Decodes the pixel data and writes each frame to a PNG image. If the pixel
-  /// data bit depth is greater than 8-bit then the PNG will be written with
-  /// 16-bit color depth.
+  /// data bit depth is greater than 8-bit then the PNG will use 16-bit color
+  /// depth.
   Png16,
 
   /// Decodes the pixel data and writes each frame to a JPG image. The JPG
@@ -175,6 +175,9 @@ enum OutputFormat {
   /// codec, quality, preset, and other settings can be controlled with the
   /// --mp4-* arguments.
   Mp4,
+
+  /// Decodes the pixel data and writes each frame to a lossless WebP image.
+  Webp,
 }
 
 impl OutputFormat {
@@ -326,6 +329,7 @@ fn get_pixel_data_from_input_source(
     OutputFormat::Png | OutputFormat::Png16 => ".png",
     OutputFormat::Jpg => ".jpg",
     OutputFormat::Mp4 => ".mp4",
+    OutputFormat::Webp => ".webp",
   };
 
   let mut mp4_encoder: Option<Mp4Encoder> = None;
@@ -484,6 +488,19 @@ fn write_frame_to_image_file(
       )
       .encode_image(&image)
       .map_err(GetPixelDataError::ImageError)?,
+
+      OutputFormat::Webp => {
+        let image = image.into_rgb8();
+
+        image::codecs::webp::WebPEncoder::new_lossless(&mut output_writer)
+          .encode(
+            &image,
+            image.width(),
+            image.height(),
+            image::ExtendedColorType::Rgb8,
+          )
+          .map_err(GetPixelDataError::ImageError)?
+      }
 
       OutputFormat::Raw | OutputFormat::Mp4 => unreachable!(),
     }
