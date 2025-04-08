@@ -13,7 +13,7 @@ use dcmfx::pixel_data::{
 use crate::InputSource;
 use crate::mp4_encoder::{
   LogLevel, Mp4Codec, Mp4CompressionPreset, Mp4Encoder, Mp4EncoderConfig,
-  Mp4PixelFormat,
+  Mp4PixelFormat, ResizeFilter,
 };
 
 pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
@@ -53,6 +53,27 @@ pub struct GetPixelDataArgs {
       apply to the frames of image data."
   )]
   transform: Option<OutputTransform>,
+
+  #[arg(
+    long,
+    num_args=2..=2,
+    value_parser = clap::value_parser!(u32),
+    value_names = ["WIDTH", "HEIGHT"],
+    help = "When the output format is not 'raw', specifies the resolution of \
+      output images and videos. If either width or height is zero then it is \
+      calculated automatically such that the input aspect ratio is preserved.\n\
+      \n\
+      Resizes are performed after any active transform is applied.
+      "
+  )]
+  resize: Option<Vec<u32>>,
+
+  #[arg(
+    long,
+    help = "The filter to use when resizing images.",
+    default_value_t = ResizeFilter::Lanczos3
+  )]
+  resize_filter: ResizeFilter,
 
   #[arg(
     long,
@@ -574,96 +595,21 @@ fn write_fragments(
   stream.flush()
 }
 
+/// Turns a raw frame of pixel data into a an [`image::DynamicImage`] with
+/// all alterations performed, including overlay rendering and any active
+/// transform or resize.
+///
 fn frame_to_image(
   frame: &mut PixelDataFrame,
   pixel_data_renderer: &mut PixelDataRenderer,
   overlays: Option<&Overlays>,
   args: &GetPixelDataArgs,
 ) -> Result<image::DynamicImage, GetPixelDataError> {
-  let mut image: image::DynamicImage =
-    if pixel_data_renderer.definition.is_grayscale() {
-      let single_channel_image = pixel_data_renderer
-        .decode_single_channel_frame(frame)
-        .map_err(GetPixelDataError::DataError)?;
+  let mut image = frame_to_dynamic_image(frame, pixel_data_renderer, args)?;
 
-      // Apply the VOI override if it's set
-      if let Some(voi_window_override) = &args.voi_window {
-        pixel_data_renderer.voi_lut = VoiLut {
-          luts: vec![],
-          windows: vec![VoiWindow::new(
-            voi_window_override[0],
-            voi_window_override[1],
-            "".to_string(),
-            VoiLutFunction::LinearExact,
-          )],
-        };
-      }
-      // If there's no VOI LUT in the DICOM or specified on the command line
-      // then automatically derive one from the content of the first frame and
-      // use it for all subsequent frames.
-      else if pixel_data_renderer.voi_lut.is_empty() {
-        let image = pixel_data_renderer
-          .decode_single_channel_frame(frame)
-          .map_err(GetPixelDataError::DataError)?;
-
-        if let Some(fallback) = image.fallback_voi_window() {
-          pixel_data_renderer.voi_lut.windows.push(fallback);
-        }
-      }
-
-      // For 16-bit outputs emit a Luma16 buffer if the pixel data can make use
-      // of it. A color palette implies 8-bit output as color palettes always
-      // output 8-bit.
-      if args.format.is_16bit()
-        && pixel_data_renderer.definition.bits_stored() > 8
-        && args.color_palette.is_none()
-      {
-        single_channel_image
-          .to_gray_u16_image(
-            &pixel_data_renderer.modality_lut,
-            &pixel_data_renderer.voi_lut,
-          )
-          .into()
-      }
-      // If there is an active color palette then use it and output the
-      // resulting RGB8
-      else if let Some(color_palette) = args.color_palette {
-        pixel_data_renderer
-          .render_single_channel_image(
-            &single_channel_image,
-            Some(color_palette.color_palette()),
-          )
-          .into()
-      }
-      // Otherwise, emit a Luma8 image
-      else {
-        single_channel_image
-          .to_gray_u8_image(
-            &pixel_data_renderer.modality_lut,
-            &pixel_data_renderer.voi_lut,
-          )
-          .into()
-      }
-    } else {
-      let image = pixel_data_renderer
-        .decode_color_frame(frame)
-        .map_err(GetPixelDataError::DataError)?;
-
-      if args.format.is_16bit()
-        && pixel_data_renderer.definition.bits_stored() > 8
-      {
-        image
-          .into_rgb_u16_image(&pixel_data_renderer.definition)
-          .into()
-      } else {
-        image
-          .into_rgb_u8_image(&pixel_data_renderer.definition)
-          .into()
-      }
-    };
-
+  // Render the overlays, if present
   if let Some(overlays) = overlays {
-    // Expand Luma images to RGB because overlays can only be rendered to RGB
+    // Expand Luma images to RGB because overlays can only be rendered on RGB
     if image.color() == image::ColorType::L8 {
       image = image.to_rgb8().into();
     } else if image.color() == image::ColorType::L16 {
@@ -675,11 +621,141 @@ fn frame_to_image(
       .unwrap();
   }
 
+  // Apply the image transform, if specified
   if let Some(transform) = args.transform {
     image.apply_orientation(transform.orientation());
   }
 
+  // Apply the image resize, if specified. Note that no resize is performed here
+  // when outputting to an MP4 because in that case FFmpeg is used to do the
+  // resize, which is faster.
+  if args.format != OutputFormat::Mp4 {
+    if let Some((new_width, new_height)) =
+      get_resized_dimensions(image.width(), image.height(), args)
+    {
+      image = image.resize_exact(
+        new_width,
+        new_height,
+        args.resize_filter.filter_type(),
+      );
+    }
+  }
+
   Ok(image)
+}
+
+/// Given an input image's width and height, returns the dimensions it should be
+/// resized to. Returns `None` if no resize is active.
+fn get_resized_dimensions(
+  width: u32,
+  height: u32,
+  args: &GetPixelDataArgs,
+) -> Option<(u32, u32)> {
+  let resize = args.resize.as_ref()?;
+
+  let mut new_width = resize[0];
+  let mut new_height = resize[1];
+
+  let aspect_ratio = f64::from(width) / f64::from(height);
+
+  // If the requested width or height is zero then calculate the correct value
+  // based on the aspect ratio of the input
+  if new_width == 0 {
+    new_width = (f64::from(new_height) * aspect_ratio) as u32;
+  } else if new_height == 0 {
+    new_height = (f64::from(new_width) / aspect_ratio) as u32;
+  }
+
+  Some((new_width, new_height))
+}
+
+/// Turns a raw frame of pixel data into a an [`image::DynamicImage`]. The most
+/// optimal storage format will be used, e.g. 8-bit/16-bit and grayscale where
+/// possible.
+///
+fn frame_to_dynamic_image(
+  frame: &mut PixelDataFrame,
+  pixel_data_renderer: &mut PixelDataRenderer,
+  args: &GetPixelDataArgs,
+) -> Result<image::DynamicImage, GetPixelDataError> {
+  if pixel_data_renderer.definition.is_grayscale() {
+    let single_channel_image = pixel_data_renderer
+      .decode_single_channel_frame(frame)
+      .map_err(GetPixelDataError::DataError)?;
+
+    // Apply the VOI override if it's set
+    if let Some(voi_window_override) = &args.voi_window {
+      pixel_data_renderer.voi_lut = VoiLut {
+        luts: vec![],
+        windows: vec![VoiWindow::new(
+          voi_window_override[0],
+          voi_window_override[1],
+          "".to_string(),
+          VoiLutFunction::LinearExact,
+        )],
+      };
+    }
+    // If there's no VOI LUT in the DICOM or specified on the command line
+    // then automatically derive one from the content of the first frame and
+    // use it for all subsequent frames.
+    else if pixel_data_renderer.voi_lut.is_empty() {
+      let image = pixel_data_renderer
+        .decode_single_channel_frame(frame)
+        .map_err(GetPixelDataError::DataError)?;
+
+      if let Some(fallback) = image.fallback_voi_window() {
+        pixel_data_renderer.voi_lut.windows.push(fallback);
+      }
+    }
+
+    // For 16-bit outputs emit a Luma16 buffer if the pixel data can make use
+    // of it. A color palette implies 8-bit output as color palettes always
+    // output 8-bit.
+    if args.format.is_16bit()
+      && pixel_data_renderer.definition.bits_stored() > 8
+      && args.color_palette.is_none()
+    {
+      let image = single_channel_image.to_gray_u16_image(
+        &pixel_data_renderer.modality_lut,
+        &pixel_data_renderer.voi_lut,
+      );
+
+      Ok(image.into())
+    }
+    // If there is an active color palette then use it and output the
+    // resulting RGB8
+    else if let Some(color_palette) = args.color_palette {
+      let image = pixel_data_renderer.render_single_channel_image(
+        &single_channel_image,
+        Some(color_palette.color_palette()),
+      );
+
+      Ok(image.into())
+    }
+    // Otherwise, emit a Luma8 image
+    else {
+      let image = single_channel_image.to_gray_u8_image(
+        &pixel_data_renderer.modality_lut,
+        &pixel_data_renderer.voi_lut,
+      );
+
+      Ok(image.into())
+    }
+  } else {
+    let image = pixel_data_renderer
+      .decode_color_frame(frame)
+      .map_err(GetPixelDataError::DataError)?;
+
+    if args.format.is_16bit()
+      && pixel_data_renderer.definition.bits_stored() > 8
+    {
+      let image = image.into_rgb_u16_image(&pixel_data_renderer.definition);
+      Ok(image.into())
+    } else {
+      let image = image.into_rgb_u8_image(&pixel_data_renderer.definition);
+      Ok(image.into())
+    }
+  }
 }
 
 /// Creates an [`Mp4Encoder`] for a given input source
@@ -700,11 +776,25 @@ fn create_mp4_encoder(
     crf: args.mp4_crf.unwrap_or(args.mp4_codec.default_crf()),
     preset: args.mp4_preset,
     pixel_format: args.mp4_pixel_format,
+    resize_filter: args.resize_filter,
     log_level: args.mp4_log_level,
   };
 
-  Mp4Encoder::new(&mp4_path, image.width(), image.height(), encoder_config)
-    .map_err(GetPixelDataError::FFmpegError)
+  // Determine output dimensions. If there is a resize active then it will be
+  // performed by the MP4 encoder.
+  let (output_width, output_height) =
+    get_resized_dimensions(image.width(), image.height(), args)
+      .unwrap_or((image.width(), image.height()));
+
+  Mp4Encoder::new(
+    &mp4_path,
+    image.width(),
+    image.height(),
+    output_width,
+    output_height,
+    encoder_config,
+  )
+  .map_err(GetPixelDataError::FFmpegError)
 }
 
 /// Writes the next frame of pixel data to an MP4 file.

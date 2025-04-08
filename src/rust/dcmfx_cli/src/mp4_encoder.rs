@@ -18,7 +18,7 @@ pub struct Mp4Encoder {
   duration: Duration,
 
   rgb24_frame: ffmpeg::frame::Video,
-  input_frame: ffmpeg::frame::Video,
+  prepared_frame: ffmpeg::frame::Video,
   scaling_context: ffmpeg::software::scaling::Context,
 }
 
@@ -27,12 +27,19 @@ impl Mp4Encoder {
   ///
   pub fn new(
     filename: &PathBuf,
-    width: u32,
-    height: u32,
+    input_width: u32,
+    input_height: u32,
+    mut output_width: u32,
+    mut output_height: u32,
     encoder_config: Mp4EncoderConfig,
   ) -> Result<Self, ffmpeg::Error> {
     ffmpeg::init()?;
     ffmpeg::util::log::set_level(encoder_config.log_level.ffmpeg_log_level());
+
+    // Ensure output dimensions are divisible by two. This is required by
+    // libx264 and libx265.
+    output_width &= !1;
+    output_height &= !1;
 
     // Configure output to put the 'moov' atom at the start of the file. This
     // requires a second pass so is a little slower, but is recommended for any
@@ -52,8 +59,8 @@ impl Mp4Encoder {
     let mut video_encoder = context.encoder().video()?;
 
     // Configure video encoder
-    video_encoder.set_width(width);
-    video_encoder.set_height(height);
+    video_encoder.set_width(output_width);
+    video_encoder.set_height(output_height);
     video_encoder.set_max_b_frames(2);
     video_encoder.set_time_base(TIME_BASE);
     video_encoder.set_format(encoder_config.pixel_format.ffmpeg_id());
@@ -80,22 +87,36 @@ impl Mp4Encoder {
     output.write_header()?;
 
     // Create a scaling context for converting incoming RGB24 frame data to the
-    // pixel format expected by the video encoder
-    let rgb24_frame =
-      ffmpeg::frame::Video::new(ffmpeg::format::Pixel::RGB24, width, height);
-    let input_frame = ffmpeg::frame::Video::new(
-      encoder_config.pixel_format.ffmpeg_id(),
-      width,
-      height,
+    // pixel format expected by the video encoder. The scaling context will also
+    // resize the incoming frame if needed.
+
+    let rgb24_frame = ffmpeg::frame::Video::new(
+      ffmpeg::format::Pixel::RGB24,
+      input_width,
+      input_height,
     );
+
+    let prepared_frame = ffmpeg::frame::Video::new(
+      encoder_config.pixel_format.ffmpeg_id(),
+      output_width,
+      output_height,
+    );
+
+    let filter = if input_width == output_width && input_height == output_height
+    {
+      ffmpeg::software::scaling::Flags::POINT
+    } else {
+      encoder_config.resize_filter.scaling_flags()
+    };
+
     let scaling_context = ffmpeg::software::scaling::Context::get(
       rgb24_frame.format(),
-      width,
-      height,
-      input_frame.format(),
-      width,
-      height,
-      ffmpeg::software::scaling::Flags::POINT,
+      rgb24_frame.width(),
+      rgb24_frame.height(),
+      prepared_frame.format(),
+      prepared_frame.width(),
+      prepared_frame.height(),
+      filter,
     )?;
 
     Ok(Self {
@@ -105,7 +126,7 @@ impl Mp4Encoder {
       duration: Duration::ZERO,
 
       rgb24_frame,
-      input_frame,
+      prepared_frame,
       scaling_context,
     })
   }
@@ -144,18 +165,19 @@ impl Mp4Encoder {
       }
     }
 
-    // Convert the RGB24 frame to the video encoder's pixel format
+    // Convert the RGB24 frame to the video encoder's expected pixel format and
+    // dimensions
     self
       .scaling_context
-      .run(&self.rgb24_frame, &mut self.input_frame)?;
+      .run(&self.rgb24_frame, &mut self.prepared_frame)?;
 
     // Set presentation time stamp on the input frame
-    self.input_frame.set_pts(Some(
+    self.prepared_frame.set_pts(Some(
       self.duration.as_micros() as i64 * i64::from(TIME_BASE.1) / 1000000,
     ));
 
     // Send the frame to the video encoder
-    self.video_encoder.send_frame(&self.input_frame)?;
+    self.video_encoder.send_frame(&self.prepared_frame)?;
     self.flush_packets_to_output()?;
 
     // Update total video duration
@@ -192,6 +214,7 @@ pub struct Mp4EncoderConfig {
   pub crf: u32,
   pub preset: Mp4CompressionPreset,
   pub pixel_format: Mp4PixelFormat,
+  pub resize_filter: ResizeFilter,
   pub log_level: LogLevel,
 }
 
@@ -386,6 +409,57 @@ impl core::fmt::Display for LogLevel {
       Self::Verbose => write!(f, "verbose"),
       Self::Debug => write!(f, "debug"),
       Self::Trace => write!(f, "trace"),
+    }
+  }
+}
+
+/// The filter to use when a resize of a frame of image data occurs prior to it
+/// being encoded.
+///
+#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
+pub enum ResizeFilter {
+  /// Fast, low-quality filter using linear interpolation for basic resizing.
+  Bilinear,
+
+  /// Slower than bilinear, but offers smoother, higher-quality results using
+  /// cubic interpolation.
+  Bicubic,
+
+  /// Medium speed and quality, applies a soft blur that can reduce aliasing.
+  Gaussian,
+
+  /// High-quality but slower filter using a sinc function, ideal for sharp,
+  /// detailed resizing.
+  Lanczos3,
+}
+
+impl ResizeFilter {
+  fn scaling_flags(&self) -> ffmpeg::software::scaling::Flags {
+    match self {
+      Self::Bilinear => ffmpeg::software::scaling::Flags::BILINEAR,
+      Self::Bicubic => ffmpeg::software::scaling::Flags::BICUBIC,
+      Self::Gaussian => ffmpeg::software::scaling::Flags::GAUSS,
+      Self::Lanczos3 => ffmpeg::software::scaling::Flags::LANCZOS,
+    }
+  }
+
+  pub fn filter_type(&self) -> image::imageops::FilterType {
+    match self {
+      Self::Bilinear => image::imageops::FilterType::Triangle,
+      Self::Bicubic => image::imageops::FilterType::CatmullRom,
+      Self::Gaussian => image::imageops::FilterType::Gaussian,
+      Self::Lanczos3 => image::imageops::FilterType::Lanczos3,
+    }
+  }
+}
+
+impl core::fmt::Display for ResizeFilter {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    match self {
+      Self::Bilinear => write!(f, "bilinear"),
+      Self::Bicubic => write!(f, "bicubic"),
+      Self::Gaussian => write!(f, "gaussian"),
+      Self::Lanczos3 => write!(f, "lanczos3"),
     }
   }
 }
