@@ -69,8 +69,8 @@ DCMfx is a CLI tool for working with DICOM and DICOM JSON
 Usage: dcmfx [OPTIONS] <COMMAND>
 
 Commands:
-  get-pixel-data  Extracts pixel data from DICOM P10 files, writing each frame
-                  to an image file
+  get-pixel-data  Extracts pixel data from DICOM P10 files, writing it to image
+                  and video files
   modify          Modifies the content of DICOM P10 files
   print           Prints the content of DICOM P10 files
   json-to-dcm     Converts DICOM JSON files to DICOM P10 files
@@ -115,23 +115,24 @@ Options:
    dcmfx get-pixel-data input.dcm
    ```
 
-   Pixel data can also be decoded and converted to a PNG (or JPEG) file per
-   frame:
+   Each frame of pixel data can be decoded and written to PNG, 16-bit PNG, JPEG,
+   or WebP Lossless images:
 
    ```sh
    dcmfx get-pixel-data input.dcm --format png
-   dcmfx get-pixel-data input.dcm --format jpg --jpeg-quality 70
+   dcmfx get-pixel-data input.dcm --format png16
+   dcmfx get-pixel-data input.dcm --format jpg --jpeg-quality 90
    ```
 
    Single channel data can also specify a VOI window center and width and/or a
-   well-known color palette:
+   well-known color palette to use:
 
    ```sh
    dcmfx get-pixel-data input.dcm --format png --voi-window 500 2000 \
      --color-palette hot-iron
    ```
 
-5. Extract pixel data from a DICOM P10 file to an MP4 H.264 video:
+5. Extract pixel data from a DICOM P10 file to an MP4 video:
 
    ```sh
    dcmfx get-pixel-data input.dcm --format mp4
