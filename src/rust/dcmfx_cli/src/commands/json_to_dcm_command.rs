@@ -32,11 +32,11 @@ pub struct ToDcmArgs {
   output_filename: Option<PathBuf>,
 
   #[clap(
-    long = "force",
+    long,
     help = "Overwrite files without prompting",
     default_value_t = false
   )]
-  force_overwrite: bool,
+  overwrite: bool,
 }
 
 enum ToDcmError {
@@ -117,7 +117,7 @@ fn input_source_to_dcm(
   let mut output_stream: Box<dyn Write> = utils::open_output_stream(
     &output_filename,
     Some(&output_filename),
-    args.force_overwrite,
+    args.overwrite,
   )
   .map_err(ToDcmError::P10Error)?;
 

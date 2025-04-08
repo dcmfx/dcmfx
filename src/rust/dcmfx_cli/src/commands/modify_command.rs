@@ -83,11 +83,11 @@ pub struct ModifyArgs {
   delete_tags: Vec<DataElementTag>,
 
   #[clap(
-    long = "force",
+    long,
     help = "Overwrite files without prompting",
     default_value_t = false
   )]
-  force_overwrite: bool,
+  overwrite: bool,
 }
 
 fn validate_data_element_tag_list(
@@ -157,7 +157,7 @@ fn modify_input_source(
       );
     }
 
-    if !args.in_place && !args.force_overwrite {
+    if !args.in_place && !args.overwrite {
       prompt_to_overwrite_if_exists(&output_filename);
     }
   }

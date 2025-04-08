@@ -2,20 +2,21 @@ use std::{
   fs::File,
   io::Write,
   path::{Path, PathBuf},
+  sync::atomic::{AtomicBool, Ordering},
 };
 
 use dcmfx::p10::P10Error;
 
 /// Opens an output stream for the given path, first checking whether it exists
 /// and prompting the user about overwriting it if necessary. This prompt isn't
-/// presented to the user if `force_overwrite` is true.
+/// presented to the user if `overwrite` is true.
 ///
 /// The path "-" is interpreted as writing to stdout.
 ///
 pub fn open_output_stream(
   path: &PathBuf,
   display_path: Option<&PathBuf>,
-  force_overwrite: bool,
+  overwrite: bool,
 ) -> Result<Box<dyn std::io::Write>, P10Error> {
   if *path == PathBuf::from("-") {
     Ok(Box::new(std::io::stdout()))
@@ -24,7 +25,7 @@ pub fn open_output_stream(
       println!("Writing \"{}\" …", display_path.display());
     }
 
-    if !force_overwrite {
+    if !overwrite {
       prompt_to_overwrite_if_exists(path);
     }
 
@@ -39,6 +40,10 @@ pub fn open_output_stream(
   }
 }
 
+/// Stores whether the user has requested to overwrite all files instead of
+/// prompting for each one.
+static OVERWRITE_ALL_FILES: AtomicBool = AtomicBool::new(false);
+
 /// Prompts the user about overwriting the given file if it exists.
 ///
 pub fn prompt_to_overwrite_if_exists(path: &Path) {
@@ -46,8 +51,12 @@ pub fn prompt_to_overwrite_if_exists(path: &Path) {
     return;
   }
 
+  if OVERWRITE_ALL_FILES.load(Ordering::Relaxed) {
+    return;
+  }
+
   print!(
-    "File \"{}\" already exists. Overwrite? (y/N): ",
+    "File \"{}\" already exists. Overwrite? ([y]es, [N]o, [a]ll): ",
     path.display()
   );
   std::io::stdout().flush().unwrap();
@@ -56,8 +65,12 @@ pub fn prompt_to_overwrite_if_exists(path: &Path) {
   std::io::stdin().read_line(&mut input).unwrap();
   let input = input.trim().to_lowercase();
 
-  if input != "y" && input != "yes" {
+  if input != "y" && input != "yes" && input != "a" && input != "all" {
     std::process::exit(1)
+  }
+
+  if input == "a" || input == "all" {
+    OVERWRITE_ALL_FILES.store(true, Ordering::Relaxed);
   }
 }
 

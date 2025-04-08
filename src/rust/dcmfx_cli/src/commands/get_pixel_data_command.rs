@@ -173,11 +173,11 @@ pub struct GetPixelDataArgs {
   render_overlays: bool,
 
   #[clap(
-    long = "force",
+    long,
     help = "Overwrite files without prompting",
     default_value_t = false
   )]
-  force_overwrite: bool,
+  overwrite: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
@@ -488,7 +488,7 @@ fn get_pixel_data_from_input_source(
             &format!(".{:04}{}", frame.index(), output_extension),
           );
 
-          if !args.force_overwrite {
+          if !args.overwrite {
             crate::utils::prompt_to_overwrite_if_exists(&filename);
           }
 
@@ -767,7 +767,7 @@ fn create_mp4_encoder(
 ) -> Result<Mp4Encoder, GetPixelDataError> {
   let mp4_path = crate::utils::path_append(output_prefix.to_path_buf(), ".mp4");
 
-  if !args.force_overwrite {
+  if !args.overwrite {
     crate::utils::prompt_to_overwrite_if_exists(&mp4_path);
   }
 

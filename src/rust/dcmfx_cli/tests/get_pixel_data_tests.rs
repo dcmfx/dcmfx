@@ -44,7 +44,7 @@ fn single_bit_unaligned_to_raw() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .assert()
     .success()
     .stdout(format!(
@@ -58,7 +58,7 @@ fn single_bit_unaligned_to_raw() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -94,7 +94,7 @@ fn rgb_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -114,7 +114,7 @@ fn ybr_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -133,7 +133,7 @@ fn rle_lossless_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .arg("--voi-window")
@@ -155,7 +155,7 @@ fn rle_lossless_bitmap_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -175,7 +175,7 @@ fn rle_lossless_color_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -195,7 +195,7 @@ fn rle_lossless_color_palette_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .assert()
@@ -214,7 +214,7 @@ fn to_jpg_with_custom_window() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .arg("--voi-window")
@@ -237,7 +237,7 @@ fn missing_voi_lut_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -256,7 +256,7 @@ fn jpg_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -275,7 +275,7 @@ fn jpg_to_webp() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("webp")
     .assert()
@@ -294,7 +294,7 @@ fn palette_color_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -313,7 +313,7 @@ fn resize_using_lanczos3() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .arg("--resize")
@@ -335,7 +335,7 @@ fn resize_using_bilinear_filter() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .arg("--resize")
@@ -360,7 +360,7 @@ fn jpeg_2000_single_channel_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .arg("--voi-window")
@@ -383,7 +383,7 @@ fn jpeg_2000_single_channel_to_png_16bit() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png16")
     .arg("--voi-window")
@@ -409,7 +409,7 @@ fn jpeg_2000_color_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -429,7 +429,7 @@ fn jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .assert()
@@ -452,7 +452,7 @@ fn jpeg_2000_single_channel_2bpp_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -475,7 +475,7 @@ fn jpeg_ls_single_channel_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -495,7 +495,7 @@ fn jpeg_ls_color_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -514,7 +514,7 @@ fn jpeg_lossless_12bit_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .assert()
@@ -533,7 +533,7 @@ fn jpeg_lossless_color_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .assert()
@@ -552,7 +552,7 @@ fn jpeg_extended_12bit_single_channel_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -574,7 +574,7 @@ fn jpeg_xl_single_channel_to_png() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -593,7 +593,7 @@ fn jpeg_xl_color_to_jpg() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -612,7 +612,7 @@ fn deflated_image_frame_compression() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .assert()
@@ -632,7 +632,7 @@ fn render_overlays() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .arg("--overlays")
@@ -652,7 +652,7 @@ fn render_overlays_out_of_bounds() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .arg("--overlays")
@@ -677,7 +677,7 @@ fn render_overlays_multiframe_unaligned() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("jpg")
     .arg("--overlays")
@@ -712,7 +712,7 @@ fn single_bit_unaligned_to_mp4_h264() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("mp4")
     .arg("--mp4-preset")
@@ -751,7 +751,7 @@ fn single_bit_unaligned_to_mp4_h265() {
     .arg(dicom_file)
     .arg("--output-prefix")
     .arg(&output_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("mp4")
     .arg("--mp4-codec")
@@ -796,7 +796,7 @@ fn render_overlays_and_rotate90() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("webp")
     .arg("--overlays")
@@ -819,7 +819,7 @@ fn render_overlays_and_flip_horizontal() {
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--force")
+    .arg("--overwrite")
     .arg("-f")
     .arg("png")
     .arg("--overlays")
