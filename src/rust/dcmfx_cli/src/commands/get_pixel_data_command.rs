@@ -49,6 +49,13 @@ pub struct GetPixelDataArgs {
 
   #[arg(
     long,
+    help = "When the output format is not 'raw', specifies a transform to \
+      apply to the frames of image data."
+  )]
+  transform: Option<OutputTransform>,
+
+  #[arg(
+    long,
     help = "When the output format is 'jpg', specifies the quality level in \
       the range 0-100.",
     default_value_t = 85
@@ -183,6 +190,45 @@ enum OutputFormat {
 impl OutputFormat {
   fn is_16bit(&self) -> bool {
     *self == Self::Png16
+  }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
+enum OutputTransform {
+  /// Rotate by 90 degrees clockwise.
+  Rotate90,
+
+  /// Rotate by 180 degrees.
+  Rotate180,
+
+  /// Rotate by 270 degrees clockwise. Equivalent to rotating by 90 degrees
+  /// counter-clockwise.
+  Rotate270,
+
+  /// Flip horizontally.
+  FlipHorizontal,
+
+  /// Flip vertically.
+  FlipVertical,
+
+  /// Rotate by 90 degrees clockwise then flip horizontally.
+  Rotate90FlipH,
+
+  /// Rotate by 270 degrees clockwise then flip horizontally.
+  Rotate270FlipH,
+}
+
+impl OutputTransform {
+  fn orientation(&self) -> image::metadata::Orientation {
+    match self {
+      Self::Rotate90 => image::metadata::Orientation::Rotate90,
+      Self::Rotate180 => image::metadata::Orientation::Rotate180,
+      Self::Rotate270 => image::metadata::Orientation::Rotate270,
+      Self::FlipHorizontal => image::metadata::Orientation::FlipHorizontal,
+      Self::FlipVertical => image::metadata::Orientation::FlipVertical,
+      Self::Rotate90FlipH => image::metadata::Orientation::Rotate90FlipH,
+      Self::Rotate270FlipH => image::metadata::Orientation::Rotate270FlipH,
+    }
   }
 }
 
@@ -629,6 +675,10 @@ fn frame_to_image(
       .unwrap();
   }
 
+  if let Some(transform) = args.transform {
+    image.apply_orientation(transform.orientation());
+  }
+
   Ok(image)
 }
 
@@ -636,7 +686,7 @@ fn frame_to_image(
 ///
 fn create_mp4_encoder(
   output_prefix: &Path,
-  pixel_data_renderer: &PixelDataRenderer,
+  image: &image::DynamicImage,
   args: &GetPixelDataArgs,
 ) -> Result<Mp4Encoder, GetPixelDataError> {
   let mp4_path = crate::utils::path_append(output_prefix.to_path_buf(), ".mp4");
@@ -644,9 +694,6 @@ fn create_mp4_encoder(
   if !args.force_overwrite {
     crate::utils::prompt_to_overwrite_if_exists(&mp4_path);
   }
-
-  let width = pixel_data_renderer.definition.columns();
-  let height = pixel_data_renderer.definition.rows();
 
   let encoder_config = Mp4EncoderConfig {
     codec: args.mp4_codec,
@@ -656,7 +703,7 @@ fn create_mp4_encoder(
     log_level: args.mp4_log_level,
   };
 
-  Mp4Encoder::new(&mp4_path, width, height, encoder_config)
+  Mp4Encoder::new(&mp4_path, image.width(), image.height(), encoder_config)
     .map_err(GetPixelDataError::FFmpegError)
 }
 
@@ -678,14 +725,13 @@ fn write_frame_to_mp4_file(
     return Ok(());
   }
 
+  // Convert the raw frame into an image
+  let image = frame_to_image(frame, pixel_data_renderer, overlays, args)?;
+
   // If this is the first frame then the MP4 encoder won't have been created,
   // so create it now
   if mp4_encoder.is_none() {
-    *mp4_encoder = Some(create_mp4_encoder(
-      output_prefix,
-      pixel_data_renderer,
-      args,
-    )?);
+    *mp4_encoder = Some(create_mp4_encoder(output_prefix, &image, args)?);
   }
 
   // Update progress readout
@@ -709,9 +755,6 @@ fn write_frame_to_mp4_file(
       .frame_duration(frame.index(), multiframe_module)
       .unwrap_or(Duration::from_secs(1))
   };
-
-  // Convert the raw frame into an image
-  let image = frame_to_image(frame, pixel_data_renderer, overlays, args)?;
 
   // Add the frame to the MP4 encoder
   mp4_encoder

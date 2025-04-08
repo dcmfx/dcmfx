@@ -122,6 +122,7 @@ Options:
    dcmfx get-pixel-data input.dcm --format png
    dcmfx get-pixel-data input.dcm --format png16
    dcmfx get-pixel-data input.dcm --format jpg --jpeg-quality 90
+   dcmfx get-pixel-data input.dcm --format webp
    ```
 
    Single channel data can also specify a VOI window center and width and/or a
@@ -130,6 +131,13 @@ Options:
    ```sh
    dcmfx get-pixel-data input.dcm --format png --voi-window 500 2000 \
      --color-palette hot-iron
+   ```
+
+   The images can be rotated or flipped by specifying a transform:
+
+   ```sh
+   dcmfx get-pixel-data input.dcm --format jpg --transform rotate90
+   dcmfx get-pixel-data input.dcm --format jpg --transform flip-vertical
    ```
 
 5. Extract pixel data from a DICOM P10 file to an MP4 video:

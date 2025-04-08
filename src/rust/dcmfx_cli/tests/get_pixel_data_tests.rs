@@ -740,6 +740,55 @@ fn single_bit_unaligned_to_mp4_h265() {
   );
 }
 
+#[test]
+fn render_overlays_and_rotate90() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/examples_overlay.dcm";
+  let output_file = format!("{}.0000.webp", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--force")
+    .arg("-f")
+    .arg("webp")
+    .arg("--overlays")
+    .arg("--transform")
+    .arg("rotate90")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "render_overlays_and_rotate90.webp");
+}
+
+#[test]
+fn render_overlays_and_flip_horizontal() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/examples_overlay.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--force")
+    .arg("-f")
+    .arg("png")
+    .arg("--overlays")
+    .arg("--transform")
+    .arg("flip-horizontal")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(
+    output_file,
+    "render_overlays_and_flip_horizontal.png"
+  );
+}
+
 fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   path1: P,
   snapshot: &str,

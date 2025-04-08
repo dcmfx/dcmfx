@@ -27,8 +27,8 @@ impl Mp4Encoder {
   ///
   pub fn new(
     filename: &PathBuf,
-    width: u16,
-    height: u16,
+    width: u32,
+    height: u32,
     encoder_config: Mp4EncoderConfig,
   ) -> Result<Self, ffmpeg::Error> {
     ffmpeg::init()?;
@@ -52,8 +52,8 @@ impl Mp4Encoder {
     let mut video_encoder = context.encoder().video()?;
 
     // Configure video encoder
-    video_encoder.set_width(width.into());
-    video_encoder.set_height(height.into());
+    video_encoder.set_width(width);
+    video_encoder.set_height(height);
     video_encoder.set_max_b_frames(2);
     video_encoder.set_time_base(TIME_BASE);
     video_encoder.set_format(encoder_config.pixel_format.ffmpeg_id());
@@ -81,24 +81,21 @@ impl Mp4Encoder {
 
     // Create a scaling context for converting incoming RGB24 frame data to the
     // pixel format expected by the video encoder
-    let rgb24_frame = ffmpeg::frame::Video::new(
-      ffmpeg::format::Pixel::RGB24,
-      width.into(),
-      height.into(),
-    );
+    let rgb24_frame =
+      ffmpeg::frame::Video::new(ffmpeg::format::Pixel::RGB24, width, height);
     let input_frame = ffmpeg::frame::Video::new(
       encoder_config.pixel_format.ffmpeg_id(),
-      width.into(),
-      height.into(),
+      width,
+      height,
     );
     let scaling_context = ffmpeg::software::scaling::Context::get(
       rgb24_frame.format(),
-      width.into(),
-      height.into(),
+      width,
+      height,
       input_frame.format(),
-      width.into(),
-      height.into(),
-      ffmpeg::software::scaling::Flags::BILINEAR,
+      width,
+      height,
+      ffmpeg::software::scaling::Flags::POINT,
     )?;
 
     Ok(Self {
@@ -127,24 +124,23 @@ impl Mp4Encoder {
     rgb_image: &RgbImage,
     frame_duration: Duration,
   ) -> Result<(), ffmpeg::Error> {
-    let width = rgb_image.width() as usize;
+    // Get the size of each line in the FFmpeg frame
+    let linesize = unsafe { (*self.rgb24_frame.as_ptr()).linesize }[0] as usize;
 
-    // Copy RGB24 data into the FFmpeg frame, ensuring that rows are 32-byte
-    // aligned
-    if width % 32 == 0 {
+    // Copy RGB24 data into the FFmpeg frame, respecting the frame's linesize
+    if rgb_image.width() as usize % linesize == 0 {
       self
         .rgb24_frame
         .data_mut(0)
         .copy_from_slice(rgb_image.as_raw());
     } else {
-      let row_size = width * 3;
+      let row_size = rgb_image.width() as usize * 3;
 
-      let dst_row_size = row_size + (32 - row_size % 32);
       let mut dst = self.rgb24_frame.data_mut(0);
 
       for src_row in rgb_image.as_raw().chunks_exact(row_size) {
         dst[..row_size].copy_from_slice(src_row);
-        dst = &mut dst[dst_row_size..];
+        dst = &mut dst[linesize..];
       }
     }
 
