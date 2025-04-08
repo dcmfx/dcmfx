@@ -211,6 +211,7 @@ impl Mp4Encoder {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Mp4EncoderConfig {
   pub codec: Mp4Codec,
+  pub codec_params: String,
   pub crf: u32,
   pub preset: Mp4CompressionPreset,
   pub pixel_format: Mp4PixelFormat,
@@ -228,13 +229,21 @@ impl Mp4EncoderConfig {
     opts.set("preset", &self.preset.to_string());
     opts.set("crf", &self.crf.to_string());
 
-    // Pass log level through to libx265
-    if self.codec == Mp4Codec::Libx265 {
-      opts.set(
-        "x265-params",
-        &format!("log-level={}", self.log_level.x265_log_level()),
-      );
-    }
+    let codec_params = if self.codec == Mp4Codec::Libx265 {
+      // Pass log level through to libx265
+      format!(
+        "log-level={}:{}",
+        self.log_level.x265_log_level(),
+        self.codec_params
+      )
+    } else {
+      self.codec_params.clone()
+    };
+
+    match self.codec {
+      Mp4Codec::Libx264 => opts.set("x264-params", &codec_params),
+      Mp4Codec::Libx265 => opts.set("x265-params", &codec_params),
+    };
 
     opts
   }
@@ -322,25 +331,25 @@ impl core::fmt::Display for Mp4CompressionPreset {
 pub enum Mp4PixelFormat {
   /// Luma (Y) at full resolution, chroma (U/V) at half resolution. Most common,
   /// smallest file size, good for general use. Playback support is universal.
-  Yuv420p,
+  Yuv420,
 
   /// Luma (Y) at full resolution, chroma (U/V) at half resolution horizontally,
   /// full vertically. Balances quality and size, ideal for higher color
   /// fidelity. Playback support is fairly common in modern systems.
-  Yuv422p,
+  Yuv422,
 
   /// Luma (Y) and chroma (U/V) at full resolution. Highest color detail,
   /// largest file size, best for professional or archival use. Playback support
   /// may be more limited.
-  Yuv444p,
+  Yuv444,
 }
 
 impl Mp4PixelFormat {
   pub fn ffmpeg_id(&self) -> ffmpeg::format::Pixel {
     match self {
-      Self::Yuv420p => ffmpeg::format::Pixel::YUV420P,
-      Self::Yuv422p => ffmpeg::format::Pixel::YUV422P,
-      Self::Yuv444p => ffmpeg::format::Pixel::YUV444P,
+      Self::Yuv420 => ffmpeg::format::Pixel::YUV420P,
+      Self::Yuv422 => ffmpeg::format::Pixel::YUV422P,
+      Self::Yuv444 => ffmpeg::format::Pixel::YUV444P,
     }
   }
 }
@@ -348,9 +357,9 @@ impl Mp4PixelFormat {
 impl core::fmt::Display for Mp4PixelFormat {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     match self {
-      Self::Yuv420p => write!(f, "yuv420p"),
-      Self::Yuv422p => write!(f, "yuv422p"),
-      Self::Yuv444p => write!(f, "yuv444p"),
+      Self::Yuv420 => write!(f, "yuv420"),
+      Self::Yuv422 => write!(f, "yuv422"),
+      Self::Yuv444 => write!(f, "yuv444"),
     }
   }
 }

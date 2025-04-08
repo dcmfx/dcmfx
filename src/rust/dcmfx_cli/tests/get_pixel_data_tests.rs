@@ -761,7 +761,7 @@ fn single_bit_unaligned_to_mp4_h265() {
     .arg("--mp4-preset")
     .arg("veryslow")
     .arg("--mp4-pixel-format")
-    .arg("yuv422p")
+    .arg("yuv422")
     .arg("--mp4-frame-rate")
     .arg("2")
     .assert()

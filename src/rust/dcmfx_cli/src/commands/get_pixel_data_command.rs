@@ -95,6 +95,15 @@ pub struct GetPixelDataArgs {
   #[arg(
     long,
     help_heading = "MP4 Encoding",
+    help = "Custom parameters to pass to the codec that allow fine control \
+      over its operation. Refer to the documentation for the selected codec \
+      for further details."
+  )]
+  mp4_codec_params: Option<String>,
+
+  #[arg(
+    long,
+    help_heading = "MP4 Encoding",
     help = "When the output format is 'mp4', specifies the constant rate \
       factor in the range 0-51. Smaller values give higher quality and larger \
       file sizes. Larger values give lower quality and smaller file sizes.\n\
@@ -119,7 +128,7 @@ pub struct GetPixelDataArgs {
     help_heading = "MP4 Encoding",
     help = "When the output format is 'mp4', specifies how video data is \
       stored.",
-    default_value_t = Mp4PixelFormat::Yuv420p
+    default_value_t = Mp4PixelFormat::Yuv420
   )]
   mp4_pixel_format: Mp4PixelFormat,
 
@@ -773,6 +782,7 @@ fn create_mp4_encoder(
 
   let encoder_config = Mp4EncoderConfig {
     codec: args.mp4_codec,
+    codec_params: args.mp4_codec_params.clone().unwrap_or_default(),
     crf: args.mp4_crf.unwrap_or(args.mp4_codec.default_crf()),
     preset: args.mp4_preset,
     pixel_format: args.mp4_pixel_format,
