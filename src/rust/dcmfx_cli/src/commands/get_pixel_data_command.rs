@@ -106,31 +106,33 @@ pub struct GetPixelDataArgs {
     help_heading = "MP4 Encoding",
     help = "When the output format is 'mp4', specifies the constant rate \
       factor in the range 0-51. Smaller values give higher quality and larger \
-      file sizes. Larger values give lower quality and smaller file sizes.\n\
-      \n\
-      The default CRF for libx264 is 18.\n\
-      The default CRF for libx265 is 6.",
+      file sizes. Larger values give lower quality and smaller file sizes.",
     value_parser = clap::value_parser!(u32).range(0..=51),
+    default_value_t = 18
   )]
-  mp4_crf: Option<u32>,
+  mp4_crf: u32,
 
   #[arg(
     long,
     help_heading = "MP4 Encoding",
     help = "When the output format is 'mp4', specifies the preset to use that \
       controls encoding speed vs compression efficiency.",
-    default_value_t = Mp4CompressionPreset::Medium
+    default_value_t = Mp4CompressionPreset::Slow
   )]
   mp4_preset: Mp4CompressionPreset,
 
   #[arg(
     long,
     help_heading = "MP4 Encoding",
-    help = "When the output format is 'mp4', specifies how video data is \
-      stored.",
-    default_value_t = Mp4PixelFormat::Yuv420
+    help = "When the output format is 'mp4', specifies the sampling rate of \
+      chroma information and whether to encode in 10-bit or 12-bit. 12-bit is \
+      only supported by libx265. Some pixel formats may have more limited \
+      playback support depending on the player and hardware.\n\
+      \n\
+      The default pixel format for libx264 is yuv420p.\n\
+      The default pixel format for libx265 is yuv420p10."
   )]
-  mp4_pixel_format: Mp4PixelFormat,
+  mp4_pixel_format: Option<Mp4PixelFormat>,
 
   #[arg(
     long,
@@ -189,6 +191,53 @@ pub struct GetPixelDataArgs {
   overwrite: bool,
 }
 
+impl GetPixelDataArgs {
+  /// Given an input image's width and height, returns the dimensions it should
+  /// be resized to. Returns `None` if no resize is active.
+  ///
+  fn new_dimensions(&self, width: u32, height: u32) -> Option<(u32, u32)> {
+    let resize = self.resize.as_ref()?;
+
+    let mut new_width = resize[0];
+    let mut new_height = resize[1];
+
+    let aspect_ratio = f64::from(width) / f64::from(height);
+
+    // If the requested width or height is zero then calculate the correct value
+    // based on the aspect ratio of the input
+    if new_width == 0 {
+      new_width = (f64::from(new_height) * aspect_ratio) as u32;
+    } else if new_height == 0 {
+      new_height = (f64::from(new_width) / aspect_ratio) as u32;
+    }
+
+    Some((new_width, new_height))
+  }
+
+  /// Returns whether the output format is HDR, i.e. supports more than 8 bits
+  /// per color/grayscale component.
+  ///
+  fn is_output_hdr(&self) -> bool {
+    self.format == OutputFormat::Png16
+      || self.format == OutputFormat::Mp4
+        && self.mp4_pixel_format_to_use().is_hdr()
+  }
+
+  /// Returns the MP4 pixel format to use, which has a different default
+  /// depending on the codec.
+  ///
+  fn mp4_pixel_format_to_use(&self) -> Mp4PixelFormat {
+    if let Some(pixel_format) = self.mp4_pixel_format {
+      pixel_format
+    } else {
+      match self.mp4_codec {
+        Mp4Codec::Libx264 => Mp4PixelFormat::Yuv420p,
+        Mp4Codec::Libx265 => Mp4PixelFormat::Yuv420p10,
+      }
+    }
+  }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
 enum OutputFormat {
   /// Reads the pixel data for each frame and writes it out exactly as it is
@@ -215,12 +264,6 @@ enum OutputFormat {
 
   /// Decodes the pixel data and writes each frame to a lossless WebP image.
   Webp,
-}
-
-impl OutputFormat {
-  fn is_16bit(&self) -> bool {
-    *self == Self::Png16
-  }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
@@ -298,6 +341,7 @@ enum GetPixelDataError {
   DataError(DataError),
   ImageError(image::ImageError),
   FFmpegError(ffmpeg_next::Error),
+  OtherError(String),
 }
 
 pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
@@ -330,7 +374,7 @@ pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
           GetPixelDataError::P10Error(e) => e.print(&task_description),
           GetPixelDataError::ImageError(e) => {
             let lines = vec![
-              format!("DICOM image error {}", task_description),
+              format!("Image error {}", task_description),
               "".to_string(),
               format!("  Error: {}", e),
             ];
@@ -342,6 +386,15 @@ pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
               format!("FFmpeg encoding error {}", task_description),
               "".to_string(),
               format!("  Error: {}", e),
+            ];
+
+            error::print_error_lines(&lines);
+          }
+          GetPixelDataError::OtherError(s) => {
+            let lines = vec![
+              format!("Error {}", task_description),
+              "".to_string(),
+              format!("  Error: {}", s),
             ];
 
             error::print_error_lines(&lines);
@@ -429,10 +482,10 @@ fn get_pixel_data_from_input_source(
       }
 
       // Pass token through the transforms to extract relevant data
-      add_token_to_transform(&mut pixel_data_renderer_transform, token)?;
-      add_token_to_transform(&mut overlays_transform, token)?;
-      add_token_to_transform(&mut cine_module_transform, token)?;
-      add_token_to_transform(&mut multiframe_module_transform, token)?;
+      add_token_to_p10_transform(&mut pixel_data_renderer_transform, token)?;
+      add_token_to_p10_transform(&mut overlays_transform, token)?;
+      add_token_to_p10_transform(&mut cine_module_transform, token)?;
+      add_token_to_p10_transform(&mut multiframe_module_transform, token)?;
 
       let pixel_data_renderer: &mut Option<PixelDataRenderer> =
         if let Some(pixel_data_renderer_transform) =
@@ -640,7 +693,7 @@ fn frame_to_image(
   // resize, which is faster.
   if args.format != OutputFormat::Mp4 {
     if let Some((new_width, new_height)) =
-      get_resized_dimensions(image.width(), image.height(), args)
+      args.new_dimensions(image.width(), image.height())
     {
       image = image.resize_exact(
         new_width,
@@ -651,31 +704,6 @@ fn frame_to_image(
   }
 
   Ok(image)
-}
-
-/// Given an input image's width and height, returns the dimensions it should be
-/// resized to. Returns `None` if no resize is active.
-fn get_resized_dimensions(
-  width: u32,
-  height: u32,
-  args: &GetPixelDataArgs,
-) -> Option<(u32, u32)> {
-  let resize = args.resize.as_ref()?;
-
-  let mut new_width = resize[0];
-  let mut new_height = resize[1];
-
-  let aspect_ratio = f64::from(width) / f64::from(height);
-
-  // If the requested width or height is zero then calculate the correct value
-  // based on the aspect ratio of the input
-  if new_width == 0 {
-    new_width = (f64::from(new_height) * aspect_ratio) as u32;
-  } else if new_height == 0 {
-    new_height = (f64::from(new_width) / aspect_ratio) as u32;
-  }
-
-  Some((new_width, new_height))
 }
 
 /// Turns a raw frame of pixel data into a an [`image::DynamicImage`]. The most
@@ -717,13 +745,9 @@ fn frame_to_dynamic_image(
       }
     }
 
-    // For 16-bit outputs emit a Luma16 buffer if the pixel data can make use
-    // of it. A color palette implies 8-bit output as color palettes always
-    // output 8-bit.
-    if args.format.is_16bit()
-      && pixel_data_renderer.definition.bits_stored() > 8
-      && args.color_palette.is_none()
-    {
+    // For HDR outputs emit a Luma16 buffer. A color palette implies 8-bit
+    // output because looking up a color palette returns 8-bit values.
+    if args.is_output_hdr() && args.color_palette.is_none() {
       let image = single_channel_image.to_gray_u16_image(
         &pixel_data_renderer.modality_lut,
         &pixel_data_renderer.voi_lut,
@@ -755,8 +779,7 @@ fn frame_to_dynamic_image(
       .decode_color_frame(frame)
       .map_err(GetPixelDataError::DataError)?;
 
-    if args.format.is_16bit()
-      && pixel_data_renderer.definition.bits_stored() > 8
+    if args.is_output_hdr() && pixel_data_renderer.definition.bits_stored() > 8
     {
       let image = image.into_rgb_u16_image(&pixel_data_renderer.definition);
       Ok(image.into())
@@ -767,11 +790,11 @@ fn frame_to_dynamic_image(
   }
 }
 
-/// Creates an [`Mp4Encoder`] for a given input source
+/// Creates an [`Mp4Encoder`] based on the first frame to be encoded.
 ///
 fn create_mp4_encoder(
   output_prefix: &Path,
-  image: &image::DynamicImage,
+  first_frame: &image::DynamicImage,
   args: &GetPixelDataArgs,
 ) -> Result<Mp4Encoder, GetPixelDataError> {
   let mp4_path = crate::utils::path_append(output_prefix.to_path_buf(), ".mp4");
@@ -780,26 +803,31 @@ fn create_mp4_encoder(
     crate::utils::prompt_to_overwrite_if_exists(&mp4_path);
   }
 
+  // Construct MP4 encoder config
   let encoder_config = Mp4EncoderConfig {
     codec: args.mp4_codec,
     codec_params: args.mp4_codec_params.clone().unwrap_or_default(),
-    crf: args.mp4_crf.unwrap_or(args.mp4_codec.default_crf()),
+    crf: args.mp4_crf,
     preset: args.mp4_preset,
-    pixel_format: args.mp4_pixel_format,
+    pixel_format: args.mp4_pixel_format_to_use(),
     resize_filter: args.resize_filter,
     log_level: args.mp4_log_level,
   };
 
+  // Validate the encoder config
+  if let Err(message) = encoder_config.validate() {
+    return Err(GetPixelDataError::OtherError(message));
+  }
+
   // Determine output dimensions. If there is a resize active then it will be
   // performed by the MP4 encoder.
-  let (output_width, output_height) =
-    get_resized_dimensions(image.width(), image.height(), args)
-      .unwrap_or((image.width(), image.height()));
+  let (output_width, output_height) = args
+    .new_dimensions(first_frame.width(), first_frame.height())
+    .unwrap_or((first_frame.width(), first_frame.height()));
 
   Mp4Encoder::new(
     &mp4_path,
-    image.width(),
-    image.height(),
+    first_frame,
     output_width,
     output_height,
     encoder_config,
@@ -860,11 +888,11 @@ fn write_frame_to_mp4_file(
   mp4_encoder
     .as_mut()
     .unwrap()
-    .add_frame(&image.into_rgb8(), frame_duration)
+    .add_frame(&image, frame_duration)
     .map_err(GetPixelDataError::FFmpegError)
 }
 
-fn add_token_to_transform<T>(
+fn add_token_to_p10_transform<T>(
   transform: &mut Option<P10CustomTypeTransform<T>>,
   token: &P10Token,
 ) -> Result<(), GetPixelDataError> {

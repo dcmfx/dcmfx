@@ -716,7 +716,9 @@ fn single_bit_unaligned_to_mp4_h264() {
     .arg("-f")
     .arg("mp4")
     .arg("--mp4-preset")
-    .arg("veryslow")
+    .arg("fast")
+    .arg("--mp4-pixel-format")
+    .arg("yuv420p10")
     .assert()
     .success()
     .stdout(format!(
@@ -730,9 +732,10 @@ fn single_bit_unaligned_to_mp4_h264() {
     get_video_stream_details(&PathBuf::from_str(output_file).unwrap()),
     Ok(VideoStreamDetails {
       codec: "h264",
-      profile: 100,
+      profile: 110,
       width: 510,
       height: 510,
+      pixel_format: 62,
       frame_count: 3,
       frame_rate: (1, 1),
     })
@@ -759,9 +762,9 @@ fn single_bit_unaligned_to_mp4_h265() {
     .arg("--mp4-crf")
     .arg("4")
     .arg("--mp4-preset")
-    .arg("veryslow")
+    .arg("fast")
     .arg("--mp4-pixel-format")
-    .arg("yuv422")
+    .arg("yuv422p12")
     .arg("--mp4-frame-rate")
     .arg("2")
     .assert()
@@ -780,6 +783,7 @@ fn single_bit_unaligned_to_mp4_h265() {
       profile: 4,
       width: 510,
       height: 510,
+      pixel_format: 127,
       frame_count: 3,
       frame_rate: (2, 1),
     })
@@ -914,6 +918,7 @@ fn get_video_stream_details(
   let profile = unsafe { (*video_stream.parameters().as_ptr()).profile };
   let width = unsafe { (*video_stream.parameters().as_ptr()).width };
   let height = unsafe { (*video_stream.parameters().as_ptr()).height };
+  let pixel_format = unsafe { (*video_stream.parameters().as_ptr()).format };
   let frame_count = video_stream.frames();
   let frame_rate = video_stream.rate();
 
@@ -922,6 +927,7 @@ fn get_video_stream_details(
     profile,
     width,
     height,
+    pixel_format,
     frame_count,
     frame_rate: (frame_rate.numerator(), frame_rate.denominator()),
   })
@@ -933,6 +939,7 @@ pub struct VideoStreamDetails {
   pub profile: i32,
   pub width: i32,
   pub height: i32,
+  pixel_format: i32,
   pub frame_count: i64,
   pub frame_rate: (i32, i32),
 }

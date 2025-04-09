@@ -5,7 +5,6 @@ use std::{
 
 use clap::ValueEnum;
 use ffmpeg_next::{self as ffmpeg};
-use image::RgbImage;
 
 const TIME_BASE: (i32, i32) = (100, 90000);
 
@@ -17,8 +16,8 @@ pub struct Mp4Encoder {
   video_encoder: ffmpeg::codec::encoder::video::Encoder,
   duration: Duration,
 
-  rgb24_frame: ffmpeg::frame::Video,
-  prepared_frame: ffmpeg::frame::Video,
+  raw_frame: ffmpeg::frame::Video,
+  yuv_frame: ffmpeg::frame::Video,
   scaling_context: ffmpeg::software::scaling::Context,
 }
 
@@ -27,8 +26,7 @@ impl Mp4Encoder {
   ///
   pub fn new(
     filename: &PathBuf,
-    input_width: u32,
-    input_height: u32,
+    first_frame: &image::DynamicImage,
     mut output_width: u32,
     mut output_height: u32,
     encoder_config: Mp4EncoderConfig,
@@ -86,36 +84,45 @@ impl Mp4Encoder {
     // Write the MP4 header
     output.write_header()?;
 
-    // Create a scaling context for converting incoming RGB24 frame data to the
+    // Create a scaling context for converting incoming raw frame data to the
     // pixel format expected by the video encoder. The scaling context will also
     // resize the incoming frame if needed.
 
-    let rgb24_frame = ffmpeg::frame::Video::new(
-      ffmpeg::format::Pixel::RGB24,
-      input_width,
-      input_height,
+    let input_format = match first_frame.color() {
+      image::ColorType::L8 => ffmpeg::format::Pixel::GRAY8,
+      image::ColorType::L16 => ffmpeg::format::Pixel::GRAY16,
+      image::ColorType::Rgb8 => ffmpeg::format::Pixel::RGB24,
+      image::ColorType::Rgb16 => ffmpeg::format::Pixel::RGB48,
+      _ => unreachable!(),
+    };
+
+    let raw_frame = ffmpeg::frame::Video::new(
+      input_format,
+      first_frame.width(),
+      first_frame.height(),
     );
 
-    let prepared_frame = ffmpeg::frame::Video::new(
+    let yuv_frame = ffmpeg::frame::Video::new(
       encoder_config.pixel_format.ffmpeg_id(),
       output_width,
       output_height,
     );
 
-    let filter = if input_width == output_width && input_height == output_height
-    {
-      ffmpeg::software::scaling::Flags::POINT
+    let is_resizing = first_frame.width() != output_width
+      || first_frame.height() != output_height;
+    let filter = if is_resizing {
+      encoder_config.resize_filter.ffmpeg_flag()
     } else {
-      encoder_config.resize_filter.scaling_flags()
+      ffmpeg::software::scaling::Flags::POINT
     };
 
     let scaling_context = ffmpeg::software::scaling::Context::get(
-      rgb24_frame.format(),
-      rgb24_frame.width(),
-      rgb24_frame.height(),
-      prepared_frame.format(),
-      prepared_frame.width(),
-      prepared_frame.height(),
+      raw_frame.format(),
+      raw_frame.width(),
+      raw_frame.height(),
+      yuv_frame.format(),
+      yuv_frame.width(),
+      yuv_frame.height(),
       filter,
     )?;
 
@@ -125,8 +132,8 @@ impl Mp4Encoder {
       video_encoder: encoder,
       duration: Duration::ZERO,
 
-      rgb24_frame,
-      prepared_frame,
+      raw_frame,
+      yuv_frame,
       scaling_context,
     })
   }
@@ -137,53 +144,81 @@ impl Mp4Encoder {
     &self.path
   }
 
-  /// Writes the next frame of RGB24 data to be encoded. The duration that the
-  /// frame is to be displayed must be specified.
+  /// Writes the next frame to be encoded to MP4. The duration that the frame is
+  /// to be displayed must be specified.
   ///
   pub fn add_frame(
     &mut self,
-    rgb_image: &RgbImage,
+    frame_image: &image::DynamicImage,
     frame_duration: Duration,
   ) -> Result<(), ffmpeg::Error> {
-    // Get the size of each line in the FFmpeg frame
-    let linesize = unsafe { (*self.rgb24_frame.as_ptr()).linesize }[0] as usize;
-
-    // Copy RGB24 data into the FFmpeg frame, respecting the frame's linesize
-    if rgb_image.width() as usize % linesize == 0 {
-      self
-        .rgb24_frame
-        .data_mut(0)
-        .copy_from_slice(rgb_image.as_raw());
-    } else {
-      let row_size = rgb_image.width() as usize * 3;
-
-      let mut dst = self.rgb24_frame.data_mut(0);
-
-      for src_row in rgb_image.as_raw().chunks_exact(row_size) {
-        dst[..row_size].copy_from_slice(src_row);
-        dst = &mut dst[linesize..];
+    // Copy frame data into the FFmpeg frame
+    match frame_image {
+      image::DynamicImage::ImageLuma8(image) => {
+        self.update_raw_frame(image.width() as usize, image.as_raw())
       }
+
+      image::DynamicImage::ImageRgb8(image) => {
+        self.update_raw_frame(image.width() as usize * 3, image.as_raw())
+      }
+
+      image::DynamicImage::ImageLuma16(image) => {
+        self.update_raw_frame(image.width() as usize * 2, image.as_raw())
+      }
+
+      image::DynamicImage::ImageRgb16(image) => {
+        self.update_raw_frame(image.width() as usize * 6, image.as_raw())
+      }
+
+      _ => unreachable!(),
     }
 
     // Convert the RGB24 frame to the video encoder's expected pixel format and
     // dimensions
     self
       .scaling_context
-      .run(&self.rgb24_frame, &mut self.prepared_frame)?;
+      .run(&self.raw_frame, &mut self.yuv_frame)?;
 
     // Set presentation time stamp on the input frame
-    self.prepared_frame.set_pts(Some(
+    self.yuv_frame.set_pts(Some(
       self.duration.as_micros() as i64 * i64::from(TIME_BASE.1) / 1000000,
     ));
 
     // Send the frame to the video encoder
-    self.video_encoder.send_frame(&self.prepared_frame)?;
+    self.video_encoder.send_frame(&self.yuv_frame)?;
     self.flush_packets_to_output()?;
 
     // Update total video duration
     self.duration += frame_duration;
 
     Ok(())
+  }
+
+  /// Copies data for an incoming frame into the raw frame frame ready for
+  /// pixel format conversion and encoding.
+  ///
+  /// This copy respects the `linesize`` of the target frame.
+  ///
+  fn update_raw_frame<T>(&mut self, row_size: usize, data: &[T]) {
+    let linesize = unsafe { (*self.raw_frame.as_ptr()).linesize }[0] as usize;
+
+    let data_u8_slice = unsafe {
+      std::slice::from_raw_parts(
+        data.as_ref().as_ptr() as *const u8,
+        std::mem::size_of_val(data),
+      )
+    };
+
+    let mut dst = self.raw_frame.data_mut(0);
+
+    if row_size == linesize {
+      dst.copy_from_slice(data_u8_slice);
+    } else {
+      for src_row in data_u8_slice.chunks_exact(row_size) {
+        dst[..row_size].copy_from_slice(src_row);
+        dst = &mut dst[linesize..];
+      }
+    }
   }
 
   /// Completes encoding once all frames have been written.
@@ -220,10 +255,20 @@ pub struct Mp4EncoderConfig {
 }
 
 impl Mp4EncoderConfig {
+  /// Validates that the encoder config is supported by FFmpeg.
+  ///
+  pub fn validate(&self) -> Result<(), String> {
+    if self.codec == Mp4Codec::Libx264 && self.pixel_format.is_12bit() {
+      return Err("libx264 does not support 12-bit pixel formats".to_string());
+    }
+
+    Ok(())
+  }
+
   /// Converts the encoder configuration to an FFmpeg dictionary of encoder
   /// options.
   ///
-  pub fn ffmpeg_encoder_options(&self) -> ffmpeg::Dictionary {
+  fn ffmpeg_encoder_options(&self) -> ffmpeg::Dictionary {
     let mut opts = ffmpeg::Dictionary::new();
 
     opts.set("preset", &self.preset.to_string());
@@ -275,15 +320,6 @@ impl Mp4Codec {
       Self::Libx265 => ffmpeg::codec::Id::H265,
     }
   }
-
-  /// Returns the default CRF (constant rate factor) for the codec.
-  ///
-  pub fn default_crf(&self) -> u32 {
-    match self {
-      Self::Libx264 => 18,
-      Self::Libx265 => 6,
-    }
-  }
 }
 
 impl core::fmt::Display for Mp4Codec {
@@ -329,37 +365,45 @@ impl core::fmt::Display for Mp4CompressionPreset {
 
 #[derive(Clone, Copy, Debug, PartialEq, ValueEnum)]
 pub enum Mp4PixelFormat {
-  /// Luma (Y) at full resolution, chroma (U/V) at half resolution. Most common,
-  /// smallest file size, good for general use. Playback support is universal.
-  Yuv420,
-
-  /// Luma (Y) at full resolution, chroma (U/V) at half resolution horizontally,
-  /// full vertically. Balances quality and size, ideal for higher color
-  /// fidelity. Playback support is fairly common in modern systems.
-  Yuv422,
-
-  /// Luma (Y) and chroma (U/V) at full resolution. Highest color detail,
-  /// largest file size, best for professional or archival use. Playback support
-  /// may be more limited.
-  Yuv444,
+  Yuv420p,
+  Yuv422p,
+  Yuv444p,
+  Yuv420p10,
+  Yuv422p10,
+  Yuv444p10,
+  Yuv420p12,
+  Yuv422p12,
+  Yuv444p12,
 }
 
 impl Mp4PixelFormat {
-  pub fn ffmpeg_id(&self) -> ffmpeg::format::Pixel {
-    match self {
-      Self::Yuv420 => ffmpeg::format::Pixel::YUV420P,
-      Self::Yuv422 => ffmpeg::format::Pixel::YUV422P,
-      Self::Yuv444 => ffmpeg::format::Pixel::YUV444P,
-    }
+  pub fn is_hdr(&self) -> bool {
+    *self == Self::Yuv420p10
+      || *self == Self::Yuv422p10
+      || *self == Self::Yuv444p10
+      || *self == Self::Yuv420p12
+      || *self == Self::Yuv422p12
+      || *self == Self::Yuv444p12
   }
-}
 
-impl core::fmt::Display for Mp4PixelFormat {
-  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+  fn is_12bit(&self) -> bool {
+    *self == Self::Yuv420p12
+      || *self == Self::Yuv422p12
+      || *self == Self::Yuv444p12
+  }
+
+  fn ffmpeg_id(&self) -> ffmpeg::format::Pixel {
+    use ffmpeg::format::Pixel;
     match self {
-      Self::Yuv420 => write!(f, "yuv420"),
-      Self::Yuv422 => write!(f, "yuv422"),
-      Self::Yuv444 => write!(f, "yuv444"),
+      Self::Yuv420p => Pixel::YUV420P,
+      Self::Yuv422p => Pixel::YUV422P,
+      Self::Yuv444p => Pixel::YUV444P,
+      Self::Yuv420p10 => Pixel::YUV420P10,
+      Self::Yuv422p10 => Pixel::YUV422P10,
+      Self::Yuv444p10 => Pixel::YUV444P10,
+      Self::Yuv420p12 => Pixel::YUV420P12,
+      Self::Yuv422p12 => Pixel::YUV422P12,
+      Self::Yuv444p12 => Pixel::YUV444P12,
     }
   }
 }
@@ -380,7 +424,7 @@ pub enum LogLevel {
 }
 
 impl LogLevel {
-  pub fn ffmpeg_log_level(&self) -> ffmpeg::util::log::Level {
+  fn ffmpeg_log_level(&self) -> ffmpeg::util::log::Level {
     match self {
       Self::Quiet => ffmpeg::util::log::Level::Quiet,
       Self::Panic => ffmpeg::util::log::Level::Panic,
@@ -394,7 +438,7 @@ impl LogLevel {
     }
   }
 
-  pub fn x265_log_level(&self) -> &str {
+  fn x265_log_level(&self) -> &str {
     match self {
       Self::Quiet | Self::Panic | Self::Fatal | Self::Error => "error",
       Self::Warning => "warning",
@@ -443,7 +487,7 @@ pub enum ResizeFilter {
 }
 
 impl ResizeFilter {
-  fn scaling_flags(&self) -> ffmpeg::software::scaling::Flags {
+  fn ffmpeg_flag(&self) -> ffmpeg::software::scaling::Flags {
     match self {
       Self::Bilinear => ffmpeg::software::scaling::Flags::BILINEAR,
       Self::Bicubic => ffmpeg::software::scaling::Flags::BICUBIC,
