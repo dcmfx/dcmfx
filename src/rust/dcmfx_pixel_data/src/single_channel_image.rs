@@ -341,7 +341,7 @@ impl SingleChannelImage {
     voi_lut: &VoiLut,
   ) -> image::GrayImage {
     self.to_gray_image(modality_lut, voi_lut, |pixel: f32| {
-      (pixel * 255.0).clamp(0.0, 255.0) as u8
+      (pixel * 255.0).round().clamp(0.0, 255.0) as u8
     })
   }
 
@@ -354,7 +354,7 @@ impl SingleChannelImage {
     voi_lut: &VoiLut,
   ) -> image::ImageBuffer<image::Luma<u16>, Vec<u16>> {
     self.to_gray_image(modality_lut, voi_lut, |pixel: f32| {
-      (pixel * 65535.0).clamp(0.0, 65535.0) as u16
+      (pixel * 65535.0).round().clamp(0.0, 65535.0) as u16
     })
   }
 

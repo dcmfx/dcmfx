@@ -18,7 +18,8 @@ impl ColorPalette {
   /// normalized RGB color.
   ///
   pub fn lookup_normalized(&self, grayscale_value: f32) -> [f32; 3] {
-    let index = (grayscale_value * 255.0).clamp(0.0, 255.0) as usize * 3;
+    let index =
+      (grayscale_value * 255.0).round().clamp(0.0, 255.0) as usize * 3;
 
     [
       f32::from(self.data[index]) / 255.0,

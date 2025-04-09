@@ -5,6 +5,8 @@ use byteorder::ByteOrder;
 
 use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath};
 
+use crate::utils::udiv_round;
+
 /// A lookup table containing unsigned 16-bit values that is created from LUT
 /// Descriptor, LUT Data (or Segmented LUT Data), and optionally LUT Explanation
 /// data elements.
@@ -255,9 +257,9 @@ impl LookupTable {
   /// 0-255 range.
   ///
   pub fn lookup_normalized_u8(&self, stored_value: i64) -> u8 {
-    let x: u32 = self.lookup(stored_value).into();
+    let x = u32::from(self.lookup(stored_value));
 
-    (x * 255 / self.int_max).min(0xFF) as u8
+    udiv_round(x * 255, self.int_max).min(0xFF) as u8
   }
 }
 

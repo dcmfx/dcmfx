@@ -6,7 +6,7 @@ use alloc::{rc::Rc, string::ToString, vec::Vec};
 
 use dcmfx_core::DataError;
 
-use crate::{PixelDataDefinition, RgbLut};
+use crate::{PixelDataDefinition, RgbLut, utils::udiv_round};
 
 /// A color image that stores RGB or YBR color values for each pixel.
 ///
@@ -224,9 +224,9 @@ impl ColorImage {
                 let g: u64 = rgb[1].into();
                 let b: u64 = rgb[2].into();
 
-                rgb_pixels.push((r * 255 / max_value).min(255) as u8);
-                rgb_pixels.push((g * 255 / max_value).min(255) as u8);
-                rgb_pixels.push((b * 255 / max_value).min(255) as u8);
+                rgb_pixels.push(udiv_round(r * 255, max_value).min(255) as u8);
+                rgb_pixels.push(udiv_round(g * 255, max_value).min(255) as u8);
+                rgb_pixels.push(udiv_round(b * 255, max_value).min(255) as u8);
               }
             }
 
@@ -240,9 +240,12 @@ impl ColorImage {
 
                 let rgb = ybr_to_rgb(y * scale, cb * scale, cr * scale);
 
-                rgb_pixels.push((rgb[0] * 255.0).clamp(0.0, 255.0) as u8);
-                rgb_pixels.push((rgb[1] * 255.0).clamp(0.0, 255.0) as u8);
-                rgb_pixels.push((rgb[2] * 255.0).clamp(0.0, 255.0) as u8);
+                rgb_pixels
+                  .push((rgb[0] * 255.0).round().clamp(0.0, 255.0) as u8);
+                rgb_pixels
+                  .push((rgb[1] * 255.0).round().clamp(0.0, 255.0) as u8);
+                rgb_pixels
+                  .push((rgb[2] * 255.0).round().clamp(0.0, 255.0) as u8);
               }
             }
           }
@@ -341,9 +344,12 @@ impl ColorImage {
                 let g: u64 = rgb[1].into();
                 let b: u64 = rgb[2].into();
 
-                rgb_pixels.push((r * 65535 / max_value).min(65535) as u16);
-                rgb_pixels.push((g * 65535 / max_value).min(65535) as u16);
-                rgb_pixels.push((b * 65535 / max_value).min(65535) as u16);
+                rgb_pixels
+                  .push(udiv_round(r * 65535, max_value).min(65535) as u16);
+                rgb_pixels
+                  .push(udiv_round(g * 65535, max_value).min(65535) as u16);
+                rgb_pixels
+                  .push(udiv_round(b * 65535, max_value).min(65535) as u16);
               }
             }
 
@@ -357,9 +363,12 @@ impl ColorImage {
 
                 let rgb = ybr_to_rgb(y * scale, cb * scale, cr * scale);
 
-                rgb_pixels.push((rgb[0] * 65535.0).clamp(0.0, 65535.0) as u16);
-                rgb_pixels.push((rgb[1] * 65535.0).clamp(0.0, 65535.0) as u16);
-                rgb_pixels.push((rgb[2] * 65535.0).clamp(0.0, 65535.0) as u16);
+                rgb_pixels
+                  .push((rgb[0] * 65535.0).round().clamp(0.0, 65535.0) as u16);
+                rgb_pixels
+                  .push((rgb[1] * 65535.0).round().clamp(0.0, 65535.0) as u16);
+                rgb_pixels
+                  .push((rgb[2] * 65535.0).round().clamp(0.0, 65535.0) as u16);
               }
             }
           }
@@ -518,7 +527,7 @@ impl ColorImage {
 
 /// Converts a YBR color into RGB.
 ///
-pub fn ybr_to_rgb(y: f64, cb: f64, cr: f64) -> [f64; 3] {
+fn ybr_to_rgb(y: f64, cb: f64, cr: f64) -> [f64; 3] {
   let r = y + 1.402 * (cr - 0.5);
   let g = y - 0.3441362862 * (cb - 0.5) - 0.7141362862 * (cr - 0.5);
   let b = y + 1.772 * (cb - 0.5);

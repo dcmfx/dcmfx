@@ -22,6 +22,7 @@ mod pixel_data_definition;
 mod pixel_data_frame;
 mod pixel_data_renderer;
 mod single_channel_image;
+mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
 pub use luts::{

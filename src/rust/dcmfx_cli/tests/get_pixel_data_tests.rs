@@ -839,15 +839,23 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   path1: P,
   snapshot: &str,
 ) -> Result<(), String> {
-  let image_1 = image::ImageReader::open(path1)
+  let image_1 = image::ImageReader::open(&path1)
     .unwrap()
     .decode()
     .unwrap()
     .to_rgb16();
 
-  let image_snapshot_path = format!("tests/snapshots/{snapshot}");
+  let image_snapshot_path =
+    PathBuf::from(format!("tests/snapshots/{snapshot}"));
+
+  let copy_command = format!(
+    "To update snapshot run `cp {} {}`.",
+    path1.as_ref().canonicalize().unwrap().display(),
+    image_snapshot_path.canonicalize().unwrap().display()
+  );
+
   if !std::path::PathBuf::from(&image_snapshot_path).exists() {
-    panic!("Snapshot file is missing: {image_snapshot_path}");
+    return Err(format!("Snapshot file is missing. {}", copy_command));
   }
 
   let image_2 = image::ImageReader::open(image_snapshot_path)
@@ -858,7 +866,10 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
 
   if image_1.width() != image_2.width() || image_1.height() != image_2.height()
   {
-    return Err("Image dimensions don't match snapshot".to_string());
+    return Err(format!(
+      "Image dimensions don't match snapshot. {}",
+      copy_command
+    ));
   }
 
   // Check that the pixels are the same within a small epsilon
@@ -872,8 +883,8 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
         || (i32::from(a[2]) - i32::from(b[2])).abs() > 257
       {
         return Err(format!(
-          "Image differs at pixel {},{}: expected {:?} but got {:?}",
-          x, y, b, a
+          "Image differs at pixel {},{}: expected {:?} but got {:?}. {}",
+          x, y, b, a, copy_command
         ));
       }
     }
