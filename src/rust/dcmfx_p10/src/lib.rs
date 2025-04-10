@@ -9,7 +9,6 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 use alloc::{
   boxed::Box,
-  rc::Rc,
   string::{String, ToString},
   vec,
   vec::Vec,
@@ -26,7 +25,7 @@ pub mod uids;
 mod internal;
 
 #[cfg(feature = "std")]
-use std::{fs::File, io::Read, rc::Rc};
+use std::{fs::File, io::Read};
 
 #[cfg(feature = "std")]
 pub type IoRead = dyn std::io::Read;
@@ -57,7 +56,7 @@ pub type IoWrite = dyn Write;
 #[cfg(not(feature = "std"))]
 pub type IoError = String;
 
-use dcmfx_core::DataSet;
+use dcmfx_core::{DataSet, RcByteSlice};
 
 pub use data_set_builder::DataSetBuilder;
 pub use p10_error::P10Error;
@@ -190,11 +189,11 @@ pub fn read_tokens_from_stream(
       Err(P10Error::DataRequired { .. }) => {
         let mut buffer = vec![0u8; 256 * 1024];
         match stream.read(&mut buffer) {
-          Ok(0) => context.write_bytes(vec![], true)?,
+          Ok(0) => context.write_bytes(RcByteSlice::empty(), true)?,
 
           Ok(bytes_count) => {
             buffer.resize(bytes_count, 0);
-            context.write_bytes(buffer, false)?;
+            context.write_bytes(buffer.into(), false)?;
           }
 
           Err(e) => {
@@ -214,7 +213,7 @@ pub fn read_tokens_from_stream(
 /// Reads DICOM P10 data from a vector of bytes into a data set.
 ///
 pub fn read_bytes(
-  bytes: Vec<u8>,
+  bytes: RcByteSlice,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
   let mut context = P10ReadContext::new();
   let mut builder = Box::new(DataSetBuilder::new());
@@ -276,7 +275,7 @@ pub fn write_stream(
   data_set: &DataSet,
   config: Option<P10WriteConfig>,
 ) -> Result<(), P10Error> {
-  let mut bytes_callback = |p10_bytes: Rc<Vec<u8>>| -> Result<(), P10Error> {
+  let mut bytes_callback = |p10_bytes: RcByteSlice| -> Result<(), P10Error> {
     match stream.write_all(&p10_bytes) {
       Ok(_) => Ok(()),
       Err(e) => Err(P10Error::FileError {
@@ -349,7 +348,7 @@ where
   /// Reads DICOM P10 data from a vector of bytes into a data set.
   ///
   fn read_p10_bytes(
-    bytes: Vec<u8>,
+    bytes: RcByteSlice,
   ) -> Result<Self, (P10Error, Box<DataSetBuilder>)>;
 
   /// Writes a data set to a DICOM P10 file. This will overwrite any existing
@@ -383,7 +382,7 @@ where
   ///
   fn to_p10_bytes(
     &self,
-    bytes_callback: &mut impl FnMut(Rc<Vec<u8>>) -> Result<(), P10Error>,
+    bytes_callback: &mut impl FnMut(RcByteSlice) -> Result<(), P10Error>,
     config: &P10WriteConfig,
   ) -> Result<(), P10Error>;
 }
@@ -399,7 +398,7 @@ impl DataSetP10Extensions for DataSet {
   }
 
   fn read_p10_bytes(
-    bytes: Vec<u8>,
+    bytes: RcByteSlice,
   ) -> Result<Self, (P10Error, Box<DataSetBuilder>)> {
     read_bytes(bytes)
   }
@@ -430,7 +429,7 @@ impl DataSetP10Extensions for DataSet {
 
   fn to_p10_bytes(
     &self,
-    bytes_callback: &mut impl FnMut(Rc<Vec<u8>>) -> Result<(), P10Error>,
+    bytes_callback: &mut impl FnMut(RcByteSlice) -> Result<(), P10Error>,
     config: &P10WriteConfig,
   ) -> Result<(), P10Error> {
     p10_write::data_set_to_bytes(self, bytes_callback, config)

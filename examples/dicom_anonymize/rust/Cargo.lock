@@ -191,6 +191,7 @@ dependencies = [
 name = "dcmfx_pixel_data"
 version = "0.0.0"
 dependencies = [
+ "bytemuck",
  "byteorder",
  "cc",
  "dcmfx_core",

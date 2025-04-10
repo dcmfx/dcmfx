@@ -14,17 +14,15 @@
 //! Additional configuration for controlling memory usage when reading DICOM
 //! P10 data is available via [`P10ReadConfig`].
 
-#[cfg(feature = "std")]
-use std::rc::Rc;
-
 #[cfg(not(feature = "std"))]
-use alloc::{boxed::Box, format, rc::Rc, string::ToString, vec, vec::Vec};
+use alloc::{boxed::Box, format, string::ToString, vec, vec::Vec};
 
 use byteorder::ByteOrder;
 
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataError, DataSet, DataSetPath,
-  TransferSyntax, ValueRepresentation, dictionary, transfer_syntax,
+  RcByteSlice, TransferSyntax, ValueRepresentation, dictionary,
+  transfer_syntax,
 };
 
 use crate::internal::byte_stream::{ByteStream, ByteStreamError};
@@ -231,7 +229,7 @@ impl P10ReadContext {
   ///
   pub fn write_bytes(
     &mut self,
-    bytes: Vec<u8>,
+    bytes: RcByteSlice,
     done: bool,
   ) -> Result<(), P10Error> {
     match self.stream.write(bytes, done) {
@@ -515,10 +513,8 @@ impl P10ReadContext {
       })?;
 
       // Construct new data element value
-      let value = DataElementValue::new_binary_unchecked(
-        vr,
-        Rc::new(data[value_offset..].to_vec()),
-      );
+      let value =
+        DataElementValue::new_binary_unchecked(vr, data.drop(value_offset));
 
       // If this data element specifies the File Meta Information group's
       // length then use it to calculate its end offset
@@ -1118,7 +1114,9 @@ impl P10ReadContext {
         // Data element values are always returned in little endian, so if this
         // is a big endian transfer syntax then convert to little endian
         if self.active_transfer_syntax().endianness.is_big() {
-          self.location.swap_endianness(tag, vr, &mut data);
+          let mut raw_data = data.into_vec();
+          self.location.swap_endianness(tag, vr, &mut raw_data);
+          data = raw_data.into();
         }
 
         let bytes_remaining = bytes_remaining - bytes_to_read;
@@ -1128,8 +1126,6 @@ impl P10ReadContext {
         } else {
           data
         };
-
-        let data = Rc::new(data);
 
         let mut tokens = Vec::with_capacity(2);
 
@@ -1244,19 +1240,20 @@ impl P10ReadContext {
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
-    mut value_bytes: Vec<u8>,
-  ) -> Result<Vec<u8>, P10Error> {
+    mut value_bytes: RcByteSlice,
+  ) -> Result<RcByteSlice, P10Error> {
     // Decode string values using the relevant character set
     if vr.is_string() {
       // Private Creator values must only contain characters from the Default
       // Character Repertoire and so are sanitized against that character set.
       // Ref: PS3.5 7.8.1.
-      value_bytes = if vr.is_encoded_string() && !tag.is_private_creator() {
-        self.location.decode_string_bytes(vr, &value_bytes)
+      if vr.is_encoded_string() && !tag.is_private_creator() {
+        value_bytes =
+          self.location.decode_string_bytes(vr, &value_bytes).into();
       } else {
-        dcmfx_character_set::sanitize_default_charset_bytes(&mut value_bytes);
-
-        value_bytes
+        let mut data = value_bytes.into_vec();
+        dcmfx_character_set::sanitize_default_charset_bytes(&mut data);
+        value_bytes = data.into();
       }
     }
 

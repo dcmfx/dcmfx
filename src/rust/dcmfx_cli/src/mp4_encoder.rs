@@ -199,22 +199,19 @@ impl Mp4Encoder {
   ///
   /// This copy respects the `linesize`` of the target frame.
   ///
-  fn update_raw_frame<T>(&mut self, row_size: usize, data: &[T]) {
+  fn update_raw_frame<T: bytemuck::Pod>(
+    &mut self,
+    row_size: usize,
+    data: &[T],
+  ) {
     let linesize = unsafe { (*self.raw_frame.as_ptr()).linesize }[0] as usize;
-
-    let data_u8_slice = unsafe {
-      std::slice::from_raw_parts(
-        data.as_ref().as_ptr() as *const u8,
-        std::mem::size_of_val(data),
-      )
-    };
 
     let mut dst = self.raw_frame.data_mut(0);
 
     if row_size == linesize {
-      dst.copy_from_slice(data_u8_slice);
+      dst.copy_from_slice(bytemuck::cast_slice(data));
     } else {
-      for src_row in data_u8_slice.chunks_exact(row_size) {
+      for src_row in bytemuck::cast_slice(data).chunks_exact(row_size) {
         dst[..row_size].copy_from_slice(src_row);
         dst = &mut dst[linesize..];
       }

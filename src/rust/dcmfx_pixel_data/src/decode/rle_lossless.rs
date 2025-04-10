@@ -66,7 +66,7 @@ pub fn decode_single_channel(
       [_],
     ) => {
       let segment = segments.pop().unwrap();
-      let mut pixels = unsafe { super::vec_cast::<u8, i8>(segment) };
+      let mut pixels = bytemuck::cast_vec(segment);
 
       if definition.has_unused_high_bits() {
         let threshold = 2i8.pow(definition.bits_stored() as u32 - 1);

@@ -3,7 +3,6 @@ use alloc::{format, string::ToString, vec, vec::Vec};
 
 use dcmfx_core::DataError;
 
-use super::vec_cast;
 use crate::{
   BitsAllocated, ColorImage, ColorSpace, PhotometricInterpretation,
   PixelDataDefinition, PixelRepresentation, SingleChannelImage,
@@ -15,8 +14,6 @@ pub fn decode_single_channel(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
-  let pixels = decode(definition, data)?;
-
   let width = definition.columns();
   let height = definition.rows();
 
@@ -27,37 +24,37 @@ pub fn decode_single_channel(
     (
       PixelRepresentation::Unsigned,
       BitsAllocated::One | BitsAllocated::Eight,
-    ) => SingleChannelImage::new_u8(width, height, pixels),
+    ) => {
+      let pixels = decode(definition, data)?;
+      SingleChannelImage::new_u8(width, height, pixels)
+    }
 
     (
       PixelRepresentation::Signed,
       BitsAllocated::One | BitsAllocated::Eight,
-    ) => SingleChannelImage::new_i8(width, height, unsafe {
-      vec_cast::<u8, i8>(pixels)
-    }),
+    ) => {
+      let pixels = decode(definition, data)?;
+      SingleChannelImage::new_i8(width, height, pixels)
+    }
 
     (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
-      SingleChannelImage::new_u16(width, height, unsafe {
-        vec_cast::<u8, u16>(pixels)
-      })
+      let pixels = decode(definition, data)?;
+      SingleChannelImage::new_u16(width, height, pixels)
     }
 
     (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
-      SingleChannelImage::new_i16(width, height, unsafe {
-        vec_cast::<u8, i16>(pixels)
-      })
+      let pixels = decode(definition, data)?;
+      SingleChannelImage::new_i16(width, height, pixels)
     }
 
     (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
-      SingleChannelImage::new_u32(width, height, unsafe {
-        vec_cast::<u8, u32>(pixels)
-      })
+      let pixels = decode(definition, data)?;
+      SingleChannelImage::new_u32(width, height, pixels)
     }
 
     (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
-      SingleChannelImage::new_i32(width, height, unsafe {
-        vec_cast::<u8, i32>(pixels)
-      })
+      let pixels = decode(definition, data)?;
+      SingleChannelImage::new_i32(width, height, pixels)
     }
   }
 }
@@ -68,8 +65,6 @@ pub fn decode_color(
   definition: &PixelDataDefinition,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let pixels = decode(definition, data)?;
-
   let width = definition.columns();
   let height = definition.rows();
 
@@ -80,14 +75,17 @@ pub fn decode_color(
     (
       PhotometricInterpretation::PaletteColor { palette },
       BitsAllocated::Eight,
-    ) => ColorImage::new_palette8(width, height, pixels, palette.clone()),
+    ) => {
+      let pixels = decode(definition, data)?;
+      ColorImage::new_palette8(width, height, pixels, palette.clone())
+    }
 
     (
       PhotometricInterpretation::PaletteColor { palette },
       BitsAllocated::Sixteen,
     ) => {
-      let data = unsafe { vec_cast::<u8, u16>(pixels) };
-      ColorImage::new_palette16(width, height, data, palette.clone())
+      let pixels = decode(definition, data)?;
+      ColorImage::new_palette16(width, height, pixels, palette.clone())
     }
 
     (PhotometricInterpretation::PaletteColor { .. }, _) => {
@@ -98,36 +96,36 @@ pub fn decode_color(
     }
 
     (_, BitsAllocated::One | BitsAllocated::Eight) => {
+      let pixels = decode(definition, data)?;
       ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
     }
 
     (_, BitsAllocated::Sixteen) => {
-      let data = unsafe { vec_cast::<u8, u16>(pixels) };
-      ColorImage::new_u16(width, height, data, ColorSpace::RGB)
+      let pixels = decode(definition, data)?;
+      ColorImage::new_u16(width, height, pixels, ColorSpace::RGB)
     }
 
     (_, BitsAllocated::ThirtyTwo) => {
-      let data = unsafe { vec_cast::<u8, u32>(pixels) };
-      ColorImage::new_u32(width, height, data, ColorSpace::RGB)
+      let pixels = decode(definition, data)?;
+      ColorImage::new_u32(width, height, pixels, ColorSpace::RGB)
     }
   }
 }
 
-fn decode(
+fn decode<T: Clone + Default + bytemuck::Pod>(
   definition: &PixelDataDefinition,
   data: &[u8],
-) -> Result<Vec<u8>, DataError> {
+) -> Result<Vec<T>, DataError> {
   let samples_per_pixel = u8::from(definition.samples_per_pixel());
   let bits_allocated = u8::from(definition.bits_allocated()).max(8);
   let mut pixel_representation = u8::from(definition.pixel_representation());
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
 
   // Allocate output buffer
-  let mut output_buffer = vec![
-    0u8;
+  let mut output_buffer: Vec<T> = vec![
+    T::default();
     definition.pixel_count()
       * usize::from(samples_per_pixel)
-      * usize::from(bits_allocated / 8)
   ];
 
   // Make FFI call into openjpeg to perform the decompression
@@ -140,8 +138,8 @@ fn decode(
       samples_per_pixel.into(),
       bits_allocated.into(),
       &mut pixel_representation,
-      output_buffer.as_mut_ptr(),
-      output_buffer.len() as u64,
+      output_buffer.as_mut_ptr() as *mut u8,
+      (output_buffer.len() * core::mem::size_of::<T>()) as u64,
       error_buffer.as_mut_ptr(),
       error_buffer.len() as u32,
     )
@@ -163,7 +161,10 @@ fn decode(
     // to be returned, then reinterpret it as signed two's complement integer
     // data
     if definition.pixel_representation() == PixelRepresentation::Signed {
-      convert_unsigned_values_to_signed_values(definition, &mut output_buffer);
+      convert_unsigned_values_to_signed_values(
+        definition,
+        bytemuck::cast_slice_mut(&mut output_buffer),
+      );
     } else {
       return Err(DataError::new_value_invalid(
         "OpenJPEG decode returned signed data but the pixel representation \
@@ -191,8 +192,7 @@ fn convert_unsigned_values_to_signed_values(
 
       for i in data.iter_mut() {
         if *i as i16 >= threshold {
-          let value = (*i as i16 - threshold * 2) as i8;
-          *i = value.to_le_bytes()[0];
+          *i = (*i as i16 - threshold * 2) as u8;
         }
       }
     }
@@ -203,9 +203,9 @@ fn convert_unsigned_values_to_signed_values(
       for chunk in data.chunks_exact_mut(2) {
         let value = u16::from_ne_bytes([chunk[0], chunk[1]]);
         if value as i32 >= threshold {
-          let bytes = ((value as i32 - threshold * 2) as i16).to_ne_bytes();
-          chunk[0] = bytes[0];
-          chunk[1] = bytes[1];
+          chunk.copy_from_slice(
+            &((value as i32 - threshold * 2) as i16).to_ne_bytes(),
+          );
         }
       }
     }
@@ -217,11 +217,9 @@ fn convert_unsigned_values_to_signed_values(
         let value =
           u32::from_ne_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
         if i64::from(value) >= threshold {
-          let bytes = ((i64::from(value) - threshold * 2) as i32).to_ne_bytes();
-          chunk[0] = bytes[0];
-          chunk[1] = bytes[1];
-          chunk[2] = bytes[2];
-          chunk[3] = bytes[3];
+          chunk.copy_from_slice(
+            &((i64::from(value) - threshold * 2) as i32).to_ne_bytes(),
+          );
         }
       }
     }

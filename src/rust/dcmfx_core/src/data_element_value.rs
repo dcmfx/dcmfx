@@ -2,13 +2,9 @@
 //! Data element values are usually stored in a [`DataSet`] which maps data
 //! element tags to data element values.
 
-#[cfg(feature = "std")]
-use std::rc::Rc;
-
 #[cfg(not(feature = "std"))]
 use alloc::{
   format,
-  rc::Rc,
   string::{String, ToString},
   vec,
   vec::Vec,
@@ -18,9 +14,9 @@ use byteorder::ByteOrder;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
-  DataElementTag, DataError, DataSet, StructuredAge, StructuredDate,
-  StructuredDateTime, StructuredTime, ValueRepresentation, code_strings,
-  dictionary, utils, value_representation,
+  DataElementTag, DataError, DataSet, RcByteSlice, StructuredAge,
+  StructuredDate, StructuredDateTime, StructuredTime, ValueRepresentation,
+  code_strings, dictionary, utils, value_representation,
 };
 
 pub mod age_string;
@@ -73,15 +69,15 @@ pub struct DataElementValue(RawDataElementValue);
 enum RawDataElementValue {
   BinaryValue {
     vr: ValueRepresentation,
-    bytes: Rc<Vec<u8>>,
+    bytes: RcByteSlice,
   },
   LookupTableDescriptorValue {
     vr: ValueRepresentation,
-    bytes: Rc<Vec<u8>>,
+    bytes: RcByteSlice,
   },
   EncapsulatedPixelDataValue {
     vr: ValueRepresentation,
-    items: Vec<Rc<Vec<u8>>>,
+    items: Vec<RcByteSlice>,
   },
   SequenceValue {
     items: Vec<DataSet>,
@@ -334,7 +330,7 @@ impl DataElementValue {
   ///
   pub fn new_binary(
     vr: ValueRepresentation,
-    bytes: Rc<Vec<u8>>,
+    bytes: RcByteSlice,
   ) -> Result<Self, DataError> {
     if vr == ValueRepresentation::Sequence {
       return Err(DataError::new_value_invalid(format!(
@@ -381,7 +377,7 @@ impl DataElementValue {
   ///
   pub fn new_binary_unchecked(
     vr: ValueRepresentation,
-    bytes: Rc<Vec<u8>>,
+    bytes: RcByteSlice,
   ) -> Self {
     Self(RawDataElementValue::BinaryValue { vr, bytes })
   }
@@ -396,7 +392,7 @@ impl DataElementValue {
   ///
   pub fn new_lookup_table_descriptor(
     vr: ValueRepresentation,
-    bytes: Rc<Vec<u8>>,
+    bytes: RcByteSlice,
   ) -> Result<Self, DataError> {
     if vr != ValueRepresentation::SignedShort
       && vr != ValueRepresentation::UnsignedShort
@@ -421,7 +417,7 @@ impl DataElementValue {
   ///
   pub fn new_lookup_table_descriptor_unchecked(
     vr: ValueRepresentation,
-    bytes: Rc<Vec<u8>>,
+    bytes: RcByteSlice,
   ) -> Self {
     Self(RawDataElementValue::LookupTableDescriptorValue { vr, bytes })
   }
@@ -442,7 +438,7 @@ impl DataElementValue {
   ///
   pub fn new_encapsulated_pixel_data(
     vr: ValueRepresentation,
-    items: Vec<Rc<Vec<u8>>>,
+    items: Vec<RcByteSlice>,
   ) -> Result<Self, DataError> {
     if vr != ValueRepresentation::OtherByteString
       && vr != ValueRepresentation::OtherWordString
@@ -466,7 +462,7 @@ impl DataElementValue {
   ///
   pub fn new_encapsulated_pixel_data_unchecked(
     vr: ValueRepresentation,
-    items: Vec<Rc<Vec<u8>>>,
+    items: Vec<RcByteSlice>,
   ) -> Self {
     Self(RawDataElementValue::EncapsulatedPixelDataValue { vr, items })
   }
@@ -480,7 +476,7 @@ impl DataElementValue {
 
     Ok(Self::new_binary_unchecked(
       ValueRepresentation::AgeString,
-      Rc::new(bytes),
+      bytes.into(),
     ))
   }
 
@@ -500,7 +496,7 @@ impl DataElementValue {
   ) -> Result<Self, DataError> {
     let bytes = attribute_tag::to_bytes(value);
 
-    Self::new_binary(ValueRepresentation::AttributeTag, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::AttributeTag, bytes.into())
   }
 
   /// Creates a new `CodeString` data element value.
@@ -522,7 +518,7 @@ impl DataElementValue {
 
     Ok(Self::new_binary_unchecked(
       ValueRepresentation::Date,
-      Rc::new(bytes),
+      bytes.into(),
     ))
   }
 
@@ -535,7 +531,7 @@ impl DataElementValue {
 
     Ok(Self::new_binary_unchecked(
       ValueRepresentation::DateTime,
-      Rc::new(bytes),
+      bytes.into(),
     ))
   }
 
@@ -544,7 +540,7 @@ impl DataElementValue {
   pub fn new_decimal_string(value: &[f64]) -> Result<Self, DataError> {
     let bytes = decimal_string::to_bytes(value);
 
-    Self::new_binary(ValueRepresentation::DecimalString, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::DecimalString, bytes.into())
   }
 
   /// Creates a new `FloatingPointDouble` data element value.
@@ -553,7 +549,7 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 8];
     byteorder::LittleEndian::write_f64_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::FloatingPointDouble, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::FloatingPointDouble, bytes.into())
   }
 
   /// Creates a new `FloatingPointSingle` data element value.
@@ -562,7 +558,7 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 4];
     byteorder::LittleEndian::write_f32_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::FloatingPointSingle, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::FloatingPointSingle, bytes.into())
   }
 
   /// Creates a new `IntegerString` data element value.
@@ -570,7 +566,7 @@ impl DataElementValue {
   pub fn new_integer_string(value: &[i32]) -> Result<Self, DataError> {
     let bytes = integer_string::to_bytes(value);
 
-    Self::new_binary(ValueRepresentation::IntegerString, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::IntegerString, bytes.into())
   }
 
   /// Creates a new `LongString` data element value.
@@ -593,13 +589,13 @@ impl DataElementValue {
     let mut bytes = value.trim_end_matches(' ').to_string().into_bytes();
     vr.pad_bytes_to_even_length(&mut bytes);
 
-    Self::new_binary(vr, Rc::new(bytes))
+    Self::new_binary(vr, bytes.into())
   }
 
   /// Creates a new `OtherByteString` data element value.
   ///
   pub fn new_other_byte_string(value: Vec<u8>) -> Result<Self, DataError> {
-    Self::new_binary(ValueRepresentation::OtherByteString, Rc::new(value))
+    Self::new_binary(ValueRepresentation::OtherByteString, value.into())
   }
 
   /// Creates a new `OtherDoubleString` data element value.
@@ -608,7 +604,7 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 8];
     byteorder::LittleEndian::write_f64_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::OtherDoubleString, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::OtherDoubleString, bytes.into())
   }
 
   /// Creates a new `OtherFloatString` data element value.
@@ -617,25 +613,25 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 4];
     byteorder::LittleEndian::write_f32_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::OtherFloatString, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::OtherFloatString, bytes.into())
   }
 
   /// Creates a new `OtherLongString` data element value.
   ///
   pub fn new_other_long_string(value: Vec<u8>) -> Result<Self, DataError> {
-    Self::new_binary(ValueRepresentation::OtherLongString, Rc::new(value))
+    Self::new_binary(ValueRepresentation::OtherLongString, value.into())
   }
 
   /// Creates a new `OtherVeryLongString` data element value.
   ///
   pub fn new_other_very_long_string(value: Vec<u8>) -> Result<Self, DataError> {
-    Self::new_binary(ValueRepresentation::OtherVeryLongString, Rc::new(value))
+    Self::new_binary(ValueRepresentation::OtherVeryLongString, value.into())
   }
 
   /// Creates a new `OtherWordString` data element value.
   ///
   pub fn new_other_word_string(value: Vec<u8>) -> Result<Self, DataError> {
-    Self::new_binary(ValueRepresentation::OtherWordString, Rc::new(value))
+    Self::new_binary(ValueRepresentation::OtherWordString, value.into())
   }
 
   /// Creates a new `PersonName` data element value.
@@ -647,7 +643,7 @@ impl DataElementValue {
 
     Ok(Self::new_binary_unchecked(
       ValueRepresentation::PersonName,
-      Rc::new(bytes),
+      bytes.into(),
     ))
   }
 
@@ -676,7 +672,7 @@ impl DataElementValue {
     let mut bytes = value.trim_end_matches(' ').to_string().into_bytes();
     vr.pad_bytes_to_even_length(&mut bytes);
 
-    Self::new_binary(vr, Rc::new(bytes))
+    Self::new_binary(vr, bytes.into())
   }
 
   /// Creates a new `SignedLong` data element value.
@@ -685,7 +681,7 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 4];
     byteorder::LittleEndian::write_i32_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::SignedLong, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::SignedLong, bytes.into())
   }
 
   /// Creates a new `SignedShort` data element value.
@@ -694,7 +690,7 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 2];
     byteorder::LittleEndian::write_i16_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::SignedShort, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::SignedShort, bytes.into())
   }
 
   /// Creates a new `SignedVeryLong` data element value.
@@ -703,7 +699,7 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 8];
     byteorder::LittleEndian::write_i64_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::SignedVeryLong, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::SignedVeryLong, bytes.into())
   }
 
   /// Creates a new `Time` data element value.
@@ -713,7 +709,7 @@ impl DataElementValue {
 
     Ok(Self::new_binary_unchecked(
       ValueRepresentation::Time,
-      Rc::new(bytes),
+      bytes.into(),
     ))
   }
 
@@ -722,7 +718,7 @@ impl DataElementValue {
   pub fn new_unique_identifier(value: &[&str]) -> Result<Self, DataError> {
     let bytes = unique_identifier::to_bytes(value)?;
 
-    Self::new_binary(ValueRepresentation::UniqueIdentifier, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::UniqueIdentifier, bytes.into())
   }
 
   /// Creates a new `UniversalResourceIdentifier` data element value.
@@ -735,13 +731,13 @@ impl DataElementValue {
     let mut bytes = value.trim_matches(' ').to_string().into_bytes();
     vr.pad_bytes_to_even_length(&mut bytes);
 
-    Self::new_binary(vr, Rc::new(bytes))
+    Self::new_binary(vr, bytes.into())
   }
 
   /// Creates a new `Unknown` data element value.
   ///
   pub fn new_unknown(value: Vec<u8>) -> Result<Self, DataError> {
-    Self::new_binary(ValueRepresentation::Unknown, Rc::new(value))
+    Self::new_binary(ValueRepresentation::Unknown, value.into())
   }
 
   /// Creates a new `UnlimitedCharacters` data element value.
@@ -764,7 +760,7 @@ impl DataElementValue {
     let mut bytes = value.trim_end_matches(' ').to_string().into_bytes();
     vr.pad_bytes_to_even_length(&mut bytes);
 
-    Self::new_binary(vr, Rc::new(bytes))
+    Self::new_binary(vr, bytes.into())
   }
 
   /// Creates a new `UnsignedLong` data element value.
@@ -773,7 +769,7 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 4];
     byteorder::LittleEndian::write_u32_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::UnsignedLong, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::UnsignedLong, bytes.into())
   }
 
   /// Creates a new `UnsignedShort` data element value.
@@ -782,7 +778,7 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 2];
     byteorder::LittleEndian::write_u16_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::UnsignedShort, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::UnsignedShort, bytes.into())
   }
 
   /// Creates a new `UnsignedVeryLong` data element value.
@@ -791,7 +787,7 @@ impl DataElementValue {
     let mut bytes = vec![0u8; value.len() * 8];
     byteorder::LittleEndian::write_u64_into(value, &mut bytes);
 
-    Self::new_binary(ValueRepresentation::UnsignedVeryLong, Rc::new(bytes))
+    Self::new_binary(ValueRepresentation::UnsignedVeryLong, bytes.into())
   }
 
   /// Returns the value representation for a data element value.
@@ -809,7 +805,7 @@ impl DataElementValue {
 
   /// For data element values that hold binary data, returns that data.
   ///
-  pub fn bytes(&self) -> Result<&Rc<Vec<u8>>, DataError> {
+  pub fn bytes(&self) -> Result<&RcByteSlice, DataError> {
     match &self.0 {
       RawDataElementValue::BinaryValue { bytes, .. }
       | RawDataElementValue::LookupTableDescriptorValue { bytes, .. } => {
@@ -825,7 +821,7 @@ impl DataElementValue {
   pub fn vr_bytes(
     &self,
     allowed_vrs: &[ValueRepresentation],
-  ) -> Result<&Rc<Vec<u8>>, DataError> {
+  ) -> Result<&RcByteSlice, DataError> {
     if allowed_vrs.contains(&self.value_representation()) {
       self.bytes()
     } else {
@@ -838,7 +834,7 @@ impl DataElementValue {
   ///
   pub fn encapsulated_pixel_data(
     &self,
-  ) -> Result<&Vec<Rc<Vec<u8>>>, DataError> {
+  ) -> Result<&Vec<RcByteSlice>, DataError> {
     match &self.0 {
       RawDataElementValue::EncapsulatedPixelDataValue { items, .. } => {
         Ok(items)
@@ -907,7 +903,7 @@ impl DataElementValue {
           || *vr == ValueRepresentation::UniversalResourceIdentifier
           || *vr == ValueRepresentation::UnlimitedText =>
       {
-        let string = core::str::from_utf8(bytes.as_slice()).map_err(|_| {
+        let string = core::str::from_utf8(bytes).map_err(|_| {
           DataError::new_value_invalid(
             "String bytes are not valid UTF-8".to_string(),
           )
@@ -947,7 +943,7 @@ impl DataElementValue {
           || *vr == ValueRepresentation::ShortString
           || *vr == ValueRepresentation::UnlimitedCharacters =>
       {
-        let string = core::str::from_utf8(bytes.as_slice()).map_err(|_| {
+        let string = core::str::from_utf8(bytes).map_err(|_| {
           DataError::new_value_invalid(
             "String bytes are not valid UTF-8".to_string(),
           )
@@ -1254,7 +1250,7 @@ impl DataElementValue {
       RawDataElementValue::BinaryValue {
         vr: ValueRepresentation::DecimalString,
         bytes,
-      } => decimal_string::from_bytes(bytes.as_slice()),
+      } => decimal_string::from_bytes(bytes),
 
       RawDataElementValue::BinaryValue { vr, bytes }
       | RawDataElementValue::BinaryValue { vr, bytes }
@@ -1503,7 +1499,7 @@ fn new_string_list(
   let mut bytes = value.join("\\").into_bytes();
   vr.pad_bytes_to_even_length(&mut bytes);
 
-  DataElementValue::new_binary(vr, Rc::new(bytes))
+  DataElementValue::new_binary(vr, bytes.into())
 }
 
 #[cfg(test)]
@@ -1529,7 +1525,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::UnsignedShort,
-        Rc::new(vec![0u8; 6])
+        vec![0u8; 6].into()
       )
       .value_representation(),
       ValueRepresentation::UnsignedShort
@@ -1554,23 +1550,23 @@ mod tests {
   fn bytes_test() {
     assert_eq!(
       DataElementValue::new_long_string(&["12"]).unwrap().bytes(),
-      Ok(&Rc::new(b"12".to_vec()))
+      Ok(&b"12".to_vec().into())
     );
 
     assert_eq!(
       DataElementValue::new_floating_point_single(&[1.0])
         .unwrap()
         .bytes(),
-      Ok(&Rc::new(vec![0, 0, 0x80, 0x3F]))
+      Ok(&vec![0, 0, 0x80, 0x3F].into())
     );
 
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::UnsignedShort,
-        Rc::new(vec![0, 1, 2, 3, 4, 5])
+        vec![0, 1, 2, 3, 4, 5].into()
       )
       .bytes(),
-      Ok(&Rc::new(vec![0, 1, 2, 3, 4, 5]))
+      Ok(&vec![0, 1, 2, 3, 4, 5].into())
     );
 
     assert_eq!(
@@ -1626,7 +1622,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::ShortText,
-        Rc::new(vec![0xD0])
+        vec![0xD0].into()
       )
       .get_string(),
       Err(DataError::new_value_invalid(
@@ -1696,7 +1692,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::ShortString,
-        Rc::new(vec![0xD0])
+        vec![0xD0].into()
       )
       .get_strings(),
       Err(DataError::new_value_invalid(
@@ -1724,7 +1720,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::IntegerString,
-        Rc::new(b"  123   ".to_vec())
+        b"  123   ".to_vec().into()
       )
       .get_int(),
       Ok(123)
@@ -1757,7 +1753,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::IntegerString,
-        Rc::new(b" 123 \\456 ".to_vec())
+        b" 123 \\456 ".to_vec().into()
       )
       .get_ints(),
       Ok(vec![123, 456])
@@ -1773,7 +1769,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::SignedLong,
-        Rc::new(vec![0])
+        vec![0].into()
       )
       .get_ints::<i32>(),
       Err(DataError::new_value_invalid(
@@ -1791,7 +1787,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::SignedShort,
-        Rc::new(vec![0])
+        vec![0].into()
       )
       .get_ints::<i16>(),
       Err(DataError::new_value_invalid(
@@ -1809,7 +1805,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::UnsignedLong,
-        Rc::new(vec![0])
+        vec![0].into()
       )
       .get_ints::<u32>(),
       Err(DataError::new_value_invalid(
@@ -1827,7 +1823,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::UnsignedShort,
-        Rc::new(vec![0]),
+        vec![0].into()
       )
       .get_ints::<u16>(),
       Err(DataError::new_value_invalid(
@@ -1838,7 +1834,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::SignedShort,
-        Rc::new(vec![0x34, 0x12, 0x00, 0x80, 0x78, 0x56])
+        vec![0x34, 0x12, 0x00, 0x80, 0x78, 0x56].into()
       )
       .get_ints(),
       Ok(vec![0x1234, -0x8000, 0x5678])
@@ -1847,7 +1843,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::UnsignedShort,
-        Rc::new(vec![0x34, 0x12, 0x00, 0x80, 0x78, 0x56])
+        vec![0x34, 0x12, 0x00, 0x80, 0x78, 0x56].into()
       )
       .get_ints(),
       Ok(vec![0x1234, 0x8000, 0x5678])
@@ -1856,7 +1852,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::OtherWordString,
-        Rc::new(vec![0, 0, 0, 0, 0, 0])
+        vec![0, 0, 0, 0, 0, 0].into()
       )
       .get_ints::<i32>(),
       Err(DataError::new_value_invalid(
@@ -1867,7 +1863,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::UnsignedShort,
-        Rc::new(vec![0, 0, 0, 0])
+        vec![0, 0, 0, 0].into()
       )
       .get_ints::<i32>(),
       Err(DataError::new_value_invalid(
@@ -1933,7 +1929,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::SignedVeryLong,
-        Rc::new(vec![0])
+        vec![0].into()
       )
       .get_big_ints::<u64>(),
       Err(DataError::new_value_invalid(
@@ -1951,7 +1947,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::UnsignedVeryLong,
-        Rc::new(vec![0])
+        vec![0].into()
       )
       .get_big_ints::<u64>(),
       Err(DataError::new_value_invalid(
@@ -1979,7 +1975,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::DecimalString,
-        Rc::new(b" 1.2   ".to_vec())
+        b" 1.2   ".to_vec().into()
       )
       .get_float(),
       Ok(1.2)
@@ -2019,7 +2015,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::DecimalString,
-        Rc::new(b" 1.2  \\3.4".to_vec())
+        b" 1.2  \\3.4".to_vec().into()
       )
       .get_floats(),
       Ok(vec![1.2, 3.4])
@@ -2042,7 +2038,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::FloatingPointDouble,
-        Rc::new(vec![0, 0, 0, 0])
+        vec![0, 0, 0, 0].into()
       )
       .get_floats(),
       Err(DataError::new_value_invalid(
@@ -2067,7 +2063,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::FloatingPointSingle,
-        Rc::new(vec![0, 0])
+        vec![0, 0].into()
       )
       .get_floats(),
       Err(DataError::new_value_invalid(
@@ -2088,7 +2084,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::AgeString,
-        Rc::new(b"001D".to_vec())
+        b"001D".to_vec().into()
       )
       .get_age(),
       Ok(age_string::StructuredAge {
@@ -2100,7 +2096,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        Rc::new(vec![])
+        RcByteSlice::empty()
       )
       .get_age(),
       Err(DataError::new_value_not_present())
@@ -2112,7 +2108,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        Rc::new(b"20000101".to_vec())
+        b"20000101".to_vec().into()
       )
       .get_date(),
       Ok(StructuredDate {
@@ -2125,7 +2121,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Time,
-        Rc::new(vec![])
+        RcByteSlice::empty()
       )
       .get_date(),
       Err(DataError::new_value_not_present())
@@ -2137,7 +2133,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::DateTime,
-        Rc::new(b"20000101123043.5".to_vec())
+        b"20000101123043.5".to_vec().into()
       )
       .get_date_time(),
       Ok(date_time::StructuredDateTime {
@@ -2154,7 +2150,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        Rc::new(vec![])
+        RcByteSlice::empty()
       )
       .get_date_time(),
       Err(DataError::new_value_not_present())
@@ -2166,7 +2162,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Time,
-        Rc::new(b"235921.2".to_vec())
+        b"235921.2".to_vec().into()
       )
       .get_time(),
       Ok(time::StructuredTime {
@@ -2179,7 +2175,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        Rc::new(vec![])
+        RcByteSlice::empty()
       )
       .get_time(),
       Err(DataError::new_value_not_present())
@@ -2191,7 +2187,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::PersonName,
-        Rc::new(vec![])
+        RcByteSlice::empty()
       )
       .get_person_name(),
       Ok(person_name::StructuredPersonName {
@@ -2204,7 +2200,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::PersonName,
-        Rc::new(b"\\".to_vec())
+        b"\\".to_vec().into()
       )
       .get_person_name(),
       Err(DataError::new_multiplicity_mismatch())
@@ -2216,7 +2212,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::PersonName,
-        Rc::new(b"\\ ".to_vec())
+        b"\\ ".to_vec().into()
       )
       .get_person_names(),
       Ok(vec![
@@ -2236,7 +2232,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        Rc::new(vec![])
+        RcByteSlice::empty()
       )
       .get_person_names(),
       Err(DataError::new_value_not_present())
@@ -2278,7 +2274,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::PersonName,
-        Rc::new(vec![0xFF, 0xFF])
+        vec![0xFF, 0xFF].into()
       )
       .to_string(tag, 80),
       "!! Invalid UTF-8 data".to_string()
@@ -2287,7 +2283,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::AttributeTag,
-        Rc::new(vec![0x34, 0x12, 0x78, 0x56])
+        vec![0x34, 0x12, 0x78, 0x56].into()
       )
       .to_string(tag, 80),
       "(1234,5678)".to_string()
@@ -2296,7 +2292,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::AttributeTag,
-        Rc::new(vec![0])
+        vec![0].into()
       )
       .to_string(tag, 80),
       "<error converting to string>".to_string()
@@ -2318,7 +2314,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::FloatingPointDouble,
-        Rc::new(vec![0, 0, 0, 0])
+        vec![0, 0, 0, 0].into()
       )
       .to_string(tag, 80),
       "<error converting to string>".to_string()
@@ -2348,7 +2344,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::UnsignedShort,
-        Rc::new(vec![0xA0, 0x0F, 0x40, 0x9C, 0x50, 0xC3])
+        vec![0xA0, 0x0F, 0x40, 0x9C, 0x50, 0xC3].into()
       )
       .to_string(tag, 80),
       "4000, 40000, 50000".to_string()
@@ -2357,7 +2353,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::SignedShort,
-        Rc::new(vec![0xA0, 0x0F, 0xE0, 0xB1, 0x50, 0xC3])
+        vec![0xA0, 0x0F, 0xE0, 0xB1, 0x50, 0xC3].into()
       )
       .to_string(tag, 80),
       "4000, -20000, 50000".to_string()
@@ -2366,7 +2362,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::SignedShort,
-        Rc::new(vec![0])
+        vec![0].into()
       )
       .to_string(tag, 80),
       "<error converting to string>".to_string()
@@ -2375,7 +2371,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_encapsulated_pixel_data_unchecked(
         ValueRepresentation::OtherByteString,
-        vec![Rc::new(vec![1, 2]), Rc::new(vec![3, 4])],
+        vec![vec![1, 2].into(), vec![3, 4].into()],
       )
       .to_string(tag, 80),
       "Items: 2, bytes: 4".to_string()
@@ -2392,7 +2388,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::SignedShort,
-        Rc::new(vec![0u8; 6])
+        vec![0u8; 6].into()
       )
       .validate_length(),
       Ok(())
@@ -2401,7 +2397,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::SignedShort,
-        Rc::new(vec![0u8; 4])
+        vec![0u8; 4].into()
       )
       .validate_length(),
       Err(DataError::new_value_length_invalid(
@@ -2414,7 +2410,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::ShortText,
-        Rc::new(vec![0u8; 0x10000])
+        vec![0u8; 0x10000].into()
       )
       .validate_length(),
       Err(DataError::new_value_length_invalid(
@@ -2427,7 +2423,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::UnsignedVeryLong,
-        Rc::new(vec![0u8; 7])
+        vec![0u8; 7].into()
       )
       .validate_length(),
       Err(DataError::new_value_length_invalid(
@@ -2440,7 +2436,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_encapsulated_pixel_data_unchecked(
         ValueRepresentation::OtherWordString,
-        vec![Rc::new(vec![0u8; 2])]
+        vec![vec![0, 0].into()]
       )
       .validate_length(),
       Ok(())
@@ -2449,7 +2445,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_encapsulated_pixel_data_unchecked(
         ValueRepresentation::OtherWordString,
-        vec![Rc::new(vec![0u8; 3])]
+        vec![vec![0u8; 3].into()]
       )
       .validate_length(),
       Err(DataError::new_value_length_invalid(
@@ -2462,7 +2458,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_encapsulated_pixel_data_unchecked(
         ValueRepresentation::OtherWordString,
-        vec![Rc::new(vec![0u8; 0xFFFFFFFF])]
+        vec![vec![0u8; 0xFFFFFFFF].into()]
       )
       .validate_length(),
       Err(DataError::new_value_length_invalid(
@@ -2487,7 +2483,7 @@ mod tests {
       }),
       DataElementValue::new_binary(
         ValueRepresentation::AgeString,
-        Rc::new(b"099Y".to_vec())
+        b"099Y".to_vec().into()
       )
     );
   }
@@ -2498,7 +2494,7 @@ mod tests {
       DataElementValue::new_application_entity("TEST  "),
       DataElementValue::new_binary(
         ValueRepresentation::ApplicationEntity,
-        Rc::new(b"TEST".to_vec())
+        b"TEST".to_vec().into()
       )
     );
 
@@ -2521,7 +2517,7 @@ mod tests {
       ]),
       DataElementValue::new_binary(
         ValueRepresentation::AttributeTag,
-        Rc::new(vec![0x23, 0x01, 0x67, 0x45, 0xAB, 0x89, 0xEF, 0xCD]),
+        vec![0x23, 0x01, 0x67, 0x45, 0xAB, 0x89, 0xEF, 0xCD].into(),
       )
     );
   }
@@ -2532,7 +2528,7 @@ mod tests {
       DataElementValue::new_code_string(&["DERIVED ", "SECONDARY"]),
       DataElementValue::new_binary(
         ValueRepresentation::CodeString,
-        Rc::new(b"DERIVED\\SECONDARY ".to_vec()),
+        b"DERIVED\\SECONDARY ".to_vec().into(),
       )
     );
 
@@ -2568,7 +2564,7 @@ mod tests {
       }),
       DataElementValue::new_binary(
         ValueRepresentation::Date,
-        Rc::new(b"20240214".to_vec()),
+        b"20240214".to_vec().into(),
       )
     );
   }
@@ -2587,7 +2583,7 @@ mod tests {
       }),
       DataElementValue::new_binary(
         ValueRepresentation::DateTime,
-        Rc::new(b"20240214220546.1+0800 ".to_vec()),
+        b"20240214220546.1+0800 ".to_vec().into(),
       )
     );
   }
@@ -2598,7 +2594,7 @@ mod tests {
       DataElementValue::new_decimal_string(&[1.2, -3.45]),
       DataElementValue::new_binary(
         ValueRepresentation::DecimalString,
-        Rc::new(b"1.2\\-3.45 ".to_vec()),
+        b"1.2\\-3.45 ".to_vec().into(),
       )
     );
   }
@@ -2609,10 +2605,11 @@ mod tests {
       DataElementValue::new_floating_point_double(&[1.2, -3.45]),
       DataElementValue::new_binary(
         ValueRepresentation::FloatingPointDouble,
-        Rc::new(vec![
+        vec![
           0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0xF3, 0x3F, 0x9A, 0x99, 0x99,
           0x99, 0x99, 0x99, 0xB, 0xC0,
-        ])
+        ]
+        .into()
       )
     );
   }
@@ -2623,7 +2620,7 @@ mod tests {
       DataElementValue::new_floating_point_single(&[1.2, -3.45]),
       DataElementValue::new_binary(
         ValueRepresentation::FloatingPointSingle,
-        Rc::new(vec![0x9A, 0x99, 0x99, 0x3F, 0xCD, 0xCC, 0x5C, 0xC0]),
+        vec![0x9A, 0x99, 0x99, 0x3F, 0xCD, 0xCC, 0x5C, 0xC0].into(),
       )
     );
   }
@@ -2634,7 +2631,7 @@ mod tests {
       DataElementValue::new_integer_string(&[10, 2_147_483_647]),
       DataElementValue::new_binary(
         ValueRepresentation::IntegerString,
-        Rc::new(b"10\\2147483647 ".to_vec()),
+        b"10\\2147483647 ".to_vec().into(),
       )
     );
   }
@@ -2645,7 +2642,7 @@ mod tests {
       DataElementValue::new_long_string(&["AA", "BB"]),
       DataElementValue::new_binary(
         ValueRepresentation::LongString,
-        Rc::new(b"AA\\BB ".to_vec()),
+        b"AA\\BB ".to_vec().into(),
       )
     );
   }
@@ -2656,7 +2653,7 @@ mod tests {
       DataElementValue::new_long_text("ABC".to_string()),
       DataElementValue::new_binary(
         ValueRepresentation::LongText,
-        Rc::new(b"ABC ".to_vec()),
+        b"ABC ".to_vec().into(),
       )
     );
   }
@@ -2667,7 +2664,7 @@ mod tests {
       DataElementValue::new_other_byte_string(vec![1, 2]),
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
-        Rc::new(vec![1, 2]),
+        vec![1, 2].into(),
       )
     );
   }
@@ -2678,10 +2675,11 @@ mod tests {
       DataElementValue::new_other_double_string(&[1.2, -3.45]),
       DataElementValue::new_binary(
         ValueRepresentation::OtherDoubleString,
-        Rc::new(vec![
+        vec![
           0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0xF3, 0x3F, 0x9A, 0x99, 0x99,
           0x99, 0x99, 0x99, 0xB, 0xC0,
-        ]),
+        ]
+        .into(),
       )
     );
   }
@@ -2692,7 +2690,7 @@ mod tests {
       DataElementValue::new_other_float_string(&[1.2, -3.45]),
       DataElementValue::new_binary(
         ValueRepresentation::OtherFloatString,
-        Rc::new(vec![0x9A, 0x99, 0x99, 0x3F, 0xCD, 0xCC, 0x5C, 0xC0]),
+        vec![0x9A, 0x99, 0x99, 0x3F, 0xCD, 0xCC, 0x5C, 0xC0].into(),
       )
     );
   }
@@ -2712,7 +2710,7 @@ mod tests {
       DataElementValue::new_other_long_string(vec![0, 1, 2, 3]),
       DataElementValue::new_binary(
         ValueRepresentation::OtherLongString,
-        Rc::new(vec![0, 1, 2, 3]),
+        vec![0, 1, 2, 3].into(),
       )
     );
   }
@@ -2734,7 +2732,7 @@ mod tests {
       ]),
       DataElementValue::new_binary(
         ValueRepresentation::OtherVeryLongString,
-        Rc::new(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        vec![0, 1, 2, 3, 4, 5, 6, 7].into(),
       )
     );
   }
@@ -2754,7 +2752,7 @@ mod tests {
       DataElementValue::new_other_word_string(vec![0, 1]),
       DataElementValue::new_binary(
         ValueRepresentation::OtherWordString,
-        Rc::new(vec![0, 1]),
+        vec![0, 1].into(),
       )
     );
   }
@@ -2788,7 +2786,7 @@ mod tests {
       ]),
       DataElementValue::new_binary(
         ValueRepresentation::PersonName,
-        Rc::new(b"=1^ 2^3^4^5\\==1^2^3^4^5 ".to_vec()),
+        b"=1^ 2^3^4^5\\==1^2^3^4^5 ".to_vec().into(),
       )
     );
   }
@@ -2799,7 +2797,7 @@ mod tests {
       DataElementValue::new_short_string(&[" AA ", "BB"]),
       DataElementValue::new_binary(
         ValueRepresentation::ShortString,
-        Rc::new(b"AA\\BB ".to_vec()),
+        b"AA\\BB ".to_vec().into(),
       )
     );
   }
@@ -2810,7 +2808,7 @@ mod tests {
       DataElementValue::new_short_text(" ABC "),
       DataElementValue::new_binary(
         ValueRepresentation::ShortText,
-        Rc::new(b" ABC".to_vec()),
+        b" ABC".to_vec().into(),
       )
     );
   }
@@ -2821,7 +2819,7 @@ mod tests {
       DataElementValue::new_signed_long(&[2_000_000_000, -2_000_000_000]),
       DataElementValue::new_binary(
         ValueRepresentation::SignedLong,
-        Rc::new(vec![0x00, 0x94, 0x35, 0x77, 0x00, 0x6C, 0xCA, 0x88])
+        vec![0x00, 0x94, 0x35, 0x77, 0x00, 0x6C, 0xCA, 0x88].into()
       )
     );
   }
@@ -2832,7 +2830,7 @@ mod tests {
       DataElementValue::new_signed_short(&[10_000, -10_000]),
       DataElementValue::new_binary(
         ValueRepresentation::SignedShort,
-        Rc::new(vec![0x10, 0x27, 0xF0, 0xD8])
+        vec![0x10, 0x27, 0xF0, 0xD8].into()
       )
     );
   }
@@ -2846,10 +2844,11 @@ mod tests {
       ]),
       DataElementValue::new_binary(
         ValueRepresentation::SignedVeryLong,
-        Rc::new(vec![
+        vec![
           0x00, 0x00, 0x64, 0xA7, 0xB3, 0xB6, 0xE0, 0x0D, 0x00, 0x00, 0x9C,
           0x58, 0x4C, 0x49, 0x1F, 0xF2,
-        ])
+        ]
+        .into()
       )
     );
   }
@@ -2864,7 +2863,7 @@ mod tests {
       }),
       DataElementValue::new_binary(
         ValueRepresentation::Time,
-        Rc::new(b"224514".to_vec()),
+        b"224514".to_vec().into(),
       )
     );
   }
@@ -2875,7 +2874,7 @@ mod tests {
       DataElementValue::new_unique_identifier(&["1.2", "3.4"]),
       DataElementValue::new_binary(
         ValueRepresentation::UniqueIdentifier,
-        Rc::new(b"1.2\\3.4\0".to_vec()),
+        b"1.2\\3.4\0".to_vec().into(),
       )
     );
   }
@@ -2886,7 +2885,7 @@ mod tests {
       DataElementValue::new_universal_resource_identifier("http;//test.com  "),
       DataElementValue::new_binary(
         ValueRepresentation::UniversalResourceIdentifier,
-        Rc::new(b"http;//test.com ".to_vec()),
+        b"http;//test.com ".to_vec().into(),
       )
     );
   }
@@ -2897,7 +2896,7 @@ mod tests {
       DataElementValue::new_unknown(vec![1, 2]),
       DataElementValue::new_binary(
         ValueRepresentation::Unknown,
-        Rc::new(vec![1, 2]),
+        vec![1, 2].into(),
       )
     );
   }
@@ -2908,7 +2907,7 @@ mod tests {
       DataElementValue::new_unlimited_characters(&[" ABCD "]),
       DataElementValue::new_binary(
         ValueRepresentation::UnlimitedCharacters,
-        Rc::new(b" ABCD ".to_vec()),
+        b" ABCD ".to_vec().into(),
       )
     );
   }
@@ -2919,7 +2918,7 @@ mod tests {
       DataElementValue::new_unlimited_text(" ABC "),
       DataElementValue::new_binary(
         ValueRepresentation::UnlimitedText,
-        Rc::new(b" ABC".to_vec()),
+        b" ABC".to_vec().into(),
       )
     );
   }
@@ -2930,7 +2929,7 @@ mod tests {
       DataElementValue::new_unsigned_long(&[4_000_000_000]),
       DataElementValue::new_binary(
         ValueRepresentation::UnsignedLong,
-        Rc::new(vec![0x00, 0x28, 0x6B, 0xEE])
+        vec![0x00, 0x28, 0x6B, 0xEE].into()
       )
     );
   }
@@ -2941,7 +2940,7 @@ mod tests {
       DataElementValue::new_unsigned_short(&[50_000]),
       DataElementValue::new_binary(
         ValueRepresentation::UnsignedShort,
-        Rc::new(vec![80, 195])
+        vec![80, 195].into()
       )
     );
   }
@@ -2952,7 +2951,7 @@ mod tests {
       DataElementValue::new_unsigned_very_long(&[10_000_000_000_000_000_000]),
       DataElementValue::new_binary(
         ValueRepresentation::UnsignedVeryLong,
-        Rc::new(vec![0x00, 0x00, 0xE8, 0x89, 0x04, 0x23, 0xC7, 0x8A])
+        vec![0x00, 0x00, 0xE8, 0x89, 0x04, 0x23, 0xC7, 0x8A].into()
       )
     );
   }

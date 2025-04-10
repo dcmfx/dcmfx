@@ -35,7 +35,9 @@ use alloc::{
 };
 
 use dcmfx_character_set::{self, SpecificCharacterSet, StringType};
-use dcmfx_core::{DataElementTag, ValueRepresentation, dictionary, utils};
+use dcmfx_core::{
+  DataElementTag, RcByteSlice, ValueRepresentation, dictionary, utils,
+};
 
 use crate::{P10Error, P10Token, internal::value_length::ValueLength};
 
@@ -435,13 +437,14 @@ impl P10Location {
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
-    value_bytes: &mut Vec<u8>,
+    value_bytes: &mut RcByteSlice,
   ) -> Result<(), P10Error> {
     if tag == dictionary::SPECIFIC_CHARACTER_SET.tag {
       self
         .update_specific_character_set_clarifying_data_element(value_bytes)?;
     } else if vr == ValueRepresentation::UnsignedShort {
-      if let Ok(u) = TryInto::<[u8; 2]>::try_into(value_bytes.as_slice()) {
+      let value_bytes: &[u8] = value_bytes;
+      if let Ok(u) = TryInto::<[u8; 2]>::try_into(value_bytes) {
         self.update_unsigned_short_clarifying_data_element(
           tag,
           u16::from_le_bytes(u),
@@ -457,7 +460,7 @@ impl P10Location {
 
   fn update_specific_character_set_clarifying_data_element(
     &mut self,
-    value_bytes: &mut Vec<u8>,
+    value_bytes: &mut RcByteSlice,
   ) -> Result<(), P10Error> {
     let specific_character_set =
       core::str::from_utf8(value_bytes).map_err(|_| {
@@ -478,8 +481,7 @@ impl P10Location {
       details: "".to_string(),
     })?;
 
-    value_bytes.clear();
-    value_bytes.extend_from_slice(b"ISO_IR 192");
+    *value_bytes = b"ISO_IR 192".to_vec().into();
 
     Ok(())
   }

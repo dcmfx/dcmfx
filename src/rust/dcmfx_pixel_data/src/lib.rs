@@ -266,14 +266,13 @@ pub fn file_extension_for_transfer_syntax(ts: &TransferSyntax) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-  #[cfg(feature = "std")]
-  use std::rc::Rc;
-
   #[cfg(not(feature = "std"))]
-  use alloc::{rc::Rc, string::ToString};
+  use alloc::string::ToString;
 
   use super::*;
-  use dcmfx_core::{DataElementValue, ValueRepresentation, dictionary};
+  use dcmfx_core::{
+    DataElementValue, RcByteSlice, ValueRepresentation, dictionary,
+  };
 
   #[test]
   fn read_native_empty_frame() {
@@ -286,7 +285,7 @@ mod tests {
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
-        Rc::new(vec![]),
+        RcByteSlice::empty(),
       )
       .unwrap(),
     );
@@ -305,7 +304,7 @@ mod tests {
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
-        Rc::new(vec![1, 2, 3, 4]),
+        vec![1, 2, 3, 4].into(),
       )
       .unwrap(),
     );
@@ -329,7 +328,7 @@ mod tests {
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
-        Rc::new(vec![1, 2, 3, 4]),
+        vec![1, 2, 3, 4].into(),
       )
       .unwrap(),
     );
@@ -356,10 +355,11 @@ mod tests {
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
-        Rc::new(vec![
+        vec![
           0b00110001, 0b00011011, 0b10100011, 0b01100101, 0b00010101,
           0b00000110,
-        ]),
+        ]
+        .into(),
       )
       .unwrap(),
     );
@@ -387,7 +387,7 @@ mod tests {
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
-        Rc::new(vec![0b01010001, 0b00001101]),
+        vec![0b01010001, 0b00001101].into(),
       )
       .unwrap(),
     );
@@ -418,7 +418,7 @@ mod tests {
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
-        Rc::new(vec![1, 2, 3, 4]),
+        vec![1, 2, 3, 4].into(),
       )
       .unwrap(),
     );
@@ -486,10 +486,10 @@ mod tests {
       DataElementValue::new_encapsulated_pixel_data(
         ValueRepresentation::OtherByteString,
         vec![
-          Rc::new(vec![0, 0, 0, 0, 0x46, 0x06, 0, 0]),
-          Rc::new("1".repeat(0x2C8).as_bytes().to_vec()),
-          Rc::new("2".repeat(0x36E).as_bytes().to_vec()),
-          Rc::new("3".repeat(0xBC8).as_bytes().to_vec()),
+          vec![0, 0, 0, 0, 0x46, 0x06, 0, 0].into(),
+          "1".repeat(0x2C8).as_bytes().to_vec().into(),
+          "2".repeat(0x36E).as_bytes().to_vec().into(),
+          "3".repeat(0xBC8).as_bytes().to_vec().into(),
         ],
       )
       .unwrap(),
@@ -518,10 +518,11 @@ mod tests {
       dictionary::EXTENDED_OFFSET_TABLE.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherVeryLongString,
-        Rc::new(vec![
+        vec![
           0, 0, 0, 0, 0, 0, 0, 0, 206, 4, 0, 0, 0, 0, 0, 0, 32, 7, 0, 0, 0, 0,
           0, 0,
-        ]),
+        ]
+        .into(),
       )
       .unwrap(),
     );
@@ -529,10 +530,11 @@ mod tests {
       dictionary::EXTENDED_OFFSET_TABLE_LENGTHS.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherVeryLongString,
-        Rc::new(vec![
+        vec![
           198, 4, 0, 0, 0, 0, 0, 0, 74, 2, 0, 0, 0, 0, 0, 0, 39, 6, 0, 0, 0, 0,
           0, 0,
-        ]),
+        ]
+        .into(),
       )
       .unwrap(),
     );
@@ -563,7 +565,7 @@ mod tests {
     let mut frame = PixelDataFrame::new(0);
 
     for fragment in fragments.iter() {
-      frame.push_fragment(Rc::new(fragment.to_vec()), 0..fragment.len());
+      frame.push_fragment(fragment.to_vec().into());
     }
 
     frame
@@ -580,10 +582,10 @@ mod tests {
       DataElementValue::new_encapsulated_pixel_data(
         ValueRepresentation::OtherByteString,
         vec![
-          Rc::new(vec![]),
-          Rc::new("1".repeat(0x4C6).as_bytes().to_vec()),
-          Rc::new("2".repeat(0x24A).as_bytes().to_vec()),
-          Rc::new("3".repeat(0x628).as_bytes().to_vec()),
+          RcByteSlice::empty(),
+          "1".repeat(0x4C6).as_bytes().to_vec().into(),
+          "2".repeat(0x24A).as_bytes().to_vec().into(),
+          "3".repeat(0x628).as_bytes().to_vec().into(),
         ],
       )
       .unwrap(),

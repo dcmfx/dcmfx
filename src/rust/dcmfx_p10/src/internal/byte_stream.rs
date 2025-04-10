@@ -4,6 +4,8 @@ use std::collections::VecDeque;
 #[cfg(not(feature = "std"))]
 use alloc::{collections::VecDeque, vec, vec::Vec};
 
+use dcmfx_core::RcByteSlice;
+
 /// A byte stream that takes incoming chunks of binary data of any size and
 /// allows the resulting data to to read and peeked as if it were one large
 /// stream of bytes.
@@ -13,19 +15,13 @@ use alloc::{collections::VecDeque, vec, vec::Vec};
 ///
 #[derive(Debug)]
 pub struct ByteStream {
-  bytes_queue: VecDeque<QueueItem>,
+  bytes_queue: VecDeque<RcByteSlice>,
   bytes_queue_size: u64,
   bytes_read: u64,
   is_writing_finished: bool,
   zlib_stream: Option<flate2::Decompress>,
-  zlib_input_queue: VecDeque<QueueItem>,
+  zlib_input_queue: VecDeque<RcByteSlice>,
   zlib_inflate_complete: bool,
-}
-
-#[derive(Debug)]
-struct QueueItem {
-  data: Vec<u8>,
-  bytes_read: usize,
 }
 
 #[derive(Debug)]
@@ -92,7 +88,7 @@ impl ByteStream {
   ///
   pub fn write(
     &mut self,
-    data: Vec<u8>,
+    data: RcByteSlice,
     done: bool,
   ) -> Result<(), ByteStreamError> {
     if self.is_writing_finished {
@@ -107,17 +103,11 @@ impl ByteStream {
 
     // If zlib inflate is active then add the bytes to the zlib input queue
     if self.zlib_stream.is_some() {
-      self.zlib_input_queue.push_back(QueueItem {
-        data,
-        bytes_read: 0,
-      });
+      self.zlib_input_queue.push_back(data);
     } else {
       // Add the new bytes to the back of the output queue
       self.bytes_queue_size += data.len() as u64;
-      self.bytes_queue.push_back(QueueItem {
-        data,
-        bytes_read: 0,
-      });
+      self.bytes_queue.push_back(data);
     };
 
     Ok(())
@@ -128,9 +118,9 @@ impl ByteStream {
   pub fn read(
     &mut self,
     byte_count: usize,
-  ) -> Result<Vec<u8>, ByteStreamError> {
+  ) -> Result<RcByteSlice, ByteStreamError> {
     if byte_count == 0 {
-      return Ok(vec![]);
+      return Ok(RcByteSlice::empty());
     }
 
     self.inflate_up_to_read_size(byte_count)?;
@@ -144,33 +134,45 @@ impl ByteStream {
       }
     }
 
-    let mut result = Vec::with_capacity(byte_count);
-
-    while result.len() < byte_count {
-      let queue_item = self.bytes_queue.front_mut().unwrap();
-
-      // Slice off the required amount and copy into the final result
-      let start = queue_item.bytes_read;
-      let end = start
-        + core::cmp::min(
-          queue_item.data.len() - start,
-          byte_count - result.len(),
-        );
-      result.extend_from_slice(&queue_item.data[start..end]);
-
-      queue_item.bytes_read += end - start;
-
-      // If only part of the chunk was consumed then push the remainder back
-      // onto the front of the queue
-      if queue_item.bytes_read == queue_item.data.len() {
-        self.bytes_queue.pop_front();
-      }
-    }
-
     self.bytes_queue_size -= byte_count as u64;
     self.bytes_read += byte_count as u64;
 
-    Ok(result)
+    match byte_count.cmp(&self.bytes_queue.front().unwrap().len()) {
+      // Return a byte slice inside the first queue item if possible
+      core::cmp::Ordering::Less => {
+        let result = self.bytes_queue.front().unwrap().take(byte_count);
+
+        let queue_item = self.bytes_queue.front_mut().unwrap();
+        *queue_item = queue_item.drop(byte_count);
+
+        Ok(result)
+      }
+
+      core::cmp::Ordering::Equal => Ok(self.bytes_queue.pop_front().unwrap()),
+
+      // The read request spans multiple queue items, so a new buffer has to be
+      // allocated
+      core::cmp::Ordering::Greater => {
+        let mut result = Vec::with_capacity(byte_count);
+
+        while result.len() < byte_count {
+          let queue_item = self.bytes_queue.front_mut().unwrap();
+
+          // Slice off the required amount and copy into the final result
+          let end = core::cmp::min(queue_item.len(), byte_count - result.len());
+          result.extend_from_slice(&queue_item[..end]);
+
+          *queue_item = queue_item.drop(end);
+
+          // If the chunk was fully consumed then remove it from the queue
+          if queue_item.is_empty() {
+            self.bytes_queue.pop_front();
+          }
+        }
+
+        Ok(result.into())
+      }
+    }
   }
 
   /// Peeks at the next bytes that will be read out of a byte stream without
@@ -199,13 +201,8 @@ impl ByteStream {
 
     for queue_item in self.bytes_queue.iter() {
       // Slice off the required amount and copy into the final result
-      let start = queue_item.bytes_read;
-      let end = start
-        + core::cmp::min(
-          queue_item.data.len() - start,
-          byte_count - result.len(),
-        );
-      result.extend_from_slice(&queue_item.data[start..end]);
+      let end = core::cmp::min(queue_item.len(), byte_count - result.len());
+      result.extend_from_slice(&queue_item[..end]);
 
       if result.len() >= byte_count {
         break;
@@ -224,25 +221,9 @@ impl ByteStream {
   /// syntax.
   ///
   pub fn start_zlib_inflate(&mut self) -> Result<(), ByteStreamError> {
-    // Store all current bytes so they can be re-written as zlib bytes
-    let bytes_queue: Vec<QueueItem> = self.bytes_queue.drain(..).collect();
-    let is_writing_finished = self.is_writing_finished;
-
-    // Clear byte stream and update it to have an active zlib decompression
-    // stream
-    self.bytes_queue = VecDeque::new();
-    self.bytes_queue_size = 0;
-    self.is_writing_finished = false;
     self.zlib_stream = Some(flate2::Decompress::new(false));
-
-    // Rewrite existing bytes to the stream so they'll be interpreted as
-    // deflated data and inflated
-    for queue_item in bytes_queue.into_iter() {
-      self.write(
-        queue_item.data[queue_item.bytes_read..].to_vec(),
-        is_writing_finished,
-      )?;
-    }
+    self.zlib_input_queue.append(&mut self.bytes_queue);
+    self.bytes_queue_size = 0;
 
     Ok(())
   }
@@ -276,10 +257,8 @@ impl ByteStream {
 
       let mut output_buffer = vec![0u8; ZLIB_INFLATE_CHUNK_SIZE];
 
-      let input_slice = &queue_item.data[queue_item.bytes_read..];
-
       match zlib_stream.decompress(
-        input_slice,
+        &queue_item,
         &mut output_buffer,
         flate2::FlushDecompress::None,
       ) {
@@ -290,20 +269,16 @@ impl ByteStream {
           // If not all the supplied input bytes were consumed, e.g. because
           // they result in more data than can be held in the output buffer,
           // then keep the remaining bytes for the next decompression call
-          if bytes_consumed < input_slice.len() as u64 {
-            self.zlib_input_queue.push_front(QueueItem {
-              data: queue_item.data,
-              bytes_read: queue_item.bytes_read + bytes_consumed as usize,
-            });
+          if bytes_consumed < queue_item.len() as u64 {
+            self
+              .zlib_input_queue
+              .push_front(queue_item.drop(bytes_consumed as usize));
           }
 
           // Put any inflated bytes onto the bytes queue
           if bytes_produced > 0 {
             output_buffer.resize(bytes_produced as usize, 0);
-            self.bytes_queue.push_back(QueueItem {
-              data: output_buffer,
-              bytes_read: 0,
-            });
+            self.bytes_queue.push_back(output_buffer.into());
             self.bytes_queue_size += bytes_produced;
           }
 

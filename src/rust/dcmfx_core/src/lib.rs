@@ -37,5 +37,6 @@ pub use data_set_path::DataSetPath;
 pub use error::DcmfxError;
 pub use iod_module::IodModule;
 pub use transfer_syntax::TransferSyntax;
+pub use utils::RcByteSlice;
 pub use value_multiplicity::ValueMultiplicity;
 pub use value_representation::ValueRepresentation;

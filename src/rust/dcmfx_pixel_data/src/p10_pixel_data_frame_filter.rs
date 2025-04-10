@@ -1,18 +1,18 @@
 //! Extracts frames of pixel data from a stream of DICOM P10 tokens.
 
 #[cfg(feature = "std")]
-use std::{collections::VecDeque, rc::Rc};
+use std::collections::VecDeque;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
-  boxed::Box, collections::VecDeque, format, rc::Rc, string::ToString, vec,
-  vec::Vec,
+  boxed::Box, collections::VecDeque, format, string::ToString, vec, vec::Vec,
 };
 
 use byteorder::ByteOrder;
 
 use dcmfx_core::{
-  DataElementValue, DataError, DataSet, ValueRepresentation, dictionary,
+  DataElementValue, DataError, DataSet, RcByteSlice, ValueRepresentation,
+  dictionary,
 };
 use dcmfx_p10::{
   P10CustomTypeTransform, P10CustomTypeTransformError, P10Error,
@@ -44,7 +44,7 @@ pub struct P10PixelDataFrameFilter {
   // second value is an offset into the Vec<u8> where the un-emitted frame data
   // begins, which is only used for native pixel data and not for encapsulated
   // pixel data.
-  pixel_data: VecDeque<(Rc<Vec<u8>>, usize)>,
+  pixel_data: VecDeque<(RcByteSlice, usize)>,
 
   pixel_data_write_offset: u64,
   pixel_data_read_offset: u64,
@@ -239,7 +239,7 @@ impl P10PixelDataFrameFilter {
         if !self.pixel_data.is_empty() {
           let mut frame = PixelDataFrame::new(self.next_frame_index);
           for item in self.pixel_data.iter() {
-            frame.push_fragment(item.0.clone(), 0..item.0.len());
+            frame.push_fragment(item.0.clone());
           }
 
           // If this frame has a length specified then apply it
@@ -322,7 +322,7 @@ impl P10PixelDataFrameFilter {
         // to the frame
         if chunk.len() * 8 - chunk_offset <= frame_size - frame.length_in_bits()
         {
-          frame.push_fragment(chunk.clone(), (chunk_offset / 8)..chunk.len());
+          frame.push_fragment(chunk.drop(chunk_offset / 8));
           self.pixel_data_read_offset +=
             (chunk.len() * 8 - chunk_offset) as u64;
         }
@@ -330,10 +330,10 @@ impl P10PixelDataFrameFilter {
         // the frame
         else {
           let length_in_bits = frame_size - frame.length_in_bits();
-          frame.push_fragment(
-            chunk.clone(),
-            (chunk_offset / 8)..(chunk_offset + length_in_bits).div_ceil(8),
-          );
+          frame.push_fragment(chunk.slice(
+            chunk_offset / 8,
+            (chunk_offset + length_in_bits).div_ceil(8),
+          ));
 
           // Put the unused part of the chunk back on so it can be used by the
           // next frame
@@ -386,7 +386,7 @@ impl P10PixelDataFrameFilter {
             self.next_frame_index += 1;
 
             for (chunk, _) in self.pixel_data.iter() {
-              frame.push_fragment(chunk.clone(), 0..chunk.len());
+              frame.push_fragment(chunk.clone());
             }
 
             frames.push(frame);
@@ -405,9 +405,8 @@ impl P10PixelDataFrameFilter {
 
             while self.pixel_data_read_offset < offset * 8 {
               if let Some((chunk, _)) = self.pixel_data.pop_front() {
-                let chunk_len = chunk.len();
-                frame.push_fragment(chunk, 0..chunk_len);
-                self.pixel_data_read_offset += (8 + chunk_len as u64) * 8;
+                frame.push_fragment(chunk.clone());
+                self.pixel_data_read_offset += (8 + chunk.len() as u64) * 8;
               } else {
                 break;
               }
@@ -525,7 +524,7 @@ impl P10PixelDataFrameFilter {
         let mut extended_offset_table =
           vec![0u64; extended_offset_table_bytes.len() / 8];
         byteorder::LittleEndian::read_u64_into(
-          extended_offset_table_bytes.as_slice(),
+          extended_offset_table_bytes,
           extended_offset_table.as_mut_slice(),
         );
 
@@ -557,7 +556,7 @@ impl P10PixelDataFrameFilter {
         let mut extended_offset_table_lengths =
           vec![0u64; extended_offset_table_lengths_bytes.len() / 8];
         byteorder::LittleEndian::read_u64_into(
-          extended_offset_table_lengths_bytes.as_slice(),
+          extended_offset_table_lengths_bytes,
           extended_offset_table_lengths.as_mut_slice(),
         );
 

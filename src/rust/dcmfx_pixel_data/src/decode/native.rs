@@ -51,30 +51,30 @@ pub fn decode_single_channel(
 
             // It's possible there will be an unneeded trailing byte after
             // adjusting for the bit offset, so remove it if present
-            data.resize_with(definition.pixel_count().div_ceil(8), || 0);
+            data.resize_with(pixel_count.div_ceil(8), || 0);
           }
 
           SingleChannelImage::new_bitmap(width, height, data, is_signed)
         }
 
         (PixelRepresentation::Signed, BitsAllocated::Eight) => {
-          let mut pixels = vec![0i8; pixel_count];
+          let mut pixels = vec![0; pixel_count];
 
           if definition.has_unused_high_bits() {
-            let threshold = 2i8.pow(u32::from(definition.bits_stored()) - 1u32);
+            let threshold = 2i8.pow(u32::from(definition.bits_stored()) - 1);
 
             for i in 0..pixel_count {
-              pixels[i] = i8::from_le_bytes([data[i]]);
+              let mut pixel = data[i] as i8;
 
-              if pixels[i] >= threshold {
-                pixels[i] -= threshold;
-                pixels[i] -= threshold;
+              if pixel >= threshold {
+                pixel -= threshold;
+                pixel -= threshold;
               }
+
+              pixels[i] = pixel;
             }
           } else {
-            for i in 0..pixel_count {
-              pixels[i] = i8::from_le_bytes([data[i]]);
-            }
+            pixels.copy_from_slice(&bytemuck::cast_slice(data)[..pixel_count]);
           }
 
           SingleChannelImage::new_i8(width, height, pixels)
@@ -85,20 +85,33 @@ pub fn decode_single_channel(
         }
 
         (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
-          let mut pixels = vec![0i16; pixel_count];
+          let mut pixels = vec![0; pixel_count];
 
           if definition.has_unused_high_bits() {
             let threshold = 2i16.pow(u32::from(definition.bits_stored()) - 1);
 
             for i in 0..pixel_count {
-              pixels[i] = i16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
+              let mut pixel =
+                i16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
 
-              if pixels[i] >= threshold {
-                pixels[i] -= threshold;
-                pixels[i] -= threshold;
+              if pixel >= threshold {
+                pixel -= threshold;
+                pixel -= threshold;
               }
+
+              pixels[i] = pixel;
             }
           } else {
+            #[cfg(target_endian = "little")]
+            unsafe {
+              core::ptr::copy_nonoverlapping(
+                data.as_ptr(),
+                pixels.as_mut_ptr() as *mut u8,
+                pixels.len() * core::mem::size_of::<i16>(),
+              );
+            }
+
+            #[cfg(target_endian = "big")]
             for i in 0..pixel_count {
               pixels[i] = i16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
             }
@@ -108,8 +121,18 @@ pub fn decode_single_channel(
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
-          let mut pixels = vec![0u16; pixel_count];
+          let mut pixels = vec![0; pixel_count];
 
+          #[cfg(target_endian = "little")]
+          unsafe {
+            core::ptr::copy_nonoverlapping(
+              data.as_ptr(),
+              pixels.as_mut_ptr() as *mut u8,
+              pixels.len() * core::mem::size_of::<u16>(),
+            );
+          }
+
+          #[cfg(target_endian = "big")]
           for i in 0..pixel_count {
             pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
           }
@@ -118,25 +141,37 @@ pub fn decode_single_channel(
         }
 
         (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
-          let mut pixels = vec![0i32; pixel_count];
+          let mut pixels = vec![0; pixel_count];
 
           if definition.has_unused_high_bits() {
             let threshold = 2i32.pow(u32::from(definition.bits_stored()) - 1);
 
             for i in 0..pixel_count {
-              pixels[i] = i32::from_le_bytes([
+              let mut pixel = i32::from_le_bytes([
                 data[i * 4],
                 data[i * 4 + 1],
                 data[i * 4 + 2],
                 data[i * 4 + 3],
               ]);
 
-              if pixels[i] >= threshold {
-                pixels[i] -= threshold;
-                pixels[i] -= threshold;
+              if pixel >= threshold {
+                pixel -= threshold;
+                pixel -= threshold;
               }
+
+              pixels[i] = pixel;
             }
           } else {
+            #[cfg(target_endian = "little")]
+            unsafe {
+              core::ptr::copy_nonoverlapping(
+                data.as_ptr(),
+                pixels.as_mut_ptr() as *mut u8,
+                pixels.len() * core::mem::size_of::<i32>(),
+              );
+            }
+
+            #[cfg(target_endian = "big")]
             for i in 0..pixel_count {
               pixels[i] = i32::from_le_bytes([
                 data[i * 4],
@@ -153,6 +188,16 @@ pub fn decode_single_channel(
         (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
           let mut pixels = vec![0u32; pixel_count];
 
+          #[cfg(target_endian = "little")]
+          unsafe {
+            core::ptr::copy_nonoverlapping(
+              data.as_ptr(),
+              pixels.as_mut_ptr() as *mut u8,
+              pixels.len() * core::mem::size_of::<u32>(),
+            );
+          }
+
+          #[cfg(target_endian = "big")]
           for i in 0..pixel_count {
             pixels[i] = u32::from_le_bytes([
               data[i * 4],

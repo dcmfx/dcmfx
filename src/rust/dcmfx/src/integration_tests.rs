@@ -3,7 +3,7 @@
 mod tests {
   const RNG_SEED: u64 = 1023;
 
-  use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path, rc::Rc};
+  use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path};
 
   use either::Either;
   use rand::rngs::SmallRng;
@@ -146,7 +146,7 @@ mod tests {
           .insert_binary_value(
             tag,
             value.value_representation(),
-            Rc::new(Vec::new()),
+            RcByteSlice::empty(),
           )
           .unwrap();
       }
@@ -367,11 +367,11 @@ mod tests {
           let mut buffer = vec![0u8; next_chunk_size()];
 
           match file.read(&mut buffer).unwrap() {
-            0 => context.write_bytes(vec![], true).unwrap(),
+            0 => context.write_bytes(RcByteSlice::empty(), true).unwrap(),
 
             bytes_count => {
               buffer.resize(bytes_count, 0);
-              context.write_bytes(buffer, false).unwrap();
+              context.write_bytes(buffer.into(), false).unwrap();
             }
           }
         }

@@ -4,13 +4,10 @@
 //! syntax, but the details of how it is encoded are not a concern of
 //! [`PixelDataFrame`].
 
-#[cfg(feature = "std")]
-use std::rc::Rc;
-
 #[cfg(not(feature = "std"))]
-use alloc::{rc::Rc, vec, vec::Vec};
+use alloc::{vec, vec::Vec};
 
-use core::ops::Range;
+use dcmfx_core::RcByteSlice;
 
 /// A single frame of pixel data in its raw form. It is made up of a one or more
 /// slices into reference-counted `Vec<u8>` data, which avoids copying of data.
@@ -21,7 +18,7 @@ use core::ops::Range;
 #[derive(Clone, Debug)]
 pub struct PixelDataFrame {
   frame_index: usize,
-  fragments: Vec<(Rc<Vec<u8>>, Range<usize>)>,
+  fragments: Vec<RcByteSlice>,
   length: usize,
   bit_offset: usize,
 }
@@ -47,21 +44,9 @@ impl PixelDataFrame {
 
   /// Adds the next fragment of pixel data to this frame.
   ///
-  pub(crate) fn push_fragment(
-    &mut self,
-    data: Rc<Vec<u8>>,
-    range: Range<usize>,
-  ) {
-    if range.start > data.len() || range.end > data.len() {
-      panic!(
-        "Invalid pixel data fragment range: {:?}, length: {}",
-        range,
-        data.len()
-      );
-    }
-
-    self.length += range.len();
-    self.fragments.push((data, range));
+  pub(crate) fn push_fragment(&mut self, fragment: RcByteSlice) {
+    self.length += fragment.len();
+    self.fragments.push(fragment);
   }
 
   /// The size in bytes of this frame of pixel data.
@@ -105,12 +90,8 @@ impl PixelDataFrame {
   /// Returns the fragments of binary data that make up this frame of pixel
   /// data.
   ///
-  pub fn fragments(&self) -> Vec<&[u8]> {
-    self
-      .fragments
-      .iter()
-      .map(|fragment| &fragment.0[fragment.1.clone()])
-      .collect()
+  pub fn fragments(&self) -> &[RcByteSlice] {
+    &self.fragments
   }
 
   /// Removes `count` bytes from the end of this frame of pixel data.
@@ -122,16 +103,13 @@ impl PixelDataFrame {
     while self.len() > target_length {
       match self.fragments.pop() {
         Some(fragment) => {
-          self.length -= fragment.1.len();
+          self.length -= fragment.len();
 
           // If this frame is now too short then restore it, but with a reduced
           // range that exactly meets the target length
           if self.length < target_length {
             let fragment_length = target_length - self.length;
-            let new_fragment = (
-              fragment.0,
-              fragment.1.start..(fragment.1.start + fragment_length),
-            );
+            let new_fragment = fragment.take(fragment_length);
 
             self.fragments.push(new_fragment);
             self.length = target_length;
@@ -149,21 +127,17 @@ impl PixelDataFrame {
   /// may require copying the pixel data into a new contiguous buffer, so
   /// accessing the individual fragments is preferred when possible.
   ///
-  pub fn to_bytes(&self) -> Rc<Vec<u8>> {
-    // If there's a single fragment with all the data then return it and avoid a
-    // copy. This isn't possible when there's a non-zero bit offset.
-    if self.bit_offset == 0 {
-      if let Some(first) = self.fragments.first() {
-        if first.0.len() == self.len() && first.1.start == 0 {
-          return first.0.clone();
-        }
-      }
+  pub fn to_bytes(&self) -> RcByteSlice {
+    // If there's a single fragment then return it and avoid a copy. This isn't
+    // possible when there's a non-zero bit offset.
+    if self.bit_offset == 0 && self.fragments.len() == 1 {
+      return self.fragments[0].clone();
     }
 
     // Copy the fragments into a new buffer
     let mut buffer = Vec::with_capacity(self.len());
     for item in self.fragments.iter() {
-      buffer.extend_from_slice(&item.0[item.1.clone()]);
+      buffer.extend_from_slice(item);
     }
 
     // Correct for any bit offset by left shifting the whole buffer. This is
@@ -177,7 +151,7 @@ impl PixelDataFrame {
       }
     }
 
-    Rc::new(buffer)
+    RcByteSlice::from_vec(buffer)
   }
 
   /// If this frame of pixel data contains more than one fragment, combines them
@@ -186,17 +160,14 @@ impl PixelDataFrame {
   ///
   pub fn combine_fragments(&mut self) -> &[u8] {
     if self.fragments.is_empty() {
-      self.fragments = vec![(Rc::new(vec![]), 0..0)];
+      self.fragments = vec![RcByteSlice::empty()];
     }
 
     if self.fragments.len() > 1 {
-      let buffer = self.to_bytes();
-      let buffer_len = buffer.len();
-
-      self.fragments = vec![(buffer, 0..buffer_len)];
+      self.fragments = vec![self.to_bytes()];
     }
 
-    self.fragments()[0]
+    &self.fragments()[0]
   }
 }
 
@@ -214,47 +185,50 @@ mod tests {
   fn single_fragment_test() {
     let mut frame = PixelDataFrame::new(0);
 
-    frame.push_fragment(Rc::new(vec![0, 1, 2, 3]), 0..3);
+    frame.push_fragment(RcByteSlice::from_vec(vec![0, 1, 2, 3]).take(3));
 
     assert_eq!(frame.len(), 3);
-    assert_eq!(frame.fragments(), vec![&[0, 1, 2]]);
-    assert_eq!(frame.to_bytes(), Rc::new(vec![0, 1, 2]));
+    assert_eq!(frame.fragments(), vec![vec![0, 1, 2].into()]);
+    assert_eq!(frame.to_bytes(), vec![0, 1, 2].into());
   }
 
   #[test]
   fn multiple_fragments_test() {
     let mut frame = PixelDataFrame::new(0);
 
-    frame.push_fragment(Rc::new(vec![0, 1, 2, 3]), 0..2);
-    frame.push_fragment(Rc::new(vec![4, 5, 6, 7]), 1..3);
-    frame.push_fragment(Rc::new(vec![8, 9, 10, 11]), 2..4);
+    frame.push_fragment(RcByteSlice::from_vec(vec![0, 1, 2, 3]).take(2));
+    frame.push_fragment(RcByteSlice::from_vec(vec![4, 5, 6, 7]).slice(1, 3));
+    frame.push_fragment(RcByteSlice::from_vec(vec![8, 9, 10, 11]).drop(2));
 
     assert_eq!(frame.len(), 6);
-    assert_eq!(frame.fragments(), vec![&[0, 1], &[5, 6], &[10, 11]]);
-    assert_eq!(frame.to_bytes(), Rc::new(vec![0, 1, 5, 6, 10, 11]));
+    assert_eq!(
+      frame.fragments(),
+      vec![vec![0, 1].into(), vec![5, 6].into(), vec![10, 11].into()]
+    );
+    assert_eq!(frame.to_bytes(), vec![0, 1, 5, 6, 10, 11].into());
   }
 
   #[test]
   fn drop_end_bytes_test() {
     let mut frame = PixelDataFrame::new(0);
-    frame.push_fragment(Rc::new(vec![0, 1, 2, 3, 4]), 0..5);
+    frame.push_fragment(vec![0, 1, 2, 3, 4].into());
 
     frame.drop_end_bytes(2);
-    assert_eq!(frame.to_bytes(), Rc::new(vec![0, 1, 2]));
+    assert_eq!(frame.to_bytes(), vec![0, 1, 2].into());
 
     let mut frame = PixelDataFrame::new(0);
-    frame.push_fragment(Rc::new(vec![0, 0, 1, 1]), 1..3);
-    frame.push_fragment(Rc::new(vec![2, 3]), 0..2);
+    frame.push_fragment(RcByteSlice::from_vec(vec![0, 0, 1, 1]).slice(1, 3));
+    frame.push_fragment(vec![2, 3].into());
 
     frame.drop_end_bytes(1);
-    assert_eq!(frame.to_bytes(), Rc::new(vec![0, 1, 2]));
+    assert_eq!(frame.to_bytes(), vec![0, 1, 2].into());
 
     let mut frame = PixelDataFrame::new(0);
-    frame.push_fragment(Rc::new(vec![0, 1]), 0..2);
-    frame.push_fragment(Rc::new(vec![2, 3]), 0..2);
-    frame.push_fragment(Rc::new(vec![4, 5]), 0..2);
+    frame.push_fragment(vec![0, 1].into());
+    frame.push_fragment(vec![2, 3].into());
+    frame.push_fragment(vec![4, 5].into());
 
     frame.drop_end_bytes(2);
-    assert_eq!(frame.to_bytes(), Rc::new(vec![0, 1, 2, 3]));
+    assert_eq!(frame.to_bytes(), vec![0, 1, 2, 3].into());
   }
 }

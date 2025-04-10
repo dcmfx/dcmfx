@@ -124,14 +124,8 @@ impl DataSetJsonExtensions for DataSet {
 
 #[cfg(test)]
 mod tests {
-  #[cfg(feature = "std")]
-  use std::rc::Rc;
-
-  #[cfg(not(feature = "std"))]
-  use alloc::{rc::Rc, vec};
-
   use dcmfx_core::{
-    DataElementTag, DataElementValue, PersonNameComponents,
+    DataElementTag, DataElementValue, PersonNameComponents, RcByteSlice,
     StructuredPersonName, ValueRepresentation, dictionary, transfer_syntax,
   };
 
@@ -260,7 +254,7 @@ mod tests {
             dictionary::PIXEL_DATA.tag,
             DataElementValue::new_encapsulated_pixel_data(
               ValueRepresentation::OtherByteString,
-              vec![Rc::new(vec![]), Rc::new(vec![1, 2])],
+              vec![RcByteSlice::empty(), vec![1, 2].into()],
             )
             .unwrap(),
           ),

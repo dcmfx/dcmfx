@@ -267,12 +267,6 @@ impl LookupTable {
 mod tests {
   use super::*;
 
-  #[cfg(feature = "std")]
-  use std::rc::Rc;
-
-  #[cfg(not(feature = "std"))]
-  use alloc::rc::Rc;
-
   use dcmfx_core::{DataElementValue, ValueRepresentation, dictionary};
 
   #[test]
@@ -282,7 +276,7 @@ mod tests {
       dictionary::LUT_DESCRIPTOR.tag,
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::SignedShort,
-        Rc::new(vec![4, 0, 255, 255, 16, 0]),
+        vec![4, 0, 255, 255, 16, 0].into(),
       ),
     );
     ds.insert(
@@ -313,7 +307,7 @@ mod tests {
       dictionary::LUT_DESCRIPTOR.tag,
       DataElementValue::new_lookup_table_descriptor_unchecked(
         ValueRepresentation::SignedShort,
-        Rc::new(vec![0, 1, 0, 0, 16, 0]),
+        vec![0, 1, 0, 0, 16, 0].into(),
       ),
     );
     ds.insert(

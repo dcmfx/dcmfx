@@ -114,18 +114,12 @@ impl P10InsertTransform {
 
 #[cfg(test)]
 mod tests {
-  #[cfg(feature = "std")]
-  use std::rc::Rc;
-
-  #[cfg(not(feature = "std"))]
-  use alloc::{format, rc::Rc};
-
-  use dcmfx_core::value_representation::ValueRepresentation;
-
   use super::*;
 
   #[cfg(not(feature = "std"))]
   use alloc::string::ToString;
+
+  use dcmfx_core::ValueRepresentation;
 
   #[test]
   fn add_tokens_test() {
@@ -201,7 +195,7 @@ mod tests {
       P10Token::DataElementValueBytes {
         tag,
         vr: ValueRepresentation::LongText,
-        data: Rc::new(value_bytes),
+        data: value_bytes.into(),
         bytes_remaining: 0,
       },
     ]

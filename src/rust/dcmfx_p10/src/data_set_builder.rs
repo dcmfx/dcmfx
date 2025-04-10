@@ -4,21 +4,18 @@
 //! Most commonly the stream of DICOM P10 tokens originates from reading raw
 //! DICOM P10 data with the [`crate::p10_read`] module.
 
-#[cfg(feature = "std")]
-use std::rc::Rc;
-
 #[cfg(not(feature = "std"))]
 use alloc::{
   boxed::Box,
   format,
-  rc::Rc,
   string::{String, ToString},
   vec,
   vec::Vec,
 };
 
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataSet, ValueRepresentation, dictionary,
+  DataElementTag, DataElementValue, DataSet, RcByteSlice, ValueRepresentation,
+  dictionary,
 };
 
 use crate::{P10Error, P10Token};
@@ -52,7 +49,7 @@ enum BuilderLocation {
   },
   EncapsulatedPixelDataSequence {
     vr: ValueRepresentation,
-    items: Vec<Rc<Vec<u8>>>,
+    items: Vec<RcByteSlice>,
   },
 }
 
@@ -64,7 +61,7 @@ enum BuilderLocation {
 struct PendingDataElement {
   tag: DataElementTag,
   vr: ValueRepresentation,
-  data: Vec<Rc<Vec<u8>>>,
+  data: Vec<RcByteSlice>,
 }
 
 impl Default for DataSetBuilder {
@@ -486,18 +483,23 @@ impl DataSetBuilder {
 fn build_final_data_element_value(
   tag: DataElementTag,
   vr: ValueRepresentation,
-  value_bytes: &[Rc<Vec<u8>>],
+  value_bytes: &[RcByteSlice],
 ) -> DataElementValue {
-  let value_length = value_bytes.iter().fold(0, |s, v| s + v.len());
-  let mut bytes = Vec::with_capacity(value_length);
+  let bytes = match value_bytes {
+    [data] => data.clone(),
+    _ => {
+      let value_length = value_bytes.iter().fold(0, |s, v| s + v.len());
+      let mut bytes = Vec::with_capacity(value_length);
 
-  // Concatenate all received bytes to get the bytes that are the final bytes
-  // for the data element value
-  for data in value_bytes.iter() {
-    bytes.extend_from_slice(data);
-  }
+      // Concatenate all received bytes to get the bytes that are the final bytes
+      // for the data element value
+      for data in value_bytes.iter() {
+        bytes.extend_from_slice(data);
+      }
 
-  let bytes = Rc::new(bytes);
+      bytes.into()
+    }
+  };
 
   // Lookup table descriptors are a special case due to the non-standard way
   // their VR applies to their underlying bytes

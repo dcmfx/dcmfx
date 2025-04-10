@@ -2,12 +2,11 @@
 //! stream of DICOM JSON data.
 
 #[cfg(feature = "std")]
-use std::{io::Write, rc::Rc};
+use std::io::Write;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
   format,
-  rc::Rc,
   string::{String, ToString},
   vec,
   vec::Vec,
@@ -17,7 +16,7 @@ use base64::prelude::*;
 
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataError, DataSet, DataSetPath,
-  ValueRepresentation, dictionary,
+  RcByteSlice, ValueRepresentation, dictionary,
 };
 use dcmfx_p10::{P10Error, P10Token};
 
@@ -35,7 +34,7 @@ pub struct P10JsonTransform {
   insert_comma: bool,
 
   /// The data element that value bytes are currently being gathered for.
-  current_data_element: (DataElementTag, Vec<Rc<Vec<u8>>>),
+  current_data_element: (DataElementTag, Vec<RcByteSlice>),
 
   /// Whether to ignore DataElementValueBytes tokens when they're received. This
   /// is used to stop certain data elements being included in the JSON.
@@ -351,7 +350,7 @@ impl P10JsonTransform {
   fn write_data_element_value_bytes(
     &mut self,
     vr: ValueRepresentation,
-    data: &Rc<Vec<u8>>,
+    data: &RcByteSlice,
     bytes_remaining: u32,
     stream: &mut crate::IoWrite,
   ) -> Result<(), JsonSerializeError> {
@@ -422,13 +421,13 @@ impl P10JsonTransform {
         bytes.extend_from_slice(chunk);
       }
 
-      Rc::new(bytes)
+      bytes.into()
     };
 
     let value = DataElementValue::new_binary_unchecked(vr, bytes.clone());
 
     let json_values = self
-      .convert_binary_value_to_json(&value, bytes)
+      .convert_binary_value_to_json(&value, bytes.into_vec())
       .map_err(|e| {
         JsonSerializeError::DataError(e.with_path(&self.data_set_path))
       })?;
@@ -703,7 +702,7 @@ impl P10JsonTransform {
   fn convert_binary_value_to_json(
     &self,
     value: &DataElementValue,
-    bytes: Rc<Vec<u8>>,
+    bytes: Vec<u8>,
   ) -> Result<Vec<String>, DataError> {
     match value.value_representation() {
       // AttributeTag value representation

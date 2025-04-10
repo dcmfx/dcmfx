@@ -1,14 +1,11 @@
-#[cfg(feature = "std")]
-use std::rc::Rc;
-
 #[cfg(not(feature = "std"))]
 use alloc::{
-  boxed::Box, format, rc::Rc, string::String, string::ToString, vec, vec::Vec,
+  boxed::Box, format, string::String, string::ToString, vec, vec::Vec,
 };
 
 use dcmfx_core::{
-  DataElementTag, DataError, DataSet, DataSetPath, ValueRepresentation,
-  dictionary,
+  DataElementTag, DataError, DataSet, DataSetPath, RcByteSlice,
+  ValueRepresentation, dictionary,
 };
 use dcmfx_p10::{P10CustomTypeTransform, PredicateFunction};
 
@@ -195,7 +192,7 @@ pub struct Overlay {
   columns: u16,
   overlay_type: OverlayType,
   origin: [i32; 2],
-  data: Rc<Vec<u8>>,
+  data: RcByteSlice,
   description: Option<String>,
   subtype: Option<OverlaySubtype>,
   label: Option<String>,

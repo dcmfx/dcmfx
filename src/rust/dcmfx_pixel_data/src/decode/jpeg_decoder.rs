@@ -4,8 +4,6 @@ use alloc::{format, string::ToString, vec::Vec};
 use crate::{ColorImage, ColorSpace, PixelDataDefinition, SingleChannelImage};
 use dcmfx_core::DataError;
 
-use super::vec_cast;
-
 /// Decodes single channel pixel data using jpeg-decoder.
 ///
 pub fn decode_single_channel(
@@ -20,7 +18,7 @@ pub fn decode_single_channel(
   if pixel_format == jpeg_decoder::PixelFormat::L8 {
     SingleChannelImage::new_u8(width, height, pixels)
   } else if pixel_format == jpeg_decoder::PixelFormat::L16 {
-    let data = unsafe { vec_cast::<u8, u16>(pixels) };
+    let data = bytemuck::cast_slice(&pixels).to_vec();
     SingleChannelImage::new_u16(width, height, data)
   } else {
     Err(DataError::new_value_invalid(format!(

@@ -1,20 +1,17 @@
 //! Defines the various tokens of a DICOM P10 that are read out of raw DICOM P10
 //! data by the `p10_read` module.
 
-#[cfg(feature = "std")]
-use std::rc::Rc;
-
 #[cfg(not(feature = "std"))]
 use alloc::{
   boxed::Box,
   format,
-  rc::Rc,
   string::{String, ToString},
   vec::Vec,
 };
 
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataSet, ValueRepresentation, dictionary,
+  DataElementTag, DataElementValue, DataSet, RcByteSlice, ValueRepresentation,
+  dictionary,
 };
 
 use crate::internal::{
@@ -57,7 +54,7 @@ pub enum P10Token {
   DataElementValueBytes {
     tag: DataElementTag,
     vr: ValueRepresentation,
-    data: Rc<Vec<u8>>,
+    data: RcByteSlice,
     bytes_remaining: u32,
   },
 

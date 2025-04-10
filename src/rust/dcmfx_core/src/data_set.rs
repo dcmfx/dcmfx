@@ -4,16 +4,12 @@
 pub mod print;
 
 #[cfg(feature = "std")]
-use std::{
-  collections::{BTreeMap, btree_map},
-  rc::Rc,
-};
+use std::collections::{BTreeMap, btree_map};
 
 #[cfg(not(feature = "std"))]
 use alloc::{
   collections::{BTreeMap, btree_map},
   format,
-  rc::Rc,
   string::{String, ToString},
   vec::Vec,
 };
@@ -24,7 +20,8 @@ use crate::data_element_value::{
 use crate::data_set_path::DataSetPathEntry;
 use crate::{
   DataElementTag, DataElementValue, DataError, DataSetPath,
-  DataSetPrintOptions, TransferSyntax, ValueRepresentation, dictionary,
+  DataSetPrintOptions, RcByteSlice, TransferSyntax, ValueRepresentation,
+  dictionary,
 };
 
 /// A DICOM data set that is a mapping of data element tags to data element
@@ -125,7 +122,7 @@ impl DataSet {
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
-    bytes: Rc<Vec<u8>>,
+    bytes: RcByteSlice,
   ) -> Result<(), DataError> {
     self.insert(tag, DataElementValue::new_binary(vr, bytes)?);
 
@@ -690,7 +687,7 @@ impl DataSet {
   pub fn get_value_bytes(
     &self,
     tag: DataElementTag,
-  ) -> Result<&Rc<Vec<u8>>, DataError> {
+  ) -> Result<&RcByteSlice, DataError> {
     self
       .get_value(tag)?
       .bytes()
@@ -706,7 +703,7 @@ impl DataSet {
     &self,
     tag: DataElementTag,
     allowed_vrs: &[ValueRepresentation],
-  ) -> Result<&Rc<Vec<u8>>, DataError> {
+  ) -> Result<&RcByteSlice, DataError> {
     self
       .get_value(tag)?
       .vr_bytes(allowed_vrs)

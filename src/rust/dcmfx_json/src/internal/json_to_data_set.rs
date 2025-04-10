@@ -1,10 +1,6 @@
-#[cfg(feature = "std")]
-use std::rc::Rc;
-
 #[cfg(not(feature = "std"))]
 use alloc::{
   format,
-  rc::Rc,
   string::{String, ToString},
   vec,
   vec::Vec,
@@ -14,8 +10,8 @@ use base64::prelude::*;
 use byteorder::ByteOrder;
 
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataSet, DataSetPath, TransferSyntax,
-  ValueRepresentation, dictionary,
+  DataElementTag, DataElementValue, DataSet, DataSetPath, RcByteSlice,
+  TransferSyntax, ValueRepresentation, dictionary,
 };
 
 use crate::json_error::JsonDeserializeError;
@@ -117,7 +113,10 @@ fn convert_json_to_data_element(
     if vr == ValueRepresentation::Sequence {
       Ok(DataElementValue::new_sequence(vec![]))
     } else {
-      Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(vec![])))
+      Ok(DataElementValue::new_binary_unchecked(
+        vr,
+        RcByteSlice::empty(),
+      ))
     }
   }
 }
@@ -212,7 +211,7 @@ fn read_dicom_json_primitive_value(
 
       vr.pad_bytes_to_even_length(&mut bytes);
 
-      Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+      Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
     }
 
     ValueRepresentation::DecimalString => {
@@ -220,7 +219,7 @@ fn read_dicom_json_primitive_value(
         let bytes =
           dcmfx_core::data_element_value::decimal_string::to_bytes(&floats);
 
-        Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+        Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
       } else {
         Err(JsonDeserializeError::JsonInvalid {
           details: "DecimalString value is invalid".to_string(),
@@ -234,7 +233,7 @@ fn read_dicom_json_primitive_value(
         let bytes =
           dcmfx_core::data_element_value::integer_string::to_bytes(&ints);
 
-        Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+        Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
       } else {
         Err(JsonDeserializeError::JsonInvalid {
           details: "IntegerString value is invalid".to_string(),
@@ -252,7 +251,7 @@ fn read_dicom_json_primitive_value(
         let mut bytes = vec![0u8; ints.len() * 4];
         byteorder::LittleEndian::write_i32_into(&ints, &mut bytes);
 
-        Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+        Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
       } else {
         Err(JsonDeserializeError::JsonInvalid {
           details: "SignedLong value is invalid".to_string(),
@@ -331,7 +330,7 @@ fn read_dicom_json_primitive_value(
 
         Ok(DataElementValue::new_lookup_table_descriptor_unchecked(
           vr,
-          Rc::new(bytes),
+          bytes.into(),
         ))
       } else {
         let mut bytes = Vec::with_capacity(ints.len() * 2);
@@ -360,7 +359,7 @@ fn read_dicom_json_primitive_value(
           }
         };
 
-        Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+        Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
       }
     }
 
@@ -437,7 +436,7 @@ fn read_dicom_json_primitive_value(
         }
       }
 
-      Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+      Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
     }
 
     ValueRepresentation::UnsignedLong => {
@@ -445,7 +444,7 @@ fn read_dicom_json_primitive_value(
         let mut bytes = vec![0u8; ints.len() * 4];
         byteorder::LittleEndian::write_u32_into(&ints, &mut bytes);
 
-        Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+        Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
       } else {
         Err(JsonDeserializeError::JsonInvalid {
           details: "UnsignedLong value is invalid".to_string(),
@@ -466,7 +465,7 @@ fn read_dicom_json_primitive_value(
       let mut bytes = vec![0u8; floats.len() * 8];
       byteorder::LittleEndian::write_f64_into(&floats, &mut bytes);
 
-      Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+      Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
     }
 
     ValueRepresentation::FloatingPointSingle => {
@@ -481,7 +480,7 @@ fn read_dicom_json_primitive_value(
       let mut bytes = vec![0u8; floats.len() * 4];
       byteorder::LittleEndian::write_f32_into(&floats, &mut bytes);
 
-      Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+      Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
     }
 
     ValueRepresentation::AttributeTag => {
@@ -509,7 +508,7 @@ fn read_dicom_json_primitive_value(
         }
       }
 
-      Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+      Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
     }
 
     ValueRepresentation::Sequence => {
@@ -619,7 +618,7 @@ fn read_dicom_json_person_name_value(
 
   Ok(DataElementValue::new_binary_unchecked(
     ValueRepresentation::PersonName,
-    Rc::new(bytes),
+    bytes.into(),
   ))
 }
 
@@ -673,7 +672,7 @@ fn read_dicom_json_inline_binary_value(
       | ValueRepresentation::OtherVeryLongString
       | ValueRepresentation::OtherWordString
       | ValueRepresentation::Unknown => {
-        Ok(DataElementValue::new_binary_unchecked(vr, Rc::new(bytes)))
+        Ok(DataElementValue::new_binary_unchecked(vr, bytes.into()))
       }
 
       _ => Err(JsonDeserializeError::JsonInvalid {
@@ -712,7 +711,7 @@ fn read_encapsulated_pixel_data_items(
     }
 
     if let Some(item) = &bytes.get(8..(8 + length)) {
-      items.push(Rc::new(item.to_vec()));
+      items.push(item.to_vec().into());
     } else {
       return Err(());
     }

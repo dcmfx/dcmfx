@@ -12,6 +12,7 @@ homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
+bytemuck = "1.22.0"
 clap = { version = "4.5.35", features = ["derive", "wrap_help"] }
 dcmfx = { path = "../dcmfx", version = "0.0.0" }
 ffmpeg-next = { version = "7.1.0", default-features = false, features = [
