@@ -13,7 +13,7 @@ fn main() {
   fuzz!(|data: &[u8]| {
     // Reading P10 bytes should never panic, but a well-formed error is fine
     // because the input is being fuzzed and so may be invalid
-    if let Ok(mut data_set) = dcmfx::p10::read_bytes(data.to_vec()) {
+    if let Ok(mut data_set) = dcmfx::p10::read_bytes(data.to_vec().into()) {
       // Write the data set to a buffer
       let mut cursor = std::io::Cursor::new(vec![]);
       data_set
@@ -21,7 +21,7 @@ fn main() {
         .expect("Writing data set should succeed");
 
       // Read the written data set
-      let mut new_data_set = dcmfx::p10::read_bytes(cursor.into_inner())
+      let mut new_data_set = dcmfx::p10::read_bytes(cursor.into_inner().into())
         .expect("Reading back written data should succeed");
 
       // Check that the read version is the same
