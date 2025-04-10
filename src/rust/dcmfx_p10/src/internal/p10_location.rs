@@ -337,7 +337,7 @@ impl P10Location {
     }
   }
 
-  /// Adds a new item to a P10 location.
+  /// Adds a new item to a P10 location. The index of the new item is returned.
   ///
   pub fn add_item(
     &mut self,

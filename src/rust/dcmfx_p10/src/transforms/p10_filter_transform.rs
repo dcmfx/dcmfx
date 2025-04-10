@@ -1,22 +1,19 @@
 #[cfg(not(feature = "std"))]
 use alloc::{boxed::Box, vec, vec::Vec};
 
-use dcmfx_core::{DataElementTag, ValueRepresentation, dictionary};
+use dcmfx_core::{DataElementTag, DataSetPath, ValueRepresentation};
 
-use crate::P10Token;
+use crate::{P10Error, P10Token};
 
 /// Transform that applies a data element filter to a stream of DICOM P10
-/// tokens.
+/// tokens. Incoming data elements are passed to a predicate function that
+/// determines whether they should be present in the output DICOM P10 token
+/// stream.
 ///
 pub struct P10FilterTransform {
   predicate: Box<PredicateFunction>,
-  location: Vec<LocationEntry>,
-}
-
-pub struct LocationEntry {
-  #[allow(dead_code)]
-  tag: DataElementTag,
-  filter_result: bool,
+  path: DataSetPath,
+  path_filter_results: Vec<bool>,
 }
 
 /// Defines a function called by a [`P10FilterTransform`] that determines
@@ -26,7 +23,7 @@ pub type PredicateFunction = dyn FnMut(
   DataElementTag,
   ValueRepresentation,
   Option<u32>,
-  &[LocationEntry],
+  &DataSetPath,
 ) -> bool;
 
 impl P10FilterTransform {
@@ -34,12 +31,13 @@ impl P10FilterTransform {
   ///
   /// The predicate function is called as tokens are added to the context, and
   /// only those data elements that return `true` from the predicate function
-  /// will pass through this filter transform.
+  /// will pass through the filter.
   ///
   pub fn new(predicate: Box<PredicateFunction>) -> Self {
     Self {
       predicate,
-      location: vec![],
+      path: DataSetPath::new(),
+      path_filter_results: vec![],
     }
   }
 
@@ -47,57 +45,77 @@ impl P10FilterTransform {
   /// data set, i.e. there are no nested sequences currently active.
   ///
   pub fn is_at_root(&self) -> bool {
-    self.location.is_empty()
+    self.path.is_empty()
   }
 
   /// Adds the next token to the P10 filter transform and returns whether it
   /// should be included in the filtered token stream.
   ///
-  pub fn add_token(&mut self, token: &P10Token) -> bool {
-    let mut push_location_entry = |tag, vr, length: Option<u32>| -> bool {
-      let filter_result = match self.location.as_slice() {
-        []
-        | [
-          ..,
-          LocationEntry {
-            filter_result: true,
-            ..
-          },
-        ] => (self.predicate)(tag, vr, length, &self.location),
+  pub fn add_token(&mut self, token: &P10Token) -> Result<bool, P10Error> {
+    let current_filter_state =
+      *self.path_filter_results.last().unwrap_or(&true);
 
-        // The predicate function is skipped if a parent has already been
-        // filtered out
-        _ => false,
-      };
-
-      self.location.push(LocationEntry { tag, filter_result });
-
-      filter_result
+    let map_data_set_path_error = |details: String| -> P10Error {
+      P10Error::TokenStreamInvalid {
+        when: "Filtering P10 token stream".to_string(),
+        details,
+        token: token.clone(),
+      }
     };
+
+    let mut run_predicate =
+      |tag, vr, length: Option<u32>| -> Result<bool, P10Error> {
+        let filter_result = match self.path_filter_results.as_slice() {
+          [] | [.., true] => (self.predicate)(tag, vr, length, &self.path),
+
+          // The predicate function is skipped if a parent has already been
+          // filtered out
+          _ => false,
+        };
+
+        self
+          .path
+          .add_data_element(tag)
+          .map_err(map_data_set_path_error)?;
+
+        self.path_filter_results.push(filter_result);
+
+        Ok(filter_result)
+      };
 
     match token {
       // If this is a new sequence or data element then run the predicate
-      // function to see if it passes the filter, then add it to the location
-      P10Token::SequenceStart { tag, vr } => {
-        push_location_entry(*tag, *vr, None)
-      }
+      // function to see if it passes the filter
+      P10Token::SequenceStart { tag, vr } => run_predicate(*tag, *vr, None),
       P10Token::DataElementHeader { tag, vr, length } => {
-        push_location_entry(*tag, *vr, Some(*length))
+        run_predicate(*tag, *vr, Some(*length))
+      }
+
+      P10Token::SequenceItemStart { index } => {
+        self
+          .path
+          .add_sequence_item(*index)
+          .map_err(map_data_set_path_error)?;
+
+        Ok(current_filter_state)
+      }
+
+      P10Token::SequenceItemDelimiter => {
+        self.path.pop().map_err(map_data_set_path_error)?;
+
+        Ok(current_filter_state)
       }
 
       // If this is a new pixel data item then add it to the location
-      P10Token::PixelDataItem { .. } => {
-        let filter_result = match self.location.last() {
-          Some(LocationEntry { filter_result, .. }) => *filter_result,
-          None => true,
-        };
+      P10Token::PixelDataItem { index, .. } => {
+        self
+          .path
+          .add_sequence_item(*index)
+          .map_err(map_data_set_path_error)?;
 
-        self.location.push(LocationEntry {
-          tag: dictionary::ITEM.tag,
-          filter_result,
-        });
+        self.path_filter_results.push(current_filter_state);
 
-        filter_result
+        Ok(current_filter_state)
       }
 
       // Detect the end of the entry at the head of the location and pop it off
@@ -105,25 +123,13 @@ impl P10FilterTransform {
       | P10Token::DataElementValueBytes {
         bytes_remaining: 0, ..
       } => {
-        let filter_result = match self.location.last() {
-          Some(LocationEntry { filter_result, .. }) => *filter_result,
-          None => true,
-        };
+        self.path.pop().map_err(map_data_set_path_error)?;
+        self.path_filter_results.pop().unwrap();
 
-        self.location.pop();
-
-        filter_result
+        Ok(current_filter_state)
       }
 
-      _ => {
-        match self.location.last() {
-          // If tokens are currently being filtered out then swallow this one
-          Some(LocationEntry { filter_result, .. }) => *filter_result,
-
-          // Otherwise this token passes through the filter
-          None => true,
-        }
-      }
+      _ => Ok(current_filter_state),
     }
   }
 }

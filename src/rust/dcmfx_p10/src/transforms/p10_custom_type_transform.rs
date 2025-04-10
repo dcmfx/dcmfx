@@ -3,9 +3,7 @@ use alloc::boxed::Box;
 
 use dcmfx_core::{DataElementTag, DataError, DataSet, IodModule};
 
-use crate::{
-  DataSetBuilder, P10Error, P10FilterTransform, P10Token, PredicateFunction,
-};
+use crate::{DataSetBuilder, P10Error, P10FilterTransform, P10Token};
 
 /// Transforms a stream of DICOM P10 tokens into a custom type. This is done by:
 ///
@@ -66,33 +64,24 @@ impl<T> P10CustomTypeTransform<T> {
     }
   }
 
-  /// Creates a new transform for converting a stream of DICOM P10 tokens to
-  /// a custom type. The predicate function controls the data elements that
-  /// are needed by the custom type.
-  ///
-  pub fn new_with_predicate(
-    predicate: Box<PredicateFunction>,
-    highest_tag: DataElementTag,
-    target_from_data_set: TargetFromDataSetFn<T>,
-  ) -> Self {
-    let filter = P10FilterTransform::new(predicate);
-
-    Self {
-      filter: Some((filter, DataSetBuilder::new())),
-      highest_tag,
-      target_from_data_set,
-      target: None,
-    }
-  }
-
   /// Creates a new transform for converting a stream of DICOM P10 tokens into
-  /// a custom type that implements [`IodModule`].
+  /// a specific [`IodModule`].
   ///
   pub fn new_for_iod_module() -> Self
   where
     T: IodModule,
   {
-    Self::new(T::iod_module_data_element_tags(), T::from_data_set)
+    let filter =
+      P10FilterTransform::new(Box::new(move |tag, vr, length, _location| {
+        T::is_iod_module_data_element(tag, vr, length, _location)
+      }));
+
+    Self {
+      filter: Some((filter, DataSetBuilder::new())),
+      highest_tag: T::iod_module_highest_tag(),
+      target_from_data_set: T::from_data_set,
+      target: None,
+    }
   }
 
   /// Adds the next token in the DICOM P10 token stream.
@@ -104,7 +93,10 @@ impl<T> P10CustomTypeTransform<T> {
     if let Some((filter, data_set_builder)) = self.filter.as_mut() {
       let is_at_root = filter.is_at_root();
 
-      if filter.add_token(token) {
+      if filter
+        .add_token(token)
+        .map_err(P10CustomTypeTransformError::P10Error)?
+      {
         data_set_builder
           .add_token(token)
           .map_err(P10CustomTypeTransformError::P10Error)?;

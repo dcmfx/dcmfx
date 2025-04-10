@@ -160,7 +160,7 @@ impl P10JsonTransform {
           .map_err(|_| token_stream_invalid_error())
       }
 
-      P10Token::SequenceItemStart => {
+      P10Token::SequenceItemStart { .. } => {
         if let Some(sequence_item_count) = self.sequence_item_counts.last_mut()
         {
           self
@@ -187,7 +187,7 @@ impl P10JsonTransform {
           .map_err(|_| token_stream_invalid_error())
       }
 
-      P10Token::PixelDataItem { length } => {
+      P10Token::PixelDataItem { length, .. } => {
         if let Some(sequence_item_count) = self.sequence_item_counts.last_mut()
         {
           self

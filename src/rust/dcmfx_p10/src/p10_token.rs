@@ -72,7 +72,7 @@ pub enum P10Token {
   SequenceDelimiter { tag: DataElementTag },
 
   /// The start of a new item in the current sequence.
-  SequenceItemStart,
+  SequenceItemStart { index: usize },
 
   /// The end of the current sequence item.
   SequenceItemDelimiter,
@@ -80,7 +80,7 @@ pub enum P10Token {
   /// The start of a new item in the current encapsulated pixel data sequence.
   /// The data for the item follows in one or more
   /// [`P10Token::DataElementValueBytes`] tokens.
-  PixelDataItem { length: u32 },
+  PixelDataItem { index: usize, length: u32 },
 
   /// The end of the DICOM P10 data has been reached with all provided data
   /// successfully parsed.
@@ -144,12 +144,14 @@ impl core::fmt::Display for P10Token {
 
       P10Token::SequenceDelimiter { .. } => "SequenceDelimiter".to_string(),
 
-      P10Token::SequenceItemStart => "SequenceItemStart".to_string(),
+      P10Token::SequenceItemStart { index } => {
+        format!("SequenceItemStart: item {}", index)
+      }
 
       P10Token::SequenceItemDelimiter => "SequenceItemDelimiter".to_string(),
 
-      P10Token::PixelDataItem { length } => {
-        format!("PixelDataItem: {} bytes", length)
+      P10Token::PixelDataItem { index, length } => {
+        format!("PixelDataItem: item {}, {} bytes", index, length)
       }
 
       P10Token::End => "End".to_string(),
@@ -223,9 +225,9 @@ pub fn data_element_to_tokens<E>(
     let header_token = P10Token::SequenceStart { tag, vr };
     token_callback(&header_token)?;
 
-    for item in items {
+    for (index, item) in items.iter().enumerate() {
       let length = item.len() as u32;
-      let item_header_token = P10Token::PixelDataItem { length };
+      let item_header_token = P10Token::PixelDataItem { index, length };
 
       token_callback(&item_header_token)?;
 
@@ -250,8 +252,8 @@ pub fn data_element_to_tokens<E>(
     let header_token = P10Token::SequenceStart { tag, vr };
     token_callback(&header_token)?;
 
-    for item in items {
-      let item_start_token = P10Token::SequenceItemStart;
+    for (index, item) in items.iter().enumerate() {
+      let item_start_token = P10Token::SequenceItemStart { index };
       token_callback(&item_start_token)?;
 
       data_elements_to_tokens(item, token_callback)?;

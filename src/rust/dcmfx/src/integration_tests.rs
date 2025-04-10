@@ -445,14 +445,14 @@ mod tests {
     {
       let frame_index = frame.index();
 
-      if pixel_data_renderer.definition.is_grayscale() {
+      if pixel_data_renderer.image_pixel_module.is_grayscale() {
         let mut image = pixel_data_renderer
           .decode_single_channel_frame(&mut frame)
           .map_err(|e| {
             DicomValidationError::PixelDataRenderError(Either::Left(e))
           })?;
 
-        image.invert_monochrome1_data(&pixel_data_renderer.definition);
+        image.invert_monochrome1_data(&pixel_data_renderer.image_pixel_module);
 
         let pixels = image.to_i64_pixels();
 
@@ -489,7 +489,7 @@ mod tests {
             .flatten();
 
         for (index, (a, b)) in image
-          .to_rgb_f64_image(&pixel_data_renderer.definition)
+          .to_rgb_f64_image(&pixel_data_renderer.image_pixel_module)
           .pixels()
           .zip(expected_pixels)
           .enumerate()

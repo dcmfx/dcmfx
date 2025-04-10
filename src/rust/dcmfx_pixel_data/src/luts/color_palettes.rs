@@ -1,4 +1,5 @@
-/// Defines a color palette that converts a grayscale value to a color.
+/// Defines a color palette that converts 8-bit grayscale values to colors
+/// using a lookup table.
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColorPalette {

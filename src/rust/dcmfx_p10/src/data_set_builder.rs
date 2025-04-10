@@ -229,11 +229,13 @@ impl DataSetBuilder {
   ) -> Result<(), P10Error> {
     match (token, self.location.last()) {
       (
-        P10Token::SequenceItemStart,
+        P10Token::SequenceItemStart { .. },
         Some(BuilderLocation::RootDataSet { .. }),
       )
-      | (P10Token::SequenceItemStart, Some(BuilderLocation::Sequence { .. })) =>
-      {
+      | (
+        P10Token::SequenceItemStart { .. },
+        Some(BuilderLocation::Sequence { .. }),
+      ) => {
         self.location.push(BuilderLocation::SequenceItem {
           data_set: DataSet::new(),
         });

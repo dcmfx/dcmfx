@@ -4,9 +4,7 @@ import dcmfx_core/data_set.{type DataSet}
 import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error
 import dcmfx_p10/p10_token.{type P10Token}
-import dcmfx_p10/transforms/p10_filter_transform.{
-  type P10FilterTransform, type PredicateFunction,
-}
+import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/order
@@ -71,25 +69,6 @@ pub fn new(
   )
 }
 
-/// Creates a new transform for converting a stream of DICOM P10 tokens to
-/// a custom type. The predicate function controls the data elements that
-/// are needed by the custom type.
-///
-pub fn new_with_predicate(
-  predicate: PredicateFunction,
-  highest_tag: DataElementTag,
-  target_from_data_set: fn(DataSet) -> Result(a, data_error.DataError),
-) -> P10CustomTypeTransform(a) {
-  let filter = p10_filter_transform.new(predicate)
-
-  P10CustomTypeTransform(
-    filter: Some(#(filter, data_set_builder.new())),
-    highest_tag:,
-    target_from_data_set:,
-    target: None,
-  )
-}
-
 /// Adds the next token in the DICOM P10 token stream.
 ///
 pub fn add_token(
@@ -102,7 +81,7 @@ pub fn add_token(
 
       use #(filter, builder) <- result.try(
         case p10_filter_transform.add_token(filter, token) {
-          #(True, filter) -> {
+          Ok(#(True, filter)) -> {
             let builder =
               builder
               |> data_set_builder.add_token(token)
@@ -111,7 +90,10 @@ pub fn add_token(
 
             #(filter, builder)
           }
-          #(False, filter) -> Ok(#(filter, builder))
+
+          Ok(#(False, filter)) -> Ok(#(filter, builder))
+
+          Error(e) -> Error(P10Error(e))
         },
       )
 

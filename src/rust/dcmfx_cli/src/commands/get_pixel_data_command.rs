@@ -6,7 +6,9 @@ use clap::{Args, ValueEnum};
 use dcmfx::core::*;
 use dcmfx::p10::*;
 use dcmfx::pixel_data::{
-  iods::{CineModule, MultiFrameModule},
+  iods::voi_lut_module::{VoiLutFunction, VoiLutModule, VoiWindow},
+  iods::{CineModule, MultiFrameModule, OverlayPlaneModule},
+  luts::{ColorPalette, StandardColorPalette},
   *,
 };
 
@@ -434,11 +436,11 @@ fn get_pixel_data_from_input_source(
   let mut pixel_data_renderer_transform = if args.format == OutputFormat::Raw {
     None
   } else {
-    Some(PixelDataRenderer::custom_type_transform())
+    Some(P10CustomTypeTransform::<PixelDataRenderer>::new_for_iod_module())
   };
 
-  let mut overlays_transform = if args.render_overlays {
-    Some(Overlays::custom_type_transform())
+  let mut overlay_plane_module_transform = if args.render_overlays {
+    Some(P10CustomTypeTransform::<OverlayPlaneModule>::new_for_iod_module())
   } else {
     None
   };
@@ -483,7 +485,7 @@ fn get_pixel_data_from_input_source(
 
       // Pass token through the transforms to extract relevant data
       add_token_to_p10_transform(&mut pixel_data_renderer_transform, token)?;
-      add_token_to_p10_transform(&mut overlays_transform, token)?;
+      add_token_to_p10_transform(&mut overlay_plane_module_transform, token)?;
       add_token_to_p10_transform(&mut cine_module_transform, token)?;
       add_token_to_p10_transform(&mut multiframe_module_transform, token)?;
 
@@ -496,12 +498,13 @@ fn get_pixel_data_from_input_source(
           &mut None
         };
 
-      let overlays =
-        if let Some(overlays_transform) = overlays_transform.as_mut() {
-          overlays_transform.get_output()
-        } else {
-          None
-        };
+      let overlay_plane_module = if let Some(overlay_plane_module) =
+        overlay_plane_module_transform.as_mut()
+      {
+        overlay_plane_module.get_output()
+      } else {
+        None
+      };
 
       // Pass token through the pixel data frame filter, receiving any frames
       // that are now available
@@ -541,7 +544,7 @@ fn get_pixel_data_from_input_source(
             pixel_data_renderer,
             cine_module,
             multiframe_module,
-            overlays,
+            overlay_plane_module,
             args,
           )?;
         } else {
@@ -558,7 +561,7 @@ fn get_pixel_data_from_input_source(
             &filename,
             frame,
             pixel_data_renderer,
-            overlays,
+            overlay_plane_module,
             args,
           )?;
         }
@@ -585,7 +588,7 @@ fn write_frame_to_image_file(
   filename: &PathBuf,
   frame: &mut PixelDataFrame,
   pixel_data_renderer: &mut Option<PixelDataRenderer>,
-  overlays: Option<&Overlays>,
+  overlay_plane_module: Option<&OverlayPlaneModule>,
   args: &GetPixelDataArgs,
 ) -> Result<(), GetPixelDataError> {
   println!("Writing \"{}\" …", filename.display());
@@ -600,7 +603,8 @@ fn write_frame_to_image_file(
   } else {
     let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
 
-    let image = frame_to_image(frame, pixel_data_renderer, overlays, args)?;
+    let image =
+      frame_to_image(frame, pixel_data_renderer, overlay_plane_module, args)?;
 
     let output_file =
       File::create(filename).expect("Failed to create output file");
@@ -664,13 +668,13 @@ fn write_fragments(
 fn frame_to_image(
   frame: &mut PixelDataFrame,
   pixel_data_renderer: &mut PixelDataRenderer,
-  overlays: Option<&Overlays>,
+  overlay_plane_module: Option<&OverlayPlaneModule>,
   args: &GetPixelDataArgs,
 ) -> Result<image::DynamicImage, GetPixelDataError> {
   let mut image = frame_to_dynamic_image(frame, pixel_data_renderer, args)?;
 
   // Render the overlays, if present
-  if let Some(overlays) = overlays {
+  if let Some(overlay_plane_module) = overlay_plane_module {
     // Expand Luma images to RGB because overlays can only be rendered on RGB
     if image.color() == image::ColorType::L8 {
       image = image.to_rgb8().into();
@@ -678,7 +682,7 @@ fn frame_to_image(
       image = image.to_rgb16().into();
     }
 
-    overlays
+    overlay_plane_module
       .render_to_rgb_image(&mut image, frame.index())
       .unwrap();
   }
@@ -715,14 +719,14 @@ fn frame_to_dynamic_image(
   pixel_data_renderer: &mut PixelDataRenderer,
   args: &GetPixelDataArgs,
 ) -> Result<image::DynamicImage, GetPixelDataError> {
-  if pixel_data_renderer.definition.is_grayscale() {
+  if pixel_data_renderer.image_pixel_module.is_grayscale() {
     let single_channel_image = pixel_data_renderer
       .decode_single_channel_frame(frame)
       .map_err(GetPixelDataError::DataError)?;
 
     // Apply the VOI override if it's set
     if let Some(voi_window_override) = &args.voi_window {
-      pixel_data_renderer.voi_lut = VoiLut {
+      pixel_data_renderer.voi_lut_module = VoiLutModule {
         luts: vec![],
         windows: vec![VoiWindow::new(
           voi_window_override[0],
@@ -735,13 +739,13 @@ fn frame_to_dynamic_image(
     // If there's no VOI LUT in the DICOM or specified on the command line
     // then automatically derive one from the content of the first frame and
     // use it for all subsequent frames.
-    else if pixel_data_renderer.voi_lut.is_empty() {
+    else if pixel_data_renderer.voi_lut_module.is_empty() {
       let image = pixel_data_renderer
         .decode_single_channel_frame(frame)
         .map_err(GetPixelDataError::DataError)?;
 
       if let Some(fallback) = image.fallback_voi_window() {
-        pixel_data_renderer.voi_lut.windows.push(fallback);
+        pixel_data_renderer.voi_lut_module.windows.push(fallback);
       }
     }
 
@@ -749,8 +753,8 @@ fn frame_to_dynamic_image(
     // output because looking up a color palette returns 8-bit values.
     if args.is_output_hdr() && args.color_palette.is_none() {
       let image = single_channel_image.to_gray_u16_image(
-        &pixel_data_renderer.modality_lut,
-        &pixel_data_renderer.voi_lut,
+        &pixel_data_renderer.modality_lut_module,
+        &pixel_data_renderer.voi_lut_module,
       );
 
       Ok(image.into())
@@ -768,8 +772,8 @@ fn frame_to_dynamic_image(
     // Otherwise, emit a Luma8 image
     else {
       let image = single_channel_image.to_gray_u8_image(
-        &pixel_data_renderer.modality_lut,
-        &pixel_data_renderer.voi_lut,
+        &pixel_data_renderer.modality_lut_module,
+        &pixel_data_renderer.voi_lut_module,
       );
 
       Ok(image.into())
@@ -779,12 +783,15 @@ fn frame_to_dynamic_image(
       .decode_color_frame(frame)
       .map_err(GetPixelDataError::DataError)?;
 
-    if args.is_output_hdr() && pixel_data_renderer.definition.bits_stored() > 8
+    if args.is_output_hdr()
+      && pixel_data_renderer.image_pixel_module.bits_stored() > 8
     {
-      let image = image.into_rgb_u16_image(&pixel_data_renderer.definition);
+      let image =
+        image.into_rgb_u16_image(&pixel_data_renderer.image_pixel_module);
       Ok(image.into())
     } else {
-      let image = image.into_rgb_u8_image(&pixel_data_renderer.definition);
+      let image =
+        image.into_rgb_u8_image(&pixel_data_renderer.image_pixel_module);
       Ok(image.into())
     }
   }
@@ -845,7 +852,7 @@ fn write_frame_to_mp4_file(
   pixel_data_renderer: &mut PixelDataRenderer,
   cine_module: &CineModule,
   multiframe_module: &MultiFrameModule,
-  overlays: Option<&Overlays>,
+  overlay_plane_module: Option<&OverlayPlaneModule>,
   args: &GetPixelDataArgs,
 ) -> Result<(), GetPixelDataError> {
   // Respect frame trimming
@@ -854,7 +861,8 @@ fn write_frame_to_mp4_file(
   }
 
   // Convert the raw frame into an image
-  let image = frame_to_image(frame, pixel_data_renderer, overlays, args)?;
+  let image =
+    frame_to_image(frame, pixel_data_renderer, overlay_plane_module, args)?;
 
   // If this is the first frame then the MP4 encoder won't have been created,
   // so create it now

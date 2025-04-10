@@ -182,7 +182,7 @@ pub fn add_token(
       #(s <> "\n", new_context)
     }
 
-    p10_token.SequenceItemStart -> {
+    p10_token.SequenceItemStart(..) -> {
       let s =
         data_set_print.format_data_element_prefix(
           dictionary.item.tag,
@@ -225,7 +225,7 @@ pub fn add_token(
       #(s <> "\n", new_context)
     }
 
-    p10_token.PixelDataItem(length) -> {
+    p10_token.PixelDataItem(length:, ..) -> {
       let #(s, width) =
         data_set_print.format_data_element_prefix(
           dictionary.item.tag,

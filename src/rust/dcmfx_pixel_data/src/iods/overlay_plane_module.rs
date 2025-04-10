@@ -4,74 +4,58 @@ use alloc::{
 };
 
 use dcmfx_core::{
-  DataElementTag, DataError, DataSet, DataSetPath, RcByteSlice,
+  DataElementTag, DataError, DataSet, DataSetPath, IodModule, RcByteSlice,
   ValueRepresentation, dictionary,
 };
-use dcmfx_p10::{P10CustomTypeTransform, PredicateFunction};
 
-/// Defines a set of overlays where each overlay is a bitmap that can be
-/// rendered on top of pixel data. Overlays are used to defined ROIs and other
-/// graphics. They are often able to be toggled on and off when viewing.
+/// The attributes of the Overlay Plane Module, which describe a set of overlays
+/// where each overlay is a bitmap that can be rendered on top of pixel data.
+/// Overlays are used to defined ROIs and other graphics. They are often able
+/// to be toggled on and off when viewing pixel data.
 ///
-/// The maximum number of overlays allowed is 16.
+/// The maximum number of overlays is 16.
 ///
 /// Ref: PS3.3 C.9.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub struct Overlays {
-  overlays: Vec<Overlay>,
+pub struct OverlayPlaneModule {
+  overlays: Vec<OverlayPlane>,
 }
 
-impl Overlays {
-  /// Returns a [`P10CustomTypeTransform`] that extracts an [`Overlays`] from a
-  /// stream of DICOM P10 tokens.
-  ///
-  pub fn custom_type_transform() -> P10CustomTypeTransform<Self> {
-    P10CustomTypeTransform::new_with_predicate(
-      Self::filter_predicate(),
-      Self::HIGHEST_TAG,
-      Self::from_data_set,
-    )
+impl IodModule for OverlayPlaneModule {
+  fn is_iod_module_data_element(
+    tag: DataElementTag,
+    _vr: ValueRepresentation,
+    _length: Option<u32>,
+    _path: &DataSetPath,
+  ) -> bool {
+    if tag.group < 0x6000 || tag.group > 0x601E || tag.group % 2 != 0 {
+      return false;
+    }
+
+    tag.element == 0x0010
+      || tag.element == 0x0011
+      || tag.element == 0x0040
+      || tag.element == 0x0050
+      || tag.element == 0x0100
+      || tag.element == 0x3000
+      || tag.element == 0x0022
+      || tag.element == 0x0045
+      || tag.element == 0x1500
+      || tag.element == 0x1301
+      || tag.element == 0x1302
+      || tag.element == 0x1303
+      || tag.element == 0x0015
+      || tag.element == 0x0051
   }
 
-  /// Returns a filter predicate that returns true for data elements that are
-  /// relevant to overlays.
-  ///
-  pub fn filter_predicate() -> Box<PredicateFunction> {
-    Box::new(|tag, _vr, _length, _location| {
-      if tag.group < 0x6000 || tag.group > 0x601E || tag.group % 2 != 0 {
-        return false;
-      }
-
-      tag.element == 0x0010
-        || tag.element == 0x0011
-        || tag.element == 0x0040
-        || tag.element == 0x0050
-        || tag.element == 0x0100
-        || tag.element == 0x3000
-        || tag.element == 0x0022
-        || tag.element == 0x0045
-        || tag.element == 0x1500
-        || tag.element == 0x1301
-        || tag.element == 0x1302
-        || tag.element == 0x1303
-        || tag.element == 0x0015
-        || tag.element == 0x0051
-    })
+  fn iod_module_highest_tag() -> DataElementTag {
+    DataElementTag::new(0x601E, 0x3000)
   }
 
-  /// The highest data element tag value that will successfully pass though the
-  /// predicate returned by [`Self::filter_predicate()`].
-  ///
-  pub const HIGHEST_TAG: DataElementTag = DataElementTag {
-    group: 0x601E,
-    element: 0x3000,
-  };
-
-  /// Creates a new [`Overlays`] instance from the relevant data elements in the
-  /// given data set.
-  ///
-  pub fn from_data_set(data_set: &DataSet) -> Result<Overlays, DataError> {
+  fn from_data_set(
+    data_set: &DataSet,
+  ) -> Result<OverlayPlaneModule, DataError> {
     let mut overlays = vec![];
 
     for i in 0..16 {
@@ -81,12 +65,14 @@ impl Overlays {
         continue;
       }
 
-      overlays.push(Overlay::from_data_set(data_set, tag_group)?);
+      overlays.push(OverlayPlane::from_data_set(data_set, tag_group)?);
     }
 
-    Ok(Overlays { overlays })
+    Ok(OverlayPlaneModule { overlays })
   }
+}
 
+impl OverlayPlaneModule {
   /// Returns whether the internal list of overlays is empty.
   ///
   pub fn is_empty(&self) -> bool {
@@ -95,7 +81,7 @@ impl Overlays {
 
   /// Returns an iterator over the individual overlays.
   ///
-  pub fn iter(&self) -> core::slice::Iter<'_, Overlay> {
+  pub fn iter(&self) -> core::slice::Iter<'_, OverlayPlane> {
     self.overlays.iter()
   }
 
@@ -180,22 +166,22 @@ impl Overlays {
   ];
 }
 
-/// Definition for a single DICOM overlay.
+/// Definition for a single DICOM overlay plane.
 ///
 /// Ref: PS3.3 C.9.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub struct Overlay {
+pub struct OverlayPlane {
   tag_group: u16,
 
-  rows: u16,
-  columns: u16,
+  overlay_rows: u16,
+  overlay_columns: u16,
   overlay_type: OverlayType,
-  origin: [i32; 2],
-  data: RcByteSlice,
-  description: Option<String>,
-  subtype: Option<OverlaySubtype>,
-  label: Option<String>,
+  overlay_origin: [i32; 2],
+  overlay_data: RcByteSlice,
+  overlay_description: Option<String>,
+  overlay_subtype: Option<OverlaySubtype>,
+  overlay_label: Option<String>,
   roi_area: Option<u64>,
   roi_mean: Option<f64>,
   roi_standard_deviation: Option<f64>,
@@ -203,9 +189,9 @@ pub struct Overlay {
   image_frame_origin: usize,
 }
 
-impl Overlay {
-  /// Creates a new `Overlay` from the relevant data elements in the given data
-  /// set.
+impl OverlayPlane {
+  /// Creates a new [`OverlayPlane`] from the relevant data elements in the
+  /// given data set.
   ///
   pub fn from_data_set(
     data_set: &DataSet,
@@ -321,14 +307,14 @@ impl Overlay {
     Ok(Self {
       tag_group,
 
-      rows,
-      columns,
+      overlay_rows: rows,
+      overlay_columns: columns,
       overlay_type,
-      origin: [i32::from(origin_value[0]), i32::from(origin_value[1])],
-      data,
-      description,
-      subtype,
-      label,
+      overlay_origin: [i32::from(origin_value[0]), i32::from(origin_value[1])],
+      overlay_data: data,
+      overlay_description: description,
+      overlay_subtype: subtype,
+      overlay_label: label,
       roi_area,
       roi_mean,
       roi_standard_deviation,
@@ -358,8 +344,8 @@ impl Overlay {
     }
 
     // Get the data for this frame
-    let overlay_data_offset = usize::from(self.rows)
-      * usize::from(self.columns)
+    let overlay_data_offset = usize::from(self.overlay_rows)
+      * usize::from(self.overlay_columns)
       * ((frame_index + 1) - self.image_frame_origin);
 
     // Alphas that apply some blurring over a 3x3 area where the overlay is
@@ -376,23 +362,23 @@ impl Overlay {
       1.0 / 8.0,
     ];
 
-    for y in 0..self.rows {
-      let pt_y = self.origin[1] + i32::from(y) - 1;
+    for y in 0..self.overlay_rows {
+      let pt_y = self.overlay_origin[1] + i32::from(y) - 1;
       if pt_y < 0 || pt_y as u32 >= height {
         continue;
       }
 
-      for x in 0..self.columns {
-        let pt_x = self.origin[0] + i32::from(x) - 1;
+      for x in 0..self.overlay_columns {
+        let pt_x = self.overlay_origin[0] + i32::from(x) - 1;
         if pt_x < 0 || pt_x as u32 >= width {
           continue;
         }
 
         // Check whether this pixel in the overlay bitmap is set
         let data_offset = overlay_data_offset
-          + usize::from(y) * usize::from(self.columns)
+          + usize::from(y) * usize::from(self.overlay_columns)
           + usize::from(x);
-        let byte = self.data[data_offset / 8];
+        let byte = self.overlay_data[data_offset / 8];
         if (byte >> (data_offset % 8)) & 1 == 0 {
           continue;
         }

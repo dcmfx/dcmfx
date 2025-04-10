@@ -216,7 +216,8 @@ impl P10WriteContext {
             .add_sequence(*tag, false, None)
             .and_then(|_| self.path.add_data_element(*tag)),
 
-          P10Token::SequenceItemStart | P10Token::PixelDataItem { .. } => self
+          P10Token::SequenceItemStart { .. }
+          | P10Token::PixelDataItem { .. } => self
             .location
             .add_item(None, ValueLength::Undefined)
             .and_then(|index| self.path.add_sequence_item(index)),
@@ -428,7 +429,7 @@ impl P10WriteContext {
         self.transfer_syntax.endianness,
       ),
 
-      P10Token::SequenceItemStart => self.data_element_header_to_bytes(
+      P10Token::SequenceItemStart { .. } => self.data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::ITEM.tag,
           vr: None,
@@ -446,14 +447,15 @@ impl P10WriteContext {
         self.transfer_syntax.endianness,
       ),
 
-      P10Token::PixelDataItem { length } => self.data_element_header_to_bytes(
-        &DataElementHeader {
-          tag: dictionary::ITEM.tag,
-          vr: None,
-          length: ValueLength::new(*length),
-        },
-        self.transfer_syntax.endianness,
-      ),
+      P10Token::PixelDataItem { length, .. } => self
+        .data_element_header_to_bytes(
+          &DataElementHeader {
+            tag: dictionary::ITEM.tag,
+            vr: None,
+            length: ValueLength::new(*length),
+          },
+          self.transfer_syntax.endianness,
+        ),
 
       P10Token::End => Ok(RcByteSlice::empty()),
     }
@@ -573,11 +575,16 @@ pub fn data_set_to_tokens<E>(
   // Create a function that passes token through the above two transforms and
   // then to the callback
   let mut process_token = |token: &P10Token| -> Result<(), E> {
-    if !remove_fmi_transform.add_token(token) {
+    // The following two unwraps are safe because the P10 transforms only error
+    // on invalid token streams, which can't happen here
+
+    if !remove_fmi_transform.add_token(token).unwrap() {
       return Ok(());
     }
 
-    let tokens = insert_specific_character_set_transform.add_token(token);
+    let tokens = insert_specific_character_set_transform
+      .add_token(token)
+      .unwrap();
 
     for token in tokens {
       token_callback(&token)?;

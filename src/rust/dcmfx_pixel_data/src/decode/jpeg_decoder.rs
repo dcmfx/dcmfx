@@ -1,19 +1,21 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec::Vec};
 
-use crate::{ColorImage, ColorSpace, PixelDataDefinition, SingleChannelImage};
+use crate::{
+  ColorImage, ColorSpace, SingleChannelImage, iods::ImagePixelModule,
+};
 use dcmfx_core::DataError;
 
 /// Decodes single channel pixel data using jpeg-decoder.
 ///
 pub fn decode_single_channel(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
-  let (pixels, pixel_format) = decode(definition, data)?;
+  let (pixels, pixel_format) = decode(image_pixel_module, data)?;
 
-  let width = definition.columns();
-  let height = definition.rows();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
 
   if pixel_format == jpeg_decoder::PixelFormat::L8 {
     SingleChannelImage::new_u8(width, height, pixels)
@@ -31,13 +33,13 @@ pub fn decode_single_channel(
 /// Decodes color pixel data using jpeg-decoder.
 ///
 pub fn decode_color(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let (pixels, pixel_format) = decode(definition, data)?;
+  let (pixels, pixel_format) = decode(image_pixel_module, data)?;
 
-  let width = definition.columns();
-  let height = definition.rows();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
 
   if pixel_format == jpeg_decoder::PixelFormat::RGB24 {
     ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
@@ -50,7 +52,7 @@ pub fn decode_color(
 }
 
 fn decode(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<(Vec<u8>, jpeg_decoder::PixelFormat), DataError> {
   let mut decoder = jpeg_decoder::Decoder::new(data);
@@ -64,8 +66,8 @@ fn decode(
 
   let image_info = decoder.info().unwrap();
 
-  if image_info.width != definition.columns()
-    || image_info.height != definition.rows()
+  if image_info.width != image_pixel_module.columns()
+    || image_info.height != image_pixel_module.rows()
   {
     return Err(DataError::new_value_invalid(
       "JPEG Lossless pixel data has incorrect dimensions".to_string(),

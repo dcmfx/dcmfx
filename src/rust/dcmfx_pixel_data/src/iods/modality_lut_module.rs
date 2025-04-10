@@ -1,18 +1,21 @@
 #[cfg(not(feature = "std"))]
 use alloc::string::{String, ToString};
 
-use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath, dictionary};
+use dcmfx_core::{
+  DataElementTag, DataError, DataSet, DataSetPath, IodModule,
+  ValueRepresentation, dictionary,
+};
 
 use crate::luts::lookup_table::LookupTable;
 
-/// Defines a Modality LUT that can be applied to raw pixel data stored values.
-/// A modality LUT is defined either by a lookup table, or by rescale intercept
-/// and slope values.
+/// The attributes of the Modality LUT Module which processes raw pixel data
+/// stored values. A modality LUT is defined either by a lookup table, or by
+/// rescale intercept and slope values.
 ///
 /// Ref: PS3.3 C.11.1.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub enum ModalityLut {
+pub enum ModalityLutModule {
   LookupTable {
     lut: LookupTable,
     lut_type: ModalityLutOutputType,
@@ -25,25 +28,32 @@ pub enum ModalityLut {
   },
 }
 
-impl ModalityLut {
-  /// The tags of the data elements relevant to construction of a
-  /// [`ModalityLUT`].
-  ///
-  pub const DATA_ELEMENT_TAGS: [DataElementTag; 8] = [
-    dictionary::MODALITY_LUT_SEQUENCE.tag,
-    dictionary::LUT_DESCRIPTOR.tag,
-    dictionary::LUT_EXPLANATION.tag,
-    dictionary::MODALITY_LUT_TYPE.tag,
-    dictionary::LUT_DATA.tag,
-    dictionary::RESCALE_INTERCEPT.tag,
-    dictionary::RESCALE_SLOPE.tag,
-    dictionary::RESCALE_TYPE.tag,
-  ];
+impl IodModule for ModalityLutModule {
+  fn is_iod_module_data_element(
+    tag: DataElementTag,
+    _vr: ValueRepresentation,
+    _length: Option<u32>,
+    path: &DataSetPath,
+  ) -> bool {
+    if !path.is_empty() {
+      return false;
+    }
 
-  /// Creates a [`ModalityLUT`] from the relevant data elements in the given
-  /// data set.
-  ///
-  pub fn from_data_set(data_set: &DataSet) -> Result<ModalityLut, DataError> {
+    tag == dictionary::MODALITY_LUT_SEQUENCE.tag
+      || tag == dictionary::LUT_DESCRIPTOR.tag
+      || tag == dictionary::LUT_EXPLANATION.tag
+      || tag == dictionary::MODALITY_LUT_TYPE.tag
+      || tag == dictionary::LUT_DATA.tag
+      || tag == dictionary::RESCALE_INTERCEPT.tag
+      || tag == dictionary::RESCALE_SLOPE.tag
+      || tag == dictionary::RESCALE_TYPE.tag
+  }
+
+  fn iod_module_highest_tag() -> DataElementTag {
+    dictionary::LUT_DATA.tag
+  }
+
+  fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     if let Ok(items) =
       data_set.get_sequence_items(dictionary::MODALITY_LUT_SEQUENCE.tag)
     {
@@ -58,7 +68,9 @@ impl ModalityLut {
       })
     }
   }
+}
 
+impl ModalityLutModule {
   /// Creates a [`ModalityLUT`] from a Modality LUT Sequence value.
   ///
   fn from_modality_lut_sequence(items: &[DataSet]) -> Result<Self, DataError> {

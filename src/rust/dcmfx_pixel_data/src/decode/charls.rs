@@ -4,24 +4,24 @@ use alloc::{format, string::ToString, vec, vec::Vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  BitsAllocated, ColorImage, ColorSpace, PixelDataDefinition,
-  SingleChannelImage,
+  ColorImage, ColorSpace, SingleChannelImage,
+  iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 
 /// Decodes single channel pixel data using CharLS.
 ///
 pub fn decode_single_channel(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
-  let width = definition.columns();
-  let height = definition.rows();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
 
-  if definition.bits_allocated() == BitsAllocated::Eight {
-    let pixels = decode(data, definition)?;
+  if image_pixel_module.bits_allocated() == BitsAllocated::Eight {
+    let pixels = decode(data, image_pixel_module)?;
     SingleChannelImage::new_u8(width, height, pixels)
-  } else if definition.bits_allocated() == BitsAllocated::Sixteen {
-    let pixels = decode(data, definition)?;
+  } else if image_pixel_module.bits_allocated() == BitsAllocated::Sixteen {
+    let pixels = decode(data, image_pixel_module)?;
     SingleChannelImage::new_u16(width, height, pixels)
   } else {
     Err(DataError::new_value_invalid(
@@ -33,17 +33,17 @@ pub fn decode_single_channel(
 /// Decodes color pixel data using CharLS.
 ///
 pub fn decode_color(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let width = definition.columns();
-  let height = definition.rows();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
 
-  if definition.bits_allocated() == BitsAllocated::Eight {
-    let pixels = decode(data, definition)?;
+  if image_pixel_module.bits_allocated() == BitsAllocated::Eight {
+    let pixels = decode(data, image_pixel_module)?;
     ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
-  } else if definition.bits_allocated() == BitsAllocated::Sixteen {
-    let pixels = decode(data, definition)?;
+  } else if image_pixel_module.bits_allocated() == BitsAllocated::Sixteen {
+    let pixels = decode(data, image_pixel_module)?;
     ColorImage::new_u16(width, height, pixels, ColorSpace::RGB)
   } else {
     Err(DataError::new_value_invalid(
@@ -54,18 +54,18 @@ pub fn decode_color(
 
 fn decode<T: Clone + Default>(
   data: &[u8],
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
 ) -> Result<Vec<T>, DataError> {
-  let width = definition.columns();
-  let height = definition.rows();
-  let samples_per_pixel = u8::from(definition.samples_per_pixel());
-  let bits_allocated = u8::from(definition.bits_allocated());
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
+  let samples_per_pixel = u8::from(image_pixel_module.samples_per_pixel());
+  let bits_allocated = u8::from(image_pixel_module.bits_allocated());
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
 
   // Allocate output buffer
   let mut output_buffer = vec![
     T::default();
-    definition.pixel_count()
+    image_pixel_module.pixel_count()
       * usize::from(samples_per_pixel)
   ];
 

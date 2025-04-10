@@ -60,7 +60,7 @@ pub type P10Token {
   SequenceDelimiter(tag: DataElementTag)
 
   /// The start of a new item in the current sequence.
-  SequenceItemStart
+  SequenceItemStart(index: Int)
 
   /// The end of the current sequence item.
   SequenceItemDelimiter
@@ -68,7 +68,7 @@ pub type P10Token {
   /// The start of a new item in the current encapsulated pixel data sequence.
   /// The data for the item follows in one or more `DataElementValueBytes`
   /// tokens.
-  PixelDataItem(length: Int)
+  PixelDataItem(index: Int, length: Int)
 
   /// The end of the DICOM P10 data has been reached with all provided data
   /// successfully parsed.
@@ -123,12 +123,17 @@ pub fn to_string(token: P10Token) -> String {
 
     SequenceDelimiter(..) -> "SequenceDelimiter"
 
-    SequenceItemStart -> "SequenceItemStart"
+    SequenceItemStart(index) ->
+      "SequenceItemStart: item " <> int.to_string(index)
 
     SequenceItemDelimiter -> "SequenceItemDelimiter"
 
-    PixelDataItem(length) ->
-      "PixelDataItem: " <> int.to_string(length) <> " bytes"
+    PixelDataItem(index, length) ->
+      "PixelDataItem: item "
+      <> int.to_string(index)
+      <> ", "
+      <> int.to_string(length)
+      <> " bytes"
 
     End -> "End"
   }
@@ -190,16 +195,25 @@ pub fn data_element_to_tokens(
 
           let context =
             items
-            |> list.try_fold(context, fn(context, item) {
+            |> list.try_fold(#(context, 0), fn(acc, item) {
+              let #(context, index) = acc
+
               let length = bit_array.byte_size(item)
-              let item_header_token = PixelDataItem(length)
+              let item_header_token = PixelDataItem(index:, length:)
               let context = token_callback(context, item_header_token)
               use context <- result.try(context)
 
               let value_bytes_token =
                 DataElementValueBytes(dictionary.item.tag, vr, item, 0)
-              token_callback(context, value_bytes_token)
+              use context <- result.map(token_callback(
+                context,
+                value_bytes_token,
+              ))
+
+              #(context, index + 1)
             })
+            |> result.map(fn(acc) { acc.0 })
+
           use context <- result.try(context)
 
           // Write delimiter for the encapsulated pixel data sequence
@@ -216,8 +230,10 @@ pub fn data_element_to_tokens(
 
           let context =
             items
-            |> list.try_fold(context, fn(context, item) {
-              let item_start_token = SequenceItemStart
+            |> list.try_fold(#(context, 0), fn(acc, item) {
+              let #(context, index) = acc
+
+              let item_start_token = SequenceItemStart(index:)
               let context = token_callback(context, item_start_token)
               use context <- result.try(context)
 
@@ -229,8 +245,14 @@ pub fn data_element_to_tokens(
 
               // Write delimiter for the item
               let item_delimiter_token = SequenceItemDelimiter
-              token_callback(context, item_delimiter_token)
+              use context <- result.map(token_callback(
+                context,
+                item_delimiter_token,
+              ))
+
+              #(context, index + 1)
             })
+            |> result.map(fn(acc) { acc.0 })
 
           use context <- result.try(context)
 

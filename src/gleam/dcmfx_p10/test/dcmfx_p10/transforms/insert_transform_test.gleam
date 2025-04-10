@@ -36,7 +36,8 @@ pub fn add_tokens_test() {
     input_tokens
     |> list.fold(#([], tx), fn(in, input_token) {
       let #(final_tokens, tx) = in
-      let #(new_token, tx) = p10_insert_transform.add_token(tx, input_token)
+      let assert Ok(#(new_token, tx)) =
+        p10_insert_transform.add_token(tx, input_token)
 
       #(list.flatten([final_tokens, new_token]), tx)
     })

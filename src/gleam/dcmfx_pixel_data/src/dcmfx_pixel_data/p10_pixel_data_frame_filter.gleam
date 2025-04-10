@@ -4,6 +4,7 @@ import bigi
 import dcmfx_core/data_element_value.{type DataElementValue}
 import dcmfx_core/data_error
 import dcmfx_core/data_set.{type DataSet}
+import dcmfx_core/data_set_path
 import dcmfx_core/dictionary
 import dcmfx_core/internal/bit_array_utils
 import dcmfx_core/value_representation
@@ -145,8 +146,8 @@ pub fn new() -> P10PixelDataFrameFilter {
     )
 
   let pixel_data_filter =
-    p10_filter_transform.new(fn(tag, _vr, _length, location) {
-      tag == dictionary.pixel_data.tag && location == []
+    p10_filter_transform.new(fn(tag, _vr, _length, path) {
+      tag == dictionary.pixel_data.tag && data_set_path.is_empty(path)
     })
 
   P10PixelDataFrameFilter(
@@ -187,8 +188,10 @@ pub fn add_token(
 
   use <- bool.guard(p10_token.is_header_token(token), Ok(#([], filter)))
 
-  let #(is_pixel_data_token, pixel_data_filter) =
+  let add_token_result =
     p10_filter_transform.add_token(filter.pixel_data_filter, token)
+    |> result.map_error(P10Error)
+  use #(is_pixel_data_token, pixel_data_filter) <- result.try(add_token_result)
 
   let filter = P10PixelDataFrameFilter(..filter, pixel_data_filter:)
 

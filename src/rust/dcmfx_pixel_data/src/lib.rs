@@ -15,34 +15,23 @@ mod color_image;
 mod decode;
 mod encode;
 pub mod iods;
-mod luts;
-mod overlays;
+pub mod luts;
 mod p10_pixel_data_frame_filter;
-mod pixel_data_definition;
 mod pixel_data_frame;
 mod pixel_data_renderer;
 mod single_channel_image;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
-pub use luts::{
-  ColorPalette, LookupTable, ModalityLut, RgbLut, StandardColorPalette, VoiLut,
-  VoiLutFunction, VoiWindow,
-};
-pub use overlays::{Overlay, OverlaySubtype, OverlayType, Overlays};
 pub use p10_pixel_data_frame_filter::{
   P10PixelDataFrameFilter, P10PixelDataFrameFilterError,
-};
-pub use pixel_data_definition::{
-  BitsAllocated, PhotometricInterpretation, PixelDataDefinition,
-  PixelRepresentation, PlanarConfiguration, SamplesPerPixel,
 };
 pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_renderer::PixelDataRenderer;
 pub use single_channel_image::SingleChannelImage;
 
 use dcmfx_core::{
-  DataError, DataSet, TransferSyntax, dictionary, transfer_syntax,
+  DataError, DataSet, IodModule, TransferSyntax, dictionary, transfer_syntax,
 };
 use dcmfx_p10::DataSetP10Extensions;
 
@@ -77,7 +66,7 @@ where
   ///
   fn get_pixel_data_images(
     &self,
-    color_palette: Option<&ColorPalette>,
+    color_palette: Option<&luts::ColorPalette>,
   ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameFilterError>;
 
   /// Returns the frames of pixel data in this data set as
@@ -136,7 +125,7 @@ impl DataSetPixelDataExtensions for DataSet {
 
   fn get_pixel_data_images(
     &self,
-    color_palette: Option<&ColorPalette>,
+    color_palette: Option<&luts::ColorPalette>,
   ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameFilterError> {
     get_pixel_data(self, |renderer, frame| {
       renderer.render_frame(frame, color_palette)

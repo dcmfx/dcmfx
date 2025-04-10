@@ -379,28 +379,27 @@ fn do_streaming_rewrite(
   )
 
   // Pass tokens through the filter if one is specified
-  let #(tokens, filter_context) = case filter_context {
-    Some(filter_context) -> {
-      let #(tokens, filter_context) =
-        tokens
-        |> list.fold(#([], filter_context), fn(in, token) {
-          let #(final_tokens, filter_context) = in
-          let #(filter_result, filter_context) =
-            p10_filter_transform.add_token(filter_context, token)
+  let tokens_and_filter_context = case filter_context {
+    Some(filter_context) ->
+      tokens
+      |> list.try_fold(#([], filter_context), fn(acc, token) {
+        let #(final_tokens, filter_context) = acc
+        let add_token_result =
+          p10_filter_transform.add_token(filter_context, token)
+        use #(filter_result, filter_context) <- result.map(add_token_result)
 
-          let final_tokens = case filter_result {
-            True -> list.append(final_tokens, [token])
-            False -> final_tokens
-          }
+        let final_tokens = case filter_result {
+          True -> list.append(final_tokens, [token])
+          False -> final_tokens
+        }
 
-          #(final_tokens, filter_context)
-        })
+        #(final_tokens, filter_context)
+      })
+      |> result.map(fn(acc) { #(acc.0, Some(acc.1)) })
 
-      #(tokens, Some(filter_context))
-    }
-
-    None -> #(tokens, filter_context)
+    None -> Ok(#(tokens, filter_context))
   }
+  use #(tokens, filter_context) <- result.try(tokens_and_filter_context)
 
   // If converting the transfer syntax then update the transfer syntax in the
   // File Meta Information token

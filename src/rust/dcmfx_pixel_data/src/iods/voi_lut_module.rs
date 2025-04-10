@@ -6,7 +6,117 @@ use alloc::{
   vec::Vec,
 };
 
-use dcmfx_core::{DataError, DataSet, DataSetPath, dictionary};
+use dcmfx_core::{
+  DataElementTag, DataError, DataSet, DataSetPath, IodModule,
+  ValueRepresentation, dictionary,
+};
+
+use crate::luts::LookupTable;
+
+/// The attributes of the VOI LUT Module, which describe a Value Of Interest
+/// (VOI) LUT that is used to define how grayscale pixel data samples are
+/// visualized.
+///
+/// A VOI LUT can contain multiple LUTs and multiple windows, however only one
+/// of these is applied at at time.
+///
+/// Ref: PS3.3 C.11.2.
+///
+#[derive(Clone, Debug, PartialEq)]
+pub struct VoiLutModule {
+  /// The grayscale LUTs for this VOI LUT.
+  pub luts: Vec<LookupTable>,
+
+  /// The windows for this VOI LUT.
+  pub windows: Vec<VoiWindow>,
+}
+
+impl IodModule for VoiLutModule {
+  fn is_iod_module_data_element(
+    tag: DataElementTag,
+    _vr: ValueRepresentation,
+    _length: Option<u32>,
+    path: &DataSetPath,
+  ) -> bool {
+    if !path.is_empty() {
+      return false;
+    }
+
+    tag == dictionary::VOILUT_SEQUENCE.tag
+      || tag == dictionary::LUT_DESCRIPTOR.tag
+      || tag == dictionary::LUT_EXPLANATION.tag
+      || tag == dictionary::LUT_DATA.tag
+      || tag == dictionary::WINDOW_CENTER.tag
+      || tag == dictionary::WINDOW_WIDTH.tag
+      || tag == dictionary::WINDOW_CENTER_WIDTH_EXPLANATION.tag
+      || tag == dictionary::VOILUT_FUNCTION.tag
+  }
+
+  fn iod_module_highest_tag() -> DataElementTag {
+    dictionary::VOILUT_FUNCTION.tag
+  }
+
+  fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
+    let luts = if let Ok(luts_sequence) =
+      data_set.get_sequence_items(dictionary::VOILUT_SEQUENCE.tag)
+    {
+      luts_sequence
+        .iter()
+        .map(|lut| {
+          LookupTable::from_data_set(
+            lut,
+            dictionary::LUT_DESCRIPTOR.tag,
+            dictionary::LUT_DATA.tag,
+            None,
+            Some(dictionary::LUT_EXPLANATION.tag),
+          )
+        })
+        .collect::<Result<Vec<_>, DataError>>()?
+    } else {
+      vec![]
+    };
+
+    let windows = VoiWindow::from_data_set(data_set)?;
+
+    Ok(Self { luts, windows })
+  }
+}
+
+impl VoiLutModule {
+  /// Returns if this VOI LUT specifies either a grayscale LUT or a VOI window.
+  /// Empty VOI LUTs return values unchanged from [`Self::apply()`].
+  ///
+  pub fn is_empty(&self) -> bool {
+    self.luts.is_empty() && self.windows.is_empty()
+  }
+
+  /// Returns the grayscale LUTs specified in this VOI LUT, if any.
+  ///
+  pub fn luts(&self) -> &[LookupTable] {
+    &self.luts
+  }
+
+  /// Returns the windows specified in this VOI LUT, if any.
+  ///
+  pub fn windows(&self) -> &[VoiWindow] {
+    &self.windows
+  }
+
+  /// Applies this VOI LUT to an input value. If there are any grayscale LUTs
+  /// specified then the first one is used, otherwise if there are any windows
+  /// specified then the first one is used. If there are no grayscale LUTs and
+  /// no windows then the input value is returned unaltered.
+  ///
+  pub fn apply(&self, x: f32) -> f32 {
+    if let Some(lut) = self.luts.first() {
+      lut.lookup_normalized(x as i64)
+    } else if let Some(window) = self.windows.first() {
+      window.compute(x)
+    } else {
+      x
+    }
+  }
+}
 
 /// Describes a single VOI LUT windowing function that can be applied in order
 /// to visualize pixel data.

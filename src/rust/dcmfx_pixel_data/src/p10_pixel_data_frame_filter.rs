@@ -134,8 +134,8 @@ impl P10PixelDataFrameFilter {
       );
 
     let pixel_data_filter =
-      P10FilterTransform::new(Box::new(|tag, _vr, _length, location| {
-        tag == dictionary::PIXEL_DATA.tag && location.is_empty()
+      P10FilterTransform::new(Box::new(|tag, _vr, _length, path| {
+        tag == dictionary::PIXEL_DATA.tag && path.is_empty()
       }));
 
     Self {
@@ -169,7 +169,12 @@ impl P10PixelDataFrameFilter {
       }
     };
 
-    if !token.is_header_token() && self.pixel_data_filter.add_token(token) {
+    if !token.is_header_token()
+      && self
+        .pixel_data_filter
+        .add_token(token)
+        .map_err(P10PixelDataFrameFilterError::P10Error)?
+    {
       self
         .process_next_pixel_data_token(token)
         .map_err(P10PixelDataFrameFilterError::DataError)

@@ -780,8 +780,6 @@ fn read_data_element_header_token(
 
     // If this is the start of a new sequence item then add it to the location
     tag, None, _ if tag == dictionary.item.tag -> {
-      let token = p10_token.SequenceItemStart
-
       let ends_at = case header.length {
         value_length.Defined(length) ->
           Some(byte_stream.bytes_read(new_stream) + length)
@@ -798,11 +796,11 @@ fn read_data_element_header_token(
             byte_stream.bytes_read(context.stream),
           )
         })
-      use #(item_count, new_location) <- result.try(new_location)
+      use #(index, new_location) <- result.try(new_location)
 
       // Add item to the path
       let assert Ok(new_path) =
-        data_set_path.add_sequence_item(context.path, item_count)
+        data_set_path.add_sequence_item(context.path, index)
 
       let new_context =
         P10ReadContext(
@@ -811,6 +809,8 @@ fn read_data_element_header_token(
           location: new_location,
           path: new_path,
         )
+
+      let token = p10_token.SequenceItemStart(index:)
 
       Ok(#([token], new_context))
     }
@@ -1448,8 +1448,6 @@ fn read_pixel_data_item_token(
         DataElementHeader(tag, None, value_length.Defined(length))
           if tag == dictionary.item.tag && length != 0xFFFFFFFF
         -> {
-          let token = p10_token.PixelDataItem(length)
-
           let next_action =
             ReadDataElementValueBytes(
               dictionary.item.tag,
@@ -1463,8 +1461,9 @@ fn read_pixel_data_item_token(
           let item_count =
             p10_location.sequence_item_count(context.location)
             |> result.unwrap(1)
+          let index = item_count - 1
           let assert Ok(new_path) =
-            data_set_path.add_sequence_item(context.path, item_count - 1)
+            data_set_path.add_sequence_item(context.path, index)
 
           let new_context =
             P10ReadContext(
@@ -1473,6 +1472,8 @@ fn read_pixel_data_item_token(
               next_action: next_action,
               path: new_path,
             )
+
+          let token = p10_token.PixelDataItem(index:, length:)
 
           Ok(#([token], new_context))
         }

@@ -3,7 +3,7 @@ use alloc::{boxed::Box, vec, vec::Vec};
 
 use dcmfx_core::{DataElementTag, DataElementValue, DataSet};
 
-use crate::{P10FilterTransform, P10Token, p10_token};
+use crate::{P10Error, P10FilterTransform, P10Token, p10_token};
 
 /// Transform that inserts data elements into a stream of DICOM P10 tokens.
 ///
@@ -23,8 +23,8 @@ impl P10InsertTransform {
     // going to be inserted. This ensures there are no duplicate data elements
     // in the resulting token stream.
     let filter_transform =
-      P10FilterTransform::new(Box::new(move |tag, _vr, _length, location| {
-        !location.is_empty() || !tags_to_insert.contains(&tag)
+      P10FilterTransform::new(Box::new(move |tag, _vr, _length, path| {
+        !path.is_empty() || !tags_to_insert.contains(&tag)
       }));
 
     Self {
@@ -39,24 +39,27 @@ impl P10InsertTransform {
   /// Adds the next available token to the P10 insert transform and returns the
   /// resulting tokens.
   ///
-  pub fn add_token(&mut self, token: &P10Token) -> Vec<P10Token> {
+  pub fn add_token(
+    &mut self,
+    token: &P10Token,
+  ) -> Result<Vec<P10Token>, P10Error> {
     // If there are no more data elements to be inserted then pass the token
     // straight through
     if self.data_elements_to_insert.is_empty() {
-      return vec![token.clone()];
+      return Ok(vec![token.clone()]);
     }
 
     let is_at_root = self.filter_transform.is_at_root();
 
     // Pass the token through the filter transform
-    if !self.filter_transform.add_token(token) {
-      return vec![];
+    if !self.filter_transform.add_token(token)? {
+      return Ok(vec![]);
     }
 
     // Data element insertion is only supported in the root data set, so if the
     // stream is not at the root data set then there's nothing to do
     if !is_at_root {
-      return vec![token.clone()];
+      return Ok(vec![token.clone()]);
     }
 
     let mut output_tokens = vec![];
@@ -92,7 +95,7 @@ impl P10InsertTransform {
       _ => output_tokens.push(token.clone()),
     };
 
-    output_tokens
+    Ok(output_tokens)
   }
 
   fn append_data_element_tokens(
@@ -161,8 +164,9 @@ mod tests {
 
     let mut output_tokens = vec![];
     for token in input_tokens {
-      output_tokens
-        .extend_from_slice(insert_transform.add_token(&token).as_slice());
+      output_tokens.extend_from_slice(
+        insert_transform.add_token(&token).unwrap().as_slice(),
+      );
     }
 
     assert_eq!(

@@ -4,9 +4,11 @@ use alloc::{format, string::ToString, vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  BitsAllocated, ColorImage, ColorSpace, PhotometricInterpretation,
-  PixelDataDefinition, PixelRepresentation, PlanarConfiguration,
-  SamplesPerPixel, SingleChannelImage,
+  ColorImage, ColorSpace, SingleChannelImage,
+  iods::image_pixel_module::{
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+    PixelRepresentation, PlanarConfiguration, SamplesPerPixel,
+  },
 };
 
 /// Decodes stored values for native single channel pixel data that uses the
@@ -14,32 +16,32 @@ use crate::{
 /// [`PhotometricInterpretation::Monochrome2`] photometric interpretations.
 ///
 pub fn decode_single_channel(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
   data_bit_offset: usize,
 ) -> Result<SingleChannelImage, DataError> {
   // Check that there is one sample per pixel
-  if definition.samples_per_pixel() != SamplesPerPixel::One {
+  if image_pixel_module.samples_per_pixel() != SamplesPerPixel::One {
     return Err(DataError::new_value_invalid(
       "Samples per pixel is not one for grayscale pixel data".to_string(),
     ));
   }
 
-  validate_data_length(definition, data)?;
+  validate_data_length(image_pixel_module, data)?;
 
-  let width = definition.columns();
-  let height = definition.rows();
-  let pixel_count = definition.pixel_count();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
+  let pixel_count = image_pixel_module.pixel_count();
 
-  match definition.photometric_interpretation() {
+  match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2 => {
       match (
-        definition.pixel_representation(),
-        definition.bits_allocated(),
+        image_pixel_module.pixel_representation(),
+        image_pixel_module.bits_allocated(),
       ) {
         (_, BitsAllocated::One) => {
-          let is_signed = definition.pixel_representation().is_signed();
+          let is_signed = image_pixel_module.pixel_representation().is_signed();
           let mut data = data.to_vec();
 
           if data_bit_offset > 0 {
@@ -60,8 +62,9 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::Eight) => {
           let mut pixels = vec![0; pixel_count];
 
-          if definition.has_unused_high_bits() {
-            let threshold = 2i8.pow(u32::from(definition.bits_stored()) - 1);
+          if image_pixel_module.has_unused_high_bits() {
+            let threshold =
+              2i8.pow(u32::from(image_pixel_module.bits_stored()) - 1);
 
             for i in 0..pixel_count {
               let mut pixel = data[i] as i8;
@@ -87,8 +90,9 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
           let mut pixels = vec![0; pixel_count];
 
-          if definition.has_unused_high_bits() {
-            let threshold = 2i16.pow(u32::from(definition.bits_stored()) - 1);
+          if image_pixel_module.has_unused_high_bits() {
+            let threshold =
+              2i16.pow(u32::from(image_pixel_module.bits_stored()) - 1);
 
             for i in 0..pixel_count {
               let mut pixel =
@@ -143,8 +147,9 @@ pub fn decode_single_channel(
         (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
           let mut pixels = vec![0; pixel_count];
 
-          if definition.has_unused_high_bits() {
-            let threshold = 2i32.pow(u32::from(definition.bits_stored()) - 1);
+          if image_pixel_module.has_unused_high_bits() {
+            let threshold =
+              2i32.pow(u32::from(image_pixel_module.bits_stored()) - 1);
 
             for i in 0..pixel_count {
               let mut pixel = i32::from_le_bytes([
@@ -215,7 +220,7 @@ pub fn decode_single_channel(
     _ => Err(DataError::new_value_invalid(format!(
       "Photometric interpretation '{}' is invalid for grayscale pixel data \
        when samples per pixel is one",
-      definition.photometric_interpretation()
+      image_pixel_module.photometric_interpretation()
     ))),
   }
 }
@@ -226,25 +231,26 @@ pub fn decode_single_channel(
 /// [`PhotometricInterpretation::PaletteColor`] photometric interpretations.
 ///
 pub fn decode_color(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  validate_data_length(definition, data)?;
+  validate_data_length(image_pixel_module, data)?;
 
-  let width = definition.columns();
-  let height = definition.rows();
-  let pixel_count = definition.pixel_count();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
+  let pixel_count = image_pixel_module.pixel_count();
 
-  let color_space = if definition.photometric_interpretation().is_ybr() {
+  let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
+  {
     ColorSpace::YBR
   } else {
     ColorSpace::RGB
   };
 
-  match definition.samples_per_pixel() {
+  match image_pixel_module.samples_per_pixel() {
     SamplesPerPixel::One => match (
-      &definition.photometric_interpretation(),
-      definition.bits_allocated(),
+      &image_pixel_module.photometric_interpretation(),
+      image_pixel_module.bits_allocated(),
     ) {
       (
         PhotometricInterpretation::PaletteColor { palette },
@@ -278,9 +284,9 @@ pub fn decode_color(
 
     SamplesPerPixel::Three {
       planar_configuration,
-    } => match definition.photometric_interpretation() {
+    } => match image_pixel_module.photometric_interpretation() {
       PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull => {
-        match (planar_configuration, definition.bits_allocated()) {
+        match (planar_configuration, image_pixel_module.bits_allocated()) {
           (_, BitsAllocated::One) => Err(DataError::new_value_invalid(
             "Bits allocated value '1' is not supported for color data"
               .to_string(),
@@ -381,13 +387,13 @@ pub fn decode_color(
       }
 
       PhotometricInterpretation::YbrFull422 => {
-        if definition.columns() % 2 == 1 {
+        if image_pixel_module.columns() % 2 == 1 {
           return Err(DataError::new_value_invalid(
             "YBR_FULL_222 pixel data width is odd".to_string(),
           ));
         }
 
-        match (planar_configuration, definition.bits_allocated()) {
+        match (planar_configuration, image_pixel_module.bits_allocated()) {
           (_, BitsAllocated::One) => Err(DataError::new_value_invalid(
             "Bits allocated value '1' is not supported for color data"
               .to_string(),
@@ -564,7 +570,7 @@ pub fn decode_color(
       _ => Err(DataError::new_value_invalid(format!(
         "Photometric interpretation '{}' is invalid for color pixel data \
            when samples per pixel is three",
-        definition.photometric_interpretation()
+        image_pixel_module.photometric_interpretation()
       ))),
     },
   }
@@ -573,11 +579,11 @@ pub fn decode_color(
 /// Validates the length of the supplied pixel data.
 ///
 fn validate_data_length(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<(), DataError> {
   let expected_size_in_bits =
-    definition.pixel_count() * definition.pixel_size_in_bits();
+    image_pixel_module.pixel_count() * image_pixel_module.pixel_size_in_bits();
 
   // Validate that the provided data is of the expected size
   if data.len() * 8 < expected_size_in_bits {
@@ -598,18 +604,17 @@ mod tests {
   #[cfg(not(feature = "std"))]
   use alloc::vec::Vec;
 
-  use crate::PixelRepresentation;
+  use crate::iods::image_pixel_module::PixelRepresentation;
 
   #[test]
   fn decode_monochrome_8_bit_unsigned() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
       PhotometricInterpretation::Monochrome2,
       2,
       2,
       BitsAllocated::Eight,
       8,
-      7,
       PixelRepresentation::Unsigned,
     )
     .unwrap();
@@ -617,21 +622,20 @@ mod tests {
     let data = [0, 1, 2, 3];
 
     assert_eq!(
-      decode_single_channel(&definition, &data, 0),
+      decode_single_channel(&image_pixel_module, &data, 0),
       SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3])
     );
   }
 
   #[test]
   fn decode_monochrome_8_bit_signed_with_7_bits_stored() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
       PhotometricInterpretation::Monochrome2,
       8,
       16,
       BitsAllocated::Eight,
       7,
-      6,
       PixelRepresentation::Signed,
     )
     .unwrap();
@@ -639,21 +643,20 @@ mod tests {
     let data: Vec<_> = (0..=127).collect();
 
     assert_eq!(
-      decode_single_channel(&definition, &data, 0),
+      decode_single_channel(&image_pixel_module, &data, 0),
       SingleChannelImage::new_i8(16, 8, (0..64).chain(-64..0).collect())
     );
   }
 
   #[test]
   fn decode_monochrome_16_bit_signed_with_12_bits_stored() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
       PhotometricInterpretation::Monochrome2,
       64,
       64,
       BitsAllocated::Sixteen,
       12,
-      11,
       PixelRepresentation::Signed,
     )
     .unwrap();
@@ -661,14 +664,14 @@ mod tests {
     let data: Vec<_> = (0..4096u16).flat_map(|i| i.to_le_bytes()).collect();
 
     assert_eq!(
-      decode_single_channel(&definition, &data, 0),
+      decode_single_channel(&image_pixel_module, &data, 0),
       SingleChannelImage::new_i16(64, 64, (0..2048).chain(-2048..0).collect())
     );
   }
 
   #[test]
   fn decode_rgb_8_bit_interleaved() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Interleaved,
       },
@@ -677,7 +680,6 @@ mod tests {
       2,
       BitsAllocated::Eight,
       8,
-      7,
       PixelRepresentation::Unsigned,
     )
     .unwrap();
@@ -685,7 +687,7 @@ mod tests {
     let data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
     assert_eq!(
-      decode_color(&definition, &data),
+      decode_color(&image_pixel_module, &data),
       ColorImage::new_u8(
         2,
         2,
@@ -697,7 +699,7 @@ mod tests {
 
   #[test]
   fn decode_rgb_16_bit_separate() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Separate,
       },
@@ -706,7 +708,6 @@ mod tests {
       2,
       BitsAllocated::Sixteen,
       16,
-      15,
       PixelRepresentation::Unsigned,
     )
     .unwrap();
@@ -716,7 +717,7 @@ mod tests {
     ];
 
     assert_eq!(
-      decode_color(&definition, &data),
+      decode_color(&image_pixel_module, &data),
       ColorImage::new_u16(
         2,
         2,
@@ -728,7 +729,7 @@ mod tests {
 
   #[test]
   fn decode_ybr_full_8_bit() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Interleaved,
       },
@@ -737,7 +738,6 @@ mod tests {
       2,
       BitsAllocated::Eight,
       8,
-      7,
       PixelRepresentation::Unsigned,
     )
     .unwrap();
@@ -745,14 +745,14 @@ mod tests {
     let data = vec![142, 122, 111, 148, 118, 122, 101, 123, 127, 116, 133, 142];
 
     assert_eq!(
-      decode_color(&definition, &data),
+      decode_color(&image_pixel_module, &data),
       ColorImage::new_u8(2, 2, data, ColorSpace::YBR)
     );
   }
 
   #[test]
   fn decode_ybr_full_422_8_bit() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::Three {
         planar_configuration: PlanarConfiguration::Interleaved,
       },
@@ -761,7 +761,6 @@ mod tests {
       2,
       BitsAllocated::Eight,
       8,
-      7,
       PixelRepresentation::Unsigned,
     )
     .unwrap();
@@ -769,7 +768,7 @@ mod tests {
     let data = vec![142, 122, 111, 148, 118, 122, 101, 123];
 
     assert_eq!(
-      decode_color(&definition, &data),
+      decode_color(&image_pixel_module, &data),
       ColorImage::new_u8(
         2,
         2,

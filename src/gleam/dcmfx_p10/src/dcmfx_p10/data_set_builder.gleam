@@ -189,8 +189,8 @@ fn add_token_to_sequence(
   token: P10Token,
 ) -> Result(DataSetBuilder, P10Error) {
   case token, builder.location {
-    p10_token.SequenceItemStart, [RootDataSet(_)]
-    | p10_token.SequenceItemStart, [Sequence(..), ..]
+    p10_token.SequenceItemStart(..), [RootDataSet(_)]
+    | p10_token.SequenceItemStart(..), [Sequence(..), ..]
     ->
       Ok(
         DataSetBuilder(..builder, location: [
@@ -228,7 +228,7 @@ fn add_token_to_encapsulated_pixel_data_sequence(
   token: P10Token,
 ) -> Result(DataSetBuilder, P10Error) {
   case token, builder.location {
-    p10_token.PixelDataItem(_length), _ ->
+    p10_token.PixelDataItem(..), _ ->
       DataSetBuilder(
         ..builder,
         pending_data_element: Some(

@@ -683,8 +683,6 @@ impl P10ReadContext {
 
       // If this is the start of a new sequence item then add it to the location
       (tag, None, _) if tag == dictionary::ITEM.tag => {
-        let token = P10Token::SequenceItemStart;
-
         let ends_at = match header.length {
           ValueLength::Defined { length } => {
             Some(self.stream.bytes_read() + u64::from(length))
@@ -692,18 +690,19 @@ impl P10ReadContext {
           ValueLength::Undefined => None,
         };
 
-        let item_index = self
-          .location
-          .add_item(ends_at, header.length)
-          .map_err(|details| P10Error::DataInvalid {
+        let index = self.location.add_item(ends_at, header.length).map_err(
+          |details| P10Error::DataInvalid {
             when: "Reading data element header".to_string(),
             details,
             path: self.path.clone(),
             offset: self.stream.bytes_read(),
-          })?;
+          },
+        )?;
 
         // Add item to the path
-        self.path.add_sequence_item(item_index).unwrap();
+        self.path.add_sequence_item(index).unwrap();
+
+        let token = P10Token::SequenceItemStart { index };
 
         Ok(vec![token])
       }
@@ -1278,8 +1277,6 @@ impl P10ReadContext {
           vr: None,
           length: ValueLength::Defined { length },
         } if tag == dictionary::ITEM.tag => {
-          let token = P10Token::PixelDataItem { length };
-
           self.next_action = NextAction::ReadDataElementValueBytes {
             tag: dictionary::ITEM.tag,
             vr,
@@ -1290,7 +1287,10 @@ impl P10ReadContext {
 
           // Add item to the path
           let item_count = self.location.sequence_item_count().unwrap_or(1);
-          self.path.add_sequence_item(item_count - 1).unwrap();
+          let index = item_count - 1;
+          self.path.add_sequence_item(index).unwrap();
+
+          let token = P10Token::PixelDataItem { index, length };
 
           Ok(vec![token])
         }

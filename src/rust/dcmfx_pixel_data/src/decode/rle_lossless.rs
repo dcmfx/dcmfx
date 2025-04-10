@@ -6,9 +6,11 @@ use byteorder::ByteOrder;
 use dcmfx_core::DataError;
 
 use crate::{
-  BitsAllocated, ColorImage, ColorSpace, PixelDataDefinition,
-  PixelRepresentation, SingleChannelImage,
-  pixel_data_definition::{PhotometricInterpretation, SamplesPerPixel},
+  ColorImage, ColorSpace, SingleChannelImage,
+  iods::image_pixel_module::{
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+    PixelRepresentation, SamplesPerPixel,
+  },
 };
 
 /// Decodes stored values for RLE Lossless pixel data that uses the
@@ -16,33 +18,33 @@ use crate::{
 /// [`PhotometricInterpretation::Monochrome2`] photometric interpretations.
 ///
 pub fn decode_single_channel(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
   // Check that there is one sample per pixel
-  if definition.samples_per_pixel() != SamplesPerPixel::One {
+  if image_pixel_module.samples_per_pixel() != SamplesPerPixel::One {
     return Err(DataError::new_value_invalid(
       "Samples per pixel is not one for grayscale pixel data".to_string(),
     ));
   }
 
   let expected_segment_length =
-    if definition.bits_allocated() == BitsAllocated::One {
-      definition.frame_size_in_bytes()
+    if image_pixel_module.bits_allocated() == BitsAllocated::One {
+      image_pixel_module.frame_size_in_bytes()
     } else {
-      definition.pixel_count()
+      image_pixel_module.pixel_count()
     };
 
   let mut segments = decode_rle_segments(data, expected_segment_length)?;
 
-  let width = definition.columns();
-  let height = definition.rows();
-  let pixel_count = definition.pixel_count();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
+  let pixel_count = image_pixel_module.pixel_count();
 
   match (
-    &definition.photometric_interpretation(),
-    definition.pixel_representation(),
-    definition.bits_allocated(),
+    &image_pixel_module.photometric_interpretation(),
+    image_pixel_module.pixel_representation(),
+    image_pixel_module.bits_allocated(),
     segments.as_slice(),
   ) {
     (
@@ -53,7 +55,7 @@ pub fn decode_single_channel(
       [_],
     ) => {
       let segment = segments.pop().unwrap();
-      let is_signed = definition.pixel_representation().is_signed();
+      let is_signed = image_pixel_module.pixel_representation().is_signed();
 
       SingleChannelImage::new_bitmap(width, height, segment, is_signed)
     }
@@ -68,8 +70,8 @@ pub fn decode_single_channel(
       let segment = segments.pop().unwrap();
       let mut pixels = bytemuck::cast_vec(segment);
 
-      if definition.has_unused_high_bits() {
-        let threshold = 2i8.pow(definition.bits_stored() as u32 - 1);
+      if image_pixel_module.has_unused_high_bits() {
+        let threshold = 2i8.pow(image_pixel_module.bits_stored() as u32 - 1);
 
         for pixel in pixels.iter_mut() {
           if *pixel >= threshold {
@@ -102,8 +104,8 @@ pub fn decode_single_channel(
     ) => {
       let mut pixels = vec![0i16; pixel_count];
 
-      if definition.has_unused_high_bits() {
-        let threshold = 2i16.pow(definition.bits_stored() as u32 - 1);
+      if image_pixel_module.has_unused_high_bits() {
+        let threshold = 2i16.pow(image_pixel_module.bits_stored() as u32 - 1);
 
         for i in 0..pixel_count {
           pixels[i] = i16::from_be_bytes([segment_0[i], segment_1[i]]);
@@ -147,8 +149,8 @@ pub fn decode_single_channel(
     ) => {
       let mut pixels = vec![0i32; pixel_count];
 
-      if definition.has_unused_high_bits() {
-        let threshold = 2i32.pow(definition.bits_stored() as u32 - 1);
+      if image_pixel_module.has_unused_high_bits() {
+        let threshold = 2i32.pow(image_pixel_module.bits_stored() as u32 - 1);
 
         for i in 0..pixel_count {
           pixels[i] = i32::from_be_bytes([
@@ -201,8 +203,8 @@ pub fn decode_single_channel(
     _ => Err(DataError::new_value_invalid(format!(
       "RLE Lossless decode not supported with photometric interpretation '{}', \
        bits allocated '{}', segment count '{}'",
-      definition.photometric_interpretation(),
-      u8::from(definition.bits_allocated()),
+      image_pixel_module.photometric_interpretation(),
+      u8::from(image_pixel_module.bits_allocated()),
       segments.len(),
     ))),
   }
@@ -213,14 +215,15 @@ pub fn decode_single_channel(
 /// [`PhotometricInterpretation::YbrFull`] photometric interpretations.
 ///
 pub fn decode_color(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let width = definition.columns();
-  let height = definition.rows();
-  let pixel_count = definition.pixel_count();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
+  let pixel_count = image_pixel_module.pixel_count();
 
-  let color_space = if definition.photometric_interpretation().is_ybr() {
+  let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
+  {
     ColorSpace::YBR
   } else {
     ColorSpace::RGB
@@ -229,8 +232,8 @@ pub fn decode_color(
   let mut segments = decode_rle_segments(data, pixel_count)?;
 
   match (
-    &definition.photometric_interpretation(),
-    definition.bits_allocated(),
+    &image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
     segments.as_slice(),
   ) {
     (
@@ -345,8 +348,8 @@ pub fn decode_color(
     _ => Err(DataError::new_value_invalid(format!(
       "Photometric interpretation '{}' is invalid for RLE Lossless color \
        pixel data when bits allocated is {} and there are {} segments",
-      definition.photometric_interpretation(),
-      u8::from(definition.bits_allocated()),
+      image_pixel_module.photometric_interpretation(),
+      u8::from(image_pixel_module.bits_allocated()),
       segments.len(),
     ))),
   }
@@ -482,14 +485,13 @@ mod tests {
 
   #[test]
   pub fn decode_monochrome_8_bit_unsigned() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
       PhotometricInterpretation::Monochrome2,
       2,
       2,
       BitsAllocated::Eight,
       8,
-      7,
       PixelRepresentation::Unsigned,
     )
     .unwrap();
@@ -497,21 +499,20 @@ mod tests {
     let data = encode_segments(&[&[0, 1, 2, 3]], 2).unwrap();
 
     assert_eq!(
-      decode_single_channel(&definition, &data),
+      decode_single_channel(&image_pixel_module, &data),
       SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3])
     );
   }
 
   #[test]
   fn decode_monochrome_8_bit_signed_with_7_bits_stored() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
       PhotometricInterpretation::Monochrome2,
       8,
       16,
       BitsAllocated::Eight,
       7,
-      6,
       PixelRepresentation::Signed,
     )
     .unwrap();
@@ -520,21 +521,20 @@ mod tests {
     let data = encode_segments(&[&data], 8).unwrap();
 
     assert_eq!(
-      decode_single_channel(&definition, &data),
+      decode_single_channel(&image_pixel_module, &data),
       SingleChannelImage::new_i8(16, 8, (0..64).chain(-64..0).collect())
     );
   }
 
   #[test]
   fn decode_monochrome_16_bit_signed_with_12_bits_stored() {
-    let definition = PixelDataDefinition::new(
+    let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
       PhotometricInterpretation::Monochrome2,
       64,
       64,
       BitsAllocated::Sixteen,
       12,
-      11,
       PixelRepresentation::Signed,
     )
     .unwrap();
@@ -544,7 +544,7 @@ mod tests {
     let data = encode_segments(&[&segment_0, &segment_1], 64).unwrap();
 
     assert_eq!(
-      decode_single_channel(&definition, &data),
+      decode_single_channel(&image_pixel_module, &data),
       SingleChannelImage::new_i16(64, 64, (0..2048).chain(-2048..0).collect())
     );
   }

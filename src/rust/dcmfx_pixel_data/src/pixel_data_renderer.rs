@@ -2,15 +2,14 @@
 use alloc::{format, string::ToString, vec, vec::Vec};
 
 use dcmfx_core::{
-  DataElementTag, DataError, DataSet, TransferSyntax, dictionary,
-  transfer_syntax,
+  DataElementTag, DataError, DataSet, DataSetPath, IodModule, TransferSyntax,
+  ValueRepresentation, dictionary, transfer_syntax,
 };
 
-use dcmfx_p10::P10CustomTypeTransform;
-
 use crate::{
-  ColorImage, ColorPalette, ModalityLut, PixelDataDefinition, PixelDataFrame,
-  SingleChannelImage, VoiLut, decode,
+  ColorImage, PixelDataFrame, SingleChannelImage, decode,
+  iods::{ImagePixelModule, ModalityLutModule, VoiLutModule},
+  luts,
 };
 
 /// Defines a pixel data renderer that can take a [`PixelDataFrame`] and render
@@ -19,78 +18,50 @@ use crate::{
 #[derive(Clone, Debug, PartialEq)]
 pub struct PixelDataRenderer {
   pub transfer_syntax: &'static TransferSyntax,
-  pub definition: PixelDataDefinition,
-  pub modality_lut: ModalityLut,
-  pub voi_lut: VoiLut,
+  pub image_pixel_module: ImagePixelModule,
+  pub modality_lut_module: ModalityLutModule,
+  pub voi_lut_module: VoiLutModule,
 }
 
-impl PixelDataRenderer {
-  /// Returns a [`P10CustomTypeTransform`] that extracts a [`PixelDataRenderer`]
-  /// from a stream of DICOM P10 tokens.
-  ///
-  pub fn custom_type_transform() -> P10CustomTypeTransform<Self> {
-    P10CustomTypeTransform::new(&Self::DATA_ELEMENT_TAGS, Self::from_data_set)
+impl IodModule for PixelDataRenderer {
+  fn is_iod_module_data_element(
+    tag: DataElementTag,
+    vr: ValueRepresentation,
+    length: Option<u32>,
+    path: &DataSetPath,
+  ) -> bool {
+    ImagePixelModule::is_iod_module_data_element(tag, vr, length, path)
+      || ModalityLutModule::is_iod_module_data_element(tag, vr, length, path)
+      || VoiLutModule::is_iod_module_data_element(tag, vr, length, path)
   }
 
-  /// The tags of the data elements that are read when creating a new
-  /// [`PixelDataRenderer`].
-  ///
-  pub const DATA_ELEMENT_TAGS: [DataElementTag; 28] = [
-    dictionary::SAMPLES_PER_PIXEL.tag,
-    dictionary::PHOTOMETRIC_INTERPRETATION.tag,
-    dictionary::PLANAR_CONFIGURATION.tag,
-    dictionary::ROWS.tag,
-    dictionary::COLUMNS.tag,
-    dictionary::BITS_ALLOCATED.tag,
-    dictionary::BITS_STORED.tag,
-    dictionary::HIGH_BIT.tag,
-    dictionary::PIXEL_REPRESENTATION.tag,
-    dictionary::RED_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
-    dictionary::RED_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
-    dictionary::GREEN_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
-    dictionary::GREEN_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
-    dictionary::BLUE_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
-    dictionary::BLUE_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
-    dictionary::LUT_DESCRIPTOR.tag,
-    dictionary::LUT_EXPLANATION.tag,
-    dictionary::LUT_DATA.tag,
-    dictionary::MODALITY_LUT_SEQUENCE.tag,
-    dictionary::MODALITY_LUT_TYPE.tag,
-    dictionary::RESCALE_INTERCEPT.tag,
-    dictionary::RESCALE_SLOPE.tag,
-    dictionary::RESCALE_TYPE.tag,
-    dictionary::VOILUT_SEQUENCE.tag,
-    dictionary::WINDOW_CENTER.tag,
-    dictionary::WINDOW_WIDTH.tag,
-    dictionary::WINDOW_CENTER_WIDTH_EXPLANATION.tag,
-    dictionary::VOILUT_FUNCTION.tag,
-  ];
+  fn iod_module_highest_tag() -> DataElementTag {
+    ImagePixelModule::iod_module_highest_tag()
+      .max(ModalityLutModule::iod_module_highest_tag())
+      .max(VoiLutModule::iod_module_highest_tag())
+  }
 
-  /// Creates a pixel data renderer for rendering frames of pixel data in a
-  /// data set into a [`SingleChannelImage`], [`ColorImage`], or [`RgbImage`].
-  ///
-  /// This references the data elements specified in
-  /// [`Self::DATA_ELEMENT_TAGS`].
-  ///
-  pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
+  fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let transfer_syntax = if data_set.has(dictionary::TRANSFER_SYNTAX_UID.tag) {
       data_set.get_transfer_syntax()?
     } else {
       &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
     };
 
-    let definition = PixelDataDefinition::from_data_set(data_set)?;
-    let modality_lut = ModalityLut::from_data_set(data_set)?;
-    let voi_lut = VoiLut::from_data_set(data_set)?;
+    let image_pixel_module = ImagePixelModule::from_data_set(data_set)?;
+    let modality_lut_module = ModalityLutModule::from_data_set(data_set)?;
+    let voi_lut_module = VoiLutModule::from_data_set(data_set)?;
 
     Ok(PixelDataRenderer {
       transfer_syntax,
-      definition,
-      modality_lut,
-      voi_lut,
+      image_pixel_module,
+      modality_lut_module,
+      voi_lut_module,
     })
   }
+}
 
+impl PixelDataRenderer {
   /// Renders a frame of pixel data to an RGB 8-bit image. The Modality LUT and
   /// VOI LUT are applied to single channel images, and resulting grayscale
   /// values are then expanded to RGB.
@@ -102,14 +73,14 @@ impl PixelDataRenderer {
   pub fn render_frame(
     &self,
     frame: &mut PixelDataFrame,
-    color_palette: Option<&ColorPalette>,
+    color_palette: Option<&luts::ColorPalette>,
   ) -> Result<image::RgbImage, DataError> {
-    if self.definition.is_grayscale() {
+    if self.image_pixel_module.is_grayscale() {
       let image = self.decode_single_channel_frame(frame)?;
       Ok(self.render_single_channel_image(&image, color_palette))
     } else {
       let image = self.decode_color_frame(frame)?;
-      Ok(image.into_rgb_u8_image(&self.definition))
+      Ok(image.into_rgb_u8_image(&self.image_pixel_module))
     }
   }
 
@@ -124,11 +95,12 @@ impl PixelDataRenderer {
   pub fn render_single_channel_image(
     &self,
     image: &SingleChannelImage,
-    color_palette: Option<&ColorPalette>,
+    color_palette: Option<&luts::ColorPalette>,
   ) -> image::RgbImage {
     let mut pixels = Vec::with_capacity(image.pixel_count() * 3);
 
-    let gray_image = image.to_gray_u8_image(&self.modality_lut, &self.voi_lut);
+    let gray_image =
+      image.to_gray_u8_image(&self.modality_lut_module, &self.voi_lut_module);
 
     if let Some(color_palette) = color_palette {
       for pixel in gray_image.pixels() {
@@ -165,25 +137,30 @@ impl PixelDataRenderer {
       | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
       | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
       | &EXPLICIT_VR_BIG_ENDIAN => decode::native::decode_single_channel(
-        &self.definition,
+        &self.image_pixel_module,
         data,
         frame_bit_offset,
       ),
 
-      &RLE_LOSSLESS => {
-        decode::rle_lossless::decode_single_channel(&self.definition, data)
-      }
+      &RLE_LOSSLESS => decode::rle_lossless::decode_single_channel(
+        &self.image_pixel_module,
+        data,
+      ),
 
       &JPEG_BASELINE_8BIT => {
-        decode::zune_jpeg::decode_single_channel(&self.definition, data)
+        decode::zune_jpeg::decode_single_channel(&self.image_pixel_module, data)
       }
 
-      &JPEG_EXTENDED_12BIT => {
-        decode::libjpeg_12bit::decode_single_channel(&self.definition, data)
-      }
+      &JPEG_EXTENDED_12BIT => decode::libjpeg_12bit::decode_single_channel(
+        &self.image_pixel_module,
+        data,
+      ),
 
       &JPEG_LOSSLESS_NON_HIERARCHICAL | &JPEG_LOSSLESS_NON_HIERARCHICAL_SV1 => {
-        decode::jpeg_decoder::decode_single_channel(&self.definition, data)
+        decode::jpeg_decoder::decode_single_channel(
+          &self.image_pixel_module,
+          data,
+        )
       }
 
       &JPEG_2K
@@ -191,21 +168,21 @@ impl PixelDataRenderer {
       | &HIGH_THROUGHPUT_JPEG_2K
       | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
-        decode::openjpeg::decode_single_channel(&self.definition, data)
+        decode::openjpeg::decode_single_channel(&self.image_pixel_module, data)
       }
 
       &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-        decode::jxl_oxide::decode_single_channel(&self.definition, data)
+        decode::jxl_oxide::decode_single_channel(&self.image_pixel_module, data)
       }
 
       #[cfg(not(target_arch = "wasm32"))]
       &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-        decode::charls::decode_single_channel(&self.definition, data)
+        decode::charls::decode_single_channel(&self.image_pixel_module, data)
       }
 
       &DEFLATED_IMAGE_FRAME_COMPRESSION => {
         decode::native::decode_single_channel(
-          &self.definition,
+          &self.image_pixel_module,
           &self.inflate_frame_data(data)?,
           0,
         )
@@ -217,7 +194,7 @@ impl PixelDataRenderer {
       ))),
     }?;
 
-    image.invert_monochrome1_data(&self.definition);
+    image.invert_monochrome1_data(&self.image_pixel_module);
 
     Ok(image)
   }
@@ -238,23 +215,23 @@ impl PixelDataRenderer {
       | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
       | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
       | &EXPLICIT_VR_BIG_ENDIAN => {
-        decode::native::decode_color(&self.definition, data)
+        decode::native::decode_color(&self.image_pixel_module, data)
       }
 
       &RLE_LOSSLESS => {
-        decode::rle_lossless::decode_color(&self.definition, data)
+        decode::rle_lossless::decode_color(&self.image_pixel_module, data)
       }
 
       &JPEG_BASELINE_8BIT => {
-        decode::zune_jpeg::decode_color(&self.definition, data)
+        decode::zune_jpeg::decode_color(&self.image_pixel_module, data)
       }
 
       &JPEG_EXTENDED_12BIT => {
-        decode::libjpeg_12bit::decode_color(&self.definition, data)
+        decode::libjpeg_12bit::decode_color(&self.image_pixel_module, data)
       }
 
       &JPEG_LOSSLESS_NON_HIERARCHICAL | &JPEG_LOSSLESS_NON_HIERARCHICAL_SV1 => {
-        decode::jpeg_decoder::decode_color(&self.definition, data)
+        decode::jpeg_decoder::decode_color(&self.image_pixel_module, data)
       }
 
       &JPEG_2K
@@ -262,20 +239,20 @@ impl PixelDataRenderer {
       | &HIGH_THROUGHPUT_JPEG_2K
       | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
       | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
-        decode::openjpeg::decode_color(&self.definition, data)
+        decode::openjpeg::decode_color(&self.image_pixel_module, data)
       }
 
       &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-        decode::jxl_oxide::decode_color(&self.definition, data)
+        decode::jxl_oxide::decode_color(&self.image_pixel_module, data)
       }
 
       #[cfg(not(target_arch = "wasm32"))]
       &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-        decode::charls::decode_color(&self.definition, data)
+        decode::charls::decode_color(&self.image_pixel_module, data)
       }
 
       &DEFLATED_IMAGE_FRAME_COMPRESSION => decode::native::decode_color(
-        &self.definition,
+        &self.image_pixel_module,
         &self.inflate_frame_data(data)?,
       ),
 
@@ -291,7 +268,8 @@ impl PixelDataRenderer {
   ///
   fn inflate_frame_data(&self, data: &[u8]) -> Result<Vec<u8>, DataError> {
     let mut decompressor = flate2::Decompress::new(false);
-    let mut inflated_data = vec![0u8; self.definition.frame_size_in_bytes()];
+    let mut inflated_data =
+      vec![0u8; self.image_pixel_module.frame_size_in_bytes()];
 
     match decompressor.decompress(
       data,

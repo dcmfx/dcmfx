@@ -4,8 +4,9 @@ use alloc::{string::ToString, vec::Vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  ModalityLut, PhotometricInterpretation, PixelDataDefinition, VoiLut,
-  VoiWindow,
+  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
+  iods::voi_lut_module::{VoiLutFunction, VoiWindow},
+  iods::{ModalityLutModule, VoiLutModule},
 };
 
 /// A single channel image that stores an integer value for each pixel.
@@ -259,15 +260,18 @@ impl SingleChannelImage {
         (max + min) as f32 * 0.5,
         (max - min) as f32,
         "".into(),
-        super::VoiLutFunction::LinearExact,
+        VoiLutFunction::LinearExact,
       )
     })
   }
 
   /// Converts Monochrome1 pixel data to Monochrome2.
   ///
-  pub fn invert_monochrome1_data(&mut self, definition: &PixelDataDefinition) {
-    if definition.photometric_interpretation()
+  pub fn invert_monochrome1_data(
+    &mut self,
+    image_pixel_module: &ImagePixelModule,
+  ) {
+    if image_pixel_module.photometric_interpretation()
       != &PhotometricInterpretation::Monochrome1
     {
       return;
@@ -275,10 +279,10 @@ impl SingleChannelImage {
 
     // Calculate the offset to add after negating the stored pixel value in
     // order to convert to Monochrome2
-    let offset: i64 = if definition.pixel_representation().is_signed() {
+    let offset: i64 = if image_pixel_module.pixel_representation().is_signed() {
       -1
     } else {
-      definition.int_max().into()
+      image_pixel_module.int_max().into()
     };
 
     match &mut self.data {
@@ -337,10 +341,10 @@ impl SingleChannelImage {
   ///
   pub fn to_gray_u8_image(
     &self,
-    modality_lut: &ModalityLut,
-    voi_lut: &VoiLut,
+    modality_lut_module: &ModalityLutModule,
+    voi_lut_module: &VoiLutModule,
   ) -> image::GrayImage {
-    self.to_gray_image(modality_lut, voi_lut, |pixel: f32| {
+    self.to_gray_image(modality_lut_module, voi_lut_module, |pixel: f32| {
       (pixel * 255.0).round().clamp(0.0, 255.0) as u8
     })
   }
@@ -350,26 +354,26 @@ impl SingleChannelImage {
   ///
   pub fn to_gray_u16_image(
     &self,
-    modality_lut: &ModalityLut,
-    voi_lut: &VoiLut,
+    modality_lut_module: &ModalityLutModule,
+    voi_lut_module: &VoiLutModule,
   ) -> image::ImageBuffer<image::Luma<u16>, Vec<u16>> {
-    self.to_gray_image(modality_lut, voi_lut, |pixel: f32| {
+    self.to_gray_image(modality_lut_module, voi_lut_module, |pixel: f32| {
       (pixel * 65535.0).round().clamp(0.0, 65535.0) as u16
     })
   }
 
   fn to_gray_image<T: image::Primitive>(
     &self,
-    modality_lut: &ModalityLut,
-    voi_lut: &VoiLut,
+    modality_lut_module: &ModalityLutModule,
+    voi_lut_module: &VoiLutModule,
     pixel_to_gray: impl Fn(f32) -> T,
   ) -> image::ImageBuffer<image::Luma<T>, Vec<T>> {
     let mut gray_pixels = Vec::with_capacity(self.pixel_count());
 
     let stored_value_to_gray = |stored_value: i64| {
       // Apply LUTs
-      let x = modality_lut.apply_to_stored_value(stored_value);
-      let x = voi_lut.apply(x);
+      let x = modality_lut_module.apply_to_stored_value(stored_value);
+      let x = voi_lut_module.apply(x);
 
       pixel_to_gray(x)
     };

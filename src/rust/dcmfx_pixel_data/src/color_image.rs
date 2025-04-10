@@ -6,7 +6,10 @@ use alloc::{rc::Rc, string::ToString, vec::Vec};
 
 use dcmfx_core::DataError;
 
-use crate::{PixelDataDefinition, RgbLut, utils::udiv_round};
+use crate::{
+  iods::ImagePixelModule, iods::PaletteColorLookupTableModule,
+  utils::udiv_round,
+};
 
 /// A color image that stores RGB or YBR color values for each pixel.
 ///
@@ -33,11 +36,11 @@ enum ColorImageData {
   },
   PaletteU8 {
     data: Vec<u8>,
-    palette: Rc<RgbLut>,
+    palette: Rc<PaletteColorLookupTableModule>,
   },
   PaletteU16 {
     data: Vec<u16>,
-    palette: Rc<RgbLut>,
+    palette: Rc<PaletteColorLookupTableModule>,
   },
 }
 
@@ -124,7 +127,7 @@ impl ColorImage {
     width: u16,
     height: u16,
     data: Vec<u8>,
-    palette: Rc<RgbLut>,
+    palette: Rc<PaletteColorLookupTableModule>,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -146,7 +149,7 @@ impl ColorImage {
     width: u16,
     height: u16,
     data: Vec<u16>,
-    palette: Rc<RgbLut>,
+    palette: Rc<PaletteColorLookupTableModule>,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -189,7 +192,7 @@ impl ColorImage {
   ///
   pub fn into_rgb_u8_image(
     self,
-    definition: &PixelDataDefinition,
+    image_pixel_module: &ImagePixelModule,
   ) -> image::ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     match self.data {
       // If this color image is already in RGB8 then return it directly,
@@ -197,12 +200,14 @@ impl ColorImage {
       ColorImageData::U8 {
         data,
         color_space: ColorSpace::RGB,
-      } if definition.bits_stored() == 8 => image::ImageBuffer::from_raw(
-        self.width.into(),
-        self.height.into(),
-        data,
-      )
-      .unwrap(),
+      } if image_pixel_module.bits_stored() == 8 => {
+        image::ImageBuffer::from_raw(
+          self.width.into(),
+          self.height.into(),
+          data,
+        )
+        .unwrap()
+      }
 
       _ => {
         let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
@@ -211,13 +216,13 @@ impl ColorImage {
           data: Vec<T>,
           color_space: ColorSpace,
           rgb_pixels: &mut Vec<u8>,
-          definition: &PixelDataDefinition,
+          image_pixel_module: &ImagePixelModule,
         ) where
           T: Copy + Into<f64> + Into<u64>,
         {
           match color_space {
             ColorSpace::RGB => {
-              let max_value: u64 = definition.int_max().into();
+              let max_value: u64 = image_pixel_module.int_max().into();
 
               for rgb in data.chunks_exact(3) {
                 let r: u64 = rgb[0].into();
@@ -231,7 +236,7 @@ impl ColorImage {
             }
 
             ColorSpace::YBR => {
-              let scale = 1.0 / f64::from(definition.int_max());
+              let scale = 1.0 / f64::from(image_pixel_module.int_max());
 
               for ybr in data.chunks_exact(3) {
                 let y: f64 = ybr[0].into();
@@ -257,7 +262,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              definition,
+              image_pixel_module,
             )
           }
 
@@ -266,7 +271,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              definition,
+              image_pixel_module,
             )
           }
 
@@ -275,7 +280,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              definition,
+              image_pixel_module,
             )
           }
 
@@ -308,7 +313,7 @@ impl ColorImage {
   ///
   pub fn into_rgb_u16_image(
     self,
-    definition: &PixelDataDefinition,
+    image_pixel_module: &ImagePixelModule,
   ) -> image::ImageBuffer<image::Rgb<u16>, Vec<u16>> {
     match self.data {
       // If this color image is already in RGB16 then return it directly,
@@ -316,12 +321,14 @@ impl ColorImage {
       ColorImageData::U16 {
         color_space: ColorSpace::RGB,
         data,
-      } if definition.bits_stored() == 16 => image::ImageBuffer::from_raw(
-        self.width.into(),
-        self.height.into(),
-        data,
-      )
-      .unwrap(),
+      } if image_pixel_module.bits_stored() == 16 => {
+        image::ImageBuffer::from_raw(
+          self.width.into(),
+          self.height.into(),
+          data,
+        )
+        .unwrap()
+      }
 
       _ => {
         let mut rgb_pixels: Vec<u16> =
@@ -331,13 +338,13 @@ impl ColorImage {
           data: Vec<T>,
           color_space: ColorSpace,
           rgb_pixels: &mut Vec<u16>,
-          definition: &PixelDataDefinition,
+          image_pixel_module: &ImagePixelModule,
         ) where
           T: Copy + Into<f64> + Into<u64>,
         {
           match color_space {
             ColorSpace::RGB => {
-              let max_value: u64 = definition.int_max().into();
+              let max_value: u64 = image_pixel_module.int_max().into();
 
               for rgb in data.chunks_exact(3) {
                 let r: u64 = rgb[0].into();
@@ -354,7 +361,7 @@ impl ColorImage {
             }
 
             ColorSpace::YBR => {
-              let scale = 1.0 / f64::from(definition.int_max());
+              let scale = 1.0 / f64::from(image_pixel_module.int_max());
 
               for ybr in data.chunks_exact(3) {
                 let y: f64 = ybr[0].into();
@@ -380,7 +387,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              definition,
+              image_pixel_module,
             )
           }
 
@@ -389,7 +396,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              definition,
+              image_pixel_module,
             )
           }
 
@@ -398,7 +405,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              definition,
+              image_pixel_module,
             )
           }
 
@@ -436,7 +443,7 @@ impl ColorImage {
   ///
   pub fn to_rgb_f64_image(
     &self,
-    definition: &PixelDataDefinition,
+    image_pixel_module: &ImagePixelModule,
   ) -> image::ImageBuffer<image::Rgb<f64>, Vec<f64>> {
     let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
 
@@ -444,11 +451,11 @@ impl ColorImage {
       data: &[T],
       color_space: &ColorSpace,
       rgb_pixels: &mut Vec<f64>,
-      definition: &PixelDataDefinition,
+      image_pixel_module: &ImagePixelModule,
     ) where
       T: Copy + Into<f64>,
     {
-      let scale = 1.0 / f64::from(definition.int_max());
+      let scale = 1.0 / f64::from(image_pixel_module.int_max());
 
       match color_space {
         ColorSpace::RGB => {
@@ -478,21 +485,21 @@ impl ColorImage {
         data,
         color_space,
         &mut rgb_pixels,
-        definition,
+        image_pixel_module,
       ),
 
       ColorImageData::U16 { data, color_space } => unsigned_data_to_rgb_pixels(
         data,
         color_space,
         &mut rgb_pixels,
-        definition,
+        image_pixel_module,
       ),
 
       ColorImageData::U32 { data, color_space } => unsigned_data_to_rgb_pixels(
         data,
         color_space,
         &mut rgb_pixels,
-        definition,
+        image_pixel_module,
       ),
 
       ColorImageData::PaletteU8 { data, palette } => {

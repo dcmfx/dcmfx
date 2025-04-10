@@ -160,7 +160,7 @@ impl P10PrintTransform {
         s
       }
 
-      P10Token::SequenceItemStart => {
+      P10Token::SequenceItemStart { .. } => {
         let mut s = data_set::print::format_data_element_prefix(
           dictionary::ITEM.tag,
           dictionary::ITEM.name,
@@ -197,7 +197,7 @@ impl P10PrintTransform {
         s
       }
 
-      P10Token::PixelDataItem { length } => {
+      P10Token::PixelDataItem { length, .. } => {
         let (s, width) = data_set::print::format_data_element_prefix(
           dictionary::ITEM.tag,
           dictionary::ITEM.name,

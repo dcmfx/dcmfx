@@ -3,39 +3,51 @@ use alloc::{format, string::ToString, vec::Vec};
 
 use dcmfx_core::DataError;
 
-use crate::{ColorImage, ColorSpace, PixelDataDefinition, SingleChannelImage};
+use crate::{
+  ColorImage, ColorSpace, SingleChannelImage, iods::ImagePixelModule,
+};
 
 /// Decodes single channel JPEG pixel data using zune-jpeg.
 ///
 pub fn decode_single_channel(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
-  let pixels =
-    decode(definition, data, zune_core::colorspace::ColorSpace::Luma)?;
+  let pixels = decode(
+    image_pixel_module,
+    data,
+    zune_core::colorspace::ColorSpace::Luma,
+  )?;
 
-  SingleChannelImage::new_u8(definition.columns(), definition.rows(), pixels)
+  SingleChannelImage::new_u8(
+    image_pixel_module.columns(),
+    image_pixel_module.rows(),
+    pixels,
+  )
 }
 
 /// Decodes color JPEG pixel data using zune-jpeg.
 ///
 pub fn decode_color(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let pixels =
-    decode(definition, data, zune_core::colorspace::ColorSpace::RGB)?;
+  let pixels = decode(
+    image_pixel_module,
+    data,
+    zune_core::colorspace::ColorSpace::RGB,
+  )?;
 
   ColorImage::new_u8(
-    definition.columns(),
-    definition.rows(),
+    image_pixel_module.columns(),
+    image_pixel_module.rows(),
     pixels,
     ColorSpace::RGB,
   )
 }
 
 fn decode(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
   color_space: zune_core::colorspace::ColorSpace,
 ) -> Result<Vec<u8>, DataError> {
@@ -51,8 +63,8 @@ fn decode(
     ))
   })?;
 
-  if decoder.info().unwrap().width != definition.columns()
-    || decoder.info().unwrap().height != definition.rows()
+  if decoder.info().unwrap().width != image_pixel_module.columns()
+    || decoder.info().unwrap().height != image_pixel_module.rows()
   {
     return Err(DataError::new_value_invalid(
       "JPEG pixel data has incorrect dimensions".to_string(),

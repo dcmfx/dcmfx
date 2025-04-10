@@ -6,27 +6,27 @@ use jxl_oxide::{FrameBufferSample, JxlImage, Render, image::BitDepth};
 use dcmfx_core::DataError;
 
 use crate::{
-  BitsAllocated, ColorImage, ColorSpace, PixelDataDefinition,
-  SingleChannelImage,
+  ColorImage, ColorSpace, SingleChannelImage,
+  iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 
 /// Decodes single channel pixel data using jxl-oxide.
 ///
 pub fn decode_single_channel(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
-  let (jxl_image, jxl_render) = decode(definition, data)?;
+  let (jxl_image, jxl_render) = decode(image_pixel_module, data)?;
 
-  let width = definition.columns();
-  let height = definition.rows();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
 
   match (
-    definition.bits_allocated(),
+    image_pixel_module.bits_allocated(),
     jxl_image.image_header().metadata.bit_depth,
   ) {
     (BitsAllocated::Eight, BitDepth::IntegerSample { bits_per_sample: 8 }) => {
-      let mut buffer = vec![0u8; definition.pixel_count()];
+      let mut buffer = vec![0u8; image_pixel_module.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 
       SingleChannelImage::new_u8(width, height, buffer)
@@ -38,7 +38,7 @@ pub fn decode_single_channel(
         bits_per_sample: 16,
       },
     ) => {
-      let mut buffer = vec![0u16; definition.pixel_count()];
+      let mut buffer = vec![0u16; image_pixel_module.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 
       SingleChannelImage::new_u16(width, height, buffer)
@@ -54,25 +54,25 @@ pub fn decode_single_channel(
 /// Decodes color pixel data using jxl-oxide.
 ///
 pub fn decode_color(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  if definition.bits_allocated() == BitsAllocated::One {
+  if image_pixel_module.bits_allocated() == BitsAllocated::One {
     return Err(DataError::new_value_invalid(
       "JPEG XL does not support 1-bit pixel data".to_string(),
     ));
   }
 
-  let (jxl_image, jxl_render) = decode(definition, data)?;
-  let width = definition.columns();
-  let height = definition.rows();
+  let (jxl_image, jxl_render) = decode(image_pixel_module, data)?;
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
 
   match (
-    definition.bits_allocated(),
+    image_pixel_module.bits_allocated(),
     jxl_image.image_header().metadata.bit_depth,
   ) {
     (BitsAllocated::Eight, BitDepth::IntegerSample { bits_per_sample: 8 }) => {
-      let mut buffer = vec![0u8; definition.pixel_count() * 3];
+      let mut buffer = vec![0u8; image_pixel_module.pixel_count() * 3];
       render_samples(&jxl_render, &mut buffer)?;
 
       ColorImage::new_u8(width, height, buffer, ColorSpace::RGB)
@@ -84,7 +84,7 @@ pub fn decode_color(
         bits_per_sample: 16,
       },
     ) => {
-      let mut buffer = vec![0u16; definition.pixel_count() * 3];
+      let mut buffer = vec![0u16; image_pixel_module.pixel_count() * 3];
       render_samples(&jxl_render, &mut buffer)?;
 
       ColorImage::new_u16(width, height, buffer, ColorSpace::RGB)
@@ -97,10 +97,10 @@ pub fn decode_color(
 }
 
 fn decode(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<(JxlImage, Render), DataError> {
-  if definition.pixel_representation().is_signed() {
+  if image_pixel_module.pixel_representation().is_signed() {
     return Err(DataError::new_value_invalid(
       "JPEG XL decoding of signed pixel data is not supported".to_string(),
     ));
@@ -113,8 +113,8 @@ fn decode(
     ))
   })?;
 
-  if image.width() != definition.columns().into()
-    || image.height() != definition.rows().into()
+  if image.width() != image_pixel_module.columns().into()
+    || image.height() != image_pixel_module.rows().into()
   {
     return Err(DataError::new_value_invalid(
       "JPEG XL pixel data has incorrect dimensions".to_string(),

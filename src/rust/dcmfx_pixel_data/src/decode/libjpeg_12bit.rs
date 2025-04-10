@@ -2,44 +2,48 @@
 use alloc::{format, vec, vec::Vec};
 
 use crate::{
-  BitsAllocated, ColorImage, ColorSpace, PixelDataDefinition,
-  SingleChannelImage,
+  ColorImage, ColorSpace, SingleChannelImage,
+  iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 use dcmfx_core::DataError;
 
 /// Decodes single channel pixel data using libjpeg_12bit.
 ///
 pub fn decode_single_channel(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
-  let pixels = decode(definition, data)?;
-  SingleChannelImage::new_u16(definition.columns(), definition.rows(), pixels)
+  let pixels = decode(image_pixel_module, data)?;
+  SingleChannelImage::new_u16(
+    image_pixel_module.columns(),
+    image_pixel_module.rows(),
+    pixels,
+  )
 }
 
 /// Decodes color pixel data using libjpeg_12bit.
 ///
 pub fn decode_color(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let pixels = decode(definition, data)?;
+  let pixels = decode(image_pixel_module, data)?;
   ColorImage::new_u16(
-    definition.columns(),
-    definition.rows(),
+    image_pixel_module.columns(),
+    image_pixel_module.rows(),
     pixels,
     ColorSpace::RGB,
   )
 }
 
 fn decode(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<Vec<u16>, DataError> {
-  if definition.bits_allocated() != BitsAllocated::Sixteen {
+  if image_pixel_module.bits_allocated() != BitsAllocated::Sixteen {
     return Err(DataError::new_value_invalid(format!(
       "JPEG 12-bit pixel data must have 16 bits allocated but has {}",
-      u8::from(definition.bits_allocated())
+      u8::from(image_pixel_module.bits_allocated())
     )));
   }
 
@@ -49,8 +53,8 @@ fn decode(
   let mut output_buffer =
     vec![
       0u16;
-      definition.pixel_count()
-        * usize::from(u8::from(definition.samples_per_pixel()))
+      image_pixel_module.pixel_count()
+        * usize::from(u8::from(image_pixel_module.samples_per_pixel()))
     ];
 
   // Make FFI call into libjpeg_12bit to perform the decompression
@@ -58,9 +62,9 @@ fn decode(
     ffi::libjpeg_12bit_decode(
       data.as_ptr(),
       data.len() as u64,
-      definition.columns().into(),
-      definition.rows().into(),
-      u8::from(definition.samples_per_pixel()).into(),
+      image_pixel_module.columns().into(),
+      image_pixel_module.rows().into(),
+      u8::from(image_pixel_module.samples_per_pixel()).into(),
       output_buffer.as_mut_ptr(),
       output_buffer.len() as u64,
       error_message.as_mut_ptr(),

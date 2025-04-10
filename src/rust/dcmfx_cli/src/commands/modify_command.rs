@@ -289,13 +289,16 @@ fn streaming_rewrite(
 
     // Pass tokens through the filter if one is specified
     let mut tokens = if let Some(filter_context) = filter_context.as_mut() {
-      tokens
-        .into_iter()
-        .filter(|token| filter_context.add_token(token))
-        .collect()
+      tokens.into_iter().try_fold(vec![], |mut acc, token| {
+        if filter_context.add_token(&token)? {
+          acc.push(token);
+        }
+
+        Ok(acc)
+      })
     } else {
-      tokens
-    };
+      Ok(tokens)
+    }?;
 
     let output_transfer_syntax =
       parse_transfer_syntax_flag(&args.transfer_syntax)?;

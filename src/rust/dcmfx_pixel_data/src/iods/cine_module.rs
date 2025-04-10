@@ -4,7 +4,8 @@ use alloc::{format, vec::Vec};
 use core::time::Duration;
 
 use dcmfx_core::{
-  DataElementTag, DataError, DataSet, DataSetPath, IodModule, dictionary,
+  DataElementTag, DataError, DataSet, DataSetPath, IodModule,
+  ValueRepresentation, dictionary,
 };
 
 use super::MultiFrameModule;
@@ -29,20 +30,31 @@ pub struct CineModule {
 }
 
 impl IodModule for CineModule {
-  fn iod_module_data_element_tags() -> &'static [DataElementTag] {
-    &[
-      dictionary::START_TRIM.tag,
-      dictionary::STOP_TRIM.tag,
-      dictionary::RECOMMENDED_DISPLAY_FRAME_RATE.tag,
-      dictionary::CINE_RATE.tag,
-      dictionary::EFFECTIVE_DURATION.tag,
-      dictionary::FRAME_TIME.tag,
-      dictionary::FRAME_TIME_VECTOR.tag,
-      dictionary::FRAME_DELAY.tag,
-      dictionary::IMAGE_TRIGGER_DELAY.tag,
-      dictionary::ACTUAL_FRAME_DURATION.tag,
-      dictionary::PREFERRED_PLAYBACK_SEQUENCING.tag,
-    ]
+  fn is_iod_module_data_element(
+    tag: DataElementTag,
+    _vr: ValueRepresentation,
+    _length: Option<u32>,
+    path: &DataSetPath,
+  ) -> bool {
+    if !path.is_empty() {
+      return false;
+    }
+
+    tag == dictionary::PREFERRED_PLAYBACK_SEQUENCING.tag
+      || tag == dictionary::FRAME_TIME.tag
+      || tag == dictionary::FRAME_TIME_VECTOR.tag
+      || tag == dictionary::START_TRIM.tag
+      || tag == dictionary::STOP_TRIM.tag
+      || tag == dictionary::RECOMMENDED_DISPLAY_FRAME_RATE.tag
+      || tag == dictionary::CINE_RATE.tag
+      || tag == dictionary::FRAME_DELAY.tag
+      || tag == dictionary::IMAGE_TRIGGER_DELAY.tag
+      || tag == dictionary::EFFECTIVE_DURATION.tag
+      || tag == dictionary::ACTUAL_FRAME_DURATION.tag
+  }
+
+  fn iod_module_highest_tag() -> DataElementTag {
+    dictionary::PREFERRED_PLAYBACK_SEQUENCING.tag
   }
 
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {

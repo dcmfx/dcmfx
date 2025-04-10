@@ -2,7 +2,8 @@
 use alloc::format;
 
 use dcmfx_core::{
-  DataElementTag, DataError, DataSet, DataSetPath, IodModule, dictionary,
+  DataElementTag, DataError, DataSet, DataSetPath, IodModule,
+  ValueRepresentation, dictionary,
 };
 
 /// The attributes of the Multi-frame Module, which describe a Multi-frame pixel
@@ -19,13 +20,24 @@ pub struct MultiFrameModule {
 }
 
 impl IodModule for MultiFrameModule {
-  fn iod_module_data_element_tags() -> &'static [DataElementTag] {
-    &[
-      dictionary::NUMBER_OF_FRAMES.tag,
-      dictionary::FRAME_INCREMENT_POINTER.tag,
-      dictionary::STEREO_PAIRS_PRESENT.tag,
-      dictionary::ENCAPSULATED_PIXEL_DATA_VALUE_TOTAL_LENGTH.tag,
-    ]
+  fn is_iod_module_data_element(
+    tag: DataElementTag,
+    _vr: ValueRepresentation,
+    _length: Option<u32>,
+    path: &DataSetPath,
+  ) -> bool {
+    if !path.is_empty() {
+      return false;
+    }
+
+    tag == dictionary::NUMBER_OF_FRAMES.tag
+      || tag == dictionary::FRAME_INCREMENT_POINTER.tag
+      || tag == dictionary::STEREO_PAIRS_PRESENT.tag
+      || tag == dictionary::ENCAPSULATED_PIXEL_DATA_VALUE_TOTAL_LENGTH.tag
+  }
+
+  fn iod_module_highest_tag() -> DataElementTag {
+    dictionary::ENCAPSULATED_PIXEL_DATA_VALUE_TOTAL_LENGTH.tag
   }
 
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {

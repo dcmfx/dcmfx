@@ -4,28 +4,31 @@ use alloc::{format, string::ToString, vec, vec::Vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  BitsAllocated, ColorImage, ColorSpace, PhotometricInterpretation,
-  PixelDataDefinition, PixelRepresentation, SingleChannelImage,
+  ColorImage, ColorSpace, SingleChannelImage,
+  iods::image_pixel_module::{
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+    PixelRepresentation,
+  },
 };
 
 /// Decodes single channel pixel data using OpenJPEG.
 ///
 pub fn decode_single_channel(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<SingleChannelImage, DataError> {
-  let width = definition.columns();
-  let height = definition.rows();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
 
   match (
-    definition.pixel_representation(),
-    definition.bits_allocated(),
+    image_pixel_module.pixel_representation(),
+    image_pixel_module.bits_allocated(),
   ) {
     (
       PixelRepresentation::Unsigned,
       BitsAllocated::One | BitsAllocated::Eight,
     ) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       SingleChannelImage::new_u8(width, height, pixels)
     }
 
@@ -33,27 +36,27 @@ pub fn decode_single_channel(
       PixelRepresentation::Signed,
       BitsAllocated::One | BitsAllocated::Eight,
     ) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       SingleChannelImage::new_i8(width, height, pixels)
     }
 
     (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       SingleChannelImage::new_u16(width, height, pixels)
     }
 
     (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       SingleChannelImage::new_i16(width, height, pixels)
     }
 
     (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       SingleChannelImage::new_u32(width, height, pixels)
     }
 
     (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       SingleChannelImage::new_i32(width, height, pixels)
     }
   }
@@ -62,21 +65,21 @@ pub fn decode_single_channel(
 /// Decodes color pixel data using OpenJPEG.
 ///
 pub fn decode_color(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
-  let width = definition.columns();
-  let height = definition.rows();
+  let width = image_pixel_module.columns();
+  let height = image_pixel_module.rows();
 
   match (
-    &definition.photometric_interpretation(),
-    definition.bits_allocated(),
+    &image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
   ) {
     (
       PhotometricInterpretation::PaletteColor { palette },
       BitsAllocated::Eight,
     ) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_palette8(width, height, pixels, palette.clone())
     }
 
@@ -84,47 +87,48 @@ pub fn decode_color(
       PhotometricInterpretation::PaletteColor { palette },
       BitsAllocated::Sixteen,
     ) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_palette16(width, height, pixels, palette.clone())
     }
 
     (PhotometricInterpretation::PaletteColor { .. }, _) => {
       Err(DataError::new_value_invalid(format!(
         "OpenJPEG palette color data has invalid bits allocated '{}'",
-        u8::from(definition.bits_allocated())
+        u8::from(image_pixel_module.bits_allocated())
       )))
     }
 
     (_, BitsAllocated::One | BitsAllocated::Eight) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
     }
 
     (_, BitsAllocated::Sixteen) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_u16(width, height, pixels, ColorSpace::RGB)
     }
 
     (_, BitsAllocated::ThirtyTwo) => {
-      let pixels = decode(definition, data)?;
+      let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_u32(width, height, pixels, ColorSpace::RGB)
     }
   }
 }
 
 fn decode<T: Clone + Default + bytemuck::Pod>(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<Vec<T>, DataError> {
-  let samples_per_pixel = u8::from(definition.samples_per_pixel());
-  let bits_allocated = u8::from(definition.bits_allocated()).max(8);
-  let mut pixel_representation = u8::from(definition.pixel_representation());
+  let samples_per_pixel = u8::from(image_pixel_module.samples_per_pixel());
+  let bits_allocated = u8::from(image_pixel_module.bits_allocated()).max(8);
+  let mut pixel_representation =
+    u8::from(image_pixel_module.pixel_representation());
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
 
   // Allocate output buffer
   let mut output_buffer: Vec<T> = vec![
     T::default();
-    definition.pixel_count()
+    image_pixel_module.pixel_count()
       * usize::from(samples_per_pixel)
   ];
 
@@ -133,8 +137,8 @@ fn decode<T: Clone + Default + bytemuck::Pod>(
     ffi::openjpeg_decode(
       data.as_ptr(),
       data.len() as u64,
-      definition.columns().into(),
-      definition.rows().into(),
+      image_pixel_module.columns().into(),
+      image_pixel_module.rows().into(),
       samples_per_pixel.into(),
       bits_allocated.into(),
       &mut pixel_representation,
@@ -156,13 +160,15 @@ fn decode<T: Clone + Default + bytemuck::Pod>(
     )));
   }
 
-  if pixel_representation != u8::from(definition.pixel_representation()) {
+  if pixel_representation != u8::from(image_pixel_module.pixel_representation())
+  {
     // If the data returned by OpenJPEG is unsigned, but signed data is expected
     // to be returned, then reinterpret it as signed two's complement integer
     // data
-    if definition.pixel_representation() == PixelRepresentation::Signed {
+    if image_pixel_module.pixel_representation() == PixelRepresentation::Signed
+    {
       convert_unsigned_values_to_signed_values(
-        definition,
+        image_pixel_module,
         bytemuck::cast_slice_mut(&mut output_buffer),
       );
     } else {
@@ -181,14 +187,14 @@ fn decode<T: Clone + Default + bytemuck::Pod>(
 /// number of bits stored in each value.
 ///
 fn convert_unsigned_values_to_signed_values(
-  definition: &PixelDataDefinition,
+  image_pixel_module: &ImagePixelModule,
   data: &mut [u8],
 ) {
-  match definition.bits_allocated() {
+  match image_pixel_module.bits_allocated() {
     BitsAllocated::One => (),
 
     BitsAllocated::Eight => {
-      let threshold = 2i16.pow(definition.bits_stored() as u32 - 1);
+      let threshold = 2i16.pow(image_pixel_module.bits_stored() as u32 - 1);
 
       for i in data.iter_mut() {
         if *i as i16 >= threshold {
@@ -198,7 +204,7 @@ fn convert_unsigned_values_to_signed_values(
     }
 
     BitsAllocated::Sixteen => {
-      let threshold = 2i32.pow(definition.bits_stored() as u32 - 1);
+      let threshold = 2i32.pow(image_pixel_module.bits_stored() as u32 - 1);
 
       for chunk in data.chunks_exact_mut(2) {
         let value = u16::from_ne_bytes([chunk[0], chunk[1]]);
@@ -211,7 +217,7 @@ fn convert_unsigned_values_to_signed_values(
     }
 
     BitsAllocated::ThirtyTwo => {
-      let threshold = 2i64.pow(definition.bits_stored() as u32 - 1);
+      let threshold = 2i64.pow(image_pixel_module.bits_stored() as u32 - 1);
 
       for chunk in data.chunks_exact_mut(4) {
         let value =

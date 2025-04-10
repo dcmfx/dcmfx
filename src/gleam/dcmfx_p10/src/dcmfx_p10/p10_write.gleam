@@ -246,7 +246,7 @@ pub fn write_token(
             Ok(P10WriteContext(..context, location:, path:))
           }
 
-          p10_token.SequenceItemStart | p10_token.PixelDataItem(..) -> {
+          p10_token.SequenceItemStart(..) | p10_token.PixelDataItem(..) -> {
             let location =
               context.location
               |> p10_location.add_item(None, value_length.Undefined)
@@ -470,7 +470,7 @@ fn token_to_bytes(
       )
       |> data_element_header_to_bytes(transfer_syntax.endianness, context)
 
-    p10_token.SequenceItemStart ->
+    p10_token.SequenceItemStart(..) ->
       DataElementHeader(dictionary.item.tag, None, value_length.Undefined)
       |> data_element_header_to_bytes(transfer_syntax.endianness, context)
 
@@ -482,7 +482,7 @@ fn token_to_bytes(
       )
       |> data_element_header_to_bytes(transfer_syntax.endianness, context)
 
-    p10_token.PixelDataItem(length) ->
+    p10_token.PixelDataItem(length:, ..) ->
       DataElementHeader(dictionary.item.tag, None, value_length.new(length))
       |> data_element_header_to_bytes(transfer_syntax.endianness, context)
 
@@ -610,12 +610,17 @@ pub fn data_set_to_tokens(
     context: #(a, P10FilterTransform, P10InsertTransform),
     token: P10Token,
   ) {
-    case p10_filter_transform.add_token(context.1, token) {
-      #(False, filter_transform) ->
-        Ok(#(context.0, filter_transform, context.2))
+    // The following two asserts are safe because the P10 transforms only error
+    // on invalid token streams, which can't happen here
 
-      #(True, filter_transform) -> {
-        let #(tokens, insert_transform) =
+    let assert Ok(#(filter_result, filter_transform)) =
+      p10_filter_transform.add_token(context.1, token)
+
+    case filter_result {
+      False -> Ok(#(context.0, filter_transform, context.2))
+
+      True -> {
+        let assert Ok(#(tokens, insert_transform)) =
           p10_insert_transform.add_token(context.2, token)
 
         use callback_context <- result.try(list.try_fold(

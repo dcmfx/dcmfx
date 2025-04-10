@@ -175,7 +175,7 @@ pub fn add_token(
       Ok(#(json, transform))
     }
 
-    p10_token.SequenceItemStart -> {
+    p10_token.SequenceItemStart(..) -> {
       let path_and_item_counts = case transform.sequence_item_counts {
         [count, ..rest] ->
           transform.data_set_path
@@ -211,7 +211,7 @@ pub fn add_token(
       Ok(#(json, transform))
     }
 
-    p10_token.PixelDataItem(length) -> {
+    p10_token.PixelDataItem(length:, ..) -> {
       let path_and_item_counts = case transform.sequence_item_counts {
         [count, ..rest] ->
           transform.data_set_path

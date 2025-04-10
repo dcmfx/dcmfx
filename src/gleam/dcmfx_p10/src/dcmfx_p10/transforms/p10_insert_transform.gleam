@@ -1,10 +1,13 @@
 import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_element_value.{type DataElementValue}
 import dcmfx_core/data_set.{type DataSet}
+import dcmfx_core/data_set_path
+import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_token.{type P10Token}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import gleam/bool
 import gleam/list
+import gleam/result
 
 /// Transform that inserts data elements into a stream of DICOM P10 tokens.
 ///
@@ -25,8 +28,8 @@ pub fn new(data_elements_to_insert: DataSet) -> P10InsertTransform {
   // to be inserted. This ensures there are no duplicate data elements in the
   // resulting token stream.
   let filter_transform =
-    p10_filter_transform.new(fn(tag, _vr, _length, location) {
-      location != [] || !list.contains(tags_to_insert, tag)
+    p10_filter_transform.new(fn(tag, _vr, _length, path) {
+      !data_set_path.is_empty(path) || !list.contains(tags_to_insert, tag)
     })
 
   P10InsertTransform(
@@ -41,24 +44,28 @@ pub fn new(data_elements_to_insert: DataSet) -> P10InsertTransform {
 pub fn add_token(
   context: P10InsertTransform,
   token: P10Token,
-) -> #(List(P10Token), P10InsertTransform) {
+) -> Result(#(List(P10Token), P10InsertTransform), P10Error) {
   // If there are no more data elements to be inserted then pass the token
   // straight through
-  use <- bool.guard(context.data_elements_to_insert == [], #([token], context))
+  use <- bool.guard(
+    context.data_elements_to_insert == [],
+    Ok(#([token], context)),
+  )
 
   let is_at_root = p10_filter_transform.is_at_root(context.filter_transform)
 
   // Pass the token through the filter transform
-  let #(filter_result, filter_transform) =
+  let add_token_result =
     p10_filter_transform.add_token(context.filter_transform, token)
+  use #(filter_result, filter_transform) <- result.try(add_token_result)
 
   let context = P10InsertTransform(..context, filter_transform:)
 
-  use <- bool.guard(!filter_result, #([], context))
+  use <- bool.guard(!filter_result, Ok(#([], context)))
 
   // Data element insertion is only supported in the root data set, so if the
   // stream is not at the root data set then there's nothing to do
-  use <- bool.guard(!is_at_root, #([token], context))
+  use <- bool.guard(!is_at_root, Ok(#([token], context)))
 
   case token {
     // If this token is the start of a new data element, and there are data
@@ -71,7 +78,7 @@ pub fn add_token(
       let context = P10InsertTransform(..context, data_elements_to_insert:)
       let tokens = [token, ..tokens_to_insert] |> list.reverse
 
-      #(tokens, context)
+      Ok(#(tokens, context))
     }
 
     // If this token is the end of the P10 tokens and there are still data
@@ -86,10 +93,10 @@ pub fn add_token(
       let context = P10InsertTransform(..context, data_elements_to_insert: [])
       let tokens = [p10_token.End, ..tokens] |> list.reverse
 
-      #(tokens, context)
+      Ok(#(tokens, context))
     }
 
-    _ -> #([token], context)
+    _ -> Ok(#([token], context))
   }
 }
 

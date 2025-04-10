@@ -6,7 +6,8 @@ extern crate afl;
 use dcmfx::core::dictionary;
 use dcmfx::p10::DataSetP10Extensions;
 use dcmfx::pixel_data::{
-  DataSetPixelDataExtensions, Overlays, PixelDataDefinition, PixelDataRenderer,
+  DataSetPixelDataExtensions, Overlays, PixelDataRenderer,
+  iods::ImagePixelModule,
 };
 
 fn main() {
@@ -44,12 +45,14 @@ fn main() {
       // Render the overlays. This should never panic.
       if let Ok(overlays) = Overlays::from_data_set(&data_set) {
         if !overlays.is_empty() {
-          if let Ok(definition) = PixelDataDefinition::from_data_set(&data_set) {
-            if definition.pixel_count() <= 4096 * 4096 {
+          if let Ok(image_pixel_module) =
+            ImagePixelModule::from_data_set(&data_set)
+          {
+            if image_pixel_module.pixel_count() <= 4096 * 4096 {
               // Allocate output image
               let mut rgb_image = image::DynamicImage::new_rgb8(
-                definition.rows().into(),
-                definition.columns().into(),
+                image_pixel_module.rows().into(),
+                image_pixel_module.columns().into(),
               );
 
               overlays.render_to_rgb_image(&mut rgb_image, 0).unwrap();
