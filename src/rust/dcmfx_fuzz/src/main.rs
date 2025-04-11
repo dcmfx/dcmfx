@@ -3,11 +3,11 @@
 #[macro_use]
 extern crate afl;
 
-use dcmfx::core::dictionary;
+use dcmfx::core::{dictionary, IodModule};
 use dcmfx::p10::DataSetP10Extensions;
 use dcmfx::pixel_data::{
-  DataSetPixelDataExtensions, Overlays, PixelDataRenderer,
-  iods::ImagePixelModule,
+  DataSetPixelDataExtensions, PixelDataRenderer,
+  iods::{ImagePixelModule, OverlayPlaneModule},
 };
 
 fn main() {
@@ -43,8 +43,8 @@ fn main() {
       }
 
       // Render the overlays. This should never panic.
-      if let Ok(overlays) = Overlays::from_data_set(&data_set) {
-        if !overlays.is_empty() {
+      if let Ok(overlay_plane_module) = OverlayPlaneModule::from_data_set(&data_set) {
+        if !overlay_plane_module.is_empty() {
           if let Ok(image_pixel_module) =
             ImagePixelModule::from_data_set(&data_set)
           {
@@ -55,7 +55,7 @@ fn main() {
                 image_pixel_module.columns().into(),
               );
 
-              overlays.render_to_rgb_image(&mut rgb_image, 0).unwrap();
+              overlay_plane_module.render_to_rgb_image(&mut rgb_image, 0).unwrap();
             }
           }
         }
