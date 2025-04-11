@@ -15,20 +15,23 @@ mod color_image;
 mod decode;
 mod encode;
 pub mod iods;
-pub mod luts;
+mod lookup_table;
 mod p10_pixel_data_frame_filter;
 mod pixel_data_frame;
 mod pixel_data_renderer;
 mod single_channel_image;
+pub mod standard_color_palettes;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
+pub use lookup_table::LookupTable;
 pub use p10_pixel_data_frame_filter::{
   P10PixelDataFrameFilter, P10PixelDataFrameFilterError,
 };
 pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_renderer::PixelDataRenderer;
 pub use single_channel_image::SingleChannelImage;
+pub use standard_color_palettes::StandardColorPalette;
 
 use dcmfx_core::{
   DataError, DataSet, IodModule, TransferSyntax, dictionary, transfer_syntax,
@@ -62,11 +65,11 @@ where
   ///
   /// Grayscale values can optionally be visualized using a color palette. The
   /// well-known color palettes defined in PS3.6 B.1 are provided in
-  /// [`crate::luts::color_palettes`].
+  /// [`crate::standard_color_palettes`].
   ///
   fn get_pixel_data_images(
     &self,
-    color_palette: Option<&luts::ColorPalette>,
+    color_palette: Option<&StandardColorPalette>,
   ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameFilterError>;
 
   /// Returns the frames of pixel data in this data set as
@@ -125,7 +128,7 @@ impl DataSetPixelDataExtensions for DataSet {
 
   fn get_pixel_data_images(
     &self,
-    color_palette: Option<&luts::ColorPalette>,
+    color_palette: Option<&StandardColorPalette>,
   ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameFilterError> {
     get_pixel_data(self, |renderer, frame| {
       renderer.render_frame(frame, color_palette)

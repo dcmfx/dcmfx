@@ -6,7 +6,7 @@ use dcmfx_core::{
   ValueRepresentation, dictionary,
 };
 
-use crate::luts::lookup_table::LookupTable;
+use crate::LookupTable;
 
 /// The attributes of the Modality LUT Module which processes raw pixel data
 /// stored values. A modality LUT is defined either by a lookup table, or by

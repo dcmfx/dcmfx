@@ -7,9 +7,8 @@ use dcmfx_core::{
 };
 
 use crate::{
-  ColorImage, PixelDataFrame, SingleChannelImage, decode,
+  ColorImage, PixelDataFrame, SingleChannelImage, StandardColorPalette, decode,
   iods::{ImagePixelModule, ModalityLutModule, VoiLutModule},
-  luts,
 };
 
 /// Defines a pixel data renderer that can take a [`PixelDataFrame`] and render
@@ -68,12 +67,12 @@ impl PixelDataRenderer {
   ///
   /// Grayscale frames can optionally be visualized using a color palette. The
   /// well-known color palettes defined in PS3.6 B.1 are provided in
-  /// [`crate::luts::color_palettes`].
+  /// [`crate::standard_color_palettes`].
   ///
   pub fn render_frame(
     &self,
     frame: &mut PixelDataFrame,
-    color_palette: Option<&luts::ColorPalette>,
+    color_palette: Option<&StandardColorPalette>,
   ) -> Result<image::RgbImage, DataError> {
     if self.image_pixel_module.is_grayscale() {
       let image = self.decode_single_channel_frame(frame)?;
@@ -90,12 +89,12 @@ impl PixelDataRenderer {
   ///
   /// The result can optionally be visualized using a color palette. The
   /// well-known color palettes defined in PS3.6 B.1 are provided in
-  /// [`crate::luts::color_palettes`].
+  /// [`crate::standard_color_palettes`].
   ///
   pub fn render_single_channel_image(
     &self,
     image: &SingleChannelImage,
-    color_palette: Option<&luts::ColorPalette>,
+    color_palette: Option<&StandardColorPalette>,
   ) -> image::RgbImage {
     let mut pixels = Vec::with_capacity(image.pixel_count() * 3);
 

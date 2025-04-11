@@ -11,7 +11,7 @@ use dcmfx_core::{
   ValueRepresentation, dictionary,
 };
 
-use crate::luts::LookupTable;
+use crate::LookupTable;
 
 /// The attributes of the VOI LUT Module, which describe a Value Of Interest
 /// (VOI) LUT that is used to define how grayscale pixel data samples are

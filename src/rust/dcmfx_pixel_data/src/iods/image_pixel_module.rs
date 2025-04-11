@@ -4,7 +4,11 @@
 use std::rc::Rc;
 
 #[cfg(not(feature = "std"))]
-use alloc::{format, rc::Rc, string::ToString};
+use alloc::{
+  format,
+  rc::Rc,
+  string::{String, ToString},
+};
 
 use dcmfx_core::{
   DataElementTag, DataError, DataSet, DataSetPath, IodModule, RcByteSlice,

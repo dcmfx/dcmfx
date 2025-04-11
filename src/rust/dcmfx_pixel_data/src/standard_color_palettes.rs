@@ -1,12 +1,14 @@
-/// Defines a color palette that converts 8-bit grayscale values to colors
-/// using a lookup table.
+/// Defines a color palette defined by the DICOM standard that converts 8-bit
+/// grayscale values to colors using a lookup table.
+///
+/// Ref: PS3.6 B.
 ///
 #[derive(Clone, Debug, PartialEq)]
-pub struct ColorPalette {
+pub struct StandardColorPalette {
   data: [u8; 768],
 }
 
-impl ColorPalette {
+impl StandardColorPalette {
   /// Looks up a grayscale value in this color palette.
   ///
   pub fn lookup(&self, grayscale_value: u8) -> [u8; 3] {
@@ -30,77 +32,13 @@ impl ColorPalette {
   }
 }
 
-/// The Standard Color Palettes defined in PS 3.6 B.1.
+/// The Hot Iron color palette is often used in nuclear medicine applications to
+/// make differences in signal intensity (counts) more apparent to the human
+/// observer.
 ///
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum StandardColorPalette {
-  /// The 'Hot Iron Color Palette'.
-  ///
-  /// Ref: PS3.6 B.1.1.
-  ///
-  HotIron,
-
-  /// The 'PET Color Palette'.
-  ///
-  /// Ref: PS3.6 B.1.2.
-  ///
-  Pet,
-
-  /// The 'Hot Metal Blue Color Palette'.
-  ///
-  /// Ref: PS3.6 B.1.3.
-  ///
-  HotMetalBlue,
-
-  /// The 'PET 20 Step Color Palette'.
-  ///
-  /// Ref: PS3.6 B.1.4.
-  ///
-  Pet20Step,
-
-  /// The 'Spring Step Color Palette'.
-  ///
-  /// Ref: PS3.6 B.1.5.
-  ///
-  Spring,
-
-  /// The 'Sumer Step Color Palette'.
-  ///
-  /// Ref: PS3.6 B.1.6.
-  ///
-  Summer,
-
-  /// The 'Fall Step Color Palette'.
-  ///
-  /// Ref: PS3.6 B.1.7.
-  ///
-  Fall,
-
-  /// The 'Winter Step Color Palette'.
-  ///
-  /// Ref: PS3.6 B.1.8.
-  ///
-  Winter,
-}
-
-impl StandardColorPalette {
-  /// Returns the color palette.
-  ///
-  pub fn color_palette(&self) -> &'static ColorPalette {
-    match self {
-      StandardColorPalette::HotIron => &HOT_IRON,
-      StandardColorPalette::Pet => &PET,
-      StandardColorPalette::HotMetalBlue => &HOT_METAL_BLUE,
-      StandardColorPalette::Pet20Step => &PET_20_STEP,
-      StandardColorPalette::Spring => &SPRING,
-      StandardColorPalette::Summer => &SUMMER,
-      StandardColorPalette::Fall => &FALL,
-      StandardColorPalette::Winter => &WINTER,
-    }
-  }
-}
-
-const HOT_IRON: ColorPalette = ColorPalette {
+/// Ref: PS3.6 B.1.1.
+///
+pub const HOT_IRON: StandardColorPalette = StandardColorPalette {
   data: [
     0, 0, 0, 2, 0, 0, 4, 0, 0, 6, 0, 0, 8, 0, 0, 10, 0, 0, 12, 0, 0, 14, 0, 0,
     16, 0, 0, 18, 0, 0, 20, 0, 0, 22, 0, 0, 24, 0, 0, 26, 0, 0, 28, 0, 0, 30,
@@ -147,7 +85,12 @@ const HOT_IRON: ColorPalette = ColorPalette {
   ],
 };
 
-const PET: ColorPalette = ColorPalette {
+/// The PET color palette is often used in PET applications to pseudo-color the
+/// superimposed PET images when displayed fused with underlying CT images.
+///
+/// Ref: PS3.6 B.1.2.
+///
+pub const PET: StandardColorPalette = StandardColorPalette {
   data: [
     0, 0, 0, 0, 2, 1, 0, 4, 3, 0, 6, 5, 0, 8, 7, 0, 10, 9, 0, 12, 11, 0, 14,
     13, 0, 16, 15, 0, 18, 17, 0, 20, 19, 0, 22, 21, 0, 24, 23, 0, 26, 25, 0,
@@ -198,7 +141,13 @@ const PET: ColorPalette = ColorPalette {
   ],
 };
 
-const HOT_METAL_BLUE: ColorPalette = ColorPalette {
+/// The Hot Metal Blue color palette is often used in nuclear medicine or PET
+/// applications to make differences in signal intensity (counts) more apparent
+/// to the human observer.
+///
+/// Ref: PS3.6 B.1.3.
+///
+pub const HOT_METAL_BLUE: StandardColorPalette = StandardColorPalette {
   data: [
     0, 0, 0, 0, 0, 2, 0, 0, 4, 0, 0, 6, 0, 0, 8, 0, 0, 10, 0, 0, 12, 0, 0, 14,
     0, 0, 16, 0, 0, 17, 0, 0, 19, 0, 0, 21, 0, 0, 23, 0, 0, 25, 0, 0, 27, 0, 0,
@@ -246,7 +195,13 @@ const HOT_METAL_BLUE: ColorPalette = ColorPalette {
   ],
 };
 
-const PET_20_STEP: ColorPalette = ColorPalette {
+/// The PET 20 Step color palette is often used in PET applications to make
+/// differences in signal intensity (counts) more apparent to the human
+/// observer.
+///
+/// Ref: PS3.6 B.1.4.
+///
+pub const PET_20_STEP: StandardColorPalette = StandardColorPalette {
   data: [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 96, 0, 80, 96, 0, 80, 96, 0, 80,
@@ -296,7 +251,17 @@ const PET_20_STEP: ColorPalette = ColorPalette {
   ],
 };
 
-const SPRING: ColorPalette = ColorPalette {
+/// The Spring Color Palette is suggested for use in color fMRI activation maps.
+/// It shades from one pastel color to another which is distinctly different,
+/// making it suitable for illustrating either unipolar or bipolar activation.
+/// As part of a complementary set of color palettes (Spring, Summer, Fall,
+/// Winter), it conveys activation strength within one statistical parametric
+/// map, while making it possible for the human observer to distinguish between
+/// different fMRI activation maps in the same blended display.
+///
+/// Ref: PS3.6 B.1.5.
+///
+pub const SPRING: StandardColorPalette = StandardColorPalette {
   data: [
     255, 0, 255, 255, 1, 254, 255, 2, 253, 255, 3, 252, 255, 4, 251, 255, 5,
     250, 255, 6, 249, 255, 7, 248, 255, 8, 247, 255, 9, 246, 255, 10, 245, 255,
@@ -350,7 +315,17 @@ const SPRING: ColorPalette = ColorPalette {
   ],
 };
 
-const SUMMER: ColorPalette = ColorPalette {
+/// The Summer Color Palette is suggested for use in color fMRI activation maps.
+/// It shades from one pastel color to another which is distinctly different,
+/// making it suitable for illustrating either unipolar or bipolar activation.
+/// As part of a complementary set of color palettes (Spring, Summer, Fall,
+/// Winter), it conveys activation strength within one statistical parametric
+/// map, while making it possible for the human observer to distinguish between
+/// different fMRI activation maps in the same blended display.
+///
+/// Ref: PS3.6 B.1.6.
+///
+pub const SUMMER: StandardColorPalette = StandardColorPalette {
   data: [
     0, 255, 0, 0, 255, 0, 0, 254, 0, 0, 254, 0, 0, 253, 0, 0, 253, 0, 0, 252,
     0, 0, 252, 0, 0, 251, 0, 0, 251, 0, 0, 250, 0, 0, 250, 0, 0, 249, 0, 0,
@@ -397,7 +372,17 @@ const SUMMER: ColorPalette = ColorPalette {
   ],
 };
 
-const FALL: ColorPalette = ColorPalette {
+/// The Fall Color Palette is suggested for use in color fMRI activation maps.
+/// It shades from one pastel color to another which is distinctly different,
+/// making it suitable for illustrating either unipolar or bipolar activation.
+/// As part of a complementary set of color palettes (Spring, Summer, Fall,
+/// Winter), it conveys activation strength within one statistical parametric
+/// map, while making it possible for the human observer to distinguish between
+/// different fMRI activation maps in the same blended display.
+///
+/// Ref: PS3.6 B.1.7
+///
+pub const FALL: StandardColorPalette = StandardColorPalette {
   data: [
     255, 255, 0, 255, 254, 0, 255, 253, 0, 255, 252, 0, 255, 251, 0, 255, 250,
     0, 255, 249, 0, 255, 248, 0, 255, 247, 0, 255, 246, 0, 255, 245, 0, 255,
@@ -446,7 +431,17 @@ const FALL: ColorPalette = ColorPalette {
   ],
 };
 
-const WINTER: ColorPalette = ColorPalette {
+/// The Winter Color Palette is suggested for use in color fMRI activation maps.
+/// It shades from one pastel color to another which is distinctly different,
+/// making it suitable for illustrating either unipolar or bipolar activation.
+/// As part of a complementary set of color palettes (Spring, Summer, Fall,
+/// Winter), it conveys activation strength within one statistical parametric
+/// map, while making it possible for the human observer to distinguish between
+/// different fMRI activation maps in the same blended display.
+///
+/// Ref: PS3.6 B.1.8
+///
+pub const WINTER: StandardColorPalette = StandardColorPalette {
   data: [
     0, 0, 255, 0, 1, 255, 0, 2, 254, 0, 3, 254, 0, 4, 253, 0, 5, 253, 0, 6,
     252, 0, 7, 252, 0, 8, 251, 0, 9, 251, 0, 10, 250, 0, 11, 250, 0, 12, 249,

@@ -8,8 +8,7 @@ use dcmfx::p10::*;
 use dcmfx::pixel_data::{
   iods::voi_lut_module::{VoiLutFunction, VoiLutModule, VoiWindow},
   iods::{CineModule, MultiFrameModule, OverlayPlaneModule},
-  luts::{ColorPalette, StandardColorPalette},
-  *,
+  standard_color_palettes, *,
 };
 
 use crate::InputSource;
@@ -320,20 +319,21 @@ enum StandardColorPaletteArg {
 }
 
 impl StandardColorPaletteArg {
-  fn color_palette(&self) -> &'static ColorPalette {
+  fn color_palette(&self) -> &'static StandardColorPalette {
     match self {
-      StandardColorPaletteArg::HotIron => StandardColorPalette::HotIron,
-      StandardColorPaletteArg::Pet => StandardColorPalette::Pet,
+      StandardColorPaletteArg::HotIron => &standard_color_palettes::HOT_IRON,
+      StandardColorPaletteArg::Pet => &standard_color_palettes::PET,
       StandardColorPaletteArg::HotMetalBlue => {
-        StandardColorPalette::HotMetalBlue
+        &standard_color_palettes::HOT_METAL_BLUE
       }
-      StandardColorPaletteArg::Pet20Step => StandardColorPalette::Pet20Step,
-      StandardColorPaletteArg::Spring => StandardColorPalette::Spring,
-      StandardColorPaletteArg::Summer => StandardColorPalette::Summer,
-      StandardColorPaletteArg::Fall => StandardColorPalette::Fall,
-      StandardColorPaletteArg::Winter => StandardColorPalette::Winter,
+      StandardColorPaletteArg::Pet20Step => {
+        &standard_color_palettes::PET_20_STEP
+      }
+      StandardColorPaletteArg::Spring => &standard_color_palettes::SPRING,
+      StandardColorPaletteArg::Summer => &standard_color_palettes::SUMMER,
+      StandardColorPaletteArg::Fall => &standard_color_palettes::FALL,
+      StandardColorPaletteArg::Winter => &standard_color_palettes::WINTER,
     }
-    .color_palette()
   }
 }
 

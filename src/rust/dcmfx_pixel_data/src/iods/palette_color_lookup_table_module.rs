@@ -3,7 +3,7 @@ use dcmfx_core::{
   ValueRepresentation, dictionary,
 };
 
-use crate::luts::LookupTable;
+use crate::LookupTable;
 
 /// The attributes of the Palette Color Lookup Table Module, which is a set of
 /// three [`LookupTable`]s, one each for red, green and blue values. Used by
