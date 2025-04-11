@@ -136,6 +136,10 @@ fn modify() {
     .arg(dicom_file)
     .arg("--output-filename")
     .arg(&temp_path)
+    .arg("--delete-tag")
+    .arg("00080064")
+    .arg("--delete-tag")
+    .arg("00181020")
     .assert()
     .success()
     .stdout(format!(

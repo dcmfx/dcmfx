@@ -74,13 +74,12 @@ pub struct ModifyArgs {
 
   #[arg(
     long,
-    help = "The data element tags to delete and not include in the output \
-      DICOM P10 file. Separate each tag to be removed with a comma. E.g. \
-      --delete-tags 00100010,00100030",
-    value_parser = validate_data_element_tag_list,
-    default_values_t = Vec::<DataElementTag>::new()
+    help = "A data element tag to delete and not include in the output DICOM \
+      P10 file. This argument can be specified multiple times to delete \
+      multiple tags.",
+    value_parser = validate_data_element_tag,
   )]
-  delete_tags: Vec<DataElementTag>,
+  delete_tag: Vec<DataElementTag>,
 
   #[clap(
     long,
@@ -90,15 +89,9 @@ pub struct ModifyArgs {
   overwrite: bool,
 }
 
-fn validate_data_element_tag_list(
-  s: &str,
-) -> Result<Vec<DataElementTag>, String> {
-  s.split(",")
-    .map(|tag| match DataElementTag::from_hex_string(tag) {
-      Ok(tag) => Ok(tag),
-      Err(_) => Err("".to_string()),
-    })
-    .collect()
+fn validate_data_element_tag(s: &str) -> Result<DataElementTag, String> {
+  DataElementTag::from_hex_string(s)
+    .map_err(|_| "Invalid data element tag".to_string())
 }
 
 pub fn run(args: &ModifyArgs) -> Result<(), ()> {
@@ -183,7 +176,7 @@ fn modify_input_source(
   };
 
   // Create a filter transform for anonymization and tag deletion if needed
-  let tags_to_delete = args.delete_tags.clone();
+  let tags_to_delete = args.delete_tag.clone();
   let anonymize = args.anonymize;
   let filter_context = if anonymize || !tags_to_delete.is_empty() {
     Some(P10FilterTransform::new(Box::new(

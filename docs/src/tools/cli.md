@@ -190,13 +190,13 @@ Options:
    file:
 
    ```sh
-   dcmfx modify input.dcm --in-place --delete-tags 7FE00010
+   dcmfx modify input.dcm --in-place --delete-tag 7FE00010
    ```
 
    Multiple data elements can be deleted by using a comma as a separator:
 
    ```sh
-   dcmfx modify input.dcm --in-place --delete-tags 00100010,00100030
+   dcmfx modify input.dcm --in-place --delete-tag 00100010 --delete-tag 00100030
    ```
 
 ## Gleam CLI
