@@ -135,8 +135,8 @@ jobs:
         working-directory: src/rust
         run: cargo test --frozen
 
-  test_dcmfx_rust_wasm_build:
-    name: Test DCMfx Rust WASM build
+  test_dcmfx_rust_wasm_library_build:
+    name: Test DCMfx Rust WASM library build
     timeout-minutes: 10
     runs-on: ubuntu-24.04
 
@@ -159,10 +159,59 @@ jobs:
         working-directory: src/rust
         run: cargo build --frozen --package dcmfx --target wasm32-unknown-unknown --no-default-features
 
+  test_dcmfx_rust_windows_msvc_library_build:
+    name: Test DCMfx Rust Windows MSVC library build
+    timeout-minutes: 10
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.86-pc-windows-msvc
+          cache-workspaces: src/rust
+
+      - name: Fetch dependencies
+        working-directory: src/rust
+        run: cargo fetch --locked
+
+      - name: Build for Windows MSVC target
+        working-directory: src/rust
+        run: cargo build --frozen --package dcmfx
+
+  test_dcmfx_fuzzer_build:
+    name: Test DCMfx Fuzzer build
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.86
+          cache-workspaces: src/rust/dcmfx_fuzz
+
+      - name: Fetch dependencies
+        working-directory: src/rust/dcmfx_fuzz
+        run: cargo fetch --locked
+
+      - name: Build fuzzer
+        working-directory: src/rust/dcmfx_fuzz
+        run: |
+          cargo install cargo-afl@0.15.17
+          cargo afl config --build
+          cargo afl build
+
   test_examples:
     name: Test examples
     timeout-minutes: 10
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository

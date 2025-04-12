@@ -7,6 +7,7 @@ find src/rust -name "Cargo.toml" -exec sed -i'' -E "s/^version = \".*\"$/version
 
 # Update crate Cargo.lock files
 cargo update --manifest-path src/rust/Cargo.toml -p dcmfx
+cargo update --manifest-path src/rust/dcmfx_fuzz/Cargo.toml
 
 # Update example app Cargo.lock files
 for dir in examples/dicom_*/rust; do

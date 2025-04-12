@@ -33,12 +33,14 @@ fn build_cpp_code() {
   build.define("CHARLS_STATIC", "1");
 
   // Explicitly specify C++14 as this is what CharLS 2.x targets
-  build.flag("-std=c++14");
+  if !std::env::var("TARGET").unwrap().contains("msvc") {
+    build.flag("-std=c++14");
+  }
 
   build.compile("dcmfx_pixel_data_cpp_libs");
 
-  // Link the C++ standard library statically on Windows
-  if std::env::var("CARGO_CFG_TARGET_OS").unwrap().as_str() == "windows" {
+  // Link the C++ standard library statically on windows-gnu targets
+  if std::env::var("TARGET").unwrap().contains("windows-gnu") {
     println!("cargo:rustc-link-search=native=C:/msys64/mingw64/lib");
     println!("cargo:rustc-link-lib=static=stdc++");
   }
@@ -50,9 +52,11 @@ fn shared_build_config(
   header_glob_path: &str,
 ) {
   // Silence build warnings
-  build.flag("-Wno-unused-but-set-variable");
-  build.flag("-Wno-unused-parameter");
-  build.flag("-Wno-implicit-fallthrough");
+  if !std::env::var("TARGET").unwrap().contains("msvc") {
+    build.flag("-Wno-unused-but-set-variable");
+    build.flag("-Wno-unused-parameter");
+    build.flag("-Wno-implicit-fallthrough");
+  }
 
   // Optimize builds
   build.define("NDEBUG", "1");
