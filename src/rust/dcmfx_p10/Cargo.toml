@@ -1,19 +1,19 @@
 [package]
 name = "dcmfx_p10"
+version = "0.15.0"
 description = "DCMfx Part 10 library"
 
 repository.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-version.workspace = true
 homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
 byteorder = "1.5.0"
-dcmfx_character_set = { path = "../dcmfx_character_set", version = "0.0.0", default-features = false }
-dcmfx_core = { path = "../dcmfx_core", version = "0.0.0", default-features = false }
+dcmfx_character_set = { path = "../dcmfx_character_set", default-features = false }
+dcmfx_core = { path = "../dcmfx_core", default-features = false }
 flate2 = "1.1.1"
 
 [features]

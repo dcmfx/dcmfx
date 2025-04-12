@@ -1,5 +1,6 @@
 [package]
 name = "dcmfx_cli"
+version = "0.15.0"
 description = "DCMfx CLI tool"
 categories = ["command-line-utilities"]
 
@@ -7,14 +8,13 @@ repository.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-version.workspace = true
 homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
 bytemuck = "1.22.0"
 clap = { version = "4.5.35", features = ["derive", "wrap_help"] }
-dcmfx = { path = "../dcmfx", version = "0.0.0" }
+dcmfx = { path = "../dcmfx" }
 ffmpeg-next = { version = "7.1.0", default-features = false, features = [
   "build-license-gpl",
   "codec",

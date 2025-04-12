@@ -200,6 +200,12 @@ jobs:
           git clone --branch Release_4.1 https://bitbucket.org/multicoreware/x265_git.git
           cd x265_git/source
 
+          # Bring CMake 4 support from master onto this release branch
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git cherry-pick b354c00
+          git cherry-pick 51ae8e9
+
           SUDO=sudo
           MAKE=make
 
@@ -246,9 +252,8 @@ jobs:
         working-directory: src/rust
         run: cargo fetch --locked --target ${{ matrix.target }}
 
-      - name: Set version number in Cargo.toml files
-        working-directory: src/rust
-        run: find . -name "Cargo.toml" -exec sed -i'' -E "s/version = \"0.0.0\"/version = \"${{ needs.check_semantic_release.outputs.new_release_version }}\"/" {} +
+      - name: Set crate versions
+        run: sh .github/scripts/set_rust_crate_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
 
       - name: Build release binary
         working-directory: src/rust
@@ -388,7 +393,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  release:
+  github_release:
     name: Release on GitHub
     timeout-minutes: 10
     runs-on: ubuntu-24.04
@@ -397,6 +402,7 @@ jobs:
       contents: write
 
     needs:
+      - check_semantic_release
       - build_rust_cli_tool
       - build_linux_packages
 
@@ -404,8 +410,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Gleam
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: 27.3
+          gleam-version: 1.9.1
+          version-type: strict
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.86
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
+
+      - name: Update Gleam package versions
+        run: sh .github/scripts/set_gleam_package_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
+
+      - name: Update Rust crate versions
+        run: sh .github/scripts/set_rust_crate_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
 
       - name: Semantic release
         id: semantic-release
@@ -423,7 +447,7 @@ jobs:
 
     needs:
       - check_semantic_release
-      - release
+      - github_release
 
     steps:
       - name: Checkout code
@@ -471,7 +495,7 @@ jobs:
 
     needs:
       - check_semantic_release
-      - release
+      - github_release
 
     steps:
       - name: Checkout code
@@ -510,7 +534,7 @@ jobs:
 
     needs:
       - check_semantic_release
-      - release
+      - github_release
 
     steps:
       - name: Checkout code
@@ -547,7 +571,7 @@ jobs:
 
     needs:
       - check_semantic_release
-      - release
+      - github_release
 
     steps:
       - name: Setup SSH key for the Arch User Repository (AUR)
@@ -601,6 +625,9 @@ jobs:
     runs-on: ubuntu-24.04
     environment: release
 
+    needs:
+      - github_release
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -648,7 +675,7 @@ jobs:
       actions: write
 
     needs:
-      - release
+      - github_release
       - update_apt_repository
       - update_arch_user_repository
       - update_homebrew_tap

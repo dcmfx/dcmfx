@@ -1,20 +1,20 @@
 [package]
 name = "dcmfx_json"
+version = "0.15.0"
 description = "DCMfx JSON library"
 
 repository.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-version.workspace = true
 homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
 base64 = "0.22.1"
 byteorder = "1.5.0"
-dcmfx_core = { path = "../dcmfx_core", version = "0.0.0", default-features = false }
-dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0", default-features = false }
+dcmfx_core = { path = "../dcmfx_core", default-features = false }
+dcmfx_p10 = { path = "../dcmfx_p10", default-features = false }
 num-traits = "0.2.19"
 serde = { version = "1.0.219", features = ["serde_derive"] }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }

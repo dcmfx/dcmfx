@@ -32,7 +32,25 @@ plugins:
 
   - "@semantic-release/release-notes-generator"
 
+  - - "@semantic-release/git"
+
+    # The following files are committed as part of the release commit
+    - assets:
+        - examples/*/gleam/gleam.toml
+        - examples/*/gleam/manifest.toml
+        - examples/*/rust/Cargo.lock
+        - examples/*/rust/Cargo.toml
+        - src/gleam/*/gleam.toml
+        - src/gleam/*/manifest.toml
+        - src/gleam/dcmfx_p10/src/dcmfx_p10/uids.gleam
+        - src/rust/*/Cargo.toml
+        - src/rust/Cargo.lock
+        - src/rust/Cargo.toml
+
+      message: "chore: Release v${nextRelease.version}"
+
   - - "@semantic-release/github"
 
+    # Include all the builds for all platforms in the release on GitHub
     - assets:
         - path: "dcmfx-*/*"

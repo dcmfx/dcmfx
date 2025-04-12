@@ -86,9 +86,9 @@ checksum = "8f1fe948ff07f4bd06c30984e69f5b4899c516a3ef74f34df92a2df2ab535495"
 
 [[package]]
 name = "cc"
-version = "1.2.18"
+version = "1.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "525046617d8376e3db1deffb079e91cef90a89fc3ca5c185bbf8c9ecdd15cd5c"
+checksum = "8e3a13707ac958681c13b39b458c073d0d9bc8a22cb1b2f4c8e55eb72c13f362"
 dependencies = [
  "shlex",
 ]
@@ -135,7 +135,7 @@ checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "dcmfx"
-version = "0.0.0"
+version = "0.15.0"
 dependencies = [
  "dcmfx_anonymize",
  "dcmfx_character_set",
@@ -147,18 +147,18 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_anonymize"
-version = "0.0.0"
+version = "0.15.0"
 dependencies = [
  "dcmfx_core",
 ]
 
 [[package]]
 name = "dcmfx_character_set"
-version = "0.0.0"
+version = "0.15.0"
 
 [[package]]
 name = "dcmfx_core"
-version = "0.0.0"
+version = "0.15.0"
 dependencies = [
  "byteorder",
  "num-traits",
@@ -172,7 +172,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_json"
-version = "0.0.0"
+version = "0.15.0"
 dependencies = [
  "base64",
  "byteorder",
@@ -185,7 +185,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_p10"
-version = "0.0.0"
+version = "0.15.0"
 dependencies = [
  "byteorder",
  "dcmfx_character_set",
@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_pixel_data"
-version = "0.0.0"
+version = "0.15.0"
 dependencies = [
  "bytemuck",
  "byteorder",
@@ -508,9 +508,9 @@ checksum = "c19937216e9d3aa9956d9bb8dfc0b0c8beb6058fc4f7a4dc4d850edf86a237d6"
 
 [[package]]
 name = "linux-raw-sys"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe7db12097d22ec582439daf8618b8fdd1a7bef6270e9af3b1ebcd30893cf413"
+checksum = "cd945864f07fe9f5371a27ad7b52a172b4b499999f1d97574c9fa68373937e12"
 
 [[package]]
 name = "memchr"
@@ -520,9 +520,9 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
 name = "miniz_oxide"
-version = "0.8.7"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff70ce3e48ae43fa075863cef62e8b43b71a4f2382229920e0df362592919430"
+checksum = "3be647b768db090acb35d5ec5db2b0e1f1de11133ca123b9eacf5137868f892a"
 dependencies = [
  "adler2",
  "simd-adler32",

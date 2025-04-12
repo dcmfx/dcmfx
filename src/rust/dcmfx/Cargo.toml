@@ -1,5 +1,6 @@
 [package]
 name = "dcmfx"
+version = "0.15.0"
 description = "Library for working with DICOM and DICOM JSON"
 categories = ["wasm"]
 
@@ -7,17 +8,16 @@ repository.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-version.workspace = true
 homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
-dcmfx_anonymize = { path = "../dcmfx_anonymize", version = "0.0.0" }
-dcmfx_character_set = { path = "../dcmfx_character_set", version = "0.0.0", default-features = false }
-dcmfx_core = { path = "../dcmfx_core", version = "0.0.0", default-features = false }
-dcmfx_json = { path = "../dcmfx_json", version = "0.0.0", default-features = false }
-dcmfx_p10 = { path = "../dcmfx_p10", version = "0.0.0", default-features = false }
-dcmfx_pixel_data = { path = "../dcmfx_pixel_data", version = "0.0.0", default-features = false }
+dcmfx_anonymize = { path = "../dcmfx_anonymize" }
+dcmfx_character_set = { path = "../dcmfx_character_set", default-features = false }
+dcmfx_core = { path = "../dcmfx_core", default-features = false }
+dcmfx_json = { path = "../dcmfx_json", default-features = false }
+dcmfx_p10 = { path = "../dcmfx_p10", default-features = false }
+dcmfx_pixel_data = { path = "../dcmfx_pixel_data", default-features = false }
 
 [dev-dependencies]
 either = "1.15.0"
