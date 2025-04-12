@@ -10,6 +10,7 @@ import dcmfx_p10/p10_read
 import dcmfx_p10/p10_token
 import dcmfx_p10/p10_write.{type P10WriteConfig, P10WriteConfig}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
+import dcmfx_p10/uids
 import file_streams/file_stream.{type FileStream}
 import gleam/bool
 import gleam/int
@@ -107,6 +108,15 @@ fn delete_tags_flag() {
   )
 }
 
+fn implementation_version_name_flag() {
+  glint.string_flag("implementation-version-name")
+  |> glint.flag_help(
+    "Specifies the value of the Implementation Version Name data element in "
+    <> "output DICOM P10 files.",
+  )
+  |> glint.flag_default(uids.dcmfx_implementation_version_name)
+}
+
 type ModifyArgs {
   ModifyArgs(
     output_filename: Option(String),
@@ -115,6 +125,7 @@ type ModifyArgs {
     zlib_compression_level: Int,
     anonymize: Bool,
     tags_to_delete: List(DataElementTag),
+    implementation_version_name: String,
   )
 }
 
@@ -127,6 +138,9 @@ pub fn run() {
   use zlib_compression_level_flag <- glint.flag(zlib_compression_level_flag())
   use anonymize_flag <- glint.flag(anonymize_flag())
   use delete_tags_flag <- glint.flag(delete_tags_flag())
+  use implementation_version_name <- glint.flag(
+    implementation_version_name_flag(),
+  )
   use _named_args, unnamed_args, flags <- glint.command()
 
   let input_filenames = unnamed_args
@@ -141,6 +155,9 @@ pub fn run() {
     |> list.map(data_element_tag.from_hex_string)
     |> result.all
 
+  let assert Ok(implementation_version_name) =
+    implementation_version_name(flags)
+
   let args =
     ModifyArgs(
       output_filename: output_filename(flags) |> option.from_result,
@@ -151,6 +168,7 @@ pub fn run() {
         |> option.unwrap(6),
       anonymize:,
       tags_to_delete:,
+      implementation_version_name:,
     )
 
   let input_sources = input_source.get_input_sources(input_filenames)
@@ -247,7 +265,11 @@ fn modify_input_source(
 
   // Setup write config
   let write_config =
-    P10WriteConfig(zlib_compression_level: args.zlib_compression_level)
+    P10WriteConfig(
+      ..p10_write.default_config(),
+      implementation_version_name: args.implementation_version_name,
+      zlib_compression_level: args.zlib_compression_level,
+    )
 
   let input_stream = input_source.open_read_stream(input_source)
   use input_stream <- result.try(input_stream)

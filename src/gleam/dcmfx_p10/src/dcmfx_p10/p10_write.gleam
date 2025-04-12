@@ -3,6 +3,7 @@
 
 import dcmfx_core/data_element_tag
 import dcmfx_core/data_element_value
+import dcmfx_core/data_error
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/data_set_path.{type DataSetPath}
 import dcmfx_core/dictionary
@@ -33,6 +34,20 @@ import gleam/result
 /// Configuration used when writing DICOM P10 data. The following config is
 /// available:
 ///
+/// ### `implementation_class_uid: String`
+///
+/// The implementation class UID that will be included in the File Meta
+/// Information header of serialized DICOM P10 data.
+///
+/// Defaults to the value of `dcmfx_p10/uids.dcmfx_implementation_class_uid`.
+///
+/// ### `implementation_version_name: String`
+///
+/// The implementation version name that will be included in the File Meta
+/// Information header of serialized DICOM P10 data.
+///
+/// Defaults to the value of `dcmfx_p10/uids.dcmfx_implementation_version_name`.
+///
 /// ### `zlib_compression_level: Int`
 ///
 /// The zlib compression level to use when the transfer syntax being used is
@@ -46,13 +61,21 @@ import gleam/result
 /// Default: 6.
 ///
 pub type P10WriteConfig {
-  P10WriteConfig(zlib_compression_level: Int)
+  P10WriteConfig(
+    implementation_class_uid: String,
+    implementation_version_name: String,
+    zlib_compression_level: Int,
+  )
 }
 
 /// Returns the default write config.
 ///
 pub fn default_config() -> P10WriteConfig {
-  P10WriteConfig(zlib_compression_level: 6)
+  P10WriteConfig(
+    implementation_class_uid: uids.dcmfx_implementation_class_uid,
+    implementation_version_name: uids.dcmfx_implementation_version_name,
+    zlib_compression_level: 6,
+  )
 }
 
 /// A write context holds the current state of an in-progress DICOM P10 write.
@@ -95,11 +118,10 @@ pub fn with_config(
 ) -> P10WriteContext {
   // Clamp zlib compression level to the valid range
   let config =
-    P10WriteConfig(zlib_compression_level: int.clamp(
-      config.zlib_compression_level,
-      0,
-      9,
-    ))
+    P10WriteConfig(
+      ..config,
+      zlib_compression_level: int.clamp(config.zlib_compression_level, 0, 9),
+    )
 
   P10WriteContext(..context, config: config)
 }
@@ -386,9 +408,24 @@ fn token_to_bytes(
     }
 
     p10_token.FileMetaInformation(file_meta_information) -> {
+      let file_meta_information =
+        file_meta_information
+        |> prepare_file_meta_information_token_data_set(
+          context.config.implementation_class_uid,
+          context.config.implementation_version_name,
+        )
+        |> result.map_error(fn(e) {
+          p10_error.DataInvalid(
+            when: "Serializing File Meta Information",
+            details: data_error.details(e),
+            path: data_error.path(e) |> option.unwrap(data_set_path.new()),
+            offset: context.p10_total_byte_count,
+          )
+        })
+      use file_meta_information <- result.try(file_meta_information)
+
       let fmi_bytes =
         file_meta_information
-        |> prepare_file_meta_information_token_data_set
         |> data_set.map(fn(tag, value) {
           let vr = data_element_value.value_representation(value)
 
@@ -396,14 +433,14 @@ fn token_to_bytes(
             value
             |> data_element_value.bytes
             |> result.replace_error(p10_error.DataInvalid(
-              "Serializing File Meta Information",
-              "Tag '"
+              when: "Serializing File Meta Information",
+              details: "Tag '"
                 <> data_element_tag.to_string(tag)
                 <> "' with value representation '"
                 <> value_representation.to_string(vr)
                 <> "' is not allowed in File Meta Information",
-              context.path,
-              context.p10_total_byte_count,
+              path: context.path,
+              offset: context.p10_total_byte_count,
             ))
           use value_bytes <- result.try(value_bytes)
 
@@ -696,27 +733,25 @@ pub fn data_set_to_bytes(
 /// values in the File Meta Information. This is done prior to serializing it to
 /// bytes.
 ///
-fn prepare_file_meta_information_token_data_set(file_meta_information: DataSet) {
+fn prepare_file_meta_information_token_data_set(
+  file_meta_information: DataSet,
+  implementation_class_uid: String,
+  implementation_version_name: String,
+) {
   let assert Ok(file_meta_information_version) =
     data_element_value.new_other_byte_string(<<0, 1>>)
-  let assert Ok(implementation_class_uid) =
-    data_element_value.new_unique_identifier([
-      uids.dcmfx_implementation_class_uid,
-    ])
-  let assert Ok(implementation_version_name) =
-    data_element_value.new_short_string([uids.dcmfx_implementation_version_name])
 
   file_meta_information
   |> data_set.insert(
     dictionary.file_meta_information_version.tag,
     file_meta_information_version,
   )
-  |> data_set.insert(
-    dictionary.implementation_class_uid.tag,
+  |> data_set.insert_string_value(dictionary.implementation_class_uid, [
     implementation_class_uid,
-  )
-  |> data_set.insert(
-    dictionary.implementation_version_name.tag,
-    implementation_version_name,
+  ])
+  |> result.try(
+    data_set.insert_string_value(_, dictionary.implementation_version_name, [
+      implementation_version_name,
+    ]),
   )
 }

@@ -37,6 +37,14 @@ pub struct ToDcmArgs {
     default_value_t = false
   )]
   overwrite: bool,
+
+  #[clap(
+    long,
+    help = "Specifies the value of the Implementation Version Name data \
+      element in output DICOM P10 files.",
+    default_value_t = uids::DCMFX_IMPLEMENTATION_VERSION_NAME.to_string(),
+  )]
+  implementation_version_name: String,
 }
 
 enum ToDcmError {
@@ -121,8 +129,13 @@ fn input_source_to_dcm(
   )
   .map_err(ToDcmError::P10Error)?;
 
+  let write_config = P10WriteConfig {
+    implementation_version_name: args.implementation_version_name.clone(),
+    ..P10WriteConfig::default()
+  };
+
   // Write P10 data to output stream
   data_set
-    .write_p10_stream(&mut output_stream, None)
+    .write_p10_stream(&mut output_stream, Some(write_config))
     .map_err(ToDcmError::P10Error)
 }

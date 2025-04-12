@@ -164,6 +164,19 @@ pub fn name(error: DataError) -> String {
   }
 }
 
+/// Returns the `details`` field of the error, if one exists.
+///
+pub fn details(error: DataError) -> String {
+  case error {
+    TagNotPresent(..) -> ""
+    ValueNotPresent(..) -> ""
+    MultiplicityMismatch(..) -> ""
+    ValueInvalid(details:, ..) -> details
+    ValueLengthInvalid(details:, ..) -> details
+    ValueUnsupported(details:, ..) -> details
+  }
+}
+
 /// Returns lines of output that describe a DICOM data error in a human-readable
 /// format.
 ///

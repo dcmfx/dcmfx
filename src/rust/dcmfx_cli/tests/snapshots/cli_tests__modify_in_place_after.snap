@@ -6,7 +6,7 @@ snapshot_kind: text
 (0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
 (0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (Deflated Explicit VR Little Endian)
 (0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
-(0002,0013) SH Implementation Version Name          [    12 bytes] "DCMfx 0.0.0"
+(0002,0013) SH Implementation Version Name          [    10 bytes] "DCMfx Test"
 (0008,0008) CS Image Type                           [    16 bytes] "ORIGINAL P …
 (0008,0012) DA Instance Creation Date               [    10 bytes] "1995.07.20"
 (0008,0013) TM Instance Creation Time               [     8 bytes] "11:22:07"

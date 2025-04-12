@@ -14,8 +14,8 @@ use byteorder::ByteOrder;
 
 use dcmfx_core::DataSetPath;
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataSet, RcByteSlice, TransferSyntax,
-  dictionary, transfer_syntax, transfer_syntax::Endianness,
+  DataElementTag, DataElementValue, DataError, DataSet, RcByteSlice,
+  TransferSyntax, dictionary, transfer_syntax, transfer_syntax::Endianness,
 };
 
 use crate::internal::p10_location::P10Location;
@@ -35,8 +35,22 @@ const ZLIB_DEFLATE_CHUNK_SIZE: usize = 64 * 1024;
 
 /// Configuration used when writing DICOM P10 data.
 ///
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct P10WriteConfig {
+  /// The implementation class UID that will be included in the File Meta
+  /// Information header of serialized DICOM P10 data.
+  ///
+  /// Defaults to the value of [`uids::DCMFX_IMPLEMENTATION_CLASS_UID`].
+  ///
+  pub implementation_class_uid: String,
+
+  /// The implementation version name that will be included in the File Meta
+  /// Information header of serialized DICOM P10 data.
+  ///
+  /// Defaults to the value of [`uids::DCMFX_IMPLEMENTATION_VERSION_NAME`].
+  ///
+  pub implementation_version_name: String,
+
   /// The zlib compression level to use when the transfer syntax being used is
   /// deflated. There are only three deflated transfer syntaxes: 'Deflated
   /// Explicit VR Little Endian', 'JPIP Referenced Deflate', and 'JPIP HTJ2K
@@ -52,6 +66,10 @@ pub struct P10WriteConfig {
 impl Default for P10WriteConfig {
   fn default() -> Self {
     Self {
+      implementation_class_uid: uids::DCMFX_IMPLEMENTATION_CLASS_UID
+        .to_string(),
+      implementation_version_name: uids::DCMFX_IMPLEMENTATION_VERSION_NAME
+        .to_string(),
       zlib_compression_level: 6,
     }
   }
@@ -92,9 +110,11 @@ impl P10WriteContext {
   /// Updates the config for a write context.
   ///
   pub fn set_config(&mut self, config: &P10WriteConfig) {
+    self.config = config.clone();
+
     // Clamp zlib compression level to the valid range
     self.config.zlib_compression_level =
-      config.zlib_compression_level.clamp(0, 9);
+      self.config.zlib_compression_level.clamp(0, 9);
   }
 
   /// Reads the current DICOM P10 bytes available out of a write context. These
@@ -326,9 +346,17 @@ impl P10WriteContext {
         let mut file_meta_information = data_set.clone();
         prepare_file_meta_information_token_data_set(
           &mut file_meta_information,
-        );
+          &self.config.implementation_class_uid,
+          &self.config.implementation_version_name,
+        )
+        .map_err(|e| P10Error::DataInvalid {
+          when: "Serializing File Meta Information".to_string(),
+          details: e.details().to_string(),
+          path: e.path().cloned().unwrap_or_default(),
+          offset: self.p10_total_byte_count,
+        })?;
 
-        let mut fmi_bytes = Vec::with_capacity(8192);
+        let mut fmi_bytes = Vec::with_capacity(1024);
 
         // Set the File Meta Information Group Length, with a placeholder for
         // the 32-bit length at the end. The length will be filled in once the
@@ -642,30 +670,23 @@ pub fn data_set_to_bytes(
 ///
 fn prepare_file_meta_information_token_data_set(
   file_meta_information: &mut DataSet,
-) {
+  implementation_class_uid: &str,
+  implementation_version_name: &str,
+) -> Result<(), DataError> {
   let file_meta_information_version =
     DataElementValue::new_other_byte_string(vec![0, 1]).unwrap();
-  let implementation_class_uid = DataElementValue::new_unique_identifier(&[
-    uids::DCMFX_IMPLEMENTATION_CLASS_UID,
-  ])
-  .unwrap();
-
-  let implementation_version_name = DataElementValue::new_short_string(&[
-    &uids::dcmfx_implementation_version_name(),
-  ])
-  .unwrap();
 
   file_meta_information.insert(
     dictionary::FILE_META_INFORMATION_VERSION.tag,
     file_meta_information_version,
   );
-  file_meta_information.insert(
-    dictionary::IMPLEMENTATION_CLASS_UID.tag,
-    implementation_class_uid,
-  );
-  file_meta_information.insert(
-    dictionary::IMPLEMENTATION_VERSION_NAME.tag,
-    implementation_version_name,
+  file_meta_information.insert_string_value(
+    &dictionary::IMPLEMENTATION_CLASS_UID,
+    &[implementation_class_uid],
+  )?;
+  file_meta_information.insert_string_value(
+    &dictionary::IMPLEMENTATION_VERSION_NAME,
+    &[implementation_version_name],
   )
 }
 

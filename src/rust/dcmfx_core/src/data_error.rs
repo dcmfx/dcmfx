@@ -233,6 +233,19 @@ impl DataError {
       Self::ValueUnsupported { .. } => "Unsupported value",
     }
   }
+
+  /// Returns the `details`` field of the error, if one exists.
+  ///
+  pub fn details(&self) -> &str {
+    match self {
+      Self::TagNotPresent { .. } => "",
+      Self::ValueNotPresent { .. } => "",
+      Self::MultiplicityMismatch { .. } => "",
+      Self::ValueInvalid { details, .. } => details,
+      Self::ValueLengthInvalid { details, .. } => details,
+      Self::ValueUnsupported { details, .. } => details,
+    }
+  }
 }
 
 impl DcmfxError for DataError {

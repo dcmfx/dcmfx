@@ -87,6 +87,14 @@ pub struct ModifyArgs {
     default_value_t = false
   )]
   overwrite: bool,
+
+  #[clap(
+    long,
+    help = "Specifies the value of the Implementation Version Name data \
+      element in output DICOM P10 files.",
+    default_value_t = uids::DCMFX_IMPLEMENTATION_VERSION_NAME.to_string(),
+  )]
+  implementation_version_name: String,
 }
 
 fn validate_data_element_tag(s: &str) -> Result<DataElementTag, String> {
@@ -191,7 +199,9 @@ fn modify_input_source(
 
   // Setup write config
   let write_config = P10WriteConfig {
+    implementation_version_name: args.implementation_version_name.clone(),
     zlib_compression_level: args.zlib_compression_level,
+    ..P10WriteConfig::default()
   };
 
   let input_stream = input_source.open_read_stream()?;

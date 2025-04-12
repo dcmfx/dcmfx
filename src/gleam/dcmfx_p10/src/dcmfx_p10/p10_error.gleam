@@ -90,6 +90,23 @@ pub fn name(error: P10Error) -> String {
   }
 }
 
+/// Returns the `details`` field of the error, if one exists.
+///
+pub fn details(error: P10Error) -> String {
+  case error {
+    TransferSyntaxNotSupported(..) -> ""
+    SpecificCharacterSetInvalid(details:, ..) -> details
+    DataRequired(..) -> ""
+    DataEndedUnexpectedly(..) -> ""
+    DataInvalid(details:, ..) -> details
+    MaximumExceeded(details:, ..) -> details
+    TokenStreamInvalid(details:, ..) -> details
+    WriteAfterCompletion(..) -> ""
+    FileStreamError(..) -> ""
+    OtherError(details:, ..) -> details
+  }
+}
+
 /// Returns lines of text that describe a DICOM P10 error in a human-readable
 /// format.
 pub fn to_lines(error: P10Error, task_description: String) -> List(String) {

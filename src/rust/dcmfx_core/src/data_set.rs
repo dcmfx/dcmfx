@@ -124,7 +124,10 @@ impl DataSet {
     vr: ValueRepresentation,
     bytes: RcByteSlice,
   ) -> Result<(), DataError> {
-    self.insert(tag, DataElementValue::new_binary(vr, bytes)?);
+    let value = DataElementValue::new_binary(vr, bytes)
+      .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))?;
+
+    self.insert(tag, value);
 
     Ok(())
   }
@@ -146,9 +149,10 @@ impl DataSet {
         DataElementValue::new_age_string(value)
       }
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -171,9 +175,10 @@ impl DataSet {
         DataElementValue::new_attribute_tag(value)
       }
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -193,9 +198,10 @@ impl DataSet {
     let value = match item.vrs {
       [ValueRepresentation::Date] => DataElementValue::new_date(value),
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -215,9 +221,10 @@ impl DataSet {
     let value = match item.vrs {
       [ValueRepresentation::Date] => DataElementValue::new_date_time(value),
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -266,9 +273,10 @@ impl DataSet {
       }
 
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -346,9 +354,10 @@ impl DataSet {
       ),
 
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -409,9 +418,10 @@ impl DataSet {
       ),
 
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -433,9 +443,10 @@ impl DataSet {
         DataElementValue::new_person_name(value)
       }
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -453,9 +464,10 @@ impl DataSet {
         Ok(DataElementValue::new_sequence(items))
       }
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -507,9 +519,10 @@ impl DataSet {
       }
 
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -529,9 +542,10 @@ impl DataSet {
     let value = match item.vrs {
       [ValueRepresentation::Time] => DataElementValue::new_time(value),
       _ => invalid_insert_error(item),
-    }?;
+    }
+    .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(item.tag)))?;
 
-    self.0.insert(item.tag, value);
+    self.insert(item.tag, value);
 
     Ok(())
   }
@@ -541,7 +555,7 @@ impl DataSet {
   ///
   pub fn merge(&mut self, b: Self) {
     for (key, value) in b.0.into_iter() {
-      self.0.insert(key, value);
+      self.insert(key, value);
     }
   }
 

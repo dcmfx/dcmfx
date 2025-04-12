@@ -96,26 +96,39 @@ impl core::fmt::Display for P10Error {
 impl P10Error {
   /// Returns the name of the error as a human-readable string.
   ///
-  pub fn name(&self) -> String {
+  pub fn name(&self) -> &str {
     match self {
-      P10Error::TransferSyntaxNotSupported { .. } => {
-        "Transfer syntax not supported".to_string()
+      Self::TransferSyntaxNotSupported { .. } => {
+        "Transfer syntax not supported"
       }
-      P10Error::SpecificCharacterSetInvalid { .. } => {
-        "Specific character set invalid".to_string()
+      Self::SpecificCharacterSetInvalid { .. } => {
+        "Specific character set invalid"
       }
-      P10Error::DataRequired { .. } => "Data required".to_string(),
-      P10Error::DataEndedUnexpectedly { .. } => {
-        "Unexpected end of data".to_string()
-      }
-      P10Error::DataInvalid { .. } => "Invalid data".to_string(),
-      P10Error::MaximumExceeded { .. } => "Maximum exceeded".to_string(),
-      P10Error::TokenStreamInvalid { .. } => {
-        "P10 token stream invalid".to_string()
-      }
-      P10Error::WriteAfterCompletion => "Write after completion".to_string(),
-      P10Error::FileError { .. } => "File I/O failure".to_string(),
-      P10Error::OtherError { error_type, .. } => error_type.clone(),
+      Self::DataRequired { .. } => "Data required",
+      Self::DataEndedUnexpectedly { .. } => "Unexpected end of data",
+      Self::DataInvalid { .. } => "Invalid data",
+      Self::MaximumExceeded { .. } => "Maximum exceeded",
+      Self::TokenStreamInvalid { .. } => "P10 token stream invalid",
+      Self::WriteAfterCompletion => "Write after completion",
+      Self::FileError { .. } => "File I/O failure",
+      Self::OtherError { error_type, .. } => error_type,
+    }
+  }
+
+  /// Returns the `details`` field of the error, if one exists.
+  ///
+  pub fn details(&self) -> &str {
+    match self {
+      Self::TransferSyntaxNotSupported { .. } => "",
+      Self::SpecificCharacterSetInvalid { details, .. } => details,
+      Self::DataRequired { .. } => "",
+      Self::DataEndedUnexpectedly { .. } => "",
+      Self::DataInvalid { details, .. } => details,
+      Self::MaximumExceeded { details, .. } => details,
+      Self::TokenStreamInvalid { details, .. } => details,
+      Self::WriteAfterCompletion => "",
+      Self::FileError { details, .. } => details,
+      Self::OtherError { details, .. } => details,
     }
   }
 }

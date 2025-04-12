@@ -139,9 +139,14 @@ pub fn insert_binary_value(
   vr: ValueRepresentation,
   bytes: BitArray,
 ) -> Result(DataSet, DataError) {
-  use value <- result.try(data_element_value.new_binary(vr, bytes))
+  let value =
+    data_element_value.new_binary(vr, bytes)
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(tag))
+    })
+  use value <- result.map(value)
 
-  Ok(insert(data_set, tag, value))
+  insert(data_set, tag, value)
 }
 
 /// Inserts a data element with an age string value into a data set. The data
@@ -157,11 +162,18 @@ pub fn insert_age_string(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs {
-    [value_representation.AgeString] -> data_element_value.new_age_string(value)
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+  let value =
+    case item.vrs {
+      [value_representation.AgeString] ->
+        data_element_value.new_age_string(value)
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with an attribute tag value into a data set. The data
@@ -177,12 +189,18 @@ pub fn insert_attribute_tag_value(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs {
-    [value_representation.AttributeTag] ->
-      data_element_value.new_attribute_tag(value)
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+  let value =
+    case item.vrs {
+      [value_representation.AttributeTag] ->
+        data_element_value.new_attribute_tag(value)
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with a date value into a data set. The data element
@@ -198,11 +216,17 @@ pub fn insert_date_value(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs {
-    [value_representation.Date] -> data_element_value.new_date(value)
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+  let value =
+    case item.vrs {
+      [value_representation.Date] -> data_element_value.new_date(value)
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with a date time value into a data set. The data
@@ -218,11 +242,17 @@ pub fn insert_date_time_value(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs {
-    [value_representation.Date] -> data_element_value.new_date_time(value)
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+  let value =
+    case item.vrs {
+      [value_representation.Date] -> data_element_value.new_date_time(value)
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with float values into a data set. The data element
@@ -239,28 +269,34 @@ pub fn insert_float_value(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs {
-    [value_representation.DecimalString] ->
-      value
-      |> list.map(ieee_float.to_finite)
-      |> result.all
-      |> result.replace_error(data_error.new_value_invalid(
-        "DecimalString float value was not finite",
-      ))
-      |> result.then(data_element_value.new_decimal_string)
+  let value =
+    case item.vrs {
+      [value_representation.DecimalString] ->
+        value
+        |> list.map(ieee_float.to_finite)
+        |> result.all
+        |> result.replace_error(data_error.new_value_invalid(
+          "DecimalString float value was not finite",
+        ))
+        |> result.then(data_element_value.new_decimal_string)
 
-    [value_representation.FloatingPointDouble] ->
-      data_element_value.new_floating_point_double(value)
-    [value_representation.FloatingPointSingle] ->
-      data_element_value.new_floating_point_single(value)
-    [value_representation.OtherDoubleString] ->
-      data_element_value.new_other_double_string(value)
-    [value_representation.OtherFloatString] ->
-      data_element_value.new_other_float_string(value)
+      [value_representation.FloatingPointDouble] ->
+        data_element_value.new_floating_point_double(value)
+      [value_representation.FloatingPointSingle] ->
+        data_element_value.new_floating_point_single(value)
+      [value_representation.OtherDoubleString] ->
+        data_element_value.new_other_double_string(value)
+      [value_representation.OtherFloatString] ->
+        data_element_value.new_other_float_string(value)
 
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with integer values into a data set. The data
@@ -278,21 +314,27 @@ pub fn insert_int_value(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs {
-    [value_representation.IntegerString] ->
-      data_element_value.new_integer_string(value)
-    [value_representation.SignedLong] ->
-      data_element_value.new_signed_long(value)
-    [value_representation.SignedShort] ->
-      data_element_value.new_signed_short(value)
-    [value_representation.UnsignedLong] ->
-      data_element_value.new_unsigned_long(value)
-    [value_representation.UnsignedShort] ->
-      data_element_value.new_unsigned_short(value)
+  let value =
+    case item.vrs {
+      [value_representation.IntegerString] ->
+        data_element_value.new_integer_string(value)
+      [value_representation.SignedLong] ->
+        data_element_value.new_signed_long(value)
+      [value_representation.SignedShort] ->
+        data_element_value.new_signed_short(value)
+      [value_representation.UnsignedLong] ->
+        data_element_value.new_unsigned_long(value)
+      [value_representation.UnsignedShort] ->
+        data_element_value.new_unsigned_short(value)
 
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with big integer values into a data set. The data
@@ -310,15 +352,21 @@ pub fn insert_big_int_value(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs {
-    [value_representation.SignedVeryLong] ->
-      data_element_value.new_signed_very_long(value)
-    [value_representation.UnsignedVeryLong] ->
-      data_element_value.new_unsigned_very_long(value)
+  let value =
+    case item.vrs {
+      [value_representation.SignedVeryLong] ->
+        data_element_value.new_signed_very_long(value)
+      [value_representation.UnsignedVeryLong] ->
+        data_element_value.new_unsigned_very_long(value)
 
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with a person name value into a data set. The data
@@ -334,12 +382,18 @@ pub fn insert_person_name_value(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs {
-    [value_representation.PersonName] ->
-      data_element_value.new_person_name(value)
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+  let value =
+    case item.vrs {
+      [value_representation.PersonName] ->
+        data_element_value.new_person_name(value)
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with a sequence value into a data set. The data
@@ -350,12 +404,18 @@ pub fn insert_sequence(
   item: dictionary.Item,
   value: List(DataSet),
 ) -> Result(DataSet, DataError) {
-  case item.vrs {
-    [value_representation.Sequence] ->
-      Ok(data_element_value.new_sequence(value))
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+  let value =
+    case item.vrs {
+      [value_representation.Sequence] ->
+        Ok(data_element_value.new_sequence(value))
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with a string value into a data set. The data
@@ -373,31 +433,37 @@ pub fn insert_string_value(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs, value {
-    [value_representation.ApplicationEntity], [value] ->
-      data_element_value.new_application_entity(value)
-    [value_representation.CodeString], _ ->
-      data_element_value.new_code_string(value)
-    [value_representation.LongString], _ ->
-      data_element_value.new_long_string(value)
-    [value_representation.LongText], [value] ->
-      data_element_value.new_long_text(value)
-    [value_representation.ShortString], _ ->
-      data_element_value.new_short_string(value)
-    [value_representation.ShortText], [value] ->
-      data_element_value.new_short_text(value)
-    [value_representation.UniqueIdentifier], _ ->
-      data_element_value.new_unique_identifier(value)
-    [value_representation.UniversalResourceIdentifier], [value] ->
-      data_element_value.new_universal_resource_identifier(value)
-    [value_representation.UnlimitedCharacters], _ ->
-      data_element_value.new_unlimited_characters(value)
-    [value_representation.UnlimitedText], [value] ->
-      data_element_value.new_unlimited_text(value)
+  let value =
+    case item.vrs, value {
+      [value_representation.ApplicationEntity], [value] ->
+        data_element_value.new_application_entity(value)
+      [value_representation.CodeString], _ ->
+        data_element_value.new_code_string(value)
+      [value_representation.LongString], _ ->
+        data_element_value.new_long_string(value)
+      [value_representation.LongText], [value] ->
+        data_element_value.new_long_text(value)
+      [value_representation.ShortString], _ ->
+        data_element_value.new_short_string(value)
+      [value_representation.ShortText], [value] ->
+        data_element_value.new_short_text(value)
+      [value_representation.UniqueIdentifier], _ ->
+        data_element_value.new_unique_identifier(value)
+      [value_representation.UniversalResourceIdentifier], [value] ->
+        data_element_value.new_universal_resource_identifier(value)
+      [value_representation.UnlimitedCharacters], _ ->
+        data_element_value.new_unlimited_characters(value)
+      [value_representation.UnlimitedText], [value] ->
+        data_element_value.new_unlimited_text(value)
 
-    _, _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+      _, _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Inserts a data element with a time value into a data set. The data element
@@ -413,11 +479,17 @@ pub fn insert_time_value(
     fn() { invalid_insert_error(item) },
   )
 
-  case item.vrs {
-    [value_representation.Time] -> data_element_value.new_time(value)
-    _ -> invalid_insert_error(item)
-  }
-  |> result.map(dict.insert(data_set, item.tag, _))
+  let value =
+    case item.vrs {
+      [value_representation.Time] -> data_element_value.new_time(value)
+      _ -> invalid_insert_error(item)
+    }
+    |> result.map_error(fn(e) {
+      data_error.with_path(e, data_set_path.new_with_data_element(item.tag))
+    })
+  use value <- result.map(value)
+
+  insert(data_set, item.tag, value)
 }
 
 /// Merges two data sets together to form a new data set. Data elements from the
