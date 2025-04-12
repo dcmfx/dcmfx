@@ -1,6 +1,9 @@
 fn main() {
   build_c_code();
-  build_cpp_code();
+
+  if !std::env::var("TARGET").unwrap().contains("wasm") {
+    build_cpp_code();
+  }
 
   // Add output directory to the linker's search path
   let out_dir = std::env::var("OUT_DIR").unwrap();
