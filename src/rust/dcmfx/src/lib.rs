@@ -48,5 +48,3 @@ pub mod p10 {
 pub mod pixel_data {
   pub use dcmfx_pixel_data::*;
 }
-
-mod integration_tests;
