@@ -16,11 +16,13 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
 
     steps:
-      - name: Install and run DCMfx
+      - name: Install DCMfx
         run: |
           brew tap dcmfx/tap
           brew install dcmfx
-          dcmfx --version
+
+      - name: Run DCMfx
+        run: dcmfx --version
 
   test_windows:
     name: Test Windows build
@@ -40,7 +42,7 @@ jobs:
         shell: powershell
 
     steps:
-      - name: Download and run DCMfx
+      - name: Download DCMfx
         run: |
           # Get latest version from GitHub API
           $version = (Invoke-RestMethod -Uri "https://api.github.com/repos/dcmfx/dcmfx/releases/latest").tag_name
@@ -53,8 +55,8 @@ jobs:
           & "C:\Program Files\7-Zip\7z.exe" x "dcmfx.tar.gz" -y
           & "C:\Program Files\7-Zip\7z.exe" x "dcmfx.tar" -y
 
-          # Run DCMfx
-          .\dcmfx.exe --version
+      - name: Run DCMfx
+        run: .\dcmfx.exe --version
 
   test_apt_repository:
     name: Test APT repository
@@ -81,12 +83,14 @@ jobs:
           apt install --reinstall -y ca-certificates
           update-ca-certificates
 
-      - name: Install and run DCMfx
+      - name: Install DCMfx
         run: |
           echo "deb [trusted=yes] https://dcmfx.github.io/apt-repository stable main" | tee /etc/apt/sources.list.d/dcmfx.list
           apt update
           apt install -y dcmfx
-          dcmfx --version
+
+      - name: Run DCMfx
+        run: dcmfx --version
 
   test_yum_repository:
     name: Test YUM repository
@@ -107,12 +111,14 @@ jobs:
       image: ${{ matrix.container-image }}
 
     steps:
-      - name: Install and run DCMfx
+      - name: Install DCMfx
         run: |
           echo -e "[dcmfx]\nname=DCMfx\nbaseurl=http://dcmfx.github.io/yum-repository\nenabled=1\ngpgcheck=0" | tee /etc/yum.repos.d/dcmfx.repo
           yum makecache
           yum install -y dcmfx
-          dcmfx --version
+
+      - name: Run DCMfx
+        run: dcmfx --version
 
   test_arch_linux:
     name: Test Arch Linux
@@ -136,7 +142,8 @@ jobs:
           su - github -c 'git clone https://aur.archlinux.org/yay-bin.git'
           su - github -c 'cd yay-bin && makepkg --syncdeps --install --noconfirm'
 
-      - name: Install and run DCMfx
-        run: |
-          su - github -c 'yay --sync --noconfirm dcmfx'
-          dcmfx --version
+      - name: Install DCMfx
+        run: su - github -c 'yay --sync --noconfirm dcmfx'
+
+      - name: Run DCMfx
+        run: dcmfx --version
