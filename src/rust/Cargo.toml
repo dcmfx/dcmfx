@@ -24,4 +24,4 @@ keywords = ["dicom"]
 lto = true
 
 [patch.crates-io]
-ffmpeg-sys-next = { git = "https://github.com/dcmfx/rust-ffmpeg-sys.git", branch = "dcmfx" }
+ffmpeg-sys-next = { git = "https://github.com/dcmfx/rust-ffmpeg-sys.git", rev = "7d76ad5" }

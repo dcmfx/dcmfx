@@ -185,6 +185,7 @@ dependencies = [
  "dcmfx_character_set",
  "dcmfx_core",
  "flate2",
+ "miniz_oxide",
 ]
 
 [[package]]
@@ -201,10 +202,11 @@ dependencies = [
  "image",
  "jpeg-decoder",
  "jxl-oxide",
+ "miniz_oxide",
  "num-traits",
  "wasm32-unknown-unknown-openbsd-libc",
  "zune-core 0.4.11",
- "zune-jpeg 0.4.14 (git+https://github.com/dcmfx/zune-image.git?branch=0.4.x-dcmfx)",
+ "zune-jpeg 0.4.14 (git+https://github.com/dcmfx/zune-image.git?rev=1ed929f)",
 ]
 
 [[package]]
@@ -904,7 +906,7 @@ dependencies = [
 [[package]]
 name = "zune-core"
 version = "0.4.11"
-source = "git+https://github.com/dcmfx/zune-image.git?branch=0.4.x-dcmfx#2b27da0fc52444d600dc8513773030ab76949856"
+source = "git+https://github.com/dcmfx/zune-image.git?rev=1ed929f#1ed929f5598466259c2537f3d3b821dc5fccdf0e"
 
 [[package]]
 name = "zune-core"
@@ -924,7 +926,7 @@ dependencies = [
 [[package]]
 name = "zune-jpeg"
 version = "0.4.14"
-source = "git+https://github.com/dcmfx/zune-image.git?branch=0.4.x-dcmfx#2b27da0fc52444d600dc8513773030ab76949856"
+source = "git+https://github.com/dcmfx/zune-image.git?rev=1ed929f#1ed929f5598466259c2537f3d3b821dc5fccdf0e"
 dependencies = [
  "zune-core 0.4.11",
 ]
