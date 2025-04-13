@@ -131,12 +131,12 @@ jobs:
           useradd -m -G wheel -s /bin/sh github
           echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
 
-      - name: Install Paru
+      - name: Install Yay
         run: |
-          su - github -c 'git clone https://aur.archlinux.org/paru.git'
-          su - github -c 'cd paru && makepkg --syncdeps --install --noconfirm'
+          su - github -c 'git clone https://aur.archlinux.org/yay-bin.git'
+          su - github -c 'cd yay-bin && makepkg --syncdeps --install --noconfirm'
 
       - name: Install and run DCMfx
         run: |
-          su - github -c 'paru --sync --noconfirm dcmfx'
+          su - github -c 'yay --sync --noconfirm dcmfx'
           dcmfx --version

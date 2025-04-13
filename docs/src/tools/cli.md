@@ -45,10 +45,10 @@ brew install dcmfx
 
 - For Arch Linux, a [package](https://aur.archlinux.org/packages/dcmfx) is
   provided in the Arch User Repository (AUR). Install it with your preferred
-  AUR helper (e.g. [paru](https://github.com/Morganamilo/paru)):
+  AUR helper (e.g. [Yay](https://github.com/Jguer/yay)):
 
   ```sh
-  paru -S dcmfx
+  yay -S dcmfx
   ```
 
 ---
