@@ -636,6 +636,8 @@ impl P10ReadContext {
       // If this is the start of a new sequence then add it to the location
       (tag, Some(ValueRepresentation::Sequence), _)
       | (tag, Some(ValueRepresentation::Unknown), ValueLength::Undefined) => {
+        self.check_data_element_ordering(&header)?;
+
         let token = P10Token::SequenceStart {
           tag,
           vr: ValueRepresentation::Sequence,
@@ -714,6 +716,8 @@ impl P10ReadContext {
           && (vr == ValueRepresentation::OtherByteString
             || vr == ValueRepresentation::OtherWordString) =>
       {
+        self.check_data_element_ordering(&header)?;
+
         let token = P10Token::SequenceStart { tag, vr };
 
         self
@@ -782,6 +786,8 @@ impl P10ReadContext {
       // For all other cases this is a standard data element that needs to have
       // its value bytes read
       (tag, Some(vr), ValueLength::Defined { length }) => {
+        self.check_data_element_ordering(&header)?;
+
         let materialized_value_required =
           self.is_materialized_value_required(header.tag, vr);
 
@@ -832,22 +838,6 @@ impl P10ReadContext {
           bytes_remaining: length,
           emit_tokens,
         };
-
-        // Check data elements appear in ascending order
-        if self.config.require_ordered_data_elements {
-          self
-            .location
-            .check_data_element_ordering(header.tag)
-            .map_err(|_| P10Error::DataInvalid {
-              when: "Reading data element header".to_string(),
-              details: format!(
-                "Data element '{}' is not in ascending order",
-                header
-              ),
-              path: self.path.clone(),
-              offset: self.stream.bytes_read(),
-            })?;
-        }
 
         // Add data element to the path
         self
@@ -939,6 +929,28 @@ impl P10ReadContext {
         self.read_implicit_vr_and_length(tag)
       }
     }
+  }
+
+  /// Checks that the specified data element tag is greater than the previous
+  /// one at the current P10 location.
+  ///
+  fn check_data_element_ordering(
+    &mut self,
+    header: &DataElementHeader,
+  ) -> Result<(), P10Error> {
+    if !self.config.require_ordered_data_elements {
+      return Ok(());
+    }
+
+    self
+      .location
+      .check_data_element_ordering(header.tag)
+      .map_err(|_| P10Error::DataInvalid {
+        when: "Reading data element header".to_string(),
+        details: format!("Data element '{}' is not in ascending order", header),
+        path: self.path.clone(),
+        offset: self.stream.bytes_read(),
+      })
   }
 
   /// Returns the transfer syntax that should be used to decode the current

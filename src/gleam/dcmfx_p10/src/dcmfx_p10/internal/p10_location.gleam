@@ -135,26 +135,27 @@ pub fn check_data_element_ordering(
   location: P10Location,
   tag: DataElementTag,
 ) -> Result(P10Location, Nil) {
+  let is_tag_ordering_valid = fn(last_data_element_tag: DataElementTag) -> Bool {
+    data_element_tag.to_int(tag)
+    > data_element_tag.to_int(last_data_element_tag)
+  }
+
   case location {
     [RootDataSet(clarifying_data_elements:, last_data_element_tag:), ..rest] ->
-      case
-        data_element_tag.to_int(tag)
-        > data_element_tag.to_int(last_data_element_tag)
-      {
+      case is_tag_ordering_valid(last_data_element_tag) {
         True -> Ok([RootDataSet(clarifying_data_elements, tag), ..rest])
         False -> Error(Nil)
       }
 
     [Item(clarifying_data_elements:, last_data_element_tag:, ends_at:), ..rest] ->
-      case
-        data_element_tag.to_int(tag)
-        > data_element_tag.to_int(last_data_element_tag)
-      {
+      case is_tag_ordering_valid(last_data_element_tag) {
         True -> Ok([Item(clarifying_data_elements, tag, ends_at), ..rest])
         False -> Error(Nil)
       }
 
-    _ -> Error(Nil)
+    [Sequence(..), ..] -> Ok(location)
+
+    [] -> Error(Nil)
   }
 }
 

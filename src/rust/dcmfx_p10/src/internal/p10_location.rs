@@ -158,12 +158,18 @@ impl P10Location {
       | Some(LocationEntry::Item {
         last_data_element_tag,
         ..
-      }) if tag > *last_data_element_tag => {
-        *last_data_element_tag = tag;
-        Ok(())
+      }) => {
+        if tag > *last_data_element_tag {
+          *last_data_element_tag = tag;
+          Ok(())
+        } else {
+          Err(())
+        }
       }
 
-      _ => Err(()),
+      Some(LocationEntry::Sequence { .. }) => Ok(()),
+
+      None => Err(()),
     }
   }
 

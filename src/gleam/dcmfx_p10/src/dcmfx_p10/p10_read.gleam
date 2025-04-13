@@ -717,6 +717,8 @@ fn read_data_element_header_token(
     tag, Some(value_representation.Sequence), _
     | tag, Some(value_representation.Unknown), value_length.Undefined
     -> {
+      use context <- result.try(check_data_element_ordering(context, header))
+
       let token = p10_token.SequenceStart(tag, value_representation.Sequence)
 
       let ends_at = case header.length {
@@ -821,6 +823,8 @@ fn read_data_element_header_token(
     | tag, Some(value_representation.OtherWordString), value_length.Undefined
       if tag == dictionary.pixel_data.tag
     -> {
+      use context <- result.try(check_data_element_ordering(context, header))
+
       let Some(vr) = vr
       let token = p10_token.SequenceStart(tag, vr)
 
@@ -931,6 +935,8 @@ fn read_data_element_header_token(
     // For all other cases this is a standard data element that needs to have
     // its value bytes read
     tag, Some(vr), value_length.Defined(length) -> {
+      use context <- result.try(check_data_element_ordering(context, header))
+
       let materialized_value_required =
         is_materialized_value_required(context, header.tag, vr)
 
@@ -978,21 +984,6 @@ fn read_data_element_header_token(
       let next_action =
         ReadDataElementValueBytes(header.tag, vr, length, length, emit_tokens)
 
-      // Check data elements appear in ascending order
-      let new_location =
-        p10_location.check_data_element_ordering(context.location, header.tag)
-        |> result.map_error(fn(_) {
-          p10_error.DataInvalid(
-            "Reading data element header",
-            "Data element '"
-              <> data_element_header.to_string(header)
-              <> "' is not in ascending order",
-            context.path,
-            byte_stream.bytes_read(context.stream),
-          )
-        })
-      use new_location <- result.try(new_location)
-
       // Add data element to the path
       let new_path =
         data_set_path.add_data_element(context.path, tag)
@@ -1013,7 +1004,6 @@ fn read_data_element_header_token(
           ..context,
           stream: new_stream,
           next_action: next_action,
-          location: new_location,
           path: new_path,
         )
 
@@ -1092,6 +1082,33 @@ fn read_data_element_header(
     transfer_syntax.VrExplicit -> read_explicit_vr_and_length(context, tag)
     transfer_syntax.VrImplicit -> read_implicit_vr_and_length(context, tag)
   }
+}
+
+/// Checks that the specified data element tag is greater than the previous one
+/// at the current P10 location.
+///
+fn check_data_element_ordering(
+  context: P10ReadContext,
+  header: DataElementHeader,
+) -> Result(P10ReadContext, P10Error) {
+  let new_location = case context.config.require_ordered_data_elements {
+    True ->
+      p10_location.check_data_element_ordering(context.location, header.tag)
+      |> result.map_error(fn(_) {
+        p10_error.DataInvalid(
+          "Reading data element header",
+          "Data element '"
+            <> data_element_header.to_string(header)
+            <> "' is not in ascending order",
+          context.path,
+          byte_stream.bytes_read(context.stream),
+        )
+      })
+    False -> Ok(context.location)
+  }
+  use new_location <- result.map(new_location)
+
+  P10ReadContext(..context, location: new_location)
 }
 
 /// Returns the transfer syntax that should be used to decode the current data.
