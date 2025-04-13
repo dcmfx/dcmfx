@@ -11,7 +11,7 @@ use alloc::{format, rc::Rc, string::String, vec::Vec};
 /// This type is used widely to avoid copying buffers wherever possible, and in
 /// most cases can be used like a `&[u8]` would be.
 ///
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct RcByteSlice {
   data: Rc<Vec<u8>>,
   range: std::ops::Range<usize>,
@@ -86,6 +86,12 @@ impl RcByteSlice {
 
   fn as_slice(&self) -> &[u8] {
     &self.data[self.range.clone()]
+  }
+}
+
+impl core::fmt::Debug for RcByteSlice {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    write!(f, "{:?}", self.as_slice())
   }
 }
 
