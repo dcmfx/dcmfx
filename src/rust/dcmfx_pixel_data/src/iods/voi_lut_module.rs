@@ -38,18 +38,17 @@ impl IodModule for VoiLutModule {
     _length: Option<u32>,
     path: &DataSetPath,
   ) -> bool {
-    if !path.is_empty() {
-      return false;
+    if path.last_sequence_tag() == Ok(dictionary::VOILUT_SEQUENCE.tag) {
+      tag == dictionary::LUT_DESCRIPTOR.tag
+        || tag == dictionary::LUT_EXPLANATION.tag
+        || tag == dictionary::LUT_DATA.tag
+    } else {
+      tag == dictionary::VOILUT_SEQUENCE.tag
+        || tag == dictionary::WINDOW_CENTER.tag
+        || tag == dictionary::WINDOW_WIDTH.tag
+        || tag == dictionary::WINDOW_CENTER_WIDTH_EXPLANATION.tag
+        || tag == dictionary::VOILUT_FUNCTION.tag
     }
-
-    tag == dictionary::VOILUT_SEQUENCE.tag
-      || tag == dictionary::LUT_DESCRIPTOR.tag
-      || tag == dictionary::LUT_EXPLANATION.tag
-      || tag == dictionary::LUT_DATA.tag
-      || tag == dictionary::WINDOW_CENTER.tag
-      || tag == dictionary::WINDOW_WIDTH.tag
-      || tag == dictionary::WINDOW_CENTER_WIDTH_EXPLANATION.tag
-      || tag == dictionary::VOILUT_FUNCTION.tag
   }
 
   fn iod_module_highest_tag() -> DataElementTag {
@@ -109,7 +108,7 @@ impl VoiLutModule {
   ///
   pub fn apply(&self, x: f32) -> f32 {
     if let Some(lut) = self.luts.first() {
-      lut.lookup_normalized(x as i64)
+      lut.lookup_normalized(x.round() as i64)
     } else if let Some(window) = self.windows.first() {
       window.compute(x)
     } else {

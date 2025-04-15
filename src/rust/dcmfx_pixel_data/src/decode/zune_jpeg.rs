@@ -23,6 +23,7 @@ pub fn decode_single_channel(
     image_pixel_module.columns(),
     image_pixel_module.rows(),
     pixels,
+    image_pixel_module.bits_stored(),
   )
 }
 
@@ -43,6 +44,7 @@ pub fn decode_color(
     image_pixel_module.rows(),
     pixels,
     ColorSpace::RGB,
+    image_pixel_module.bits_stored(),
   )
 }
 

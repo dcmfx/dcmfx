@@ -25,8 +25,12 @@ impl IodModule for OverlayPlaneModule {
     tag: DataElementTag,
     _vr: ValueRepresentation,
     _length: Option<u32>,
-    _path: &DataSetPath,
+    path: &DataSetPath,
   ) -> bool {
+    if !path.is_empty() {
+      return false;
+    }
+
     if tag.group < 0x6000 || tag.group > 0x601E || tag.group % 2 != 0 {
       return false;
     }

@@ -14,6 +14,7 @@ mod no_std_allocator;
 mod color_image;
 mod decode;
 mod encode;
+mod grayscale_pipeline;
 pub mod iods;
 mod lookup_table;
 mod p10_pixel_data_frame_filter;
@@ -24,6 +25,7 @@ pub mod standard_color_palettes;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
+pub use grayscale_pipeline::GrayscalePipeline;
 pub use lookup_table::LookupTable;
 pub use p10_pixel_data_frame_filter::{
   P10PixelDataFrameFilter, P10PixelDataFrameFilterError,

@@ -4,9 +4,8 @@ use alloc::{string::ToString, vec::Vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
+  GrayscalePipeline,
   iods::voi_lut_module::{VoiLutFunction, VoiWindow},
-  iods::{ModalityLutModule, VoiLutModule},
 };
 
 /// A single channel image that stores an integer value for each pixel.
@@ -16,6 +15,7 @@ pub struct SingleChannelImage {
   width: u16,
   height: u16,
   data: SingleChannelImageData,
+  bits_stored: u16,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -49,6 +49,7 @@ impl SingleChannelImage {
       width,
       height,
       data: SingleChannelImageData::Bitmap { data, is_signed },
+      bits_stored: 1,
     })
   }
 
@@ -59,6 +60,7 @@ impl SingleChannelImage {
     width: u16,
     height: u16,
     data: Vec<i8>,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -66,10 +68,17 @@ impl SingleChannelImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 8 {
+      return Err(DataError::new_value_invalid(
+        "Single channel image i8 bits stored must be <= 8".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: SingleChannelImageData::I8(data),
+      bits_stored,
     })
   }
 
@@ -80,6 +89,7 @@ impl SingleChannelImage {
     width: u16,
     height: u16,
     data: Vec<u8>,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -87,10 +97,17 @@ impl SingleChannelImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 8 {
+      return Err(DataError::new_value_invalid(
+        "Single channel image u8 bits stored must be <= 8".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: SingleChannelImageData::U8(data),
+      bits_stored,
     })
   }
 
@@ -101,6 +118,7 @@ impl SingleChannelImage {
     width: u16,
     height: u16,
     data: Vec<i16>,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -108,10 +126,17 @@ impl SingleChannelImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 16 {
+      return Err(DataError::new_value_invalid(
+        "Single channel image i16 bits stored must be <= 16".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: SingleChannelImageData::I16(data),
+      bits_stored,
     })
   }
 
@@ -122,6 +147,7 @@ impl SingleChannelImage {
     width: u16,
     height: u16,
     data: Vec<u16>,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -129,10 +155,17 @@ impl SingleChannelImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 16 {
+      return Err(DataError::new_value_invalid(
+        "Single channel image u16 bits stored must be <= 16".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: SingleChannelImageData::U16(data),
+      bits_stored,
     })
   }
 
@@ -143,6 +176,7 @@ impl SingleChannelImage {
     width: u16,
     height: u16,
     data: Vec<i32>,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -150,10 +184,17 @@ impl SingleChannelImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 32 {
+      return Err(DataError::new_value_invalid(
+        "Single channel image i32 bits stored must be <= 32".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: SingleChannelImageData::I32(data),
+      bits_stored,
     })
   }
 
@@ -164,6 +205,7 @@ impl SingleChannelImage {
     width: u16,
     height: u16,
     data: Vec<u32>,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -171,10 +213,17 @@ impl SingleChannelImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 32 {
+      return Err(DataError::new_value_invalid(
+        "Single channel image u32 bits stored must be <= 32".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: SingleChannelImageData::U32(data),
+      bits_stored,
     })
   }
 
@@ -200,6 +249,22 @@ impl SingleChannelImage {
   ///
   pub fn pixel_count(&self) -> usize {
     usize::from(self.width()) * usize::from(self.height())
+  }
+
+  /// Returns whether this single channel image stores signed pixel data.
+  ///
+  pub fn is_signed(&self) -> bool {
+    match self.data {
+      SingleChannelImageData::Bitmap { is_signed, .. } => is_signed,
+
+      SingleChannelImageData::I8(..)
+      | SingleChannelImageData::I16(..)
+      | SingleChannelImageData::I32(..) => true,
+
+      SingleChannelImageData::U8(..)
+      | SingleChannelImageData::U16(..)
+      | SingleChannelImageData::U32(..) => false,
+    }
   }
 
   /// Returns the minimum and maximum values in this single channel image.
@@ -254,7 +319,7 @@ impl SingleChannelImage {
   /// Returns a VOI Window that covers the full range of values in this single
   /// channel image.
   ///
-  pub fn fallback_voi_window(&self) -> Option<VoiWindow> {
+  pub fn default_voi_window(&self) -> Option<VoiWindow> {
     self.min_max_values().map(|(min, max)| {
       VoiWindow::new(
         (max + min) as f32 * 0.5,
@@ -267,22 +332,13 @@ impl SingleChannelImage {
 
   /// Converts Monochrome1 pixel data to Monochrome2.
   ///
-  pub fn invert_monochrome1_data(
-    &mut self,
-    image_pixel_module: &ImagePixelModule,
-  ) {
-    if image_pixel_module.photometric_interpretation()
-      != &PhotometricInterpretation::Monochrome1
-    {
-      return;
-    }
-
+  pub fn invert_monochrome1_data(&mut self) {
     // Calculate the offset to add after negating the stored pixel value in
     // order to convert to Monochrome2
-    let offset: i64 = if image_pixel_module.pixel_representation().is_signed() {
+    let offset: i64 = if self.is_signed() {
       -1
     } else {
-      image_pixel_module.int_max().into()
+      (1i64 << self.bits_stored) - 1
     };
 
     match &mut self.data {
@@ -337,46 +393,38 @@ impl SingleChannelImage {
   }
 
   /// Converts this single channel image to an 8-bit grayscale image by passing
-  /// its values through the given Modality LUT and VOI LUT.
+  /// its values through the given grayscale LUT pipeline.
   ///
   pub fn to_gray_u8_image(
     &self,
-    modality_lut_module: &ModalityLutModule,
-    voi_lut_module: &VoiLutModule,
+    grayscale_pipeline: &GrayscalePipeline,
   ) -> image::GrayImage {
-    self.to_gray_image(modality_lut_module, voi_lut_module, |pixel: f32| {
+    self.to_gray_image(|stored_value: i64| {
+      let pixel = grayscale_pipeline.apply(stored_value);
+
       (pixel * 255.0).round().clamp(0.0, 255.0) as u8
     })
   }
 
   /// Converts this single channel image to a 16-bit grayscale image by passing
-  /// its values through the given Modality LUT and VOI LUT.
+  /// its values through the given grayscale LUT pipeline.
   ///
   pub fn to_gray_u16_image(
     &self,
-    modality_lut_module: &ModalityLutModule,
-    voi_lut_module: &VoiLutModule,
+    grayscale_pipeline: &GrayscalePipeline,
   ) -> image::ImageBuffer<image::Luma<u16>, Vec<u16>> {
-    self.to_gray_image(modality_lut_module, voi_lut_module, |pixel: f32| {
+    self.to_gray_image(|stored_value: i64| {
+      let pixel = grayscale_pipeline.apply(stored_value);
+
       (pixel * 65535.0).round().clamp(0.0, 65535.0) as u16
     })
   }
 
   fn to_gray_image<T: image::Primitive>(
     &self,
-    modality_lut_module: &ModalityLutModule,
-    voi_lut_module: &VoiLutModule,
-    pixel_to_gray: impl Fn(f32) -> T,
+    stored_value_to_gray: impl Fn(i64) -> T,
   ) -> image::ImageBuffer<image::Luma<T>, Vec<T>> {
     let mut gray_pixels = Vec::with_capacity(self.pixel_count());
-
-    let stored_value_to_gray = |stored_value: i64| {
-      // Apply LUTs
-      let x = modality_lut_module.apply_to_stored_value(stored_value);
-      let x = voi_lut_module.apply(x);
-
-      pixel_to_gray(x)
-    };
 
     match &self.data {
       SingleChannelImageData::Bitmap { data, is_signed } => {

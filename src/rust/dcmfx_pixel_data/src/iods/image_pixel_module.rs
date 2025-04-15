@@ -299,6 +299,24 @@ impl ImagePixelModule {
     self.pixel_representation
   }
 
+  /// Returns the range of integer values that can be stored.
+  ///
+  pub fn stored_value_range(&self) -> core::ops::RangeInclusive<i64> {
+    let min = if self.pixel_representation.is_signed() {
+      -(1i64 << (self.bits_stored - 1))
+    } else {
+      0
+    };
+
+    let max = if self.pixel_representation.is_signed() {
+      (1i64 << (self.bits_stored - 1)) - 1
+    } else {
+      (1i64 << self.bits_stored) - 1
+    };
+
+    min..=max
+  }
+
   /// Returns the number of bits consumed by a single pixel.
   ///
   pub fn pixel_size_in_bits(&self) -> usize {
@@ -359,26 +377,6 @@ impl ImagePixelModule {
   ///
   pub fn is_rgb(&self) -> bool {
     !self.is_grayscale()
-  }
-
-  /// Returns the smallest valid integer value for integer pixel data. This is
-  /// determined by the pixel representation and the bits stored value.
-  ///
-  pub fn int_min(&self) -> i32 {
-    match self.pixel_representation {
-      PixelRepresentation::Signed => -(1i64 << (self.bits_stored - 1)) as i32,
-      PixelRepresentation::Unsigned => 0,
-    }
-  }
-
-  /// Returns the largest valid integer value for integer pixel data. This is
-  /// determined by the pixel representation and the bits stored value.
-  ///
-  pub fn int_max(&self) -> u32 {
-    match self.pixel_representation {
-      PixelRepresentation::Signed => (1u32 << (self.bits_stored - 1)) - 1,
-      PixelRepresentation::Unsigned => ((1u64 << self.bits_stored) - 1) as u32,
-    }
   }
 
   /// Returns whether this image pixel module has unused high bits in its
@@ -522,7 +520,7 @@ impl PhotometricInterpretation {
   /// Creates a new `PhotometricInterpretation` from the *'(0028,0004)
   /// Photometric Interpretation'* data element in the given data set.
   ///
-  pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
+  fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let tag = dictionary::PHOTOMETRIC_INTERPRETATION.tag;
 
     match data_set.get_string(tag)? {
@@ -591,6 +589,12 @@ impl PhotometricInterpretation {
       | PhotometricInterpretation::YbrRct => true,
     }
   }
+
+  /// Returns whether this pixel representation is [`Self::Monochrome1`].
+  ///
+  pub fn is_monochrome1(&self) -> bool {
+    self == &Self::Monochrome1
+  }
 }
 
 impl core::fmt::Display for PhotometricInterpretation {
@@ -631,10 +635,10 @@ pub enum PlanarConfiguration {
 }
 
 impl PlanarConfiguration {
-  /// Creates a new `PlanarConfiguration` from the *'(0028,0006) Planar
+  /// Creates a new [`PlanarConfiguration`] from the *'(0028,0006) Planar
   /// Configuration'* data element in the given data set.
   ///
-  pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
+  fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let tag = dictionary::PLANAR_CONFIGURATION.tag;
 
     match data_set.get_int(tag)? {
@@ -663,7 +667,7 @@ impl BitsAllocated {
   /// Creates a new `BitsAllocated` from the *'(0028,0100) Bits Allocated'* data
   /// element in the given data set.
   ///
-  pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
+  fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let tag = dictionary::BITS_ALLOCATED.tag;
 
     match data_set.get_int(tag)? {
@@ -711,7 +715,7 @@ impl PixelRepresentation {
   /// Creates a new `PixelRepresentation` from the *'(0028,0103) Pixel
   /// Representation'* data element in the given data set.
   ///
-  pub fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
+  fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let tag = dictionary::PIXEL_REPRESENTATION.tag;
 
     match data_set.get_int(tag)? {
@@ -748,7 +752,7 @@ mod tests {
   use super::*;
 
   #[test]
-  fn int_ranges_test() {
+  fn test_stored_value_range() {
     let mut image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
       PhotometricInterpretation::Monochrome2,
@@ -760,19 +764,22 @@ mod tests {
     )
     .unwrap();
 
-    assert_eq!(image_pixel_module.int_max(), 4095);
+    assert_eq!(image_pixel_module.stored_value_range(), 0..=4095);
 
     image_pixel_module.pixel_representation = PixelRepresentation::Signed;
-    assert_eq!(image_pixel_module.int_min(), -2048);
-    assert_eq!(image_pixel_module.int_max(), 2047);
+    assert_eq!(image_pixel_module.stored_value_range(), -2048..=2047);
 
     image_pixel_module.bits_allocated = BitsAllocated::ThirtyTwo;
     image_pixel_module.bits_stored = 32;
-    assert_eq!(image_pixel_module.int_min(), i32::MIN);
-    assert_eq!(image_pixel_module.int_max(), i32::MAX as u32);
+    assert_eq!(
+      image_pixel_module.stored_value_range(),
+      i64::from(i32::MIN)..=i64::from(i32::MAX)
+    );
 
     image_pixel_module.pixel_representation = PixelRepresentation::Unsigned;
-    assert_eq!(image_pixel_module.int_min(), 0);
-    assert_eq!(image_pixel_module.int_max(), u32::MAX);
+    assert_eq!(
+      image_pixel_module.stored_value_range(),
+      0..=i64::from(u32::MAX)
+    );
   }
 }

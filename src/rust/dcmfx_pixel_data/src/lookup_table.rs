@@ -30,7 +30,7 @@ pub struct LookupTable {
 
   /// The largest number that can be stored in the LUT. This is calculated using
   /// the `bits_per_entry` value.
-  int_max: u32,
+  int_max: u16,
 
   /// Scale factor that converts a lookup table value into the range 0-1.
   normalization_scale: f32,
@@ -113,7 +113,7 @@ impl LookupTable {
       None
     };
 
-    let int_max = (1u32 << bits_per_entry) - 1;
+    let int_max = ((1u32 << bits_per_entry) - 1) as u16;
 
     // Scale factor that converts a lookup table value into the range 0-1
     let normalization_scale = 1.0 / (int_max as f32);
@@ -237,6 +237,20 @@ impl LookupTable {
     Ok(lut)
   }
 
+  /// Returns the number of entries in the lookup table. This will never exceed
+  /// 65536.
+  ///
+  pub fn entry_count(&self) -> usize {
+    self.data.len()
+  }
+
+  /// Returns the maximum value that can be stored by this LUT given its
+  /// `bits_per_entry` value.
+  ///
+  pub fn int_max(&self) -> u16 {
+    self.int_max
+  }
+
   /// Looks up a value in this lookup table.
   ///
   pub fn lookup(&self, stored_value: i64) -> u16 {
@@ -259,7 +273,7 @@ impl LookupTable {
   pub fn lookup_normalized_u8(&self, stored_value: i64) -> u8 {
     let x = u32::from(self.lookup(stored_value));
 
-    udiv_round(x * 255, self.int_max).min(0xFF) as u8
+    udiv_round(x * 255, self.int_max.into()).min(0xFF) as u8
   }
 }
 

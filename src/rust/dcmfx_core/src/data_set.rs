@@ -609,9 +609,9 @@ impl DataSet {
   pub fn to_lines(
     &self,
     print_options: &DataSetPrintOptions,
-    mut callback: &mut impl FnMut(String),
+    callback: &mut impl FnMut(String),
   ) {
-    print::data_set_to_lines(self, print_options, &mut callback, 0);
+    print::data_set_to_lines(self, print_options, callback, 0);
   }
 
   /// Looks up a data set path in a data set and returns the data element or

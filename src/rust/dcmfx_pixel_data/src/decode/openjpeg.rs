@@ -19,6 +19,7 @@ pub fn decode_single_channel(
 ) -> Result<SingleChannelImage, DataError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
+  let bits_stored = image_pixel_module.bits_stored();
 
   match (
     image_pixel_module.pixel_representation(),
@@ -29,7 +30,7 @@ pub fn decode_single_channel(
       BitsAllocated::One | BitsAllocated::Eight,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_u8(width, height, pixels)
+      SingleChannelImage::new_u8(width, height, pixels, bits_stored)
     }
 
     (
@@ -37,27 +38,27 @@ pub fn decode_single_channel(
       BitsAllocated::One | BitsAllocated::Eight,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_i8(width, height, pixels)
+      SingleChannelImage::new_i8(width, height, pixels, bits_stored)
     }
 
     (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_u16(width, height, pixels)
+      SingleChannelImage::new_u16(width, height, pixels, bits_stored)
     }
 
     (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_i16(width, height, pixels)
+      SingleChannelImage::new_i16(width, height, pixels, bits_stored)
     }
 
     (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_u32(width, height, pixels)
+      SingleChannelImage::new_u32(width, height, pixels, bits_stored)
     }
 
     (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_i32(width, height, pixels)
+      SingleChannelImage::new_i32(width, height, pixels, bits_stored)
     }
   }
 }
@@ -70,6 +71,7 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
+  let bits_stored = image_pixel_module.bits_stored();
 
   match (
     &image_pixel_module.photometric_interpretation(),
@@ -80,7 +82,13 @@ pub fn decode_color(
       BitsAllocated::Eight,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
-      ColorImage::new_palette8(width, height, pixels, palette.clone())
+      ColorImage::new_palette8(
+        width,
+        height,
+        pixels,
+        palette.clone(),
+        bits_stored,
+      )
     }
 
     (
@@ -88,7 +96,13 @@ pub fn decode_color(
       BitsAllocated::Sixteen,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
-      ColorImage::new_palette16(width, height, pixels, palette.clone())
+      ColorImage::new_palette16(
+        width,
+        height,
+        pixels,
+        palette.clone(),
+        bits_stored,
+      )
     }
 
     (PhotometricInterpretation::PaletteColor { .. }, _) => {
@@ -100,17 +114,17 @@ pub fn decode_color(
 
     (_, BitsAllocated::One | BitsAllocated::Eight) => {
       let pixels = decode(image_pixel_module, data)?;
-      ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
+      ColorImage::new_u8(width, height, pixels, ColorSpace::RGB, bits_stored)
     }
 
     (_, BitsAllocated::Sixteen) => {
       let pixels = decode(image_pixel_module, data)?;
-      ColorImage::new_u16(width, height, pixels, ColorSpace::RGB)
+      ColorImage::new_u16(width, height, pixels, ColorSpace::RGB, bits_stored)
     }
 
     (_, BitsAllocated::ThirtyTwo) => {
       let pixels = decode(image_pixel_module, data)?;
-      ColorImage::new_u32(width, height, pixels, ColorSpace::RGB)
+      ColorImage::new_u32(width, height, pixels, ColorSpace::RGB, bits_stored)
     }
   }
 }

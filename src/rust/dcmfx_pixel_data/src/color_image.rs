@@ -6,10 +6,7 @@ use alloc::{rc::Rc, string::ToString, vec::Vec};
 
 use dcmfx_core::DataError;
 
-use crate::{
-  iods::ImagePixelModule, iods::PaletteColorLookupTableModule,
-  utils::udiv_round,
-};
+use crate::{iods::PaletteColorLookupTableModule, utils::udiv_round};
 
 /// A color image that stores RGB or YBR color values for each pixel.
 ///
@@ -18,6 +15,7 @@ pub struct ColorImage {
   width: u16,
   height: u16,
   data: ColorImageData,
+  bits_stored: u16,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -62,6 +60,7 @@ impl ColorImage {
     height: u16,
     data: Vec<u8>,
     color_space: ColorSpace,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) * 3 {
       return Err(DataError::new_value_invalid(
@@ -69,10 +68,17 @@ impl ColorImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 8 {
+      return Err(DataError::new_value_invalid(
+        "Color image u8 bits stored must be <= 8".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: ColorImageData::U8 { data, color_space },
+      bits_stored,
     })
   }
 
@@ -84,6 +90,7 @@ impl ColorImage {
     height: u16,
     data: Vec<u16>,
     color_space: ColorSpace,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) * 3 {
       return Err(DataError::new_value_invalid(
@@ -91,10 +98,17 @@ impl ColorImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 16 {
+      return Err(DataError::new_value_invalid(
+        "Color image u8 bits stored must be <= 16".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: ColorImageData::U16 { data, color_space },
+      bits_stored,
     })
   }
 
@@ -106,6 +120,7 @@ impl ColorImage {
     height: u16,
     data: Vec<u32>,
     color_space: ColorSpace,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) * 3 {
       return Err(DataError::new_value_invalid(
@@ -113,10 +128,17 @@ impl ColorImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 32 {
+      return Err(DataError::new_value_invalid(
+        "Color image u8 bits stored must be <= 32".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: ColorImageData::U32 { data, color_space },
+      bits_stored,
     })
   }
 
@@ -128,6 +150,7 @@ impl ColorImage {
     height: u16,
     data: Vec<u8>,
     palette: Rc<PaletteColorLookupTableModule>,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -135,10 +158,17 @@ impl ColorImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 8 {
+      return Err(DataError::new_value_invalid(
+        "Color image palette8 bits stored must be <= 8".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: ColorImageData::PaletteU8 { data, palette },
+      bits_stored,
     })
   }
 
@@ -150,6 +180,7 @@ impl ColorImage {
     height: u16,
     data: Vec<u16>,
     palette: Rc<PaletteColorLookupTableModule>,
+    bits_stored: u16,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -157,10 +188,17 @@ impl ColorImage {
       ));
     }
 
+    if bits_stored == 0 || bits_stored > 16 {
+      return Err(DataError::new_value_invalid(
+        "Color image palette8 bits stored must be <= 16".to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
       data: ColorImageData::PaletteU16 { data, palette },
+      bits_stored,
     })
   }
 
@@ -188,26 +226,32 @@ impl ColorImage {
     usize::from(self.width) * usize::from(self.height)
   }
 
+  /// Returns the maximum value that can be stored, based on the number of bits
+  /// stored.
+  ///
+  fn max_storable_value(&self) -> u32 {
+    ((1u64 << self.bits_stored) - 1) as u32
+  }
+
   /// Converts this color image to an 8-bit RGB image.
   ///
   pub fn into_rgb_u8_image(
     self,
-    image_pixel_module: &ImagePixelModule,
   ) -> image::ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+    let max_storable_value = self.max_storable_value();
+
     match self.data {
       // If this color image is already in RGB8 then return it directly,
       // avoiding a copy
       ColorImageData::U8 {
         data,
         color_space: ColorSpace::RGB,
-      } if image_pixel_module.bits_stored() == 8 => {
-        image::ImageBuffer::from_raw(
-          self.width.into(),
-          self.height.into(),
-          data,
-        )
-        .unwrap()
-      }
+      } if self.bits_stored == 8 => image::ImageBuffer::from_raw(
+        self.width.into(),
+        self.height.into(),
+        data,
+      )
+      .unwrap(),
 
       _ => {
         let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
@@ -216,27 +260,30 @@ impl ColorImage {
           data: Vec<T>,
           color_space: ColorSpace,
           rgb_pixels: &mut Vec<u8>,
-          image_pixel_module: &ImagePixelModule,
+          max_storable_value: u32,
         ) where
           T: Copy + Into<f64> + Into<u64>,
         {
           match color_space {
             ColorSpace::RGB => {
-              let max_value: u64 = image_pixel_module.int_max().into();
+              let max_storable_value: u64 = max_storable_value.into();
 
               for rgb in data.chunks_exact(3) {
                 let r: u64 = rgb[0].into();
                 let g: u64 = rgb[1].into();
                 let b: u64 = rgb[2].into();
 
-                rgb_pixels.push(udiv_round(r * 255, max_value).min(255) as u8);
-                rgb_pixels.push(udiv_round(g * 255, max_value).min(255) as u8);
-                rgb_pixels.push(udiv_round(b * 255, max_value).min(255) as u8);
+                rgb_pixels
+                  .push(udiv_round(r * 255, max_storable_value).min(255) as u8);
+                rgb_pixels
+                  .push(udiv_round(g * 255, max_storable_value).min(255) as u8);
+                rgb_pixels
+                  .push(udiv_round(b * 255, max_storable_value).min(255) as u8);
               }
             }
 
             ColorSpace::YBR => {
-              let scale = 1.0 / f64::from(image_pixel_module.int_max());
+              let scale = 1.0 / f64::from(max_storable_value);
 
               for ybr in data.chunks_exact(3) {
                 let y: f64 = ybr[0].into();
@@ -262,7 +309,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              image_pixel_module,
+              max_storable_value,
             )
           }
 
@@ -271,7 +318,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              image_pixel_module,
+              max_storable_value,
             )
           }
 
@@ -280,7 +327,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              image_pixel_module,
+              max_storable_value,
             )
           }
 
@@ -313,22 +360,21 @@ impl ColorImage {
   ///
   pub fn into_rgb_u16_image(
     self,
-    image_pixel_module: &ImagePixelModule,
   ) -> image::ImageBuffer<image::Rgb<u16>, Vec<u16>> {
+    let max_storable_value = self.max_storable_value();
+
     match self.data {
       // If this color image is already in RGB16 then return it directly,
       // avoiding a copy
       ColorImageData::U16 {
         color_space: ColorSpace::RGB,
         data,
-      } if image_pixel_module.bits_stored() == 16 => {
-        image::ImageBuffer::from_raw(
-          self.width.into(),
-          self.height.into(),
-          data,
-        )
-        .unwrap()
-      }
+      } if self.bits_stored == 16 => image::ImageBuffer::from_raw(
+        self.width.into(),
+        self.height.into(),
+        data,
+      )
+      .unwrap(),
 
       _ => {
         let mut rgb_pixels: Vec<u16> =
@@ -338,30 +384,33 @@ impl ColorImage {
           data: Vec<T>,
           color_space: ColorSpace,
           rgb_pixels: &mut Vec<u16>,
-          image_pixel_module: &ImagePixelModule,
+          max_storable_value: u32,
         ) where
           T: Copy + Into<f64> + Into<u64>,
         {
           match color_space {
             ColorSpace::RGB => {
-              let max_value: u64 = image_pixel_module.int_max().into();
+              let max_storable_value: u64 = max_storable_value.into();
 
               for rgb in data.chunks_exact(3) {
                 let r: u64 = rgb[0].into();
                 let g: u64 = rgb[1].into();
                 let b: u64 = rgb[2].into();
 
-                rgb_pixels
-                  .push(udiv_round(r * 65535, max_value).min(65535) as u16);
-                rgb_pixels
-                  .push(udiv_round(g * 65535, max_value).min(65535) as u16);
-                rgb_pixels
-                  .push(udiv_round(b * 65535, max_value).min(65535) as u16);
+                rgb_pixels.push(
+                  udiv_round(r * 65535, max_storable_value).min(65535) as u16,
+                );
+                rgb_pixels.push(
+                  udiv_round(g * 65535, max_storable_value).min(65535) as u16,
+                );
+                rgb_pixels.push(
+                  udiv_round(b * 65535, max_storable_value).min(65535) as u16,
+                );
               }
             }
 
             ColorSpace::YBR => {
-              let scale = 1.0 / f64::from(image_pixel_module.int_max());
+              let scale = 1.0 / f64::from(max_storable_value);
 
               for ybr in data.chunks_exact(3) {
                 let y: f64 = ybr[0].into();
@@ -387,7 +436,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              image_pixel_module,
+              max_storable_value,
             )
           }
 
@@ -396,7 +445,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              image_pixel_module,
+              max_storable_value,
             )
           }
 
@@ -405,7 +454,7 @@ impl ColorImage {
               data,
               color_space,
               &mut rgb_pixels,
-              image_pixel_module,
+              max_storable_value,
             )
           }
 
@@ -443,7 +492,6 @@ impl ColorImage {
   ///
   pub fn to_rgb_f64_image(
     &self,
-    image_pixel_module: &ImagePixelModule,
   ) -> image::ImageBuffer<image::Rgb<f64>, Vec<f64>> {
     let mut rgb_pixels = Vec::with_capacity(self.pixel_count() * 3);
 
@@ -451,11 +499,11 @@ impl ColorImage {
       data: &[T],
       color_space: &ColorSpace,
       rgb_pixels: &mut Vec<f64>,
-      image_pixel_module: &ImagePixelModule,
+      max_storable_value: u32,
     ) where
       T: Copy + Into<f64>,
     {
-      let scale = 1.0 / f64::from(image_pixel_module.int_max());
+      let scale = 1.0 / f64::from(max_storable_value);
 
       match color_space {
         ColorSpace::RGB => {
@@ -485,21 +533,21 @@ impl ColorImage {
         data,
         color_space,
         &mut rgb_pixels,
-        image_pixel_module,
+        self.max_storable_value(),
       ),
 
       ColorImageData::U16 { data, color_space } => unsigned_data_to_rgb_pixels(
         data,
         color_space,
         &mut rgb_pixels,
-        image_pixel_module,
+        self.max_storable_value(),
       ),
 
       ColorImageData::U32 { data, color_space } => unsigned_data_to_rgb_pixels(
         data,
         color_space,
         &mut rgb_pixels,
-        image_pixel_module,
+        self.max_storable_value(),
       ),
 
       ColorImageData::PaletteU8 { data, palette } => {

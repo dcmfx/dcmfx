@@ -7,8 +7,8 @@ use dcmfx_core::{
 };
 
 use crate::{
-  ColorImage, PixelDataFrame, SingleChannelImage, StandardColorPalette, decode,
-  iods::{ImagePixelModule, ModalityLutModule, VoiLutModule},
+  ColorImage, GrayscalePipeline, PixelDataFrame, SingleChannelImage,
+  StandardColorPalette, decode, iods::ImagePixelModule,
 };
 
 /// Defines a pixel data renderer that can take a [`PixelDataFrame`] and render
@@ -18,8 +18,7 @@ use crate::{
 pub struct PixelDataRenderer {
   pub transfer_syntax: &'static TransferSyntax,
   pub image_pixel_module: ImagePixelModule,
-  pub modality_lut_module: ModalityLutModule,
-  pub voi_lut_module: VoiLutModule,
+  pub grayscale_pipeline: GrayscalePipeline,
 }
 
 impl IodModule for PixelDataRenderer {
@@ -30,14 +29,12 @@ impl IodModule for PixelDataRenderer {
     path: &DataSetPath,
   ) -> bool {
     ImagePixelModule::is_iod_module_data_element(tag, vr, length, path)
-      || ModalityLutModule::is_iod_module_data_element(tag, vr, length, path)
-      || VoiLutModule::is_iod_module_data_element(tag, vr, length, path)
+      || GrayscalePipeline::is_iod_module_data_element(tag, vr, length, path)
   }
 
   fn iod_module_highest_tag() -> DataElementTag {
     ImagePixelModule::iod_module_highest_tag()
-      .max(ModalityLutModule::iod_module_highest_tag())
-      .max(VoiLutModule::iod_module_highest_tag())
+      .max(GrayscalePipeline::iod_module_highest_tag())
   }
 
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
@@ -48,14 +45,15 @@ impl IodModule for PixelDataRenderer {
     };
 
     let image_pixel_module = ImagePixelModule::from_data_set(data_set)?;
-    let modality_lut_module = ModalityLutModule::from_data_set(data_set)?;
-    let voi_lut_module = VoiLutModule::from_data_set(data_set)?;
+    let grayscale_pipeline = GrayscalePipeline::from_data_set(
+      data_set,
+      image_pixel_module.stored_value_range(),
+    )?;
 
     Ok(PixelDataRenderer {
       transfer_syntax,
       image_pixel_module,
-      modality_lut_module,
-      voi_lut_module,
+      grayscale_pipeline,
     })
   }
 }
@@ -79,7 +77,7 @@ impl PixelDataRenderer {
       Ok(self.render_single_channel_image(&image, color_palette))
     } else {
       let image = self.decode_color_frame(frame)?;
-      Ok(image.into_rgb_u8_image(&self.image_pixel_module))
+      Ok(image.into_rgb_u8_image())
     }
   }
 
@@ -98,8 +96,7 @@ impl PixelDataRenderer {
   ) -> image::RgbImage {
     let mut pixels = Vec::with_capacity(image.pixel_count() * 3);
 
-    let gray_image =
-      image.to_gray_u8_image(&self.modality_lut_module, &self.voi_lut_module);
+    let gray_image = image.to_gray_u8_image(&self.grayscale_pipeline);
 
     if let Some(color_palette) = color_palette {
       for pixel in gray_image.pixels() {
@@ -193,7 +190,13 @@ impl PixelDataRenderer {
       ))),
     }?;
 
-    image.invert_monochrome1_data(&self.image_pixel_module);
+    if self
+      .image_pixel_module
+      .photometric_interpretation()
+      .is_monochrome1()
+    {
+      image.invert_monochrome1_data();
+    }
 
     Ok(image)
   }

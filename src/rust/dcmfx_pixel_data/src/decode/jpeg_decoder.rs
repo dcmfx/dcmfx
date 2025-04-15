@@ -16,12 +16,13 @@ pub fn decode_single_channel(
 
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
+  let bits_stored = image_pixel_module.bits_stored();
 
   if pixel_format == jpeg_decoder::PixelFormat::L8 {
-    SingleChannelImage::new_u8(width, height, pixels)
+    SingleChannelImage::new_u8(width, height, pixels, bits_stored)
   } else if pixel_format == jpeg_decoder::PixelFormat::L16 {
     let data = bytemuck::cast_slice(&pixels).to_vec();
-    SingleChannelImage::new_u16(width, height, data)
+    SingleChannelImage::new_u16(width, height, data, bits_stored)
   } else {
     Err(DataError::new_value_invalid(format!(
       "JPEG Lossless pixel format '{:?}' is not supported for single channel images",
@@ -40,9 +41,10 @@ pub fn decode_color(
 
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
+  let bits_stored = image_pixel_module.bits_stored();
 
   if pixel_format == jpeg_decoder::PixelFormat::RGB24 {
-    ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
+    ColorImage::new_u8(width, height, pixels, ColorSpace::RGB, bits_stored)
   } else {
     Err(DataError::new_value_invalid(format!(
       "JPEG Lossless pixel format '{:?}' is not supported for color images",

@@ -90,6 +90,25 @@ impl DataSetPath {
     }
   }
 
+  /// Returns the data element tag of the most recently added sequence in this
+  /// data set path. Returns an error if there are no sequences active.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn last_sequence_tag(&self) -> Result<DataElementTag, ()> {
+    let mut iterator = self.0.iter().rev();
+
+    while let Some(entry) = iterator.next() {
+      // Go up one more and return the data element
+      if let DataSetPathEntry::SequenceItem { .. } = entry {
+        if let Some(DataSetPathEntry::DataElement { tag }) = iterator.next() {
+          return Ok(*tag);
+        }
+      }
+    }
+
+    Err(())
+  }
+
   /// Adds a new entry onto a data set path that specifies the given data
   /// element tag. This is only valid when the current path is empty or a
   /// sequence item.

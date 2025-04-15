@@ -16,13 +16,14 @@ pub fn decode_single_channel(
 ) -> Result<SingleChannelImage, DataError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
+  let bits_stored = image_pixel_module.bits_stored();
 
   if image_pixel_module.bits_allocated() == BitsAllocated::Eight {
     let pixels = decode(data, image_pixel_module)?;
-    SingleChannelImage::new_u8(width, height, pixels)
+    SingleChannelImage::new_u8(width, height, pixels, bits_stored)
   } else if image_pixel_module.bits_allocated() == BitsAllocated::Sixteen {
     let pixels = decode(data, image_pixel_module)?;
-    SingleChannelImage::new_u16(width, height, pixels)
+    SingleChannelImage::new_u16(width, height, pixels, bits_stored)
   } else {
     Err(DataError::new_value_invalid(
       "JPEG LS pixel data is not single channel".to_string(),
@@ -38,13 +39,14 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
+  let bits_stored = image_pixel_module.bits_stored();
 
   if image_pixel_module.bits_allocated() == BitsAllocated::Eight {
     let pixels = decode(data, image_pixel_module)?;
-    ColorImage::new_u8(width, height, pixels, ColorSpace::RGB)
+    ColorImage::new_u8(width, height, pixels, ColorSpace::RGB, bits_stored)
   } else if image_pixel_module.bits_allocated() == BitsAllocated::Sixteen {
     let pixels = decode(data, image_pixel_module)?;
-    ColorImage::new_u16(width, height, pixels, ColorSpace::RGB)
+    ColorImage::new_u16(width, height, pixels, ColorSpace::RGB, bits_stored)
   } else {
     Err(DataError::new_value_invalid(
       "JPEG LS pixel data is not color".to_string(),

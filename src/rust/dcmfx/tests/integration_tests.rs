@@ -53,10 +53,6 @@ fn integration_tests() -> Result<(), ()> {
           error.print(&format!("reading {:?}", dicom));
         }
 
-        Err((dicom, DicomValidationError::PrintedOutputMissing)) => {
-          eprintln!("Error: No printed output file for {:?}", dicom);
-        }
-
         Err((dicom, DicomValidationError::PrintedOutputMismatch)) => {
           eprintln!(
             "Error: printed output mismatch with {:?}, compare the two files",
@@ -107,7 +103,6 @@ fn integration_tests() -> Result<(), ()> {
 
 enum DicomValidationError {
   LoadError { error: P10Error },
-  PrintedOutputMissing,
   PrintedOutputMismatch,
   JsonOutputMissing,
   JsonOutputMismatch,
@@ -187,7 +182,7 @@ fn test_data_set_matches_expected_print_output(
 ) -> Result<(), DicomValidationError> {
   let expected_print_output: Vec<_> =
     std::fs::read_to_string(format!("{}.printed", dicom.to_string_lossy()))
-      .map_err(|_| DicomValidationError::PrintedOutputMissing)?
+      .unwrap_or_default()
       .lines()
       .map(String::from)
       .collect();
@@ -449,7 +444,13 @@ fn test_pixel_data_read(
           DicomValidationError::PixelDataRenderError(Either::Left(e))
         })?;
 
-      image.invert_monochrome1_data(&pixel_data_renderer.image_pixel_module);
+      if pixel_data_renderer
+        .image_pixel_module
+        .photometric_interpretation()
+        .is_monochrome1()
+      {
+        image.invert_monochrome1_data();
+      }
 
       let pixels = image.to_i64_pixels();
 
@@ -486,7 +487,7 @@ fn test_pixel_data_read(
           .flatten();
 
       for (index, (a, b)) in image
-        .to_rgb_f64_image(&pixel_data_renderer.image_pixel_module)
+        .to_rgb_f64_image()
         .pixels()
         .zip(expected_pixels)
         .enumerate()

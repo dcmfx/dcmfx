@@ -6,7 +6,7 @@ use clap::{Args, ValueEnum};
 use dcmfx::core::*;
 use dcmfx::p10::*;
 use dcmfx::pixel_data::{
-  iods::voi_lut_module::{VoiLutFunction, VoiLutModule, VoiWindow},
+  iods::voi_lut_module::{VoiLutFunction, VoiWindow},
   iods::{CineModule, MultiFrameModule, OverlayPlaneModule},
   standard_color_palettes, *,
 };
@@ -726,36 +726,35 @@ fn frame_to_dynamic_image(
 
     // Apply the VOI override if it's set
     if let Some(voi_window_override) = &args.voi_window {
-      pixel_data_renderer.voi_lut_module = VoiLutModule {
-        luts: vec![],
-        windows: vec![VoiWindow::new(
+      pixel_data_renderer
+        .grayscale_pipeline
+        .set_voi_window(VoiWindow::new(
           voi_window_override[0],
           voi_window_override[1],
           "".to_string(),
           VoiLutFunction::LinearExact,
-        )],
-      };
+        ));
     }
     // If there's no VOI LUT in the DICOM or specified on the command line
-    // then automatically derive one from the content of the first frame and
-    // use it for all subsequent frames.
-    else if pixel_data_renderer.voi_lut_module.is_empty() {
+    // then calculate a VOI Window from the content of the first frame and use
+    // it for all subsequent frames.
+    else if pixel_data_renderer.grayscale_pipeline.voi_lut().is_empty() {
       let image = pixel_data_renderer
         .decode_single_channel_frame(frame)
         .map_err(GetPixelDataError::DataError)?;
 
-      if let Some(fallback) = image.fallback_voi_window() {
-        pixel_data_renderer.voi_lut_module.windows.push(fallback);
+      if let Some(window) = image.default_voi_window() {
+        pixel_data_renderer
+          .grayscale_pipeline
+          .set_voi_window(window);
       }
     }
 
     // For HDR outputs emit a Luma16 buffer. A color palette implies 8-bit
     // output because looking up a color palette returns 8-bit values.
     if args.is_output_hdr() && args.color_palette.is_none() {
-      let image = single_channel_image.to_gray_u16_image(
-        &pixel_data_renderer.modality_lut_module,
-        &pixel_data_renderer.voi_lut_module,
-      );
+      let image = single_channel_image
+        .to_gray_u16_image(&pixel_data_renderer.grayscale_pipeline);
 
       Ok(image.into())
     }
@@ -771,10 +770,8 @@ fn frame_to_dynamic_image(
     }
     // Otherwise, emit a Luma8 image
     else {
-      let image = single_channel_image.to_gray_u8_image(
-        &pixel_data_renderer.modality_lut_module,
-        &pixel_data_renderer.voi_lut_module,
-      );
+      let image = single_channel_image
+        .to_gray_u8_image(&pixel_data_renderer.grayscale_pipeline);
 
       Ok(image.into())
     }
@@ -786,13 +783,9 @@ fn frame_to_dynamic_image(
     if args.is_output_hdr()
       && pixel_data_renderer.image_pixel_module.bits_stored() > 8
     {
-      let image =
-        image.into_rgb_u16_image(&pixel_data_renderer.image_pixel_module);
-      Ok(image.into())
+      Ok(image.into_rgb_u16_image().into())
     } else {
-      let image =
-        image.into_rgb_u8_image(&pixel_data_renderer.image_pixel_module);
-      Ok(image.into())
+      Ok(image.into_rgb_u8_image().into())
     }
   }
 }

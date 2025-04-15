@@ -254,7 +254,7 @@ impl PreferredPlaybackSequencing {
   /// Creates a new `PreferredPlaybackSequencing` from the *'(0028,0103)
   /// Preferred Playback Sequencing'* data element in the given data set.
   ///
-  pub fn from_data_set(data_set: &DataSet) -> Result<Option<Self>, DataError> {
+  fn from_data_set(data_set: &DataSet) -> Result<Option<Self>, DataError> {
     let tag = dictionary::PREFERRED_PLAYBACK_SEQUENCING.tag;
 
     if !data_set.has(tag) {

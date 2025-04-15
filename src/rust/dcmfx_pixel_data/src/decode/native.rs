@@ -32,6 +32,7 @@ pub fn decode_single_channel(
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let pixel_count = image_pixel_module.pixel_count();
+  let bits_stored = image_pixel_module.bits_stored();
 
   match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::Monochrome1
@@ -63,8 +64,7 @@ pub fn decode_single_channel(
           let mut pixels = vec![0; pixel_count];
 
           if image_pixel_module.has_unused_high_bits() {
-            let threshold =
-              2i8.pow(u32::from(image_pixel_module.bits_stored()) - 1);
+            let threshold = 2i8.pow(u32::from(bits_stored) - 1);
 
             for i in 0..pixel_count {
               let mut pixel = data[i] as i8;
@@ -80,19 +80,18 @@ pub fn decode_single_channel(
             pixels.copy_from_slice(&bytemuck::cast_slice(data)[..pixel_count]);
           }
 
-          SingleChannelImage::new_i8(width, height, pixels)
+          SingleChannelImage::new_i8(width, height, pixels, bits_stored)
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::Eight) => {
-          SingleChannelImage::new_u8(width, height, data.to_vec())
+          SingleChannelImage::new_u8(width, height, data.to_vec(), bits_stored)
         }
 
         (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
           let mut pixels = vec![0; pixel_count];
 
           if image_pixel_module.has_unused_high_bits() {
-            let threshold =
-              2i16.pow(u32::from(image_pixel_module.bits_stored()) - 1);
+            let threshold = 2i16.pow(u32::from(bits_stored) - 1);
 
             for i in 0..pixel_count {
               let mut pixel =
@@ -121,7 +120,7 @@ pub fn decode_single_channel(
             }
           }
 
-          SingleChannelImage::new_i16(width, height, pixels)
+          SingleChannelImage::new_i16(width, height, pixels, bits_stored)
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
@@ -141,15 +140,14 @@ pub fn decode_single_channel(
             pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
           }
 
-          SingleChannelImage::new_u16(width, height, pixels)
+          SingleChannelImage::new_u16(width, height, pixels, bits_stored)
         }
 
         (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
           let mut pixels = vec![0; pixel_count];
 
           if image_pixel_module.has_unused_high_bits() {
-            let threshold =
-              2i32.pow(u32::from(image_pixel_module.bits_stored()) - 1);
+            let threshold = 2i32.pow(u32::from(bits_stored) - 1);
 
             for i in 0..pixel_count {
               let mut pixel = i32::from_le_bytes([
@@ -187,7 +185,7 @@ pub fn decode_single_channel(
             }
           }
 
-          SingleChannelImage::new_i32(width, height, pixels)
+          SingleChannelImage::new_i32(width, height, pixels, bits_stored)
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
@@ -212,7 +210,7 @@ pub fn decode_single_channel(
             ]);
           }
 
-          SingleChannelImage::new_u32(width, height, pixels)
+          SingleChannelImage::new_u32(width, height, pixels, bits_stored)
         }
       }
     }
@@ -239,6 +237,7 @@ pub fn decode_color(
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let pixel_count = image_pixel_module.pixel_count();
+  let bits_stored = image_pixel_module.bits_stored();
 
   let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
   {
@@ -255,9 +254,13 @@ pub fn decode_color(
       (
         PhotometricInterpretation::PaletteColor { palette },
         BitsAllocated::Eight,
-      ) => {
-        ColorImage::new_palette8(width, height, data.to_vec(), palette.clone())
-      }
+      ) => ColorImage::new_palette8(
+        width,
+        height,
+        data.to_vec(),
+        palette.clone(),
+        bits_stored,
+      ),
 
       (
         PhotometricInterpretation::PaletteColor { palette },
@@ -269,7 +272,13 @@ pub fn decode_color(
           pixels.push(u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]));
         }
 
-        ColorImage::new_palette16(width, height, pixels, palette.clone())
+        ColorImage::new_palette16(
+          width,
+          height,
+          pixels,
+          palette.clone(),
+          bits_stored,
+        )
       }
 
       (photometric_interpretation, bits_allocated) => {
@@ -294,7 +303,7 @@ pub fn decode_color(
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Eight) => {
             let pixels = data[..(pixel_count * 3)].to_vec();
-            ColorImage::new_u8(width, height, pixels, color_space)
+            ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
@@ -304,7 +313,7 @@ pub fn decode_color(
               pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2] + 1]);
             }
 
-            ColorImage::new_u16(width, height, pixels, color_space)
+            ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
@@ -319,7 +328,7 @@ pub fn decode_color(
               ]);
             }
 
-            ColorImage::new_u32(width, height, pixels, color_space)
+            ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Eight) => {
@@ -331,7 +340,7 @@ pub fn decode_color(
               pixels[i * 3 + 2] = data[pixel_count * 2 + i];
             }
 
-            ColorImage::new_u8(width, height, pixels, color_space)
+            ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Sixteen) => {
@@ -352,7 +361,7 @@ pub fn decode_color(
               ]);
             }
 
-            ColorImage::new_u16(width, height, pixels, color_space)
+            ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::ThirtyTwo) => {
@@ -381,7 +390,7 @@ pub fn decode_color(
               ]);
             }
 
-            ColorImage::new_u32(width, height, pixels, color_space)
+            ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
           }
         }
       }
@@ -416,7 +425,13 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u8(width, height, pixels, ColorSpace::YBR)
+            ColorImage::new_u8(
+              width,
+              height,
+              pixels,
+              ColorSpace::YBR,
+              bits_stored,
+            )
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
@@ -436,7 +451,13 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u16(width, height, pixels, ColorSpace::YBR)
+            ColorImage::new_u16(
+              width,
+              height,
+              pixels,
+              ColorSpace::YBR,
+              bits_stored,
+            )
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
@@ -476,7 +497,13 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u32(width, height, pixels, ColorSpace::YBR)
+            ColorImage::new_u32(
+              width,
+              height,
+              pixels,
+              ColorSpace::YBR,
+              bits_stored,
+            )
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Eight) => {
@@ -496,7 +523,13 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u8(width, height, pixels, ColorSpace::YBR)
+            ColorImage::new_u8(
+              width,
+              height,
+              pixels,
+              ColorSpace::YBR,
+              bits_stored,
+            )
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Sixteen) => {
@@ -522,7 +555,13 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u16(width, height, pixels, ColorSpace::YBR)
+            ColorImage::new_u16(
+              width,
+              height,
+              pixels,
+              ColorSpace::YBR,
+              bits_stored,
+            )
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::ThirtyTwo) => {
@@ -562,7 +601,13 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u32(width, height, pixels, ColorSpace::YBR)
+            ColorImage::new_u32(
+              width,
+              height,
+              pixels,
+              ColorSpace::YBR,
+              bits_stored,
+            )
           }
         }
       }
@@ -623,7 +668,7 @@ mod tests {
 
     assert_eq!(
       decode_single_channel(&image_pixel_module, &data, 0),
-      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3])
+      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3], 8)
     );
   }
 
@@ -644,7 +689,7 @@ mod tests {
 
     assert_eq!(
       decode_single_channel(&image_pixel_module, &data, 0),
-      SingleChannelImage::new_i8(16, 8, (0..64).chain(-64..0).collect())
+      SingleChannelImage::new_i8(16, 8, (0..64).chain(-64..0).collect(), 7)
     );
   }
 
@@ -665,7 +710,12 @@ mod tests {
 
     assert_eq!(
       decode_single_channel(&image_pixel_module, &data, 0),
-      SingleChannelImage::new_i16(64, 64, (0..2048).chain(-2048..0).collect())
+      SingleChannelImage::new_i16(
+        64,
+        64,
+        (0..2048).chain(-2048..0).collect(),
+        12
+      )
     );
   }
 
@@ -692,7 +742,8 @@ mod tests {
         2,
         2,
         vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-        ColorSpace::RGB
+        ColorSpace::RGB,
+        8
       )
     );
   }
@@ -722,7 +773,8 @@ mod tests {
         2,
         2,
         vec![0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11,],
-        ColorSpace::RGB
+        ColorSpace::RGB,
+        16
       )
     );
   }
@@ -746,7 +798,7 @@ mod tests {
 
     assert_eq!(
       decode_color(&image_pixel_module, &data),
-      ColorImage::new_u8(2, 2, data, ColorSpace::YBR)
+      ColorImage::new_u8(2, 2, data, ColorSpace::YBR, 8)
     );
   }
 
@@ -773,7 +825,8 @@ mod tests {
         2,
         2,
         vec![142, 111, 148, 122, 111, 148, 118, 101, 123, 122, 101, 123],
-        ColorSpace::YBR
+        ColorSpace::YBR,
+        8
       )
     );
   }

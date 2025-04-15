@@ -3,7 +3,7 @@
 #[macro_use]
 extern crate afl;
 
-use dcmfx::core::{dictionary, IodModule};
+use dcmfx::core::{DataSetPrintOptions, IodModule, dictionary};
 use dcmfx::p10::DataSetP10Extensions;
 use dcmfx::pixel_data::{
   DataSetPixelDataExtensions, PixelDataRenderer,
@@ -15,6 +15,9 @@ fn main() {
     // Reading P10 bytes should never panic, but a well-formed error is fine
     // because the input is being fuzzed and so may be invalid
     if let Ok(mut data_set) = dcmfx::p10::read_bytes(data.to_vec().into()) {
+      // Print the data set to human-readable output. This should never panic.
+      data_set.to_lines(&DataSetPrintOptions::default(), &mut |_| ());
+
       // Write the data set to a buffer
       let mut cursor = std::io::Cursor::new(vec![]);
       data_set
@@ -43,7 +46,9 @@ fn main() {
       }
 
       // Render the overlays. This should never panic.
-      if let Ok(overlay_plane_module) = OverlayPlaneModule::from_data_set(&data_set) {
+      if let Ok(overlay_plane_module) =
+        OverlayPlaneModule::from_data_set(&data_set)
+      {
         if !overlay_plane_module.is_empty() {
           if let Ok(image_pixel_module) =
             ImagePixelModule::from_data_set(&data_set)
@@ -55,7 +60,9 @@ fn main() {
                 image_pixel_module.columns().into(),
               );
 
-              overlay_plane_module.render_to_rgb_image(&mut rgb_image, 0).unwrap();
+              overlay_plane_module
+                .render_to_rgb_image(&mut rgb_image, 0)
+                .unwrap();
             }
           }
         }

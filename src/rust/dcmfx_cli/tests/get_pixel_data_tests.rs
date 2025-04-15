@@ -125,6 +125,25 @@ fn ybr_to_png() {
 }
 
 #[test]
+fn modality_lut_sequence() {
+  let dicom_file = "../../../test/assets/fo-dicom/CR-ModalitySequenceLUT.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--overwrite")
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "modality_lut_sequence.png");
+}
+
+#[test]
 fn rle_lossless_to_jpg() {
   let dicom_file = "../../../test/assets/pydicom/test_files/MR_small_RLE.dcm";
   let output_file = format!("{}.0000.jpg", dicom_file);
@@ -541,6 +560,51 @@ fn jpeg_lossless_color_to_jpg() {
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "jpeg_lossless_color_to_jpg.jpg");
+}
+
+#[test]
+fn jpeg_lossless_12bit_to_jpg_with_inverse_presentation_lut_shape() {
+  let dicom_file = "../../../test/assets/other/jpeg_lossless_with_inverse_presentation_lut_shape.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--overwrite")
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(
+    output_file,
+    "jpeg_lossless_12bit_to_jpg_with_inverse_presentation_lut_shape.jpg"
+  );
+}
+
+#[test]
+fn jpeg_lossless_12bit_to_jpg_with_presentation_lut() {
+  let dicom_file =
+    "../../../test/assets/other/jpeg_lossless_with_presentation_lut.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--overwrite")
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(
+    output_file,
+    "jpeg_lossless_12bit_to_jpg_with_presentation_lut.jpg"
+  );
 }
 
 #[test]

@@ -26,6 +26,8 @@ pub enum ModalityLutModule {
     rescale_slope: f32,
     rescale_type: ModalityLutOutputType,
   },
+
+  Identity,
 }
 
 impl IodModule for ModalityLutModule {
@@ -35,18 +37,17 @@ impl IodModule for ModalityLutModule {
     _length: Option<u32>,
     path: &DataSetPath,
   ) -> bool {
-    if !path.is_empty() {
-      return false;
+    if path.last_sequence_tag() == Ok(dictionary::MODALITY_LUT_SEQUENCE.tag) {
+      tag == dictionary::LUT_DESCRIPTOR.tag
+        || tag == dictionary::LUT_EXPLANATION.tag
+        || tag == dictionary::MODALITY_LUT_TYPE.tag
+        || tag == dictionary::LUT_DATA.tag
+    } else {
+      tag == dictionary::MODALITY_LUT_SEQUENCE.tag
+        || tag == dictionary::RESCALE_INTERCEPT.tag
+        || tag == dictionary::RESCALE_SLOPE.tag
+        || tag == dictionary::RESCALE_TYPE.tag
     }
-
-    tag == dictionary::MODALITY_LUT_SEQUENCE.tag
-      || tag == dictionary::LUT_DESCRIPTOR.tag
-      || tag == dictionary::LUT_EXPLANATION.tag
-      || tag == dictionary::MODALITY_LUT_TYPE.tag
-      || tag == dictionary::LUT_DATA.tag
-      || tag == dictionary::RESCALE_INTERCEPT.tag
-      || tag == dictionary::RESCALE_SLOPE.tag
-      || tag == dictionary::RESCALE_TYPE.tag
   }
 
   fn iod_module_highest_tag() -> DataElementTag {
@@ -61,11 +62,7 @@ impl IodModule for ModalityLutModule {
     } else if data_set.has(dictionary::RESCALE_INTERCEPT.tag) {
       Self::from_rescale(data_set)
     } else {
-      Ok(Self::Rescale {
-        rescale_intercept: 0.0,
-        rescale_slope: 1.0,
-        rescale_type: ModalityLutOutputType::Unspecified,
-      })
+      Ok(Self::Identity)
     }
   }
 }
@@ -125,12 +122,44 @@ impl ModalityLutModule {
     })
   }
 
+  /// Returns whether this Modality LUT is an identity transform, i.e. it does
+  /// nothing.
+  ///
+  pub fn is_identity(&self) -> bool {
+    *self == Self::Identity
+  }
+
   /// Returns the output type of values returned by this Modality LUT.
   ///
   pub fn output_type(&self) -> &ModalityLutOutputType {
     match self {
       Self::LookupTable { lut_type, .. } => lut_type,
       Self::Rescale { rescale_type, .. } => rescale_type,
+      Self::Identity => &ModalityLutOutputType::Unspecified,
+    }
+  }
+
+  /// Returns the output range of this Modality LUT for the given range of
+  /// stored values.
+  ///
+  pub fn output_range(
+    &self,
+    stored_value_range: core::ops::RangeInclusive<i64>,
+  ) -> core::ops::RangeInclusive<f32> {
+    match self {
+      Self::LookupTable { lut, .. } => 0.0..=f32::from(lut.int_max()),
+
+      Self::Rescale { .. } => {
+        let a = self.apply_to_stored_value(*stored_value_range.start());
+        let b = self.apply_to_stored_value(*stored_value_range.end());
+
+        (a.min(b))..=(a.max(b))
+      }
+
+      Self::Identity => {
+        let range = stored_value_range;
+        (*range.start() as f32)..=(*range.end() as f32)
+      }
     }
   }
 
@@ -147,6 +176,8 @@ impl ModalityLutModule {
         rescale_slope,
         ..
       } => rescale_intercept + rescale_slope * (stored_value as f32),
+
+      Self::Identity => stored_value as f32,
     }
   }
 }
@@ -172,7 +203,7 @@ pub enum ModalityLutOutputType {
 impl ModalityLutOutputType {
   /// Creates a [`ModalityLutOutputType`] from a string value.
   ///
-  pub fn from_string(s: &str) -> Self {
+  fn from_string(s: &str) -> Self {
     match s {
       "OD" => Self::OpticalDensity,
       "HU" => Self::HounsfieldUnits,

@@ -40,6 +40,7 @@ pub fn decode_single_channel(
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let pixel_count = image_pixel_module.pixel_count();
+  let bits_stored = image_pixel_module.bits_stored();
 
   match (
     &image_pixel_module.photometric_interpretation(),
@@ -81,7 +82,7 @@ pub fn decode_single_channel(
         }
       }
 
-      SingleChannelImage::new_i8(width, height, pixels)
+      SingleChannelImage::new_i8(width, height, pixels, bits_stored)
     }
 
     (
@@ -92,7 +93,7 @@ pub fn decode_single_channel(
       [_],
     ) => {
       let pixels = segments.pop().unwrap();
-      SingleChannelImage::new_u8(width, height, pixels)
+      SingleChannelImage::new_u8(width, height, pixels, bits_stored)
     }
 
     (
@@ -121,7 +122,7 @@ pub fn decode_single_channel(
         }
       }
 
-      SingleChannelImage::new_i16(width, height, pixels)
+      SingleChannelImage::new_i16(width, height, pixels, bits_stored)
     }
 
     (
@@ -137,7 +138,7 @@ pub fn decode_single_channel(
         pixels[i] = u16::from_be_bytes([segment_0[i], segment_1[i]]);
       }
 
-      SingleChannelImage::new_u16(width, height, pixels)
+      SingleChannelImage::new_u16(width, height, pixels, bits_stored)
     }
 
     (
@@ -176,7 +177,7 @@ pub fn decode_single_channel(
         }
       }
 
-      SingleChannelImage::new_i32(width, height, pixels)
+      SingleChannelImage::new_i32(width, height, pixels, bits_stored)
     }
 
     (
@@ -197,7 +198,7 @@ pub fn decode_single_channel(
         ]);
       }
 
-      SingleChannelImage::new_u32(width, height, pixels)
+      SingleChannelImage::new_u32(width, height, pixels, bits_stored)
     }
 
     _ => Err(DataError::new_value_invalid(format!(
@@ -221,6 +222,7 @@ pub fn decode_color(
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let pixel_count = image_pixel_module.pixel_count();
+  let bits_stored = image_pixel_module.bits_stored();
 
   let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
   {
@@ -242,7 +244,13 @@ pub fn decode_color(
       [_],
     ) => {
       let data = segments.pop().unwrap();
-      ColorImage::new_palette8(width, height, data, palette.clone())
+      ColorImage::new_palette8(
+        width,
+        height,
+        data,
+        palette.clone(),
+        bits_stored,
+      )
     }
 
     (
@@ -256,7 +264,13 @@ pub fn decode_color(
         pixels.push(u16::from_be_bytes([segment_0[i], segment_1[i]]));
       }
 
-      ColorImage::new_palette16(width, height, pixels, palette.clone())
+      ColorImage::new_palette16(
+        width,
+        height,
+        pixels,
+        palette.clone(),
+        bits_stored,
+      )
     }
 
     (
@@ -272,7 +286,7 @@ pub fn decode_color(
         pixels[i * 3 + 2] = blue_segment[i];
       }
 
-      ColorImage::new_u8(width, height, pixels, color_space)
+      ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
     }
 
     (
@@ -298,7 +312,7 @@ pub fn decode_color(
           u16::from_be_bytes([blue_segment_0[i], blue_segment_1[i]]);
       }
 
-      ColorImage::new_u16(width, height, pixels, color_space)
+      ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
     }
 
     (
@@ -342,7 +356,7 @@ pub fn decode_color(
         ]);
       }
 
-      ColorImage::new_u32(width, height, pixels, color_space)
+      ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
     }
 
     _ => Err(DataError::new_value_invalid(format!(
@@ -500,7 +514,7 @@ mod tests {
 
     assert_eq!(
       decode_single_channel(&image_pixel_module, &data),
-      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3])
+      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3], 8)
     );
   }
 
@@ -522,7 +536,7 @@ mod tests {
 
     assert_eq!(
       decode_single_channel(&image_pixel_module, &data),
-      SingleChannelImage::new_i8(16, 8, (0..64).chain(-64..0).collect())
+      SingleChannelImage::new_i8(16, 8, (0..64).chain(-64..0).collect(), 7)
     );
   }
 
@@ -545,7 +559,12 @@ mod tests {
 
     assert_eq!(
       decode_single_channel(&image_pixel_module, &data),
-      SingleChannelImage::new_i16(64, 64, (0..2048).chain(-2048..0).collect())
+      SingleChannelImage::new_i16(
+        64,
+        64,
+        (0..2048).chain(-2048..0).collect(),
+        12
+      )
     );
   }
 }
