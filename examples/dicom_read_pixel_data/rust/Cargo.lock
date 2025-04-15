@@ -135,7 +135,7 @@ checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "dcmfx"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "dcmfx_anonymize",
  "dcmfx_character_set",
@@ -147,18 +147,18 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_anonymize"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "dcmfx_core",
 ]
 
 [[package]]
 name = "dcmfx_character_set"
-version = "0.16.1"
+version = "0.17.0"
 
 [[package]]
 name = "dcmfx_core"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "byteorder",
  "num-traits",
@@ -172,7 +172,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_json"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "base64",
  "byteorder",
@@ -185,7 +185,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_p10"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "byteorder",
  "dcmfx_character_set",
@@ -196,7 +196,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_pixel_data"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "bytemuck",
  "byteorder",
@@ -504,9 +504,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.171"
+version = "0.2.172"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c19937216e9d3aa9956d9bb8dfc0b0c8beb6058fc4f7a4dc4d850edf86a237d6"
+checksum = "d750af042f7ef4f724306de029d18836c26c1765a54a6a3f094cbd23a7267ffa"
 
 [[package]]
 name = "linux-raw-sys"
