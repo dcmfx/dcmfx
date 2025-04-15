@@ -1,4 +1,4 @@
-import dcmfx_core/data_element_tag.{type DataElementTag, DataElementTag}
+import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/dictionary
 import dcmfx_core/value_representation.{type ValueRepresentation}
 import dcmfx_p10/internal/value_length.{type ValueLength}

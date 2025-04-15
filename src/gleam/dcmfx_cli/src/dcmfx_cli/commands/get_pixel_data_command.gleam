@@ -1,8 +1,8 @@
 import dcmfx_cli/input_source.{type InputSource}
-import dcmfx_core/data_error.{type DataError}
+import dcmfx_core/data_error
 import dcmfx_core/data_set
 import dcmfx_p10
-import dcmfx_p10/p10_error.{type P10Error}
+import dcmfx_p10/p10_error
 import dcmfx_p10/p10_read.{type P10ReadContext}
 import dcmfx_p10/p10_token
 import dcmfx_pixel_data

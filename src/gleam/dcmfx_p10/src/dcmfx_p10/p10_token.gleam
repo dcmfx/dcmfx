@@ -1,7 +1,7 @@
 //// Defines the various DICOM P10 tokens that are read out of raw DICOM P10
 //// data by the `p10_read` module.
 
-import dcmfx_core/data_element_tag.{type DataElementTag, DataElementTag}
+import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_element_value.{type DataElementValue}
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary

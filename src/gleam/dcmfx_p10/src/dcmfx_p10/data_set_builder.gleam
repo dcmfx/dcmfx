@@ -4,14 +4,11 @@
 //// Most commonly the stream of DICOM P10 tokens originates from reading raw
 //// DICOM P10 data with the `p10_read` module.
 
-import dcmfx_core/data_element_tag.{type DataElementTag, DataElementTag}
+import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_element_value.{type DataElementValue}
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_core/value_representation.{type ValueRepresentation}
-import dcmfx_p10/internal/data_element_header.{
-  type DataElementHeader, DataElementHeader,
-}
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_token.{type P10Token}
 import gleam/bit_array

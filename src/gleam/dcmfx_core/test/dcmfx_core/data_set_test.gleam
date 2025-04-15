@@ -1,4 +1,4 @@
-import dcmfx_core/data_element_tag.{type DataElementTag, DataElementTag}
+import dcmfx_core/data_element_tag.{DataElementTag}
 import dcmfx_core/data_element_value
 import dcmfx_core/data_error
 import dcmfx_core/data_set
