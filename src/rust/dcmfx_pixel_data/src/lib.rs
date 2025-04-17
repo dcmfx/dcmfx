@@ -22,6 +22,7 @@ mod pixel_data_frame;
 mod pixel_data_renderer;
 mod single_channel_image;
 pub mod standard_color_palettes;
+mod stored_value_output_cache;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
@@ -34,6 +35,7 @@ pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_renderer::PixelDataRenderer;
 pub use single_channel_image::SingleChannelImage;
 pub use standard_color_palettes::StandardColorPalette;
+pub use stored_value_output_cache::StoredValueOutputCache;
 
 use dcmfx_core::{
   DataError, DataSet, IodModule, TransferSyntax, dictionary, transfer_syntax,

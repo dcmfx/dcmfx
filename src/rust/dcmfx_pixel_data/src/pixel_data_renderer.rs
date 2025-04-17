@@ -81,8 +81,8 @@ impl PixelDataRenderer {
     }
   }
 
-  /// Renders a [`SingleChannelImage`] to an RGB 8-bit image. The Modality LUT
-  /// and VOI LUT are applied, and resulting grayscale values are then expanded
+  /// Renders a [`SingleChannelImage`] to an RGB 8-bit image. The grayscale
+  /// pipeline is applied, and resulting grayscale values are then expanded
   /// to RGB.
   ///
   /// The result can optionally be visualized using a color palette. The
@@ -115,8 +115,8 @@ impl PixelDataRenderer {
   }
 
   /// Decodes a frame of single channel pixel data into a
-  /// [`SingleChannelImage`]. The returned image needs to have the Modality LUT
-  /// and VOI LUT applied in order to reach final grayscale display values.
+  /// [`SingleChannelImage`]. The returned image needs to have the grayscale
+  /// pipeline applied in order to reach final grayscale display values.
   ///
   pub fn decode_single_channel_frame(
     &self,

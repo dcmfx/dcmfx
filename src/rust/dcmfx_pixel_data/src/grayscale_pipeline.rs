@@ -1,3 +1,5 @@
+use core::cell::{Ref, RefCell};
+
 #[cfg(not(feature = "std"))]
 use alloc::vec;
 
@@ -6,9 +8,12 @@ use dcmfx_core::{
   ValueRepresentation,
 };
 
-use crate::iods::{
-  ModalityLutModule, SoftcopyPresentationLutModule, VoiLutModule,
-  voi_lut_module::VoiWindow,
+use crate::{
+  StoredValueOutputCache,
+  iods::{
+    ModalityLutModule, SoftcopyPresentationLutModule, VoiLutModule,
+    voi_lut_module::VoiWindow,
+  },
 };
 
 /// The grayscale pipeline consists of the Modality LUT, the VOI LUT, and the
@@ -30,15 +35,20 @@ use crate::iods::{
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct GrayscalePipeline {
+  stored_value_range: core::ops::RangeInclusive<i64>,
   modality_lut_module: ModalityLutModule,
+  modality_lut_output_range: core::ops::RangeInclusive<f32>,
   voi_lut_module: VoiLutModule,
   softcopy_presentation_lut_module: SoftcopyPresentationLutModule,
-  modality_lut_output_range: core::ops::RangeInclusive<f32>,
+
+  // Internal caches used when the stored value range has <= 2^16 items
+  output_cache_u8: RefCell<Option<StoredValueOutputCache<u8>>>,
+  output_cache_u16: RefCell<Option<StoredValueOutputCache<u16>>>,
 }
 
 impl GrayscalePipeline {
   /// Returns whether the specified data element is needed for the construction
-  /// of a [`GrayscaleLutPipeline`].
+  /// of a [`GrayscalePipeline`].
   ///
   pub fn is_iod_module_data_element(
     tag: DataElementTag,
@@ -62,7 +72,7 @@ impl GrayscalePipeline {
       .max(SoftcopyPresentationLutModule::iod_module_highest_tag())
   }
 
-  /// Creates a [`GrayscaleLutPipeline`] from a data set and a range of possible
+  /// Creates a [`GrayscalePipeline`] from a data set and a range of possible
   /// input stored values.
   ///
   pub fn from_data_set(
@@ -75,13 +85,17 @@ impl GrayscalePipeline {
       SoftcopyPresentationLutModule::from_data_set(data_set)?;
 
     let modality_lut_output_range =
-      modality_lut_module.output_range(stored_value_range);
+      modality_lut_module.output_range(&stored_value_range);
 
     Ok(GrayscalePipeline {
+      stored_value_range,
       modality_lut_module,
+      modality_lut_output_range,
       voi_lut_module,
       softcopy_presentation_lut_module,
-      modality_lut_output_range,
+
+      output_cache_u8: RefCell::new(None),
+      output_cache_u16: RefCell::new(None),
     })
   }
 
@@ -111,10 +125,14 @@ impl GrayscalePipeline {
       luts: vec![],
       windows: vec![window],
     };
+
+    // Clear caches
+    *self.output_cache_u8.get_mut() = None;
+    *self.output_cache_u16.get_mut() = None;
   }
 
-  /// Takes a stored value from decoded pixel data and passes in through the
-  /// Modality LUT, VOI LUT, and Softcopy Presentation LUT modules to get a
+  /// Takes a stored value from pixel data and passes in through the Modality
+  /// LUT, VOI LUT, and Softcopy Presentation LUT modules to get a normalized
   /// final Presentation Value (P-Value).
   ///
   pub fn apply(&self, stored_value: i64) -> f32 {
@@ -131,6 +149,65 @@ impl GrayscalePipeline {
     };
 
     self.softcopy_presentation_lut_module.apply(x)
+  }
+
+  /// The same as [`Self::apply()`] but the normalized final Presentation Value
+  /// (P-Value) is converted to a `u8`.
+  ///
+  pub fn apply_u8(&self, stored_value: i64) -> u8 {
+    (self.apply(stored_value) * 255.0).round().clamp(0.0, 255.0) as u8
+  }
+
+  /// The same as [`Self::apply()`] but the normalized final Presentation Value
+  /// (P-Value) is converted to a `u16`.
+  ///
+  pub fn apply_u16(&self, stored_value: i64) -> u16 {
+    (self.apply(stored_value) * 65535.0)
+      .round()
+      .clamp(0.0, 65535.0) as u16
+  }
+
+  /// Returns the cache for converting a pixel data stored value into a final
+  /// `u8` Presentation Value (P-Value) using this grayscale pipeline.
+  ///
+  /// Caches are only available when the stored value range has <= 2^16 items.
+  ///
+  pub fn output_cache_u8(&self) -> Ref<Option<StoredValueOutputCache<u8>>> {
+    if let Ok(mut output_cache_u8) = self.output_cache_u8.try_borrow_mut() {
+      if output_cache_u8.is_none() && self.is_stored_value_range_cacheable() {
+        *output_cache_u8 = Some(StoredValueOutputCache::new(
+          &self.stored_value_range,
+          |pixel| self.apply_u8(pixel),
+        ));
+      }
+    }
+
+    self.output_cache_u8.borrow()
+  }
+
+  /// Returns the cache for converting a pixel data stored value into a final
+  /// `u16` Presentation Value (P-Value) using this grayscale pipeline.
+  ///
+  /// Caches are only available when the stored value range has <= 2^16 items.
+  ///
+  pub fn output_cache_u16(&self) -> Ref<Option<StoredValueOutputCache<u16>>> {
+    if let Ok(mut output_cache_u16) = self.output_cache_u16.try_borrow_mut() {
+      if output_cache_u16.is_none() && self.is_stored_value_range_cacheable() {
+        *output_cache_u16 = Some(StoredValueOutputCache::new(
+          &self.stored_value_range,
+          |pixel| self.apply_u16(pixel),
+        ));
+      }
+    }
+
+    self.output_cache_u16.borrow()
+  }
+
+  /// Controls whether the stored value range will be cached. Caching only
+  /// occurs when the range of stored values has <= 2^16 items.
+  ///
+  fn is_stored_value_range_cacheable(&self) -> bool {
+    self.stored_value_range.end() - self.stored_value_range.start() < 65536
   }
 }
 

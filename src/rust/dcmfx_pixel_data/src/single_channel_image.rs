@@ -399,11 +399,15 @@ impl SingleChannelImage {
     &self,
     grayscale_pipeline: &GrayscalePipeline,
   ) -> image::GrayImage {
-    self.to_gray_image(|stored_value: i64| {
-      let pixel = grayscale_pipeline.apply(stored_value);
+    match &*grayscale_pipeline.output_cache_u8() {
+      Some(cache) => {
+        self.to_gray_image(|stored_value: i64| cache.get(stored_value))
+      }
 
-      (pixel * 255.0).round().clamp(0.0, 255.0) as u8
-    })
+      None => self.to_gray_image(|stored_value: i64| {
+        grayscale_pipeline.apply_u8(stored_value)
+      }),
+    }
   }
 
   /// Converts this single channel image to a 16-bit grayscale image by passing
@@ -413,11 +417,15 @@ impl SingleChannelImage {
     &self,
     grayscale_pipeline: &GrayscalePipeline,
   ) -> image::ImageBuffer<image::Luma<u16>, Vec<u16>> {
-    self.to_gray_image(|stored_value: i64| {
-      let pixel = grayscale_pipeline.apply(stored_value);
+    match &*grayscale_pipeline.output_cache_u16() {
+      Some(cache) => {
+        self.to_gray_image(|stored_value: i64| cache.get(stored_value))
+      }
 
-      (pixel * 65535.0).round().clamp(0.0, 65535.0) as u16
-    })
+      None => self.to_gray_image(|stored_value: i64| {
+        grayscale_pipeline.apply_u16(stored_value)
+      }),
+    }
   }
 
   fn to_gray_image<T: image::Primitive>(

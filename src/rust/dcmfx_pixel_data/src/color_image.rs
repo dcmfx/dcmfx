@@ -263,22 +263,17 @@ impl ColorImage {
           max_storable_value: u32,
         ) where
           T: Copy + Into<f64> + Into<u64>,
+          u64: From<T>,
         {
           match color_space {
             ColorSpace::RGB => {
               let max_storable_value: u64 = max_storable_value.into();
 
-              for rgb in data.chunks_exact(3) {
-                let r: u64 = rgb[0].into();
-                let g: u64 = rgb[1].into();
-                let b: u64 = rgb[2].into();
-
-                rgb_pixels
-                  .push(udiv_round(r * 255, max_storable_value).min(255) as u8);
-                rgb_pixels
-                  .push(udiv_round(g * 255, max_storable_value).min(255) as u8);
-                rgb_pixels
-                  .push(udiv_round(b * 255, max_storable_value).min(255) as u8);
+              for value in data {
+                rgb_pixels.push(
+                  udiv_round(u64::from(value) * 255, max_storable_value)
+                    .min(255) as u8,
+                );
               }
             }
 
@@ -386,25 +381,17 @@ impl ColorImage {
           rgb_pixels: &mut Vec<u16>,
           max_storable_value: u32,
         ) where
-          T: Copy + Into<f64> + Into<u64>,
+          T: Copy + Into<f64>,
+          u64: From<T>,
         {
           match color_space {
             ColorSpace::RGB => {
               let max_storable_value: u64 = max_storable_value.into();
 
-              for rgb in data.chunks_exact(3) {
-                let r: u64 = rgb[0].into();
-                let g: u64 = rgb[1].into();
-                let b: u64 = rgb[2].into();
-
+              for value in data {
                 rgb_pixels.push(
-                  udiv_round(r * 65535, max_storable_value).min(65535) as u16,
-                );
-                rgb_pixels.push(
-                  udiv_round(g * 65535, max_storable_value).min(65535) as u16,
-                );
-                rgb_pixels.push(
-                  udiv_round(b * 65535, max_storable_value).min(65535) as u16,
+                  udiv_round(u64::from(value) * 65535, max_storable_value)
+                    .min(65535) as u16,
                 );
               }
             }

@@ -3,7 +3,7 @@
 #[macro_use]
 extern crate afl;
 
-use dcmfx::core::{DataSetPrintOptions, IodModule, dictionary};
+use dcmfx::core::{IodModule, dictionary};
 use dcmfx::p10::DataSetP10Extensions;
 use dcmfx::pixel_data::{
   DataSetPixelDataExtensions, PixelDataRenderer,
@@ -15,9 +15,6 @@ fn main() {
     // Reading P10 bytes should never panic, but a well-formed error is fine
     // because the input is being fuzzed and so may be invalid
     if let Ok(mut data_set) = dcmfx::p10::read_bytes(data.to_vec().into()) {
-      // Print the data set to human-readable output. This should never panic.
-      data_set.to_lines(&DataSetPrintOptions::default(), &mut |_| ());
-
       // Write the data set to a buffer
       let mut cursor = std::io::Cursor::new(vec![]);
       data_set

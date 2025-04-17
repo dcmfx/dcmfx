@@ -144,7 +144,7 @@ impl ModalityLutModule {
   ///
   pub fn output_range(
     &self,
-    stored_value_range: core::ops::RangeInclusive<i64>,
+    stored_value_range: &core::ops::RangeInclusive<i64>,
   ) -> core::ops::RangeInclusive<f32> {
     match self {
       Self::LookupTable { lut, .. } => 0.0..=f32::from(lut.int_max()),
