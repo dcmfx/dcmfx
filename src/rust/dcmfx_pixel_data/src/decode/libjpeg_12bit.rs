@@ -19,6 +19,9 @@ pub fn decode_single_channel(
     image_pixel_module.rows(),
     pixels,
     image_pixel_module.bits_stored(),
+    image_pixel_module
+      .photometric_interpretation()
+      .is_monochrome1(),
   )
 }
 

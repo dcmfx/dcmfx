@@ -17,12 +17,27 @@ pub fn decode_single_channel(
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
+  let is_monochrome1 = image_pixel_module
+    .photometric_interpretation()
+    .is_monochrome1();
 
   if pixel_format == jpeg_decoder::PixelFormat::L8 {
-    SingleChannelImage::new_u8(width, height, pixels, bits_stored)
+    SingleChannelImage::new_u8(
+      width,
+      height,
+      pixels,
+      bits_stored,
+      is_monochrome1,
+    )
   } else if pixel_format == jpeg_decoder::PixelFormat::L16 {
     let data = bytemuck::cast_slice(&pixels).to_vec();
-    SingleChannelImage::new_u16(width, height, data, bits_stored)
+    SingleChannelImage::new_u16(
+      width,
+      height,
+      data,
+      bits_stored,
+      is_monochrome1,
+    )
   } else {
     Err(DataError::new_value_invalid(format!(
       "JPEG Lossless pixel format '{:?}' is not supported for single channel images",

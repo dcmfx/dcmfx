@@ -41,6 +41,9 @@ pub fn decode_single_channel(
   let height = image_pixel_module.rows();
   let pixel_count = image_pixel_module.pixel_count();
   let bits_stored = image_pixel_module.bits_stored();
+  let is_monochrome1 = image_pixel_module
+    .photometric_interpretation()
+    .is_monochrome1();
 
   match (
     &image_pixel_module.photometric_interpretation(),
@@ -58,7 +61,13 @@ pub fn decode_single_channel(
       let segment = segments.pop().unwrap();
       let is_signed = image_pixel_module.pixel_representation().is_signed();
 
-      SingleChannelImage::new_bitmap(width, height, segment, is_signed)
+      SingleChannelImage::new_bitmap(
+        width,
+        height,
+        segment,
+        is_signed,
+        is_monochrome1,
+      )
     }
 
     (
@@ -82,7 +91,13 @@ pub fn decode_single_channel(
         }
       }
 
-      SingleChannelImage::new_i8(width, height, pixels, bits_stored)
+      SingleChannelImage::new_i8(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (
@@ -93,7 +108,13 @@ pub fn decode_single_channel(
       [_],
     ) => {
       let pixels = segments.pop().unwrap();
-      SingleChannelImage::new_u8(width, height, pixels, bits_stored)
+      SingleChannelImage::new_u8(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (
@@ -122,7 +143,13 @@ pub fn decode_single_channel(
         }
       }
 
-      SingleChannelImage::new_i16(width, height, pixels, bits_stored)
+      SingleChannelImage::new_i16(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (
@@ -138,7 +165,13 @@ pub fn decode_single_channel(
         pixels[i] = u16::from_be_bytes([segment_0[i], segment_1[i]]);
       }
 
-      SingleChannelImage::new_u16(width, height, pixels, bits_stored)
+      SingleChannelImage::new_u16(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (
@@ -177,7 +210,13 @@ pub fn decode_single_channel(
         }
       }
 
-      SingleChannelImage::new_i32(width, height, pixels, bits_stored)
+      SingleChannelImage::new_i32(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (
@@ -198,7 +237,13 @@ pub fn decode_single_channel(
         ]);
       }
 
-      SingleChannelImage::new_u32(width, height, pixels, bits_stored)
+      SingleChannelImage::new_u32(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     _ => Err(DataError::new_value_invalid(format!(
@@ -514,7 +559,7 @@ mod tests {
 
     assert_eq!(
       decode_single_channel(&image_pixel_module, &data),
-      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3], 8)
+      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3], 8, false)
     );
   }
 
@@ -536,7 +581,13 @@ mod tests {
 
     assert_eq!(
       decode_single_channel(&image_pixel_module, &data),
-      SingleChannelImage::new_i8(16, 8, (0..64).chain(-64..0).collect(), 7)
+      SingleChannelImage::new_i8(
+        16,
+        8,
+        (0..64).chain(-64..0).collect(),
+        7,
+        false
+      )
     );
   }
 
@@ -563,7 +614,8 @@ mod tests {
         64,
         64,
         (0..2048).chain(-2048..0).collect(),
-        12
+        12,
+        false
       )
     );
   }

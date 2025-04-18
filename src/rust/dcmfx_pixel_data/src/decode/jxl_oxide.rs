@@ -21,6 +21,9 @@ pub fn decode_single_channel(
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
+  let is_monochrome1 = image_pixel_module
+    .photometric_interpretation()
+    .is_monochrome1();
 
   match (
     image_pixel_module.bits_allocated(),
@@ -30,7 +33,13 @@ pub fn decode_single_channel(
       let mut buffer = vec![0u8; image_pixel_module.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 
-      SingleChannelImage::new_u8(width, height, buffer, bits_stored)
+      SingleChannelImage::new_u8(
+        width,
+        height,
+        buffer,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (
@@ -42,7 +51,13 @@ pub fn decode_single_channel(
       let mut buffer = vec![0u16; image_pixel_module.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 
-      SingleChannelImage::new_u16(width, height, buffer, bits_stored)
+      SingleChannelImage::new_u16(
+        width,
+        height,
+        buffer,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     _ => Err(DataError::new_value_invalid(

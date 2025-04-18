@@ -416,12 +416,12 @@ fn test_pixel_data_read(
   }
 
   // Read the .pixel_array.json file
-  let expected_pixel_data_json =
+  let expected_pixel_array_json =
     std::fs::read_to_string(pixel_array_file).unwrap();
 
   // Check the expected number of frames are present
   let expected_frames: Vec<serde_json::Value> =
-    serde_json::from_str(&expected_pixel_data_json).unwrap();
+    serde_json::from_str(&expected_pixel_array_json).unwrap();
   if frames.len() != expected_frames.len() {
     return Err(DicomValidationError::PixelDataRenderError(Either::Right(
       format!(
@@ -438,34 +438,29 @@ fn test_pixel_data_read(
     let frame_index = frame.index();
 
     if pixel_data_renderer.image_pixel_module.is_grayscale() {
-      let mut image = pixel_data_renderer
+      let image = pixel_data_renderer
         .decode_single_channel_frame(&mut frame)
         .map_err(|e| {
           DicomValidationError::PixelDataRenderError(Either::Left(e))
         })?;
 
-      if pixel_data_renderer
-        .image_pixel_module
-        .photometric_interpretation()
-        .is_monochrome1()
-      {
-        image.invert_monochrome1_data();
-      }
+      let stored_values = image.to_stored_values();
 
-      let pixels = image.to_i64_pixels();
-
-      let expected_pixels =
+      let expected_stored_values =
         serde_json::from_value::<Vec<Vec<i64>>>(expected_frame)
           .unwrap()
           .into_iter()
           .flatten();
 
-      for (index, (a, b)) in pixels.into_iter().zip(expected_pixels).enumerate()
+      for (index, (a, b)) in stored_values
+        .into_iter()
+        .zip(expected_stored_values)
+        .enumerate()
       {
         if a != b {
           return Err(DicomValidationError::PixelDataRenderError(
             Either::Right(format!(
-              "Pixel data of frame {} is incorrect at index {}, expected {} \
+              "Stored value of frame {} is incorrect at index {}, expected {} \
                 but got {}",
               frame_index, index, b, a
             )),

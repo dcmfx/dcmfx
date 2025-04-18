@@ -16,6 +16,7 @@ pub struct SingleChannelImage {
   height: u16,
   data: SingleChannelImageData,
   bits_stored: u16,
+  is_monochrome1: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -38,6 +39,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<u8>,
     is_signed: bool,
+    is_monochrome1: bool,
   ) -> Result<Self, DataError> {
     if data.len() != (usize::from(width) * usize::from(height)).div_ceil(8) {
       return Err(DataError::new_value_invalid(
@@ -50,6 +52,7 @@ impl SingleChannelImage {
       height,
       data: SingleChannelImageData::Bitmap { data, is_signed },
       bits_stored: 1,
+      is_monochrome1,
     })
   }
 
@@ -61,6 +64,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<i8>,
     bits_stored: u16,
+    is_monochrome1: bool,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -79,6 +83,7 @@ impl SingleChannelImage {
       height,
       data: SingleChannelImageData::I8(data),
       bits_stored,
+      is_monochrome1,
     })
   }
 
@@ -90,6 +95,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<u8>,
     bits_stored: u16,
+    is_monochrome1: bool,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -108,6 +114,7 @@ impl SingleChannelImage {
       height,
       data: SingleChannelImageData::U8(data),
       bits_stored,
+      is_monochrome1,
     })
   }
 
@@ -119,6 +126,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<i16>,
     bits_stored: u16,
+    is_monochrome1: bool,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -137,6 +145,7 @@ impl SingleChannelImage {
       height,
       data: SingleChannelImageData::I16(data),
       bits_stored,
+      is_monochrome1,
     })
   }
 
@@ -148,6 +157,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<u16>,
     bits_stored: u16,
+    is_monochrome1: bool,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -166,6 +176,7 @@ impl SingleChannelImage {
       height,
       data: SingleChannelImageData::U16(data),
       bits_stored,
+      is_monochrome1,
     })
   }
 
@@ -177,6 +188,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<i32>,
     bits_stored: u16,
+    is_monochrome1: bool,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -195,6 +207,7 @@ impl SingleChannelImage {
       height,
       data: SingleChannelImageData::I32(data),
       bits_stored,
+      is_monochrome1,
     })
   }
 
@@ -206,6 +219,7 @@ impl SingleChannelImage {
     height: u16,
     data: Vec<u32>,
     bits_stored: u16,
+    is_monochrome1: bool,
   ) -> Result<Self, DataError> {
     if data.len() != usize::from(width) * usize::from(height) {
       return Err(DataError::new_value_invalid(
@@ -224,6 +238,7 @@ impl SingleChannelImage {
       height,
       data: SingleChannelImageData::U32(data),
       bits_stored,
+      is_monochrome1,
     })
   }
 
@@ -267,7 +282,8 @@ impl SingleChannelImage {
     }
   }
 
-  /// Returns the minimum and maximum values in this single channel image.
+  /// Returns the minimum and maximum stored values in this single channel
+  /// image.
   ///
   pub fn min_max_values(&self) -> Option<(i64, i64)> {
     fn min_max<I: Iterator<Item = i64>>(iter: I) -> Option<(i64, i64)> {
@@ -330,68 +346,6 @@ impl SingleChannelImage {
     })
   }
 
-  /// Converts Monochrome1 pixel data to Monochrome2.
-  ///
-  pub fn invert_monochrome1_data(&mut self) {
-    // Calculate the offset to add after negating the stored pixel value in
-    // order to convert to Monochrome2
-    let offset: i64 = if self.is_signed() {
-      -1
-    } else {
-      (1i64 << self.bits_stored) - 1
-    };
-
-    match &mut self.data {
-      SingleChannelImageData::Bitmap { data, .. } => {
-        for pixel in data.iter_mut() {
-          *pixel = !*pixel;
-        }
-      }
-
-      SingleChannelImageData::I8(data) => {
-        for pixel in data.iter_mut() {
-          *pixel = (-i64::from(*pixel) + offset)
-            .clamp(i8::MIN as i64, i8::MAX as i64) as i8;
-        }
-      }
-
-      SingleChannelImageData::U8(data) => {
-        for pixel in data.iter_mut() {
-          *pixel = (-i64::from(*pixel) + offset)
-            .clamp(u8::MIN as i64, u8::MAX as i64) as u8;
-        }
-      }
-
-      SingleChannelImageData::I16(data) => {
-        for pixel in data.iter_mut() {
-          *pixel = (-i64::from(*pixel) + offset)
-            .clamp(i16::MIN as i64, i16::MAX as i64) as i16;
-        }
-      }
-
-      SingleChannelImageData::U16(data) => {
-        for pixel in data.iter_mut() {
-          *pixel = (-i64::from(*pixel) + offset)
-            .clamp(u16::MIN as i64, u16::MAX as i64) as u16;
-        }
-      }
-
-      SingleChannelImageData::I32(data) => {
-        for pixel in data.iter_mut() {
-          *pixel = (-i64::from(*pixel) + offset)
-            .clamp(i32::MIN as i64, i32::MAX as i64) as i32;
-        }
-      }
-
-      SingleChannelImageData::U32(data) => {
-        for pixel in data.iter_mut() {
-          *pixel = (-i64::from(*pixel) + offset)
-            .clamp(u32::MIN as i64, u32::MAX as i64) as u32;
-        }
-      }
-    }
-  }
-
   /// Converts this single channel image to an 8-bit grayscale image by passing
   /// its values through the given grayscale LUT pipeline.
   ///
@@ -432,10 +386,12 @@ impl SingleChannelImage {
     &self,
     stored_value_to_gray: impl Fn(i64) -> T,
   ) -> image::ImageBuffer<image::Luma<T>, Vec<T>> {
-    let mut gray_pixels = Vec::with_capacity(self.pixel_count());
-
-    match &self.data {
+    let gray_pixels = match &self.data {
       SingleChannelImageData::Bitmap { data, is_signed } => {
+        let mut gray_pixels = Vec::with_capacity(self.pixel_count());
+
+        let monochrome1_offset = self.monochrome1_offset();
+
         for pixel in data.iter() {
           for b in 0..8 {
             if gray_pixels.len() == gray_pixels.capacity() {
@@ -446,48 +402,36 @@ impl SingleChannelImage {
             if *is_signed {
               value = -value;
             }
+            if self.is_monochrome1 {
+              value = -value + monochrome1_offset;
+            }
 
             gray_pixels.push(stored_value_to_gray(value));
           }
         }
+
+        gray_pixels
       }
 
       SingleChannelImageData::I8(data) => {
-        for pixel in data.iter() {
-          gray_pixels.push(stored_value_to_gray((*pixel).into()));
-        }
+        self.to_gray_image_internal(data, stored_value_to_gray)
       }
-
       SingleChannelImageData::U8(data) => {
-        for pixel in data.iter() {
-          gray_pixels.push(stored_value_to_gray((*pixel).into()));
-        }
+        self.to_gray_image_internal(data, stored_value_to_gray)
       }
-
       SingleChannelImageData::I16(data) => {
-        for pixel in data.iter() {
-          gray_pixels.push(stored_value_to_gray((*pixel).into()));
-        }
+        self.to_gray_image_internal(data, stored_value_to_gray)
       }
-
       SingleChannelImageData::U16(data) => {
-        for pixel in data.iter() {
-          gray_pixels.push(stored_value_to_gray((*pixel).into()));
-        }
+        self.to_gray_image_internal(data, stored_value_to_gray)
       }
-
       SingleChannelImageData::I32(data) => {
-        for pixel in data.iter() {
-          gray_pixels.push(stored_value_to_gray((*pixel).into()));
-        }
+        self.to_gray_image_internal(data, stored_value_to_gray)
       }
-
       SingleChannelImageData::U32(data) => {
-        for pixel in data.iter() {
-          gray_pixels.push(stored_value_to_gray((*pixel).into()));
-        }
+        self.to_gray_image_internal(data, stored_value_to_gray)
       }
-    }
+    };
 
     image::ImageBuffer::from_raw(
       self.width.into(),
@@ -497,16 +441,54 @@ impl SingleChannelImage {
     .unwrap()
   }
 
-  /// Converts this single channel image to a [`Vec<i64>`].
+  fn to_gray_image_internal<T, U>(
+    &self,
+    data: &[T],
+    stored_value_to_gray: impl Fn(i64) -> U,
+  ) -> Vec<U>
+  where
+    T: Copy,
+    i64: From<T>,
+  {
+    let mut gray_pixels = Vec::with_capacity(self.pixel_count());
+
+    if self.is_monochrome1 {
+      let offset = self.monochrome1_offset();
+
+      for stored_value in data.iter() {
+        gray_pixels
+          .push(stored_value_to_gray(-i64::from(*stored_value) + offset));
+      }
+    } else {
+      for stored_value in data.iter() {
+        gray_pixels.push(stored_value_to_gray((*stored_value).into()));
+      }
+    }
+
+    gray_pixels
+  }
+
+  /// Calculates the offset to add after negating the stored pixel value in
+  /// order to convert to Monochrome2.
   ///
-  pub fn to_i64_pixels(&self) -> Vec<i64> {
+  fn monochrome1_offset(&self) -> i64 {
+    if self.is_signed() {
+      -1
+    } else {
+      (1i64 << self.bits_stored) - 1
+    }
+  }
+
+  /// Returns this single channel image's stored values.
+  ///
+  pub fn to_stored_values(&self) -> Vec<i64> {
+    let mut stored_values = Vec::with_capacity(self.pixel_count());
+
     match &self.data {
       SingleChannelImageData::Bitmap { data, is_signed } => {
-        let mut i64_pixels = Vec::with_capacity(self.pixel_count());
-
         for pixel in data.iter() {
           for b in 0..8 {
-            if i64_pixels.len() == i64_pixels.capacity() {
+            if stored_values.len() == stored_values.capacity() {
               break;
             }
 
@@ -515,36 +497,48 @@ impl SingleChannelImage {
               value = -value;
             }
 
-            i64_pixels.push(value);
+            stored_values.push(value);
           }
         }
-
-        i64_pixels
       }
 
       SingleChannelImageData::I8(data) => {
-        data.iter().map(|pixel| (*pixel).into()).collect()
+        for stored_value in data {
+          stored_values.push(i64::from(*stored_value));
+        }
       }
 
       SingleChannelImageData::U8(data) => {
-        data.iter().map(|pixel| (*pixel).into()).collect()
+        for stored_value in data {
+          stored_values.push(i64::from(*stored_value));
+        }
       }
 
       SingleChannelImageData::I16(data) => {
-        data.iter().map(|pixel| (*pixel).into()).collect()
+        for stored_value in data {
+          stored_values.push(i64::from(*stored_value));
+        }
       }
 
       SingleChannelImageData::U16(data) => {
-        data.iter().map(|pixel| (*pixel).into()).collect()
+        for stored_value in data {
+          stored_values.push(i64::from(*stored_value));
+        }
       }
 
       SingleChannelImageData::I32(data) => {
-        data.iter().map(|pixel| (*pixel).into()).collect()
+        for stored_value in data {
+          stored_values.push(i64::from(*stored_value));
+        }
       }
 
       SingleChannelImageData::U32(data) => {
-        data.iter().map(|pixel| (*pixel).into()).collect()
+        for stored_value in data {
+          stored_values.push(i64::from(*stored_value));
+        }
       }
-    }
+    };
+
+    stored_values
   }
 }

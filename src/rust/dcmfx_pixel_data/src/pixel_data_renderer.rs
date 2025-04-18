@@ -127,7 +127,7 @@ impl PixelDataRenderer {
 
     use transfer_syntax::*;
 
-    let mut image = match self.transfer_syntax {
+    match self.transfer_syntax {
       &IMPLICIT_VR_LITTLE_ENDIAN
       | &EXPLICIT_VR_LITTLE_ENDIAN
       | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
@@ -188,17 +188,7 @@ impl PixelDataRenderer {
         "Transfer syntax '{}' is not able to be decoded",
         self.transfer_syntax.name,
       ))),
-    }?;
-
-    if self
-      .image_pixel_module
-      .photometric_interpretation()
-      .is_monochrome1()
-    {
-      image.invert_monochrome1_data();
     }
-
-    Ok(image)
   }
 
   /// Decodes a frame of color pixel data into a [`ColorImage`].

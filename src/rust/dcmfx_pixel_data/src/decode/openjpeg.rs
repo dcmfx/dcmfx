@@ -20,6 +20,9 @@ pub fn decode_single_channel(
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
+  let is_monochrome1 = image_pixel_module
+    .photometric_interpretation()
+    .is_monochrome1();
 
   match (
     image_pixel_module.pixel_representation(),
@@ -30,7 +33,13 @@ pub fn decode_single_channel(
       BitsAllocated::One | BitsAllocated::Eight,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_u8(width, height, pixels, bits_stored)
+      SingleChannelImage::new_u8(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (
@@ -38,27 +47,57 @@ pub fn decode_single_channel(
       BitsAllocated::One | BitsAllocated::Eight,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_i8(width, height, pixels, bits_stored)
+      SingleChannelImage::new_i8(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_u16(width, height, pixels, bits_stored)
+      SingleChannelImage::new_u16(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_i16(width, height, pixels, bits_stored)
+      SingleChannelImage::new_i16(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_u32(width, height, pixels, bits_stored)
+      SingleChannelImage::new_u32(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
 
     (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_i32(width, height, pixels, bits_stored)
+      SingleChannelImage::new_i32(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
     }
   }
 }
