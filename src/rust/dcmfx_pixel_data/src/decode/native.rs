@@ -355,7 +355,7 @@ pub fn decode_color(
             let mut pixels = vec![0u16; pixel_count * 3];
 
             for i in 0..(pixel_count * 3) {
-              pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2] + 1]);
+              pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
             }
 
             ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
@@ -367,9 +367,9 @@ pub fn decode_color(
             for i in 0..(pixel_count * 3) {
               pixels[i] = u32::from_le_bytes([
                 data[i * 4],
-                data[i * 4] + 1,
-                data[i * 4] + 2,
-                data[i * 4] + 3,
+                data[i * 4 + 1],
+                data[i * 4 + 2],
+                data[i * 4 + 3],
               ]);
             }
 
