@@ -72,7 +72,7 @@ fn single_bit_unaligned_to_raw() {
 
   for (i, output_file) in output_files.iter().enumerate() {
     let filename =
-      format!("get_pixel_data_tests__single_bit_unaligned_to_raw.000{i}.bin");
+      format!("get_pixel_data__single_bit_unaligned_to_raw.000{i}.bin");
 
     assert_eq!(
       std::fs::read(&output_file.0).unwrap(),

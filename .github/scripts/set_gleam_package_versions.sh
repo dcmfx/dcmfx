@@ -2,11 +2,9 @@
 
 set -e
 
-# Update the version in the gleam.toml files
 echo "Updating version in gleam.toml files …"
 find src/gleam -name "gleam.toml" -exec sed -i'' -E "s/^version = \".*\"$/version = \"$1\"/" {} +
 
-# Update all the manifest.toml files
 echo "Updating main manifest.toml files …"
 for dir in src/gleam/dcmfx_*/; do
   cd $dir
@@ -20,7 +18,6 @@ done
 echo "Updating version in uids.gleam …"
 sed -i'' -E "s/\"DCMfx \" <> \".*\"$/\"DCMfx \" <> \"$1\"/" src/gleam/dcmfx_p10/src/dcmfx_p10/uids.gleam
 
-# Update example app manifest.toml files
 echo "Updating example app manifest.toml files …"
 for dir in examples/dicom_*/gleam; do
   cd $dir
