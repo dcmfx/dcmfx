@@ -311,10 +311,10 @@ pub fn decode_color(
         PhotometricInterpretation::PaletteColor { palette },
         BitsAllocated::Sixteen,
       ) => {
-        let mut pixels = vec![0u16; pixel_count * 3];
+        let mut pixels = vec![0u16; pixel_count];
 
         for i in 0..pixel_count {
-          pixels.push(u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]));
+          pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
         }
 
         ColorImage::new_palette16(
