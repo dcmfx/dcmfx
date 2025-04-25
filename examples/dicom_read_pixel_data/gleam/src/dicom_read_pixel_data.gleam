@@ -4,6 +4,7 @@ import dcmfx_pixel_data/pixel_data_frame
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/option.{Some}
 
 const input_file = "../../example.dcm"
 
@@ -13,9 +14,11 @@ pub fn main() {
 
   frames
   |> list.each(fn(frame) {
+    let assert Some(frame_index) = pixel_data_frame.index(frame)
+
     io.println(
       "Frame "
-      <> int.to_string(pixel_data_frame.index(frame))
+      <> int.to_string(frame_index)
       <> " has size "
       <> int.to_string(pixel_data_frame.length(frame))
       <> " bytes",

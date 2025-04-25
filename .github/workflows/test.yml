@@ -205,7 +205,7 @@ jobs:
         working-directory: src/rust/dcmfx_fuzz
         run: |
           cargo install cargo-afl@0.15.17
-          cargo afl config --build
+          cargo afl config --build --force
           cargo afl build
 
   test_examples:

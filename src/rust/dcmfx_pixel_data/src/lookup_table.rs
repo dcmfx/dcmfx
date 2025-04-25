@@ -37,6 +37,26 @@ pub struct LookupTable {
 }
 
 impl LookupTable {
+  /// Creates a [`LookupTable`].
+  ///
+  pub fn new(
+    first_input_value: i64,
+    explanation: Option<String>,
+    data: Vec<u16>,
+    int_max: u16,
+  ) -> Self {
+    // Scale factor that converts a lookup table value into the range 0-1
+    let normalization_scale = 1.0 / (int_max as f32);
+
+    Self {
+      first_input_value,
+      explanation,
+      data,
+      int_max,
+      normalization_scale,
+    }
+  }
+
   /// Creates a [`LookupTable`] from the relevant data elements in a data set.
   ///
   pub fn from_data_set(
@@ -115,16 +135,12 @@ impl LookupTable {
 
     let int_max = ((1u32 << bits_per_entry) - 1) as u16;
 
-    // Scale factor that converts a lookup table value into the range 0-1
-    let normalization_scale = 1.0 / (int_max as f32);
-
-    Ok(Self {
-      first_input_value: first_input_value.into(),
+    Ok(Self::new(
+      first_input_value.into(),
       explanation,
       data,
       int_max,
-      normalization_scale,
-    })
+    ))
   }
 
   /// Evaluates segmented lookup table data into a final lookup table.

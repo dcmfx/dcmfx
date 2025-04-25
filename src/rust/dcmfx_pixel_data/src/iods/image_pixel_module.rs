@@ -299,6 +299,20 @@ impl ImagePixelModule {
     self.pixel_representation
   }
 
+  /// Returns the planar configuration in use when there are three samples per
+  /// pixel. If there is only one sample per pixel then a fallback of
+  /// [`PlanarConfiguration::Interleaved`] is returned, although it is not
+  /// relevant to how the pixel data is stored.
+  ///
+  pub fn planar_configuration(&self) -> PlanarConfiguration {
+    match self.samples_per_pixel {
+      SamplesPerPixel::One => PlanarConfiguration::Interleaved,
+      SamplesPerPixel::Three {
+        planar_configuration,
+      } => planar_configuration,
+    }
+  }
+
   /// Returns the range of integer values that can be stored.
   ///
   pub fn stored_value_range(&self) -> core::ops::RangeInclusive<i64> {
@@ -359,24 +373,13 @@ impl ImagePixelModule {
   /// Returns whether this image pixel module defines grayscale pixel data.
   ///
   pub fn is_grayscale(&self) -> bool {
-    match self.photometric_interpretation {
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2 => true,
-
-      PhotometricInterpretation::PaletteColor { .. }
-      | PhotometricInterpretation::Rgb
-      | PhotometricInterpretation::YbrFull
-      | PhotometricInterpretation::YbrFull422
-      | PhotometricInterpretation::YbrIct
-      | PhotometricInterpretation::YbrRct
-      | PhotometricInterpretation::Xyb => false,
-    }
+    self.photometric_interpretation.is_grayscale()
   }
 
-  /// Returns whether this image pixel module defines RGB color data.
+  /// Returns whether this image pixel module defines color data.
   ///
-  pub fn is_rgb(&self) -> bool {
-    !self.is_grayscale()
+  pub fn is_color(&self) -> bool {
+    !self.photometric_interpretation.is_grayscale()
   }
 
   /// Returns whether this image pixel module has unused high bits in its
@@ -517,7 +520,7 @@ pub enum PhotometricInterpretation {
 }
 
 impl PhotometricInterpretation {
-  /// Creates a new `PhotometricInterpretation` from the *'(0028,0004)
+  /// Creates a new [`PhotometricInterpretation`] from the *'(0028,0004)
   /// Photometric Interpretation'* data element in the given data set.
   ///
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
@@ -573,42 +576,77 @@ impl PhotometricInterpretation {
     }
   }
 
+  /// Returns whether this photometric interpretation stores grayscale pixel
+  /// data.
+  ///
+  pub fn is_grayscale(&self) -> bool {
+    match self {
+      Self::Monochrome1 | Self::Monochrome2 => true,
+
+      Self::PaletteColor { .. }
+      | Self::Rgb
+      | Self::YbrFull
+      | Self::YbrFull422
+      | Self::YbrIct
+      | Self::YbrRct
+      | Self::Xyb => false,
+    }
+  }
+
+  /// Returns whether this photometric interpretation defines color data.
+  ///
+  pub fn is_color(&self) -> bool {
+    !self.is_grayscale()
+  }
+
   /// Returns whether this photometric interpretation specifies YBR color data.
   ///
   pub fn is_ybr(&self) -> bool {
     match self {
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2
-      | PhotometricInterpretation::PaletteColor { .. }
-      | PhotometricInterpretation::Rgb
-      | PhotometricInterpretation::Xyb => false,
+      Self::Monochrome1
+      | Self::Monochrome2
+      | Self::PaletteColor { .. }
+      | Self::Rgb
+      | Self::Xyb => false,
 
-      PhotometricInterpretation::YbrFull
-      | PhotometricInterpretation::YbrFull422
-      | PhotometricInterpretation::YbrIct
-      | PhotometricInterpretation::YbrRct => true,
+      Self::YbrFull | Self::YbrFull422 | Self::YbrIct | Self::YbrRct => true,
     }
   }
 
-  /// Returns whether this pixel representation is [`Self::Monochrome1`].
+  /// Returns whether this photometric interpretation specifies YBR 422 color
+  /// data.
+  ///
+  pub fn is_ybr_422(&self) -> bool {
+    self == &Self::YbrFull422
+  }
+
+  /// Returns whether this photometric interpretation is
+  /// [`PhotometricInterpretation::Monochrome1`].
   ///
   pub fn is_monochrome1(&self) -> bool {
     self == &Self::Monochrome1
+  }
+
+  /// Returns whether this photometric interpretation is
+  /// [`PhotometricInterpretation::PaletteColor`].
+  ///
+  pub fn is_palette_color(&self) -> bool {
+    matches!(self, Self::PaletteColor { .. })
   }
 }
 
 impl core::fmt::Display for PhotometricInterpretation {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     let s = match self {
-      PhotometricInterpretation::Monochrome1 => "Monochrome1",
-      PhotometricInterpretation::Monochrome2 => "Monochrome2",
-      PhotometricInterpretation::PaletteColor { .. } => "PaletteColor",
-      PhotometricInterpretation::Rgb => "Rgb",
-      PhotometricInterpretation::YbrFull => "YbrFull",
-      PhotometricInterpretation::YbrFull422 => "YbrFull422",
-      PhotometricInterpretation::YbrIct => "YbrIct",
-      PhotometricInterpretation::YbrRct => "YbrRct",
-      PhotometricInterpretation::Xyb => "Xyb",
+      Self::Monochrome1 => "Monochrome1",
+      Self::Monochrome2 => "Monochrome2",
+      Self::PaletteColor { .. } => "PaletteColor",
+      Self::Rgb => "Rgb",
+      Self::YbrFull => "YbrFull",
+      Self::YbrFull422 => "YbrFull422",
+      Self::YbrIct => "YbrIct",
+      Self::YbrRct => "YbrRct",
+      Self::Xyb => "Xyb",
     };
 
     write!(f, "{}", s)

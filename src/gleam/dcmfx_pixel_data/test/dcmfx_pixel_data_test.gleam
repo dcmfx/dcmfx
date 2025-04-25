@@ -292,8 +292,9 @@ pub fn read_encapsulated_using_extended_offset_table_test() {
 fn frame_with_fragments(index: Int, fragments: List(BitArray)) -> PixelDataFrame {
   list.fold(
     fragments,
-    pixel_data_frame.new(index),
-    pixel_data_frame.push_fragment,
+    pixel_data_frame.new()
+      |> pixel_data_frame.set_index(index),
+    pixel_data_frame.push_chunk,
   )
 }
 

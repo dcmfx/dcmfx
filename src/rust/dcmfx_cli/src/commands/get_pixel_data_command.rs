@@ -550,7 +550,7 @@ fn get_pixel_data_from_input_source(
         } else {
           let filename = crate::utils::path_append(
             output_prefix.clone(),
-            &format!(".{:04}{}", frame.index(), output_extension),
+            &format!(".{:04}{}", frame.index().unwrap(), output_extension),
           );
 
           if !args.overwrite {
@@ -651,7 +651,7 @@ fn write_fragments(
   let mut stream = File::create(filename)?;
 
   if frame.bit_offset() == 0 {
-    for fragment in frame.fragments() {
+    for fragment in frame.chunks() {
       stream.write_all(fragment)?;
     }
   } else {
@@ -683,7 +683,7 @@ fn frame_to_image(
     }
 
     overlay_plane_module
-      .render_to_rgb_image(&mut image, frame.index())
+      .render_to_rgb_image(&mut image, frame.index().unwrap())
       .unwrap();
   }
 
@@ -849,7 +849,7 @@ fn write_frame_to_mp4_file(
   args: &GetPixelDataArgs,
 ) -> Result<(), GetPixelDataError> {
   // Respect frame trimming
-  if cine_module.is_frame_trimmed(frame.index()) {
+  if cine_module.is_frame_trimmed(frame.index().unwrap()) {
     return Ok(());
   }
 
@@ -865,7 +865,7 @@ fn write_frame_to_mp4_file(
 
   // Update progress readout
   let start_trim = cine_module.start_trim.unwrap_or(0);
-  let progress = (frame.index() + 1 - start_trim) as f64
+  let progress = (frame.index().unwrap() + 1 - start_trim) as f64
     / (cine_module.number_of_frames(multiframe_module) as f64);
   print!(
     "\rWriting \"{}\" … {:.1}%",
@@ -881,7 +881,7 @@ fn write_frame_to_mp4_file(
     Duration::from_secs_f64(1.0 / frame_rate)
   } else {
     cine_module
-      .frame_duration(frame.index(), multiframe_module)
+      .frame_duration(frame.index().unwrap(), multiframe_module)
       .unwrap_or(Duration::from_secs(1))
   };
 

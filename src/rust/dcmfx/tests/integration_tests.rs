@@ -435,7 +435,7 @@ fn test_pixel_data_read(
   for (mut frame, expected_frame) in
     frames.into_iter().zip(expected_frames.into_iter())
   {
-    let frame_index = frame.index();
+    let frame_index = frame.index().unwrap();
 
     if pixel_data_renderer.image_pixel_module.is_grayscale() {
       let image = pixel_data_renderer

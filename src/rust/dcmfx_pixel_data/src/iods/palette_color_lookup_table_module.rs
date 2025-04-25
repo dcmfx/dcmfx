@@ -13,9 +13,9 @@ use crate::LookupTable;
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct PaletteColorLookupTableModule {
-  red: LookupTable,
-  green: LookupTable,
-  blue: LookupTable,
+  red_lut: LookupTable,
+  green_lut: LookupTable,
+  blue_lut: LookupTable,
 }
 
 impl IodModule for PaletteColorLookupTableModule {
@@ -69,22 +69,32 @@ impl IodModule for PaletteColorLookupTableModule {
       None,
     )?;
 
-    Ok(Self {
-      red: red_lut,
-      green: green_lut,
-      blue: blue_lut,
-    })
+    Ok(Self::new(red_lut, green_lut, blue_lut))
   }
 }
 
 impl PaletteColorLookupTableModule {
+  /// Creates a new set of RGB lookup tables.
+  ///
+  pub fn new(
+    red_lut: LookupTable,
+    green_lut: LookupTable,
+    blue_lut: LookupTable,
+  ) -> Self {
+    Self {
+      red_lut,
+      green_lut,
+      blue_lut,
+    }
+  }
+
   /// Looks up a value in the RGB lookup tables.
   ///
   pub fn lookup(&self, stored_value: i64) -> [u16; 3] {
     [
-      self.red.lookup(stored_value),
-      self.green.lookup(stored_value),
-      self.blue.lookup(stored_value),
+      self.red_lut.lookup(stored_value),
+      self.green_lut.lookup(stored_value),
+      self.blue_lut.lookup(stored_value),
     ]
   }
 
@@ -93,9 +103,9 @@ impl PaletteColorLookupTableModule {
   ///
   pub fn lookup_normalized(&self, stored_value: i64) -> [f32; 3] {
     [
-      self.red.lookup_normalized(stored_value),
-      self.green.lookup_normalized(stored_value),
-      self.blue.lookup_normalized(stored_value),
+      self.red_lut.lookup_normalized(stored_value),
+      self.green_lut.lookup_normalized(stored_value),
+      self.blue_lut.lookup_normalized(stored_value),
     ]
   }
 
@@ -104,9 +114,9 @@ impl PaletteColorLookupTableModule {
   ///
   pub fn lookup_normalized_u8(&self, stored_value: i64) -> [u8; 3] {
     [
-      self.red.lookup_normalized_u8(stored_value),
-      self.green.lookup_normalized_u8(stored_value),
-      self.blue.lookup_normalized_u8(stored_value),
+      self.red_lut.lookup_normalized_u8(stored_value),
+      self.green_lut.lookup_normalized_u8(stored_value),
+      self.blue_lut.lookup_normalized_u8(stored_value),
     ]
   }
 }

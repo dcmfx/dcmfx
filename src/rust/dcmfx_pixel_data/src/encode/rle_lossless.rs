@@ -1,5 +1,253 @@
 #[cfg(not(feature = "std"))]
-use alloc::{vec, vec::Vec};
+use alloc::{format, string::ToString, vec, vec::Vec};
+
+use crate::{
+  ColorImage, PixelDataEncodeError, SingleChannelImage,
+  color_image::ColorImageData,
+  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
+  single_channel_image::SingleChannelImageData,
+};
+
+/// Encodes a [`SingleChannelImage`] into RLE Lossless raw bytes.
+///
+pub fn encode_single_channel(
+  image: &SingleChannelImage,
+) -> Result<Vec<u8>, PixelDataEncodeError> {
+  let mut segments: Vec<Vec<u8>> = vec![];
+  let mut row_size = usize::from(image.width());
+
+  match (image.data(), image.bits_stored()) {
+    (SingleChannelImageData::Bitmap { data, .. }, _) => {
+      segments.push(data.to_vec());
+      row_size = if image.width() % 8 == 0 {
+        usize::from(image.width() / 8)
+      } else {
+        data.len()
+      };
+    }
+
+    (SingleChannelImageData::I8(data), 8) => {
+      segments.push(bytemuck::cast_slice(data).to_vec());
+    }
+
+    (SingleChannelImageData::I8(data), _) => {
+      segments.push(vec![0; image.pixel_count()]);
+
+      let mask = (1 << image.bits_stored()) - 1;
+
+      for (i, pixel) in data.iter().enumerate().take(image.pixel_count()) {
+        segments[0][i] = (i16::from(*pixel) & mask) as u8;
+      }
+    }
+
+    (SingleChannelImageData::U8(data), _) => {
+      segments.push(data.to_vec());
+    }
+
+    (SingleChannelImageData::I16(data), 16) => {
+      for _ in 0..2 {
+        segments.push(vec![0; image.pixel_count()]);
+      }
+
+      for (i, pixel) in data.iter().enumerate().take(image.pixel_count()) {
+        let [a, b] = pixel.to_be_bytes();
+
+        segments[0][i] = a;
+        segments[1][i] = b;
+      }
+    }
+
+    (SingleChannelImageData::I16(data), _) => {
+      for _ in 0..2 {
+        segments.push(vec![0; image.pixel_count()]);
+      }
+
+      let mask = (1 << image.bits_stored()) - 1;
+
+      for (i, pixel) in data.iter().enumerate().take(image.pixel_count()) {
+        let [a, b] = ((i32::from(*pixel) & mask) as u16).to_be_bytes();
+
+        segments[0][i] = a;
+        segments[1][i] = b;
+      }
+    }
+
+    (SingleChannelImageData::U16(data), _) => {
+      for _ in 0..2 {
+        segments.push(vec![0; image.pixel_count()]);
+      }
+
+      for (i, pixel) in data.iter().enumerate().take(image.pixel_count()) {
+        let [a, b] = pixel.to_be_bytes();
+
+        segments[0][i] = a;
+        segments[1][i] = b;
+      }
+    }
+
+    (SingleChannelImageData::I32(data), 32) => {
+      for _ in 0..4 {
+        segments.push(vec![0; image.pixel_count()]);
+      }
+
+      for (i, pixel) in data.iter().enumerate().take(image.pixel_count()) {
+        let [a, b, c, d] = pixel.to_be_bytes();
+
+        segments[0][i] = a;
+        segments[1][i] = b;
+        segments[2][i] = c;
+        segments[3][i] = d;
+      }
+    }
+
+    (SingleChannelImageData::I32(data), _) => {
+      for _ in 0..4 {
+        segments.push(vec![0; image.pixel_count()]);
+      }
+
+      let mask = (1 << image.bits_stored()) - 1;
+
+      for (i, pixel) in data.iter().enumerate().take(image.pixel_count()) {
+        let [a, b, c, d] = ((i64::from(*pixel) & mask) as u32).to_be_bytes();
+
+        segments[0][i] = a;
+        segments[1][i] = b;
+        segments[2][i] = c;
+        segments[3][i] = d;
+      }
+    }
+
+    (SingleChannelImageData::U32(data), _) => {
+      for _ in 0..4 {
+        segments.push(vec![0; image.pixel_count()]);
+      }
+
+      for (i, pixel) in data.iter().enumerate().take(image.pixel_count()) {
+        let [a, b, c, d] = pixel.to_be_bytes();
+
+        segments[0][i] = a;
+        segments[1][i] = b;
+        segments[2][i] = c;
+        segments[3][i] = d;
+      }
+    }
+  }
+
+  encode_segments(segments, row_size).map_err(|e| {
+    PixelDataEncodeError::OtherError {
+      details: e.to_string(),
+    }
+  })
+}
+
+/// Encodes a [`SingleChannelImage`] into RLE Lossless raw bytes.
+///
+pub fn encode_color(
+  image: &ColorImage,
+  image_pixel_module: &ImagePixelModule,
+) -> Result<Vec<u8>, PixelDataEncodeError> {
+  let mut segments: Vec<Vec<u8>> = vec![];
+
+  let photometric_interpretation =
+    image_pixel_module.photometric_interpretation();
+
+  match photometric_interpretation {
+    PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull => match image.data() {
+      ColorImageData::U8 { data, .. } => {
+        for _ in 0..3 {
+          segments.push(vec![0; image.pixel_count()]);
+        }
+
+        for i in 0..image.pixel_count() {
+          segments[0][i] = data[i * 3];
+          segments[1][i] = data[i * 3 + 1];
+          segments[2][i] = data[i * 3 + 2];
+        }
+      }
+
+      ColorImageData::U16 { data, .. } => {
+        for _ in 0..6 {
+          segments.push(vec![0; image.pixel_count()]);
+        }
+
+        for i in 0..image.pixel_count() {
+          let [a, b] = data[i * 3].to_be_bytes();
+          segments[0][i] = a;
+          segments[1][i] = b;
+
+          let [a, b] = data[i * 3 + 1].to_be_bytes();
+          segments[2][i] = a;
+          segments[3][i] = b;
+
+          let [a, b] = data[i * 3 + 2].to_be_bytes();
+          segments[4][i] = a;
+          segments[5][i] = b;
+        }
+      }
+
+      ColorImageData::U32 { data, .. } => {
+        for _ in 0..12 {
+          segments.push(vec![0; image.pixel_count()]);
+        }
+
+        for i in 0..image.pixel_count() {
+          let [a, b, c, d] = data[i * 3].to_be_bytes();
+          segments[0][i] = a;
+          segments[1][i] = b;
+          segments[2][i] = c;
+          segments[3][i] = d;
+
+          let [a, b, c, d] = data[i * 3 + 1].to_be_bytes();
+          segments[4][i] = a;
+          segments[5][i] = b;
+          segments[6][i] = c;
+          segments[7][i] = d;
+
+          let [a, b, c, d] = data[i * 3 + 2].to_be_bytes();
+          segments[8][i] = a;
+          segments[9][i] = b;
+          segments[10][i] = c;
+          segments[11][i] = d;
+        }
+      }
+
+      ColorImageData::PaletteU8 { data, .. } => {
+        segments.push(data.to_vec());
+      }
+
+      ColorImageData::PaletteU16 { data, .. } => {
+        for _ in 0..2 {
+          segments.push(vec![0; image.pixel_count()]);
+        }
+
+        for (i, pixel) in data.iter().enumerate().take(image.pixel_count()) {
+          let [a, b] = pixel.to_be_bytes();
+
+          segments[0][i] = a;
+          segments[1][i] = b;
+        }
+      }
+    },
+
+    _ => {
+      return Err(PixelDataEncodeError::NotSupported {
+        details: format!(
+          "Photometric interpretation '{}' is not able to be encoded into \
+           RLE Lossless pixel data",
+          photometric_interpretation
+        ),
+      });
+    }
+  }
+
+  encode_segments(segments, usize::from(image.width())).map_err(|e| {
+    PixelDataEncodeError::OtherError {
+      details: e.to_string(),
+    }
+  })
+}
 
 /// RLE encodes the data for a set of segments where each row of the image data
 /// has the given size.
@@ -10,20 +258,20 @@ use alloc::{vec, vec::Vec};
 /// Ref: PS3.5 G.3.1, PS3.5 G.4, PS3.5 G.5.
 ///
 #[allow(dead_code, clippy::result_unit_err)]
-pub fn encode_segments(
-  segments: &[&[u8]],
+fn encode_segments(
+  segments: Vec<Vec<u8>>,
   row_size: usize,
-) -> Result<Vec<u8>, ()> {
+) -> Result<Vec<u8>, &'static str> {
   // The maximum number of segments allowed by RLE Lossless is 15
   if segments.len() > 15 {
-    return Err(());
+    return Err("RLE Lossless segment count exceeds 15");
   }
 
   let mut encoded_segments = Vec::with_capacity(segments.len());
   let mut total_segment_length = 0;
 
   // RLE encode all segments
-  for segment in segments {
+  for segment in segments.iter() {
     let mut data: Vec<u8> = encode_segment(segment, row_size)?;
 
     // Ensure encoded segment has even length
@@ -37,7 +285,7 @@ pub fn encode_segments(
 
   // Check total output size doesn't exceed a u32
   if 64 + total_segment_length > u32::MAX as usize {
-    return Err(());
+    return Err("RLE Lossless segment data is too long");
   }
 
   let mut output: Vec<u8> = Vec::with_capacity(64 + total_segment_length);
@@ -72,11 +320,14 @@ pub fn encode_segments(
 /// Ref: PS3.5 G.3.1.
 ///
 #[allow(clippy::result_unit_err)]
-fn encode_segment(data: &[u8], row_size: usize) -> Result<Vec<u8>, ()> {
+fn encode_segment(
+  data: &[u8],
+  row_size: usize,
+) -> Result<Vec<u8>, &'static str> {
   let mut output = vec![];
 
   if row_size == 0 || data.len() % row_size != 0 {
-    return Err(());
+    return Err("RLE Lossless segment data is not a multiple of the row size");
   }
 
   for row in data.chunks_exact(row_size) {

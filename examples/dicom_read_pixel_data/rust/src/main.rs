@@ -12,14 +12,19 @@ pub fn main() {
         PixelDataRenderer::from_data_set(&ds).unwrap();
 
     for mut frame in frames {
-        println!("Frame {} has size {} bytes", frame.index(), frame.len());
+        println!(
+            "Frame {} has size {} bytes",
+            frame.index().unwrap(),
+            frame.len()
+        );
 
         // Render raw frame data into an image::RgbImage
         let frame_image =
             pixel_data_renderer.render_frame(&mut frame, None).unwrap();
 
         // Open output PNG file
-        let output_filename = format!("frame.{}.png", frame.index());
+        let output_filename =
+            format!("frame.{}.png", frame.index().unwrap());
         let mut output_file =
             std::fs::File::create(&output_filename).unwrap();
 

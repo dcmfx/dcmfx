@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::{format, string::ToString, vec, vec::Vec};
+use alloc::vec::Vec;
 
 use dcmfx_core::{
   DataElementTag, DataError, DataSet, DataSetPath, IodModule, TransferSyntax,
@@ -73,10 +73,20 @@ impl PixelDataRenderer {
     color_palette: Option<&StandardColorPalette>,
   ) -> Result<image::RgbImage, DataError> {
     if self.image_pixel_module.is_grayscale() {
-      let image = self.decode_single_channel_frame(frame)?;
+      let image = decode::decode_single_channel(
+        frame,
+        self.transfer_syntax,
+        &self.image_pixel_module,
+      )?;
+
       Ok(self.render_single_channel_image(&image, color_palette))
     } else {
-      let image = self.decode_color_frame(frame)?;
+      let image = decode::decode_color(
+        frame,
+        self.transfer_syntax,
+        &self.image_pixel_module,
+      )?;
+
       Ok(image.into_rgb_u8_image())
     }
   }
@@ -115,80 +125,18 @@ impl PixelDataRenderer {
   }
 
   /// Decodes a frame of single channel pixel data into a
-  /// [`SingleChannelImage`]. The returned image needs to have the grayscale
+  /// [`SingleChannelImage`]. The returned image needs to have a grayscale
   /// pipeline applied in order to reach final grayscale display values.
   ///
   pub fn decode_single_channel_frame(
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<SingleChannelImage, DataError> {
-    let frame_bit_offset = frame.bit_offset();
-    let data = frame.combine_fragments();
-
-    use transfer_syntax::*;
-
-    match self.transfer_syntax {
-      &IMPLICIT_VR_LITTLE_ENDIAN
-      | &EXPLICIT_VR_LITTLE_ENDIAN
-      | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
-      | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-      | &EXPLICIT_VR_BIG_ENDIAN => decode::native::decode_single_channel(
-        &self.image_pixel_module,
-        data,
-        frame_bit_offset,
-      ),
-
-      &RLE_LOSSLESS => decode::rle_lossless::decode_single_channel(
-        &self.image_pixel_module,
-        data,
-      ),
-
-      &JPEG_BASELINE_8BIT => {
-        decode::zune_jpeg::decode_single_channel(&self.image_pixel_module, data)
-      }
-
-      &JPEG_EXTENDED_12BIT => decode::libjpeg_12bit::decode_single_channel(
-        &self.image_pixel_module,
-        data,
-      ),
-
-      &JPEG_LOSSLESS_NON_HIERARCHICAL | &JPEG_LOSSLESS_NON_HIERARCHICAL_SV1 => {
-        decode::jpeg_decoder::decode_single_channel(
-          &self.image_pixel_module,
-          data,
-        )
-      }
-
-      &JPEG_2K
-      | &JPEG_2K_LOSSLESS_ONLY
-      | &HIGH_THROUGHPUT_JPEG_2K
-      | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
-      | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
-        decode::openjpeg::decode_single_channel(&self.image_pixel_module, data)
-      }
-
-      &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-        decode::jxl_oxide::decode_single_channel(&self.image_pixel_module, data)
-      }
-
-      #[cfg(not(target_arch = "wasm32"))]
-      &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-        decode::charls::decode_single_channel(&self.image_pixel_module, data)
-      }
-
-      &DEFLATED_IMAGE_FRAME_COMPRESSION => {
-        decode::native::decode_single_channel(
-          &self.image_pixel_module,
-          &self.inflate_frame_data(data)?,
-          0,
-        )
-      }
-
-      _ => Err(DataError::new_value_unsupported(format!(
-        "Transfer syntax '{}' is not able to be decoded",
-        self.transfer_syntax.name,
-      ))),
-    }
+    decode::decode_single_channel(
+      frame,
+      self.transfer_syntax,
+      &self.image_pixel_module,
+    )
   }
 
   /// Decodes a frame of color pixel data into a [`ColorImage`].
@@ -197,99 +145,6 @@ impl PixelDataRenderer {
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<ColorImage, DataError> {
-    let data = frame.combine_fragments();
-
-    use transfer_syntax::*;
-
-    match self.transfer_syntax {
-      &IMPLICIT_VR_LITTLE_ENDIAN
-      | &EXPLICIT_VR_LITTLE_ENDIAN
-      | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
-      | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-      | &EXPLICIT_VR_BIG_ENDIAN => {
-        decode::native::decode_color(&self.image_pixel_module, data)
-      }
-
-      &RLE_LOSSLESS => {
-        decode::rle_lossless::decode_color(&self.image_pixel_module, data)
-      }
-
-      &JPEG_BASELINE_8BIT => {
-        decode::zune_jpeg::decode_color(&self.image_pixel_module, data)
-      }
-
-      &JPEG_EXTENDED_12BIT => {
-        decode::libjpeg_12bit::decode_color(&self.image_pixel_module, data)
-      }
-
-      &JPEG_LOSSLESS_NON_HIERARCHICAL | &JPEG_LOSSLESS_NON_HIERARCHICAL_SV1 => {
-        decode::jpeg_decoder::decode_color(&self.image_pixel_module, data)
-      }
-
-      &JPEG_2K
-      | &JPEG_2K_LOSSLESS_ONLY
-      | &HIGH_THROUGHPUT_JPEG_2K
-      | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
-      | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
-        decode::openjpeg::decode_color(&self.image_pixel_module, data)
-      }
-
-      &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-        decode::jxl_oxide::decode_color(&self.image_pixel_module, data)
-      }
-
-      #[cfg(not(target_arch = "wasm32"))]
-      &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-        decode::charls::decode_color(&self.image_pixel_module, data)
-      }
-
-      &DEFLATED_IMAGE_FRAME_COMPRESSION => decode::native::decode_color(
-        &self.image_pixel_module,
-        &self.inflate_frame_data(data)?,
-      ),
-
-      _ => Err(DataError::new_value_unsupported(format!(
-        "Transfer syntax '{}' is not able to be decoded",
-        self.transfer_syntax.name
-      ))),
-    }
-  }
-
-  /// Inflates deflated data for a single frame. This is used by the 'Deflated
-  /// Image Frame Compression' transfer syntax.
-  ///
-  fn inflate_frame_data(&self, data: &[u8]) -> Result<Vec<u8>, DataError> {
-    let mut decompressor = flate2::Decompress::new(false);
-    let mut inflated_data =
-      vec![0u8; self.image_pixel_module.frame_size_in_bytes()];
-
-    match decompressor.decompress(
-      data,
-      &mut inflated_data,
-      flate2::FlushDecompress::Finish,
-    ) {
-      Ok(status) => {
-        if status != flate2::Status::StreamEnd {
-          return Err(DataError::new_value_invalid(
-            "Frame data inflate did not reach the end of the stream"
-              .to_string(),
-          ));
-        }
-
-        if decompressor.total_out() != inflated_data.len() as u64 {
-          return Err(DataError::new_value_invalid(format!(
-            "Frame data inflate produced {} bytes but {} bytes were expected",
-            decompressor.total_out(),
-            inflated_data.len()
-          )));
-        }
-
-        Ok(inflated_data)
-      }
-
-      Err(_) => Err(DataError::new_value_invalid(
-        "Frame data inflate failed".to_string(),
-      )),
-    }
+    decode::decode_color(frame, self.transfer_syntax, &self.image_pixel_module)
   }
 }

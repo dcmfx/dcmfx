@@ -227,7 +227,7 @@ fn write_frame(
   use stream <- result.try(file_stream.open_write(filename))
 
   let fragments = case pixel_data_frame.bit_offset(frame) {
-    0 -> pixel_data_frame.fragments(frame)
+    0 -> pixel_data_frame.chunks(frame)
     _ -> [pixel_data_frame.to_bytes(frame)]
   }
 

@@ -5,7 +5,10 @@ use dcmfx_core::DataError;
 
 use crate::{
   GrayscalePipeline,
-  iods::voi_lut_module::{VoiLutFunction, VoiWindow},
+  iods::{
+    image_pixel_module::BitsAllocated,
+    voi_lut_module::{VoiLutFunction, VoiWindow},
+  },
 };
 
 /// A single channel image that stores an integer value for each pixel.
@@ -20,7 +23,7 @@ pub struct SingleChannelImage {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum SingleChannelImageData {
+pub enum SingleChannelImageData {
   Bitmap { data: Vec<u8>, is_signed: bool },
   I8(Vec<i8>),
   U8(Vec<u8>),
@@ -260,10 +263,43 @@ impl SingleChannelImage {
     self.height
   }
 
+  /// Returns the internal data of this single channel image.
+  ///
+  pub fn data(&self) -> &SingleChannelImageData {
+    &self.data
+  }
+
   /// Returns the total number of pixels in this single channel image.
   ///
   pub fn pixel_count(&self) -> usize {
     usize::from(self.width()) * usize::from(self.height())
+  }
+
+  /// Returns the number of bits allocated for each stored value.
+  ///
+  pub fn bits_allocated(&self) -> BitsAllocated {
+    match self.data {
+      SingleChannelImageData::Bitmap { .. } => BitsAllocated::One,
+
+      SingleChannelImageData::I8(..) | SingleChannelImageData::U8(..) => {
+        BitsAllocated::Eight
+      }
+
+      SingleChannelImageData::I16(..) | SingleChannelImageData::U16(..) => {
+        BitsAllocated::Sixteen
+      }
+
+      SingleChannelImageData::I32(..) | SingleChannelImageData::U32(..) => {
+        BitsAllocated::ThirtyTwo
+      }
+    }
+  }
+
+  /// Returns the number of bits stored for each stored value. This will never
+  /// exceed the number of bits allocated.
+  ///
+  pub fn bits_stored(&self) -> u16 {
+    self.bits_stored
   }
 
   /// Returns whether this single channel image stores signed pixel data.

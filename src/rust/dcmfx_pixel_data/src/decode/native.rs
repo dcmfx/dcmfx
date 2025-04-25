@@ -313,6 +313,16 @@ pub fn decode_color(
       ) => {
         let mut pixels = vec![0u16; pixel_count];
 
+        #[cfg(target_endian = "little")]
+        unsafe {
+          core::ptr::copy_nonoverlapping(
+            data.as_ptr(),
+            pixels.as_mut_ptr() as *mut u8,
+            pixels.len() * core::mem::size_of::<u16>(),
+          );
+        }
+
+        #[cfg(target_endian = "big")]
         for i in 0..pixel_count {
           pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
         }
@@ -354,6 +364,16 @@ pub fn decode_color(
           (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
             let mut pixels = vec![0u16; pixel_count * 3];
 
+            #[cfg(target_endian = "little")]
+            unsafe {
+              core::ptr::copy_nonoverlapping(
+                data.as_ptr(),
+                pixels.as_mut_ptr() as *mut u8,
+                pixels.len() * core::mem::size_of::<u16>(),
+              );
+            }
+
+            #[cfg(target_endian = "big")]
             for i in 0..(pixel_count * 3) {
               pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
             }
@@ -364,6 +384,16 @@ pub fn decode_color(
           (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
             let mut pixels = vec![0u32; pixel_count * 3];
 
+            #[cfg(target_endian = "little")]
+            unsafe {
+              core::ptr::copy_nonoverlapping(
+                data.as_ptr(),
+                pixels.as_mut_ptr() as *mut u8,
+                pixels.len() * core::mem::size_of::<u32>(),
+              );
+            }
+
+            #[cfg(target_endian = "big")]
             for i in 0..(pixel_count * 3) {
               pixels[i] = u32::from_le_bytes([
                 data[i * 4],

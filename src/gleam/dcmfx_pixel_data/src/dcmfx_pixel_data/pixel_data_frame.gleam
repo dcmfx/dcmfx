@@ -1,12 +1,10 @@
-//// Defines a single frame of pixel data in its raw form.
-////
-//// The data will be native, RLE encoded, or using an encapsulated transfer
-//// syntax, but the details of how it is encoded are not a concern of
-//// `PixelDataFrame`.
+//// Holds a single frame of pixel data in its raw form. Details of how to
+//// read or interpret the data are not a concern of `PixelDataFrame`.
 
 import gleam/bit_array
 import gleam/int
 import gleam/list
+import gleam/option.{type Option, None, Some}
 
 /// A single frame of pixel data. This is made up of a one or more bit arrays,
 /// which avoids copying of data.
@@ -15,49 +13,58 @@ import gleam/list
 ///
 pub opaque type PixelDataFrame {
   PixelDataFrame(
-    frame_index: Int,
-    fragments: List(BitArray),
-    length: Int,
+    frame_index: Option(Int),
+    chunks: List(BitArray),
+    length_in_bits: Int,
     bit_offset: Int,
   )
 }
 
 /// Creates a new empty frame of pixel data.
 ///
-pub fn new(frame_index: Int) -> PixelDataFrame {
-  PixelDataFrame(frame_index:, fragments: [], length: 0, bit_offset: 0)
+pub fn new() -> PixelDataFrame {
+  PixelDataFrame(
+    frame_index: None,
+    chunks: [],
+    length_in_bits: 0,
+    bit_offset: 0,
+  )
 }
 
 /// Returns the index of this frame, i.e. 0 for the first frame in its DICOM
-/// data set, 1 for the second frame, etc.
+/// data set, 1 for the second frame, etc. Returns `None` if the frame's index
+/// hasn't been set.
 ///
-pub fn index(frame: PixelDataFrame) -> Int {
+pub fn index(frame: PixelDataFrame) -> Option(Int) {
   frame.frame_index
 }
 
-/// Adds the next fragment of pixel data to this frame.
+/// Sets the index of this frame.
 ///
-@internal
-pub fn push_fragment(frame: PixelDataFrame, data: BitArray) -> PixelDataFrame {
+pub fn set_index(frame: PixelDataFrame, index: Int) -> PixelDataFrame {
+  PixelDataFrame(..frame, frame_index: Some(index))
+}
+
+/// Adds the next chunk of pixel data to this frame.
+///
+pub fn push_chunk(frame: PixelDataFrame, data: BitArray) -> PixelDataFrame {
   PixelDataFrame(
     ..frame,
-    fragments: [data, ..frame.fragments],
-    length: frame.length + bit_array.byte_size(data),
+    chunks: [data, ..frame.chunks],
+    length_in_bits: frame.length_in_bits + bit_array.bit_size(data),
   )
 }
 
 /// The size in bytes of this frame of pixel data.
 ///
 pub fn length(frame: PixelDataFrame) -> Int {
-  frame.length
+  { length_in_bits(frame) + 7 } / 8
 }
 
-/// The size in bits of this frame of pixel data. This takes into account the
-/// frame's bit offset, i.e. the number of high bits in the first byte that
-/// aren't used.
+/// The size in bits of this frame of pixel data.
 ///
 pub fn length_in_bits(frame: PixelDataFrame) -> Int {
-  int.max(frame.length * 8 - frame.bit_offset, 0)
+  int.max(0, frame.length_in_bits - frame.bit_offset)
 }
 
 /// Returns the bit offset for this frame.
@@ -80,21 +87,20 @@ pub fn set_bit_offset(frame: PixelDataFrame, bit_offset: Int) {
 /// Returns whether this frame of pixel data is empty.
 ///
 pub fn is_empty(frame: PixelDataFrame) -> Bool {
-  frame.length == 0
+  length_in_bits(frame) == 0
 }
 
-/// Returns the fragments of binary data that make up this frame of pixel
-/// data.
+/// Returns the chunks of binary data that make up this frame of pixel data.
 ///
-pub fn fragments(frame: PixelDataFrame) -> List(BitArray) {
-  frame.fragments |> list.reverse
+pub fn chunks(frame: PixelDataFrame) -> List(BitArray) {
+  frame.chunks |> list.reverse
 }
 
 /// Removes `count` bytes from the end of this frame of pixel data.
 ///
 @internal
 pub fn drop_end_bytes(frame: PixelDataFrame, count: Int) -> PixelDataFrame {
-  let target_length = int.max(0, frame.length - count)
+  let target_length = int.max(0, length_in_bits(frame) - count * 8)
 
   do_drop_end_bytes(frame, target_length)
 }
@@ -103,30 +109,29 @@ fn do_drop_end_bytes(
   frame: PixelDataFrame,
   target_length: Int,
 ) -> PixelDataFrame {
-  case frame.length > target_length {
+  case length_in_bits(frame) > target_length {
     True ->
-      case frame.fragments {
-        [fragment, ..fragments] -> {
-          let length = frame.length - bit_array.byte_size(fragment)
+      case frame.chunks {
+        [chunk, ..chunks] -> {
+          let length_in_bits = length_in_bits(frame) - bit_array.bit_size(chunk)
 
           // If this frame is now too short then restore it, but with a sliced
-          // final fragment that exactly meets the target length
-          case length < target_length {
+          // final chunk that exactly meets the target length
+          case length_in_bits < target_length {
             True -> {
-              let fragment_length = target_length - length
+              let chunk_length = target_length - length_in_bits
 
-              let assert Ok(new_fragment) =
-                bit_array.slice(fragment, 0, fragment_length)
+              let assert <<new_chunk:bits-size(chunk_length), _:bits>> = chunk
 
               PixelDataFrame(
                 ..frame,
-                fragments: [new_fragment, ..fragments],
-                length: target_length,
+                chunks: [new_chunk, ..chunks],
+                length_in_bits: target_length,
               )
             }
 
             False ->
-              PixelDataFrame(..frame, fragments:, length:)
+              PixelDataFrame(..frame, chunks:, length_in_bits:)
               |> do_drop_end_bytes(target_length)
           }
         }
@@ -140,12 +145,12 @@ fn do_drop_end_bytes(
 
 /// Converts this frame of pixel data to a single contiguous bit array. This may
 /// require copying the pixel data into a new contiguous buffer, so accessing
-/// the individual fragments is preferred when possible.
+/// the individual chunks is preferred when possible.
 ///
 pub fn to_bytes(frame: PixelDataFrame) -> BitArray {
-  let bytes = case frame.fragments {
-    [fragment] -> fragment
-    fragments -> fragments |> list.reverse |> bit_array.concat
+  let bytes = case frame.chunks {
+    [chunk] -> chunk
+    chunks -> chunks |> list.reverse |> bit_array.concat
   }
 
   case frame.bit_offset {

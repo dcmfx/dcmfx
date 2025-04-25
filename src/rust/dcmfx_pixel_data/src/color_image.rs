@@ -6,9 +6,12 @@ use alloc::{rc::Rc, string::ToString, vec::Vec};
 
 use dcmfx_core::DataError;
 
-use crate::{iods::PaletteColorLookupTableModule, utils::udiv_round};
+use crate::{
+  iods::{PaletteColorLookupTableModule, image_pixel_module::BitsAllocated},
+  utils::udiv_round,
+};
 
-/// A color image that stores RGB or YBR color values for each pixel.
+/// A color image that stores an RGB, YBR, or palette color for each pixel.
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColorImage {
@@ -19,7 +22,7 @@ pub struct ColorImage {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum ColorImageData {
+pub enum ColorImageData {
   U8 {
     data: Vec<u8>,
     color_space: ColorSpace,
@@ -220,10 +223,52 @@ impl ColorImage {
     self.height
   }
 
+  /// Returns the internal data of this color image.
+  ///
+  pub fn data(&self) -> &ColorImageData {
+    &self.data
+  }
+
   /// Returns the total number of pixels in this color image.
   ///
   pub fn pixel_count(&self) -> usize {
     usize::from(self.width) * usize::from(self.height)
+  }
+
+  /// Returns the number of samples stored per pixel. This is three except for
+  /// palette colors, where there is one sample per pixel.
+  ///
+  pub fn samples_per_pixel(&self) -> usize {
+    match self.data {
+      ColorImageData::U8 { .. }
+      | ColorImageData::U16 { .. }
+      | ColorImageData::U32 { .. } => 3,
+
+      ColorImageData::PaletteU8 { .. } | ColorImageData::PaletteU16 { .. } => 1,
+    }
+  }
+
+  /// Returns the number of bits allocated for each sample.
+  ///
+  pub fn bits_allocated(&self) -> BitsAllocated {
+    match self.data {
+      ColorImageData::U8 { .. } | ColorImageData::PaletteU8 { .. } => {
+        BitsAllocated::Eight
+      }
+
+      ColorImageData::U16 { .. } | ColorImageData::PaletteU16 { .. } => {
+        BitsAllocated::Sixteen
+      }
+
+      ColorImageData::U32 { .. } => BitsAllocated::ThirtyTwo,
+    }
+  }
+
+  /// Returns the number of bits stored for each sample. This will never exceed
+  /// the number of bits allocated.
+  ///
+  pub fn bits_stored(&self) -> u16 {
+    self.bits_stored
   }
 
   /// Returns the maximum value that can be stored, based on the number of bits

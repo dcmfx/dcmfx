@@ -293,12 +293,13 @@ fn process_next_pixel_data_token(
             filter.pixel_data
             |> deque.to_list
             |> list.fold(
-              pixel_data_frame.new(frame_index),
+              pixel_data_frame.new()
+                |> pixel_data_frame.set_index(frame_index),
               fn(frame, pixel_data) {
                 let offset = pixel_data.1
                 let assert <<_:size(offset), fragment:bits>> = pixel_data.0
 
-                pixel_data_frame.push_fragment(frame, fragment)
+                pixel_data_frame.push_chunk(frame, fragment)
               },
             )
 
@@ -393,7 +394,8 @@ fn get_pending_native_frames(
         P10PixelDataFrameFilter(..filter, next_frame_index: frame_index + 1)
 
       let frame =
-        pixel_data_frame.new(frame_index)
+        pixel_data_frame.new()
+        |> pixel_data_frame.set_index(frame_index)
         |> pixel_data_frame.set_bit_offset(filter.pixel_data_read_offset % 8)
 
       let #(frame, filter) = get_pending_native_frame(filter, frame)
@@ -403,9 +405,8 @@ fn get_pending_native_frames(
       // case of 1bpp pixel data when there are unused bits at the end of the
       // data and there are enough unused bits to contain data for one or more
       // frames. This can occur when the size of a single frame is <= 7 bits.
-      let frames = case
-        pixel_data_frame.index(frame) < get_number_of_frames(filter)
-      {
+      let assert Some(frame_index) = pixel_data_frame.index(frame)
+      let frames = case frame_index < get_number_of_frames(filter) {
         True -> [frame, ..frames]
         False -> frames
       }
@@ -435,7 +436,7 @@ fn get_pending_native_frame(
         // to the frame
         True -> {
           let assert <<_:size(chunk_offset), fragment:bits>> = chunk
-          let frame = pixel_data_frame.push_fragment(frame, fragment)
+          let frame = pixel_data_frame.push_chunk(frame, fragment)
 
           let filter =
             P10PixelDataFrameFilter(
@@ -464,7 +465,7 @@ fn get_pending_native_frame(
             _:bits,
           >> = chunk
 
-          let frame = frame |> pixel_data_frame.push_fragment(fragment)
+          let frame = frame |> pixel_data_frame.push_chunk(fragment)
 
           // Put the unused part of the chunk back on so it can be used by the
           // next frame
@@ -536,9 +537,10 @@ fn get_pending_encapsulated_frames(
                 filter.pixel_data
                 |> deque.to_list
                 |> list.fold(
-                  pixel_data_frame.new(frame_index),
+                  pixel_data_frame.new()
+                    |> pixel_data_frame.set_index(frame_index),
                   fn(frame, chunk) {
-                    pixel_data_frame.push_fragment(frame, chunk.0)
+                    pixel_data_frame.push_chunk(frame, chunk.0)
                   },
                 )
 
@@ -589,7 +591,8 @@ fn get_pending_encapsulated_frames_using_offset_table(
       let #(frame, filter) =
         get_pending_encapsulated_frame(
           filter,
-          pixel_data_frame.new(frame_index),
+          pixel_data_frame.new()
+            |> pixel_data_frame.set_index(frame_index),
           offset * 8,
         )
 
@@ -632,7 +635,7 @@ fn get_pending_encapsulated_frame(
     True ->
       case deque.pop_front(filter.pixel_data) {
         Ok(#(#(chunk, _), pixel_data)) -> {
-          let frame = frame |> pixel_data_frame.push_fragment(chunk)
+          let frame = frame |> pixel_data_frame.push_chunk(chunk)
           let pixel_data_read_offset =
             filter.pixel_data_read_offset
             + { 8 + bit_array.byte_size(chunk) }

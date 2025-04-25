@@ -12,8 +12,8 @@ use alloc::{vec, vec::Vec};
 mod no_std_allocator;
 
 mod color_image;
-mod decode;
-mod encode;
+pub mod decode;
+pub mod encode;
 mod grayscale_pipeline;
 pub mod iods;
 mod lookup_table;
@@ -26,6 +26,7 @@ mod stored_value_output_cache;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
+pub use encode::PixelDataEncodeError;
 pub use grayscale_pipeline::GrayscalePipeline;
 pub use lookup_table::LookupTable;
 pub use p10_pixel_data_frame_filter::{
@@ -558,10 +559,10 @@ mod tests {
   }
 
   fn frame_with_fragments(fragments: &[&[u8]]) -> PixelDataFrame {
-    let mut frame = PixelDataFrame::new(0);
+    let mut frame = PixelDataFrame::new();
 
     for fragment in fragments.iter() {
-      frame.push_fragment(fragment.to_vec().into());
+      frame.push_bytes(fragment.to_vec().into());
     }
 
     frame

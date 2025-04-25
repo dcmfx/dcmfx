@@ -523,6 +523,7 @@ dependencies = [
  "jxl-oxide",
  "miniz_oxide",
  "num-traits",
+ "rand 0.9.0",
  "wasm32-unknown-unknown-openbsd-libc",
  "zune-core 0.4.11",
  "zune-jpeg 0.4.14 (git+https://github.com/dcmfx/zune-image.git?rev=1ed929f)",
