@@ -102,7 +102,9 @@ impl P10JsonTransform {
         .begin(data_set, stream)
         .map_err(JsonSerializeError::IOError),
 
-      P10Token::DataElementHeader { tag, vr, length } => {
+      P10Token::DataElementHeader {
+        tag, vr, length, ..
+      } => {
         self
           .write_data_element_header(*tag, *vr, *length, stream)
           .map_err(JsonSerializeError::IOError)?;
@@ -136,7 +138,7 @@ impl P10JsonTransform {
         Ok(())
       }
 
-      P10Token::SequenceStart { tag, vr } => {
+      P10Token::SequenceStart { tag, vr, .. } => {
         self.write_sequence_start(*tag, *vr, stream)?;
 
         self.sequence_item_counts.push(0);

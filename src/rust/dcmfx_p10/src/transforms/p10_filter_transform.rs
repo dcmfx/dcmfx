@@ -17,7 +17,6 @@ use crate::{P10Error, P10Token};
 ///
 pub struct P10FilterTransform {
   predicate: Box<PredicateFunction>,
-  path: DataSetPath,
   path_filter_results: Vec<bool>,
 }
 
@@ -41,7 +40,6 @@ impl P10FilterTransform {
   pub fn new(predicate: Box<PredicateFunction>) -> Self {
     Self {
       predicate,
-      path: DataSetPath::new(),
       path_filter_results: vec![],
     }
   }
@@ -50,7 +48,7 @@ impl P10FilterTransform {
   /// data set, i.e. there are no nested sequences currently active.
   ///
   pub fn is_at_root(&self) -> bool {
-    self.path.is_empty()
+    self.path_filter_results.len() <= 1
   }
 
   /// Adds the next token to the P10 filter transform and returns whether it
@@ -60,81 +58,90 @@ impl P10FilterTransform {
     let current_filter_state =
       *self.path_filter_results.last().unwrap_or(&true);
 
-    let map_data_set_path_error = |details: String| -> P10Error {
-      P10Error::TokenStreamInvalid {
-        when: "Filtering P10 token stream".to_string(),
-        details,
-        token: token.clone(),
-      }
-    };
+    let mut run_predicate = |tag, vr, length, path| -> Result<bool, P10Error> {
+      let filter_result = match self.path_filter_results.as_slice() {
+        [] | [.., true] => (self.predicate)(tag, vr, length, path),
 
-    let mut run_predicate =
-      |tag, vr, length: Option<u32>| -> Result<bool, P10Error> {
-        let filter_result = match self.path_filter_results.as_slice() {
-          [] | [.., true] => (self.predicate)(tag, vr, length, &self.path),
-
-          // The predicate function is skipped if a parent has already been
-          // filtered out
-          _ => false,
-        };
-
-        self
-          .path
-          .add_data_element(tag)
-          .map_err(map_data_set_path_error)?;
-
-        self.path_filter_results.push(filter_result);
-
-        Ok(filter_result)
+        // The predicate function is skipped if a parent has already been
+        // filtered out
+        _ => false,
       };
 
+      self.path_filter_results.push(filter_result);
+
+      Ok(filter_result)
+    };
+
     match token {
-      // If this is a new sequence or data element then run the predicate
-      // function to see if it passes the filter
-      P10Token::SequenceStart { tag, vr } => run_predicate(*tag, *vr, None),
-      P10Token::DataElementHeader { tag, vr, length } => {
-        run_predicate(*tag, *vr, Some(*length))
+      P10Token::FilePreambleAndDICMPrefix { .. }
+      | P10Token::FileMetaInformation { .. } => Ok(true),
+
+      P10Token::SequenceStart { tag, vr, path } => {
+        run_predicate(*tag, *vr, None, path)
       }
 
-      P10Token::SequenceItemStart { index } => {
+      P10Token::SequenceDelimiter { .. } => {
         self
-          .path
-          .add_sequence_item(*index)
-          .map_err(map_data_set_path_error)?;
+          .path_filter_results
+          .pop()
+          .ok_or(P10Error::TokenStreamInvalid {
+            when: "Adding token to filter transform".to_string(),
+            details: "".to_string(),
+            token: token.clone(),
+          })?;
 
         Ok(current_filter_state)
       }
 
-      P10Token::SequenceItemDelimiter => {
-        self.path.pop().map_err(map_data_set_path_error)?;
-
-        Ok(current_filter_state)
-      }
-
-      // If this is a new pixel data item then add it to the location
-      P10Token::PixelDataItem { index, .. } => {
-        self
-          .path
-          .add_sequence_item(*index)
-          .map_err(map_data_set_path_error)?;
-
+      P10Token::SequenceItemStart { .. } => {
         self.path_filter_results.push(current_filter_state);
 
         Ok(current_filter_state)
       }
 
-      // Detect the end of the entry at the head of the location and pop it off
-      P10Token::SequenceDelimiter { .. }
-      | P10Token::DataElementValueBytes {
-        bytes_remaining: 0, ..
-      } => {
-        self.path.pop().map_err(map_data_set_path_error)?;
-        self.path_filter_results.pop().unwrap();
+      P10Token::SequenceItemDelimiter => {
+        self
+          .path_filter_results
+          .pop()
+          .ok_or(P10Error::TokenStreamInvalid {
+            when: "Adding token to filter transform".to_string(),
+            details: "".to_string(),
+            token: token.clone(),
+          })?;
 
         Ok(current_filter_state)
       }
 
-      _ => Ok(current_filter_state),
+      P10Token::DataElementHeader {
+        tag,
+        vr,
+        length,
+        path,
+      } => run_predicate(*tag, *vr, Some(*length), path),
+
+      P10Token::DataElementValueBytes {
+        bytes_remaining, ..
+      } => {
+        if *bytes_remaining == 0 {
+          self.path_filter_results.pop().ok_or(
+            P10Error::TokenStreamInvalid {
+              when: "Adding token to filter transform".to_string(),
+              details: "".to_string(),
+              token: token.clone(),
+            },
+          )?;
+        }
+
+        Ok(current_filter_state)
+      }
+
+      P10Token::PixelDataItem { .. } => {
+        self.path_filter_results.push(current_filter_state);
+
+        Ok(current_filter_state)
+      }
+
+      P10Token::End => Ok(true),
     }
   }
 }

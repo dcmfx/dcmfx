@@ -65,7 +65,9 @@ impl P10PrintTransform {
         s
       }
 
-      P10Token::DataElementHeader { tag, vr, length } => {
+      P10Token::DataElementHeader {
+        tag, vr, length, ..
+      } => {
         let (s, width) = data_set::print::format_data_element_prefix(
           *tag,
           self.private_creators.last().unwrap().tag_name(*tag),
@@ -124,7 +126,7 @@ impl P10PrintTransform {
         )
       }
 
-      P10Token::SequenceStart { tag, vr } => {
+      P10Token::SequenceStart { tag, vr, .. } => {
         let mut s = data_set::print::format_data_element_prefix(
           *tag,
           self.private_creators.last().unwrap().tag_name(*tag),

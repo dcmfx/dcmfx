@@ -324,7 +324,7 @@ impl DataSetBuilder {
 
       // If this token indicates the start of a new sequence then update the
       // current location accordingly
-      P10Token::SequenceStart { tag, vr } => {
+      P10Token::SequenceStart { tag, vr, .. } => {
         let new_location = match vr {
           ValueRepresentation::OtherByteString
           | ValueRepresentation::OtherWordString => {

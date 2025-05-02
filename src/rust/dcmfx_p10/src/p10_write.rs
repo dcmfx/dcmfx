@@ -403,7 +403,9 @@ impl P10WriteContext {
         Ok(fmi_bytes.into())
       }
 
-      P10Token::DataElementHeader { tag, vr, length } => {
+      P10Token::DataElementHeader {
+        tag, vr, length, ..
+      } => {
         let vr = match self.transfer_syntax.vr_serialization {
           transfer_syntax::VrSerialization::VrExplicit => Some(*vr),
           transfer_syntax::VrSerialization::VrImplicit => None,
@@ -432,7 +434,7 @@ impl P10WriteContext {
         }
       }
 
-      P10Token::SequenceStart { tag, vr } => {
+      P10Token::SequenceStart { tag, vr, .. } => {
         let vr = match self.transfer_syntax.vr_serialization {
           transfer_syntax::VrSerialization::VrExplicit => Some(*vr),
           transfer_syntax::VrSerialization::VrImplicit => None,
@@ -583,6 +585,7 @@ impl Default for P10WriteContext {
 ///
 pub fn data_set_to_tokens<E>(
   data_set: &DataSet,
+  path: &DataSetPath,
   token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
 ) -> Result<(), E> {
   // Create filter transform that removes File Meta Information data elements
@@ -632,7 +635,7 @@ pub fn data_set_to_tokens<E>(
   process_token(&fmi_token)?;
 
   // Write main data set
-  p10_token::data_elements_to_tokens(data_set, &mut process_token)?;
+  p10_token::data_elements_to_tokens(data_set, path, &mut process_token)?;
 
   // Write end token
   process_token(&P10Token::End)
@@ -643,6 +646,7 @@ pub fn data_set_to_tokens<E>(
 ///
 pub fn data_set_to_bytes(
   data_set: &DataSet,
+  path: &DataSetPath,
   bytes_callback: &mut impl FnMut(RcByteSlice) -> Result<(), P10Error>,
   config: &P10WriteConfig,
 ) -> Result<(), P10Error> {
@@ -660,7 +664,7 @@ pub fn data_set_to_bytes(
     Ok(())
   };
 
-  data_set_to_tokens(data_set, &mut process_token)
+  data_set_to_tokens(data_set, path, &mut process_token)
 }
 
 /// Sets the *'(0002,0001) File Meta Information Version'*, *'(0002,0012)

@@ -63,10 +63,14 @@ impl DataSetPath {
     self.0.len()
   }
 
-  /// Returns whether a data set path has no entries.
+  /// Returns whether a data set path is currently empty or pointing to a
+  /// root-level data element.
   ///
-  pub fn is_empty(&self) -> bool {
-    self.0.is_empty()
+  pub fn is_root(&self) -> bool {
+    matches!(
+      self.0.as_slice(),
+      [] | [DataSetPathEntry::DataElement { .. }]
+    )
   }
 
   /// Returns the number of sequence items present in a data set path.

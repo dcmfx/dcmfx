@@ -10,8 +10,8 @@ use alloc::{
 };
 
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataSet, RcByteSlice, ValueRepresentation,
-  dictionary,
+  DataElementTag, DataElementValue, DataSet, DataSetPath, RcByteSlice,
+  ValueRepresentation, dictionary,
 };
 
 use crate::internal::{
@@ -46,6 +46,7 @@ pub enum P10Token {
     tag: DataElementTag,
     vr: ValueRepresentation,
     length: u32,
+    path: DataSetPath,
   },
 
   /// Raw data for the value of the current data element. Data element values
@@ -66,6 +67,7 @@ pub enum P10Token {
   SequenceStart {
     tag: DataElementTag,
     vr: ValueRepresentation,
+    path: DataSetPath,
   },
 
   /// The end of the current sequence.
@@ -117,7 +119,9 @@ impl core::fmt::Display for P10Token {
         )
       }
 
-      P10Token::DataElementHeader { tag, vr, length } => format!(
+      P10Token::DataElementHeader {
+        tag, vr, length, ..
+      } => format!(
         "DataElementHeader: {}, name: {}, vr: {}, length: {} bytes",
         tag,
         dictionary::tag_name(*tag, None),
@@ -135,7 +139,7 @@ impl core::fmt::Display for P10Token {
         bytes_remaining
       ),
 
-      P10Token::SequenceStart { tag, vr } => format!(
+      P10Token::SequenceStart { tag, vr, .. } => format!(
         "SequenceStart: {}, name: {}, vr: {}",
         tag,
         dictionary::tag_name(*tag, None),
@@ -181,10 +185,14 @@ impl P10Token {
 ///
 pub fn data_elements_to_tokens<E>(
   data_set: &DataSet,
+  path: &DataSetPath,
   token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
 ) -> Result<(), E> {
   for (tag, value) in data_set.iter() {
-    data_element_to_tokens(*tag, value, token_callback)?;
+    let mut path = path.clone();
+    path.add_data_element(*tag).unwrap();
+
+    data_element_to_tokens(*tag, value, &path, token_callback)?;
   }
 
   Ok(())
@@ -196,6 +204,7 @@ pub fn data_elements_to_tokens<E>(
 pub fn data_element_to_tokens<E>(
   tag: DataElementTag,
   value: &DataElementValue,
+  path: &DataSetPath,
   token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
 ) -> Result<(), E> {
   let vr = value.value_representation();
@@ -206,6 +215,7 @@ pub fn data_element_to_tokens<E>(
       tag,
       vr,
       length: bytes.len() as u32,
+      path: path.clone(),
     };
     token_callback(&header_token)?;
 
@@ -222,7 +232,11 @@ pub fn data_element_to_tokens<E>(
   // For encapsulated pixel data, write all of the items individually,
   // followed by a sequence delimiter
   if let Ok(items) = value.encapsulated_pixel_data() {
-    let header_token = P10Token::SequenceStart { tag, vr };
+    let header_token = P10Token::SequenceStart {
+      tag,
+      vr,
+      path: path.clone(),
+    };
     token_callback(&header_token)?;
 
     for (index, item) in items.iter().enumerate() {
@@ -249,14 +263,21 @@ pub fn data_element_to_tokens<E>(
   // For sequences, write the item data sets recursively, followed by a
   // sequence delimiter
   if let Ok(items) = value.sequence_items() {
-    let header_token = P10Token::SequenceStart { tag, vr };
+    let header_token = P10Token::SequenceStart {
+      tag,
+      vr,
+      path: path.clone(),
+    };
     token_callback(&header_token)?;
 
     for (index, item) in items.iter().enumerate() {
       let item_start_token = P10Token::SequenceItemStart { index };
       token_callback(&item_start_token)?;
 
-      data_elements_to_tokens(item, token_callback)?;
+      let mut path = path.clone();
+      path.add_sequence_item(index).unwrap();
+
+      data_elements_to_tokens(item, &path, token_callback)?;
 
       // Write delimiter for the item
       let item_delimiter_token = P10Token::SequenceItemDelimiter;

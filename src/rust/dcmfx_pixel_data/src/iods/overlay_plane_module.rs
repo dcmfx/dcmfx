@@ -27,7 +27,7 @@ impl IodModule for OverlayPlaneModule {
     _length: Option<u32>,
     path: &DataSetPath,
   ) -> bool {
-    if !path.is_empty() {
+    if !path.is_root() {
       return false;
     }
 
@@ -299,7 +299,7 @@ impl OverlayPlane {
       return Err(
         DataError::new_value_length_invalid(
           ValueRepresentation::SignedShort,
-          data.len(),
+          data.len() as u64,
           format!("Overlay Data should have length {}", expected_data_length,),
         )
         .with_path(&DataSetPath::new_with_data_element(data_tag)),

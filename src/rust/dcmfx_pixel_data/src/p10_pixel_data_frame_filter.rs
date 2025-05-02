@@ -135,7 +135,7 @@ impl P10PixelDataFrameFilter {
 
     let pixel_data_filter =
       P10FilterTransform::new(Box::new(|tag, _vr, _length, path| {
-        tag == dictionary::PIXEL_DATA.tag && path.is_empty()
+        tag == dictionary::PIXEL_DATA.tag && path.is_root()
       }));
 
     Self {

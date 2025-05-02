@@ -91,7 +91,7 @@ pub struct P10ReadConfig {
   /// By default the maximum sequence depth is set to ten thousand, i.e. no
   /// meaningful maximum is enforced.
   ///
-  pub max_sequence_depth: u32,
+  pub max_sequence_depth: usize,
 
   /// Whether to error if data elements are not in ascending order in the DICOM
   /// P10 data. Such data is malformed but is still able to read, however doing
@@ -137,7 +137,6 @@ pub struct P10ReadContext {
   transfer_syntax: &'static TransferSyntax,
   path: DataSetPath,
   location: P10Location,
-  sequence_depth: u32,
 }
 
 /// The next action specifies what will be attempted to be read next from a read
@@ -176,7 +175,6 @@ impl P10ReadContext {
       transfer_syntax: &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
       path: DataSetPath::new(),
       location: P10Location::new(),
-      sequence_depth: 0,
     }
   }
 
@@ -316,11 +314,6 @@ impl P10ReadContext {
 
     match self.location.next_delimiter_token(bytes_read) {
       Ok(token) => {
-        // Decrement the sequence depth if this is a sequence delimiter
-        if matches!(token, P10Token::SequenceDelimiter { .. }) {
-          self.sequence_depth -= 1;
-        }
-
         // Update current path
         if matches!(token, P10Token::SequenceDelimiter { .. })
           || token == P10Token::SequenceItemDelimiter
@@ -638,11 +631,6 @@ impl P10ReadContext {
       | (tag, Some(ValueRepresentation::Unknown), ValueLength::Undefined) => {
         self.check_data_element_ordering(&header)?;
 
-        let token = P10Token::SequenceStart {
-          tag,
-          vr: ValueRepresentation::Sequence,
-        };
-
         let ends_at = match header.length {
           ValueLength::Defined { length } => {
             Some(self.stream.bytes_read() + u64::from(length))
@@ -667,7 +655,7 @@ impl P10ReadContext {
           })?;
 
         // Check that the maximum sequence depth hasn't been reached
-        if self.sequence_depth >= self.config.max_sequence_depth {
+        if self.path.len() / 2 >= self.config.max_sequence_depth {
           return Err(P10Error::MaximumExceeded {
             details: "Maximum allowed sequence depth reached".to_string(),
             path: self.path.clone(),
@@ -678,7 +666,11 @@ impl P10ReadContext {
         // Add sequence to the path
         self.path.add_data_element(tag).unwrap();
 
-        self.sequence_depth += 1;
+        let token = P10Token::SequenceStart {
+          tag,
+          vr: ValueRepresentation::Sequence,
+          path: self.path.clone(),
+        };
 
         Ok(vec![token])
       }
@@ -718,8 +710,6 @@ impl P10ReadContext {
       {
         self.check_data_element_ordering(&header)?;
 
-        let token = P10Token::SequenceStart { tag, vr };
-
         self
           .location
           .add_sequence(tag, false, None)
@@ -734,6 +724,12 @@ impl P10ReadContext {
 
         self.next_action = NextAction::ReadPixelDataItem { vr };
 
+        let token = P10Token::SequenceStart {
+          tag,
+          vr,
+          path: self.path.clone(),
+        };
+
         Ok(vec![token])
       }
 
@@ -745,7 +741,6 @@ impl P10ReadContext {
         let tokens = match self.location.end_sequence() {
           Ok(tag) => {
             self.path.pop().unwrap();
-            self.sequence_depth -= 1;
 
             vec![P10Token::SequenceDelimiter { tag }]
           }
@@ -810,6 +805,7 @@ impl P10ReadContext {
 
         // Swallow the '(FFFC,FFFC) Data Set Trailing Padding' data element. No
         // tokens for it are emitted. Ref: PS3.10 7.2.
+        //
         // Also swallow group length tags that have an element of 0x0000.
         // Ref: PS3.5 7.2.
         let emit_tokens = header.tag
@@ -826,6 +822,7 @@ impl P10ReadContext {
             tag: header.tag,
             vr,
             length,
+            path: self.path.clone(),
           }]
         } else {
           vec![]
@@ -913,9 +910,10 @@ impl P10ReadContext {
     {
       return Err(P10Error::DataInvalid {
         when: "Reading data element header".to_string(),
-        details:
-          "File Meta Information data element found in the main data set"
-            .to_string(),
+        details: format!(
+          "File Meta Information data element '{}' found in the main data set",
+          tag
+        ),
         path: DataSetPath::new_with_data_element(tag),
         offset: self.stream.bytes_read(),
       });
@@ -1153,6 +1151,7 @@ impl P10ReadContext {
                 tag,
                 vr,
                 length: data.len() as u32,
+                path: self.path.clone(),
               });
             } else {
               return Err(P10Error::DataInvalid {

@@ -44,7 +44,7 @@ impl IodModule for ImagePixelModule {
     length: Option<u32>,
     path: &DataSetPath,
   ) -> bool {
-    if !path.is_empty() {
+    if !path.is_root() {
       return false;
     }
 

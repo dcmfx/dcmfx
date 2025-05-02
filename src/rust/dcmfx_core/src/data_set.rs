@@ -497,7 +497,7 @@ impl DataSet {
         DataElementValue::new_long_string(value)
       }
       ([ValueRepresentation::LongText], [value]) => {
-        DataElementValue::new_long_text(value.to_string())
+        DataElementValue::new_long_text(value)
       }
       ([ValueRepresentation::ShortString], _) => {
         DataElementValue::new_short_string(value)

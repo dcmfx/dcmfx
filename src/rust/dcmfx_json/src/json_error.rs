@@ -116,7 +116,7 @@ impl DcmfxError for JsonDeserializeError {
           lines.push(format!("  Name: {}", dictionary::tag_name(tag, None)));
         }
 
-        if !path.is_empty() {
+        if !path.is_root() {
           lines.push(format!("  Path: {}", path));
         }
 

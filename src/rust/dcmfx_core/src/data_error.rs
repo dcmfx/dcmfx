@@ -67,7 +67,7 @@ pub enum DataError {
   },
   ValueLengthInvalid {
     vr: ValueRepresentation,
-    length: usize,
+    length: u64,
     details: String,
     path: Option<DataSetPath>,
   },
@@ -153,7 +153,7 @@ impl DataError {
   ///
   pub fn new_value_length_invalid(
     vr: ValueRepresentation,
-    length: usize,
+    length: u64,
     details: String,
   ) -> Self {
     Self::ValueLengthInvalid {

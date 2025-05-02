@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
 
-use dcmfx_core::{DataElementTag, DataError, DataSet, IodModule};
+use dcmfx_core::{DataElementTag, DataError, DataSet, DcmfxError, IodModule};
 
 use crate::{DataSetBuilder, P10Error, P10FilterTransform, P10Token};
 
@@ -38,6 +38,24 @@ pub enum P10CustomTypeTransformError {
   /// An error that occurred when creating the custom type from the gathered
   /// data set.
   DataError(DataError),
+}
+
+impl core::fmt::Display for P10CustomTypeTransformError {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    match self {
+      Self::P10Error(e) => e.fmt(f),
+      Self::DataError(e) => e.fmt(f),
+    }
+  }
+}
+
+impl DcmfxError for P10CustomTypeTransformError {
+  fn to_lines(&self, task_description: &str) -> Vec<String> {
+    match self {
+      Self::P10Error(e) => e.to_lines(task_description),
+      Self::DataError(e) => e.to_lines(task_description),
+    }
+  }
 }
 
 impl<T> P10CustomTypeTransform<T> {

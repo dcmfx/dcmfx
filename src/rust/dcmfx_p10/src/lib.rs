@@ -56,7 +56,7 @@ pub type IoWrite = dyn Write;
 #[cfg(not(feature = "std"))]
 pub type IoError = String;
 
-use dcmfx_core::{DataSet, RcByteSlice};
+use dcmfx_core::{DataSet, DataSetPath, RcByteSlice};
 
 pub use data_set_builder::DataSetBuilder;
 pub use p10_error::P10Error;
@@ -422,7 +422,7 @@ impl DataSetP10Extensions for DataSet {
     &self,
     token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
   ) -> Result<(), E> {
-    p10_write::data_set_to_tokens(self, token_callback)
+    p10_write::data_set_to_tokens(self, &DataSetPath::new(), token_callback)
   }
 
   fn to_p10_bytes(
@@ -430,6 +430,11 @@ impl DataSetP10Extensions for DataSet {
     bytes_callback: &mut impl FnMut(RcByteSlice) -> Result<(), P10Error>,
     config: &P10WriteConfig,
   ) -> Result<(), P10Error> {
-    p10_write::data_set_to_bytes(self, bytes_callback, config)
+    p10_write::data_set_to_bytes(
+      self,
+      &DataSetPath::new(),
+      bytes_callback,
+      config,
+    )
   }
 }

@@ -583,7 +583,7 @@ impl DataElementValue {
 
   /// Creates a new `LongText` data element value.
   ///
-  pub fn new_long_text(value: String) -> Result<Self, DataError> {
+  pub fn new_long_text(value: &str) -> Result<Self, DataError> {
     let vr = ValueRepresentation::LongText;
 
     let mut bytes = value.trim_end_matches(' ').to_string().into_bytes();
@@ -1404,7 +1404,7 @@ impl DataElementValue {
         if value_length != 6 {
           return Err(DataError::new_value_length_invalid(
             *vr,
-            value_length,
+            value_length as u64,
             "Lookup table descriptor length must be exactly 6 bytes"
               .to_string(),
           ));
@@ -1424,7 +1424,7 @@ impl DataElementValue {
         if value_length > bytes_max {
           return Err(DataError::new_value_length_invalid(
             *vr,
-            value_length,
+            value_length as u64,
             format!("Must not exceed {} bytes", bytes_max),
           ));
         }
@@ -1432,7 +1432,7 @@ impl DataElementValue {
         if value_length % bytes_multiple_of != 0 {
           return Err(DataError::new_value_length_invalid(
             *vr,
-            value_length,
+            value_length as u64,
             format!("Must be a multiple of {} bytes", bytes_multiple_of),
           ));
         }
@@ -1445,7 +1445,7 @@ impl DataElementValue {
           if item_length > 0xFFFFFFFE {
             return Err(DataError::new_value_length_invalid(
               *vr,
-              item_length,
+              item_length as u64,
               format!("Must not exceed {} bytes", 0xFFFFFFFEu32),
             ));
           }
@@ -1453,7 +1453,7 @@ impl DataElementValue {
           if item_length % 2 != 0 {
             return Err(DataError::new_value_length_invalid(
               *vr,
-              item_length,
+              item_length as u64,
               "Must be a multiple of 2 bytes".to_string(),
             ));
           }
@@ -1594,9 +1594,7 @@ mod tests {
     );
 
     assert_eq!(
-      DataElementValue::new_long_text("A".to_string())
-        .unwrap()
-        .get_string(),
+      DataElementValue::new_long_text("A").unwrap().get_string(),
       Ok("A")
     );
 
@@ -1701,9 +1699,7 @@ mod tests {
     );
 
     assert_eq!(
-      DataElementValue::new_long_text("A".to_string())
-        .unwrap()
-        .get_strings(),
+      DataElementValue::new_long_text("A").unwrap().get_strings(),
       Err(DataError::new_value_not_present())
     );
 
@@ -1741,7 +1737,7 @@ mod tests {
     );
 
     assert_eq!(
-      DataElementValue::new_long_text("123".to_string())
+      DataElementValue::new_long_text("123")
         .unwrap()
         .get_int::<i32>(),
       Err(DataError::new_value_not_present())
@@ -1879,7 +1875,7 @@ mod tests {
     );
 
     assert_eq!(
-      DataElementValue::new_long_text("123".to_string())
+      DataElementValue::new_long_text("123")
         .unwrap()
         .get_ints::<i32>(),
       Err(DataError::new_value_not_present())
@@ -1910,7 +1906,7 @@ mod tests {
     );
 
     assert_eq!(
-      DataElementValue::new_long_text("123".to_string())
+      DataElementValue::new_long_text("123")
         .unwrap()
         .get_big_int::<u64>(),
       Err(DataError::new_value_not_present())
@@ -1963,7 +1959,7 @@ mod tests {
     );
 
     assert_eq!(
-      DataElementValue::new_long_text("123".to_string())
+      DataElementValue::new_long_text("123")
         .unwrap()
         .get_big_ints::<u64>(),
       Err(DataError::new_value_not_present())
@@ -2003,9 +1999,7 @@ mod tests {
     );
 
     assert_eq!(
-      DataElementValue::new_long_text("1.2".to_string())
-        .unwrap()
-        .get_float(),
+      DataElementValue::new_long_text("1.2").unwrap().get_float(),
       Err(DataError::new_value_not_present())
     );
   }
@@ -2072,9 +2066,7 @@ mod tests {
     );
 
     assert_eq!(
-      DataElementValue::new_long_text("1.2".to_string())
-        .unwrap()
-        .get_floats(),
+      DataElementValue::new_long_text("1.2").unwrap().get_floats(),
       Err(DataError::new_value_not_present())
     );
   }
@@ -2650,7 +2642,7 @@ mod tests {
   #[test]
   fn new_long_text_test() {
     assert_eq!(
-      DataElementValue::new_long_text("ABC".to_string()),
+      DataElementValue::new_long_text("ABC"),
       DataElementValue::new_binary(
         ValueRepresentation::LongText,
         b"ABC ".to_vec().into(),

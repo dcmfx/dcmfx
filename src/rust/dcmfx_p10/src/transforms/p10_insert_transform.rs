@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::{boxed::Box, vec, vec::Vec};
 
-use dcmfx_core::{DataElementTag, DataElementValue, DataSet};
+use dcmfx_core::{DataElementTag, DataElementValue, DataSet, DataSetPath};
 
 use crate::{P10Error, P10FilterTransform, P10Token, p10_token};
 
@@ -24,7 +24,7 @@ impl P10InsertTransform {
     // in the resulting token stream.
     let filter_transform =
       P10FilterTransform::new(Box::new(move |tag, _vr, _length, path| {
-        !path.is_empty() || !tags_to_insert.contains(&tag)
+        !path.is_root() || !tags_to_insert.contains(&tag)
       }));
 
     Self {
@@ -68,15 +68,19 @@ impl P10InsertTransform {
       // If this token is the start of a new data element, and there are data
       // elements still to be inserted, then insert any that should appear prior
       // to this next data element
-      P10Token::SequenceStart { tag, .. }
-      | P10Token::DataElementHeader { tag, .. } => {
+      P10Token::SequenceStart { tag, path, .. }
+      | P10Token::DataElementHeader { tag, path, .. } => {
         while let Some(data_element) = self.data_elements_to_insert.pop() {
           if data_element.0.to_int() >= tag.to_int() {
             self.data_elements_to_insert.push(data_element);
             break;
           }
 
-          self.append_data_element_tokens(data_element, &mut output_tokens);
+          self.append_data_element_tokens(
+            data_element,
+            path,
+            &mut output_tokens,
+          );
         }
 
         output_tokens.push(token.clone());
@@ -86,7 +90,11 @@ impl P10InsertTransform {
       // elements to be inserted then insert them now prior to the end
       P10Token::End => {
         while let Some(data_element) = self.data_elements_to_insert.pop() {
-          self.append_data_element_tokens(data_element, &mut output_tokens);
+          self.append_data_element_tokens(
+            data_element,
+            &DataSetPath::new(),
+            &mut output_tokens,
+          );
         }
 
         output_tokens.push(P10Token::End);
@@ -101,11 +109,13 @@ impl P10InsertTransform {
   fn append_data_element_tokens(
     &self,
     data_element: (DataElementTag, DataElementValue),
+    path: &DataSetPath,
     output_tokens: &mut Vec<P10Token>,
   ) {
     p10_token::data_element_to_tokens::<()>(
       data_element.0,
       &data_element.1,
+      path,
       &mut |token: &P10Token| {
         output_tokens.push(token.clone());
         Ok(())
@@ -129,23 +139,27 @@ mod tests {
     let data_elements_to_insert: DataSet = vec![
       (
         DataElementTag::new(0, 0),
-        DataElementValue::new_long_text("0".to_string()).unwrap(),
+        DataElementValue::new_long_text("00").unwrap(),
       ),
       (
         DataElementTag::new(1, 0),
-        DataElementValue::new_long_text("1".to_string()).unwrap(),
+        DataElementValue::new_long_text("01").unwrap(),
       ),
       (
         DataElementTag::new(3, 0),
-        DataElementValue::new_long_text("3".to_string()).unwrap(),
+        DataElementValue::new_long_text("03").unwrap(),
       ),
       (
         DataElementTag::new(4, 0),
-        DataElementValue::new_long_text("4".to_string()).unwrap(),
+        DataElementValue::new_long_text("04").unwrap(),
       ),
       (
         DataElementTag::new(6, 0),
-        DataElementValue::new_long_text("6".to_string()).unwrap(),
+        DataElementValue::new_long_text("06").unwrap(),
+      ),
+      (
+        DataElementTag::new(7, 0),
+        DataElementValue::new_long_text("07").unwrap(),
       ),
     ]
     .into_iter()
@@ -154,8 +168,9 @@ mod tests {
     let mut insert_transform = P10InsertTransform::new(data_elements_to_insert);
 
     let input_tokens: Vec<P10Token> = vec![
-      tokens_for_tag(DataElementTag::new(2, 0)),
-      tokens_for_tag(DataElementTag::new(5, 0)),
+      tokens_for_tag(DataElementTag::new(2, 0), b"12"),
+      tokens_for_tag(DataElementTag::new(5, 0), b"15"),
+      tokens_for_tag(DataElementTag::new(6, 0), b"16"),
       vec![P10Token::End],
     ]
     .into_iter()
@@ -172,13 +187,14 @@ mod tests {
     assert_eq!(
       output_tokens,
       vec![
-        tokens_for_tag(DataElementTag::new(0, 0)),
-        tokens_for_tag(DataElementTag::new(1, 0)),
-        tokens_for_tag(DataElementTag::new(2, 0)),
-        tokens_for_tag(DataElementTag::new(3, 0)),
-        tokens_for_tag(DataElementTag::new(4, 0)),
-        tokens_for_tag(DataElementTag::new(5, 0)),
-        tokens_for_tag(DataElementTag::new(6, 0)),
+        tokens_for_tag(DataElementTag::new(0, 0), b"00"),
+        tokens_for_tag(DataElementTag::new(1, 0), b"01"),
+        tokens_for_tag(DataElementTag::new(2, 0), b"12"),
+        tokens_for_tag(DataElementTag::new(3, 0), b"03"),
+        tokens_for_tag(DataElementTag::new(4, 0), b"04"),
+        tokens_for_tag(DataElementTag::new(5, 0), b"15"),
+        tokens_for_tag(DataElementTag::new(6, 0), b"06"),
+        tokens_for_tag(DataElementTag::new(7, 0), b"07"),
         vec![P10Token::End]
       ]
       .into_iter()
@@ -187,19 +203,18 @@ mod tests {
     );
   }
 
-  fn tokens_for_tag(tag: DataElementTag) -> Vec<P10Token> {
-    let value_bytes = format!("{} ", tag.group).into_bytes();
-
+  fn tokens_for_tag(tag: DataElementTag, value_bytes: &[u8]) -> Vec<P10Token> {
     vec![
       P10Token::DataElementHeader {
         tag,
         vr: ValueRepresentation::LongText,
         length: value_bytes.len() as u32,
+        path: DataSetPath::new(),
       },
       P10Token::DataElementValueBytes {
         tag,
         vr: ValueRepresentation::LongText,
-        data: value_bytes.into(),
+        data: value_bytes.to_vec().into(),
         bytes_remaining: 0,
       },
     ]
