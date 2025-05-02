@@ -36,7 +36,8 @@ static void term_source(j_decompress_ptr _dinfo) {}
 // Decodes the given bytes as a 12-bit JPEG.
 int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size, uint32_t width,
                          uint32_t height, uint32_t samples_per_pixel,
-                         uint16_t *output_buffer, uint64_t output_buffer_size,
+                         uint32_t is_ybr_color_space, uint16_t *output_buffer,
+                         uint64_t output_buffer_size,
                          char error_message[JMSG_LENGTH_MAX]) {
   struct jpeg_decompress_struct dinfo;
   struct jpeg_error_mgr jerr;
@@ -90,7 +91,11 @@ int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size, uint32_t width,
   if (dinfo.output_components == 1) {
     dinfo.out_color_space = JCS_GRAYSCALE;
   } else if (dinfo.output_components == 3) {
-    dinfo.out_color_space = JCS_RGB;
+    if (is_ybr_color_space == 1) {
+      dinfo.out_color_space = JCS_YCbCr;
+    } else {
+      dinfo.out_color_space = JCS_RGB;
+    }
   } else {
     strcpy(error_message, "Output components is not 1 or 3");
     (void)jpeg_destroy_decompress(&dinfo);

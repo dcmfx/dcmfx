@@ -267,25 +267,6 @@ fn missing_voi_lut_to_png() {
 }
 
 #[test]
-fn jpg_to_png() {
-  let dicom_file = "../../../test/assets/fo-dicom/GH538-jpeg1.dcm";
-  let output_file = format!("{}.0000.png", dicom_file);
-
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  cmd
-    .arg("get-pixel-data")
-    .arg(dicom_file)
-    .arg("--overwrite")
-    .arg("-f")
-    .arg("png")
-    .assert()
-    .success()
-    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
-
-  assert_image_snapshot!(output_file, "jpg_to_png.png");
-}
-
-#[test]
 fn jpg_to_webp() {
   let dicom_file = "../../../test/assets/fo-dicom/GH538-jpeg1.dcm";
   let output_file = format!("{}.0000.webp", dicom_file);
@@ -301,7 +282,7 @@ fn jpg_to_webp() {
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(output_file, "jpg_to_png.png");
+  assert_image_snapshot!(output_file, "jpg_to_webp.webp");
 }
 
 #[test]
@@ -439,6 +420,25 @@ fn jpeg_2000_color_to_png() {
 }
 
 #[test]
+fn jpeg_2000_ybr_color_space_to_jpg() {
+  let dicom_file = "../../../test/assets/other/jpeg_2000_ybr_color_space.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--overwrite")
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "jpeg_2000_ybr_color_space_to_jpg.jpg");
+}
+
+#[test]
 fn jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/J2K_pixelrep_mismatch.dcm";
@@ -522,6 +522,25 @@ fn jpeg_ls_color_to_png() {
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
   assert_image_snapshot!(output_file, "jpeg_ls_color_to_png.png");
+}
+
+#[test]
+fn jpeg_ls_ybr_color_space_to_jpg() {
+  let dicom_file = "../../../test/assets/other/jpeg_ls_ybr_color_space.dcm";
+  let output_file = format!("{}.0000.jpg", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--overwrite")
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "jpeg_ls_ybr_color_space_to_jpg.jpg");
 }
 
 #[test]
@@ -919,17 +938,23 @@ fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   let copy_command = format!(
     "To update snapshot run `cp {} {}`.",
     path1.as_ref().canonicalize().unwrap().display(),
-    image_snapshot_path.canonicalize().unwrap().display()
+    std::env::current_dir()
+      .unwrap()
+      .join(&image_snapshot_path)
+      .display()
   );
 
   if !std::path::PathBuf::from(&image_snapshot_path).exists() {
     return Err(format!("Snapshot file is missing. {}", copy_command));
   }
 
-  let image_2 = image::ImageReader::open(image_snapshot_path)
+  let image_2 = image::ImageReader::open(&image_snapshot_path)
     .unwrap()
     .decode()
-    .unwrap()
+    .expect(&format!(
+      "{} to be a valid image file",
+      image_snapshot_path.display()
+    ))
     .to_rgb16();
 
   if image_1.width() != image_2.width() || image_1.height() != image_2.height()

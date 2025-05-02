@@ -32,11 +32,19 @@ pub fn decode_color(
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(image_pixel_module, data)?;
+
+  let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
+  {
+    ColorSpace::YBR
+  } else {
+    ColorSpace::RGB
+  };
+
   ColorImage::new_u16(
     image_pixel_module.columns(),
     image_pixel_module.rows(),
     pixels,
-    ColorSpace::RGB,
+    color_space,
     image_pixel_module.bits_stored(),
   )
 }
@@ -70,6 +78,7 @@ fn decode(
       image_pixel_module.columns().into(),
       image_pixel_module.rows().into(),
       u8::from(image_pixel_module.samples_per_pixel()).into(),
+      u32::from(image_pixel_module.photometric_interpretation().is_ybr()),
       output_buffer.as_mut_ptr(),
       output_buffer.len() as u64,
       error_message.as_mut_ptr(),
@@ -97,7 +106,8 @@ mod ffi {
       jpeg_size: u64,
       width: u32,
       height: u32,
-      channels: u32,
+      samples_per_pixel: u32,
+      is_ybr_color_space: u32,
       output_buffer: *mut u16,
       output_buffer_size: u64,
       error_message: *mut ::core::ffi::c_char,

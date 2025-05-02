@@ -112,6 +112,14 @@ pub fn decode_color(
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
 
+  let color_space = if image_pixel_module.photometric_interpretation()
+    == &PhotometricInterpretation::YbrFull
+  {
+    ColorSpace::YBR
+  } else {
+    ColorSpace::RGB
+  };
+
   match (
     &image_pixel_module.photometric_interpretation(),
     image_pixel_module.bits_allocated(),
@@ -153,17 +161,17 @@ pub fn decode_color(
 
     (_, BitsAllocated::One | BitsAllocated::Eight) => {
       let pixels = decode(image_pixel_module, data)?;
-      ColorImage::new_u8(width, height, pixels, ColorSpace::RGB, bits_stored)
+      ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
     }
 
     (_, BitsAllocated::Sixteen) => {
       let pixels = decode(image_pixel_module, data)?;
-      ColorImage::new_u16(width, height, pixels, ColorSpace::RGB, bits_stored)
+      ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
     }
 
     (_, BitsAllocated::ThirtyTwo) => {
       let pixels = decode(image_pixel_module, data)?;
-      ColorImage::new_u32(width, height, pixels, ColorSpace::RGB, bits_stored)
+      ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
     }
   }
 }

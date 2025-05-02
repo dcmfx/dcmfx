@@ -48,10 +48,11 @@ pub enum ColorImageData {
 /// The color space of the color image's data. This is used when unsigned
 /// integer data is being stored,a s it can be either YBR or RGB.
 ///
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ColorSpace {
   RGB,
   YBR,
+  YBR422,
 }
 
 impl ColorImage {
@@ -271,6 +272,20 @@ impl ColorImage {
     self.bits_stored
   }
 
+  /// Returns the color space used by the data stored in this color image.
+  ///
+  pub fn color_space(&self) -> ColorSpace {
+    match &self.data {
+      ColorImageData::U8 { color_space, .. }
+      | ColorImageData::U16 { color_space, .. }
+      | ColorImageData::U32 { color_space, .. } => *color_space,
+
+      ColorImageData::PaletteU8 { .. } | ColorImageData::PaletteU16 { .. } => {
+        ColorSpace::RGB
+      }
+    }
+  }
+
   /// Returns the maximum value that can be stored, based on the number of bits
   /// stored.
   ///
@@ -322,7 +337,7 @@ impl ColorImage {
               }
             }
 
-            ColorSpace::YBR => {
+            ColorSpace::YBR | ColorSpace::YBR422 => {
               let scale = 1.0 / f64::from(max_storable_value);
 
               for ybr in data.chunks_exact(3) {
@@ -441,7 +456,7 @@ impl ColorImage {
               }
             }
 
-            ColorSpace::YBR => {
+            ColorSpace::YBR | ColorSpace::YBR422 => {
               let scale = 1.0 / f64::from(max_storable_value);
 
               for ybr in data.chunks_exact(3) {
@@ -546,7 +561,7 @@ impl ColorImage {
           }
         }
 
-        ColorSpace::YBR => {
+        ColorSpace::YBR | ColorSpace::YBR422 => {
           for ybr in data.chunks_exact(3) {
             let rgb = ybr_to_rgb(
               ybr[0].into() * scale,

@@ -138,10 +138,10 @@ fn decode(
     ));
   }
 
-  // Convert CMYK to sRGB
-  if image.pixel_format().has_black() {
-    image.request_color_encoding(jxl_oxide::EnumColourEncoding::srgb(
-      jxl_oxide::RenderingIntent::Relative,
+  // Convert colors to sRGB
+  if image_pixel_module.is_color() {
+    image.request_color_encoding(jxl_oxide::EnumColourEncoding::srgb_gamma22(
+      jxl_oxide::RenderingIntent::default(),
     ));
   }
 

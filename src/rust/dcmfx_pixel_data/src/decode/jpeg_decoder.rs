@@ -2,7 +2,8 @@
 use alloc::{format, string::ToString, vec::Vec};
 
 use crate::{
-  ColorImage, ColorSpace, SingleChannelImage, iods::ImagePixelModule,
+  ColorImage, ColorSpace, SingleChannelImage,
+  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
 };
 use dcmfx_core::DataError;
 
@@ -58,13 +59,48 @@ pub fn decode_color(
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
 
-  if pixel_format == jpeg_decoder::PixelFormat::RGB24 {
-    ColorImage::new_u8(width, height, pixels, ColorSpace::RGB, bits_stored)
-  } else {
-    Err(DataError::new_value_invalid(format!(
-      "JPEG Lossless pixel format '{:?}' is not supported for color images",
+  match (
+    image_pixel_module.photometric_interpretation(),
+    pixel_format,
+  ) {
+    (
+      PhotometricInterpretation::PaletteColor { palette },
+      jpeg_decoder::PixelFormat::L8,
+    ) => ColorImage::new_palette8(
+      width,
+      height,
+      pixels,
+      palette.clone(),
+      bits_stored,
+    ),
+
+    (
+      PhotometricInterpretation::PaletteColor { palette },
+      jpeg_decoder::PixelFormat::L16,
+    ) => {
+      let data = bytemuck::cast_slice(&pixels).to_vec();
+      ColorImage::new_palette16(
+        width,
+        height,
+        data,
+        palette.clone(),
+        bits_stored,
+      )
+    }
+
+    (
+      PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull,
+      jpeg_decoder::PixelFormat::RGB24,
+    ) => {
+      ColorImage::new_u8(width, height, pixels, ColorSpace::RGB, bits_stored)
+    }
+
+    _ => Err(DataError::new_value_invalid(format!(
+      "Photometric interpretation '{}' is invalid for JPEG Lossless decode \
+       when decoded pixel format is '{:?}'",
+      image_pixel_module.photometric_interpretation(),
       pixel_format
-    )))
+    ))),
   }
 }
 
@@ -73,6 +109,10 @@ fn decode(
   data: &[u8],
 ) -> Result<(Vec<u8>, jpeg_decoder::PixelFormat), DataError> {
   let mut decoder = jpeg_decoder::Decoder::new(data);
+
+  if image_pixel_module.is_color() {
+    decoder.set_color_transform(jpeg_decoder::ColorTransform::RGB);
+  }
 
   decoder.read_info().map_err(|e| {
     DataError::new_value_invalid(format!(

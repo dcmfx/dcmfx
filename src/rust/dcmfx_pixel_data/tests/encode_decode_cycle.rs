@@ -363,12 +363,13 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
       }
     }
 
-    let color_space =
-      if image_pixel_module.photometric_interpretation().is_ybr() {
-        ColorSpace::YBR
-      } else {
-        ColorSpace::RGB
-      };
+    let color_space = match image_pixel_module.photometric_interpretation() {
+      PhotometricInterpretation::PaletteColor { .. }
+      | PhotometricInterpretation::Rgb => ColorSpace::RGB,
+      PhotometricInterpretation::YbrFull => ColorSpace::YBR,
+      PhotometricInterpretation::YbrFull422 => ColorSpace::YBR422,
+      _ => unreachable!(),
+    };
 
     create(
       image_pixel_module.columns(),

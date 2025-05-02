@@ -284,11 +284,18 @@ pub fn decode_color(
   let pixel_count = image_pixel_module.pixel_count();
   let bits_stored = image_pixel_module.bits_stored();
 
-  let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
-  {
-    ColorSpace::YBR
-  } else {
-    ColorSpace::RGB
+  let color_space = match image_pixel_module.photometric_interpretation() {
+    PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb => ColorSpace::RGB,
+    PhotometricInterpretation::YbrFull => ColorSpace::YBR,
+    PhotometricInterpretation::YbrFull422 => ColorSpace::YBR422,
+    _ => {
+      return Err(DataError::new_value_unsupported(format!(
+        "Photometric interpretation '{}' is not supported for native color \
+         decode",
+        image_pixel_module.photometric_interpretation()
+      )));
+    }
   };
 
   match image_pixel_module.samples_per_pixel() {
@@ -500,13 +507,7 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u8(
-              width,
-              height,
-              pixels,
-              ColorSpace::YBR,
-              bits_stored,
-            )
+            ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
@@ -526,13 +527,7 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u16(
-              width,
-              height,
-              pixels,
-              ColorSpace::YBR,
-              bits_stored,
-            )
+            ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
@@ -572,13 +567,7 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u32(
-              width,
-              height,
-              pixels,
-              ColorSpace::YBR,
-              bits_stored,
-            )
+            ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Eight) => {
@@ -598,13 +587,7 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u8(
-              width,
-              height,
-              pixels,
-              ColorSpace::YBR,
-              bits_stored,
-            )
+            ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Sixteen) => {
@@ -630,13 +613,7 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u16(
-              width,
-              height,
-              pixels,
-              ColorSpace::YBR,
-              bits_stored,
-            )
+            ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::ThirtyTwo) => {
@@ -676,13 +653,7 @@ pub fn decode_color(
               pixels[i * 6 + 5] = cr;
             }
 
-            ColorImage::new_u32(
-              width,
-              height,
-              pixels,
-              ColorSpace::YBR,
-              bits_stored,
-            )
+            ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
           }
         }
       }
@@ -907,7 +878,7 @@ mod tests {
         2,
         2,
         vec![142, 111, 148, 122, 111, 148, 118, 101, 123, 122, 101, 123],
-        ColorSpace::YBR,
+        ColorSpace::YBR422,
         8
       )
     );

@@ -56,12 +56,19 @@ pub fn decode_color(
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
 
+  let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
+  {
+    ColorSpace::YBR
+  } else {
+    ColorSpace::RGB
+  };
+
   if image_pixel_module.bits_allocated() == BitsAllocated::Eight {
     let pixels = decode(data, image_pixel_module)?;
-    ColorImage::new_u8(width, height, pixels, ColorSpace::RGB, bits_stored)
+    ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
   } else if image_pixel_module.bits_allocated() == BitsAllocated::Sixteen {
     let pixels = decode(data, image_pixel_module)?;
-    ColorImage::new_u16(width, height, pixels, ColorSpace::RGB, bits_stored)
+    ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
   } else {
     Err(DataError::new_value_invalid(
       "JPEG LS pixel data is not color".to_string(),

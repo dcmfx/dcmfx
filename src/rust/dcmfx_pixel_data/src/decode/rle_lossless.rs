@@ -269,11 +269,10 @@ pub fn decode_color(
   let pixel_count = image_pixel_module.pixel_count();
   let bits_stored = image_pixel_module.bits_stored();
 
-  let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
-  {
-    ColorSpace::YBR
-  } else {
-    ColorSpace::RGB
+  let color_space = match image_pixel_module.photometric_interpretation() {
+    PhotometricInterpretation::YbrFull => ColorSpace::YBR,
+    PhotometricInterpretation::YbrFull422 => ColorSpace::YBR422,
+    _ => ColorSpace::RGB,
   };
 
   let mut segments = decode_rle_segments(data, pixel_count)?;
