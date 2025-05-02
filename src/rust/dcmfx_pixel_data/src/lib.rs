@@ -18,11 +18,11 @@ mod grayscale_pipeline;
 pub mod iods;
 mod lookup_table;
 mod monochrome_image;
-mod p10_pixel_data_frame_filter;
 mod pixel_data_frame;
 mod pixel_data_renderer;
 pub mod standard_color_palettes;
 mod stored_value_output_cache;
+mod transforms;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
@@ -30,13 +30,13 @@ pub use encode::{PixelDataEncodeConfig, PixelDataEncodeError};
 pub use grayscale_pipeline::GrayscalePipeline;
 pub use lookup_table::LookupTable;
 pub use monochrome_image::MonochromeImage;
-pub use p10_pixel_data_frame_filter::{
-  P10PixelDataFrameFilter, P10PixelDataFrameFilterError,
-};
 pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_renderer::PixelDataRenderer;
 pub use standard_color_palettes::StandardColorPalette;
 pub use stored_value_output_cache::StoredValueOutputCache;
+pub use transforms::{
+  P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
+};
 
 use dcmfx_core::{
   DataError, DataSet, IodModule, TransferSyntax, dictionary, transfer_syntax,
@@ -58,7 +58,7 @@ where
   ///
   fn get_pixel_data_frames(
     &self,
-  ) -> Result<Vec<PixelDataFrame>, P10PixelDataFrameFilterError>;
+  ) -> Result<Vec<PixelDataFrame>, P10PixelDataFrameTransformError>;
 
   /// Returns the frames of pixel data in this data set as fully resolved RGB8
   /// images. Output image data may have been subjected to a lossy conversion to
@@ -75,7 +75,7 @@ where
   fn get_pixel_data_images(
     &self,
     color_palette: Option<&StandardColorPalette>,
-  ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameFilterError>;
+  ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameTransformError>;
 
   /// Returns the frames of pixel data in this data set as [`MonochromeImage`]s.
   ///
@@ -93,16 +93,16 @@ where
   ///
   fn get_pixel_data_color_images(
     &self,
-  ) -> Result<Vec<ColorImage>, P10PixelDataFrameFilterError>;
+  ) -> Result<Vec<ColorImage>, P10PixelDataFrameTransformError>;
 }
 
 impl DataSetPixelDataExtensions for DataSet {
   fn get_pixel_data_frames(
     &self,
-  ) -> Result<Vec<PixelDataFrame>, P10PixelDataFrameFilterError> {
+  ) -> Result<Vec<PixelDataFrame>, P10PixelDataFrameTransformError> {
     // Create a new data set containing only the data elements needed by the
-    // pixel data filter. This avoids calling `DataSet::to_p10_tokens()` on the
-    // whole data set.
+    // pixel data frame transform. This avoids calling DataSet::to_p10_tokens()
+    // on the whole data set.
     let mut ds = DataSet::new();
     for tag in [
       dictionary::NUMBER_OF_FRAMES.tag,
@@ -120,10 +120,10 @@ impl DataSetPixelDataExtensions for DataSet {
 
     // Pass the cut down data set through a pixel data filter and collect all
     // emitted frames
-    let mut pixel_data_frame_filter = P10PixelDataFrameFilter::new();
+    let mut pixel_data_frame_transform = P10PixelDataFrameTransform::new();
     let mut frames = vec![];
     ds.to_p10_tokens(&mut |token| {
-      frames.extend_from_slice(&pixel_data_frame_filter.add_token(token)?);
+      frames.extend_from_slice(&pixel_data_frame_transform.add_token(token)?);
       Ok(())
     })?;
 
@@ -133,7 +133,7 @@ impl DataSetPixelDataExtensions for DataSet {
   fn get_pixel_data_images(
     &self,
     color_palette: Option<&StandardColorPalette>,
-  ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameFilterError> {
+  ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameTransformError> {
     get_pixel_data(self, |renderer, frame| {
       renderer.render_frame(frame, color_palette)
     })
@@ -149,7 +149,7 @@ impl DataSetPixelDataExtensions for DataSet {
 
   fn get_pixel_data_color_images(
     &self,
-  ) -> Result<Vec<ColorImage>, P10PixelDataFrameFilterError> {
+  ) -> Result<Vec<ColorImage>, P10PixelDataFrameTransformError> {
     get_pixel_data(self, |renderer, frame| renderer.decode_color_frame(frame))
   }
 }
@@ -157,12 +157,12 @@ impl DataSetPixelDataExtensions for DataSet {
 fn get_pixel_data<T, F>(
   data_set: &DataSet,
   mut process_frame: F,
-) -> Result<Vec<T>, P10PixelDataFrameFilterError>
+) -> Result<Vec<T>, P10PixelDataFrameTransformError>
 where
   F: FnMut(&PixelDataRenderer, &mut PixelDataFrame) -> Result<T, DataError>,
 {
   let renderer = PixelDataRenderer::from_data_set(data_set)
-    .map_err(P10PixelDataFrameFilterError::DataError)?;
+    .map_err(P10PixelDataFrameTransformError::DataError)?;
 
   let frames = data_set.get_pixel_data_frames()?;
 
@@ -170,7 +170,7 @@ where
     .into_iter()
     .map(|mut frame| {
       process_frame(&renderer, &mut frame)
-        .map_err(P10PixelDataFrameFilterError::DataError)
+        .map_err(P10PixelDataFrameTransformError::DataError)
     })
     .collect()
 }

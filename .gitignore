@@ -13,6 +13,8 @@ erl_crash.dump
 /examples/**/*.jpg
 /examples/**/*.png
 
+/src/rust/dcmfx_cli/tests/snapshots/*.new
+
 /src/rust/dcmfx_fuzz/inputs
 /src/rust/dcmfx_fuzz/outputs
 

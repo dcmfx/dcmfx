@@ -6,10 +6,10 @@ import dcmfx_p10/p10_error
 import dcmfx_p10/p10_read.{type P10ReadContext}
 import dcmfx_p10/p10_token
 import dcmfx_pixel_data
-import dcmfx_pixel_data/p10_pixel_data_frame_filter.{
-  type P10PixelDataFrameFilter, type P10PixelDataFrameFilterError,
-}
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
+import dcmfx_pixel_data/transforms/p10_pixel_data_frame_transform.{
+  type P10PixelDataFrameTransform, type P10PixelDataFrameTransformError,
+}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error.{type FileStreamError}
 import gleam/bool
@@ -69,9 +69,9 @@ pub fn run() {
           <> "\""
 
         case e {
-          p10_pixel_data_frame_filter.DataError(e) ->
+          p10_pixel_data_frame_transform.DataError(e) ->
             data_error.print(e, task_description)
-          p10_pixel_data_frame_filter.P10Error(e) ->
+          p10_pixel_data_frame_transform.P10Error(e) ->
             p10_error.print(e, task_description)
         }
 
@@ -84,11 +84,11 @@ pub fn run() {
 fn get_pixel_data_from_input_source(
   input_source: InputSource,
   output_prefix: Option(String),
-) -> Result(Nil, P10PixelDataFrameFilterError) {
+) -> Result(Nil, P10PixelDataFrameTransformError) {
   // Open input stream
   let input_stream =
     input_source.open_read_stream(input_source)
-    |> result.map_error(p10_pixel_data_frame_filter.P10Error)
+    |> result.map_error(p10_pixel_data_frame_transform.P10Error)
   use input_stream <- result.try(input_stream)
 
   let output_prefix =
@@ -105,12 +105,12 @@ fn get_pixel_data_from_input_source(
       ),
     )
 
-  let pixel_data_frame_filter = p10_pixel_data_frame_filter.new()
+  let pixel_data_frame_transform = p10_pixel_data_frame_transform.new()
 
   perform_get_pixel_data_loop(
     input_stream,
     read_context,
-    pixel_data_frame_filter,
+    pixel_data_frame_transform,
     output_prefix,
     "",
     0,
@@ -120,17 +120,17 @@ fn get_pixel_data_from_input_source(
 fn perform_get_pixel_data_loop(
   input_stream: FileStream,
   read_context: P10ReadContext,
-  pixel_data_frame_filter: P10PixelDataFrameFilter,
+  pixel_data_frame_transform: P10PixelDataFrameTransform,
   output_prefix: String,
   output_extension: String,
   frame_number: Int,
-) -> Result(Nil, P10PixelDataFrameFilterError) {
+) -> Result(Nil, P10PixelDataFrameTransformError) {
   // Read the next tokens from the input stream
   case dcmfx_p10.read_tokens_from_stream(input_stream, read_context) {
     Ok(#(tokens, read_context)) -> {
       let context = #(
         output_extension,
-        pixel_data_frame_filter,
+        pixel_data_frame_transform,
         frame_number,
         False,
       )
@@ -152,7 +152,7 @@ fn perform_get_pixel_data_loop(
 
           // Pass token through the pixel data filter
           case
-            p10_pixel_data_frame_filter.add_token(
+            p10_pixel_data_frame_transform.add_token(
               pixel_data_frame_filter,
               token,
             )
@@ -172,7 +172,7 @@ fn perform_get_pixel_data_loop(
                   |> result.replace(frame_number + 1)
                 })
                 |> result.map_error(fn(e) {
-                  p10_pixel_data_frame_filter.P10Error(
+                  p10_pixel_data_frame_transform.P10Error(
                     p10_error.FileStreamError("Writing pixel data frame", e),
                   )
                 })
@@ -196,11 +196,11 @@ fn perform_get_pixel_data_loop(
         })
 
       case context {
-        Ok(#(output_extension, pixel_data_frame_filter, frame_number, False)) ->
+        Ok(#(output_extension, pixel_data_frame_transform, frame_number, False)) ->
           perform_get_pixel_data_loop(
             input_stream,
             read_context,
-            pixel_data_frame_filter,
+            pixel_data_frame_transform,
             output_prefix,
             output_extension,
             frame_number,
@@ -212,7 +212,7 @@ fn perform_get_pixel_data_loop(
       }
     }
 
-    Error(e) -> Error(p10_pixel_data_frame_filter.P10Error(e))
+    Error(e) -> Error(p10_pixel_data_frame_transform.P10Error(e))
   }
 }
 

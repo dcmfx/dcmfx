@@ -32,10 +32,10 @@ pub struct GetPixelDataArgs {
   #[arg(
     long,
     short,
-    help = "The prefix for output files. When writing individual frames this is
-      suffixed with a 4-digit frame number, and an appropriate file extension. \
-      This option is only valid when a single input filename is specified. By \
-      default, the output prefix is the input filename."
+    help = "The prefix for output files. When writing individual frames this \
+      is suffixed with a 4-digit frame number, and an appropriate file \
+      extension. This option is only valid when a single input filename is \
+      specified. By default, the output prefix is the input filename."
   )]
   output_prefix: Option<PathBuf>,
 
@@ -97,8 +97,8 @@ pub struct GetPixelDataArgs {
     long,
     help_heading = "MP4 Encoding",
     help = "Custom parameters to pass to the codec that allow fine control \
-      over its operation. Refer to the documentation for the selected codec \
-      for further details."
+      over its operation. Refer to the documentation for the active codec for \
+      further details."
   )]
   mp4_codec_params: Option<String>,
 
@@ -431,7 +431,7 @@ fn get_pixel_data_from_input_source(
     ..P10ReadConfig::default()
   });
 
-  let mut p10_pixel_data_frame_filter = P10PixelDataFrameFilter::new();
+  let mut p10_pixel_data_frame_transform = P10PixelDataFrameTransform::new();
 
   let mut pixel_data_renderer_transform = if args.format == OutputFormat::Raw {
     None
@@ -475,11 +475,12 @@ fn get_pixel_data_from_input_source(
       // For raw output, determine the output extension from the transfer syntax
       if args.format == OutputFormat::Raw {
         if let P10Token::FileMetaInformation { data_set } = token {
-          output_extension = file_extension_for_transfer_syntax(
-            data_set
-              .get_transfer_syntax()
-              .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN),
-          );
+          output_extension =
+            dcmfx::pixel_data::file_extension_for_transfer_syntax(
+              data_set
+                .get_transfer_syntax()
+                .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN),
+            );
         }
       }
 
@@ -506,19 +507,18 @@ fn get_pixel_data_from_input_source(
         None
       };
 
-      // Pass token through the pixel data frame filter, receiving any frames
+      // Pass token through the pixel data frame transform, receiving any frames
       // that are now available
-      let mut frames =
-        p10_pixel_data_frame_filter
-          .add_token(token)
-          .map_err(|e| match e {
-            P10PixelDataFrameFilterError::DataError(e) => {
-              GetPixelDataError::DataError(e)
-            }
-            P10PixelDataFrameFilterError::P10Error(e) => {
-              GetPixelDataError::P10Error(e)
-            }
-          })?;
+      let mut frames = p10_pixel_data_frame_transform
+        .add_token(token)
+        .map_err(|e| match e {
+          P10PixelDataFrameTransformError::DataError(e) => {
+            GetPixelDataError::DataError(e)
+          }
+          P10PixelDataFrameTransformError::P10Error(e) => {
+            GetPixelDataError::P10Error(e)
+          }
+        })?;
 
       // Process available frames
       for frame in frames.iter_mut() {

@@ -125,8 +125,8 @@ Options:
    dcmfx get-pixel-data input.dcm --format webp
    ```
 
-   Single channel data can also specify a VOI window center and width and/or a
-   well-known color palette to use:
+   For monochrome pixel data, a VOI window center and width and/or a well-known
+   color palette can be specified:
 
    ```sh
    dcmfx get-pixel-data input.dcm --format png --voi-window 500 2000 \

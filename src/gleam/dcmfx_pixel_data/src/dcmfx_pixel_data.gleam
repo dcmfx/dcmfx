@@ -4,10 +4,10 @@ import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
 import dcmfx_core/transfer_syntax.{type TransferSyntax}
 import dcmfx_p10/p10_write
-import dcmfx_pixel_data/p10_pixel_data_frame_filter.{
-  type P10PixelDataFrameFilterError,
-}
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
+import dcmfx_pixel_data/transforms/p10_pixel_data_frame_transform.{
+  type P10PixelDataFrameTransformError,
+}
 import gleam/list
 import gleam/pair
 import gleam/result
@@ -21,7 +21,7 @@ import gleam/result
 ///
 pub fn get_pixel_data_frames(
   data_set: DataSet,
-) -> Result(List(PixelDataFrame), P10PixelDataFrameFilterError) {
+) -> Result(List(PixelDataFrame), P10PixelDataFrameTransformError) {
   // Create a new data set containing only the data elements needed by the pixel
   // data filter. This avoids calling `data_elements_to_tokens()` on the
   // whole data set.
@@ -44,13 +44,13 @@ pub fn get_pixel_data_frames(
 
   // Pass the cut down data set through a pixel data filter and collect all
   // emitted frames
-  let context = #([], p10_pixel_data_frame_filter.new())
+  let context = #([], p10_pixel_data_frame_transform.new())
   ds
   |> p10_write.data_set_to_tokens(context, fn(context, token) {
     let #(frames, filter) = context
 
     use #(new_frames, filter) <- result.map(
-      p10_pixel_data_frame_filter.add_token(filter, token),
+      p10_pixel_data_frame_transform.add_token(filter, token),
     )
 
     let frames = list.append(frames, new_frames)
