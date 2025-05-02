@@ -26,6 +26,7 @@ mod transforms;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
+pub use decode::PixelDataDecodeError;
 pub use encode::{PixelDataEncodeConfig, PixelDataEncodeError};
 pub use grayscale_pipeline::GrayscalePipeline;
 pub use lookup_table::LookupTable;

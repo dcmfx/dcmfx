@@ -7,7 +7,8 @@ use alloc::{
 use dcmfx_core::{DcmfxError, TransferSyntax, transfer_syntax};
 
 use crate::{
-  ColorImage, MonochromeImage, PixelDataFrame, iods::ImagePixelModule,
+  ColorImage, MonochromeImage, PixelDataFrame,
+  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
 };
 
 mod native;
@@ -125,6 +126,36 @@ impl DcmfxError for PixelDataEncodeError {
     }
 
     lines
+  }
+}
+
+/// Returns the output photometric interpretation of pixel data in the given
+/// image pixel module encoded into the specified transfer syntax.
+///
+#[allow(clippy::result_unit_err)]
+pub fn encode_photometric_interpretation<'a>(
+  photometric_interpretation: &'a PhotometricInterpretation,
+  transfer_syntax: &'static TransferSyntax,
+) -> Result<&'a PhotometricInterpretation, PixelDataEncodeError> {
+  match transfer_syntax {
+    &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
+    | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
+    | &transfer_syntax::ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN
+    | &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION => {
+      native::encode_photometric_interpretation(photometric_interpretation)
+    }
+
+    &transfer_syntax::RLE_LOSSLESS => {
+      rle_lossless::encode_photometric_interpretation(
+        photometric_interpretation,
+      )
+    }
+
+    _ => {
+      Err(PixelDataEncodeError::TransferSyntaxNotSupported { transfer_syntax })
+    }
   }
 }
 

@@ -2,10 +2,36 @@
 use alloc::{format, vec, vec::Vec};
 
 use crate::{
-  ColorImage, ColorSpace, MonochromeImage,
-  iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
+  ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
+  iods::image_pixel_module::{
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+  },
 };
 use dcmfx_core::DataError;
+
+/// Returns the photometric interpretation used by data decoded using
+/// libjpeg_12bit.
+///
+pub fn decode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
+) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
+  match photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::Rgb => Ok(photometric_interpretation),
+
+    PhotometricInterpretation::YbrFull => Ok(&PhotometricInterpretation::Rgb),
+
+    _ => {
+      Err(PixelDataDecodeError::NotSupported {
+        details: format!(
+          "Decoding photometric interpretation '{}' is not supported",
+          photometric_interpretation
+        ),
+      })
+    }
+  }
+}
 
 /// Decodes monochrome pixel data using libjpeg_12bit.
 ///
@@ -35,9 +61,9 @@ pub fn decode_color(
 
   let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
   {
-    ColorSpace::YBR
+    ColorSpace::Ybr
   } else {
-    ColorSpace::RGB
+    ColorSpace::Rgb
   };
 
   ColorImage::new_u16(

@@ -3,7 +3,10 @@ use alloc::{format, string::ToString, vec, vec::Vec};
 
 use dcmfx_core::{DataError, DcmfxError, TransferSyntax, transfer_syntax};
 
-use crate::{iods::ImagePixelModule, ColorImage, MonochromeImage, PixelDataFrame};
+use crate::{
+  ColorImage, MonochromeImage, PixelDataFrame,
+  iods::{ImagePixelModule, image_pixel_module::PhotometricInterpretation},
+};
 
 #[cfg(not(target_arch = "wasm32"))]
 mod charls;
@@ -78,6 +81,71 @@ impl DcmfxError for PixelDataDecodeError {
     }
 
     lines
+  }
+}
+
+/// Given an input photometric interpretation and transfer syntax, returns the
+/// photometric interpretation of the decoded image data. This is limited to the
+/// equivalent photometric interpretations that can be represented in a
+/// [`MonochromeImage`] or [`ColorImage`].
+///
+#[allow(clippy::result_unit_err)]
+pub fn decode_photometric_interpretation<'a>(
+  photometric_interpretation: &'a PhotometricInterpretation,
+  transfer_syntax: &'static TransferSyntax,
+) -> Result<&'a PhotometricInterpretation, PixelDataDecodeError> {
+  use transfer_syntax::*;
+
+  match transfer_syntax {
+    &IMPLICIT_VR_LITTLE_ENDIAN
+    | &EXPLICIT_VR_LITTLE_ENDIAN
+    | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &EXPLICIT_VR_BIG_ENDIAN => {
+      native::decode_photometric_interpretation(photometric_interpretation)
+    }
+
+    &RLE_LOSSLESS => rle_lossless::decode_photometric_interpretation(
+      photometric_interpretation,
+    ),
+
+    &JPEG_BASELINE_8BIT => {
+      zune_jpeg::decode_photometric_interpretation(photometric_interpretation)
+    }
+
+    &JPEG_EXTENDED_12BIT => libjpeg_12bit::decode_photometric_interpretation(
+      photometric_interpretation,
+    ),
+
+    &JPEG_LOSSLESS_NON_HIERARCHICAL | &JPEG_LOSSLESS_NON_HIERARCHICAL_SV1 => {
+      jpeg_decoder::decode_photometric_interpretation(
+        photometric_interpretation,
+      )
+    }
+
+    &JPEG_2K
+    | &JPEG_2K_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2K
+    | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
+      openjpeg::decode_photometric_interpretation(photometric_interpretation)
+    }
+
+    &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
+      jxl_oxide::decode_photometric_interpretation(photometric_interpretation)
+    }
+
+    &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
+      charls::decode_photometric_interpretation(photometric_interpretation)
+    }
+
+    &DEFLATED_IMAGE_FRAME_COMPRESSION => {
+      native::decode_photometric_interpretation(photometric_interpretation)
+    }
+
+    _ => {
+      Err(PixelDataDecodeError::TransferSyntaxNotSupported { transfer_syntax })
+    }
   }
 }
 

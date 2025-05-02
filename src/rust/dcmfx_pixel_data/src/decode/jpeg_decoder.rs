@@ -1,11 +1,37 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec::Vec};
 
+use dcmfx_core::DataError;
+
 use crate::{
-  ColorImage, ColorSpace, MonochromeImage,
+  ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
 };
-use dcmfx_core::DataError;
+
+/// Returns the photometric interpretation used by data decoded using
+/// jpeg-decoder.
+///
+pub fn decode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
+) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
+  match photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb => Ok(photometric_interpretation),
+
+    PhotometricInterpretation::YbrFull => Ok(&PhotometricInterpretation::Rgb),
+
+    _ => {
+      Err(PixelDataDecodeError::NotSupported {
+        details: format!(
+          "Decoding photometric interpretation '{}' is not supported",
+          photometric_interpretation
+        ),
+      })
+    }
+  }
+}
 
 /// Decodes monochrome pixel data using jpeg-decoder.
 ///
@@ -101,7 +127,7 @@ pub fn decode_color(
       PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull,
       jpeg_decoder::PixelFormat::RGB24,
     ) => {
-      ColorImage::new_u8(width, height, pixels, ColorSpace::RGB, bits_stored)
+      ColorImage::new_u8(width, height, pixels, ColorSpace::Rgb, bits_stored)
     }
 
     _ => Err(DataError::new_value_invalid(format!(

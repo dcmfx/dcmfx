@@ -8,6 +8,35 @@ use crate::{
   monochrome_image::MonochromeImageData,
 };
 
+/// Returns the photometric interpretation used by an image encoded as RLE
+/// Lossless pixel data.
+///
+pub fn encode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
+) -> Result<&PhotometricInterpretation, PixelDataEncodeError> {
+  match photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
+
+    PhotometricInterpretation::YbrFull422 => {
+      Ok(&PhotometricInterpretation::YbrFull)
+    }
+
+    _ => {
+      Err(PixelDataEncodeError::NotSupported {
+        details: format!(
+          "Encoding photometric interpretation '{}' into RLE Lossless pixel \
+           data is not supported",
+          photometric_interpretation
+        ),
+      })
+    }
+  }
+}
+
 /// Encodes a [`MonochromeImage`] into RLE Lossless raw bytes.
 ///
 pub fn encode_monochrome(

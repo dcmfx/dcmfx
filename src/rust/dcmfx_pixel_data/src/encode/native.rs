@@ -11,6 +11,32 @@ use crate::{
   monochrome_image::MonochromeImageData,
 };
 
+/// Returns the photometric interpretation used by an image encoded as native
+/// pixel data.
+///
+pub fn encode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
+) -> Result<&PhotometricInterpretation, PixelDataEncodeError> {
+  match photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull422
+    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
+
+    _ => {
+      Err(PixelDataEncodeError::NotSupported {
+        details: format!(
+          "Encoding photometric interpretation '{}' into native pixel data is \
+           not supported",
+          photometric_interpretation
+        ),
+      })
+    }
+  }
+}
+
 /// Encodes a [`MonochromeImage`] into native pixel data raw bytes.
 ///
 pub fn encode_monochrome(image: &MonochromeImage) -> PixelDataFrame {

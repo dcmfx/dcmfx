@@ -4,12 +4,39 @@ use alloc::{format, string::ToString, vec, vec::Vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, MonochromeImage,
+  ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
     PixelRepresentation,
   },
 };
+
+/// Returns the photometric interpretation used by data decoded using OpenJPEG.
+///
+pub fn decode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
+) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
+  match photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
+
+    PhotometricInterpretation::YbrIct | PhotometricInterpretation::YbrRct => {
+      Ok(&PhotometricInterpretation::Rgb)
+    }
+
+    PhotometricInterpretation::YbrFull422 | PhotometricInterpretation::Xyb => {
+      Err(PixelDataDecodeError::NotSupported {
+        details: format!(
+          "Decoding photometric interpretation '{}' is not supported",
+          photometric_interpretation
+        ),
+      })
+    }
+  }
+}
 
 /// Decodes monochrome pixel data using OpenJPEG.
 ///
@@ -115,9 +142,9 @@ pub fn decode_color(
   let color_space = if image_pixel_module.photometric_interpretation()
     == &PhotometricInterpretation::YbrFull
   {
-    ColorSpace::YBR
+    ColorSpace::Ybr
   } else {
-    ColorSpace::RGB
+    ColorSpace::Rgb
   };
 
   match (

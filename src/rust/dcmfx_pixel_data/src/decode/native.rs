@@ -4,12 +4,36 @@ use alloc::{format, string::ToString, vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, MonochromeImage,
+  ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
     PixelRepresentation, PlanarConfiguration, SamplesPerPixel,
   },
 };
+
+/// Returns the photometric interpretation used by decoded native pixel data.
+///
+pub fn decode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
+) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
+  match photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull
+    | PhotometricInterpretation::YbrFull422 => Ok(photometric_interpretation),
+
+    _ => {
+      Err(PixelDataDecodeError::NotSupported {
+        details: format!(
+          "Decoding photometric interpretation '{}' is not supported",
+          photometric_interpretation
+        ),
+      })
+    }
+  }
+}
 
 /// Decodes stored values for native monochrome pixel data that uses the
 /// [`PhotometricInterpretation::Monochrome1`] or
@@ -286,9 +310,9 @@ pub fn decode_color(
 
   let color_space = match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::PaletteColor { .. }
-    | PhotometricInterpretation::Rgb => ColorSpace::RGB,
-    PhotometricInterpretation::YbrFull => ColorSpace::YBR,
-    PhotometricInterpretation::YbrFull422 => ColorSpace::YBR422,
+    | PhotometricInterpretation::Rgb => ColorSpace::Rgb,
+    PhotometricInterpretation::YbrFull => ColorSpace::Ybr,
+    PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr422,
     _ => {
       return Err(DataError::new_value_unsupported(format!(
         "Photometric interpretation '{}' is not supported for native color \
@@ -789,7 +813,7 @@ mod tests {
         2,
         2,
         vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-        ColorSpace::RGB,
+        ColorSpace::Rgb,
         8
       )
     );
@@ -820,7 +844,7 @@ mod tests {
         2,
         2,
         vec![0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11,],
-        ColorSpace::RGB,
+        ColorSpace::Rgb,
         16
       )
     );
@@ -845,7 +869,7 @@ mod tests {
 
     assert_eq!(
       decode_color(&image_pixel_module, &data),
-      ColorImage::new_u8(2, 2, data, ColorSpace::YBR, 8)
+      ColorImage::new_u8(2, 2, data, ColorSpace::Ybr, 8)
     );
   }
 
@@ -872,7 +896,7 @@ mod tests {
         2,
         2,
         vec![142, 111, 148, 122, 111, 148, 118, 101, 123, 122, 101, 123],
-        ColorSpace::YBR422,
+        ColorSpace::Ybr422,
         8
       )
     );

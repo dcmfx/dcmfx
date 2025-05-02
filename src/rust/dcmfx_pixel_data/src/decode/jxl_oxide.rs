@@ -6,9 +6,37 @@ use jxl_oxide::{FrameBufferSample, JxlImage, Render, image::BitDepth};
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, MonochromeImage,
-  iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
+  ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
+  iods::image_pixel_module::{
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+  },
 };
+
+/// Returns the photometric interpretation used by data decoded using jxl-oxide.
+///
+pub fn decode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
+) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
+  match photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::Rgb => Ok(photometric_interpretation),
+
+    PhotometricInterpretation::YbrFull422
+    | PhotometricInterpretation::YbrIct
+    | PhotometricInterpretation::YbrRct
+    | PhotometricInterpretation::Xyb => Ok(&PhotometricInterpretation::Rgb),
+
+    _ => {
+      Err(PixelDataDecodeError::NotSupported {
+        details: format!(
+          "Decoding photometric interpretation '{}' is not supported",
+          photometric_interpretation
+        ),
+      })
+    }
+  }
+}
 
 /// Decodes monochrome pixel data using jxl-oxide.
 ///
@@ -92,7 +120,7 @@ pub fn decode_color(
       let mut buffer = vec![0u8; image_pixel_module.pixel_count() * 3];
       render_samples(&jxl_render, &mut buffer)?;
 
-      ColorImage::new_u8(width, height, buffer, ColorSpace::RGB, bits_stored)
+      ColorImage::new_u8(width, height, buffer, ColorSpace::Rgb, bits_stored)
     }
 
     (
@@ -104,7 +132,7 @@ pub fn decode_color(
       let mut buffer = vec![0u16; image_pixel_module.pixel_count() * 3];
       render_samples(&jxl_render, &mut buffer)?;
 
-      ColorImage::new_u16(width, height, buffer, ColorSpace::RGB, bits_stored)
+      ColorImage::new_u16(width, height, buffer, ColorSpace::Rgb, bits_stored)
     }
 
     _ => Err(DataError::new_value_invalid(

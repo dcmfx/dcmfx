@@ -4,9 +4,32 @@ use alloc::{format, string::ToString, vec::Vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, MonochromeImage,
+  ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
 };
+
+/// Returns the photometric interpretation used by data decoded using zune-jpeg.
+///
+pub fn decode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
+) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
+  match photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull
+    | PhotometricInterpretation::YbrFull422 => Ok(photometric_interpretation),
+
+    _ => {
+      Err(PixelDataDecodeError::NotSupported {
+        details: format!(
+          "Decoding photometric interpretation '{}' is not supported",
+          photometric_interpretation
+        ),
+      })
+    }
+  }
+}
 
 /// Decodes monochrome JPEG pixel data using zune-jpeg.
 ///
@@ -40,13 +63,13 @@ pub fn decode_color(
   let (zune_color_space, output_color_space) =
     match image_pixel_module.photometric_interpretation() {
       PhotometricInterpretation::Rgb => {
-        (zune_core::colorspace::ColorSpace::RGB, ColorSpace::RGB)
+        (zune_core::colorspace::ColorSpace::RGB, ColorSpace::Rgb)
       }
       PhotometricInterpretation::YbrFull => {
-        (zune_core::colorspace::ColorSpace::YCbCr, ColorSpace::YBR)
+        (zune_core::colorspace::ColorSpace::YCbCr, ColorSpace::Ybr)
       }
       PhotometricInterpretation::YbrFull422 => {
-        (zune_core::colorspace::ColorSpace::YCbCr, ColorSpace::YBR422)
+        (zune_core::colorspace::ColorSpace::YCbCr, ColorSpace::Ybr422)
       }
       _ => {
         return Err(DataError::new_value_unsupported(format!(

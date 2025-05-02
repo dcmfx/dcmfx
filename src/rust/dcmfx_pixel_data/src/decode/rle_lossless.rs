@@ -6,12 +6,36 @@ use byteorder::ByteOrder;
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, MonochromeImage,
+  ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
     PixelRepresentation, SamplesPerPixel,
   },
 };
+
+/// Returns the photometric interpretation used by decoded RLE Lossless pixel
+/// data.
+///
+pub fn decode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
+) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
+  match photometric_interpretation {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
+
+    _ => {
+      Err(PixelDataDecodeError::NotSupported {
+        details: format!(
+          "Decoding photometric interpretation '{}' is not supported",
+          photometric_interpretation
+        ),
+      })
+    }
+  }
+}
 
 /// Decodes stored values for RLE Lossless pixel data that uses the
 /// [`PhotometricInterpretation::Monochrome1`] or
@@ -270,9 +294,9 @@ pub fn decode_color(
   let bits_stored = image_pixel_module.bits_stored();
 
   let color_space = match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::YbrFull => ColorSpace::YBR,
-    PhotometricInterpretation::YbrFull422 => ColorSpace::YBR422,
-    _ => ColorSpace::RGB,
+    PhotometricInterpretation::YbrFull => ColorSpace::Ybr,
+    PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr422,
+    _ => ColorSpace::Rgb,
   };
 
   let mut segments = decode_rle_segments(data, pixel_count)?;

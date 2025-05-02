@@ -50,9 +50,9 @@ pub enum ColorImageData {
 ///
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ColorSpace {
-  RGB,
-  YBR,
-  YBR422,
+  Rgb,
+  Ybr,
+  Ybr422,
 }
 
 impl ColorImage {
@@ -281,7 +281,7 @@ impl ColorImage {
       | ColorImageData::U32 { color_space, .. } => *color_space,
 
       ColorImageData::PaletteU8 { .. } | ColorImageData::PaletteU16 { .. } => {
-        ColorSpace::RGB
+        ColorSpace::Rgb
       }
     }
   }
@@ -305,7 +305,7 @@ impl ColorImage {
       // avoiding a copy
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::RGB,
+        color_space: ColorSpace::Rgb,
       } if self.bits_stored == 8 => image::ImageBuffer::from_raw(
         self.width.into(),
         self.height.into(),
@@ -326,7 +326,7 @@ impl ColorImage {
           u64: From<T>,
         {
           match color_space {
-            ColorSpace::RGB => {
+            ColorSpace::Rgb => {
               let max_storable_value: u64 = max_storable_value.into();
 
               for value in data {
@@ -337,7 +337,7 @@ impl ColorImage {
               }
             }
 
-            ColorSpace::YBR | ColorSpace::YBR422 => {
+            ColorSpace::Ybr | ColorSpace::Ybr422 => {
               let scale = 1.0 / f64::from(max_storable_value);
 
               for ybr in data.chunks_exact(3) {
@@ -422,7 +422,7 @@ impl ColorImage {
       // If this color image is already in RGB16 then return it directly,
       // avoiding a copy
       ColorImageData::U16 {
-        color_space: ColorSpace::RGB,
+        color_space: ColorSpace::Rgb,
         data,
       } if self.bits_stored == 16 => image::ImageBuffer::from_raw(
         self.width.into(),
@@ -445,7 +445,7 @@ impl ColorImage {
           u64: From<T>,
         {
           match color_space {
-            ColorSpace::RGB => {
+            ColorSpace::Rgb => {
               let max_storable_value: u64 = max_storable_value.into();
 
               for value in data {
@@ -456,7 +456,7 @@ impl ColorImage {
               }
             }
 
-            ColorSpace::YBR | ColorSpace::YBR422 => {
+            ColorSpace::Ybr | ColorSpace::Ybr422 => {
               let scale = 1.0 / f64::from(max_storable_value);
 
               for ybr in data.chunks_exact(3) {
@@ -553,7 +553,7 @@ impl ColorImage {
       let scale = 1.0 / f64::from(max_storable_value);
 
       match color_space {
-        ColorSpace::RGB => {
+        ColorSpace::Rgb => {
           for rgb in data.chunks_exact(3) {
             rgb_pixels.push(rgb[0].into() * scale);
             rgb_pixels.push(rgb[1].into() * scale);
@@ -561,7 +561,7 @@ impl ColorImage {
           }
         }
 
-        ColorSpace::YBR | ColorSpace::YBR422 => {
+        ColorSpace::Ybr | ColorSpace::Ybr422 => {
           for ybr in data.chunks_exact(3) {
             let rgb = ybr_to_rgb(
               ybr[0].into() * scale,
