@@ -351,7 +351,7 @@ fn resize_using_bilinear_filter() {
 }
 
 #[test]
-fn jpeg_2000_single_channel_to_jpg() {
+fn jpeg_2000_monochrome_to_jpg() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/MR_small_jp2klossless.dcm";
   let output_file = format!("{}.0000.jpg", dicom_file);
@@ -374,7 +374,7 @@ fn jpeg_2000_single_channel_to_jpg() {
 }
 
 #[test]
-fn jpeg_2000_single_channel_to_png_16bit() {
+fn jpeg_2000_monochrome_to_png_16bit() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/MR_small_jp2klossless.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
@@ -395,7 +395,7 @@ fn jpeg_2000_single_channel_to_png_16bit() {
 
   assert_image_snapshot!(
     output_file,
-    "jpeg_2000_single_channel_to_png_16bit.png"
+    "jpeg_2000_monochrome_to_png_16bit.png"
   );
 }
 
@@ -439,7 +439,7 @@ fn jpeg_2000_ybr_color_space_to_jpg() {
 }
 
 #[test]
-fn jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg() {
+fn jpeg_2000_monochrome_with_mismatched_pixel_representation_to_jpg() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/J2K_pixelrep_mismatch.dcm";
   let output_file = format!("{}.0000.jpg", dicom_file);
@@ -457,12 +457,12 @@ fn jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg() {
 
   assert_image_snapshot!(
     output_file,
-    "jpeg_2000_single_channel_with_mismatched_pixel_representation_to_jpg.jpg"
+    "jpeg_2000_monochrome_with_mismatched_pixel_representation_to_jpg.jpg"
   );
 }
 
 #[test]
-fn jpeg_2000_single_channel_2bpp_to_png() {
+fn jpeg_2000_monochrome_2bpp_to_png() {
   let dicom_file =
     "../../../test/assets/other/examples_jpeg2k.monochrome_2bpp.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
@@ -480,12 +480,12 @@ fn jpeg_2000_single_channel_2bpp_to_png() {
 
   assert_image_snapshot!(
     output_file,
-    "jpeg_2000_single_channel_2bpp_to_png.png"
+    "jpeg_2000_monochrome_2bpp_to_png.png"
   );
 }
 
 #[test]
-fn jpeg_ls_single_channel_to_png() {
+fn jpeg_ls_monochrome_to_png() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
@@ -501,7 +501,7 @@ fn jpeg_ls_single_channel_to_png() {
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(output_file, "jpeg_ls_single_channel_to_png.png");
+  assert_image_snapshot!(output_file, "jpeg_ls_monochrome_to_png.png");
 }
 
 #[test]
@@ -627,7 +627,7 @@ fn jpeg_lossless_12bit_to_jpg_with_presentation_lut() {
 }
 
 #[test]
-fn jpeg_extended_12bit_single_channel_to_png() {
+fn jpeg_extended_12bit_monochrome_to_png() {
   let dicom_file = "../../../test/assets/pydicom/test_files/JPEG-lossy.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
 
@@ -644,12 +644,12 @@ fn jpeg_extended_12bit_single_channel_to_png() {
 
   assert_image_snapshot!(
     output_file,
-    "jpeg_extended_12bit_single_channel_to_png.png"
+    "jpeg_extended_12bit_monochrome_to_png.png"
   );
 }
 
 #[test]
-fn jpeg_xl_single_channel_to_png() {
+fn jpeg_xl_monochrome_to_png() {
   let dicom_file = "../../../test/assets/other/monochrome_jpeg_xl.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
 
@@ -664,7 +664,7 @@ fn jpeg_xl_single_channel_to_png() {
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(output_file, "jpeg_xl_single_channel_to_png.png");
+  assert_image_snapshot!(output_file, "jpeg_xl_monochrome_to_png.png");
 }
 
 #[test]

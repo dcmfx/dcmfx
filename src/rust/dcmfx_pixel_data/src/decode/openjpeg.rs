@@ -4,19 +4,19 @@ use alloc::{format, string::ToString, vec, vec::Vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, SingleChannelImage,
+  ColorImage, ColorSpace, MonochromeImage,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
     PixelRepresentation,
   },
 };
 
-/// Decodes single channel pixel data using OpenJPEG.
+/// Decodes monochrome pixel data using OpenJPEG.
 ///
-pub fn decode_single_channel(
+pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<SingleChannelImage, DataError> {
+) -> Result<MonochromeImage, DataError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
@@ -33,7 +33,7 @@ pub fn decode_single_channel(
       BitsAllocated::One | BitsAllocated::Eight,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_u8(
+      MonochromeImage::new_u8(
         width,
         height,
         pixels,
@@ -47,7 +47,7 @@ pub fn decode_single_channel(
       BitsAllocated::One | BitsAllocated::Eight,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_i8(
+      MonochromeImage::new_i8(
         width,
         height,
         pixels,
@@ -58,7 +58,7 @@ pub fn decode_single_channel(
 
     (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_u16(
+      MonochromeImage::new_u16(
         width,
         height,
         pixels,
@@ -69,7 +69,7 @@ pub fn decode_single_channel(
 
     (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_i16(
+      MonochromeImage::new_i16(
         width,
         height,
         pixels,
@@ -80,7 +80,7 @@ pub fn decode_single_channel(
 
     (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_u32(
+      MonochromeImage::new_u32(
         width,
         height,
         pixels,
@@ -91,7 +91,7 @@ pub fn decode_single_channel(
 
     (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
       let pixels = decode(image_pixel_module, data)?;
-      SingleChannelImage::new_i32(
+      MonochromeImage::new_i32(
         width,
         height,
         pixels,

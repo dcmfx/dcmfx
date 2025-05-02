@@ -2,32 +2,32 @@
 use alloc::{format, string::ToString, vec, vec::Vec};
 
 use crate::{
-  ColorImage, PixelDataEncodeError, PixelDataFrame, SingleChannelImage,
+  ColorImage, MonochromeImage, PixelDataEncodeError, PixelDataFrame,
   color_image::ColorImageData,
   iods::{
     ImagePixelModule,
     image_pixel_module::{PhotometricInterpretation, PlanarConfiguration},
   },
-  single_channel_image::SingleChannelImageData,
+  monochrome_image::MonochromeImageData,
 };
 
-/// Encodes a [`SingleChannelImage`] into native pixel data raw bytes.
+/// Encodes a [`MonochromeImage`] into native pixel data raw bytes.
 ///
-pub fn encode_single_channel(image: &SingleChannelImage) -> PixelDataFrame {
+pub fn encode_monochrome(image: &MonochromeImage) -> PixelDataFrame {
   let bit_size =
     image.pixel_count() as u64 * u64::from(u8::from(image.bits_allocated()));
   let mut result = vec![0u8; bit_size.div_ceil(8) as usize];
 
   match (image.data(), image.bits_stored()) {
-    (SingleChannelImageData::Bitmap { data, .. }, _) => {
+    (MonochromeImageData::Bitmap { data, .. }, _) => {
       result.copy_from_slice(data)
     }
 
-    (SingleChannelImageData::I8(data), 8) => {
+    (MonochromeImageData::I8(data), 8) => {
       result.copy_from_slice(bytemuck::cast_slice(data))
     }
 
-    (SingleChannelImageData::I8(data), _) => {
+    (MonochromeImageData::I8(data), _) => {
       let mask = (1 << image.bits_stored()) - 1;
 
       for (i, pixel) in data.iter().enumerate() {
@@ -35,9 +35,9 @@ pub fn encode_single_channel(image: &SingleChannelImage) -> PixelDataFrame {
       }
     }
 
-    (SingleChannelImageData::U8(data), _) => result.copy_from_slice(data),
+    (MonochromeImageData::U8(data), _) => result.copy_from_slice(data),
 
-    (SingleChannelImageData::I16(data), 16) => {
+    (MonochromeImageData::I16(data), 16) => {
       #[cfg(target_endian = "little")]
       unsafe {
         core::ptr::copy_nonoverlapping(
@@ -53,7 +53,7 @@ pub fn encode_single_channel(image: &SingleChannelImage) -> PixelDataFrame {
       }
     }
 
-    (SingleChannelImageData::I16(data), _) => {
+    (MonochromeImageData::I16(data), _) => {
       let mask = (1 << image.bits_stored()) - 1;
 
       for (i, pixel) in data.iter().enumerate() {
@@ -62,7 +62,7 @@ pub fn encode_single_channel(image: &SingleChannelImage) -> PixelDataFrame {
       }
     }
 
-    (SingleChannelImageData::U16(data), _) => {
+    (MonochromeImageData::U16(data), _) => {
       #[cfg(target_endian = "little")]
       unsafe {
         core::ptr::copy_nonoverlapping(
@@ -78,11 +78,11 @@ pub fn encode_single_channel(image: &SingleChannelImage) -> PixelDataFrame {
       }
     }
 
-    (SingleChannelImageData::I32(data), 16) => {
+    (MonochromeImageData::I32(data), 16) => {
       result.copy_from_slice(bytemuck::cast_slice(data))
     }
 
-    (SingleChannelImageData::I32(data), _) => {
+    (MonochromeImageData::I32(data), _) => {
       let mask = (1 << image.bits_stored()) - 1;
 
       for (i, pixel) in data.iter().enumerate() {
@@ -91,7 +91,7 @@ pub fn encode_single_channel(image: &SingleChannelImage) -> PixelDataFrame {
       }
     }
 
-    (SingleChannelImageData::U32(data), _) => {
+    (MonochromeImageData::U32(data), _) => {
       #[cfg(target_endian = "little")]
       unsafe {
         core::ptr::copy_nonoverlapping(

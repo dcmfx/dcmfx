@@ -3,13 +3,14 @@ use std::rc::Rc;
 #[cfg(not(feature = "std"))]
 use alloc::rc::Rc;
 
+use dcmfx_pixel_data::PixelDataEncodeConfig;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
 use dcmfx_core::{DataError, TransferSyntax, transfer_syntax};
 
 use dcmfx_pixel_data::{
-  ColorImage, ColorSpace, LookupTable, SingleChannelImage, decode, encode,
+  ColorImage, ColorSpace, LookupTable, MonochromeImage, decode, encode,
   iods::{
     PaletteColorLookupTableModule,
     image_pixel_module::{
@@ -27,7 +28,7 @@ fn test_native_encode_decode_cycle() {
 
   for image_pixel_module in all_image_pixel_modules() {
     if image_pixel_module.is_grayscale() {
-      test_single_channel_image_encode_decode_cycle(
+      test_monochrome_image_encode_decode_cycle(
         &image_pixel_module,
         transfer_syntax,
       );
@@ -46,7 +47,7 @@ fn test_rle_lossless_encode_decode_cycle() {
 
   for image_pixel_module in all_image_pixel_modules() {
     if image_pixel_module.is_grayscale() {
-      test_single_channel_image_encode_decode_cycle(
+      test_monochrome_image_encode_decode_cycle(
         &image_pixel_module,
         transfer_syntax,
       );
@@ -73,7 +74,7 @@ fn test_deflated_image_frame_encode_decode_cycle() {
 
   for image_pixel_module in all_image_pixel_modules() {
     if image_pixel_module.is_grayscale() {
-      test_single_channel_image_encode_decode_cycle(
+      test_monochrome_image_encode_decode_cycle(
         &image_pixel_module,
         transfer_syntax,
       );
@@ -86,16 +87,20 @@ fn test_deflated_image_frame_encode_decode_cycle() {
   }
 }
 
-fn test_single_channel_image_encode_decode_cycle(
+fn test_monochrome_image_encode_decode_cycle(
   image_pixel_module: &ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
 ) {
-  let image = create_single_channel_image(&image_pixel_module);
+  let image = create_monochrome_image(&image_pixel_module);
 
-  let mut encoded_frame =
-    encode::encode_single_channel(&image, transfer_syntax).unwrap();
+  let mut encoded_frame = encode::encode_monochrome(
+    &image,
+    transfer_syntax,
+    &PixelDataEncodeConfig::new(),
+  )
+  .unwrap();
 
-  let decoded_pixel_data = decode::decode_single_channel(
+  let decoded_pixel_data = decode::decode_monochrome(
     &mut encoded_frame,
     transfer_syntax,
     &image_pixel_module,
@@ -111,8 +116,13 @@ fn test_color_image_encode_decode_cycle(
 ) {
   let image = create_color_image(&image_pixel_module);
 
-  let mut encoded_frame =
-    encode::encode_color(&image, transfer_syntax, &image_pixel_module).unwrap();
+  let mut encoded_frame = encode::encode_color(
+    &image,
+    transfer_syntax,
+    &image_pixel_module,
+    &PixelDataEncodeConfig::new(),
+  )
+  .unwrap();
 
   let decoded_image = decode::decode_color(
     &mut encoded_frame,
@@ -245,12 +255,12 @@ fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
   image_pixel_modules
 }
 
-/// Creates a [`SingleChannelImage`] with random data based on the given
+/// Creates a [`MonochromeImage`] with random data based on the given
 /// [`ImagePixelModule`].
 ///
-fn create_single_channel_image(
+fn create_monochrome_image(
   image_pixel_module: &ImagePixelModule,
-) -> SingleChannelImage {
+) -> MonochromeImage {
   fn create_image<T>(
     image_pixel_module: &ImagePixelModule,
     create: impl Fn(
@@ -259,8 +269,8 @@ fn create_single_channel_image(
       Vec<T>,
       u16,
       bool,
-    ) -> Result<SingleChannelImage, DataError>,
-  ) -> SingleChannelImage
+    ) -> Result<MonochromeImage, DataError>,
+  ) -> MonochromeImage
   where
     T: TryFrom<i64> + Copy + Default,
     <T as TryFrom<i64>>::Error: std::fmt::Debug,
@@ -300,26 +310,20 @@ fn create_single_channel_image(
     BitsAllocated::One => create_image(
       &image_pixel_module,
       |width, height, data, _bits_stored, is_monochrome1| {
-        SingleChannelImage::new_bitmap(
-          width,
-          height,
-          data,
-          false,
-          is_monochrome1,
-        )
+        MonochromeImage::new_bitmap(width, height, data, false, is_monochrome1)
       },
     ),
 
     BitsAllocated::Eight => {
-      create_image(&image_pixel_module, SingleChannelImage::new_u8)
+      create_image(&image_pixel_module, MonochromeImage::new_u8)
     }
 
     BitsAllocated::Sixteen => {
-      create_image(&image_pixel_module, SingleChannelImage::new_u16)
+      create_image(&image_pixel_module, MonochromeImage::new_u16)
     }
 
     BitsAllocated::ThirtyTwo => {
-      create_image(&image_pixel_module, SingleChannelImage::new_u32)
+      create_image(&image_pixel_module, MonochromeImage::new_u32)
     }
   }
 }

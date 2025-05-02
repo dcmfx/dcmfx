@@ -170,7 +170,7 @@ impl PixelDataFrame {
   /// into one new chunk. Returns the slice of the first (and only) chunk that
   /// contains all the pixel data for this frame.
   ///
-  pub fn combine_fragments(&mut self) -> &[u8] {
+  pub fn combine_chunks(&mut self) -> &[u8] {
     if self.chunks.is_empty() {
       self.chunks = vec![RcByteSlice::empty()];
     }

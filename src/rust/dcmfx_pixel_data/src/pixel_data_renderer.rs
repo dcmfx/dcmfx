@@ -7,12 +7,12 @@ use dcmfx_core::{
 };
 
 use crate::{
-  ColorImage, GrayscalePipeline, PixelDataFrame, SingleChannelImage,
+  ColorImage, GrayscalePipeline, MonochromeImage, PixelDataFrame,
   StandardColorPalette, decode, iods::ImagePixelModule,
 };
 
 /// Defines a pixel data renderer that can take a [`PixelDataFrame`] and render
-/// it into a [`SingleChannelImage`], [`ColorImage`], or [`image::RgbImage`].
+/// it into a [`MonochromeImage`], [`ColorImage`], or [`image::RgbImage`].
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct PixelDataRenderer {
@@ -59,11 +59,11 @@ impl IodModule for PixelDataRenderer {
 }
 
 impl PixelDataRenderer {
-  /// Renders a frame of pixel data to an RGB 8-bit image. The Modality LUT and
-  /// VOI LUT are applied to single channel images, and resulting grayscale
-  /// values are then expanded to RGB.
+  /// Renders a frame of pixel data to an RGB 8-bit image. The grayscale
+  /// pipeline is applied to monochrome images, and resulting grayscale values
+  /// are then expanded to RGB.
   ///
-  /// Grayscale frames can optionally be visualized using a color palette. The
+  /// Monochrome frames can optionally be visualized using a color palette. The
   /// well-known color palettes defined in PS3.6 B.1 are provided in
   /// [`crate::standard_color_palettes`].
   ///
@@ -73,13 +73,13 @@ impl PixelDataRenderer {
     color_palette: Option<&StandardColorPalette>,
   ) -> Result<image::RgbImage, DataError> {
     if self.image_pixel_module.is_grayscale() {
-      let image = decode::decode_single_channel(
+      let image = decode::decode_monochrome(
         frame,
         self.transfer_syntax,
         &self.image_pixel_module,
       )?;
 
-      Ok(self.render_single_channel_image(&image, color_palette))
+      Ok(self.render_monochrome_image(&image, color_palette))
     } else {
       let image = decode::decode_color(
         frame,
@@ -91,7 +91,7 @@ impl PixelDataRenderer {
     }
   }
 
-  /// Renders a [`SingleChannelImage`] to an RGB 8-bit image. The grayscale
+  /// Renders a [`MonochromeImage`] to an RGB 8-bit image. The grayscale
   /// pipeline is applied, and resulting grayscale values are then expanded
   /// to RGB.
   ///
@@ -99,9 +99,9 @@ impl PixelDataRenderer {
   /// well-known color palettes defined in PS3.6 B.1 are provided in
   /// [`crate::standard_color_palettes`].
   ///
-  pub fn render_single_channel_image(
+  pub fn render_monochrome_image(
     &self,
-    image: &SingleChannelImage,
+    image: &MonochromeImage,
     color_palette: Option<&StandardColorPalette>,
   ) -> image::RgbImage {
     let mut pixels = Vec::with_capacity(image.pixel_count() * 3);
@@ -124,15 +124,15 @@ impl PixelDataRenderer {
       .unwrap()
   }
 
-  /// Decodes a frame of single channel pixel data into a
-  /// [`SingleChannelImage`]. The returned image needs to have a grayscale
-  /// pipeline applied in order to reach final grayscale display values.
+  /// Decodes a frame of monochrome pixel data into a [`MonochromeImage`]. The
+  /// returned image needs to have a grayscale pipeline applied in order to
+  /// reach final grayscale display values.
   ///
-  pub fn decode_single_channel_frame(
+  pub fn decode_monochrome_frame(
     &self,
     frame: &mut PixelDataFrame,
-  ) -> Result<SingleChannelImage, DataError> {
-    decode::decode_single_channel(
+  ) -> Result<MonochromeImage, DataError> {
+    decode::decode_monochrome(
       frame,
       self.transfer_syntax,
       &self.image_pixel_module,

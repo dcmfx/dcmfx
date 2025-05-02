@@ -6,16 +6,16 @@ use jxl_oxide::{FrameBufferSample, JxlImage, Render, image::BitDepth};
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, SingleChannelImage,
+  ColorImage, ColorSpace, MonochromeImage,
   iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 
-/// Decodes single channel pixel data using jxl-oxide.
+/// Decodes monochrome pixel data using jxl-oxide.
 ///
-pub fn decode_single_channel(
+pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<SingleChannelImage, DataError> {
+) -> Result<MonochromeImage, DataError> {
   let (jxl_image, jxl_render) = decode(image_pixel_module, data)?;
 
   let width = image_pixel_module.columns();
@@ -33,7 +33,7 @@ pub fn decode_single_channel(
       let mut buffer = vec![0u8; image_pixel_module.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 
-      SingleChannelImage::new_u8(
+      MonochromeImage::new_u8(
         width,
         height,
         buffer,
@@ -51,7 +51,7 @@ pub fn decode_single_channel(
       let mut buffer = vec![0u16; image_pixel_module.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 
-      SingleChannelImage::new_u16(
+      MonochromeImage::new_u16(
         width,
         height,
         buffer,
@@ -61,7 +61,7 @@ pub fn decode_single_channel(
     }
 
     _ => Err(DataError::new_value_invalid(
-      "JPEG XL pixel data does not contain a supported single channel image"
+      "JPEG XL pixel data does not contain a supported monochrome image"
         .to_string(),
     )),
   }

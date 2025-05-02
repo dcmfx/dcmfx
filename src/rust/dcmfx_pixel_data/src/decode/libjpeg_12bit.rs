@@ -2,19 +2,19 @@
 use alloc::{format, vec, vec::Vec};
 
 use crate::{
-  ColorImage, ColorSpace, SingleChannelImage,
+  ColorImage, ColorSpace, MonochromeImage,
   iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 use dcmfx_core::DataError;
 
-/// Decodes single channel pixel data using libjpeg_12bit.
+/// Decodes monochrome pixel data using libjpeg_12bit.
 ///
-pub fn decode_single_channel(
+pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<SingleChannelImage, DataError> {
+) -> Result<MonochromeImage, DataError> {
   let pixels = decode(image_pixel_module, data)?;
-  SingleChannelImage::new_u16(
+  MonochromeImage::new_u16(
     image_pixel_module.columns(),
     image_pixel_module.rows(),
     pixels,

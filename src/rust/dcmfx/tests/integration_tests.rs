@@ -439,7 +439,7 @@ fn test_pixel_data_read(
 
     if pixel_data_renderer.image_pixel_module.is_grayscale() {
       let image = pixel_data_renderer
-        .decode_single_channel_frame(&mut frame)
+        .decode_monochrome_frame(&mut frame)
         .map_err(|e| {
           DicomValidationError::PixelDataRenderError(Either::Left(e))
         })?;

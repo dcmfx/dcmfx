@@ -4,16 +4,16 @@ use alloc::{format, string::ToString, vec, vec::Vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, SingleChannelImage,
+  ColorImage, ColorSpace, MonochromeImage,
   iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 
-/// Decodes single channel pixel data using CharLS.
+/// Decodes monochrome pixel data using CharLS.
 ///
-pub fn decode_single_channel(
+pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<SingleChannelImage, DataError> {
+) -> Result<MonochromeImage, DataError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
@@ -23,25 +23,13 @@ pub fn decode_single_channel(
 
   if image_pixel_module.bits_allocated() == BitsAllocated::Eight {
     let pixels = decode(data, image_pixel_module)?;
-    SingleChannelImage::new_u8(
-      width,
-      height,
-      pixels,
-      bits_stored,
-      is_monochrome1,
-    )
+    MonochromeImage::new_u8(width, height, pixels, bits_stored, is_monochrome1)
   } else if image_pixel_module.bits_allocated() == BitsAllocated::Sixteen {
     let pixels = decode(data, image_pixel_module)?;
-    SingleChannelImage::new_u16(
-      width,
-      height,
-      pixels,
-      bits_stored,
-      is_monochrome1,
-    )
+    MonochromeImage::new_u16(width, height, pixels, bits_stored, is_monochrome1)
   } else {
     Err(DataError::new_value_invalid(
-      "JPEG LS pixel data is not single channel".to_string(),
+      "JPEG LS pixel data is not monochrome".to_string(),
     ))
   }
 }

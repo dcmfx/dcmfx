@@ -720,8 +720,8 @@ fn frame_to_dynamic_image(
   args: &GetPixelDataArgs,
 ) -> Result<image::DynamicImage, GetPixelDataError> {
   if pixel_data_renderer.image_pixel_module.is_grayscale() {
-    let single_channel_image = pixel_data_renderer
-      .decode_single_channel_frame(frame)
+    let monochrome_image = pixel_data_renderer
+      .decode_monochrome_frame(frame)
       .map_err(GetPixelDataError::DataError)?;
 
     // Apply the VOI override if it's set
@@ -740,7 +740,7 @@ fn frame_to_dynamic_image(
     // it for all subsequent frames.
     else if pixel_data_renderer.grayscale_pipeline.voi_lut().is_empty() {
       let image = pixel_data_renderer
-        .decode_single_channel_frame(frame)
+        .decode_monochrome_frame(frame)
         .map_err(GetPixelDataError::DataError)?;
 
       if let Some(window) = image.default_voi_window() {
@@ -753,7 +753,7 @@ fn frame_to_dynamic_image(
     // For HDR outputs emit a Luma16 buffer. A color palette implies 8-bit
     // output because looking up a color palette returns 8-bit values.
     if args.is_output_hdr() && args.color_palette.is_none() {
-      let image = single_channel_image
+      let image = monochrome_image
         .to_gray_u16_image(&pixel_data_renderer.grayscale_pipeline);
 
       Ok(image.into())
@@ -761,8 +761,8 @@ fn frame_to_dynamic_image(
     // If there is an active color palette then use it and output the
     // resulting RGB8
     else if let Some(color_palette) = args.color_palette {
-      let image = pixel_data_renderer.render_single_channel_image(
-        &single_channel_image,
+      let image = pixel_data_renderer.render_monochrome_image(
+        &monochrome_image,
         Some(color_palette.color_palette()),
       );
 
@@ -770,7 +770,7 @@ fn frame_to_dynamic_image(
     }
     // Otherwise, emit a Luma8 image
     else {
-      let image = single_channel_image
+      let image = monochrome_image
         .to_gray_u8_image(&pixel_data_renderer.grayscale_pipeline);
 
       Ok(image.into())

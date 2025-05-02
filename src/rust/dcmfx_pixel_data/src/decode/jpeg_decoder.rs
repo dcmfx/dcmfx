@@ -2,17 +2,17 @@
 use alloc::{format, string::ToString, vec::Vec};
 
 use crate::{
-  ColorImage, ColorSpace, SingleChannelImage,
+  ColorImage, ColorSpace, MonochromeImage,
   iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
 };
 use dcmfx_core::DataError;
 
-/// Decodes single channel pixel data using jpeg-decoder.
+/// Decodes monochrome pixel data using jpeg-decoder.
 ///
-pub fn decode_single_channel(
+pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<SingleChannelImage, DataError> {
+) -> Result<MonochromeImage, DataError> {
   let (pixels, pixel_format) = decode(image_pixel_module, data)?;
 
   let width = image_pixel_module.columns();
@@ -22,28 +22,37 @@ pub fn decode_single_channel(
     .photometric_interpretation()
     .is_monochrome1();
 
-  if pixel_format == jpeg_decoder::PixelFormat::L8 {
-    SingleChannelImage::new_u8(
+  match (
+    image_pixel_module.photometric_interpretation(),
+    pixel_format,
+  ) {
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      jpeg_decoder::PixelFormat::L8,
+    ) => MonochromeImage::new_u8(
       width,
       height,
       pixels,
       bits_stored,
       is_monochrome1,
-    )
-  } else if pixel_format == jpeg_decoder::PixelFormat::L16 {
-    let data = bytemuck::cast_slice(&pixels).to_vec();
-    SingleChannelImage::new_u16(
-      width,
-      height,
-      data,
-      bits_stored,
-      is_monochrome1,
-    )
-  } else {
-    Err(DataError::new_value_invalid(format!(
-      "JPEG Lossless pixel format '{:?}' is not supported for single channel images",
+    ),
+
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      jpeg_decoder::PixelFormat::L16,
+    ) => {
+      let data = bytemuck::cast_slice(&pixels).to_vec();
+      MonochromeImage::new_u16(width, height, data, bits_stored, is_monochrome1)
+    }
+
+    _ => Err(DataError::new_value_invalid(format!(
+      "Photometric interpretation '{}' is invalid for JPEG Lossless decode \
+       when decoded pixel format is '{:?}'",
+      image_pixel_module.photometric_interpretation(),
       pixel_format
-    )))
+    ))),
   }
 }
 

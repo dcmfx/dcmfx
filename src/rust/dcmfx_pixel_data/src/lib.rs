@@ -17,24 +17,24 @@ pub mod encode;
 mod grayscale_pipeline;
 pub mod iods;
 mod lookup_table;
+mod monochrome_image;
 mod p10_pixel_data_frame_filter;
 mod pixel_data_frame;
 mod pixel_data_renderer;
-mod single_channel_image;
 pub mod standard_color_palettes;
 mod stored_value_output_cache;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
-pub use encode::PixelDataEncodeError;
+pub use encode::{PixelDataEncodeConfig, PixelDataEncodeError};
 pub use grayscale_pipeline::GrayscalePipeline;
 pub use lookup_table::LookupTable;
+pub use monochrome_image::MonochromeImage;
 pub use p10_pixel_data_frame_filter::{
   P10PixelDataFrameFilter, P10PixelDataFrameFilterError,
 };
 pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_renderer::PixelDataRenderer;
-pub use single_channel_image::SingleChannelImage;
 pub use standard_color_palettes::StandardColorPalette;
 pub use stored_value_output_cache::StoredValueOutputCache;
 
@@ -77,16 +77,15 @@ where
     color_palette: Option<&StandardColorPalette>,
   ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameFilterError>;
 
-  /// Returns the frames of pixel data in this data set as
-  /// [`SingleChannelImage`]s.
+  /// Returns the frames of pixel data in this data set as [`MonochromeImage`]s.
   ///
-  /// This will only succeed when the pixel data is single channel. Returned
-  /// images needs to have the Modality LUT and VOI LUT applied in order to
-  /// reach final grayscale display values.
+  /// This will only succeed when the pixel data uses a monochrome photometric
+  /// interpretation. Returned images needs to have a grayscale pipeline applied
+  /// in order to reach final grayscale display values.
   ///
-  fn get_pixel_data_single_channel_images(
+  fn get_pixel_data_monochrome_images(
     &self,
-  ) -> Result<Vec<SingleChannelImage>, P10PixelDataFrameFilterError>;
+  ) -> Result<Vec<MonochromeImage>, P10PixelDataFrameFilterError>;
 
   /// Returns the frames of pixel data in this data set as [`ColorImage`]s.
   ///
@@ -140,11 +139,11 @@ impl DataSetPixelDataExtensions for DataSet {
     })
   }
 
-  fn get_pixel_data_single_channel_images(
+  fn get_pixel_data_monochrome_images(
     &self,
-  ) -> Result<Vec<SingleChannelImage>, P10PixelDataFrameFilterError> {
+  ) -> Result<Vec<MonochromeImage>, P10PixelDataFrameFilterError> {
     get_pixel_data(self, |renderer, frame| {
-      renderer.decode_single_channel_frame(frame)
+      renderer.decode_monochrome_frame(frame)
     })
   }
 

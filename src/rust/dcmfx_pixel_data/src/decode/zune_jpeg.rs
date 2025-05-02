@@ -4,23 +4,23 @@ use alloc::{format, string::ToString, vec::Vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, SingleChannelImage,
+  ColorImage, ColorSpace, MonochromeImage,
   iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
 };
 
-/// Decodes single channel JPEG pixel data using zune-jpeg.
+/// Decodes monochrome JPEG pixel data using zune-jpeg.
 ///
-pub fn decode_single_channel(
+pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<SingleChannelImage, DataError> {
+) -> Result<MonochromeImage, DataError> {
   let pixels = decode(
     image_pixel_module,
     data,
     zune_core::colorspace::ColorSpace::Luma,
   )?;
 
-  SingleChannelImage::new_u8(
+  MonochromeImage::new_u8(
     image_pixel_module.columns(),
     image_pixel_module.rows(),
     pixels,

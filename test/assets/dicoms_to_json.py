@@ -92,9 +92,8 @@ def dicom_pixel_data_to_json(file, data_set):
 
     frame_data = None
 
-    # Single channel grayscale pixel data is output as JSON so the raw values
-    # can be compared
     if data_set.SamplesPerPixel == 1:
+        # Monochrome pixel data is output unaltered
         if (
             data_set.PhotometricInterpretation == "MONOCHROME1"
             or data_set.PhotometricInterpretation == "MONOCHROME2"
@@ -103,6 +102,7 @@ def dicom_pixel_data_to_json(file, data_set):
             if not isinstance(frame_data[0][0], list):
                 frame_data = [frame_data]
 
+        # Palette color pixel data is converted to RGB
         elif data_set.PhotometricInterpretation == "PALETTE COLOR":
             frame_data = pydicom.pixels.apply_color_lut(
                 data_set.pixel_array, data_set
@@ -115,6 +115,7 @@ def dicom_pixel_data_to_json(file, data_set):
             if not isinstance(frame_data[0][0][0], list):
                 frame_data = [frame_data]
 
+    # RGB and YBR data is converted to normalized form
     elif data_set.SamplesPerPixel == 3 and (
         data_set.PhotometricInterpretation == "RGB"
         or data_set.PhotometricInterpretation == "YBR_FULL"

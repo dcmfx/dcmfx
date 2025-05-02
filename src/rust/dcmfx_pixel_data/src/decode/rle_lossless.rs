@@ -6,7 +6,7 @@ use byteorder::ByteOrder;
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, SingleChannelImage,
+  ColorImage, ColorSpace, MonochromeImage,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
     PixelRepresentation, SamplesPerPixel,
@@ -17,10 +17,10 @@ use crate::{
 /// [`PhotometricInterpretation::Monochrome1`] or
 /// [`PhotometricInterpretation::Monochrome2`] photometric interpretations.
 ///
-pub fn decode_single_channel(
+pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<SingleChannelImage, DataError> {
+) -> Result<MonochromeImage, DataError> {
   // Check that there is one sample per pixel
   if image_pixel_module.samples_per_pixel() != SamplesPerPixel::One {
     return Err(DataError::new_value_invalid(
@@ -61,7 +61,7 @@ pub fn decode_single_channel(
       let segment = segments.pop().unwrap();
       let is_signed = image_pixel_module.pixel_representation().is_signed();
 
-      SingleChannelImage::new_bitmap(
+      MonochromeImage::new_bitmap(
         width,
         height,
         segment,
@@ -91,7 +91,7 @@ pub fn decode_single_channel(
         }
       }
 
-      SingleChannelImage::new_i8(
+      MonochromeImage::new_i8(
         width,
         height,
         pixels,
@@ -108,7 +108,7 @@ pub fn decode_single_channel(
       [_],
     ) => {
       let pixels = segments.pop().unwrap();
-      SingleChannelImage::new_u8(
+      MonochromeImage::new_u8(
         width,
         height,
         pixels,
@@ -143,7 +143,7 @@ pub fn decode_single_channel(
         }
       }
 
-      SingleChannelImage::new_i16(
+      MonochromeImage::new_i16(
         width,
         height,
         pixels,
@@ -165,7 +165,7 @@ pub fn decode_single_channel(
         pixels[i] = u16::from_be_bytes([segment_0[i], segment_1[i]]);
       }
 
-      SingleChannelImage::new_u16(
+      MonochromeImage::new_u16(
         width,
         height,
         pixels,
@@ -210,7 +210,7 @@ pub fn decode_single_channel(
         }
       }
 
-      SingleChannelImage::new_i32(
+      MonochromeImage::new_i32(
         width,
         height,
         pixels,
@@ -237,7 +237,7 @@ pub fn decode_single_channel(
         ]);
       }
 
-      SingleChannelImage::new_u32(
+      MonochromeImage::new_u32(
         width,
         height,
         pixels,

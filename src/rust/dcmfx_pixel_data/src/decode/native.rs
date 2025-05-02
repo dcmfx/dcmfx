@@ -4,22 +4,22 @@ use alloc::{format, string::ToString, vec};
 use dcmfx_core::DataError;
 
 use crate::{
-  ColorImage, ColorSpace, SingleChannelImage,
+  ColorImage, ColorSpace, MonochromeImage,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
     PixelRepresentation, PlanarConfiguration, SamplesPerPixel,
   },
 };
 
-/// Decodes stored values for native single channel pixel data that uses the
+/// Decodes stored values for native monochrome pixel data that uses the
 /// [`PhotometricInterpretation::Monochrome1`] or
 /// [`PhotometricInterpretation::Monochrome2`] photometric interpretations.
 ///
-pub fn decode_single_channel(
+pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
   data_bit_offset: usize,
-) -> Result<SingleChannelImage, DataError> {
+) -> Result<MonochromeImage, DataError> {
   // Check that there is one sample per pixel
   if image_pixel_module.samples_per_pixel() != SamplesPerPixel::One {
     return Err(DataError::new_value_invalid(
@@ -60,7 +60,7 @@ pub fn decode_single_channel(
             data.resize_with(pixel_count.div_ceil(8), || 0);
           }
 
-          SingleChannelImage::new_bitmap(
+          MonochromeImage::new_bitmap(
             width,
             height,
             data,
@@ -89,7 +89,7 @@ pub fn decode_single_channel(
             pixels.copy_from_slice(&bytemuck::cast_slice(data)[..pixel_count]);
           }
 
-          SingleChannelImage::new_i8(
+          MonochromeImage::new_i8(
             width,
             height,
             pixels,
@@ -99,7 +99,7 @@ pub fn decode_single_channel(
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::Eight) => {
-          SingleChannelImage::new_u8(
+          MonochromeImage::new_u8(
             width,
             height,
             data.to_vec(),
@@ -141,7 +141,7 @@ pub fn decode_single_channel(
             }
           }
 
-          SingleChannelImage::new_i16(
+          MonochromeImage::new_i16(
             width,
             height,
             pixels,
@@ -167,7 +167,7 @@ pub fn decode_single_channel(
             pixels[i] = u16::from_le_bytes([data[i * 2], data[i * 2 + 1]]);
           }
 
-          SingleChannelImage::new_u16(
+          MonochromeImage::new_u16(
             width,
             height,
             pixels,
@@ -218,7 +218,7 @@ pub fn decode_single_channel(
             }
           }
 
-          SingleChannelImage::new_i32(
+          MonochromeImage::new_i32(
             width,
             height,
             pixels,
@@ -249,7 +249,7 @@ pub fn decode_single_channel(
             ]);
           }
 
-          SingleChannelImage::new_u32(
+          MonochromeImage::new_u32(
             width,
             height,
             pixels,
@@ -713,8 +713,8 @@ mod tests {
     let data = [0, 1, 2, 3];
 
     assert_eq!(
-      decode_single_channel(&image_pixel_module, &data, 0),
-      SingleChannelImage::new_u8(2, 2, vec![0, 1, 2, 3], 8, false)
+      decode_monochrome(&image_pixel_module, &data, 0),
+      MonochromeImage::new_u8(2, 2, vec![0, 1, 2, 3], 8, false)
     );
   }
 
@@ -734,14 +734,8 @@ mod tests {
     let data: Vec<_> = (0..=127).collect();
 
     assert_eq!(
-      decode_single_channel(&image_pixel_module, &data, 0),
-      SingleChannelImage::new_i8(
-        16,
-        8,
-        (0..64).chain(-64..0).collect(),
-        7,
-        false
-      )
+      decode_monochrome(&image_pixel_module, &data, 0),
+      MonochromeImage::new_i8(16, 8, (0..64).chain(-64..0).collect(), 7, false)
     );
   }
 
@@ -761,8 +755,8 @@ mod tests {
     let data: Vec<_> = (0..4096u16).flat_map(|i| i.to_le_bytes()).collect();
 
     assert_eq!(
-      decode_single_channel(&image_pixel_module, &data, 0),
-      SingleChannelImage::new_i16(
+      decode_monochrome(&image_pixel_module, &data, 0),
+      MonochromeImage::new_i16(
         64,
         64,
         (0..2048).chain(-2048..0).collect(),
