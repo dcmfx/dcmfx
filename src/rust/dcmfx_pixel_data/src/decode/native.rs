@@ -697,11 +697,11 @@ fn validate_data_length(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<(), DataError> {
-  let expected_size_in_bits =
-    image_pixel_module.pixel_count() * image_pixel_module.pixel_size_in_bits();
+  let expected_size_in_bits = image_pixel_module.pixel_count() as u64
+    * u64::from(image_pixel_module.pixel_size_in_bits());
 
   // Validate that the provided data is of the expected size
-  if data.len() * 8 < expected_size_in_bits {
+  if data.len() as u64 * 8 < expected_size_in_bits {
     return Err(DataError::new_value_invalid(format!(
       "Pixel data has incorrect length, expected {} bits but found {} bits",
       expected_size_in_bits,

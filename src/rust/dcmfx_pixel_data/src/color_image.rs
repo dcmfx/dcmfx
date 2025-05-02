@@ -239,7 +239,7 @@ impl ColorImage {
   /// Returns the number of samples stored per pixel. This is three except for
   /// palette colors, where there is one sample per pixel.
   ///
-  pub fn samples_per_pixel(&self) -> usize {
+  pub fn samples_per_pixel(&self) -> u8 {
     match self.data {
       ColorImageData::U8 { .. }
       | ColorImageData::U16 { .. }

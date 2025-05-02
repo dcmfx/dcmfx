@@ -201,7 +201,7 @@ impl ImagePixelModule {
       )));
     }
 
-    Ok(Self {
+    let image_pixel_module = Self {
       samples_per_pixel,
       photometric_interpretation,
       rows,
@@ -215,7 +215,18 @@ impl ImagePixelModule {
       largest_image_pixel_value,
       icc_profile,
       color_space,
-    })
+    };
+
+    // Check that the the frame size in bytes isn't too large to represent
+    if image_pixel_module.frame_size_in_bits().div_ceil(8)
+      > u64::from(u32::MAX - 1)
+    {
+      return Err(DataError::new_value_invalid(
+        "Frame size exceeds 2^32 - 2".to_string(),
+      ));
+    }
+
+    Ok(image_pixel_module)
   }
 
   /// Creates a new [`ImagePixelModule`] from just those values that are
@@ -333,7 +344,7 @@ impl ImagePixelModule {
 
   /// Returns the number of bits consumed by a single pixel.
   ///
-  pub fn pixel_size_in_bits(&self) -> usize {
+  pub fn pixel_size_in_bits(&self) -> u8 {
     match self.photometric_interpretation {
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2
@@ -343,12 +354,11 @@ impl ImagePixelModule {
       | PhotometricInterpretation::YbrIct
       | PhotometricInterpretation::YbrRct
       | PhotometricInterpretation::Xyb => {
-        usize::from(u8::from(self.samples_per_pixel))
-          * usize::from(u8::from(self.bits_allocated))
+        u8::from(self.samples_per_pixel) * u8::from(self.bits_allocated)
       }
 
       PhotometricInterpretation::YbrFull422 => {
-        usize::from(u8::from(self.bits_allocated)) * 2
+        u8::from(self.bits_allocated) * 2
       }
     }
   }
@@ -359,7 +369,13 @@ impl ImagePixelModule {
     usize::from(self.rows) * usize::from(self.columns)
   }
 
-  /// Returns the number of bytes consumed by a single frame of image data.
+  /// Returns the number of bits consumed by a single frame of pixel data.
+  ///
+  pub fn frame_size_in_bits(&self) -> u64 {
+    self.pixel_count() as u64 * u64::from(self.pixel_size_in_bits())
+  }
+
+  /// Returns the number of bytes consumed by a single frame of pixel data.
   ///
   /// If the size of a single frame of image data is not a whole number of
   /// bytes, which is possible when [`Self::bits_allocated`] is
@@ -367,7 +383,7 @@ impl ImagePixelModule {
   /// bytes.
   ///
   pub fn frame_size_in_bytes(&self) -> usize {
-    (self.pixel_count() * self.pixel_size_in_bits()).div_ceil(8)
+    self.frame_size_in_bits().div_ceil(8) as usize
   }
 
   /// Returns whether this image pixel module defines grayscale pixel data.
