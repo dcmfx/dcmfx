@@ -393,10 +393,7 @@ fn jpeg_2000_monochrome_to_png_16bit() {
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(
-    output_file,
-    "jpeg_2000_monochrome_to_png_16bit.png"
-  );
+  assert_image_snapshot!(output_file, "jpeg_2000_monochrome_to_png_16bit.png");
 }
 
 #[test]
@@ -478,10 +475,7 @@ fn jpeg_2000_monochrome_2bpp_to_png() {
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(
-    output_file,
-    "jpeg_2000_monochrome_2bpp_to_png.png"
-  );
+  assert_image_snapshot!(output_file, "jpeg_2000_monochrome_2bpp_to_png.png");
 }
 
 #[test]

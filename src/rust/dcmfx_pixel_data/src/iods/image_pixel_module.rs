@@ -271,6 +271,15 @@ impl ImagePixelModule {
     &self.photometric_interpretation
   }
 
+  /// Sets this image pixel module's photometric interpretation.
+  ///
+  pub fn set_photometric_interpretation(
+    &mut self,
+    new_photometric_interpretation: PhotometricInterpretation,
+  ) {
+    self.photometric_interpretation = new_photometric_interpretation;
+  }
+
   /// Returns this image pixel module's number of rows, i.e. its height.
   ///
   pub fn rows(&self) -> u16 {

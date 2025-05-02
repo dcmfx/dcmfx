@@ -271,7 +271,7 @@ impl LookupTable {
   ///
   pub fn lookup(&self, stored_value: i64) -> u16 {
     let index = stored_value - self.first_input_value;
-    let clamped_index = index.clamp(0, self.data.len() as i64 - 1);
+    let clamped_index = index.clamp(0, (self.data.len() as i64 - 1).max(0));
 
     self.data[clamped_index as usize]
   }

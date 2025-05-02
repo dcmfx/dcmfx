@@ -13,27 +13,23 @@ use crate::{
 ///
 pub fn encode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
-) -> Result<&PhotometricInterpretation, PixelDataEncodeError> {
+) -> Result<PhotometricInterpretation, PixelDataEncodeError> {
   match photometric_interpretation {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
     | PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
-
-    PhotometricInterpretation::YbrFull422 => {
-      Ok(&PhotometricInterpretation::YbrFull)
+    | PhotometricInterpretation::YbrFull => {
+      Ok(photometric_interpretation.clone())
     }
 
-    _ => {
-      Err(PixelDataEncodeError::NotSupported {
-        details: format!(
-          "Encoding photometric interpretation '{}' into RLE Lossless pixel \
-           data is not supported",
-          photometric_interpretation
-        ),
-      })
-    }
+    _ => Err(PixelDataEncodeError::NotSupported {
+      details: format!(
+        "Encoding photometric interpretation '{}' into RLE Lossless pixel \
+         data is not supported",
+        photometric_interpretation
+      ),
+    }),
   }
 }
 
@@ -193,14 +189,10 @@ pub fn encode_color(
   let row_size = usize::from(image.width());
   let pixel_count = image.pixel_count();
 
-  let photometric_interpretation =
-    image_pixel_module.photometric_interpretation();
-
-  match photometric_interpretation {
+  match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull
-    | PhotometricInterpretation::YbrFull422 => match image.data() {
+    | PhotometricInterpretation::YbrFull => match image.data() {
       ColorImageData::U8 { data, .. } => {
         let mut segment_0 = vec![0; pixel_count];
         let mut segment_1 = vec![0; pixel_count];
@@ -313,7 +305,7 @@ pub fn encode_color(
       details: format!(
         "Photometric interpretation '{}' is not able to be encoded into \
          RLE Lossless pixel data",
-        photometric_interpretation
+        image_pixel_module.photometric_interpretation()
       ),
     }),
   }

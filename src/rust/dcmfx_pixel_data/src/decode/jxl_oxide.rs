@@ -27,14 +27,12 @@ pub fn decode_photometric_interpretation(
     | PhotometricInterpretation::YbrRct
     | PhotometricInterpretation::Xyb => Ok(&PhotometricInterpretation::Rgb),
 
-    _ => {
-      Err(PixelDataDecodeError::NotSupported {
-        details: format!(
-          "Decoding photometric interpretation '{}' is not supported",
-          photometric_interpretation
-        ),
-      })
-    }
+    _ => Err(PixelDataDecodeError::NotSupported {
+      details: format!(
+        "Decoding photometric interpretation '{}' is not supported",
+        photometric_interpretation
+      ),
+    }),
   }
 }
 

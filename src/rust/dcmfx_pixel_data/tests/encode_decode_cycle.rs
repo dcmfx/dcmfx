@@ -24,64 +24,65 @@ const RNG_SEED: u64 = 1023;
 
 #[test]
 fn test_native_encode_decode_cycle() {
-  let transfer_syntax = &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN;
-
-  for image_pixel_module in all_image_pixel_modules() {
-    if image_pixel_module.is_grayscale() {
-      test_monochrome_image_encode_decode_cycle(
-        &image_pixel_module,
-        transfer_syntax,
-      );
-    } else {
-      test_color_image_encode_decode_cycle(
-        &image_pixel_module,
-        transfer_syntax,
-      );
-    }
-  }
+  test_encode_decode_cycle(
+    all_image_pixel_modules(),
+    &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
+    0,
+    0.0,
+  );
 }
 
 #[test]
 fn test_rle_lossless_encode_decode_cycle() {
-  let transfer_syntax = &transfer_syntax::RLE_LOSSLESS;
+  test_encode_decode_cycle(
+    all_image_pixel_modules(),
+    &transfer_syntax::RLE_LOSSLESS,
+    0,
+    0.0,
+  );
+}
 
-  for image_pixel_module in all_image_pixel_modules() {
-    if image_pixel_module.is_grayscale() {
-      test_monochrome_image_encode_decode_cycle(
-        &image_pixel_module,
-        transfer_syntax,
-      );
-    } else {
-      if image_pixel_module
-        .photometric_interpretation()
-        .is_palette_color()
-        || image_pixel_module.photometric_interpretation().is_ybr_422()
-      {
-        continue;
-      }
-
-      test_color_image_encode_decode_cycle(
-        &image_pixel_module,
-        transfer_syntax,
-      );
-    }
-  }
+#[test]
+fn test_jpeg_baseline_8bit_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| m.bits_allocated() == BitsAllocated::Eight)
+      .collect(),
+    &transfer_syntax::JPEG_BASELINE_8BIT,
+    2,
+    0.02,
+  );
 }
 
 #[test]
 fn test_deflated_image_frame_encode_decode_cycle() {
-  let transfer_syntax = &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION;
+  test_encode_decode_cycle(
+    all_image_pixel_modules(),
+    &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION,
+    0,
+    0.0,
+  );
+}
 
-  for image_pixel_module in all_image_pixel_modules() {
+fn test_encode_decode_cycle(
+  image_pixel_modules: Vec<ImagePixelModule>,
+  transfer_syntax: &'static TransferSyntax,
+  monochrome_image_max_reencode_delta: i64,
+  color_image_max_reencode_delta: f64,
+) {
+  for image_pixel_module in image_pixel_modules {
     if image_pixel_module.is_grayscale() {
       test_monochrome_image_encode_decode_cycle(
         &image_pixel_module,
         transfer_syntax,
+        monochrome_image_max_reencode_delta,
       );
     } else {
       test_color_image_encode_decode_cycle(
-        &image_pixel_module,
+        image_pixel_module,
         transfer_syntax,
+        color_image_max_reencode_delta,
       );
     }
   }
@@ -90,40 +91,73 @@ fn test_deflated_image_frame_encode_decode_cycle() {
 fn test_monochrome_image_encode_decode_cycle(
   image_pixel_module: &ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
+  max_reencode_delta: i64,
 ) {
-  let image = create_monochrome_image(&image_pixel_module);
+  let original_image = create_monochrome_image(&image_pixel_module);
 
+  // Encode into the target transfer syntax
   let mut encoded_frame = encode::encode_monochrome(
-    &image,
+    &original_image,
+    &image_pixel_module,
     transfer_syntax,
-    &PixelDataEncodeConfig::new(),
+    &encode_config(),
   )
   .unwrap();
 
-  let decoded_pixel_data = decode::decode_monochrome(
+  // Decode out of the target transfer syntax
+  let decoded_image = decode::decode_monochrome(
     &mut encoded_frame,
     transfer_syntax,
     &image_pixel_module,
   )
   .unwrap();
 
-  assert_eq!(image, decoded_pixel_data);
+  // Check dimensions are unchanged
+  assert_eq!(original_image.width(), decoded_image.width());
+  assert_eq!(original_image.height(), decoded_image.height());
+
+  // Convert images to stored values so that they can be compared
+  let original_image = original_image.to_stored_values();
+  let decoded_image = decoded_image.to_stored_values();
+
+  // Compare all pixels
+  for i in 0..image_pixel_module.pixel_count() {
+    assert!(original_image[i] - decoded_image[i] <= max_reencode_delta);
+  }
 }
 
 fn test_color_image_encode_decode_cycle(
-  image_pixel_module: &ImagePixelModule,
+  mut image_pixel_module: ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
+  mut max_reencode_delta: f64,
 ) {
-  let image = create_color_image(&image_pixel_module);
+  // If the photometric interpretation isn't supported for encoding then there's
+  // nothing to do
+  let Ok(encoded_photometric_interpretation) =
+    encode::encode_photometric_interpretation(
+      image_pixel_module.photometric_interpretation(),
+      transfer_syntax,
+    )
+  else {
+    return;
+  };
 
+  // Create a random color image to test with
+  let original_image = create_color_image(&image_pixel_module);
+
+  // Encode into the target transfer syntax
   let mut encoded_frame = encode::encode_color(
-    &image,
-    transfer_syntax,
+    &original_image,
     &image_pixel_module,
-    &PixelDataEncodeConfig::new(),
+    transfer_syntax,
+    &encode_config(),
   )
   .unwrap();
 
+  image_pixel_module
+    .set_photometric_interpretation(encoded_photometric_interpretation);
+
+  // Decode out of the target transfer syntax
   let decoded_image = decode::decode_color(
     &mut encoded_frame,
     transfer_syntax,
@@ -131,7 +165,43 @@ fn test_color_image_encode_decode_cycle(
   )
   .unwrap();
 
-  assert_eq!(image, decoded_image);
+  // Check dimensions are unchanged
+  assert_eq!(original_image.width(), decoded_image.width());
+  assert_eq!(original_image.height(), decoded_image.height());
+
+  // Convert images to RGB f64 so their pixels can each be compared
+  let original_image = original_image.to_rgb_f64_image();
+  let decoded_image = decoded_image.to_rgb_f64_image();
+
+  // The allowed error doubles with every unused bit because the comparison is
+  // done following expansion to the 0-1 range, meaning the same error in a raw
+  // stored value ends up as double the error in the normalized representation.
+  let bits_stored = image_pixel_module.bits_stored();
+  let bits_allocated = u16::from(u8::from(image_pixel_module.bits_allocated()));
+  for _ in bits_stored..bits_allocated {
+    max_reencode_delta *= 2.0;
+  }
+
+  // Compare all pixels
+  for y in 0..original_image.height() {
+    for x in 0..original_image.width() {
+      let original_pixel = original_image.get_pixel(x, y);
+      let decoded_pixel = decoded_image.get_pixel(x, y);
+
+      for i in 0..3 {
+        assert!(original_pixel.0[i] - decoded_pixel.0[i] <= max_reencode_delta);
+      }
+    }
+  }
+}
+
+/// Returns an pixel data encode config that uses maximum quality for lossy
+/// compression so that any changes following encode and decode are minimized.
+///
+fn encode_config() -> PixelDataEncodeConfig {
+  let mut encode_config = PixelDataEncodeConfig::new();
+  encode_config.set_quality(100);
+  encode_config
 }
 
 /// Enumerates a large number of different configurations of
@@ -174,6 +244,9 @@ fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
     (10, 5),
     (5, 10),
     (10, 10),
+    (32, 16),
+    (16, 32),
+    (32, 32),
   ];
 
   let mut image_pixel_modules = vec![];
@@ -369,9 +442,9 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
 
     let color_space = match image_pixel_module.photometric_interpretation() {
       PhotometricInterpretation::PaletteColor { .. }
-      | PhotometricInterpretation::Rgb => ColorSpace::RGB,
-      PhotometricInterpretation::YbrFull => ColorSpace::YBR,
-      PhotometricInterpretation::YbrFull422 => ColorSpace::YBR422,
+      | PhotometricInterpretation::Rgb => ColorSpace::Rgb,
+      PhotometricInterpretation::YbrFull => ColorSpace::Ybr,
+      PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr422,
       _ => unreachable!(),
     };
 
@@ -430,7 +503,7 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
 
 fn create_palette_color_lookup_table_module()
 -> Rc<PaletteColorLookupTableModule> {
-  let lut = LookupTable::new(0, None, vec![], 255);
+  let lut = LookupTable::new(0, None, (0..255).collect::<Vec<u16>>(), 255);
 
   Rc::new(PaletteColorLookupTableModule::new(
     lut.clone(),

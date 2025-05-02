@@ -11,6 +11,7 @@ use crate::{
   iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
 };
 
+mod jpeg_encoder;
 mod native;
 mod rle_lossless;
 
@@ -18,6 +19,7 @@ mod rle_lossless;
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct PixelDataEncodeConfig {
+  quality: u8,
   zlib_compression_level: u32,
 }
 
@@ -26,8 +28,28 @@ impl PixelDataEncodeConfig {
   ///
   pub fn new() -> Self {
     PixelDataEncodeConfig {
+      quality: 85,
       zlib_compression_level: 6,
     }
+  }
+
+  /// Returns the quality to use when performing lossy compression of pixel
+  /// data, e.g. in the JPEG (Process 1) transfer syntax.
+  ///
+  /// The level ranges from 1 (lowest quality), through to 100 (highest
+  /// quality).
+  ///
+  /// Default: 85.
+  ///
+  pub fn quality(&self) -> u8 {
+    self.quality
+  }
+
+  /// Sets the quality to use when performing lossy image compression of pixel
+  /// data, e.g. in the JPEG (Process 1) transfer syntax.
+  ///
+  pub fn set_quality(&mut self, quality: u8) {
+    self.quality = quality.clamp(1, 100);
   }
 
   /// Returns the zlib compression level used when encoding pixel data into the
@@ -42,7 +64,8 @@ impl PixelDataEncodeConfig {
     self.zlib_compression_level
   }
 
-  /// Creates a new encode config with default values.
+  /// Sets the zlib compression level used when encoding pixel data into the
+  /// 'Deflated Image Frame Compression' transfer syntax.
   ///
   pub fn set_zlib_compression_level(&mut self, compression_level: u32) {
     self.zlib_compression_level = compression_level.clamp(1, 9);
@@ -133,25 +156,29 @@ impl DcmfxError for PixelDataEncodeError {
 /// image pixel module encoded into the specified transfer syntax.
 ///
 #[allow(clippy::result_unit_err)]
-pub fn encode_photometric_interpretation<'a>(
-  photometric_interpretation: &'a PhotometricInterpretation,
+pub fn encode_photometric_interpretation(
+  photometric_interpretation: &PhotometricInterpretation,
   transfer_syntax: &'static TransferSyntax,
-) -> Result<&'a PhotometricInterpretation, PixelDataEncodeError> {
+) -> Result<PhotometricInterpretation, PixelDataEncodeError> {
+  use transfer_syntax::*;
+
   match transfer_syntax {
-    &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN
-    | &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION => {
+    &IMPLICIT_VR_LITTLE_ENDIAN
+    | &EXPLICIT_VR_LITTLE_ENDIAN
+    | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &EXPLICIT_VR_BIG_ENDIAN
+    | &DEFLATED_IMAGE_FRAME_COMPRESSION => {
       native::encode_photometric_interpretation(photometric_interpretation)
     }
 
-    &transfer_syntax::RLE_LOSSLESS => {
-      rle_lossless::encode_photometric_interpretation(
-        photometric_interpretation,
-      )
-    }
+    &RLE_LOSSLESS => rle_lossless::encode_photometric_interpretation(
+      photometric_interpretation,
+    ),
+
+    &JPEG_BASELINE_8BIT => jpeg_encoder::encode_photometric_interpretation(
+      photometric_interpretation,
+    ),
 
     _ => {
       Err(PixelDataEncodeError::TransferSyntaxNotSupported { transfer_syntax })
@@ -163,23 +190,29 @@ pub fn encode_photometric_interpretation<'a>(
 ///
 pub fn encode_monochrome(
   image: &MonochromeImage,
+  image_pixel_module: &ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
   encode_config: &PixelDataEncodeConfig,
 ) -> Result<PixelDataFrame, PixelDataEncodeError> {
-  match transfer_syntax {
-    &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
-      Ok(native::encode_monochrome(image))
-    }
+  use transfer_syntax::*;
 
-    &transfer_syntax::RLE_LOSSLESS => {
+  match transfer_syntax {
+    &IMPLICIT_VR_LITTLE_ENDIAN
+    | &EXPLICIT_VR_LITTLE_ENDIAN
+    | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &EXPLICIT_VR_BIG_ENDIAN => Ok(native::encode_monochrome(image)),
+
+    &RLE_LOSSLESS => {
       rle_lossless::encode_monochrome(image).map(PixelDataFrame::new_from_bytes)
     }
 
-    &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION => deflate_frame_data(
+    &JPEG_BASELINE_8BIT => {
+      jpeg_encoder::encode_monochrome(image, image_pixel_module, encode_config)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &DEFLATED_IMAGE_FRAME_COMPRESSION => deflate_frame_data(
       native::encode_monochrome(image),
       encode_config.zlib_compression_level,
     ),
@@ -194,26 +227,31 @@ pub fn encode_monochrome(
 ///
 pub fn encode_color(
   image: &ColorImage,
-  transfer_syntax: &'static TransferSyntax,
   image_pixel_module: &ImagePixelModule,
+  transfer_syntax: &'static TransferSyntax,
   encode_config: &PixelDataEncodeConfig,
 ) -> Result<PixelDataFrame, PixelDataEncodeError> {
+  use transfer_syntax::*;
+
   match transfer_syntax {
-    &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
-    | &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN => {
+    &IMPLICIT_VR_LITTLE_ENDIAN
+    | &EXPLICIT_VR_LITTLE_ENDIAN
+    | &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+    | &EXPLICIT_VR_BIG_ENDIAN => {
       native::encode_color(image, image_pixel_module)
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    &transfer_syntax::RLE_LOSSLESS => {
-      rle_lossless::encode_color(image, image_pixel_module)
+    &RLE_LOSSLESS => rle_lossless::encode_color(image, image_pixel_module)
+      .map(PixelDataFrame::new_from_bytes),
+
+    &JPEG_BASELINE_8BIT => {
+      jpeg_encoder::encode_color(image, image_pixel_module, encode_config)
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION => {
+    &DEFLATED_IMAGE_FRAME_COMPRESSION => {
       let frame = native::encode_color(image, image_pixel_module)
         .map(PixelDataFrame::new_from_bytes)?;
 

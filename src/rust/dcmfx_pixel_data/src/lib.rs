@@ -86,7 +86,7 @@ where
   ///
   fn get_pixel_data_monochrome_images(
     &self,
-  ) -> Result<Vec<MonochromeImage>, P10PixelDataFrameFilterError>;
+  ) -> Result<Vec<MonochromeImage>, P10PixelDataFrameTransformError>;
 
   /// Returns the frames of pixel data in this data set as [`ColorImage`]s.
   ///
@@ -142,7 +142,7 @@ impl DataSetPixelDataExtensions for DataSet {
 
   fn get_pixel_data_monochrome_images(
     &self,
-  ) -> Result<Vec<MonochromeImage>, P10PixelDataFrameFilterError> {
+  ) -> Result<Vec<MonochromeImage>, P10PixelDataFrameTransformError> {
     get_pixel_data(self, |renderer, frame| {
       renderer.decode_monochrome_frame(frame)
     })
