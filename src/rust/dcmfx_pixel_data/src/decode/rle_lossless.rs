@@ -326,10 +326,10 @@ pub fn decode_color(
       BitsAllocated::Sixteen,
       [segment_0, segment_1],
     ) => {
-      let mut pixels = vec![0u16; pixel_count * 3];
+      let mut pixels = vec![0u16; pixel_count];
 
       for i in 0..pixel_count {
-        pixels.push(u16::from_be_bytes([segment_0[i], segment_1[i]]));
+        pixels[i] = u16::from_be_bytes([segment_0[i], segment_1[i]]);
       }
 
       ColorImage::new_palette16(
