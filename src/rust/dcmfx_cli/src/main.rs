@@ -3,6 +3,7 @@
 mod commands;
 mod input_source;
 mod mp4_encoder;
+mod transfer_syntax_arg;
 mod utils;
 
 use clap::{Parser, Subcommand};

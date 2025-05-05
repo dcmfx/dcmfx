@@ -5,7 +5,12 @@ use std::collections::VecDeque;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
-  boxed::Box, collections::VecDeque, format, string::ToString, vec, vec::Vec,
+  boxed::Box,
+  collections::VecDeque,
+  format,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
 };
 
 use byteorder::ByteOrder;
@@ -304,7 +309,7 @@ impl P10PixelDataFrameTransform {
     }
   }
 
-  /// Returns the value for *'(0028,0008) Number of Frames'* data element.
+  /// Returns the value for the *'(0028,0008) Number of Frames'* data element.
   ///
   pub fn get_number_of_frames(&self) -> usize {
     match self.details.get_output() {

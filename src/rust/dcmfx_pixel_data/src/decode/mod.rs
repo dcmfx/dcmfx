@@ -1,5 +1,10 @@
 #[cfg(not(feature = "std"))]
-use alloc::{format, string::ToString, vec, vec::Vec};
+use alloc::{
+  format,
+  string::{String, ToString},
+  vec,
+  vec::Vec,
+};
 
 use dcmfx_core::{DataError, DcmfxError, TransferSyntax, transfer_syntax};
 
@@ -135,6 +140,7 @@ pub fn decode_photometric_interpretation<'a>(
       jxl_oxide::decode_photometric_interpretation(photometric_interpretation)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::decode_photometric_interpretation(photometric_interpretation)
     }

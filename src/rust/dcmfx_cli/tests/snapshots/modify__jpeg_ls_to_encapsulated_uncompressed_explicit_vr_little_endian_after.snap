@@ -1,0 +1,82 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (Ultrasound Multi-frame Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    46 bytes] "1.2.840.11 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (Encapsulated Uncompressed Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    10 bytes] "DCMfx Test"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "gdcmconv"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    22 bytes] "DERIVED",  …
+(0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Ultrasound Multi-frame Image Storage)
+(0008,0018) UI SOP Instance UID                     [    46 bytes] "1.2.840.11 …
+(0008,0020) DA Study Date                           [     8 bytes] 2021-01-25
+(0008,0021) DA Series Date                          [     8 bytes] 2021-01-25
+(0008,0023) DA Content Date                         [     8 bytes] 2021-01-25
+(0008,002A) DT Acquisition DateTime                 [    18 bytes] 2021-01-25T …
+(0008,0030) TM Study Time                           [     6 bytes] 12:58:08
+(0008,0031) TM Series Time                          [     6 bytes] 12:58:08
+(0008,0033) TM Content Time                         [     6 bytes] 13:05:18
+(0008,0060) CS Modality                             [     2 bytes] "US" (Ultrasound)
+(0008,0070) LO Manufacturer                         [    22 bytes] "GE Vingmed …
+(0008,1090) LO Manufacturer's Model Name            [    10 bytes] "Vivid E95"
+(0008,2142) IS Start Trim                           [     2 bytes] "1"
+(0008,2143) IS Stop Trim                            [     2 bytes] "35"
+(0008,2144) IS Recommended Display Frame Rate       [     2 bytes] "32"
+(0018,0040) IS Cine Rate                            [     2 bytes] "32"
+(0018,0072) DS Effective Duration                   [     6 bytes] "1.065"
+(0018,1020) LO Software Versions                    [    18 bytes] "Vivid E95: …
+(0018,1063) DS Frame Time                           [     8 bytes] "31.3235"
+(0018,1066) DS Frame Delay                          [     2 bytes] "0"
+(0018,1088) IS Heart Rate                           [     2 bytes] "69"
+(0018,1242) IS Actual Frame Duration                [     2 bytes] "31"
+(0018,1244) US Preferred Playback Sequencing        [     2 bytes] 0
+(0018,6011) SQ Sequence of Ultrasound Regions
+  (FFFE,E000) Item
+    (0018,6012) US Region Spatial Format                [     2 bytes] 1
+    (0018,6014) US Region Data Type                     [     2 bytes] 2
+    (0018,6016) UL Region Flags                         [     4 bytes] 0
+    (0018,6018) UL Region Location Min X0               [     4 bytes] 148
+    (0018,601A) UL Region Location Min Y0               [     4 bytes] 70
+    (0018,601C) UL Region Location Max X1               [     4 bytes] 868
+    (0018,601E) UL Region Location Max Y1               [     4 bytes] 658
+    (0018,6020) SL Reference Pixel X0                   [     4 bytes] 360
+    (0018,6022) SL Reference Pixel Y0                   [     4 bytes] 1
+    (0018,6024) US Physical Units X Direction           [     2 bytes] 3
+    (0018,6026) US Physical Units Y Direction           [     2 bytes] 3
+    (0018,602C) FD Physical Delta X                     [     8 bytes] 0.02383764
+    (0018,602E) FD Physical Delta Y                     [     8 bytes] 0.02383764
+    (0018,6030) UL Transducer Frequency                 [     4 bytes] 1670
+    (0018,6032) UL Pulse Repetition Frequency           [     4 bytes] 4000
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0018,6060) FL R Wave Time Vector                   [     8 bytes] 56.63633346 …
+(0020,000D) UI Study Instance UID                   [    42 bytes] "1.2.840.11 …
+(0020,000E) UI Series Instance UID                  [    42 bytes] "1.2.840.11 …
+(0020,0011) IS Series Number                        [     4 bytes] "0001"
+(0020,0013) IS Instance Number                      [     4 bytes] "0035"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 3
+(0028,0004) CS Photometric Interpretation           [     8 bytes] "YBR_FULL"
+(0028,0006) US Planar Configuration                 [     2 bytes] 0
+(0028,0008) IS Number of Frames                     [     2 bytes] "1"
+(0028,0009) AT Frame Increment Pointer              [     4 bytes] (0018,1063)
+(0028,0010) US Rows                                 [     2 bytes] 708
+(0028,0011) US Columns                              [     2 bytes] 1016
+(0028,0014) US Ultrasound Color Data Present        [     2 bytes] 1
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 8
+(0028,0102) US High Bit                             [     2 bytes] 7
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
+(0028,2112) DS Lossy Image Compression Ratio        [     2 bytes] "95"
+(0028,2114) CS Lossy Image Compression Method       [    12 bytes] "ISO_109 … (JPEG Lossy Compression [ISO/IEC 10918-1])
+(0032,1060) LO Requested Procedure Description      [     0 bytes] ""
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [2157984 bytes] [00 80 8 …
+(FFFE,E0DD) Sequence Delimitation Item

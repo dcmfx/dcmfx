@@ -119,4 +119,15 @@ impl PaletteColorLookupTableModule {
       self.blue_lut.lookup_normalized_u8(stored_value),
     ]
   }
+
+  /// Returns the maximum value that can be stored by any of the red, green or
+  /// blue LUTs.
+  ///
+  pub fn int_max(&self) -> u16 {
+    let red_int_max = self.red_lut.int_max();
+    let green_int_max = self.green_lut.int_max();
+    let blue_int_max = self.blue_lut.int_max();
+
+    red_int_max.max(green_int_max).max(blue_int_max)
+  }
 }

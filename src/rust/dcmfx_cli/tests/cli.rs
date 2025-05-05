@@ -1,8 +1,8 @@
 mod utils;
 
-use assert_cmd::{Command, assert::Assert};
+use assert_cmd::Command;
 use insta::assert_snapshot;
-use utils::{generate_temp_filename, to_native_path};
+use utils::{generate_temp_filename, get_stdout};
 
 #[test]
 fn print() {
@@ -110,97 +110,4 @@ fn dcm_to_json() {
     .stdout(format!("Writing \"{}\" …\n", temp_path.display()));
 
   assert_snapshot!("dcm_to_json", std::fs::read_to_string(&temp_path).unwrap());
-}
-
-#[test]
-fn modify() {
-  let dicom_file = "../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm";
-  let temp_path = generate_temp_filename();
-
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("print")
-    .arg(dicom_file)
-    .assert()
-    .success();
-
-  assert_snapshot!("modify_before", get_stdout(assert));
-
-  Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("modify")
-    .arg("--transfer-syntax")
-    .arg("explicit-vr-big-endian")
-    .arg("--anonymize")
-    .arg(dicom_file)
-    .arg("--output-filename")
-    .arg(&temp_path)
-    .arg("--delete-tag")
-    .arg("00080064")
-    .arg("--delete-tag")
-    .arg("00181020")
-    .arg("--implementation-version-name")
-    .arg("DCMfx Test")
-    .assert()
-    .success()
-    .stdout(format!(
-      "Modifying \"{}\" => \"{}\" …\n",
-      to_native_path(&dicom_file),
-      temp_path.display()
-    ));
-
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("print")
-    .arg(&temp_path)
-    .assert()
-    .success();
-
-  assert_snapshot!("modify_after", get_stdout(assert));
-}
-
-#[test]
-fn modify_in_place() {
-  let dicom_file = "../../../test/assets/fo-dicom/CR-MONO1-10-chest.dcm";
-  let temp_path = generate_temp_filename();
-
-  std::fs::copy(dicom_file, &temp_path).unwrap();
-
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("print")
-    .arg(&temp_path)
-    .assert()
-    .success();
-
-  assert_snapshot!("modify_in_place_before", get_stdout(assert));
-
-  Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("modify")
-    .arg("--transfer-syntax")
-    .arg("deflated-explicit-vr-little-endian")
-    .arg("--in-place")
-    .arg("--implementation-version-name")
-    .arg("DCMfx Test")
-    .arg(&temp_path)
-    .assert()
-    .success()
-    .stdout(format!(
-      "Modifying \"{}\" in place …\n",
-      temp_path.display()
-    ));
-
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("print")
-    .arg(&temp_path)
-    .assert()
-    .success();
-
-  assert_snapshot!("modify_in_place_after", get_stdout(assert));
-}
-
-fn get_stdout(assert: Assert) -> String {
-  String::from_utf8(assert.get_output().stdout.clone()).unwrap()
 }

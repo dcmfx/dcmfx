@@ -1,0 +1,88 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (Ultrasound Multi-frame Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    56 bytes] "1.2.840.11 …
+(0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    10 bytes] "DCMfx Test"
+(0002,0016) AE Source Application Entity Title      [    10 bytes] "microMAXX"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    32 bytes] "DERIVED",  …
+(0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Ultrasound Multi-frame Image Storage)
+(0008,0018) UI SOP Instance UID                     [    56 bytes] "1.2.840.11 …
+(0008,0020) DA Study Date                           [     8 bytes] 2016-05-03
+(0008,0021) DA Series Date                          [     8 bytes] 2016-05-03
+(0008,0023) DA Content Date                         [     8 bytes] 2016-05-03
+(0008,0030) TM Study Time                           [     6 bytes] 12:08:50
+(0008,0031) TM Series Time                          [     6 bytes] 12:08:50
+(0008,0033) TM Content Time                         [     6 bytes] 12:15:35
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "US" (Ultrasound)
+(0008,0070) LO Manufacturer                         [    14 bytes] "SonoSite,  …
+(0008,0080) LO Institution Name                     [     0 bytes] ""
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1010) SH Station Name                         [    14 bytes] "Not connec …
+(0008,1030) LO Study Description                    [     0 bytes] ""
+(0008,1060) PN Name of Physician(s) Reading Study   [     0 bytes] ""
+(0008,1070) PN Operators' Name                      [     0 bytes] ""
+(0008,1090) LO Manufacturer's Model Name            [     6 bytes] "Turbo"
+(0008,2111) ST Derivation Description               [    34 bytes] "RGB to JPE …
+(0010,0010) PN Patient's Name                       [     4 bytes] "PLA"
+(0010,0020) LO Patient ID                           [     4 bytes] "204"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0010,1000) LO Other Patient IDs                    [     0 bytes] ""
+(0010,2160) SH Ethnic Group                         [     2 bytes] ""
+(0010,21B0) LT Additional Patient History           [     0 bytes] ""
+(0018,1020) LO Software Versions                    [    14 bytes] "51.80.108. …
+(0018,1030) LO Protocol Name                        [     0 bytes] ""
+(0018,1063) DS Frame Time                           [     6 bytes] "33.333"
+(0018,1088) IS Heart Rate                           [     2 bytes] "0"
+(0018,5010) LO Transducer Data                      [    16 bytes] "50.80.103. …
+(0018,6011) SQ Sequence of Ultrasound Regions
+  (FFFE,E000) Item
+    (0018,6012) US Region Spatial Format                [     2 bytes] 1
+    (0018,6014) US Region Data Type                     [     2 bytes] 1
+    (0018,6016) UL Region Flags                         [     4 bytes] 2
+    (0018,6018) UL Region Location Min X0               [     4 bytes] 84
+    (0018,601A) UL Region Location Min Y0               [     4 bytes] 31
+    (0018,601C) UL Region Location Max X1               [     4 bytes] 595
+    (0018,601E) UL Region Location Max Y1               [     4 bytes] 414
+    (0018,6024) US Physical Units X Direction           [     2 bytes] 3
+    (0018,6026) US Physical Units Y Direction           [     2 bytes] 3
+    (0018,602C) FD Physical Delta X                     [     8 bytes] 0.051049 …
+    (0018,602E) FD Physical Delta Y                     [     8 bytes] 0.051049 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0019,0010) LO Private Creator                      [    22 bytes] "SonoSite P …
+(0019,1050) UN unknown_private_tag                  [ 26974 bytes] [3C 3F 78 6 …
+(0019,1060) UN unknown_private_tag                  [  6584 bytes] [3C 3F 78 6 …
+(0020,000D) UI Study Instance UID                   [    54 bytes] "1.2.840.11 …
+(0020,000E) UI Series Instance UID                  [    54 bytes] "1.2.840.11 …
+(0020,0010) SH Study ID                             [     2 bytes] "1"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     6 bytes] "16117"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,0060) CS Laterality                           [     0 bytes] ""
+(0028,0002) US Samples per Pixel                    [     2 bytes] 3
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "YBR_FULL_4 …
+(0028,0006) US Planar Configuration                 [     2 bytes] 0
+(0028,0008) IS Number of Frames                     [     2 bytes] "30"
+(0028,0009) AT Frame Increment Pointer              [     4 bytes] (0018,1063)
+(0028,0010) US Rows                                 [     2 bytes] 240
+(0028,0011) US Columns                              [     2 bytes] 320
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 8
+(0028,0102) US High Bit                             [     2 bytes] 7
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
+(0028,2112) DS Lossy Image Compression Ratio        [     2 bytes] "19"
+(0040,0244) DA Performed Procedure Step Start Date  [     8 bytes] 2016-05-03
+(0040,0245) TM Performed Procedure Step Start Time  [     6 bytes] 12:08:50
+(0040,0253) SH Performed Procedure Step ID          [    14 bytes] "SONOPPS000 …
+(0040,0254) LO Performed Procedure Step Description  [     0 bytes] ""
+(7FE0,0010) OW Pixel Data                           [4608000 bytes] [00 0C 83  …

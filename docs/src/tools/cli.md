@@ -115,8 +115,8 @@ Options:
    dcmfx get-pixel-data input.dcm
    ```
 
-   Each frame of pixel data can be decoded and written to PNG, 16-bit PNG, JPEG,
-   or WebP Lossless images:
+   Each frame of pixel data can be converted to PNG, 16-bit PNG, JPEG, or WebP
+   Lossless images:
 
    ```sh
    dcmfx get-pixel-data input.dcm --format png
@@ -157,24 +157,15 @@ Options:
    dcmfx modify input.dcm --output-filename output.dcm
    ```
 
-7. Modify a DICOM P10 file to use the 'Deflated Explicit VR Little Endian'
-   transfer syntax with maximum compression:
+7. Modify a DICOM P10 file's transfer syntax:
 
    ```sh
-   dcmfx modify input.dcm output.dcm \
-     --transfer-syntax deflated-explicit-vr-little-endian \
-     --zlib-compression-level 9
+   dcmfx modify input.dcm --output-filename output.dcm \
+     --transfer-syntax explicit-vr-little-endian
    ```
 
-   The `modify` command can only convert between the following transfer
-   syntaxes:
-
-   - Implicit VR Little Endian
-   - Explicit VR Little Endian
-   - Deflated Explicit VR Little Endian
-   - Explicit VR Big Endian
-
-   Conversion between other transfer syntaxes is not supported.
+   Pixel data will be automatically transcoded as appropriate. See the output
+   from `dcmfx modify --help` for full details of supported transfer syntaxes.
 
 8. Anonymize a DICOM P10 file in-place by removing all identifying data
    elements and private data elements:

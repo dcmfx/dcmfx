@@ -83,8 +83,9 @@ pub struct GetPixelDataArgs {
   #[arg(
     long,
     help = "When the output format is 'jpg', specifies the quality level in \
-      the range 0-100.",
-    default_value_t = 85
+      the range 1-100.",
+    default_value_t = 85,
+    value_parser = clap::value_parser!(u8).range(1..=100),
   )]
   jpg_quality: u8,
 

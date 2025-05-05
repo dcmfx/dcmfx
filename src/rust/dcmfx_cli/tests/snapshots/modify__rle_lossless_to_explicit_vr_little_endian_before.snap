@@ -1,0 +1,281 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (CT Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    52 bytes] "1.2.276.0. …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (RLE Lossless)
+(0002,0012) UI Implementation Class UID             [    48 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    10 bytes] "GDCM 2.1.0"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "gdcmconv"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    24 bytes] "DERIVED",  …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2003-12-10
+(0008,0013) TM Instance Creation Time               [     4 bytes] 11:00
+(0008,0014) UI Instance Creator UID                 [    28 bytes] "1.2.276.0. …
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (CT Image Storage)
+(0008,0018) UI SOP Instance UID                     [    52 bytes] "1.2.276.0. …
+(0008,0020) DA Study Date                           [     8 bytes] 2003-12-08
+(0008,0021) DA Series Date                          [     8 bytes] 1997-04-30
+(0008,0022) DA Acquisition Date                     [     8 bytes] 1997-04-30
+(0008,0023) DA Content Date                         [     8 bytes] 1997-04-30
+(0008,0030) TM Study Time                           [     6 bytes] 06:36:49
+(0008,0031) TM Series Time                          [     6 bytes] 11:27:49
+(0008,0032) TM Acquisition Time                     [     6 bytes] 11:29:36
+(0008,0033) TM Content Time                         [     6 bytes] 11:30:08
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+(0008,0070) LO Manufacturer                         [    18 bytes] "GE MEDICAL …
+(0008,0080) LO Institution Name                     [    18 bytes] "JFK IMAGIN …
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,0201) SH Timezone Offset From UTC             [     6 bytes] "-0500"
+(0008,1010) SH Station Name                         [     8 bytes] "CT01_OC0"
+(0008,1030) LO Study Description                    [     4 bytes] "e+1"
+(0008,1090) LO Manufacturer's Model Name            [     8 bytes] "RHAPSODE"
+(0008,2111) ST Derivation Description               [    50 bytes] "Lossless R …
+(0008,2112) SQ Source Image Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (CT Image Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    46 bytes] "1.3.6.1 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0009,0010) LO Private Creator                      [    12 bytes] "GEMS_IDEN_ …
+(0009,1001) LO Private Element Creator              [    14 bytes] "GE_GENESIS …
+(0009,1002) SH Private Element Creator              [     4 bytes] "CT01"
+(0009,1004) SH Private Element Creator              [    12 bytes] "HiSpeed CT …
+(0009,1027) SL Private Element Creator              [     4 bytes] 862399669
+(0009,1030) SH Private Element Creator              [     0 bytes] ""
+(0009,1031) SH Private Element Creator              [     0 bytes] ""
+(0009,10E6) SH Private Element Creator              [     2 bytes] "05"
+(0009,10E7) UL Private Element Creator              [     4 bytes] 973283917
+(0009,10E9) SL Private Element Creator              [     4 bytes] 862399669
+(0010,0010) PN Patient's Name                       [    22 bytes] "Compressed …
+(0010,0020) LO Patient ID                           [     4 bytes] "1CT1"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     2 bytes] "O" (Other)
+(0010,1010) AS Patient's Age                        [     4 bytes] 0 years
+(0010,1030) DS Patient's Weight                     [     8 bytes] "0.000000"
+(0010,21B0) LT Additional Patient History           [     0 bytes] ""
+(0011,0010) LO Private Creator                      [    12 bytes] "GEMS_PATI_ …
+(0011,1010) SS Private Element Creator              [     2 bytes] 0
+(0018,0010) LO Contrast/Bolus Agent                 [    14 bytes] "ISOVUE300/ …
+(0018,0022) CS Scan Options                         [    12 bytes] "HELICAL MO …
+(0018,0050) DS Slice Thickness                      [     8 bytes] "5.000000"
+(0018,0060) DS KVP                                  [     4 bytes] "120"
+(0018,0088) DS Spacing Between Slices               [     8 bytes] "5.000000"
+(0018,0090) DS Data Collection Diameter             [    10 bytes] "480.000000"
+(0018,1020) LO Software Versions                    [     2 bytes] "05"
+(0018,1040) LO Contrast/Bolus Route                 [     2 bytes] "IV"
+(0018,1100) DS Reconstruction Diameter              [    10 bytes] "338.671600"
+(0018,1110) DS Distance Source to Detector          [    16 bytes] "1099.31005 …
+(0018,1111) DS Distance Source to Patient           [    10 bytes] "630.000000"
+(0018,1120) DS Gantry/Detector Tilt                 [     8 bytes] "0.000000"
+(0018,1130) DS Table Height                         [    10 bytes] "133.699997"
+(0018,1150) IS Exposure Time                        [     4 bytes] "1601"
+(0018,1151) IS X-Ray Tube Current                   [     4 bytes] "170"
+(0018,1152) IS Exposure                             [     4 bytes] "170"
+(0018,1160) SH Filter Type                          [    16 bytes] "LARGE BOWT …
+(0018,1190) DS Focal Spot(s)                        [     8 bytes] "0.700000"
+(0018,1210) SH Convolution Kernel                   [     8 bytes] "STANDARD"
+(0018,5100) CS Patient Position                     [     4 bytes] "FFS" (Feet First-Supine)
+(0019,0010) LO Private Creator                      [    12 bytes] "GEMS_ACQU_ …
+(0019,1002) SL Private Element Creator              [     4 bytes] 912
+(0019,1003) DS Cell number at Theta                 [    10 bytes] "373.750000"
+(0019,1004) DS Private Element Creator              [     8 bytes] "1.016600"
+(0019,100F) DS Horiz. Frame of ref.                 [    10 bytes] "955.799988"
+(0019,1011) SS Series contrast                      [     2 bytes] 2
+(0019,1013) SS Private Element Creator              [     2 bytes] 0
+(0019,1014) SS Private Element Creator              [     2 bytes] 0
+(0019,1015) SS Start number for enhanced scans      [     2 bytes] 0
+(0019,1016) SS Private Element Creator              [     2 bytes] 0
+(0019,1017) SS Series plane                         [     2 bytes] 2
+(0019,1018) LO First scan ras                       [     2 bytes] "S"
+(0019,1019) DS First scan location                  [     8 bytes] "7.791870"
+(0019,101A) LO Last scan ras                        [     2 bytes] "I"
+(0019,101B) DS Private Element Creator              [    12 bytes] "-320.197968"
+(0019,101E) DS Display field of view                [     8 bytes] "0.000000"
+(0019,1023) DS Table Speed [mm/rotation]            [     8 bytes] "5.000000"
+(0019,1024) DS Mid Scan Time [sec]                  [    10 bytes] "17.784578"
+(0019,1025) SS Private Element Creator              [     2 bytes] 1
+(0019,1026) SL Tube Azimuth [degree]                [     4 bytes] 0
+(0019,1027) DS Rotation Speed [msec]                [     8 bytes] "1.000000"
+(0019,102A) DS x-ray On position                    [    10 bytes] "178.079926"
+(0019,102B) DS x-ray Off position                   [    12 bytes] "3994.299316"
+(0019,102C) SL Number of triggers                   [     4 bytes] 10431
+(0019,102E) DS Private Element Creator              [    12 bytes] "-718.079956"
+(0019,102F) DS Trigger frequency                    [    10 bytes] "984.000000"
+(0019,1039) SS SFOV Type                            [     2 bytes] 16
+(0019,1040) SS Stat recon flag                      [     2 bytes] 0
+(0019,1041) SS Private Element Creator              [     2 bytes] 1
+(0019,1042) SS Private Element Creator              [     2 bytes] 0
+(0019,1043) SS Total Segments Required              [     2 bytes] 0
+(0019,1044) DS Interscan delay                      [     8 bytes] "1.000000"
+(0019,1047) SS View compression factor              [     2 bytes] 1
+(0019,104A) SS Private Element Creator              [     2 bytes] 6
+(0019,104B) SL Private Element Creator              [     4 bytes] 10431
+(0019,1052) SS Recon post proc. Flag                [     2 bytes] 1
+(0019,1057) SS Private Element Creator              [     2 bytes] -95
+(0019,1058) SS CT bone number                       [     2 bytes] 0
+(0019,105E) SL Private Element Creator              [     4 bytes] 763
+(0019,105F) SL Private Element Creator              [     4 bytes] 1
+(0019,1060) SL Private Element Creator              [     4 bytes] 1969
+(0019,1061) SL Private Element Creator              [     4 bytes] 1576
+(0019,1062) SL Increment between views              [     4 bytes] 1
+(0019,106A) SS Dependent on #views processed        [     2 bytes] 4
+(0019,106B) SS Field of view in detector cells      [     2 bytes] 852
+(0019,1070) SS Private Element Creator              [     2 bytes] 1
+(0019,1071) SS Private Element Creator              [     2 bytes] 0
+(0019,1072) DS Private Element Creator              [     8 bytes] "0.000000"
+(0019,1073) DS Private Element Creator              [     8 bytes] "0.000000"
+(0019,1074) DS Private Element Creator              [     8 bytes] "0.000000"
+(0019,1075) DS Avg of right ref chans over views    [     8 bytes] "0.000000"
+(0019,1076) DS Max right chan over views            [     8 bytes] "0.000000"
+(0019,10DA) SS Reference channel used               [     2 bytes] 0
+(0019,10DB) DS Private Element Creator              [     8 bytes] "0.000000"
+(0019,10DC) SS Private Element Creator              [     2 bytes] 1
+(0019,10DD) SS Private Element Creator              [     2 bytes] 1
+(0019,10DE) DS Dynamic Z alpha value                [     8 bytes] "0.000000"
+(0020,000D) UI Study Instance UID                   [    42 bytes] "1.3.6.1.4. …
+(0020,000E) UI Series Instance UID                  [    44 bytes] "1.3.6.1.4. …
+(0020,0010) SH Study ID                             [     4 bytes] "1CT1"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "2"
+(0020,0013) IS Instance Number                      [     2 bytes] "8"
+(0020,0032) DS Image Position (Patient)             [    34 bytes] "-158.13580 …
+(0020,0037) DS Image Orientation (Patient)          [    54 bytes] "1.000000", …
+(0020,0052) UI Frame of Reference UID               [    44 bytes] "1.3.6.1.4. …
+(0020,0060) CS Laterality                           [     0 bytes] ""
+(0020,1040) LO Position Reference Indicator         [     2 bytes] "SN"
+(0020,1041) DS Slice Location                       [    14 bytes] "-77.204063 …
+(0020,4000) LT Image Comments                       [     4 bytes] "RLE"
+(0021,0010) LO Private Creator                      [    12 bytes] "GEMS_RELA_ …
+(0021,1003) SS Series from which Prescribed         [     2 bytes] 2
+(0021,1005) SH Genesis Version - now                [     2 bytes] "05"
+(0021,1007) UL Series Record checksum               [     4 bytes] 1605775145
+(0021,1015) US Unknown                              [     2 bytes] 24078
+(0021,1016) SS Unknown                              [     2 bytes] 2
+(0021,1018) SH Genesis version - Now                [     2 bytes] "05"
+(0021,1019) UL Acq recon record checksum            [     4 bytes] 750675506
+(0021,1037) SS Private Element Creator              [     2 bytes] 16
+(0021,104A) LO Anatomical reference for scout       [     0 bytes] ""
+(0021,1090) SS Tube focal spot position             [     2 bytes] 7400
+(0021,1091) SS Biopsy position                      [     2 bytes] 0
+(0021,1092) FL Biopsy T location                    [     4 bytes] 0.0
+(0021,1093) FL Biopsy ref location                  [     4 bytes] 0.0
+(0023,0010) LO Private Creator                      [    12 bytes] "GEMS_STDY_ …
+(0023,1070) FD Private Element Creator              [     8 bytes] 862399761.1 …
+(0023,1074) SL Private Element Creator              [     4 bytes] 1
+(0023,107D) SS Private Element Creator              [     2 bytes] 0
+(0025,0010) LO Private Creator                      [    12 bytes] "GEMS_SERS_ …
+(0025,1006) SS Private Element Creator              [     2 bytes] 0
+(0025,1007) SL Private Element Creator              [     4 bytes] 44
+(0025,1010) SL Private Element Creator              [     4 bytes] 0
+(0025,1011) SS Private Element Creator              [     2 bytes] 0
+(0025,1017) SL Private Element Creator              [     4 bytes] 0
+(0025,1018) SL Private Element Creator              [     4 bytes] 0
+(0025,1019) SL Private Element Creator              [     4 bytes] 4
+(0025,101A) SH Private Element Creator              [     0 bytes] ""
+(0027,0010) LO Private Creator                      [    12 bytes] "GEMS_IMAG_ …
+(0027,1006) SL Private Element Creator              [     4 bytes] 1
+(0027,1010) SS Private Element Creator              [     2 bytes] 0
+(0027,101C) SL Private Element Creator              [     4 bytes] 150
+(0027,101D) SS Private Element Creator              [     2 bytes] 1
+(0027,101E) SL Private Element Creator              [     4 bytes] 24
+(0027,101F) SL Private Element Creator              [     4 bytes] 129
+(0027,1020) SS Private Element Creator              [     2 bytes] 1
+(0027,1030) SH Private Element Creator              [     0 bytes] ""
+(0027,1035) SS Plane Type                           [     2 bytes] 2
+(0027,1040) SH Private Element Creator              [     2 bytes] "I"
+(0027,1041) FL Image location                       [     4 bytes] -77.2040634 …
+(0027,1042) FL Private Element Creator              [     4 bytes] -11.1999998 …
+(0027,1043) FL Private Element Creator              [     4 bytes] 9.699999809 …
+(0027,1044) FL Private Element Creator              [     4 bytes] -75.6999969 …
+(0027,1045) FL Private Element Creator              [     4 bytes] 0.0
+(0027,1046) FL Private Element Creator              [     4 bytes] 0.0
+(0027,1047) FL Normal S coord                       [     4 bytes] -1.0
+(0027,1048) FL Private Element Creator              [     4 bytes] -180.535797 …
+(0027,1049) FL Private Element Creator              [     4 bytes] 179.0357971 …
+(0027,104A) FL Private Element Creator              [     4 bytes] -75.6999969 …
+(0027,104B) FL Private Element Creator              [     4 bytes] -180.535797 …
+(0027,104C) FL Private Element Creator              [     4 bytes] -159.635803 …
+(0027,104D) FL Private Element Creator              [     4 bytes] -75.6999969 …
+(0027,1050) FL Private Element Creator              [     4 bytes] -63.1999969 …
+(0027,1051) FL Scan End Location                    [     4 bytes] -116.203048 …
+(0027,1052) SH Private Element Creator              [     2 bytes] "L"
+(0027,1053) SH RAS letter for anterior/posterior    [     2 bytes] "A"
+(0027,1054) SH Private Element Creator              [     2 bytes] "I"
+(0027,1055) SH Private Element Creator              [     2 bytes] "I"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0030) DS Pixel Spacing                        [    18 bytes] "0.661468", …
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 1
+(0028,0120) SS Pixel Padding Value                  [     2 bytes] -2000
+(0028,1052) DS Rescale Intercept                    [     6 bytes] "-1024\0"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1\0"
+(0029,0010) LO Private Creator                      [    12 bytes] "GEMS_IMPS_ …
+(0029,1004) SL Private Element Creator              [     4 bytes] 0
+(0029,1005) DS Private Element Creator              [     8 bytes] "0.000000"
+(0029,1006) DS Private Element Creator              [     8 bytes] "0.000000"
+(0029,1007) SL Private Element Creator              [     4 bytes] 87
+(0029,1008) SH Private Element Creator              [     0 bytes] ""
+(0029,1009) SH Private Element Creator              [     0 bytes] ""
+(0029,100A) SS Private Element Creator              [     2 bytes] 764
+(0029,1026) SS Private Element Creator              [     2 bytes] 2
+(0029,1034) SL Private Element Creator              [     4 bytes] 0
+(0029,1035) SL Private Element Creator              [     4 bytes] 0
+(0043,0010) LO Private Creator                      [    12 bytes] "GEMS_PARM_ …
+(0043,1010) US Private Element Creator              [     2 bytes] 400
+(0043,1011) US Private Element Creator              [     2 bytes] 10431
+(0043,1012) SS Private Element Creator              [     6 bytes] 14, 2, 3
+(0043,1013) SS Decon kernel parameters              [    10 bytes] 107, 21, 4, …
+(0043,1014) SS Private Element Creator              [     6 bytes] 4, 4, 5
+(0043,1015) SS Private Element Creator              [     2 bytes] 10431
+(0043,1016) SS Private Element Creator              [     2 bytes] 0
+(0043,1017) DS Private Element Creator              [     8 bytes] "0.095000"
+(0043,1018) DS Private Element Creator              [    26 bytes] "0.085000", …
+(0043,1019) SS Number of BBH chains to blend        [     2 bytes] 350
+(0043,101A) SL Starting channel number              [     4 bytes] 7
+(0043,101B) SS Private Element Creator              [    10 bytes] 0, 0, 0, 0, 0
+(0043,101C) SS Private Element Creator              [     2 bytes] 0
+(0043,101D) SS Level value                          [     2 bytes] 40
+(0043,101E) DS Delta Start Time [msec]              [     8 bytes] "2.000000"
+(0043,101F) SL Private Element Creator              [     4 bytes] 0
+(0043,1020) DS Private Element Creator              [     8 bytes] "0.000000"
+(0043,1021) SS Corrected after glow terms           [     2 bytes] 0
+(0043,1025) SS Private Element Creator              [    12 bytes] 1, 2, 3, 74 …
+(0043,1026) US Private Element Creator              [    12 bytes] 0, 1, 1, 0, 0
+(0043,1027) SH Private Element Creator              [     6 bytes] "/1.0:1"
+(0043,1028) OB Private Element Creator              [    80 bytes] [43 54 30 3 …
+(0043,1029) OB Histogram tables                     [  2068 bytes] [00 00 00 0 …
+(0043,102A) OB Private Element Creator              [    40 bytes] [43 54 30 3 …
+(0043,102B) SS Private Element Creator              [     8 bytes] 4, 4, 0, 0
+(0043,1031) DS Recon Center Coordinates             [    20 bytes] "-11.200000 …
+(0043,1040) FL Private Element Creator              [     4 bytes] 178.0799255 …
+(0043,1041) FL Private Element Creator              [     4 bytes] 3816.219482 …
+(0043,1042) SL DAS trigger source                   [     4 bytes] 0
+(0043,1043) SL Private Element Creator              [     4 bytes] 0
+(0043,1044) SL DAS output source                    [     4 bytes] 1
+(0043,1045) SL Private Element Creator              [     4 bytes] 1
+(0043,1046) SL DAS cal mode                         [     4 bytes] 3
+(0043,1047) SL Private Element Creator              [     4 bytes] -1
+(0043,1048) SL DAS reg xm                           [     4 bytes] 1
+(0043,1049) SL DAS auto zero                        [     4 bytes] 0
+(0043,104A) SS Private Element Creator              [     2 bytes] 1
+(0043,104B) SL DAS xm pattern                       [     4 bytes] 0
+(0043,104C) SS Private Element Creator              [     2 bytes] 0
+(0043,104D) FL Start scan to X-ray on delay         [     4 bytes] 0.0
+(0043,104E) FL Duration of X-ray on                 [     4 bytes] 10.60060977 …
+(7FE0,0010) OW Pixel Data
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [ 65536 bytes] [02 00 00 …
+  (FFFE,E000) Item                                    [ 65536 bytes] [CE EE 00 …
+  (FFFE,E000) Item                                    [ 65536 bytes] [B9 BA BB …
+  (FFFE,E000) Item                                    [ 51722 bytes] [15 13 30 …
+(FFFE,E0DD) Sequence Delimitation Item

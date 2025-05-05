@@ -11,8 +11,8 @@ use alloc::{
 };
 
 use dcmfx_core::{
-  DataElementTag, DataError, DataSet, DataSetPath, IodModule, RcByteSlice,
-  ValueRepresentation, dictionary,
+  DataElementTag, DataElementValue, DataError, DataSet, DataSetPath, IodModule,
+  RcByteSlice, ValueRepresentation, dictionary,
 };
 
 use crate::iods::PaletteColorLookupTableModule;
@@ -35,6 +35,23 @@ pub struct ImagePixelModule {
   largest_image_pixel_value: Option<i64>,
   icc_profile: Option<RcByteSlice>,
   color_space: Option<String>,
+}
+
+impl core::fmt::Display for ImagePixelModule {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    f.debug_struct("ImagePixelModule")
+      .field("samples_per_pixel", &self.samples_per_pixel)
+      .field(
+        "photometric_interpretation",
+        &self.photometric_interpretation.to_string(),
+      )
+      .field("rows", &self.rows)
+      .field("columns", &self.columns)
+      .field("bits_allocated", &self.bits_allocated)
+      .field("bits_stored", &self.bits_stored)
+      .field("pixel_representation", &self.pixel_representation)
+      .finish()
+  }
 }
 
 impl IodModule for ImagePixelModule {
@@ -198,6 +215,17 @@ impl ImagePixelModule {
       return Err(DataError::new_value_invalid(format!(
         "High bit '{}' is not one less than the bits stored '{}'",
         high_bit, bits_stored
+      )));
+    }
+
+    // Check that the image width is even when using YBR 422
+    if photometric_interpretation == PhotometricInterpretation::YbrFull422
+      && columns % 2 == 1
+    {
+      return Err(DataError::new_value_invalid(format!(
+        "Uneven width '{}' is not allowed with the YBR 422 photometric \
+         interpretation",
+        columns
       )));
     }
 
@@ -657,6 +685,25 @@ impl PhotometricInterpretation {
   ///
   pub fn is_palette_color(&self) -> bool {
     matches!(self, Self::PaletteColor { .. })
+  }
+
+  /// Converts this photometric interpretation to a data element value that uses
+  /// the [`ValueRepresentation::CodeString`] value representation.
+  ///
+  pub fn to_data_element_value(&self) -> DataElementValue {
+    let s = match self {
+      Self::Monochrome1 => "MONOCHROME1",
+      Self::Monochrome2 => "MONOCHROME2",
+      Self::PaletteColor { .. } => "PALETTE COLOR",
+      Self::Rgb => "RGB",
+      Self::YbrFull => "YBR_FULL",
+      Self::YbrFull422 => "YBR_FULL_422",
+      Self::YbrIct => "YBR_ICT",
+      Self::YbrRct => "YBR_RCT",
+      Self::Xyb => "XYB",
+    };
+
+    DataElementValue::new_code_string(&[s]).unwrap()
   }
 }
 

@@ -512,7 +512,7 @@ pub const smpte_st_2110_20_uncompressed_progressive_active_video = TransferSynta
   vr_serialization: VrExplicit,
   endianness: LittleEndian,
   is_deflated: False,
-  is_encapsulated: True,
+  is_encapsulated: False,
 )
 
 /// The 'SMPTE ST 2110-20 Uncompressed Interlaced Active Video' transfer syntax.
@@ -523,7 +523,7 @@ pub const smpte_st_2110_20_uncompressed_interlaced_active_video = TransferSyntax
   vr_serialization: VrExplicit,
   endianness: LittleEndian,
   is_deflated: False,
-  is_encapsulated: True,
+  is_encapsulated: False,
 )
 
 /// The 'SMPTE ST 2110-30 PCM Audio' transfer syntax.

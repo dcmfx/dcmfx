@@ -145,6 +145,9 @@ fn test_color_image_encode_decode_cycle(
   // Create a random color image to test with
   let original_image = create_color_image(&image_pixel_module);
 
+  image_pixel_module
+    .set_photometric_interpretation(encoded_photometric_interpretation.clone());
+
   // Encode into the target transfer syntax
   let mut encoded_frame = encode::encode_color(
     &original_image,
@@ -153,9 +156,6 @@ fn test_color_image_encode_decode_cycle(
     &encode_config(),
   )
   .unwrap();
-
-  image_pixel_module
-    .set_photometric_interpretation(encoded_photometric_interpretation);
 
   // Decode out of the target transfer syntax
   let decoded_image = decode::decode_color(

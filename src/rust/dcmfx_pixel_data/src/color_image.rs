@@ -78,6 +78,13 @@ impl ColorImage {
       ));
     }
 
+    if color_space == ColorSpace::Ybr422 && width % 2 == 1 {
+      return Err(DataError::new_value_invalid(
+        "Color image in the YBR 422 color space must have even width"
+          .to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
@@ -108,6 +115,13 @@ impl ColorImage {
       ));
     }
 
+    if color_space == ColorSpace::Ybr422 && width % 2 == 1 {
+      return Err(DataError::new_value_invalid(
+        "Color image in the YBR 422 color space must have even width"
+          .to_string(),
+      ));
+    }
+
     Ok(Self {
       width,
       height,
@@ -135,6 +149,13 @@ impl ColorImage {
     if bits_stored == 0 || bits_stored > 32 {
       return Err(DataError::new_value_invalid(
         "Color image u8 bits stored must be <= 32".to_string(),
+      ));
+    }
+
+    if color_space == ColorSpace::Ybr422 && width % 2 == 1 {
+      return Err(DataError::new_value_invalid(
+        "Color image in the YBR 422 color space must have even width"
+          .to_string(),
       ));
     }
 

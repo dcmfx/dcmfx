@@ -59,6 +59,7 @@ impl DataSetPath {
 
   /// Returns the number of entries in a data set path.
   ///
+  #[allow(clippy::len_without_is_empty)]
   pub fn len(&self) -> usize {
     self.0.len()
   }

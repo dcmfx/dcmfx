@@ -500,12 +500,6 @@ pub fn decode_color(
       }
 
       PhotometricInterpretation::YbrFull422 => {
-        if image_pixel_module.columns() % 2 == 1 {
-          return Err(DataError::new_value_invalid(
-            "YBR_FULL_222 pixel data width is odd".to_string(),
-          ));
-        }
-
         match (planar_configuration, image_pixel_module.bits_allocated()) {
           (_, BitsAllocated::One) => Err(DataError::new_value_invalid(
             "Bits allocated value '1' is not supported for color data"

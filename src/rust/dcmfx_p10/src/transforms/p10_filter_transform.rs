@@ -1,10 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::{
-  boxed::Box,
-  string::{String, ToString},
-  vec,
-  vec::Vec,
-};
+use alloc::{boxed::Box, string::ToString, vec, vec::Vec};
 
 use dcmfx_core::{DataElementTag, DataSetPath, ValueRepresentation};
 

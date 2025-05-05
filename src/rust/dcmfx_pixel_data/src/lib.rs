@@ -37,14 +37,15 @@ pub use standard_color_palettes::StandardColorPalette;
 pub use stored_value_output_cache::StoredValueOutputCache;
 pub use transforms::{
   P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
+  P10PixelDataTranscodeTransform, P10PixelDataTranscodeTransformError,
 };
 
 use dcmfx_core::{
   DataError, DataSet, IodModule, TransferSyntax, dictionary, transfer_syntax,
 };
-use dcmfx_p10::DataSetP10Extensions;
+use dcmfx_p10::{DataSetBuilder, DataSetP10Extensions};
 
-/// Adds functions to [`DataSet`] for accessing its pixel data.
+/// Adds functions to [`DataSet`] for working with pixel data it contains.
 ///
 pub trait DataSetPixelDataExtensions
 where
@@ -95,6 +96,15 @@ where
   fn get_pixel_data_color_images(
     &self,
   ) -> Result<Vec<ColorImage>, P10PixelDataFrameTransformError>;
+
+  /// Transcode's the pixel data in this data set into a new data set that uses
+  /// the specified [`TransferSyntax`].
+  ///
+  fn transcode_pixel_data(
+    &self,
+    target_transfer_syntax: &'static TransferSyntax,
+    encode_config: PixelDataEncodeConfig,
+  ) -> Result<DataSet, P10PixelDataTranscodeTransformError>;
 }
 
 impl DataSetPixelDataExtensions for DataSet {
@@ -152,6 +162,33 @@ impl DataSetPixelDataExtensions for DataSet {
     &self,
   ) -> Result<Vec<ColorImage>, P10PixelDataFrameTransformError> {
     get_pixel_data(self, |renderer, frame| renderer.decode_color_frame(frame))
+  }
+
+  fn transcode_pixel_data(
+    &self,
+    output_transfer_syntax: &'static TransferSyntax,
+    encode_config: PixelDataEncodeConfig,
+  ) -> Result<DataSet, P10PixelDataTranscodeTransformError> {
+    let mut transcode_transform = P10PixelDataTranscodeTransform::new(
+      output_transfer_syntax,
+      encode_config,
+    );
+
+    let mut data_set_builder = DataSetBuilder::new();
+
+    self.to_p10_tokens(&mut |token| {
+      let tokens = transcode_transform.add_token(token)?;
+
+      for token in tokens.iter() {
+        data_set_builder
+          .add_token(token)
+          .map_err(P10PixelDataTranscodeTransformError::P10Error)?;
+      }
+
+      Ok(())
+    })?;
+
+    Ok(data_set_builder.final_data_set().unwrap())
   }
 }
 

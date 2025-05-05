@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::{format, string::ToString, vec, vec::Vec};
+use alloc::{boxed::Box, string::ToString, vec, vec::Vec};
 
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
@@ -11,29 +11,31 @@ use crate::{
 use super::PixelDataEncodeConfig;
 
 /// Returns the photometric interpretation used by an image encoded using
-/// zune_jpeg.
+/// jpeg-encoder.
 ///
 pub fn encode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
-) -> Result<PhotometricInterpretation, PixelDataEncodeError> {
+) -> Result<&PhotometricInterpretation, ()> {
   match photometric_interpretation {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => {
-      Ok(photometric_interpretation.clone())
+    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
+
+    PhotometricInterpretation::YbrFull422 => {
+      Ok(&PhotometricInterpretation::YbrFull)
     }
 
-    _ => Err(PixelDataEncodeError::NotSupported {
-      details: format!(
-        "Encoding photometric interpretation '{}' is not supported",
-        photometric_interpretation
-      ),
-    }),
+    PhotometricInterpretation::PaletteColor { .. } => {
+      Ok(&PhotometricInterpretation::Rgb)
+    }
+
+    _ => Err(()),
   }
 }
 
-/// Encodes a [`MonochromeImage`] into JPEG Baseline (Process 1) raw bytes.
+/// Encodes a [`MonochromeImage`] into JPEG Baseline (Process 1) raw bytes using
+/// `jpeg-encoder`.
 ///
 pub fn encode_monochrome(
   image: &MonochromeImage,
@@ -55,16 +57,15 @@ pub fn encode_monochrome(
     ) => encode(data, width, height, jpeg_encoder::ColorType::Luma, quality),
 
     _ => Err(PixelDataEncodeError::NotSupported {
-      details: format!(
-        "Photometric interpretation '{}' is not able to be encoded into JPEG \
-         pixel data",
-        image_pixel_module.photometric_interpretation()
-      ),
+      image_pixel_module: Box::new(image_pixel_module.clone()),
+      input_bits_allocated: image.bits_allocated(),
+      input_color_space: None,
     }),
   }
 }
 
-/// Encodes a [`ColorImage`] into JPEG Baseline (Process 1) raw bytes.
+/// Encodes a [`ColorImage`] into JPEG Baseline (Process 1) raw bytes using
+/// `jpeg-encoder`.
 ///
 pub fn encode_color(
   image: &ColorImage,
@@ -90,17 +91,37 @@ pub fn encode_color(
     (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr,
+        color_space: ColorSpace::Ybr | ColorSpace::Ybr422,
       },
       PhotometricInterpretation::YbrFull,
     ) => encode(data, width, height, jpeg_encoder::ColorType::Ycbcr, quality),
 
+    (
+      ColorImageData::PaletteU8 { data, palette },
+      PhotometricInterpretation::Rgb,
+    ) if palette.int_max() <= 255 => {
+      let mut rgb_data = Vec::with_capacity(data.len() * 3);
+
+      for index in data {
+        let pixel = palette.lookup(i64::from(*index));
+        rgb_data.push(pixel[0] as u8);
+        rgb_data.push(pixel[1] as u8);
+        rgb_data.push(pixel[2] as u8);
+      }
+
+      encode(
+        &rgb_data,
+        width,
+        height,
+        jpeg_encoder::ColorType::Rgb,
+        quality,
+      )
+    }
+
     _ => Err(PixelDataEncodeError::NotSupported {
-      details: format!(
-        "Photometric interpretation '{}' is not able to be encoded into JPEG \
-         pixel data",
-        image_pixel_module.photometric_interpretation()
-      ),
+      image_pixel_module: Box::new(image_pixel_module.clone()),
+      input_bits_allocated: image.bits_allocated(),
+      input_color_space: Some(image.color_space()),
     }),
   }
 }

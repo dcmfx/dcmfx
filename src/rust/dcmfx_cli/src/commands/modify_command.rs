@@ -7,9 +7,10 @@ use rand::Rng;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
+use dcmfx::pixel_data::*;
 
 use crate::utils::prompt_to_overwrite_if_exists;
-use crate::{InputSource, utils};
+use crate::{InputSource, transfer_syntax_arg::TransferSyntaxArg, utils};
 
 pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
 
@@ -43,20 +44,29 @@ pub struct ModifyArgs {
   #[arg(
     long,
     short,
-    help = "The transfer syntax for the output DICOM P10 file. This can only \
-      convert between the following transfer syntaxes: \
-      'implicit-vr-little-endian', 'explicit-vr-little-endian', \
-      'deflated-explicit-vr-little-endian', and 'explicit-vr-big-endian'."
+    help = "The transfer syntax for the output DICOM P10 file. Pixel data will \
+      be automatically transcoded. For some transfer syntaxes additional \
+      arguments are available to control image compression."
   )]
-  transfer_syntax: Option<String>,
+  transfer_syntax: Option<TransferSyntaxArg>,
+
+  #[arg(
+    long,
+    short,
+    help = "When transcoding to the 'jpeg-baseline-8bit' transfer syntax, \
+      specifies the JPEG quality level in the range 1-100.",
+    default_value_t = 85,
+    value_parser = clap::value_parser!(u8).range(1..=100),
+  )]
+  quality: u8,
 
   #[arg(
     long,
     help = "\
       The zlib compression level to use when outputting to the 'Deflated \
-      Explicit VR Little Endian' transfer syntax. The level ranges from 0, \
-      meaning no compression, through to 9, which gives the best compression \
-      at the cost of speed.",
+      Explicit VR Little Endian' and 'Deflated Image Frame Compression' \
+      transfer syntaxes. The level ranges from 0, meaning no compression, \
+      through to 9, which gives the best compression at the cost of speed.",
     default_value_t = 6,
     value_parser = clap::value_parser!(u32).range(0..=9),
   )]
@@ -102,6 +112,11 @@ fn validate_data_element_tag(s: &str) -> Result<DataElementTag, String> {
     .map_err(|_| "Invalid data element tag".to_string())
 }
 
+enum ModifyCommandError {
+  P10Error(P10Error),
+  P10PixelDataTranscodeTransformError(P10PixelDataTranscodeTransformError),
+}
+
 pub fn run(args: &ModifyArgs) -> Result<(), ()> {
   let input_sources = crate::get_input_sources(&args.input_filenames);
 
@@ -129,7 +144,15 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
       Ok(()) => (),
 
       Err(e) => {
-        e.print(&format!("modifying \"{}\"", input_source));
+        let task_description = format!("modifying \"{}\"", input_source);
+
+        match e {
+          ModifyCommandError::P10Error(e) => e.print(&task_description),
+          ModifyCommandError::P10PixelDataTranscodeTransformError(e) => {
+            e.print(&task_description);
+          }
+        }
+
         return Err(());
       }
     }
@@ -141,7 +164,7 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
 fn modify_input_source(
   input_source: &InputSource,
   args: &ModifyArgs,
-) -> Result<(), P10Error> {
+) -> Result<(), ModifyCommandError> {
   let output_filename = args
     .output_filename
     .clone()
@@ -204,66 +227,52 @@ fn modify_input_source(
     ..P10WriteConfig::default()
   };
 
-  let input_stream = input_source.open_read_stream()?;
+  // Setup a pixel data transcode transform if an output transfer syntax is
+  // specified
+  let pixel_data_transcode_transform =
+    if let Some(output_transfer_syntax) = args.transfer_syntax {
+      let mut pixel_data_encode_config = PixelDataEncodeConfig::new();
+      pixel_data_encode_config.set_quality(args.quality);
+      pixel_data_encode_config
+        .set_zlib_compression_level(args.zlib_compression_level);
+
+      Some(P10PixelDataTranscodeTransform::new(
+        output_transfer_syntax.as_transfer_syntax(),
+        pixel_data_encode_config,
+      ))
+    } else {
+      None
+    };
+
+  let input_stream = input_source
+    .open_read_stream()
+    .map_err(ModifyCommandError::P10Error)?;
 
   streaming_rewrite(
     input_stream,
     tmp_output_filename.as_ref().unwrap_or(&output_filename),
     write_config,
     filter_context,
-    args,
+    pixel_data_transcode_transform,
   )?;
 
   // Rename the temporary file to the desired output filename
   if output_filename != PathBuf::from("-") {
     if let Some(tmp_output_filename) = tmp_output_filename {
       std::fs::rename(&tmp_output_filename, &output_filename).map_err(|e| {
-        P10Error::FileError {
+        ModifyCommandError::P10Error(P10Error::FileError {
           when: format!(
             "Renaming '{}' to '{}'",
             tmp_output_filename.display(),
             output_filename.display()
           ),
           details: e.to_string(),
-        }
+        })
       })?;
     }
   }
 
   Ok(())
-}
-
-/// Detects and validates the value passed to --transfer-syntax, if present.
-///
-fn parse_transfer_syntax_flag(
-  transfer_syntax_flag: &Option<String>,
-) -> Result<Option<&TransferSyntax>, P10Error> {
-  let Some(transfer_syntax_value) = transfer_syntax_flag else {
-    return Ok(None);
-  };
-
-  match transfer_syntax_value.as_str() {
-    "implicit-vr-little-endian" => {
-      Ok(Some(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN))
-    }
-    "explicit-vr-little-endian" => {
-      Ok(Some(&transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN))
-    }
-    "deflated-explicit-vr-little-endian" => {
-      Ok(Some(&transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN))
-    }
-    "explicit-vr-big-endian" => {
-      Ok(Some(&transfer_syntax::EXPLICIT_VR_BIG_ENDIAN))
-    }
-
-    _ => Err(P10Error::OtherError {
-      error_type: "Unsupported transfer syntax conversion".to_string(),
-      details: format!(
-        "The transfer syntax '{}' is not recognized",
-        transfer_syntax_value
-      ),
-    }),
-  }
 }
 
 /// Rewrites by streaming the tokens of the DICOM P10 straight to the output
@@ -274,11 +283,12 @@ fn streaming_rewrite(
   output_filename: &PathBuf,
   write_config: P10WriteConfig,
   mut filter_context: Option<P10FilterTransform>,
-  args: &ModifyArgs,
-) -> Result<(), P10Error> {
+  mut pixel_data_transcode_transform: Option<P10PixelDataTranscodeTransform>,
+) -> Result<(), ModifyCommandError> {
   // Open output stream
   let mut output_stream: Box<dyn Write> =
-    utils::open_output_stream(output_filename, None, false)?;
+    utils::open_output_stream(output_filename, None, false)
+      .map_err(ModifyCommandError::P10Error)?;
 
   // Create read and write contexts
   let mut p10_read_context = P10ReadContext::new();
@@ -292,15 +302,36 @@ fn streaming_rewrite(
   // Stream P10 tokens from the input stream to the output stream
   loop {
     // Read the next P10 tokens from the input stream
-    let tokens = dcmfx::p10::read_tokens_from_stream(
+    let mut tokens = dcmfx::p10::read_tokens_from_stream(
       &mut input_stream,
       &mut p10_read_context,
-    )?;
+    )
+    .map_err(ModifyCommandError::P10Error)?;
+
+    // Pass tokens through the pixel data transcode transform if one is active
+    if let Some(pixel_data_transcode_transform) =
+      pixel_data_transcode_transform.as_mut()
+    {
+      let mut new_tokens = vec![];
+
+      for token in tokens.iter() {
+        new_tokens.extend(
+          pixel_data_transcode_transform
+            .add_token(token)
+            .map_err(ModifyCommandError::P10PixelDataTranscodeTransformError)?,
+        );
+      }
+
+      tokens = new_tokens
+    }
 
     // Pass tokens through the filter if one is specified
-    let mut tokens = if let Some(filter_context) = filter_context.as_mut() {
+    let tokens = if let Some(filter_context) = filter_context.as_mut() {
       tokens.into_iter().try_fold(vec![], |mut acc, token| {
-        if filter_context.add_token(&token)? {
+        if filter_context
+          .add_token(&token)
+          .map_err(ModifyCommandError::P10Error)?
+        {
           acc.push(token);
         }
 
@@ -310,25 +341,13 @@ fn streaming_rewrite(
       Ok(tokens)
     }?;
 
-    let output_transfer_syntax =
-      parse_transfer_syntax_flag(&args.transfer_syntax)?;
-
-    // If converting the transfer syntax then update the transfer syntax in the
-    // File Meta Information token
-    if let Some(ts) = output_transfer_syntax {
-      for token in tokens.iter_mut() {
-        if let P10Token::FileMetaInformation { data_set: fmi } = token {
-          change_transfer_syntax(fmi, ts)?;
-        }
-      }
-    }
-
     // Write tokens to the output stream
     let ended = dcmfx::p10::write_tokens_to_stream(
       &tokens,
       &mut output_stream,
       &mut p10_write_context,
-    )?;
+    )
+    .map_err(ModifyCommandError::P10Error)?;
 
     // Stop when the end token is received
     if ended {
@@ -337,45 +356,4 @@ fn streaming_rewrite(
   }
 
   Ok(())
-}
-
-/// Adds/updates the *'(0002,0010) TransferSyntaxUID'* data element in the data
-/// set. If the current transfer syntax is not able to be converted from then an
-/// error is returned.
-///
-fn change_transfer_syntax(
-  data_set: &mut DataSet,
-  output_transfer_syntax: &TransferSyntax,
-) -> Result<(), P10Error> {
-  // Read the current transfer syntax, defaulting to 'Implicit VR Little Endian'
-  let transfer_syntax = data_set
-    .get_transfer_syntax()
-    .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN);
-
-  // The list of transfer syntaxes that can be converted from
-  let valid_source_ts = [
-    transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
-    transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN,
-    transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN,
-    transfer_syntax::EXPLICIT_VR_BIG_ENDIAN,
-  ];
-
-  if valid_source_ts.contains(transfer_syntax) {
-    data_set
-      .insert_string_value(
-        &dictionary::TRANSFER_SYNTAX_UID,
-        &[output_transfer_syntax.uid],
-      )
-      .unwrap();
-
-    Ok(())
-  } else {
-    Err(P10Error::OtherError {
-      error_type: "Unsupported transfer syntax conversion".to_string(),
-      details: format!(
-        "The transfer syntax '{}' is not able to be converted from",
-        transfer_syntax.name
-      ),
-    })
-  }
 }

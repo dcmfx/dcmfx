@@ -1,8 +1,8 @@
 #[cfg(not(feature = "std"))]
-use alloc::{format, string::ToString, vec, vec::Vec};
+use alloc::{boxed::Box, string::ToString, vec, vec::Vec};
 
 use crate::{
-  ColorImage, MonochromeImage, PixelDataEncodeError,
+  ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
   color_image::ColorImageData,
   iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
   monochrome_image::MonochromeImageData,
@@ -13,23 +13,19 @@ use crate::{
 ///
 pub fn encode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
-) -> Result<PhotometricInterpretation, PixelDataEncodeError> {
+) -> Result<&PhotometricInterpretation, ()> {
   match photometric_interpretation {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
     | PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => {
-      Ok(photometric_interpretation.clone())
+    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
+
+    PhotometricInterpretation::YbrFull422 => {
+      Ok(&PhotometricInterpretation::YbrFull)
     }
 
-    _ => Err(PixelDataEncodeError::NotSupported {
-      details: format!(
-        "Encoding photometric interpretation '{}' into RLE Lossless pixel \
-         data is not supported",
-        photometric_interpretation
-      ),
-    }),
+    _ => Err(()),
   }
 }
 
@@ -37,12 +33,22 @@ pub fn encode_photometric_interpretation(
 ///
 pub fn encode_monochrome(
   image: &MonochromeImage,
+  image_pixel_module: &ImagePixelModule,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let pixel_count = image.pixel_count();
   let row_size = usize::from(image.width());
 
-  match (image.data(), image.bits_stored()) {
-    (MonochromeImageData::Bitmap { data, .. }, _) => {
+  match (
+    image.data(),
+    image.bits_stored(),
+    image_pixel_module.photometric_interpretation(),
+  ) {
+    (
+      MonochromeImageData::Bitmap { data, .. },
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let segment_0 = data.to_vec();
 
       let row_size = if image.width() % 8 == 0 {
@@ -54,13 +60,23 @@ pub fn encode_monochrome(
       encode_segments(&[segment_0], row_size)
     }
 
-    (MonochromeImageData::I8(data), 8) => {
+    (
+      MonochromeImageData::I8(data),
+      8,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let segment_0 = bytemuck::cast_slice(data).to_vec();
 
       encode_segments(&[segment_0], row_size)
     }
 
-    (MonochromeImageData::I8(data), _) => {
+    (
+      MonochromeImageData::I8(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mut segment_0 = vec![0; pixel_count];
 
       let mask = (1 << image.bits_stored()) - 1;
@@ -72,13 +88,23 @@ pub fn encode_monochrome(
       encode_segments(&[segment_0], row_size)
     }
 
-    (MonochromeImageData::U8(data), _) => {
+    (
+      MonochromeImageData::U8(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let segment_0 = data.to_vec();
 
       encode_segments(&[segment_0], row_size)
     }
 
-    (MonochromeImageData::I16(data), 16) => {
+    (
+      MonochromeImageData::I16(data),
+      16,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
 
@@ -92,7 +118,12 @@ pub fn encode_monochrome(
       encode_segments(&[segment_0, segment_1], row_size)
     }
 
-    (MonochromeImageData::I16(data), _) => {
+    (
+      MonochromeImageData::I16(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
 
@@ -108,7 +139,12 @@ pub fn encode_monochrome(
       encode_segments(&[segment_0, segment_1], row_size)
     }
 
-    (MonochromeImageData::U16(data), _) => {
+    (
+      MonochromeImageData::U16(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
 
@@ -122,7 +158,12 @@ pub fn encode_monochrome(
       encode_segments(&[segment_0, segment_1], row_size)
     }
 
-    (MonochromeImageData::I32(data), 32) => {
+    (
+      MonochromeImageData::I32(data),
+      32,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
       let mut segment_2 = vec![0; pixel_count];
@@ -140,7 +181,12 @@ pub fn encode_monochrome(
       encode_segments(&[segment_0, segment_1, segment_2, segment_3], row_size)
     }
 
-    (MonochromeImageData::I32(data), _) => {
+    (
+      MonochromeImageData::I32(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
       let mut segment_2 = vec![0; pixel_count];
@@ -160,7 +206,12 @@ pub fn encode_monochrome(
       encode_segments(&[segment_0, segment_1, segment_2, segment_3], row_size)
     }
 
-    (MonochromeImageData::U32(data), _) => {
+    (
+      MonochromeImageData::U32(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
       let mut segment_2 = vec![0; pixel_count];
@@ -177,6 +228,12 @@ pub fn encode_monochrome(
 
       encode_segments(&[segment_0, segment_1, segment_2, segment_3], row_size)
     }
+
+    _ => Err(PixelDataEncodeError::NotSupported {
+      image_pixel_module: Box::new(image_pixel_module.clone()),
+      input_bits_allocated: image.bits_allocated(),
+      input_color_space: None,
+    }),
   }
 }
 
@@ -189,124 +246,166 @@ pub fn encode_color(
   let row_size = usize::from(image.width());
   let pixel_count = image.pixel_count();
 
-  match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::PaletteColor { .. }
-    | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => match image.data() {
-      ColorImageData::U8 { data, .. } => {
-        let mut segment_0 = vec![0; pixel_count];
-        let mut segment_1 = vec![0; pixel_count];
-        let mut segment_2 = vec![0; pixel_count];
+  match (
+    image.data(),
+    image_pixel_module.photometric_interpretation(),
+  ) {
+    (
+      ColorImageData::PaletteU8 { data, .. },
+      PhotometricInterpretation::PaletteColor { .. },
+    ) => {
+      let segment_0 = data.to_vec();
 
-        for i in 0..pixel_count {
-          segment_0[i] = data[i * 3];
-          segment_1[i] = data[i * 3 + 1];
-          segment_2[i] = data[i * 3 + 2];
-        }
+      encode_segments(&[segment_0], row_size)
+    }
 
-        encode_segments(&[segment_0, segment_1, segment_2], row_size)
+    (
+      ColorImageData::PaletteU16 { data, .. },
+      PhotometricInterpretation::PaletteColor { .. },
+    ) => {
+      let mut segment_0 = vec![0; pixel_count];
+      let mut segment_1 = vec![0; pixel_count];
+
+      for i in 0..pixel_count {
+        let [a, b] = data[i].to_be_bytes();
+
+        segment_0[i] = a;
+        segment_1[i] = b;
       }
 
-      ColorImageData::U16 { data, .. } => {
-        let mut segment_0 = vec![0; pixel_count];
-        let mut segment_1 = vec![0; pixel_count];
-        let mut segment_2 = vec![0; pixel_count];
-        let mut segment_3 = vec![0; pixel_count];
-        let mut segment_4 = vec![0; pixel_count];
-        let mut segment_5 = vec![0; pixel_count];
+      encode_segments(&[segment_0, segment_1], row_size)
+    }
 
-        for i in 0..pixel_count {
-          let [a, b] = data[i * 3].to_be_bytes();
-          segment_0[i] = a;
-          segment_1[i] = b;
+    (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::Rgb,
+    )
+    | (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Ybr | ColorSpace::Ybr422,
+      },
+      PhotometricInterpretation::YbrFull,
+    ) => {
+      let mut segment_0 = vec![0; pixel_count];
+      let mut segment_1 = vec![0; pixel_count];
+      let mut segment_2 = vec![0; pixel_count];
 
-          let [a, b] = data[i * 3 + 1].to_be_bytes();
-          segment_2[i] = a;
-          segment_3[i] = b;
-
-          let [a, b] = data[i * 3 + 2].to_be_bytes();
-          segment_4[i] = a;
-          segment_5[i] = b;
-        }
-
-        encode_segments(
-          &[
-            segment_0, segment_1, segment_2, segment_3, segment_4, segment_5,
-          ],
-          row_size,
-        )
+      for i in 0..pixel_count {
+        segment_0[i] = data[i * 3];
+        segment_1[i] = data[i * 3 + 1];
+        segment_2[i] = data[i * 3 + 2];
       }
 
-      ColorImageData::U32 { data, .. } => {
-        let mut segment_0 = vec![0; pixel_count];
-        let mut segment_1 = vec![0; pixel_count];
-        let mut segment_2 = vec![0; pixel_count];
-        let mut segment_3 = vec![0; pixel_count];
-        let mut segment_4 = vec![0; pixel_count];
-        let mut segment_5 = vec![0; pixel_count];
-        let mut segment_6 = vec![0; pixel_count];
-        let mut segment_7 = vec![0; pixel_count];
-        let mut segment_8 = vec![0; pixel_count];
-        let mut segment_9 = vec![0; pixel_count];
-        let mut segment_10 = vec![0; pixel_count];
-        let mut segment_11 = vec![0; pixel_count];
+      encode_segments(&[segment_0, segment_1, segment_2], row_size)
+    }
 
-        for i in 0..pixel_count {
-          let [a, b, c, d] = data[i * 3].to_be_bytes();
-          segment_0[i] = a;
-          segment_1[i] = b;
-          segment_2[i] = c;
-          segment_3[i] = d;
+    (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::Rgb,
+    )
+    | (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Ybr | ColorSpace::Ybr422,
+      },
+      PhotometricInterpretation::YbrFull,
+    ) => {
+      let mut segment_0 = vec![0; pixel_count];
+      let mut segment_1 = vec![0; pixel_count];
+      let mut segment_2 = vec![0; pixel_count];
+      let mut segment_3 = vec![0; pixel_count];
+      let mut segment_4 = vec![0; pixel_count];
+      let mut segment_5 = vec![0; pixel_count];
 
-          let [a, b, c, d] = data[i * 3 + 1].to_be_bytes();
-          segment_4[i] = a;
-          segment_5[i] = b;
-          segment_6[i] = c;
-          segment_7[i] = d;
+      for i in 0..pixel_count {
+        let [a, b] = data[i * 3].to_be_bytes();
+        segment_0[i] = a;
+        segment_1[i] = b;
 
-          let [a, b, c, d] = data[i * 3 + 2].to_be_bytes();
-          segment_8[i] = a;
-          segment_9[i] = b;
-          segment_10[i] = c;
-          segment_11[i] = d;
-        }
+        let [a, b] = data[i * 3 + 1].to_be_bytes();
+        segment_2[i] = a;
+        segment_3[i] = b;
 
-        encode_segments(
-          &[
-            segment_0, segment_1, segment_2, segment_3, segment_4, segment_5,
-            segment_6, segment_7, segment_8, segment_9, segment_10, segment_11,
-          ],
-          row_size,
-        )
+        let [a, b] = data[i * 3 + 2].to_be_bytes();
+        segment_4[i] = a;
+        segment_5[i] = b;
       }
 
-      ColorImageData::PaletteU8 { data, .. } => {
-        let segment_0 = data.to_vec();
+      encode_segments(
+        &[
+          segment_0, segment_1, segment_2, segment_3, segment_4, segment_5,
+        ],
+        row_size,
+      )
+    }
 
-        encode_segments(&[segment_0], row_size)
+    (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::Rgb,
+    )
+    | (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Ybr | ColorSpace::Ybr422,
+      },
+      PhotometricInterpretation::YbrFull,
+    ) => {
+      let mut segment_0 = vec![0; pixel_count];
+      let mut segment_1 = vec![0; pixel_count];
+      let mut segment_2 = vec![0; pixel_count];
+      let mut segment_3 = vec![0; pixel_count];
+      let mut segment_4 = vec![0; pixel_count];
+      let mut segment_5 = vec![0; pixel_count];
+      let mut segment_6 = vec![0; pixel_count];
+      let mut segment_7 = vec![0; pixel_count];
+      let mut segment_8 = vec![0; pixel_count];
+      let mut segment_9 = vec![0; pixel_count];
+      let mut segment_10 = vec![0; pixel_count];
+      let mut segment_11 = vec![0; pixel_count];
+
+      for i in 0..pixel_count {
+        let [a, b, c, d] = data[i * 3].to_be_bytes();
+        segment_0[i] = a;
+        segment_1[i] = b;
+        segment_2[i] = c;
+        segment_3[i] = d;
+
+        let [a, b, c, d] = data[i * 3 + 1].to_be_bytes();
+        segment_4[i] = a;
+        segment_5[i] = b;
+        segment_6[i] = c;
+        segment_7[i] = d;
+
+        let [a, b, c, d] = data[i * 3 + 2].to_be_bytes();
+        segment_8[i] = a;
+        segment_9[i] = b;
+        segment_10[i] = c;
+        segment_11[i] = d;
       }
 
-      ColorImageData::PaletteU16 { data, .. } => {
-        let mut segment_0 = vec![0; pixel_count];
-        let mut segment_1 = vec![0; pixel_count];
-
-        for i in 0..pixel_count {
-          let [a, b] = data[i].to_be_bytes();
-
-          segment_0[i] = a;
-          segment_1[i] = b;
-        }
-
-        encode_segments(&[segment_0, segment_1], row_size)
-      }
-    },
+      encode_segments(
+        &[
+          segment_0, segment_1, segment_2, segment_3, segment_4, segment_5,
+          segment_6, segment_7, segment_8, segment_9, segment_10, segment_11,
+        ],
+        row_size,
+      )
+    }
 
     _ => Err(PixelDataEncodeError::NotSupported {
-      details: format!(
-        "Photometric interpretation '{}' is not able to be encoded into \
-         RLE Lossless pixel data",
-        image_pixel_module.photometric_interpretation()
-      ),
+      image_pixel_module: Box::new(image_pixel_module.clone()),
+      input_bits_allocated: image.bits_allocated(),
+      input_color_space: Some(image.color_space()),
     }),
   }
 }
@@ -421,7 +520,7 @@ fn encode_row(mut data: &[u8], output: &mut Vec<u8>) {
     let max_run_length = data.len().min(128);
 
     // See how many times this byte repeats, up to a maximum of 128 which is
-    // all the can be encoded in a single run
+    // all that can be encoded in a single run
     while run_length < max_run_length && first_byte == data[run_length] {
       run_length += 1;
     }

@@ -1,12 +1,12 @@
 #[cfg(not(feature = "std"))]
-use alloc::{format, string::ToString, vec, vec::Vec};
+use alloc::{boxed::Box, vec, vec::Vec};
 
 use crate::{
-  ColorImage, MonochromeImage, PixelDataEncodeError, PixelDataFrame,
+  ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
+  PixelDataFrame,
   color_image::ColorImageData,
-  iods::{
-    ImagePixelModule,
-    image_pixel_module::{PhotometricInterpretation, PlanarConfiguration},
+  iods::image_pixel_module::{
+    ImagePixelModule, PhotometricInterpretation, PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -16,44 +16,54 @@ use crate::{
 ///
 pub fn encode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
-) -> Result<PhotometricInterpretation, PixelDataEncodeError> {
+) -> Result<&PhotometricInterpretation, ()> {
   match photometric_interpretation {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
     | PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull422
-    | PhotometricInterpretation::YbrFull => {
-      Ok(photometric_interpretation.clone())
-    }
+    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
 
-    _ => Err(PixelDataEncodeError::NotSupported {
-      details: format!(
-        "Encoding photometric interpretation '{}' into native pixel data is \
-           not supported",
-        photometric_interpretation
-      ),
-    }),
+    _ => Err(()),
   }
 }
 
 /// Encodes a [`MonochromeImage`] into native pixel data raw bytes.
 ///
-pub fn encode_monochrome(image: &MonochromeImage) -> PixelDataFrame {
+pub fn encode_monochrome(
+  image: &MonochromeImage,
+  image_pixel_module: &ImagePixelModule,
+) -> Result<PixelDataFrame, PixelDataEncodeError> {
   let bit_size =
     image.pixel_count() as u64 * u64::from(u8::from(image.bits_allocated()));
   let mut result = vec![0u8; bit_size.div_ceil(8) as usize];
 
-  match (image.data(), image.bits_stored()) {
-    (MonochromeImageData::Bitmap { data, .. }, _) => {
-      result.copy_from_slice(data)
-    }
+  match (
+    image.data(),
+    image.bits_stored(),
+    image_pixel_module.photometric_interpretation(),
+  ) {
+    (
+      MonochromeImageData::Bitmap { data, .. },
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => result.copy_from_slice(data),
 
-    (MonochromeImageData::I8(data), 8) => {
-      result.copy_from_slice(bytemuck::cast_slice(data))
-    }
+    (
+      MonochromeImageData::I8(data),
+      8,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => result.copy_from_slice(bytemuck::cast_slice(data)),
 
-    (MonochromeImageData::I8(data), _) => {
+    (
+      MonochromeImageData::I8(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mask = (1 << image.bits_stored()) - 1;
 
       for (i, pixel) in data.iter().enumerate() {
@@ -61,9 +71,19 @@ pub fn encode_monochrome(image: &MonochromeImage) -> PixelDataFrame {
       }
     }
 
-    (MonochromeImageData::U8(data), _) => result.copy_from_slice(data),
+    (
+      MonochromeImageData::U8(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => result.copy_from_slice(data),
 
-    (MonochromeImageData::I16(data), 16) => {
+    (
+      MonochromeImageData::I16(data),
+      16,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       #[cfg(target_endian = "little")]
       unsafe {
         core::ptr::copy_nonoverlapping(
@@ -79,7 +99,12 @@ pub fn encode_monochrome(image: &MonochromeImage) -> PixelDataFrame {
       }
     }
 
-    (MonochromeImageData::I16(data), _) => {
+    (
+      MonochromeImageData::I16(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mask = (1 << image.bits_stored()) - 1;
 
       for (i, pixel) in data.iter().enumerate() {
@@ -88,7 +113,12 @@ pub fn encode_monochrome(image: &MonochromeImage) -> PixelDataFrame {
       }
     }
 
-    (MonochromeImageData::U16(data), _) => {
+    (
+      MonochromeImageData::U16(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       #[cfg(target_endian = "little")]
       unsafe {
         core::ptr::copy_nonoverlapping(
@@ -104,11 +134,19 @@ pub fn encode_monochrome(image: &MonochromeImage) -> PixelDataFrame {
       }
     }
 
-    (MonochromeImageData::I32(data), 16) => {
-      result.copy_from_slice(bytemuck::cast_slice(data))
-    }
+    (
+      MonochromeImageData::I32(data),
+      16,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => result.copy_from_slice(bytemuck::cast_slice(data)),
 
-    (MonochromeImageData::I32(data), _) => {
+    (
+      MonochromeImageData::I32(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       let mask = (1 << image.bits_stored()) - 1;
 
       for (i, pixel) in data.iter().enumerate() {
@@ -117,7 +155,12 @@ pub fn encode_monochrome(image: &MonochromeImage) -> PixelDataFrame {
       }
     }
 
-    (MonochromeImageData::U32(data), _) => {
+    (
+      MonochromeImageData::U32(data),
+      _,
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => {
       #[cfg(target_endian = "little")]
       unsafe {
         core::ptr::copy_nonoverlapping(
@@ -132,12 +175,20 @@ pub fn encode_monochrome(image: &MonochromeImage) -> PixelDataFrame {
         result.copy_from_slice(&pixel.to_le_bytes());
       }
     }
+
+    _ => {
+      return Err(PixelDataEncodeError::NotSupported {
+        image_pixel_module: Box::new(image_pixel_module.clone()),
+        input_bits_allocated: image.bits_allocated(),
+        input_color_space: None,
+      });
+    }
   }
 
   let mut frame = PixelDataFrame::new();
   frame.push_bits(result.into(), bit_size);
 
-  frame
+  Ok(frame)
 }
 
 /// Encodes a [`ColorImage`] into native pixel data raw bytes.
@@ -152,246 +203,331 @@ pub fn encode_color(
     image_pixel_module.photometric_interpretation();
   let planar_configuration = image_pixel_module.planar_configuration();
 
-  match photometric_interpretation {
-    PhotometricInterpretation::PaletteColor { .. }
-    | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => {
-      match (image.data(), planar_configuration) {
-        (ColorImageData::U8 { data, .. }, PlanarConfiguration::Interleaved)
-        | (ColorImageData::PaletteU8 { data, .. }, _) => {
-          result.copy_from_slice(data)
-        }
+  match (
+    image.data(),
+    planar_configuration,
+    photometric_interpretation,
+  ) {
+    (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PlanarConfiguration::Interleaved,
+      PhotometricInterpretation::Rgb,
+    )
+    | (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Ybr,
+      },
+      PlanarConfiguration::Interleaved,
+      PhotometricInterpretation::YbrFull,
+    )
+    | (
+      ColorImageData::PaletteU8 { data, .. },
+      _,
+      PhotometricInterpretation::PaletteColor { .. },
+    ) => result.copy_from_slice(data),
 
-        (ColorImageData::U8 { data, .. }, PlanarConfiguration::Separate) => {
-          for i in 0..image.pixel_count() {
-            result[i] = data[i * 3];
-            result[image.pixel_count() + i] = data[i * 3 + 1];
-            result[image.pixel_count() * 2 + i] = data[i * 3 + 2];
-          }
-        }
-
-        (
-          ColorImageData::U16 { data, .. },
-          PlanarConfiguration::Interleaved,
-        )
-        | (ColorImageData::PaletteU16 { data, .. }, _) => {
-          #[cfg(target_endian = "little")]
-          unsafe {
-            core::ptr::copy_nonoverlapping(
-              data.as_ptr(),
-              result.as_mut_ptr() as *mut u16,
-              data.len(),
-            );
-          }
-
-          #[cfg(target_endian = "big")]
-          for pixel in data {
-            result.copy_from_slice(&pixel.to_le_bytes());
-          }
-        }
-
-        (ColorImageData::U16 { data, .. }, PlanarConfiguration::Separate) => {
-          let mut i0 = 0;
-          let mut i1 = image.pixel_count() * 2;
-          let mut i2 = image.pixel_count() * 4;
-
-          for i in 0..image.pixel_count() {
-            result[i0..(i0 + 2)].copy_from_slice(&data[i * 3].to_le_bytes());
-            result[i1..(i1 + 2)]
-              .copy_from_slice(&data[i * 3 + 1].to_le_bytes());
-            result[i2..(i2 + 2)]
-              .copy_from_slice(&data[i * 3 + 2].to_le_bytes());
-
-            i0 += 2;
-            i1 += 2;
-            i2 += 2;
-          }
-        }
-
-        (
-          ColorImageData::U32 { data, .. },
-          PlanarConfiguration::Interleaved,
-        ) => {
-          #[cfg(target_endian = "little")]
-          unsafe {
-            core::ptr::copy_nonoverlapping(
-              data.as_ptr(),
-              result.as_mut_ptr() as *mut u32,
-              data.len(),
-            );
-          }
-
-          #[cfg(target_endian = "big")]
-          for pixel in data {
-            result.copy_from_slice(&pixel.to_le_bytes());
-          }
-        }
-
-        (ColorImageData::U32 { data, .. }, PlanarConfiguration::Separate) => {
-          let mut i0 = 0;
-          let mut i1 = image.pixel_count() * 4;
-          let mut i2 = image.pixel_count() * 8;
-
-          for i in 0..image.pixel_count() {
-            result[i0..(i0 + 4)].copy_from_slice(&data[i * 3].to_le_bytes());
-            result[i1..(i1 + 4)]
-              .copy_from_slice(&data[i * 3 + 1].to_le_bytes());
-            result[i2..(i2 + 4)]
-              .copy_from_slice(&data[i * 3 + 2].to_le_bytes());
-
-            i0 += 4;
-            i1 += 4;
-            i2 += 4;
-          }
-        }
+    (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PlanarConfiguration::Separate,
+      PhotometricInterpretation::Rgb,
+    )
+    | (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Ybr,
+      },
+      PlanarConfiguration::Separate,
+      PhotometricInterpretation::YbrFull,
+    ) => {
+      for i in 0..image.pixel_count() {
+        result[i] = data[i * 3];
+        result[image.pixel_count() + i] = data[i * 3 + 1];
+        result[image.pixel_count() * 2 + i] = data[i * 3 + 2];
       }
     }
 
-    PhotometricInterpretation::YbrFull422 => {
-      if image.width() % 2 == 1 {
-        return Err(PixelDataEncodeError::NotSupported {
-          details: format!(
-            "The YBR_FULL_422 photometric interpretation requires width to be \
-             even but it is {} pixels",
-            image.width()
-          ),
-        });
+    (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PlanarConfiguration::Interleaved,
+      PhotometricInterpretation::Rgb,
+    )
+    | (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Ybr,
+      },
+      PlanarConfiguration::Interleaved,
+      PhotometricInterpretation::YbrFull,
+    )
+    | (
+      ColorImageData::PaletteU16 { data, .. },
+      _,
+      PhotometricInterpretation::PaletteColor { .. },
+    ) => {
+      #[cfg(target_endian = "little")]
+      unsafe {
+        core::ptr::copy_nonoverlapping(
+          data.as_ptr(),
+          result.as_mut_ptr() as *mut u16,
+          data.len(),
+        );
       }
 
-      match (image.data(), planar_configuration) {
-        (ColorImageData::U8 { data, .. }, PlanarConfiguration::Interleaved) => {
-          for (i, pixels) in data.chunks_exact(6).enumerate() {
-            let y0 = pixels[0];
-            let y1 = pixels[3];
-            let cb =
-              ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u8;
-            let cr =
-              ((usize::from(pixels[2]) + usize::from(pixels[5])) / 2) as u8;
+      #[cfg(target_endian = "big")]
+      for pixel in data {
+        result.copy_from_slice(&pixel.to_le_bytes());
+      }
+    }
 
-            let i = i * 4;
-            result[i] = y0;
-            result[i + 1] = y1;
-            result[i + 2] = cb;
-            result[i + 3] = cr;
-          }
-        }
+    (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PlanarConfiguration::Separate,
+      PhotometricInterpretation::Rgb,
+    )
+    | (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Ybr,
+      },
+      PlanarConfiguration::Separate,
+      PhotometricInterpretation::YbrFull,
+    ) => {
+      let mut i0 = 0;
+      let mut i1 = image.pixel_count() * 2;
+      let mut i2 = image.pixel_count() * 4;
 
-        (ColorImageData::U8 { data, .. }, PlanarConfiguration::Separate) => {
-          for (i, pixels) in data.chunks_exact(6).enumerate() {
-            let y0 = pixels[0];
-            let y1 = pixels[3];
-            let cb =
-              ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u8;
-            let cr =
-              ((usize::from(pixels[2]) + usize::from(pixels[5])) / 2) as u8;
+      for i in 0..image.pixel_count() {
+        result[i0..(i0 + 2)].copy_from_slice(&data[i * 3].to_le_bytes());
+        result[i1..(i1 + 2)].copy_from_slice(&data[i * 3 + 1].to_le_bytes());
+        result[i2..(i2 + 2)].copy_from_slice(&data[i * 3 + 2].to_le_bytes());
 
-            let j = i * 2;
-            result[j] = y0;
-            result[j + 1] = y1;
+        i0 += 2;
+        i1 += 2;
+        i2 += 2;
+      }
+    }
 
-            let j = image.pixel_count() + i;
-            result[j] = cb;
+    (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PlanarConfiguration::Interleaved,
+      PhotometricInterpretation::Rgb,
+    )
+    | (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Ybr,
+      },
+      PlanarConfiguration::Interleaved,
+      PhotometricInterpretation::YbrFull,
+    ) => {
+      #[cfg(target_endian = "little")]
+      unsafe {
+        core::ptr::copy_nonoverlapping(
+          data.as_ptr(),
+          result.as_mut_ptr() as *mut u32,
+          data.len(),
+        );
+      }
 
-            let j = j + image.pixel_count() / 2;
-            result[j] = cr;
-          }
-        }
+      #[cfg(target_endian = "big")]
+      for pixel in data {
+        result.copy_from_slice(&pixel.to_le_bytes());
+      }
+    }
 
-        (
-          ColorImageData::U16 { data, .. },
-          PlanarConfiguration::Interleaved,
-        ) => {
-          for (i, pixels) in data.chunks_exact(6).enumerate() {
-            let y0 = pixels[0];
-            let y1 = pixels[3];
-            let cb =
-              ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u16;
-            let cr =
-              ((usize::from(pixels[2]) + usize::from(pixels[5])) / 2) as u16;
+    (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PlanarConfiguration::Separate,
+      PhotometricInterpretation::Rgb,
+    )
+    | (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Ybr,
+      },
+      PlanarConfiguration::Separate,
+      PhotometricInterpretation::YbrFull,
+    ) => {
+      let mut i0 = 0;
+      let mut i1 = image.pixel_count() * 4;
+      let mut i2 = image.pixel_count() * 8;
 
-            let i = i * 8;
-            result[i..(i + 2)].copy_from_slice(&y0.to_le_bytes());
-            result[(i + 2)..(i + 4)].copy_from_slice(&y1.to_le_bytes());
-            result[(i + 4)..(i + 6)].copy_from_slice(&cb.to_le_bytes());
-            result[(i + 6)..(i + 8)].copy_from_slice(&cr.to_le_bytes());
-          }
-        }
+      for i in 0..image.pixel_count() {
+        result[i0..(i0 + 4)].copy_from_slice(&data[i * 3].to_le_bytes());
+        result[i1..(i1 + 4)].copy_from_slice(&data[i * 3 + 1].to_le_bytes());
+        result[i2..(i2 + 4)].copy_from_slice(&data[i * 3 + 2].to_le_bytes());
 
-        (ColorImageData::U16 { data, .. }, PlanarConfiguration::Separate) => {
-          for (i, pixels) in data.chunks_exact(6).enumerate() {
-            let y0 = pixels[0];
-            let y1 = pixels[3];
-            let cb =
-              ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u16;
-            let cr =
-              ((usize::from(pixels[2]) + usize::from(pixels[5])) / 2) as u16;
+        i0 += 4;
+        i1 += 4;
+        i2 += 4;
+      }
+    }
 
-            let j = i * 4;
-            result[j..(j + 2)].copy_from_slice(&y0.to_le_bytes());
-            result[(j + 2)..(j + 4)].copy_from_slice(&y1.to_le_bytes());
+    (
+      ColorImageData::U8 { data, .. },
+      PlanarConfiguration::Interleaved,
+      PhotometricInterpretation::YbrFull422,
+    ) => {
+      for (i, pixels) in data.chunks_exact(6).enumerate() {
+        let y0 = pixels[0];
+        let y1 = pixels[3];
+        let cb = ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u8;
+        let cr = ((usize::from(pixels[2]) + usize::from(pixels[5])) / 2) as u8;
 
-            let j = (image.pixel_count() + i) * 2;
-            result[j..(j + 2)].copy_from_slice(&cb.to_le_bytes());
+        let i = i * 4;
+        result[i] = y0;
+        result[i + 1] = y1;
+        result[i + 2] = cb;
+        result[i + 3] = cr;
+      }
+    }
 
-            let j = j + image.pixel_count();
-            result[j..(j + 2)].copy_from_slice(&cr.to_le_bytes());
-          }
-        }
+    (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Ybr422,
+      },
+      PlanarConfiguration::Separate,
+      PhotometricInterpretation::YbrFull422,
+    ) => {
+      for (i, pixels) in data.chunks_exact(6).enumerate() {
+        let y0 = pixels[0];
+        let y1 = pixels[3];
+        let cb = ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u8;
+        let cr = ((usize::from(pixels[2]) + usize::from(pixels[5])) / 2) as u8;
 
-        (
-          ColorImageData::U32 { data, .. },
-          PlanarConfiguration::Interleaved,
-        ) => {
-          for (i, pixels) in data.chunks_exact(6).enumerate() {
-            let y0 = pixels[0];
-            let y1 = pixels[3];
-            let cb = ((u64::from(pixels[1]) + u64::from(pixels[4])) / 2) as u32;
-            let cr = ((u64::from(pixels[2]) + u64::from(pixels[5])) / 2) as u32;
+        let j = i * 2;
+        result[j] = y0;
+        result[j + 1] = y1;
 
-            let i = i * 16;
-            result[i..(i + 4)].copy_from_slice(&y0.to_le_bytes());
-            result[(i + 4)..(i + 8)].copy_from_slice(&y1.to_le_bytes());
-            result[(i + 8)..(i + 12)].copy_from_slice(&cb.to_le_bytes());
-            result[(i + 12)..(i + 16)].copy_from_slice(&cr.to_le_bytes());
-          }
-        }
+        let j = image.pixel_count() + i;
+        result[j] = cb;
 
-        (ColorImageData::U32 { data, .. }, PlanarConfiguration::Separate) => {
-          for (i, pixels) in data.chunks_exact(6).enumerate() {
-            let y0 = pixels[0];
-            let y1 = pixels[3];
-            let cb = ((u64::from(pixels[1]) + u64::from(pixels[4])) / 2) as u32;
-            let cr = ((u64::from(pixels[2]) + u64::from(pixels[5])) / 2) as u32;
+        let j = j + image.pixel_count() / 2;
+        result[j] = cr;
+      }
+    }
 
-            let j = i * 8;
-            result[j..(j + 4)].copy_from_slice(&y0.to_le_bytes());
-            result[(j + 4)..(j + 8)].copy_from_slice(&y1.to_le_bytes());
+    (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Ybr422,
+      },
+      PlanarConfiguration::Interleaved,
+      PhotometricInterpretation::YbrFull422,
+    ) => {
+      for (i, pixels) in data.chunks_exact(6).enumerate() {
+        let y0 = pixels[0];
+        let y1 = pixels[3];
+        let cb = ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u16;
+        let cr = ((usize::from(pixels[2]) + usize::from(pixels[5])) / 2) as u16;
 
-            let j = (image.pixel_count() + i) * 4;
-            result[j..(j + 4)].copy_from_slice(&cb.to_le_bytes());
+        let i = i * 8;
+        result[i..(i + 2)].copy_from_slice(&y0.to_le_bytes());
+        result[(i + 2)..(i + 4)].copy_from_slice(&y1.to_le_bytes());
+        result[(i + 4)..(i + 6)].copy_from_slice(&cb.to_le_bytes());
+        result[(i + 6)..(i + 8)].copy_from_slice(&cr.to_le_bytes());
+      }
+    }
 
-            let j = j + image.pixel_count() * 2;
-            result[j..(j + 4)].copy_from_slice(&cr.to_le_bytes());
-          }
-        }
+    (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Ybr422,
+      },
+      PlanarConfiguration::Separate,
+      PhotometricInterpretation::YbrFull422,
+    ) => {
+      for (i, pixels) in data.chunks_exact(6).enumerate() {
+        let y0 = pixels[0];
+        let y1 = pixels[3];
+        let cb = ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u16;
+        let cr = ((usize::from(pixels[2]) + usize::from(pixels[5])) / 2) as u16;
 
-        (ColorImageData::PaletteU8 { .. }, _)
-        | (ColorImageData::PaletteU16 { .. }, _) => {
-          return Err(PixelDataEncodeError::NotSupported {
-            details: "Palette color images can't be encoded to YBR 422"
-              .to_string(),
-          });
-        }
+        let j = i * 4;
+        result[j..(j + 2)].copy_from_slice(&y0.to_le_bytes());
+        result[(j + 2)..(j + 4)].copy_from_slice(&y1.to_le_bytes());
+
+        let j = (image.pixel_count() + i) * 2;
+        result[j..(j + 2)].copy_from_slice(&cb.to_le_bytes());
+
+        let j = j + image.pixel_count();
+        result[j..(j + 2)].copy_from_slice(&cr.to_le_bytes());
+      }
+    }
+
+    (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Ybr422,
+      },
+      PlanarConfiguration::Interleaved,
+      PhotometricInterpretation::YbrFull422,
+    ) => {
+      for (i, pixels) in data.chunks_exact(6).enumerate() {
+        let y0 = pixels[0];
+        let y1 = pixels[3];
+        let cb = ((u64::from(pixels[1]) + u64::from(pixels[4])) / 2) as u32;
+        let cr = ((u64::from(pixels[2]) + u64::from(pixels[5])) / 2) as u32;
+
+        let i = i * 16;
+        result[i..(i + 4)].copy_from_slice(&y0.to_le_bytes());
+        result[(i + 4)..(i + 8)].copy_from_slice(&y1.to_le_bytes());
+        result[(i + 8)..(i + 12)].copy_from_slice(&cb.to_le_bytes());
+        result[(i + 12)..(i + 16)].copy_from_slice(&cr.to_le_bytes());
+      }
+    }
+
+    (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Ybr422,
+      },
+      PlanarConfiguration::Separate,
+      PhotometricInterpretation::YbrFull422,
+    ) => {
+      for (i, pixels) in data.chunks_exact(6).enumerate() {
+        let y0 = pixels[0];
+        let y1 = pixels[3];
+        let cb = ((u64::from(pixels[1]) + u64::from(pixels[4])) / 2) as u32;
+        let cr = ((u64::from(pixels[2]) + u64::from(pixels[5])) / 2) as u32;
+
+        let j = i * 8;
+        result[j..(j + 4)].copy_from_slice(&y0.to_le_bytes());
+        result[(j + 4)..(j + 8)].copy_from_slice(&y1.to_le_bytes());
+
+        let j = (image.pixel_count() + i) * 4;
+        result[j..(j + 4)].copy_from_slice(&cb.to_le_bytes());
+
+        let j = j + image.pixel_count() * 2;
+        result[j..(j + 4)].copy_from_slice(&cr.to_le_bytes());
       }
     }
 
     _ => {
       return Err(PixelDataEncodeError::NotSupported {
-        details: format!(
-          "Photometric interpretation '{}' is not able to be encoded into \
-           native pixel data",
-          photometric_interpretation
-        ),
+        image_pixel_module: Box::new(image_pixel_module.clone()),
+        input_bits_allocated: image.bits_allocated(),
+        input_color_space: Some(image.color_space()),
       });
     }
   }

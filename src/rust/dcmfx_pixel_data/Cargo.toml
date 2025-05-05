@@ -22,8 +22,8 @@ jpeg-encoder = "0.6.1"
 jxl-oxide = "0.11.4"
 miniz_oxide = "0.8.8"
 num-traits = "0.2.19"
-zune-core = { git = "https://github.com/dcmfx/zune-image.git", rev = "1ed929f" }
-zune-jpeg = { git = "https://github.com/dcmfx/zune-image.git", rev = "1ed929f" }
+zune-core = "0.4.12"
+zune-jpeg = "0.4.12"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm32-unknown-unknown-openbsd-libc = "0.2"
