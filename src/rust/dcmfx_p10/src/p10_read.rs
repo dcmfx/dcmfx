@@ -803,6 +803,20 @@ impl P10ReadContext {
           });
         }
 
+        // Add data element to the path
+        self
+          .path
+          .add_data_element(tag)
+          .map_err(|_| P10Error::DataInvalid {
+            when: "Reading data element header".to_string(),
+            details: format!(
+              "Data element '{}' is not valid for the current path",
+              header
+            ),
+            path: self.path.clone(),
+            offset: self.stream.bytes_read(),
+          })?;
+
         // Swallow the '(FFFC,FFFC) Data Set Trailing Padding' data element. No
         // tokens for it are emitted. Ref: PS3.10 7.2.
         //
@@ -835,20 +849,6 @@ impl P10ReadContext {
           bytes_remaining: length,
           emit_tokens,
         };
-
-        // Add data element to the path
-        self
-          .path
-          .add_data_element(tag)
-          .map_err(|_| P10Error::DataInvalid {
-            when: "Reading data element header".to_string(),
-            details: format!(
-              "Data element '{}' is not valid for the current path",
-              header
-            ),
-            path: self.path.clone(),
-            offset: self.stream.bytes_read(),
-          })?;
 
         Ok(tokens)
       }

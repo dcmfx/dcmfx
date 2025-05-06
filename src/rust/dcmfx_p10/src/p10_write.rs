@@ -281,7 +281,7 @@ impl P10WriteContext {
             self.location.end_sequence().and_then(|_| self.path.pop())
           }
 
-          _ => Ok(()),
+          _ => Ok(&mut self.path),
         }
         .map_err(map_to_p10_token_stream_error)?;
 

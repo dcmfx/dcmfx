@@ -31,7 +31,7 @@ pub struct DataSetPath(Vec<DataSetPathEntry>);
 /// An individual entry in a [`DataSetPath`].
 ///
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) enum DataSetPathEntry {
+pub enum DataSetPathEntry {
   DataElement { tag: DataElementTag },
   SequenceItem { index: usize },
 }
@@ -53,7 +53,7 @@ impl DataSetPath {
 
   /// Returns the entries for a data set path.
   ///
-  pub(crate) fn entries(&self) -> &Vec<DataSetPathEntry> {
+  pub fn entries(&self) -> &Vec<DataSetPathEntry> {
     &self.0
   }
 
@@ -150,12 +150,12 @@ impl DataSetPath {
   /// Removes the last entry in a data set path.
   ///
   #[allow(clippy::result_unit_err)]
-  pub fn pop(&mut self) -> Result<(), String> {
+  pub fn pop(&mut self) -> Result<&mut Self, String> {
     if self.0.is_empty() {
       Err("Data set path is empty".to_string())
     } else {
       self.0.pop();
-      Ok(())
+      Ok(self)
     }
   }
 

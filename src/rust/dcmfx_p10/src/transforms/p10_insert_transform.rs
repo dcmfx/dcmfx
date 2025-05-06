@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::{boxed::Box, vec, vec::Vec};
+use alloc::{boxed::Box, string::ToString, vec, vec::Vec};
 
 use dcmfx_core::{DataElementTag, DataElementValue, DataSet, DataSetPath};
 
@@ -76,9 +76,20 @@ impl P10InsertTransform {
             break;
           }
 
+          let mut path = path.clone();
+          path
+            .pop()
+            .and_then(|path| path.add_data_element(data_element.0))
+            .map_err(|_| P10Error::TokenStreamInvalid {
+              when: "Adding token to insert transform".to_string(),
+              details: "Failed altering path for data element to insert"
+                .to_string(),
+              token: token.clone(),
+            })?;
+
           self.append_data_element_tokens(
             data_element,
-            path,
+            &path,
             &mut output_tokens,
           );
         }
@@ -90,9 +101,11 @@ impl P10InsertTransform {
       // elements to be inserted then insert them now prior to the end
       P10Token::End => {
         while let Some(data_element) = self.data_elements_to_insert.pop() {
+          let tag = data_element.0;
+
           self.append_data_element_tokens(
             data_element,
-            &DataSetPath::new(),
+            &DataSetPath::new_with_data_element(tag),
             &mut output_tokens,
           );
         }
@@ -195,7 +208,7 @@ mod tests {
         tokens_for_tag(DataElementTag::new(5, 0), b"15"),
         tokens_for_tag(DataElementTag::new(6, 0), b"06"),
         tokens_for_tag(DataElementTag::new(7, 0), b"07"),
-        vec![P10Token::End]
+        vec![P10Token::End],
       ]
       .into_iter()
       .flatten()
@@ -209,7 +222,7 @@ mod tests {
         tag,
         vr: ValueRepresentation::LongText,
         length: value_bytes.len() as u32,
-        path: DataSetPath::new(),
+        path: DataSetPath::new_with_data_element(tag),
       },
       P10Token::DataElementValueBytes {
         tag,

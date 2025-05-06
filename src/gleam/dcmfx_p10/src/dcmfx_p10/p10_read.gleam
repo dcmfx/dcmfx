@@ -148,7 +148,6 @@ pub opaque type P10ReadContext {
     transfer_syntax: TransferSyntax,
     path: DataSetPath,
     location: P10Location,
-    sequence_depth: Int,
   )
 }
 
@@ -179,7 +178,6 @@ pub fn new_read_context() -> P10ReadContext {
     transfer_syntax: transfer_syntax.implicit_vr_little_endian,
     path: data_set_path.new(),
     location: p10_location.new(),
-    sequence_depth: 0,
   )
 }
 
@@ -337,12 +335,6 @@ fn next_delimiter_token(
 
   case p10_location.next_delimiter_token(context.location, bytes_read) {
     Ok(#(token, new_location)) -> {
-      // Decrement the sequence depth if this is a sequence delimiter
-      let new_sequence_depth = case token {
-        p10_token.SequenceDelimiter(..) -> context.sequence_depth - 1
-        _ -> context.sequence_depth
-      }
-
       // Update current path
       let new_path = case token {
         p10_token.SequenceDelimiter(..) | p10_token.SequenceItemDelimiter -> {
@@ -353,12 +345,7 @@ fn next_delimiter_token(
       }
 
       let new_context =
-        P10ReadContext(
-          ..context,
-          path: new_path,
-          location: new_location,
-          sequence_depth: new_sequence_depth,
-        )
+        P10ReadContext(..context, path: new_path, location: new_location)
 
       #([token], new_context)
     }
@@ -719,8 +706,6 @@ fn read_data_element_header_token(
     -> {
       use context <- result.try(check_data_element_ordering(context, header))
 
-      let token = p10_token.SequenceStart(tag, value_representation.Sequence)
-
       let ends_at = case header.length {
         value_length.Defined(length) ->
           Some(byte_stream.bytes_read(new_stream) + length)
@@ -752,7 +737,8 @@ fn read_data_element_header_token(
 
       // Check that the maximum sequence depth hasn't been reached
       let sequence_depth_check = case
-        context.sequence_depth < context.config.max_sequence_depth
+        data_set_path.length(context.path) / 2
+        < context.config.max_sequence_depth
       {
         True -> Ok(Nil)
         False ->
@@ -768,13 +754,15 @@ fn read_data_element_header_token(
       let assert Ok(new_path) =
         data_set_path.add_data_element(context.path, tag)
 
+      let token =
+        p10_token.SequenceStart(tag, value_representation.Sequence, new_path)
+
       let new_context =
         P10ReadContext(
           ..context,
           stream: new_stream,
           path: new_path,
           location: new_location,
-          sequence_depth: context.sequence_depth + 1,
         )
 
       Ok(#([token], new_context))
@@ -826,7 +814,6 @@ fn read_data_element_header_token(
       use context <- result.try(check_data_element_ordering(context, header))
 
       let Some(vr) = vr
-      let token = p10_token.SequenceStart(tag, vr)
 
       let new_location =
         p10_location.add_sequence(context.location, tag, False, None)
@@ -842,6 +829,8 @@ fn read_data_element_header_token(
 
       let assert Ok(new_path) =
         data_set_path.add_data_element(context.path, tag)
+
+      let token = p10_token.SequenceStart(tag, vr, new_path)
 
       let new_context =
         P10ReadContext(
@@ -860,19 +849,13 @@ fn read_data_element_header_token(
     tag, None, value_length.Defined(0)
       if tag == dictionary.sequence_delimitation_item.tag
     -> {
-      let #(tokens, new_path, new_location, new_sequence_depth) = case
+      let #(tokens, new_path, new_location) = case
         p10_location.end_sequence(context.location)
       {
         Ok(#(tag, new_location)) -> {
           let assert Ok(new_path) = data_set_path.pop(context.path)
-          let new_sequence_depth = context.sequence_depth - 1
 
-          #(
-            [p10_token.SequenceDelimiter(tag:)],
-            new_path,
-            new_location,
-            new_sequence_depth,
-          )
+          #([p10_token.SequenceDelimiter(tag:)], new_path, new_location)
         }
 
         // If a sequence delimiter occurs outside of a sequence then no error is
@@ -880,12 +863,7 @@ fn read_data_element_header_token(
         // sequence delimiters have been observed in some DICOM P10 data, and
         // not propagating an error right here doesn't do any harm and allows
         // such data to be read.
-        Error(_) -> #(
-          [],
-          context.path,
-          context.location,
-          context.sequence_depth,
-        )
+        Error(_) -> #([], context.path, context.location)
       }
 
       let new_context =
@@ -894,7 +872,6 @@ fn read_data_element_header_token(
           stream: new_stream,
           path: new_path,
           location: new_location,
-          sequence_depth: new_sequence_depth,
         )
 
       Ok(#(tokens, new_context))
@@ -963,27 +940,6 @@ fn read_data_element_header_token(
       }
       use _ <- result.try(max_size_check_result)
 
-      // Swallow the '(FFFC,FFFC) Data Set Trailing Padding' data element. No
-      // tokens for it are emitted. Ref: PS3.10 7.2.
-      // Also swallow group length tags that have an element of 0x0000.
-      // Ref: PS3.5 7.2.
-      let emit_tokens =
-        header.tag != dictionary.data_set_trailing_padding.tag
-        && header.tag.element != 0x0000
-
-      // If the whole value is being materialized then the DataElementHeader
-      // token is only emitted once all the data is available. This is necessary
-      // because in the case of string values that are being converted to UTF-8
-      // the length of the final string value following UTF-8 conversion is not
-      // yet known.
-      let tokens = case emit_tokens && !materialized_value_required {
-        True -> [p10_token.DataElementHeader(header.tag, vr, length)]
-        False -> []
-      }
-
-      let next_action =
-        ReadDataElementValueBytes(header.tag, vr, length, length, emit_tokens)
-
       // Add data element to the path
       let new_path =
         data_set_path.add_data_element(context.path, tag)
@@ -998,6 +954,28 @@ fn read_data_element_header_token(
           )
         })
       use new_path <- result.try(new_path)
+
+      // Swallow the '(FFFC,FFFC) Data Set Trailing Padding' data element. No
+      // tokens for it are emitted. Ref: PS3.10 7.2.
+      //
+      // Also swallow group length tags that have an element of 0x0000.
+      // Ref: PS3.5 7.2.
+      let emit_tokens =
+        header.tag != dictionary.data_set_trailing_padding.tag
+        && header.tag.element != 0x0000
+
+      // If the whole value is being materialized then the DataElementHeader
+      // token is only emitted once all the data is available. This is necessary
+      // because in the case of string values that are being converted to UTF-8
+      // the length of the final string value following UTF-8 conversion is not
+      // yet known.
+      let tokens = case emit_tokens && !materialized_value_required {
+        True -> [p10_token.DataElementHeader(header.tag, vr, length, new_path)]
+        False -> []
+      }
+
+      let next_action =
+        ReadDataElementValueBytes(header.tag, vr, length, length, emit_tokens)
 
       let new_context =
         P10ReadContext(
@@ -1072,7 +1050,9 @@ fn read_data_element_header(
     is_invalid_data_element,
     Error(p10_error.DataInvalid(
       when: "Reading data element header",
-      details: "File Meta Information data element found in the main data set",
+      details: "File Meta Information data element '"
+        <> data_element_tag.to_string(tag)
+        <> "' found in the main data set",
       path: context.path,
       offset: byte_stream.bytes_read(context.stream),
     )),
@@ -1317,7 +1297,7 @@ fn read_data_element_value_bytes_token(
               case length <= max_length {
                 True ->
                   Ok([
-                    p10_token.DataElementHeader(tag, vr, length),
+                    p10_token.DataElementHeader(tag, vr, length, context.path),
                     value_bytes_token,
                   ])
                 False ->

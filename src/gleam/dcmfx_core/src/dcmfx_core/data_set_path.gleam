@@ -52,21 +52,24 @@ pub fn new_with_data_element(tag: DataElementTag) -> DataSetPath {
 
 /// Returns the entries for a data set path.
 ///
-@internal
 pub fn entries(path: DataSetPath) -> List(DataSetPathEntry) {
   path.entries
 }
 
 /// Returns the number of entries in a data set path.
 ///
-pub fn size(path: DataSetPath) -> Int {
+pub fn length(path: DataSetPath) -> Int {
   path.entries |> list.length
 }
 
-/// Returns whether a data set path has no entries.
+/// Returns whether a data set path is currently empty or pointing to a
+/// root-level data element.
 ///
-pub fn is_empty(path: DataSetPath) -> Bool {
-  path.entries |> list.is_empty
+pub fn is_root(path: DataSetPath) -> Bool {
+  case path.entries {
+    [] | [DataElement(..)] -> True
+    _ -> False
+  }
 }
 
 /// Returns the number of sequence items present in a data set path.

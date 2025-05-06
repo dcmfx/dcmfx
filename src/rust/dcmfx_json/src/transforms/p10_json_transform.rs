@@ -159,7 +159,9 @@ impl P10JsonTransform {
         self
           .data_set_path
           .pop()
-          .map_err(|_| token_stream_invalid_error())
+          .map_err(|_| token_stream_invalid_error())?;
+
+        Ok(())
       }
 
       P10Token::SequenceItemStart { .. } => {
@@ -186,7 +188,9 @@ impl P10JsonTransform {
         self
           .data_set_path
           .pop()
-          .map_err(|_| token_stream_invalid_error())
+          .map_err(|_| token_stream_invalid_error())?;
+
+        Ok(())
       }
 
       P10Token::PixelDataItem { length, .. } => {

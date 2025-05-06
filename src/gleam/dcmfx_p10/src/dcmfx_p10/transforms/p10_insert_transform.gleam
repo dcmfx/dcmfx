@@ -1,7 +1,7 @@
 import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_element_value.{type DataElementValue}
 import dcmfx_core/data_set.{type DataSet}
-import dcmfx_core/data_set_path
+import dcmfx_core/data_set_path.{type DataSetPath}
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_token.{type P10Token}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
@@ -29,7 +29,7 @@ pub fn new(data_elements_to_insert: DataSet) -> P10InsertTransform {
   // resulting token stream.
   let filter_transform =
     p10_filter_transform.new(fn(tag, _vr, _length, path) {
-      !data_set_path.is_empty(path) || !list.contains(tags_to_insert, tag)
+      !data_set_path.is_root(path) || !list.contains(tags_to_insert, tag)
     })
 
   P10InsertTransform(
@@ -71,14 +71,22 @@ pub fn add_token(
     // If this token is the start of a new data element, and there are data
     // elements still to be inserted, then insert any that should appear prior
     // to this next data element
-    p10_token.SequenceStart(tag, ..) | p10_token.DataElementHeader(tag, ..) -> {
-      let #(tokens_to_insert, data_elements_to_insert) =
-        tokens_to_insert_before_tag(tag, context.data_elements_to_insert, [])
+    p10_token.SequenceStart(tag:, path:, ..)
+    | p10_token.DataElementHeader(tag:, path:, ..) -> {
+      use #(tokens_to_insert, data_elements_to_insert) <- result.map(
+        tokens_to_insert_before_tag(
+          tag,
+          path,
+          context.data_elements_to_insert,
+          token,
+          [],
+        ),
+      )
 
       let context = P10InsertTransform(..context, data_elements_to_insert:)
       let tokens = [token, ..tokens_to_insert] |> list.reverse
 
-      Ok(#(tokens, context))
+      #(tokens, context)
     }
 
     // If this token is the end of the P10 tokens and there are still data
@@ -87,7 +95,11 @@ pub fn add_token(
       let tokens =
         context.data_elements_to_insert
         |> list.fold([], fn(acc, data_element) {
-          prepend_data_element_tokens(data_element, acc)
+          prepend_data_element_tokens(
+            data_element,
+            data_set_path.new_with_data_element(data_element.0),
+            acc,
+          )
         })
 
       let context = P10InsertTransform(..context, data_elements_to_insert: [])
@@ -106,28 +118,48 @@ pub fn add_token(
 ///
 fn tokens_to_insert_before_tag(
   tag: DataElementTag,
+  path: DataSetPath,
   data_elements_to_insert: List(#(DataElementTag, DataElementValue)),
+  token: P10Token,
   acc: List(P10Token),
-) -> #(List(P10Token), List(#(DataElementTag, DataElementValue))) {
+) -> Result(
+  #(List(P10Token), List(#(DataElementTag, DataElementValue))),
+  P10Error,
+) {
   case data_elements_to_insert {
     [data_element, ..rest] ->
       case
         data_element_tag.to_int(data_element.0) < data_element_tag.to_int(tag)
       {
-        True ->
-          data_element
-          |> prepend_data_element_tokens(acc)
-          |> tokens_to_insert_before_tag(tag, rest, _)
+        True -> {
+          let path =
+            path
+            |> data_set_path.pop
+            |> result.try(data_set_path.add_data_element(_, data_element.0))
+            |> result.map_error(fn(_) {
+              p10_error.TokenStreamInvalid(
+                when: "Adding token to insert transform",
+                details: "Failed altering path for data element to insert",
+                token:,
+              )
+            })
+          use path <- result.try(path)
 
-        False -> #(acc, data_elements_to_insert)
+          data_element
+          |> prepend_data_element_tokens(path, acc)
+          |> tokens_to_insert_before_tag(tag, path, rest, token, _)
+        }
+
+        False -> Ok(#(acc, data_elements_to_insert))
       }
 
-    _ -> #(acc, data_elements_to_insert)
+    _ -> Ok(#(acc, data_elements_to_insert))
   }
 }
 
 fn prepend_data_element_tokens(
   data_element: #(DataElementTag, DataElementValue),
+  path: DataSetPath,
   acc: List(P10Token),
 ) -> List(P10Token) {
   let #(tag, value) = data_element
@@ -135,7 +167,7 @@ fn prepend_data_element_tokens(
   // This assert is safe because the function that gathers the tokens for the
   // data set never errors
   let assert Ok(tokens) =
-    p10_token.data_element_to_tokens(tag, value, acc, fn(acc, token) {
+    p10_token.data_element_to_tokens(tag, value, path, acc, fn(acc, token) {
       Ok([token, ..acc])
     })
 

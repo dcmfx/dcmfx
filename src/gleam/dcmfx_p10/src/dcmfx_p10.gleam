@@ -2,6 +2,7 @@
 //// transmit DICOM-based medical imaging information.
 
 import dcmfx_core/data_set.{type DataSet}
+import dcmfx_core/data_set_path
 import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext}
@@ -241,7 +242,13 @@ pub fn write_stream(
 
   let config = option.lazy_unwrap(config, p10_write.default_config)
 
-  p10_write.data_set_to_bytes(data_set, Nil, bytes_callback, config)
+  p10_write.data_set_to_bytes(
+    data_set,
+    data_set_path.new(),
+    Nil,
+    bytes_callback,
+    config,
+  )
 }
 
 /// Writes a data set to in-memory DICOM P10 bytes.
@@ -254,6 +261,7 @@ pub fn write_bytes(
 
   p10_write.data_set_to_bytes(
     data_set,
+    data_set_path.new(),
     [],
     fn(chunks, bytes) { Ok([bytes, ..chunks]) },
     config,

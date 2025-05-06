@@ -4,6 +4,7 @@
 import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_element_value.{type DataElementValue}
 import dcmfx_core/data_set.{type DataSet}
+import dcmfx_core/data_set_path.{type DataSetPath}
 import dcmfx_core/dictionary
 import dcmfx_core/value_representation.{type ValueRepresentation}
 import dcmfx_p10/internal/data_element_header
@@ -38,7 +39,12 @@ pub type P10Token {
   /// The start of the next data element. This token will always be followed by
   /// one or more `DataElementValueBytes` tokens containing the value bytes for
   /// the data element.
-  DataElementHeader(tag: DataElementTag, vr: ValueRepresentation, length: Int)
+  DataElementHeader(
+    tag: DataElementTag,
+    vr: ValueRepresentation,
+    length: Int,
+    path: DataSetPath,
+  )
 
   /// Raw data for the value of the current data element. Data element values
   /// are split across multiple of these tokens when their length exceeds the
@@ -54,7 +60,7 @@ pub type P10Token {
   /// encapsulated pixel data then the VR of that data, either `OtherByteString`
   /// or `OtherWordString`, will be specified. If not, the VR will be
   /// `Sequence`.
-  SequenceStart(tag: DataElementTag, vr: ValueRepresentation)
+  SequenceStart(tag: DataElementTag, vr: ValueRepresentation, path: DataSetPath)
 
   /// The end of the current sequence.
   SequenceDelimiter(tag: DataElementTag)
@@ -95,7 +101,7 @@ pub fn to_string(token: P10Token) -> String {
       })
       |> string.join(", ")
 
-    DataElementHeader(tag, vr, length) ->
+    DataElementHeader(tag, vr, length, ..) ->
       "DataElementHeader: "
       <> data_element_tag.to_string(tag)
       <> ", name: "
@@ -113,7 +119,7 @@ pub fn to_string(token: P10Token) -> String {
       <> int.to_string(bytes_remaining)
       <> " bytes remaining"
 
-    SequenceStart(tag, vr) ->
+    SequenceStart(tag, vr, ..) ->
       "SequenceStart: "
       <> data_element_tag.to_string(tag)
       <> ", name: "
@@ -155,12 +161,15 @@ pub fn is_header_token(token: P10Token) -> Bool {
 ///
 pub fn data_elements_to_tokens(
   data_set: DataSet,
+  path: DataSetPath,
   context: a,
   token_callback: fn(a, P10Token) -> Result(a, b),
 ) -> Result(a, b) {
   data_set
   |> data_set.try_fold(context, fn(context, tag, value) {
-    data_element_to_tokens(tag, value, context, token_callback)
+    let assert Ok(path) = data_set_path.add_data_element(path, tag)
+
+    data_element_to_tokens(tag, value, path, context, token_callback)
   })
 }
 
@@ -170,6 +179,7 @@ pub fn data_elements_to_tokens(
 pub fn data_element_to_tokens(
   tag: DataElementTag,
   value: DataElementValue,
+  path: DataSetPath,
   context: a,
   token_callback: fn(a, P10Token) -> Result(a, b),
 ) -> Result(a, b) {
@@ -178,7 +188,8 @@ pub fn data_element_to_tokens(
   case data_element_value.bytes(value) {
     // For values that have their bytes directly available write them out as-is
     Ok(bytes) -> {
-      let header_token = DataElementHeader(tag, vr, bit_array.byte_size(bytes))
+      let header_token =
+        DataElementHeader(tag, vr, bit_array.byte_size(bytes), path)
       use context <- result.try(token_callback(context, header_token))
 
       DataElementValueBytes(tag, vr, bytes, bytes_remaining: 0)
@@ -190,7 +201,7 @@ pub fn data_element_to_tokens(
         // For encapsulated pixel data, write all of the items individually,
         // followed by a sequence delimiter
         Ok(items) -> {
-          let header_token = SequenceStart(tag, vr)
+          let header_token = SequenceStart(tag, vr, path)
           use context <- result.try(token_callback(context, header_token))
 
           let context =
@@ -225,7 +236,7 @@ pub fn data_element_to_tokens(
           // sequence delimiter
           let assert Ok(items) = data_element_value.sequence_items(value)
 
-          let header_token = SequenceStart(tag, vr)
+          let header_token = SequenceStart(tag, vr, path)
           use context <- result.try(token_callback(context, header_token))
 
           let context =
@@ -237,8 +248,11 @@ pub fn data_element_to_tokens(
               let context = token_callback(context, item_start_token)
               use context <- result.try(context)
 
+              let assert Ok(path) = data_set_path.add_sequence_item(path, index)
+
               use context <- result.try(data_elements_to_tokens(
                 item,
+                path,
                 context,
                 token_callback,
               ))

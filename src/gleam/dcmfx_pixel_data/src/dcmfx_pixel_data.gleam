@@ -1,6 +1,7 @@
 //// Extracts frames of pixel data present in a data set.
 
 import dcmfx_core/data_set.{type DataSet}
+import dcmfx_core/data_set_path
 import dcmfx_core/dictionary
 import dcmfx_core/transfer_syntax.{type TransferSyntax}
 import dcmfx_p10/p10_write
@@ -46,17 +47,21 @@ pub fn get_pixel_data_frames(
   // emitted frames
   let context = #([], p10_pixel_data_frame_transform.new())
   ds
-  |> p10_write.data_set_to_tokens(context, fn(context, token) {
-    let #(frames, filter) = context
+  |> p10_write.data_set_to_tokens(
+    data_set_path.new(),
+    context,
+    fn(context, token) {
+      let #(frames, filter) = context
 
-    use #(new_frames, filter) <- result.map(
-      p10_pixel_data_frame_transform.add_token(filter, token),
-    )
+      use #(new_frames, filter) <- result.map(
+        p10_pixel_data_frame_transform.add_token(filter, token),
+      )
 
-    let frames = list.append(frames, new_frames)
+      let frames = list.append(frames, new_frames)
 
-    #(frames, filter)
-  })
+      #(frames, filter)
+    },
+  )
   |> result.map(pair.first)
 }
 

@@ -59,7 +59,7 @@ pub fn add_token(
       context,
     )
 
-    p10_token.DataElementHeader(tag, vr, length) -> {
+    p10_token.DataElementHeader(tag, vr, length, ..) -> {
       let assert Ok(private_creators) = list.first(context.private_creators)
 
       let #(s, width) =
@@ -148,7 +148,7 @@ pub fn add_token(
       #(s, new_context)
     }
 
-    p10_token.SequenceStart(tag, vr) -> {
+    p10_token.SequenceStart(tag, vr, ..) -> {
       let assert Ok(private_creators) = list.first(context.private_creators)
 
       let s =

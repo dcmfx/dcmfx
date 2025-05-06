@@ -24,15 +24,20 @@ pub fn data_set_to_json(
 
   let context = #("", transform)
 
-  p10_write.data_set_to_tokens(data_set, context, fn(context, token) {
-    let #(json, transform) = context
-    use #(new_json, transform) <- result.map(p10_json_transform.add_token(
-      transform,
-      token,
-    ))
+  p10_write.data_set_to_tokens(
+    data_set,
+    data_set_path.new(),
+    context,
+    fn(context, token) {
+      let #(json, transform) = context
+      use #(new_json, transform) <- result.map(p10_json_transform.add_token(
+        transform,
+        token,
+      ))
 
-    #(json <> new_json, transform)
-  })
+      #(json <> new_json, transform)
+    },
+  )
   |> result.map(pair.first)
 }
 

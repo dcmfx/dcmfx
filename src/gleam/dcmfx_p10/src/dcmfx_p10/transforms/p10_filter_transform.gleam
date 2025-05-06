@@ -15,7 +15,6 @@ import gleam/result
 pub opaque type P10FilterTransform {
   P10FilterTransform(
     predicate: PredicateFunction,
-    path: DataSetPath,
     path_filter_results: List(Bool),
   )
 }
@@ -33,18 +32,14 @@ pub type PredicateFunction =
 /// will pass through the filter.
 ///
 pub fn new(predicate: PredicateFunction) -> P10FilterTransform {
-  P10FilterTransform(
-    predicate: predicate,
-    path: data_set_path.new(),
-    path_filter_results: [],
-  )
+  P10FilterTransform(predicate: predicate, path_filter_results: [])
 }
 
 /// Returns whether the current position of the P10 filter context is the root
 /// data set, i.e. there are no nested sequences currently active.
 ///
 pub fn is_at_root(context: P10FilterTransform) -> Bool {
-  data_set_path.is_empty(context.path)
+  list.length(context.path_filter_results) <= 1
 }
 
 /// Adds the next token to the P10 filter transform and returns whether it
@@ -59,108 +54,113 @@ pub fn add_token(
     _ -> True
   }
 
-  let map_data_set_path_error = fn(details: String) -> P10Error {
-    p10_error.TokenStreamInvalid(
-      when: "Filtering P10 token stream",
-      details:,
-      token:,
-    )
-  }
-
   let run_predicate = fn(
     tag: DataElementTag,
     vr: ValueRepresentation,
     length: Option(Int),
+    path: DataSetPath,
   ) {
     let filter_result = case context.path_filter_results {
-      [] | [True, ..] -> context.predicate(tag, vr, length, context.path)
+      [] | [True, ..] -> context.predicate(tag, vr, length, path)
 
       // The predicate function is skipped if a parent has already been filtered
       // out
       _ -> False
     }
 
-    let path =
-      context.path
-      |> data_set_path.add_data_element(tag)
-      |> result.map_error(map_data_set_path_error)
-    use path <- result.map(path)
-
     let path_filter_results = [filter_result, ..context.path_filter_results]
 
-    let new_context = P10FilterTransform(..context, path:, path_filter_results:)
+    let new_context = P10FilterTransform(..context, path_filter_results:)
 
-    #(filter_result, new_context)
+    Ok(#(filter_result, new_context))
   }
 
   case token {
-    // If this is a new sequence or data element then run the predicate function
-    // to see if it passes the filter, then add it to the location
-    p10_token.SequenceStart(tag, vr) -> run_predicate(tag, vr, None)
-    p10_token.DataElementHeader(tag, vr, length) ->
-      run_predicate(tag, vr, Some(length))
+    p10_token.FilePreambleAndDICMPrefix(..) | p10_token.FileMetaInformation(..) ->
+      Ok(#(True, context))
 
-    p10_token.SequenceItemStart(index) -> {
-      let path =
-        context.path
-        |> data_set_path.add_sequence_item(index)
-        |> result.map_error(map_data_set_path_error)
-      use path <- result.map(path)
+    p10_token.SequenceStart(tag, vr, path) -> run_predicate(tag, vr, None, path)
 
-      let new_context = P10FilterTransform(..context, path:)
+    p10_token.SequenceDelimiter(..) -> {
+      let path_filter_results =
+        list.rest(context.path_filter_results)
+        |> result.map_error(fn(_) {
+          p10_error.TokenStreamInvalid(
+            "Adding token to filter transform",
+            "Sequence delimiter received when current path is empty",
+            token,
+          )
+        })
+      use path_filter_results <- result.map(path_filter_results)
 
-      #(current_filter_state, new_context)
-    }
-
-    p10_token.SequenceItemDelimiter -> {
-      let path =
-        context.path
-        |> data_set_path.pop
-        |> result.map_error(map_data_set_path_error)
-      use path <- result.map(path)
-
-      let new_context = P10FilterTransform(..context, path:)
+      let new_context = P10FilterTransform(..context, path_filter_results:)
 
       #(current_filter_state, new_context)
     }
 
-    // If this is a new pixel data item then add it to the location
-    p10_token.PixelDataItem(index:, ..) -> {
-      let path =
-        context.path
-        |> data_set_path.add_sequence_item(index)
-        |> result.map_error(map_data_set_path_error)
-      use path <- result.map(path)
-
+    p10_token.SequenceItemStart(..) -> {
       let path_filter_results = [
         current_filter_state,
         ..context.path_filter_results
       ]
 
-      let new_context =
-        P10FilterTransform(..context, path:, path_filter_results:)
+      let new_context = P10FilterTransform(..context, path_filter_results:)
 
-      #(current_filter_state, new_context)
+      Ok(#(current_filter_state, new_context))
     }
 
-    // Detect the end of the entry at the head of the location and pop it off
-    p10_token.SequenceDelimiter(..)
-    | p10_token.DataElementValueBytes(bytes_remaining: 0, ..) -> {
-      let path =
-        context.path
-        |> data_set_path.pop
-        |> result.map_error(map_data_set_path_error)
-      use path <- result.map(path)
-
-      let assert Ok(path_filter_results) =
+    p10_token.SequenceItemDelimiter -> {
+      let path_filter_results =
         list.rest(context.path_filter_results)
+        |> result.map_error(fn(_) {
+          p10_error.TokenStreamInvalid(
+            "Adding token to filter transform",
+            "Sequence item delimiter received when current path is empty",
+            token,
+          )
+        })
+      use path_filter_results <- result.map(path_filter_results)
 
-      let new_context =
-        P10FilterTransform(..context, path:, path_filter_results:)
+      let new_context = P10FilterTransform(..context, path_filter_results:)
 
       #(current_filter_state, new_context)
     }
 
-    _ -> Ok(#(current_filter_state, context))
+    p10_token.DataElementHeader(tag, vr, length, path) ->
+      run_predicate(tag, vr, Some(length), path)
+
+    p10_token.DataElementValueBytes(bytes_remaining:, ..) -> {
+      let path_filter_results = case bytes_remaining {
+        0 -> {
+          list.rest(context.path_filter_results)
+          |> result.map_error(fn(_) {
+            p10_error.TokenStreamInvalid(
+              "Adding token to filter transform",
+              "Data element bytes ended when current path is empty",
+              token,
+            )
+          })
+        }
+        _ -> Ok(context.path_filter_results)
+      }
+      use path_filter_results <- result.map(path_filter_results)
+
+      let new_context = P10FilterTransform(..context, path_filter_results:)
+
+      #(current_filter_state, new_context)
+    }
+
+    p10_token.PixelDataItem(..) -> {
+      let path_filter_results = [
+        current_filter_state,
+        ..context.path_filter_results
+      ]
+
+      let new_context = P10FilterTransform(..context, path_filter_results:)
+
+      Ok(#(current_filter_state, new_context))
+    }
+
+    p10_token.End -> Ok(#(True, context))
   }
 }

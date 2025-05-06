@@ -81,7 +81,8 @@ impl P10FilterTransform {
           .pop()
           .ok_or(P10Error::TokenStreamInvalid {
             when: "Adding token to filter transform".to_string(),
-            details: "".to_string(),
+            details: "Sequence delimiter received when current path is empty"
+              .to_string(),
             token: token.clone(),
           })?;
 
@@ -100,7 +101,9 @@ impl P10FilterTransform {
           .pop()
           .ok_or(P10Error::TokenStreamInvalid {
             when: "Adding token to filter transform".to_string(),
-            details: "".to_string(),
+            details:
+              "Sequence item delimiter received when current path is empty"
+                .to_string(),
             token: token.clone(),
           })?;
 
@@ -121,7 +124,8 @@ impl P10FilterTransform {
           self.path_filter_results.pop().ok_or(
             P10Error::TokenStreamInvalid {
               when: "Adding token to filter transform".to_string(),
-              details: "".to_string(),
+              details: "Data element bytes ended when current path is empty"
+                .to_string(),
               token: token.clone(),
             },
           )?;

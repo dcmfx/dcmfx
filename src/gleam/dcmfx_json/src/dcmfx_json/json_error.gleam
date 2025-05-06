@@ -64,7 +64,7 @@ pub fn deserialize_error_to_lines(
 
           _ -> []
         },
-        case data_set_path.is_empty(path) {
+        case data_set_path.is_root(path) {
           True -> []
           False -> ["  Path: " <> data_set_path.to_string(path)]
         },

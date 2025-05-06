@@ -471,7 +471,7 @@ fn token_to_bytes(
       bit_array.concat([fmi_length_bytes, fmi_bytes])
     }
 
-    p10_token.DataElementHeader(tag, vr, length) -> {
+    p10_token.DataElementHeader(tag, vr, length, ..) -> {
       let vr = case transfer_syntax.vr_serialization {
         transfer_syntax.VrExplicit -> Some(vr)
         transfer_syntax.VrImplicit -> None
@@ -489,7 +489,7 @@ fn token_to_bytes(
       }
       |> Ok
 
-    p10_token.SequenceStart(tag, vr) -> {
+    p10_token.SequenceStart(tag, vr, ..) -> {
       let vr = case transfer_syntax.vr_serialization {
         transfer_syntax.VrExplicit -> Some(vr)
         transfer_syntax.VrImplicit -> None
@@ -623,6 +623,7 @@ pub fn data_element_header_to_bytes(
 ///
 pub fn data_set_to_tokens(
   data_set: DataSet,
+  path: DataSetPath,
   callback_context: a,
   token_callback: fn(a, P10Token) -> Result(a, e),
 ) -> Result(a, e) {
@@ -692,6 +693,7 @@ pub fn data_set_to_tokens(
   // Write main data set
   use context <- result.try(p10_token.data_elements_to_tokens(
     data_set,
+    path,
     context,
     process_token,
   ))
@@ -707,6 +709,7 @@ pub fn data_set_to_tokens(
 ///
 pub fn data_set_to_bytes(
   data_set: DataSet,
+  path: DataSetPath,
   context: a,
   bytes_callback: fn(a, BitArray) -> Result(a, P10Error),
   config: P10WriteConfig,
@@ -724,7 +727,7 @@ pub fn data_set_to_bytes(
     #(context, write_context)
   }
 
-  data_set_to_tokens(data_set, #(context, write_context), process_token)
+  data_set_to_tokens(data_set, path, #(context, write_context), process_token)
   |> result.map(fn(x) { x.0 })
 }
 

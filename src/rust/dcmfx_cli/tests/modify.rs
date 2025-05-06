@@ -156,6 +156,10 @@ fn jpeg_ls_to_encapsulated_uncompressed_explicit_vr_little_endian() {
   );
 }
 
+// The following test isn't run on Windows because the zlib-ng feature of flate2
+// isn't used on that platform, which causes it to have different compression
+// output
+#[cfg(not(windows))]
 #[test]
 fn jpeg_2000_to_deflated_image_frame_compression() {
   modify_transfer_syntax(

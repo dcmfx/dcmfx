@@ -147,7 +147,7 @@ pub fn new() -> P10PixelDataFrameTransform {
 
   let pixel_data_filter =
     p10_filter_transform.new(fn(tag, _vr, _length, path) {
-      tag == dictionary.pixel_data.tag && data_set_path.is_empty(path)
+      tag == dictionary.pixel_data.tag && data_set_path.is_root(path)
     })
 
   P10PixelDataFrameTransform(

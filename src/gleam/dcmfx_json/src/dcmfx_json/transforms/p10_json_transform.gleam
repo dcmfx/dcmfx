@@ -94,7 +94,7 @@ pub fn add_token(
     p10_token.FilePreambleAndDICMPrefix(..) -> Ok(#("", transform))
     p10_token.FileMetaInformation(data_set) -> Ok(begin(transform, data_set))
 
-    p10_token.DataElementHeader(tag, vr, length) -> {
+    p10_token.DataElementHeader(tag, vr, length, ..) -> {
       let #(json, transform) =
         write_data_element_header(transform, tag, vr, length)
 
@@ -132,7 +132,7 @@ pub fn add_token(
       #(json, transform)
     }
 
-    p10_token.SequenceStart(tag, vr) -> {
+    p10_token.SequenceStart(tag, vr, ..) -> {
       use #(json, transform) <- result.try(write_sequence_start(
         transform,
         tag,

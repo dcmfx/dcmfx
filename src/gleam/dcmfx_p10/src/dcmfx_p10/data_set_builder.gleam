@@ -271,7 +271,7 @@ fn add_token_to_data_set(
     // If this token is the start of a new data element then create a new
     // pending data element that will have its data filled in by subsequent
     // DataElementValueBytes tokens
-    p10_token.DataElementHeader(tag, vr, _length) ->
+    p10_token.DataElementHeader(tag, vr, _length, ..) ->
       DataSetBuilder(
         ..builder,
         pending_data_element: Some(PendingDataElement(tag, vr, [])),
@@ -280,7 +280,7 @@ fn add_token_to_data_set(
 
     // If this token indicates the start of a new sequence then update the
     // current location accordingly
-    p10_token.SequenceStart(tag, vr) -> {
+    p10_token.SequenceStart(tag, vr, ..) -> {
       let new_location = case vr {
         value_representation.OtherByteString
         | value_representation.OtherWordString ->
