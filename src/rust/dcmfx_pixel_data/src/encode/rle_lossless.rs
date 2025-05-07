@@ -436,12 +436,7 @@ fn encode_segments(
 
   // RLE encode all segments
   for segment in segments {
-    let mut data: Vec<u8> = encode_segment(segment, row_size)?;
-
-    // Ensure encoded segment has even length
-    if data.len() % 2 == 1 {
-      data.push(0)
-    }
+    let data = encode_segment(segment, row_size)?;
 
     total_segment_length += data.len();
     encoded_segments.push(data);
@@ -455,7 +450,12 @@ fn encode_segments(
     });
   }
 
-  let mut output: Vec<u8> = Vec::with_capacity(64 + total_segment_length);
+  let mut output_length = 64 + total_segment_length;
+  if output_length % 2 == 1 {
+    output_length += 1;
+  }
+
+  let mut output: Vec<u8> = Vec::with_capacity(output_length);
 
   // Append number of segments
   output.extend_from_slice(&(encoded_segments.len() as u32).to_le_bytes());
@@ -473,6 +473,11 @@ fn encode_segments(
   // Append encoded segment data
   for segment in encoded_segments.iter() {
     output.extend_from_slice(segment);
+  }
+
+  // Ensure even length
+  if output.len() % 2 == 1 {
+    output.push(0)
   }
 
   Ok(output)
@@ -496,7 +501,8 @@ fn encode_segment(
   if row_size == 0 || data.len() % row_size != 0 {
     return Err(PixelDataEncodeError::OtherError {
       name: "RLE Lossless encode failed".to_string(),
-      details: "Segment data is not a multiple of the row size".to_string(),
+      details: "Segment data length is not a multiple of the row size"
+        .to_string(),
     });
   }
 
@@ -519,31 +525,35 @@ fn encode_row(mut data: &[u8], output: &mut Vec<u8>) {
     let mut run_length = 1;
     let max_run_length = data.len().min(128);
 
-    // See how many times this byte repeats, up to a maximum of 128 which is
-    // all that can be encoded in a single run
+    // Count how many times this byte repeats, up to a maximum of 128 which is
+    // the most that can be encoded in a single run
     while run_length < max_run_length && first_byte == data[run_length] {
       run_length += 1;
     }
 
-    // If there are repeats then encode as a Replicate Run
+    // If there are repeated bytes then encode as a replicate run
     if run_length > 1 {
       output.push((257 - run_length) as u8);
       output.push(first_byte);
 
       data = &data[run_length..];
+
       continue;
     }
 
-    // Otherwise encode as a Literal Run
+    // Otherwise, encode as a literal run
     let mut length = 1;
-    while length < max_run_length && data[length] != data[length - 1] {
-      length += 1;
-    }
+    while length < max_run_length {
+      // Check if a new replicate run of three or more bytes starts here
+      if data[length] == data[length - 1]
+        && length + 1 < data.len()
+        && data[length] == data[length + 1]
+      {
+        length -= 1;
+        break;
+      }
 
-    // If the last byte in this Literal Run could be part of an immediately
-    // following Replicate Run then don't include its final byte
-    if length < data.len() && data[length - 1] == data[length] {
-      length -= 1;
+      length += 1;
     }
 
     output.push((length - 1) as u8);
@@ -558,17 +568,17 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_empty_input() {
+  fn empty_input() {
     assert_eq!(encode_segment(&[], 1), Ok(vec![]),);
   }
 
   #[test]
-  fn test_single_byte() {
+  fn single_byte() {
     assert_eq!(encode_segment(&[42], 1), Ok(vec![0, 42]),);
   }
 
   #[test]
-  fn test_all_unique_bytes() {
+  fn all_unique_bytes() {
     assert_eq!(
       encode_segment(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 10),
       Ok(vec![9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -576,20 +586,40 @@ mod tests {
   }
 
   #[test]
-  fn test_all_repeating_bytes() {
+  fn all_repeating_bytes() {
     assert_eq!(encode_segment(&[5, 5, 5, 5], 4), Ok(vec![253, 5]));
   }
 
   #[test]
-  fn test_mixed_repeated_and_unique_bytes() {
+  fn mixed_repeated_and_unique_bytes() {
     assert_eq!(
       encode_segment(&[1, 2, 3, 4, 5, 5, 5, 6, 7, 8, 8, 9], 12),
-      Ok(vec![3, 1, 2, 3, 4, 254, 5, 1, 6, 7, 255, 8, 0, 9]),
+      Ok(vec![3, 1, 2, 3, 4, 254, 5, 4, 6, 7, 8, 8, 9]),
     );
   }
 
   #[test]
-  fn test_maximum_rle_run_length() {
+  fn maximum_rle_run_length() {
     assert_eq!(encode_segment(&[99; 129], 129), Ok(vec![129, 99, 0, 99]));
+  }
+
+  #[test]
+  fn two_byte_repeat_in_literal_run() {
+    assert_eq!(
+      encode_segment(&[1, 2, 3, 3, 4, 5, 6], 7),
+      Ok(vec![6, 1, 2, 3, 3, 4, 5, 6])
+    );
+  }
+
+  #[test]
+  fn odd_length_segment_adds_padding_byte() {
+    assert_eq!(
+      encode_segments(&[vec![1, 2]], 2),
+      Ok(vec![
+        1, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 0
+      ])
+    );
   }
 }
