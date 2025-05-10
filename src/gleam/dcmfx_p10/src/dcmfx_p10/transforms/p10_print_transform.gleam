@@ -48,19 +48,19 @@ pub fn new(print_options: DataSetPrintOptions) -> P10PrintTransform {
 /// text output to be displayed.
 ///
 pub fn add_token(
-  context: P10PrintTransform,
+  transform: P10PrintTransform,
   token: P10Token,
 ) -> #(String, P10PrintTransform) {
   case token {
     p10_token.FileMetaInformation(data_set) -> #(
-      data_set.to_lines(data_set, context.print_options, "", fn(s, line) {
+      data_set.to_lines(data_set, transform.print_options, "", fn(s, line) {
         s <> line <> "\n"
       }),
-      context,
+      transform,
     )
 
     p10_token.DataElementHeader(tag, vr, length, ..) -> {
-      let assert Ok(private_creators) = list.first(context.private_creators)
+      let assert Ok(private_creators) = list.first(transform.private_creators)
 
       let #(s, width) =
         data_set_print.format_data_element_prefix(
@@ -68,12 +68,13 @@ pub fn add_token(
           data_set.tag_name(private_creators, tag),
           Some(vr),
           Some(length),
-          context.indent,
-          context.print_options,
+          transform.indent,
+          transform.print_options,
         )
 
       // Calculate the width remaining for previewing the value
-      let value_max_width = int.max(context.print_options.max_width - width, 10)
+      let value_max_width =
+        int.max(transform.print_options.max_width - width, 10)
 
       // Use the next value bytes token to print a preview of the data element's
       // value
@@ -89,20 +90,20 @@ pub fn add_token(
         False -> None
       }
 
-      let new_context =
+      let new_transform =
         P10PrintTransform(
-          ..context,
+          ..transform,
           current_data_element: tag,
           value_max_width:,
           ignore_data_element_value_bytes:,
           last_data_element_private_creator_tag:,
         )
 
-      #(s, new_context)
+      #(s, new_transform)
     }
 
     p10_token.DataElementValueBytes(vr:, data:, ..)
-      if !context.ignore_data_element_value_bytes
+      if !transform.ignore_data_element_value_bytes
     -> {
       let value = data_element_value.new_binary_unchecked(vr, data)
 
@@ -112,8 +113,8 @@ pub fn add_token(
 
       // Store private creator name data elements
       let private_creators = case
-        context.last_data_element_private_creator_tag,
-        context.private_creators
+        transform.last_data_element_private_creator_tag,
+        transform.private_creators
       {
         Some(tag), [private_creators, ..rest] -> [
           data_set.insert(
@@ -127,29 +128,29 @@ pub fn add_token(
           ..rest
         ]
 
-        _, _ -> context.private_creators
+        _, _ -> transform.private_creators
       }
 
       let s =
         data_element_value.to_string(
           value,
-          context.current_data_element,
-          context.value_max_width,
+          transform.current_data_element,
+          transform.value_max_width,
         )
         <> "\n"
 
-      let new_context =
+      let new_transform =
         P10PrintTransform(
-          ..context,
+          ..transform,
           ignore_data_element_value_bytes:,
           private_creators:,
         )
 
-      #(s, new_context)
+      #(s, new_transform)
     }
 
     p10_token.SequenceStart(tag, vr, ..) -> {
-      let assert Ok(private_creators) = list.first(context.private_creators)
+      let assert Ok(private_creators) = list.first(transform.private_creators)
 
       let s =
         data_set_print.format_data_element_prefix(
@@ -157,13 +158,14 @@ pub fn add_token(
           data_set.tag_name(private_creators, tag),
           Some(vr),
           None,
-          context.indent,
-          context.print_options,
+          transform.indent,
+          transform.print_options,
         ).0
 
-      let new_context = P10PrintTransform(..context, indent: context.indent + 1)
+      let new_transform =
+        P10PrintTransform(..transform, indent: transform.indent + 1)
 
-      #(s <> "\n", new_context)
+      #(s <> "\n", new_transform)
     }
 
     p10_token.SequenceDelimiter(..) -> {
@@ -173,13 +175,14 @@ pub fn add_token(
           dictionary.sequence_delimitation_item.name,
           None,
           None,
-          context.indent - 1,
-          context.print_options,
+          transform.indent - 1,
+          transform.print_options,
         ).0
 
-      let new_context = P10PrintTransform(..context, indent: context.indent - 1)
+      let new_transform =
+        P10PrintTransform(..transform, indent: transform.indent - 1)
 
-      #(s <> "\n", new_context)
+      #(s <> "\n", new_transform)
     }
 
     p10_token.SequenceItemStart(..) -> {
@@ -189,18 +192,18 @@ pub fn add_token(
           dictionary.item.name,
           None,
           None,
-          context.indent,
-          context.print_options,
+          transform.indent,
+          transform.print_options,
         ).0
 
-      let new_context =
+      let new_transform =
         P10PrintTransform(
-          ..context,
-          indent: context.indent + 1,
-          private_creators: [data_set.new(), ..context.private_creators],
+          ..transform,
+          indent: transform.indent + 1,
+          private_creators: [data_set.new(), ..transform.private_creators],
         )
 
-      #(s <> "\n", new_context)
+      #(s <> "\n", new_transform)
     }
 
     p10_token.SequenceItemDelimiter -> {
@@ -210,19 +213,19 @@ pub fn add_token(
           dictionary.item_delimitation_item.name,
           None,
           None,
-          context.indent - 1,
-          context.print_options,
+          transform.indent - 1,
+          transform.print_options,
         ).0
 
-      let new_context =
+      let new_transform =
         P10PrintTransform(
-          ..context,
-          indent: context.indent - 1,
-          private_creators: list.rest(context.private_creators)
-            |> result.unwrap(context.private_creators),
+          ..transform,
+          indent: transform.indent - 1,
+          private_creators: list.rest(transform.private_creators)
+            |> result.unwrap(transform.private_creators),
         )
 
-      #(s <> "\n", new_context)
+      #(s <> "\n", new_transform)
     }
 
     p10_token.PixelDataItem(length:, ..) -> {
@@ -232,27 +235,28 @@ pub fn add_token(
           dictionary.item.name,
           None,
           Some(length),
-          context.indent,
-          context.print_options,
+          transform.indent,
+          transform.print_options,
         )
 
       // Calculate the width remaining for previewing the value
-      let value_max_width = int.max(context.print_options.max_width - width, 10)
+      let value_max_width =
+        int.max(transform.print_options.max_width - width, 10)
 
       // Use the next value bytes token to print a preview of the pixel data
       // item's value
       let ignore_data_element_value_bytes = False
 
-      let new_context =
+      let new_transform =
         P10PrintTransform(
-          ..context,
+          ..transform,
           value_max_width:,
           ignore_data_element_value_bytes:,
         )
 
-      #(s, new_context)
+      #(s, new_transform)
     }
 
-    _ -> #("", context)
+    _ -> #("", transform)
   }
 }

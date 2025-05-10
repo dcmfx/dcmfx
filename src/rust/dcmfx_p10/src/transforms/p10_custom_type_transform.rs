@@ -14,8 +14,8 @@ use crate::{DataSetBuilder, P10Error, P10FilterTransform, P10Token};
 /// 3. Passing the data set to a function that creates the custom type.
 ///
 /// The result is then accessed using [`P10CustomTypeTransform::get_output()`]
-/// which returns `None` if the target is not yet available or was unable to be
-/// created.
+/// which returns [`None`] if the target is not yet available or was unable to
+/// be created.
 ///
 pub struct P10CustomTypeTransform<T> {
   filter: Option<(P10FilterTransform, DataSetBuilder)>,

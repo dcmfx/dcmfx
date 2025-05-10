@@ -8,25 +8,33 @@ use crate::{
   monochrome_image::MonochromeImageData,
 };
 
-/// Returns the photometric interpretation used by an image encoded as RLE
-/// Lossless pixel data.
+/// Returns the Image Pixel Module resulting from encoding as RLE Lossless pixel
+/// data.
 ///
-pub fn encode_photometric_interpretation(
-  photometric_interpretation: &PhotometricInterpretation,
-) -> Result<&PhotometricInterpretation, ()> {
-  match photometric_interpretation {
+pub fn encode_image_pixel_module(
+  image_pixel_module: &ImagePixelModule,
+) -> Result<ImagePixelModule, ()> {
+  let encoded_photometric_interpretation = match image_pixel_module
+    .photometric_interpretation()
+  {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
     | PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
-
-    PhotometricInterpretation::YbrFull422 => {
-      Ok(&PhotometricInterpretation::YbrFull)
+    | PhotometricInterpretation::YbrFull => {
+      image_pixel_module.photometric_interpretation().clone()
     }
 
-    _ => Err(()),
-  }
+    PhotometricInterpretation::YbrFull422 => PhotometricInterpretation::YbrFull,
+
+    _ => return Err(()),
+  };
+
+  let mut image_pixel_module = image_pixel_module.clone();
+  image_pixel_module
+    .set_photometric_interpretation(encoded_photometric_interpretation);
+
+  Ok(image_pixel_module)
 }
 
 /// Encodes a [`MonochromeImage`] into RLE Lossless raw bytes.

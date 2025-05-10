@@ -130,4 +130,16 @@ impl PaletteColorLookupTableModule {
 
     red_int_max.max(green_int_max).max(blue_int_max)
   }
+
+  /// Converts this Palette Color Lookup Table Module to a data set.
+  ///
+  pub fn to_data_set(&self) -> DataSet {
+    let mut data_set = DataSet::new();
+
+    data_set.merge(self.red_lut.input_data_set().clone());
+    data_set.merge(self.green_lut.input_data_set().clone());
+    data_set.merge(self.blue_lut.input_data_set().clone());
+
+    data_set
+  }
 }

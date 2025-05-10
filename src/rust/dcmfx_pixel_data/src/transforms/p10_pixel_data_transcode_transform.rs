@@ -8,9 +8,8 @@ use alloc::{
 };
 
 use dcmfx_core::{
-  DataElementTag, DataError, DataSet, DataSetPath, DcmfxError, IodModule,
-  RcByteSlice, TransferSyntax, ValueRepresentation, dictionary,
-  transfer_syntax,
+  DataElementTag, DataError, DataSetPath, DcmfxError, IodModule, RcByteSlice,
+  TransferSyntax, ValueRepresentation, dictionary, transfer_syntax,
 };
 use dcmfx_p10::{
   P10CustomTypeTransform, P10CustomTypeTransformError, P10Error,
@@ -305,7 +304,7 @@ impl P10PixelDataTranscodeTransform {
       ));
     }
 
-    // Determine the photometric interpretation after transcoding
+    // Determine the photometric interpretation after decoding
     let decoded_photometric_interpretation =
       decode::decode_photometric_interpretation(
         image_pixel_module.photometric_interpretation(),
@@ -313,38 +312,44 @@ impl P10PixelDataTranscodeTransform {
       )
       .map_err(P10PixelDataTranscodeTransformError::PixelDataDecodeError)?;
 
-    let encoded_photometric_interpretation =
-      encode::encode_photometric_interpretation(
-        decoded_photometric_interpretation,
-        output_transfer_syntax,
-      )
-      .map_err(P10PixelDataTranscodeTransformError::PixelDataEncodeError)?;
+    // Determine the output Image Pixel Module after encoding
+    let output_image_pixel_module = encode::encode_image_pixel_module(
+      image_pixel_module.clone().set_photometric_interpretation(
+        decoded_photometric_interpretation.clone(),
+      ),
+      output_transfer_syntax,
+    )
+    .map_err(P10PixelDataTranscodeTransformError::PixelDataEncodeError)?;
 
-    // Create a data set containing the data elements to be be inserted/updated.
-    // Currently this is just the photometric interpretation.
-    let mut data_elements_to_insert = DataSet::new();
-    data_elements_to_insert.insert(
-      dictionary::PHOTOMETRIC_INTERPRETATION.tag,
-      encoded_photometric_interpretation.to_data_element_value(),
+    // Create filter transform for excluding the previous Image Pixel Module
+    let mut filter_transform =
+      P10FilterTransform::new(Box::new(|tag, vr, length, path| {
+        !ImagePixelModule::is_iod_module_data_element(tag, vr, length, path)
+      }));
+
+    // Create insert transform for adding the new Image Pixel Module
+    let mut insert_transform = P10InsertTransform::new(
+      output_image_pixel_module
+        .to_data_set()
+        .map_err(P10PixelDataTranscodeTransformError::DataError)?,
     );
 
-    // Create insert transform for inserting the above data set into the tokens
-    // for the Image Pixel Module. This replaces existing values.
-    let mut insert_transform = P10InsertTransform::new(data_elements_to_insert);
-
+    // Pass the buffered tokens through the above two transforms
     let mut transformed_tokens = Vec::with_capacity(token_buffer.len());
     for token in token_buffer {
-      transformed_tokens.extend(
-        insert_transform
-          .add_token(token)
-          .map_err(P10PixelDataTranscodeTransformError::P10Error)?,
-      );
+      if filter_transform
+        .add_token(token)
+        .map_err(P10PixelDataTranscodeTransformError::P10Error)?
+      {
+        transformed_tokens.extend(
+          insert_transform
+            .add_token(token)
+            .map_err(P10PixelDataTranscodeTransformError::P10Error)?,
+        );
+      }
     }
 
-    let mut output_image_pixel_module = image_pixel_module.clone();
-    output_image_pixel_module.set_photometric_interpretation(
-      encoded_photometric_interpretation.clone(),
-    );
+    insert_transform.flush(&mut transformed_tokens);
 
     Ok((transformed_tokens, output_image_pixel_module))
   }

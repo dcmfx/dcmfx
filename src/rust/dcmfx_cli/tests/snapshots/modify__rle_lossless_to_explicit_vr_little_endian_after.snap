@@ -209,6 +209,7 @@ snapshot_kind: text
 (0027,1055) SH Private Element Creator              [     2 bytes] "I"
 (0028,0002) US Samples per Pixel                    [     2 bytes] 1
 (0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0006) US Planar Configuration                 [     2 bytes] 0
 (0028,0010) US Rows                                 [     2 bytes] 512
 (0028,0011) US Columns                              [     2 bytes] 512
 (0028,0030) DS Pixel Spacing                        [    18 bytes] "0.661468", …

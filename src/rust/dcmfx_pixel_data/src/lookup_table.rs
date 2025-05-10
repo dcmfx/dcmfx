@@ -15,6 +15,11 @@ use crate::utils::udiv_round;
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct LookupTable {
+  /// A data set containing those data elements from the data set that were used
+  /// to construct this lookup table.
+  ///
+  input_data_set: DataSet,
+
   /// When looking up an input value in this LUT, this is the input value that
   /// maps to the LUT's first entry. Lower input values than this also return
   /// the first entry in the LUT data.
@@ -37,26 +42,6 @@ pub struct LookupTable {
 }
 
 impl LookupTable {
-  /// Creates a [`LookupTable`].
-  ///
-  pub fn new(
-    first_input_value: i64,
-    explanation: Option<String>,
-    data: Vec<u16>,
-    int_max: u16,
-  ) -> Self {
-    // Scale factor that converts a lookup table value into the range 0-1
-    let normalization_scale = 1.0 / (int_max as f32);
-
-    Self {
-      first_input_value,
-      explanation,
-      data,
-      int_max,
-      normalization_scale,
-    }
-  }
-
   /// Creates a [`LookupTable`] from the relevant data elements in a data set.
   ///
   pub fn from_data_set(
@@ -66,6 +51,13 @@ impl LookupTable {
     segmented_lut_data_tag: Option<DataElementTag>,
     lut_explanation_tag: Option<DataElementTag>,
   ) -> Result<LookupTable, DataError> {
+    let input_data_set = data_set.filter(|tag, _value| {
+      tag == lut_descriptor_tag
+        || tag == lut_data_tag
+        || Some(tag) == segmented_lut_data_tag
+        || Some(tag) == lut_explanation_tag
+    });
+
     let (entry_count, first_input_value, bits_per_entry) =
       data_set.get_lookup_table_descriptor(lut_descriptor_tag)?;
 
@@ -135,12 +127,17 @@ impl LookupTable {
 
     let int_max = ((1u32 << bits_per_entry) - 1) as u16;
 
-    Ok(Self::new(
-      first_input_value.into(),
+    // Scale factor that converts a lookup table value into the range 0-1
+    let normalization_scale = 1.0 / (int_max as f32);
+
+    Ok(Self {
+      input_data_set,
+      first_input_value: first_input_value.into(),
       explanation,
       data,
       int_max,
-    ))
+      normalization_scale,
+    })
   }
 
   /// Evaluates segmented lookup table data into a final lookup table.
@@ -251,6 +248,13 @@ impl LookupTable {
     }
 
     Ok(lut)
+  }
+
+  /// Returns a data set containing those data elements from the data set that
+  /// were used to construct this lookup table.
+  ///
+  pub fn input_data_set(&self) -> &DataSet {
+    &self.input_data_set
   }
 
   /// Returns the number of entries in the lookup table. This will never exceed
@@ -379,6 +383,7 @@ mod tests {
   #[test]
   fn lookup_value() {
     let lut = LookupTable {
+      input_data_set: DataSet::new(),
       first_input_value: 50,
       explanation: None,
       data: vec![1, 4, 9, 16, 64],

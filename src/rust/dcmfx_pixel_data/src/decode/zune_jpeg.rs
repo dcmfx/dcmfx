@@ -5,7 +5,9 @@ use dcmfx_core::DataError;
 
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
-  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
+  iods::image_pixel_module::{
+    ImagePixelModule, PhotometricInterpretation, SamplesPerPixel,
+  },
 };
 
 /// Returns the photometric interpretation used by data decoded using zune-jpeg.
@@ -35,21 +37,38 @@ pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<MonochromeImage, DataError> {
-  let pixels = decode(
-    image_pixel_module,
-    data,
-    zune_core::colorspace::ColorSpace::Luma,
-  )?;
+  if image_pixel_module.samples_per_pixel() != SamplesPerPixel::One {
+    return Err(DataError::new_value_unsupported(
+      "Samples per pixel must be one for monochrome JPEG decode".to_string(),
+    ));
+  }
 
-  MonochromeImage::new_u8(
-    image_pixel_module.columns(),
-    image_pixel_module.rows(),
-    pixels,
-    image_pixel_module.bits_stored(),
-    image_pixel_module
-      .photometric_interpretation()
-      .is_monochrome1(),
-  )
+  match image_pixel_module.photometric_interpretation() {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2 => {
+      let pixels = decode(
+        image_pixel_module,
+        data,
+        zune_core::colorspace::ColorSpace::Luma,
+      )?;
+
+      MonochromeImage::new_u8(
+        image_pixel_module.columns(),
+        image_pixel_module.rows(),
+        pixels,
+        image_pixel_module.bits_stored(),
+        image_pixel_module
+          .photometric_interpretation()
+          .is_monochrome1(),
+      )
+    }
+
+    _ => Err(DataError::new_value_unsupported(format!(
+      "Photometric interpretation '{}' is not supported for monochrome JPEG \
+       decode",
+      image_pixel_module.photometric_interpretation()
+    ))),
+  }
 }
 
 /// Decodes color JPEG pixel data using zune-jpeg.
@@ -58,6 +77,12 @@ pub fn decode_color(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, DataError> {
+  if u8::from(image_pixel_module.samples_per_pixel()) != 3 {
+    return Err(DataError::new_value_unsupported(
+      "Samples per pixel must be three for color JPEG decode".to_string(),
+    ));
+  }
+
   let (zune_color_space, output_color_space) =
     match image_pixel_module.photometric_interpretation() {
       PhotometricInterpretation::Rgb => {
@@ -71,7 +96,8 @@ pub fn decode_color(
       }
       _ => {
         return Err(DataError::new_value_unsupported(format!(
-          "Photometric interpretation '{}' is not supported for JPEG decode",
+          "Photometric interpretation '{}' is not supported for color JPEG \
+           decode",
           image_pixel_module.photometric_interpretation()
         )));
       }

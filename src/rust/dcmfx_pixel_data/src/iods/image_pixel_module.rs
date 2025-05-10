@@ -30,7 +30,7 @@ pub struct ImagePixelModule {
   bits_stored: u16,
   high_bit: u16,
   pixel_representation: PixelRepresentation,
-  pixel_aspect_ratio: Option<(i64, i64)>,
+  pixel_aspect_ratio: Option<(i32, i32)>,
   smallest_image_pixel_value: Option<i64>,
   largest_image_pixel_value: Option<i64>,
   icc_profile: Option<RcByteSlice>,
@@ -109,7 +109,7 @@ impl IodModule for ImagePixelModule {
     let pixel_aspect_ratio = if data_set.has(dictionary::PIXEL_ASPECT_RATIO.tag)
     {
       match data_set
-        .get_ints::<i64>(dictionary::PIXEL_ASPECT_RATIO.tag)?
+        .get_ints::<i32>(dictionary::PIXEL_ASPECT_RATIO.tag)?
         .as_slice()
       {
         [] => None,
@@ -194,7 +194,7 @@ impl ImagePixelModule {
     bits_stored: u16,
     high_bit: u16,
     pixel_representation: PixelRepresentation,
-    pixel_aspect_ratio: Option<(i64, i64)>,
+    pixel_aspect_ratio: Option<(i32, i32)>,
     smallest_image_pixel_value: Option<i64>,
     largest_image_pixel_value: Option<i64>,
     icc_profile: Option<RcByteSlice>,
@@ -299,13 +299,30 @@ impl ImagePixelModule {
     &self.photometric_interpretation
   }
 
-  /// Sets this image pixel module's photometric interpretation.
+  /// Sets this image pixel module's photometric interpretation. The samples per
+  /// pixel value is also updated appropriately.
   ///
   pub fn set_photometric_interpretation(
     &mut self,
     new_photometric_interpretation: PhotometricInterpretation,
-  ) {
+  ) -> &Self {
     self.photometric_interpretation = new_photometric_interpretation;
+
+    match self.photometric_interpretation {
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2
+      | PhotometricInterpretation::PaletteColor { .. } => {
+        self.samples_per_pixel = SamplesPerPixel::One;
+      }
+
+      _ => {
+        self.samples_per_pixel = SamplesPerPixel::Three {
+          planar_configuration: PlanarConfiguration::Interleaved,
+        };
+      }
+    }
+
+    self
   }
 
   /// Returns this image pixel module's number of rows, i.e. its height.
@@ -442,6 +459,119 @@ impl ImagePixelModule {
   pub fn has_unused_high_bits(&self) -> bool {
     self.bits_stored < u8::from(self.bits_allocated).into()
   }
+
+  /// Converts this Image Pixel Module to a data set.
+  ///
+  pub fn to_data_set(&self) -> Result<DataSet, DataError> {
+    let mut data_set = DataSet::new();
+
+    data_set.insert(
+      dictionary::SAMPLES_PER_PIXEL.tag,
+      self.samples_per_pixel.to_data_element_value(),
+    );
+
+    data_set.insert(
+      dictionary::PLANAR_CONFIGURATION.tag,
+      self.planar_configuration().to_data_element_value(),
+    );
+
+    data_set.insert(
+      dictionary::PHOTOMETRIC_INTERPRETATION.tag,
+      self.photometric_interpretation.to_data_element_value(),
+    );
+
+    data_set.insert(
+      dictionary::ROWS.tag,
+      DataElementValue::new_unsigned_short(&[self.rows])?,
+    );
+
+    data_set.insert(
+      dictionary::COLUMNS.tag,
+      DataElementValue::new_unsigned_short(&[self.columns])?,
+    );
+
+    data_set.insert(
+      dictionary::BITS_ALLOCATED.tag,
+      self.bits_allocated.to_data_element_value(),
+    );
+
+    data_set.insert(
+      dictionary::BITS_STORED.tag,
+      DataElementValue::new_unsigned_short(&[self.bits_stored])?,
+    );
+
+    data_set.insert(
+      dictionary::HIGH_BIT.tag,
+      DataElementValue::new_unsigned_short(&[self.high_bit])?,
+    );
+
+    data_set.insert(
+      dictionary::PIXEL_REPRESENTATION.tag,
+      self.pixel_representation.to_data_element_value(),
+    );
+
+    if let Some((a, b)) = self.pixel_aspect_ratio {
+      data_set.insert(
+        dictionary::PIXEL_ASPECT_RATIO.tag,
+        DataElementValue::new_integer_string(&[a, b])?,
+      );
+    }
+
+    if let Some(smallest_image_pixel_value) = self.smallest_image_pixel_value {
+      if self.pixel_representation.is_signed() {
+        data_set.insert(
+          dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag,
+          DataElementValue::new_signed_short(&[
+            smallest_image_pixel_value as i16
+          ])?,
+        );
+      } else {
+        data_set.insert(
+          dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag,
+          DataElementValue::new_unsigned_short(&[
+            smallest_image_pixel_value as u16
+          ])?,
+        );
+      }
+    }
+
+    if let Some(largest_image_pixel_value) = self.largest_image_pixel_value {
+      if self.pixel_representation.is_signed() {
+        data_set.insert(
+          dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag,
+          DataElementValue::new_signed_short(&[
+            largest_image_pixel_value as i16
+          ])?,
+        );
+      } else {
+        data_set.insert(
+          dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag,
+          DataElementValue::new_unsigned_short(&[
+            largest_image_pixel_value as u16
+          ])?,
+        );
+      }
+    }
+
+    if let Some(icc_profile) = &self.icc_profile {
+      data_set.insert(
+        dictionary::ICC_PROFILE.tag,
+        DataElementValue::new_binary_unchecked(
+          ValueRepresentation::OtherByteString,
+          icc_profile.clone(),
+        ),
+      );
+    }
+
+    if let Some(color_space) = &self.color_space {
+      data_set.insert(
+        dictionary::COLOR_SPACE.tag,
+        DataElementValue::new_code_string(&[color_space])?,
+      );
+    }
+
+    Ok(data_set)
+  }
 }
 
 /// Specifies the number of separate planes in the pixel data image. For
@@ -464,8 +594,8 @@ pub enum SamplesPerPixel {
 }
 
 impl SamplesPerPixel {
-  /// Creates a new `SamplesPerPixel` from the *'(0028,0002) Samples per Pixel'*
-  /// data element in the given data set.
+  /// Creates a new [`SamplesPerPixel`] from the *'(0028,0002) Samples per
+  /// Pixel'* data element in the given data set.
   ///
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let tag = dictionary::SAMPLES_PER_PIXEL.tag;
@@ -487,6 +617,13 @@ impl SamplesPerPixel {
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),
     }
+  }
+
+  /// Converts this [`SamplesPerPixel`] to a data element value that uses
+  /// the [`ValueRepresentation::UnsignedShort`] value representation.
+  ///
+  pub fn to_data_element_value(&self) -> DataElementValue {
+    DataElementValue::new_unsigned_short(&[u16::from(u8::from(*self))]).unwrap()
   }
 }
 
@@ -763,6 +900,18 @@ impl PlanarConfiguration {
       ),
     }
   }
+
+  /// Converts this [`PlanarConfiguration`] to a data element value that uses
+  /// the [`ValueRepresentation::UnsignedShort`] value representation.
+  ///
+  pub fn to_data_element_value(&self) -> DataElementValue {
+    let value = match self {
+      Self::Interleaved => 0,
+      Self::Separate => 1,
+    };
+
+    DataElementValue::new_unsigned_short(&[value]).unwrap()
+  }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -774,8 +923,8 @@ pub enum BitsAllocated {
 }
 
 impl BitsAllocated {
-  /// Creates a new `BitsAllocated` from the *'(0028,0100) Bits Allocated'* data
-  /// element in the given data set.
+  /// Creates a new [`BitsAllocated`] from the *'(0028,0100) Bits Allocated'*
+  /// data element in the given data set.
   ///
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let tag = dictionary::BITS_ALLOCATED.tag;
@@ -793,6 +942,15 @@ impl BitsAllocated {
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),
     }
+  }
+
+  /// Converts this [`BitsAllocated`] to a data element value that uses the
+  /// [`ValueRepresentation::UnsignedShort`] value representation.
+  ///
+  pub fn to_data_element_value(&self) -> DataElementValue {
+    let value = u8::from(*self);
+
+    DataElementValue::new_unsigned_short(&[u16::from(value)]).unwrap()
   }
 }
 
@@ -822,7 +980,7 @@ pub enum PixelRepresentation {
 }
 
 impl PixelRepresentation {
-  /// Creates a new `PixelRepresentation` from the *'(0028,0103) Pixel
+  /// Creates a new [`PixelRepresentation`] from the *'(0028,0103) Pixel
   /// Representation'* data element in the given data set.
   ///
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
@@ -845,6 +1003,15 @@ impl PixelRepresentation {
   ///
   pub fn is_signed(&self) -> bool {
     *self == Self::Signed
+  }
+
+  /// Converts this [`PixelRepresentation`] to a data element value that uses
+  /// the [`ValueRepresentation::UnsignedShort`] value representation.
+  ///
+  pub fn to_data_element_value(&self) -> DataElementValue {
+    let value = u8::from(*self);
+
+    DataElementValue::new_unsigned_short(&[u16::from(value)]).unwrap()
   }
 }
 

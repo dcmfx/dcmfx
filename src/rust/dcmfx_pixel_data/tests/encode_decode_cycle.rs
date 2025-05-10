@@ -7,7 +7,10 @@ use dcmfx_pixel_data::PixelDataEncodeConfig;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
-use dcmfx_core::{DataError, TransferSyntax, transfer_syntax};
+use dcmfx_core::{
+  DataElementValue, DataError, DataSet, TransferSyntax, ValueRepresentation,
+  dictionary, transfer_syntax,
+};
 
 use dcmfx_pixel_data::{
   ColorImage, ColorSpace, LookupTable, MonochromeImage, decode, encode,
@@ -127,17 +130,14 @@ fn test_monochrome_image_encode_decode_cycle(
 }
 
 fn test_color_image_encode_decode_cycle(
-  mut image_pixel_module: ImagePixelModule,
+  image_pixel_module: ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
   mut max_reencode_delta: f64,
 ) {
-  // If the photometric interpretation isn't supported for encoding then there's
+  // If the Image Pixel Module isn't supported for encoding then there's
   // nothing to do
-  let Ok(encoded_photometric_interpretation) =
-    encode::encode_photometric_interpretation(
-      image_pixel_module.photometric_interpretation(),
-      transfer_syntax,
-    )
+  let Ok(encoded_image_pixel_module) =
+    encode::encode_image_pixel_module(&image_pixel_module, transfer_syntax)
   else {
     return;
   };
@@ -145,13 +145,10 @@ fn test_color_image_encode_decode_cycle(
   // Create a random color image to test with
   let original_image = create_color_image(&image_pixel_module);
 
-  image_pixel_module
-    .set_photometric_interpretation(encoded_photometric_interpretation.clone());
-
   // Encode into the target transfer syntax
   let mut encoded_frame = encode::encode_color(
     &original_image,
-    &image_pixel_module,
+    &encoded_image_pixel_module,
     transfer_syntax,
     &encode_config(),
   )
@@ -161,7 +158,7 @@ fn test_color_image_encode_decode_cycle(
   let decoded_image = decode::decode_color(
     &mut encoded_frame,
     transfer_syntax,
-    &image_pixel_module,
+    &encoded_image_pixel_module,
   )
   .unwrap();
 
@@ -503,7 +500,33 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
 
 fn create_palette_color_lookup_table_module()
 -> Rc<PaletteColorLookupTableModule> {
-  let lut = LookupTable::new(0, None, (0..255).collect::<Vec<u16>>(), 255);
+  let mut data_set = DataSet::new();
+
+  let lut_descriptor: Vec<u16> = vec![4, 0, 8];
+
+  data_set.insert(
+    dictionary::LUT_DESCRIPTOR.tag,
+    DataElementValue::new_lookup_table_descriptor_unchecked(
+      ValueRepresentation::UnsignedShort,
+      bytemuck::cast_slice::<u16, u8>(&lut_descriptor)
+        .to_vec()
+        .into(),
+    ),
+  );
+
+  data_set.insert(
+    dictionary::LUT_DATA.tag,
+    DataElementValue::new_other_byte_string(vec![0, 1, 2, 3]).unwrap(),
+  );
+
+  let lut = LookupTable::from_data_set(
+    &data_set,
+    dictionary::LUT_DESCRIPTOR.tag,
+    dictionary::LUT_DATA.tag,
+    None,
+    None,
+  )
+  .unwrap();
 
   Rc::new(PaletteColorLookupTableModule::new(
     lut.clone(),

@@ -28,7 +28,7 @@ pub type PredicateFunction = dyn FnMut(
 impl P10FilterTransform {
   /// Creates a new filter transform for filtering a stream of DICOM P10 tokens.
   ///
-  /// The predicate function is called as tokens are added to the context, and
+  /// The predicate function is called as tokens are added to the transform, and
   /// only those data elements that return `true` from the predicate function
   /// will pass through the filter.
   ///
@@ -39,8 +39,8 @@ impl P10FilterTransform {
     }
   }
 
-  /// Returns whether the current position of the P10 filter context is the root
-  /// data set, i.e. there are no nested sequences currently active.
+  /// Returns whether the current position of the P10 filter transform is the
+  /// root data set, i.e. there are no nested sequences currently active.
   ///
   pub fn is_at_root(&self) -> bool {
     self.path_filter_results.len() <= 1

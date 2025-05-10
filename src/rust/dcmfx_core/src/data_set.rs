@@ -586,6 +586,24 @@ impl DataSet {
     self.0.iter_mut()
   }
 
+  /// Creates a new data set containing only those data elements for which the
+  /// given function returns `True`.
+  ///
+  pub fn filter(
+    &self,
+    mut predicate: impl FnMut(DataElementTag, &DataElementValue) -> bool,
+  ) -> Self {
+    let mut result = Self::new();
+
+    for (tag, value) in self.0.iter() {
+      if predicate(*tag, value) {
+        result.insert(*tag, value.clone());
+      }
+    }
+
+    result
+  }
+
   /// Prints a data set to stdout formatted for readability.
   ///
   #[cfg(feature = "std")]

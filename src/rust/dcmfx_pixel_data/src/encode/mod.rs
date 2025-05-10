@@ -11,9 +11,7 @@ use dcmfx_core::{DcmfxError, TransferSyntax, transfer_syntax};
 
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataFrame,
-  iods::image_pixel_module::{
-    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
-  },
+  iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 
 mod jpeg_encoder;
@@ -93,11 +91,11 @@ pub enum PixelDataEncodeError {
     transfer_syntax: &'static TransferSyntax,
   },
 
-  /// The Specified [`PhotometricInterpretation`] is not supported for encoding
-  /// into the requested transfer syntax. This can be returned by the
-  /// [`encode_photometric_interpretation()`] function.
-  PhotometricInterpretationNotSupported {
-    photometric_interpretation: PhotometricInterpretation,
+  /// The specified [`ImagePixelModule`] is not supported for encoding into the
+  /// requested transfer syntax. This error may be returned by
+  /// [`encode_image_pixel_module()`].
+  ImagePixelModuleNotSupported {
+    image_pixel_module: ImagePixelModule,
     transfer_syntax: &'static TransferSyntax,
   },
 
@@ -124,8 +122,8 @@ impl PixelDataEncodeError {
       Self::TransferSyntaxNotSupported { .. } => {
         "Transfer syntax not supported".to_string()
       }
-      Self::PhotometricInterpretationNotSupported { .. } => {
-        "Photometric interpretation not supported by encoder".to_string()
+      Self::ImagePixelModuleNotSupported { .. } => {
+        "Image Pixel Module not supported by encoder".to_string()
       }
       Self::NotSupported { .. } => "Configuration not supported".to_string(),
       Self::OtherError { name, .. } => name.to_string(),
@@ -144,15 +142,8 @@ impl core::fmt::Display for PixelDataEncodeError {
         )
       }
 
-      Self::PhotometricInterpretationNotSupported {
-        photometric_interpretation,
-        ..
-      } => {
-        write!(
-          f,
-          "Photometric interpretation '{}' not supported by encoder",
-          photometric_interpretation
-        )
+      Self::ImagePixelModuleNotSupported { .. } => {
+        write!(f, "Image Pixel Module not supported by encoder",)
       }
 
       Self::NotSupported { .. } => {
@@ -179,14 +170,11 @@ impl DcmfxError for PixelDataEncodeError {
         lines.push(format!("  Transfer syntax: {}", transfer_syntax.name));
       }
 
-      Self::PhotometricInterpretationNotSupported {
-        photometric_interpretation,
+      Self::ImagePixelModuleNotSupported {
+        image_pixel_module,
         transfer_syntax,
       } => {
-        lines.push(format!(
-          "  Photometric interpretation: {}",
-          photometric_interpretation
-        ));
+        lines.push(format!("  Image pixel module: {}", image_pixel_module));
         lines.push(format!("  Transfer syntax: {}", transfer_syntax.name));
       }
 
@@ -215,14 +203,14 @@ impl DcmfxError for PixelDataEncodeError {
   }
 }
 
-/// Returns the output photometric interpretation of pixel data in the given
-/// image pixel module encoded into the specified transfer syntax.
+/// Returns the resulting Image Pixel Module following encoding into the
+/// specified transfer syntax.
 ///
 #[allow(clippy::result_unit_err)]
-pub fn encode_photometric_interpretation<'a>(
-  photometric_interpretation: &'a PhotometricInterpretation,
+pub fn encode_image_pixel_module(
+  image_pixel_module: &ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
-) -> Result<&'a PhotometricInterpretation, PixelDataEncodeError> {
+) -> Result<ImagePixelModule, PixelDataEncodeError> {
   use transfer_syntax::*;
 
   match transfer_syntax {
@@ -232,16 +220,16 @@ pub fn encode_photometric_interpretation<'a>(
     | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
     | &EXPLICIT_VR_BIG_ENDIAN
     | &DEFLATED_IMAGE_FRAME_COMPRESSION => {
-      native::encode_photometric_interpretation(photometric_interpretation)
+      native::encode_image_pixel_module(image_pixel_module)
     }
 
-    &RLE_LOSSLESS => rle_lossless::encode_photometric_interpretation(
-      photometric_interpretation,
-    ),
+    &RLE_LOSSLESS => {
+      rle_lossless::encode_image_pixel_module(image_pixel_module)
+    }
 
-    &JPEG_BASELINE_8BIT => jpeg_encoder::encode_photometric_interpretation(
-      photometric_interpretation,
-    ),
+    &JPEG_BASELINE_8BIT => {
+      jpeg_encoder::encode_image_pixel_module(image_pixel_module)
+    }
 
     _ => {
       return Err(PixelDataEncodeError::TransferSyntaxNotSupported {
@@ -249,12 +237,10 @@ pub fn encode_photometric_interpretation<'a>(
       });
     }
   }
-  .map_err(
-    |_| PixelDataEncodeError::PhotometricInterpretationNotSupported {
-      photometric_interpretation: photometric_interpretation.clone(),
-      transfer_syntax,
-    },
-  )
+  .map_err(|_| PixelDataEncodeError::ImagePixelModuleNotSupported {
+    image_pixel_module: image_pixel_module.clone(),
+    transfer_syntax,
+  })
 }
 
 /// Encodes a [`MonochromeImage`] into raw pixel data bytes.

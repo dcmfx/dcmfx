@@ -18,7 +18,7 @@ pub opaque type P10InsertTransform {
   )
 }
 
-/// Creates a new context for inserting data elements into the root data set
+/// Creates a new transform for inserting data elements into the root data set
 /// of a stream of DICOM P10 tokens.
 ///
 pub fn new(data_elements_to_insert: DataSet) -> P10InsertTransform {
@@ -42,30 +42,30 @@ pub fn new(data_elements_to_insert: DataSet) -> P10InsertTransform {
 /// resulting tokens.
 ///
 pub fn add_token(
-  context: P10InsertTransform,
+  transform: P10InsertTransform,
   token: P10Token,
 ) -> Result(#(List(P10Token), P10InsertTransform), P10Error) {
   // If there are no more data elements to be inserted then pass the token
   // straight through
   use <- bool.guard(
-    context.data_elements_to_insert == [],
-    Ok(#([token], context)),
+    transform.data_elements_to_insert == [],
+    Ok(#([token], transform)),
   )
 
-  let is_at_root = p10_filter_transform.is_at_root(context.filter_transform)
+  let is_at_root = p10_filter_transform.is_at_root(transform.filter_transform)
 
   // Pass the token through the filter transform
   let add_token_result =
-    p10_filter_transform.add_token(context.filter_transform, token)
+    p10_filter_transform.add_token(transform.filter_transform, token)
   use #(filter_result, filter_transform) <- result.try(add_token_result)
 
-  let context = P10InsertTransform(..context, filter_transform:)
+  let transform = P10InsertTransform(..transform, filter_transform:)
 
-  use <- bool.guard(!filter_result, Ok(#([], context)))
+  use <- bool.guard(!filter_result, Ok(#([], transform)))
 
   // Data element insertion is only supported in the root data set, so if the
   // stream is not at the root data set then there's nothing to do
-  use <- bool.guard(!is_at_root, Ok(#([token], context)))
+  use <- bool.guard(!is_at_root, Ok(#([token], transform)))
 
   case token {
     // If this token is the start of a new data element, and there are data
@@ -77,39 +77,51 @@ pub fn add_token(
         tokens_to_insert_before_tag(
           tag,
           path,
-          context.data_elements_to_insert,
+          transform.data_elements_to_insert,
           token,
           [],
         ),
       )
 
-      let context = P10InsertTransform(..context, data_elements_to_insert:)
+      let transform = P10InsertTransform(..transform, data_elements_to_insert:)
       let tokens = [token, ..tokens_to_insert] |> list.reverse
 
-      #(tokens, context)
+      #(tokens, transform)
     }
 
     // If this token is the end of the P10 tokens and there are still data
     // elements to be inserted then insert them now prior to the end
     p10_token.End -> {
-      let tokens =
-        context.data_elements_to_insert
-        |> list.fold([], fn(acc, data_element) {
-          prepend_data_element_tokens(
-            data_element,
-            data_set_path.new_with_data_element(data_element.0),
-            acc,
-          )
-        })
-
-      let context = P10InsertTransform(..context, data_elements_to_insert: [])
+      let #(tokens, transform) = flush(transform)
       let tokens = [p10_token.End, ..tokens] |> list.reverse
 
-      Ok(#(tokens, context))
+      Ok(#(tokens, transform))
     }
 
-    _ -> Ok(#([token], context))
+    _ -> Ok(#([token], transform))
   }
+}
+
+/// If there are any remaining data elements for this transform to insert,
+/// returns their P10 tokens.
+///
+/// These tokens are returned automatically when an end token is received, but
+/// in some circumstances may need to be requested manually.
+///
+pub fn flush(
+  transform: P10InsertTransform,
+) -> #(List(P10Token), P10InsertTransform) {
+  let tokens =
+    transform.data_elements_to_insert
+    |> list.fold([], fn(acc, data_element) {
+      prepend_data_element_tokens(
+        data_element,
+        data_set_path.new_with_data_element(data_element.0),
+        acc,
+      )
+    })
+
+  #(tokens, P10InsertTransform(..transform, data_elements_to_insert: []))
 }
 
 /// Removes all data elements to insert off the list that have a tag value lower

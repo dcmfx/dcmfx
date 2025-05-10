@@ -27,7 +27,7 @@ pub type PredicateFunction =
 
 /// Creates a new filter transform for filtering a stream of DICOM P10 tokens.
 ///
-/// The predicate function is called as tokens are added to the context, and
+/// The predicate function is called as tokens are added to the transform, and
 /// only those data elements that return `True` from the predicate function
 /// will pass through the filter.
 ///
@@ -35,21 +35,21 @@ pub fn new(predicate: PredicateFunction) -> P10FilterTransform {
   P10FilterTransform(predicate: predicate, path_filter_results: [])
 }
 
-/// Returns whether the current position of the P10 filter context is the root
+/// Returns whether the current position of the P10 filter transform is the root
 /// data set, i.e. there are no nested sequences currently active.
 ///
-pub fn is_at_root(context: P10FilterTransform) -> Bool {
-  list.length(context.path_filter_results) <= 1
+pub fn is_at_root(transform: P10FilterTransform) -> Bool {
+  list.length(transform.path_filter_results) <= 1
 }
 
 /// Adds the next token to the P10 filter transform and returns whether it
 /// should be included in the filtered token stream.
 ///
 pub fn add_token(
-  context: P10FilterTransform,
+  transform: P10FilterTransform,
   token: P10Token,
 ) -> Result(#(Bool, P10FilterTransform), P10Error) {
-  let current_filter_state = case context.path_filter_results {
+  let current_filter_state = case transform.path_filter_results {
     [filter_result, ..] -> filter_result
     _ -> True
   }
@@ -60,30 +60,30 @@ pub fn add_token(
     length: Option(Int),
     path: DataSetPath,
   ) {
-    let filter_result = case context.path_filter_results {
-      [] | [True, ..] -> context.predicate(tag, vr, length, path)
+    let filter_result = case transform.path_filter_results {
+      [] | [True, ..] -> transform.predicate(tag, vr, length, path)
 
       // The predicate function is skipped if a parent has already been filtered
       // out
       _ -> False
     }
 
-    let path_filter_results = [filter_result, ..context.path_filter_results]
+    let path_filter_results = [filter_result, ..transform.path_filter_results]
 
-    let new_context = P10FilterTransform(..context, path_filter_results:)
+    let new_transform = P10FilterTransform(..transform, path_filter_results:)
 
-    Ok(#(filter_result, new_context))
+    Ok(#(filter_result, new_transform))
   }
 
   case token {
     p10_token.FilePreambleAndDICMPrefix(..) | p10_token.FileMetaInformation(..) ->
-      Ok(#(True, context))
+      Ok(#(True, transform))
 
     p10_token.SequenceStart(tag, vr, path) -> run_predicate(tag, vr, None, path)
 
     p10_token.SequenceDelimiter(..) -> {
       let path_filter_results =
-        list.rest(context.path_filter_results)
+        list.rest(transform.path_filter_results)
         |> result.map_error(fn(_) {
           p10_error.TokenStreamInvalid(
             "Adding token to filter transform",
@@ -93,25 +93,25 @@ pub fn add_token(
         })
       use path_filter_results <- result.map(path_filter_results)
 
-      let new_context = P10FilterTransform(..context, path_filter_results:)
+      let new_transform = P10FilterTransform(..transform, path_filter_results:)
 
-      #(current_filter_state, new_context)
+      #(current_filter_state, new_transform)
     }
 
     p10_token.SequenceItemStart(..) -> {
       let path_filter_results = [
         current_filter_state,
-        ..context.path_filter_results
+        ..transform.path_filter_results
       ]
 
-      let new_context = P10FilterTransform(..context, path_filter_results:)
+      let new_transform = P10FilterTransform(..transform, path_filter_results:)
 
-      Ok(#(current_filter_state, new_context))
+      Ok(#(current_filter_state, new_transform))
     }
 
     p10_token.SequenceItemDelimiter -> {
       let path_filter_results =
-        list.rest(context.path_filter_results)
+        list.rest(transform.path_filter_results)
         |> result.map_error(fn(_) {
           p10_error.TokenStreamInvalid(
             "Adding token to filter transform",
@@ -121,9 +121,9 @@ pub fn add_token(
         })
       use path_filter_results <- result.map(path_filter_results)
 
-      let new_context = P10FilterTransform(..context, path_filter_results:)
+      let new_transform = P10FilterTransform(..transform, path_filter_results:)
 
-      #(current_filter_state, new_context)
+      #(current_filter_state, new_transform)
     }
 
     p10_token.DataElementHeader(tag, vr, length, path) ->
@@ -132,7 +132,7 @@ pub fn add_token(
     p10_token.DataElementValueBytes(bytes_remaining:, ..) -> {
       let path_filter_results = case bytes_remaining {
         0 -> {
-          list.rest(context.path_filter_results)
+          list.rest(transform.path_filter_results)
           |> result.map_error(fn(_) {
             p10_error.TokenStreamInvalid(
               "Adding token to filter transform",
@@ -141,26 +141,26 @@ pub fn add_token(
             )
           })
         }
-        _ -> Ok(context.path_filter_results)
+        _ -> Ok(transform.path_filter_results)
       }
       use path_filter_results <- result.map(path_filter_results)
 
-      let new_context = P10FilterTransform(..context, path_filter_results:)
+      let new_transform = P10FilterTransform(..transform, path_filter_results:)
 
-      #(current_filter_state, new_context)
+      #(current_filter_state, new_transform)
     }
 
     p10_token.PixelDataItem(..) -> {
       let path_filter_results = [
         current_filter_state,
-        ..context.path_filter_results
+        ..transform.path_filter_results
       ]
 
-      let new_context = P10FilterTransform(..context, path_filter_results:)
+      let new_transform = P10FilterTransform(..transform, path_filter_results:)
 
-      Ok(#(current_filter_state, new_context))
+      Ok(#(current_filter_state, new_transform))
     }
 
-    p10_token.End -> Ok(#(True, context))
+    p10_token.End -> Ok(#(True, transform))
   }
 }

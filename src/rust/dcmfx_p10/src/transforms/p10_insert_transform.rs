@@ -1,7 +1,9 @@
 #[cfg(not(feature = "std"))]
 use alloc::{boxed::Box, string::ToString, vec, vec::Vec};
 
-use dcmfx_core::{DataElementTag, DataElementValue, DataSet, DataSetPath};
+use dcmfx_core::{
+  DataElementTag, DataElementValue, DataSet, DataSetPath, IodModule,
+};
 
 use crate::{P10Error, P10FilterTransform, P10Token, p10_token};
 
@@ -13,7 +15,7 @@ pub struct P10InsertTransform {
 }
 
 impl P10InsertTransform {
-  /// Creates a new context for inserting data elements into the root data set
+  /// Creates a new transform for inserting data elements into the root data set
   /// of a stream of DICOM P10 tokens.
   ///
   pub fn new(data_elements_to_insert: DataSet) -> Self {
@@ -36,8 +38,30 @@ impl P10InsertTransform {
     }
   }
 
-  /// Adds the next available token to the P10 insert transform and returns the
-  /// resulting tokens.
+  /// Creates a new transform for inserting data elements into the root data set
+  /// of a stream of DICOM P10 tokens. All data elements for the specified IOD
+  /// module will be removed, even if they aren't present in the data set of
+  /// new data elements to be inserted.
+  ///
+  pub fn new_for_iod_module<T: IodModule>(
+    data_elements_to_insert: DataSet,
+  ) -> Self {
+    let filter_transform =
+      P10FilterTransform::new(Box::new(move |tag, vr, length, path| {
+        !T::is_iod_module_data_element(tag, vr, length, path)
+      }));
+
+    Self {
+      data_elements_to_insert: data_elements_to_insert
+        .into_iter()
+        .rev()
+        .collect(),
+      filter_transform,
+    }
+  }
+
+  /// Adds the next available token to this transform and returns the resulting
+  /// tokens.
   ///
   pub fn add_token(
     &mut self,
@@ -100,16 +124,7 @@ impl P10InsertTransform {
       // If this token is the end of the P10 tokens and there are still data
       // elements to be inserted then insert them now prior to the end
       P10Token::End => {
-        while let Some(data_element) = self.data_elements_to_insert.pop() {
-          let tag = data_element.0;
-
-          self.append_data_element_tokens(
-            data_element,
-            &DataSetPath::new_with_data_element(tag),
-            &mut output_tokens,
-          );
-        }
-
+        self.flush(&mut output_tokens);
         output_tokens.push(P10Token::End);
       }
 
@@ -117,6 +132,24 @@ impl P10InsertTransform {
     };
 
     Ok(output_tokens)
+  }
+
+  /// If there are any remaining data elements for this transform to insert,
+  /// appends them to the given vector.
+  ///
+  /// This happens automatically when a [`P10Token::End`] token is received, but
+  /// in some circumstances may need to be triggered manually.
+  ///
+  pub fn flush(&mut self, output_tokens: &mut Vec<P10Token>) {
+    while let Some(data_element) = self.data_elements_to_insert.pop() {
+      let tag = data_element.0;
+
+      self.append_data_element_tokens(
+        data_element,
+        &DataSetPath::new_with_data_element(tag),
+        output_tokens,
+      );
+    }
   }
 
   fn append_data_element_tokens(

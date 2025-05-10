@@ -10,28 +10,37 @@ use crate::{
 
 use super::PixelDataEncodeConfig;
 
-/// Returns the photometric interpretation used by an image encoded using
-/// jpeg-encoder.
+/// Returns the Image Pixel Module resulting from encoding using jpeg-encoder.
 ///
-pub fn encode_photometric_interpretation(
-  photometric_interpretation: &PhotometricInterpretation,
-) -> Result<&PhotometricInterpretation, ()> {
-  match photometric_interpretation {
+pub fn encode_image_pixel_module(
+  image_pixel_module: &ImagePixelModule,
+) -> Result<ImagePixelModule, ()> {
+  let mut image_pixel_module = image_pixel_module.clone();
+
+  match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
+    | PhotometricInterpretation::YbrFull => {
+      image_pixel_module.set_photometric_interpretation(
+        image_pixel_module.photometric_interpretation().clone(),
+      );
+    }
 
     PhotometricInterpretation::YbrFull422 => {
-      Ok(&PhotometricInterpretation::YbrFull)
+      image_pixel_module
+        .set_photometric_interpretation(PhotometricInterpretation::YbrFull);
     }
 
     PhotometricInterpretation::PaletteColor { .. } => {
-      Ok(&PhotometricInterpretation::Rgb)
+      image_pixel_module
+        .set_photometric_interpretation(PhotometricInterpretation::Rgb);
     }
 
-    _ => Err(()),
-  }
+    _ => return Err(()),
+  };
+
+  Ok(image_pixel_module)
 }
 
 /// Encodes a [`MonochromeImage`] into JPEG Baseline (Process 1) raw bytes using
