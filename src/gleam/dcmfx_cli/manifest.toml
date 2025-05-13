@@ -41,6 +41,7 @@ dcmfx_json = { path = "../dcmfx_json" }
 dcmfx_p10 = { path = "../dcmfx_p10" }
 dcmfx_pixel_data = { path = "../dcmfx_pixel_data" }
 file_streams = { version = ">= 1.5.0 and < 2.0.0" }
+filepath = { version = ">= 1.1.2 and < 2.0.0" }
 gleam_stdlib = { version = ">= 0.59.0 and < 2.0.0" }
 gleeunit = { version = ">= 1.3.0 and < 2.0.0" }
 glint = { version = ">= 1.2.1 and < 2.0.0" }

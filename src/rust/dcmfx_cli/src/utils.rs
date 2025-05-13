@@ -56,7 +56,7 @@ pub fn prompt_to_overwrite_if_exists(path: &Path) {
   }
 
   print!(
-    "File \"{}\" already exists. Overwrite? ([y]es, [N]o, [a]ll): ",
+    "File \"{}\" already exists. Overwrite? ([y]es, [n]o, [a]ll): ",
     path.display()
   );
   std::io::stdout().flush().unwrap();

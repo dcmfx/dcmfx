@@ -1,5 +1,5 @@
 ---
-source: dcmfx_cli/tests/cli_tests.rs
+source: dcmfx_cli/tests/print.rs
 expression: get_stdout(assert)
 snapshot_kind: text
 ---

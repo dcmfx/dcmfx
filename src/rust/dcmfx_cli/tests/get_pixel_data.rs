@@ -8,14 +8,12 @@ use std::{
 use assert_cmd::Command;
 use ffmpeg_next as ffmpeg;
 
-use dcmfx_cli::utils::path_append;
-
 #[macro_use]
 mod assert_image_snapshot;
 use utils::{generate_temp_filename, to_native_path};
 
 #[test]
-fn single_bit_unaligned_to_raw() {
+fn single_bit_unaligned() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm";
   let output_files = [
@@ -64,15 +62,14 @@ fn single_bit_unaligned_to_raw() {
     ));
 
   for (i, output_file) in output_files.iter().enumerate() {
-    let filename =
-      format!("get_pixel_data__single_bit_unaligned_to_raw.000{i}.bin");
+    let filename = format!("get_pixel_data__single_bit_unaligned.000{i}.bin");
 
     assert_eq!(
       std::fs::read(&output_file.0).unwrap(),
       std::fs::read(format!("tests/snapshots/{filename}")).unwrap()
     );
 
-    let filename = format!("single_bit_unaligned_to_raw.000{i}.png");
+    let filename = format!("single_bit_unaligned.000{i}.png");
     assert_image_snapshot!(&output_file.1, &filename);
   }
 }
@@ -799,7 +796,7 @@ fn single_bit_unaligned_to_mp4_h264() {
     ));
 
   assert_eq!(
-    get_video_stream_details(&PathBuf::from_str(output_file).unwrap()),
+    get_video_stream_details(PathBuf::from_str(output_file).unwrap()),
     Ok(VideoStreamDetails {
       codec: "h264",
       profile: 110,
@@ -816,14 +813,21 @@ fn single_bit_unaligned_to_mp4_h264() {
 fn single_bit_unaligned_to_mp4_h265() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm";
-  let output_file = generate_temp_filename();
+
+  let output_directory = generate_temp_filename();
+  std::fs::create_dir(&output_directory).unwrap();
+
+  let output_filename = format!(
+    "{0}/liver_nonbyte_aligned.dcm.mp4",
+    output_directory.display()
+  );
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
-    .arg("--output-prefix")
-    .arg(&output_file)
+    .arg("--output-directory")
+    .arg(&output_directory)
     .arg("--overwrite")
     .arg("-f")
     .arg("mp4")
@@ -840,14 +844,14 @@ fn single_bit_unaligned_to_mp4_h265() {
     .assert()
     .success()
     .stdout(format!(
-      "\rWriting \"{0}.mp4\" … 33.3%\r\
-       Writing \"{0}.mp4\" … 66.7%\r\
-       Writing \"{0}.mp4\" … 100.0%\n",
-      output_file.display(),
+      "\rWriting \"{0}\" … 33.3%\r\
+       Writing \"{0}\" … 66.7%\r\
+       Writing \"{0}\" … 100.0%\n",
+      to_native_path(&output_filename),
     ));
 
   assert_eq!(
-    get_video_stream_details(&path_append(output_file, ".mp4")),
+    get_video_stream_details(output_filename),
     Ok(VideoStreamDetails {
       codec: "hevc",
       profile: 4,
@@ -909,15 +913,50 @@ fn render_overlays_and_flip_horizontal() {
   );
 }
 
+#[test]
+fn with_output_directory() {
+  let dicom_file = "../../../test/assets/other/mr_brucker_with_unaligned_multiframe_overlay.dcm";
+
+  let output_directory = generate_temp_filename();
+  std::fs::create_dir(&output_directory).unwrap();
+
+  let output_files: Vec<String> = (0..4)
+    .map(|i| {
+      format!(
+        "{}/mr_brucker_with_unaligned_multiframe_overlay.dcm.000{}.bin",
+        output_directory.display(),
+        i
+      )
+    })
+    .collect();
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--output-directory")
+    .arg(output_directory)
+    .assert()
+    .success()
+    .stdout(format!(
+      "Writing \"{}\" …\nWriting \"{}\" …\n\
+       Writing \"{}\" …\nWriting \"{}\" …\n",
+      to_native_path(&output_files[0]),
+      to_native_path(&output_files[1]),
+      to_native_path(&output_files[2]),
+      to_native_path(&output_files[3])
+    ));
+}
+
 /// Returns details on the video stream of a video file.
 ///
-fn get_video_stream_details(
-  path: &Path,
+fn get_video_stream_details<P: AsRef<Path>>(
+  path: P,
 ) -> Result<VideoStreamDetails, ffmpeg::Error> {
   ffmpeg::init()?;
 
   // Open the input file
-  let input = ffmpeg::format::input(path)?;
+  let input = ffmpeg::format::input(&path)?;
 
   // Find the first video stream
   let video_stream = input

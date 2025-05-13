@@ -12,11 +12,11 @@ import dcmfx_pixel_data/transforms/p10_pixel_data_frame_transform.{
 }
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error.{type FileStreamError}
-import gleam/bool
+import filepath
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/option.{type Option}
+import gleam/option.{None, Some}
 import gleam/result
 import gleam/string
 import glint
@@ -26,45 +26,40 @@ fn command_help() {
   <> "files"
 }
 
-fn output_prefix_flag() {
-  glint.string_flag("output-prefix")
+fn output_directory_flag() {
+  glint.string_flag("output-directory")
   |> glint.flag_help(
-    "The prefix for output image files. When writing individual frames this "
-    <> "is suffixed with a 4-digit frame number, and an appropriate file "
-    <> "extension. This option is only valid when a single input filename is "
-    <> "specified. By default, the output prefix is the input filename.",
+    "The directory to write output files into. The names of the output files "
+    <> "will be the name of the input file suffixed with a 4-digit frame "
+    <> "number, and an appropriate file extension.",
   )
 }
 
 pub fn run() {
   use <- glint.command_help(command_help())
   use <- glint.unnamed_args(glint.MinArgs(1))
-  use output_prefix_flag <- glint.flag(output_prefix_flag())
+  use output_directory <- glint.flag(output_directory_flag())
   use _named_args, unnamed_args, flags <- glint.command()
 
   let input_filenames = unnamed_args
-  let output_prefix = output_prefix_flag(flags) |> option.from_result
+  let output_directory = output_directory(flags) |> option.from_result
 
   let input_sources = input_source.get_input_sources(input_filenames)
 
-  use <- bool.lazy_guard(
-    option.is_some(output_prefix) && list.length(input_sources) > 1,
-    fn() {
-      io.println_error(
-        "When there are multiple input files --output-prefix must not be "
-        <> "specified",
-      )
-      Error(Nil)
-    },
-  )
+  input_source.validate_output_args(input_sources, None, output_directory)
 
   input_sources
   |> list.try_each(fn(input_source) {
+    let output_prefix = case output_directory {
+      Some(output_directory) -> filepath.join(output_directory, "/")
+      None -> input_source.output_path(input_source, "", output_directory)
+    }
+
     case get_pixel_data_from_input_source(input_source, output_prefix) {
       Ok(Nil) -> Ok(Nil)
       Error(e) -> {
         let task_description =
-          "extracting pixel data from\""
+          "extracting pixel data from \""
           <> input_source.to_string(input_source)
           <> "\""
 
@@ -83,17 +78,13 @@ pub fn run() {
 
 fn get_pixel_data_from_input_source(
   input_source: InputSource,
-  output_prefix: Option(String),
+  output_prefix: String,
 ) -> Result(Nil, P10PixelDataFrameTransformError) {
   // Open input stream
   let input_stream =
     input_source.open_read_stream(input_source)
     |> result.map_error(p10_pixel_data_frame_transform.P10Error)
   use input_stream <- result.try(input_stream)
-
-  let output_prefix =
-    output_prefix
-    |> option.unwrap(input_source.to_string(input_source))
 
   // Create read context with a small max token size to keep memory usage low
   let read_context =

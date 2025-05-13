@@ -35,13 +35,12 @@ pub struct GetPixelDataArgs {
 
   #[arg(
     long,
-    short,
-    help = "The prefix for output files. When writing individual frames this \
-      is suffixed with a 4-digit frame number, and an appropriate file \
-      extension. This option is only valid when a single input filename is \
-      specified. By default, the output prefix is the input filename."
+    short = 'd',
+    help = "The directory to write output files into. The names of the output \
+      files will be the name of the input file suffixed with a 4-digit frame \
+      number, and an appropriate file extension."
   )]
-  output_prefix: Option<PathBuf>,
+  output_directory: Option<PathBuf>,
 
   #[arg(
     long,
@@ -68,7 +67,7 @@ pub struct GetPixelDataArgs {
       output images and videos. If either width or height is zero then it is \
       calculated automatically such that the input aspect ratio is preserved.\n\
       \n\
-      Resizes are performed after any active transform is applied.
+      Resizes are performed after the transform, if one is specified.
       "
   )]
   resize: Option<Vec<u32>>,
@@ -191,7 +190,7 @@ pub struct GetPixelDataArgs {
 
   #[clap(
     long,
-    help = "Overwrite files without prompting",
+    help = "Overwrite files without prompting.",
     default_value_t = false
   )]
   overwrite: bool,
@@ -354,22 +353,12 @@ enum GetPixelDataError {
 pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
   let input_sources = crate::get_input_sources(&args.input_filenames);
 
-  if input_sources.contains(&InputSource::Stdin) && args.output_prefix.is_none()
-  {
-    eprintln!("When reading from stdin --output-prefix must be specified");
-    return Err(());
-  }
-
-  if input_sources.len() > 1 && args.output_prefix.is_some() {
-    eprintln!(
-      "When there are multiple input files --output-prefix must not be \
-       specified"
-    );
-    return Err(());
-  }
+  crate::validate_output_args(&input_sources, &None, &args.output_directory);
 
   for input_source in input_sources {
-    match get_pixel_data_from_input_source(&input_source, args) {
+    let output_prefix = input_source.output_path("", &args.output_directory);
+
+    match get_pixel_data_from_input_source(&input_source, output_prefix, args) {
       Ok(()) => (),
 
       Err(e) => {
@@ -418,16 +407,12 @@ pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
 
 fn get_pixel_data_from_input_source(
   input_source: &InputSource,
+  output_prefix: PathBuf,
   args: &GetPixelDataArgs,
 ) -> Result<(), GetPixelDataError> {
   let mut stream = input_source
     .open_read_stream()
     .map_err(GetPixelDataError::P10Error)?;
-
-  let output_prefix = args
-    .output_prefix
-    .clone()
-    .unwrap_or_else(|| input_source.path().unwrap().clone());
 
   // Create read context with a small max token size to keep memory usage low
   let mut read_context = P10ReadContext::new();

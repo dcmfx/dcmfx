@@ -21,31 +21,40 @@ impl core::fmt::Display for InputSource {
 }
 
 impl InputSource {
-  /// Returns the input source as a `PathBuf`.
+  /// Returns the input source as a [`PathBuf`].
   ///
-  pub fn path(&self) -> Option<&PathBuf> {
+  pub fn path(&self) -> PathBuf {
     match self {
-      InputSource::Stdin => None,
-      InputSource::LocalFile { path } => Some(path),
+      InputSource::Stdin => PathBuf::from("stdin"),
+      InputSource::LocalFile { path } => path.clone(),
     }
   }
 
-  /// Returns the input source as a `PathBuf` wih the given string appended to
-  /// the file name.
+  /// Returns path to the output file for this input source taking into account
+  /// the specified output suffix and output directory.
   ///
-  pub fn append(&self, s: &str) -> PathBuf {
-    if let Some(path) = self.path() {
-      let mut path = path.clone();
+  pub fn output_path(
+    &self,
+    output_suffix: &str,
+    output_directory: &Option<PathBuf>,
+  ) -> PathBuf {
+    let mut path = self.path();
 
+    if let Some(output_directory) = output_directory {
+      output_directory.join(format!(
+        "{}{}",
+        path.file_name().unwrap().to_string_lossy(),
+        output_suffix
+      ))
+    } else {
       if let Some(file_name) = path.file_name() {
-        let new_file_name = format!("{}{s}", file_name.to_string_lossy());
+        let new_file_name =
+          format!("{}{output_suffix}", file_name.to_string_lossy());
         path.set_file_name(new_file_name);
       }
 
-      return path;
+      path
     }
-
-    PathBuf::new()
   }
 
   /// Opens the input source as a read stream.
@@ -84,6 +93,11 @@ pub fn get_input_sources(input_filenames: &[PathBuf]) -> Vec<InputSource> {
           let paths: Vec<_> = paths.into_iter().collect();
 
           if paths.is_empty() {
+            if !input_filename.is_file() {
+              eprintln!("Error: '{}' is not a file", input_filename.display(),);
+              std::process::exit(1);
+            }
+
             input_sources.push(InputSource::LocalFile {
               path: PathBuf::from(input_filename),
             });
@@ -94,7 +108,7 @@ pub fn get_input_sources(input_filenames: &[PathBuf]) -> Vec<InputSource> {
 
                 Err(e) => {
                   eprintln!(
-                    "Error globbing input '{}', details: {}",
+                    "Error: Failed globbing input '{}', details: {}",
                     input_filename.display(),
                     e.error()
                   );
@@ -108,7 +122,7 @@ pub fn get_input_sources(input_filenames: &[PathBuf]) -> Vec<InputSource> {
 
         Err(e) => {
           eprintln!(
-            "Invalid glob pattern '{}', details: {}",
+            "Error: Invalid glob pattern '{}', details: {}",
             input_filename.display(),
             e
           );

@@ -22,11 +22,22 @@ pub struct ToJsonArgs {
   #[clap(
     long,
     short,
-    help = "The name of the output DICOM JSON file. This option is only valid \
-      when a single input filename is specified. Specify '-' to write to \
-      stdout."
+    help = "The name of the DICOM JSON output file. By default the output \
+      DICOM JSON file is the name of the input file with '.json' appended. \
+      Specify '-' to write to stdout.\n\
+      \n\
+      This argument is not permitted when multiple input files are specified."
   )]
   output_filename: Option<PathBuf>,
+
+  #[clap(
+    long,
+    short = 'd',
+    help = "The directory to write output files into. The names of the output \
+      DICOM JSON files will be the name of the input file with '.json' \
+      appended."
+  )]
+  output_directory: Option<PathBuf>,
 
   #[arg(
     long = "pretty",
@@ -39,7 +50,7 @@ pub struct ToJsonArgs {
   #[arg(
     long,
     help = "Whether to extend DICOM JSON to store encapsulated pixel data as \
-      inline binaries",
+      inline binaries. This is a common extension to the DICOM JSON standard.",
     default_value_t = true
   )]
   store_encapsulated_pixel_data: bool,
@@ -60,13 +71,11 @@ enum ToJsonError {
 pub fn run(args: &ToJsonArgs) -> Result<(), ()> {
   let input_sources = crate::get_input_sources(&args.input_filenames);
 
-  if input_sources.len() > 1 && args.output_filename.is_some() {
-    eprintln!(
-      "When there are multiple input files --output-filename must not be \
-       specified"
-    );
-    return Err(());
-  }
+  crate::validate_output_args(
+    &input_sources,
+    &args.output_filename,
+    &args.output_directory,
+  );
 
   let config = DicomJsonConfig {
     pretty_print: args.pretty_print,
@@ -74,7 +83,13 @@ pub fn run(args: &ToJsonArgs) -> Result<(), ()> {
   };
 
   for input_source in input_sources {
-    match input_source_to_json(&input_source, args, &config) {
+    let output_filename = if let Some(output_filename) = &args.output_filename {
+      output_filename.clone()
+    } else {
+      input_source.output_path(".json", &args.output_directory)
+    };
+
+    match input_source_to_json(&input_source, output_filename, args, &config) {
       Ok(()) => (),
 
       Err(e) => {
@@ -95,17 +110,13 @@ pub fn run(args: &ToJsonArgs) -> Result<(), ()> {
 
 fn input_source_to_json(
   input_source: &InputSource,
+  output_filename: PathBuf,
   args: &ToJsonArgs,
   config: &DicomJsonConfig,
 ) -> Result<(), ToJsonError> {
   let mut input_stream = input_source
     .open_read_stream()
     .map_err(ToJsonError::P10Error)?;
-
-  let output_filename = args
-    .output_filename
-    .clone()
-    .unwrap_or_else(|| input_source.clone().append(".json"));
 
   // Open output stream
   let mut output_stream: Box<dyn Write> = utils::open_output_stream(

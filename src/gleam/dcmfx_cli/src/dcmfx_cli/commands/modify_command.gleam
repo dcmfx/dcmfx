@@ -1,5 +1,6 @@
 import dcmfx_anonymize
 import dcmfx_cli/input_source.{type InputSource}
+import dcmfx_cli/utils.{bool_to_int}
 import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/dictionary
@@ -31,8 +32,17 @@ fn command_help() {
 fn output_filename_flag() {
   glint.string_flag("output-filename")
   |> glint.flag_help(
-    "The name of the output DICOM P10 file. This option is only valid when a "
-    <> "single input filename is specified.",
+    "The name of the DICOM P10 output file.\n\n"
+    <> "This argument is not permitted when multiple input files are "
+    <> "specified.",
+  )
+}
+
+fn output_directory_flag() {
+  glint.string_flag("output-directory")
+  |> glint.flag_help(
+    "The directory to write output files into. The names of the output DICOM "
+    <> "P10 files will be the same as the input files.",
   )
 }
 
@@ -41,8 +51,11 @@ fn in_place_flag() {
   |> glint.flag_default(False)
   |> glint.flag_help(
     "Whether to modify the input files in place, i.e. overwrite them with the "
-    <> "newly modified version rather than write it to a new file. WARNING: "
-    <> "this is a potentially irreversible operation.",
+    <> "newly modified version rather than write it to a new file.\n\n"
+    <> "If there is an error during in-place modification of a file then it "
+    <> "will not be altered.\n\n"
+    <> "WARNING: modification in-place is a potentially irreversible "
+    <> "operation.",
   )
 }
 
@@ -120,6 +133,7 @@ fn implementation_version_name_flag() {
 type ModifyArgs {
   ModifyArgs(
     output_filename: Option(String),
+    output_directory: Option(String),
     in_place: Bool,
     transfer_syntax: Option(String),
     zlib_compression_level: Int,
@@ -133,6 +147,7 @@ pub fn run() {
   use <- glint.command_help(command_help())
   use <- glint.unnamed_args(glint.MinArgs(1))
   use output_filename <- glint.flag(output_filename_flag())
+  use output_directory <- glint.flag(output_directory_flag())
   use in_place <- glint.flag(in_place_flag())
   use transfer_syntax_flag <- glint.flag(transfer_syntax_flag())
   use zlib_compression_level_flag <- glint.flag(zlib_compression_level_flag())
@@ -161,6 +176,7 @@ pub fn run() {
   let args =
     ModifyArgs(
       output_filename: output_filename(flags) |> option.from_result,
+      output_directory: output_directory(flags) |> option.from_result,
       in_place:,
       transfer_syntax: transfer_syntax_flag(flags) |> option.from_result,
       zlib_compression_level: zlib_compression_level_flag(flags)
@@ -171,31 +187,44 @@ pub fn run() {
       implementation_version_name:,
     )
 
-  let input_sources = input_source.get_input_sources(input_filenames)
-
+  // Check that exactly one output-related arg was specified
   use <- bool.lazy_guard(
-    !bool.exclusive_or(in_place, option.is_some(args.output_filename)),
+    {
+      bool_to_int(option.is_some(args.output_filename))
+      + bool_to_int(option.is_some(args.output_directory))
+      + bool_to_int(args.in_place)
+    }
+      != 1,
     fn() {
       io.println_error(
-        "Exactly one of --output-filename or --in-place must be specified",
+        "Exactly one of --output-filename, --output-directory, or --in-place "
+        <> "must be specified",
       )
       Error(Nil)
     },
   )
 
-  use <- bool.lazy_guard(
-    list.length(input_sources) > 1 && option.is_some(args.output_filename),
-    fn() {
-      io.println_error(
-        "When there are multiple input files --output-filename must not be specified",
-      )
-      Error(Nil)
-    },
+  let input_sources = input_source.get_input_sources(input_filenames)
+
+  input_source.validate_output_args(
+    input_sources,
+    args.output_filename,
+    args.output_directory,
   )
 
   input_sources
   |> list.try_each(fn(input_source) {
-    case modify_input_source(input_source, args) {
+    let output_filename = case args.in_place {
+      True -> input_source.to_string(input_source)
+      False ->
+        case args.output_filename {
+          Some(output_filename) -> output_filename
+          None ->
+            input_source.output_path(input_source, "", args.output_directory)
+        }
+    }
+
+    case modify_input_source(input_source, output_filename, args) {
       Ok(_) -> Ok(Nil)
       Error(e) -> {
         p10_error.print(
@@ -210,12 +239,9 @@ pub fn run() {
 
 fn modify_input_source(
   input_source: InputSource,
+  output_filename: String,
   args: ModifyArgs,
 ) -> Result(Nil, P10Error) {
-  let output_filename =
-    args.output_filename
-    |> option.unwrap(input_source.to_string(input_source))
-
   case args.in_place {
     True ->
       io.println(

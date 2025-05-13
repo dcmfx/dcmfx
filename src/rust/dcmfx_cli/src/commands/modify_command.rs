@@ -26,17 +26,30 @@ pub struct ModifyArgs {
   #[clap(
     long,
     short,
-    help = "The name of the output DICOM P10 file. This option is only valid \
-      when a single input filename is specified. Specify '-' to write to \
-      stdout."
+    help = "The name of the DICOM P10 output file. Specify '-' to write to \
+      stdout.\n\
+      \n\
+      This argument is not permitted when multiple input files are specified."
   )]
   output_filename: Option<PathBuf>,
+
+  #[clap(
+    long,
+    short = 'd',
+    help = "The directory to write output files into. The names of the output \
+      DICOM P10 files will be the same as the input files."
+  )]
+  output_directory: Option<PathBuf>,
 
   #[arg(
     long,
     help = "Whether to modify the input files in place, i.e. overwrite them \
-      with the newly modified version rather than write it to a new file. \
-      WARNING: this is a potentially irreversible operation.",
+      with the newly modified version rather than write it to a new file.\n\
+      \n\
+      If there is an error during in-place modification of a file then it will \
+      not be altered.\n\
+      \n\
+      WARNING: modification in-place is a potentially irreversible operation.",
     default_value_t = false
   )]
   in_place: bool,
@@ -118,29 +131,41 @@ enum ModifyCommandError {
 }
 
 pub fn run(args: &ModifyArgs) -> Result<(), ()> {
+  if (args.output_filename.is_some() as u8
+    + args.output_directory.is_some() as u8
+    + args.in_place as u8)
+    != 1
+  {
+    eprintln!(
+      "Exactly one of --output-filename, --output-directory, or --in-place \
+       must be specified"
+    );
+    return Err(());
+  }
+
   let input_sources = crate::get_input_sources(&args.input_filenames);
 
-  if !(args.in_place ^ args.output_filename.is_some()) {
-    eprintln!(
-      "Exactly one of --output-filename or --in-place must be specified"
-    );
-    return Err(());
-  }
-
-  if input_sources.len() > 1 && args.output_filename.is_some() {
-    eprintln!(
-      "When there are multiple input files --output-filename must not be specified"
-    );
-    return Err(());
-  }
+  crate::validate_output_args(
+    &input_sources,
+    &args.output_filename,
+    &args.output_directory,
+  );
 
   if args.in_place && input_sources.contains(&InputSource::Stdin) {
-    eprintln!("When reading from stdin --in-place must not be specified");
+    eprintln!("Error: --in-place is not valid when reading from stdin");
     return Err(());
   }
 
   for input_source in input_sources {
-    match modify_input_source(&input_source, args) {
+    let output_filename: PathBuf = if args.in_place {
+      input_source.path()
+    } else if let Some(output_filename) = &args.output_filename {
+      output_filename.clone()
+    } else {
+      input_source.output_path("", &args.output_directory)
+    };
+
+    match modify_input_source(&input_source, output_filename, args) {
       Ok(()) => (),
 
       Err(e) => {
@@ -163,13 +188,9 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
 
 fn modify_input_source(
   input_source: &InputSource,
+  output_filename: PathBuf,
   args: &ModifyArgs,
 ) -> Result<(), ModifyCommandError> {
-  let output_filename = args
-    .output_filename
-    .clone()
-    .unwrap_or_else(|| input_source.path().unwrap().clone());
-
   if output_filename != PathBuf::from("-") {
     if args.in_place {
       println!("Modifying \"{}\" in place …", input_source,);

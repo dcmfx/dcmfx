@@ -6,6 +6,8 @@ mod mp4_encoder;
 mod transfer_syntax_arg;
 mod utils;
 
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 
 use commands::{
@@ -96,4 +98,43 @@ fn get_peak_memory_usage() -> i64 {
   }
 
   max
+}
+
+/// Validates the --output-filename and --output-directory arguments for the
+/// given input sources.
+///
+pub fn validate_output_args(
+  input_sources: &[InputSource],
+  output_filename: &Option<PathBuf>,
+  output_directory: &Option<PathBuf>,
+) {
+  // Check that --output-directory is a valid directory
+  if let Some(output_directory) = output_directory {
+    if !output_directory.is_dir() {
+      eprintln!(
+        "Error: '{}' is not a valid directory",
+        output_directory.display()
+      );
+      std::process::exit(1);
+    }
+  }
+
+  // Check that --output-filename and --output-directory aren't both specified
+  if output_filename.is_some() && output_directory.is_some() {
+    eprintln!(
+      "Error: --output-filename and --output-directory can't be specified \
+       together"
+    );
+    std::process::exit(1);
+  }
+
+  // Check that --output-filename isn't specified when there's more than one
+  // input source
+  if input_sources.len() > 1 && output_filename.is_some() {
+    eprintln!(
+      "Error: --output-filename is not valid when there are multiple input \
+       files"
+    );
+    std::process::exit(1);
+  }
 }

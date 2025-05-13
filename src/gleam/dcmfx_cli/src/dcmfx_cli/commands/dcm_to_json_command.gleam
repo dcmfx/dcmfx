@@ -9,7 +9,7 @@ import dcmfx_p10/p10_token
 import file_streams/file_stream.{type FileStream}
 import gleam/io
 import gleam/list
-import gleam/option.{type Option}
+import gleam/option.{None, Some}
 import gleam/result
 import glint
 
@@ -22,6 +22,14 @@ fn output_filename_flag() {
   |> glint.flag_help(
     "The name of the output DICOM JSON file. This option is only valid "
     <> "when a single input filename is specified.",
+  )
+}
+
+fn output_directory_flag() {
+  glint.string_flag("output-directory")
+  |> glint.flag_help(
+    "The directory to write output files into. The names of the output DICOM "
+    <> "JSON files will be the name of the input file with '.json' appended.",
   )
 }
 
@@ -39,7 +47,8 @@ fn store_encapsulated_pixel_data_flag() {
   |> glint.flag_default(True)
   |> glint.flag_help(
     "Whether to extend DICOM JSON to store encapsulated pixel data as "
-    <> "inline binaries",
+    <> "inline binaries. This is a common extension to the DICOM JSON "
+    <> "standard.",
   )
 }
 
@@ -52,6 +61,7 @@ pub fn run() {
   use <- glint.command_help(command_help())
   use <- glint.unnamed_args(glint.MinArgs(1))
   use output_filename <- glint.flag(output_filename_flag())
+  use output_directory <- glint.flag(output_directory_flag())
   use pretty_print_flag <- glint.flag(pretty_print_flag())
   use store_encapsulated_pixel_data_flag <- glint.flag(
     store_encapsulated_pixel_data_flag(),
@@ -60,6 +70,7 @@ pub fn run() {
 
   let input_filenames = unnamed_args
   let output_filename = output_filename(flags) |> option.from_result
+  let output_directory = output_directory(flags) |> option.from_result
   let assert Ok(pretty_print) = pretty_print_flag(flags)
   let assert Ok(store_encapsulated_pixel_data) =
     store_encapsulated_pixel_data_flag(flags)
@@ -68,8 +79,19 @@ pub fn run() {
 
   let input_sources = input_source.get_input_sources(input_filenames)
 
+  input_source.validate_output_args(
+    input_sources,
+    output_filename,
+    output_directory,
+  )
+
   input_sources
   |> list.try_each(fn(input_source) {
+    let output_filename = case output_filename {
+      Some(output_filename) -> output_filename
+      None -> input_source.output_path(input_source, ".json", output_directory)
+    }
+
     case input_source_to_json(input_source, output_filename, config) {
       Ok(Nil) -> Ok(Nil)
 
@@ -90,7 +112,7 @@ pub fn run() {
 
 fn input_source_to_json(
   input_source: InputSource,
-  output_filename: Option(String),
+  output_filename: String,
   config: DicomJsonConfig,
 ) -> Result(Nil, ToJsonError) {
   // Open input stream
@@ -100,12 +122,8 @@ fn input_source_to_json(
     |> result.map_error(ToJsonP10Error)
   use input_stream <- result.try(input_stream)
 
-  let output_filename =
-    output_filename
-    |> option.unwrap(input_source.to_string(input_source) <> ".json")
-
   // Open output stream
-  io.println_error("Writing \"{" <> output_filename <> "}\" …")
+  io.println_error("Writing \"" <> output_filename <> "\" …")
   let output_stream =
     file_stream.open_write(output_filename)
     |> result.map_error(fn(e) {

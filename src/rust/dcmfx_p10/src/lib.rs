@@ -25,7 +25,7 @@ pub mod uids;
 mod internal;
 
 #[cfg(feature = "std")]
-use std::{fs::File, io::Read};
+use std::{fs::File, io::Read, path::Path};
 
 #[cfg(feature = "std")]
 pub type IoRead = dyn std::io::Read;
@@ -103,7 +103,7 @@ pub fn is_valid_bytes(bytes: &[u8]) -> bool {
 /// Reads DICOM P10 data from a file into an in-memory data set.
 ///
 #[cfg(feature = "std")]
-pub fn read_file(filename: &str) -> Result<DataSet, P10Error> {
+pub fn read_file<P: AsRef<Path>>(filename: P) -> Result<DataSet, P10Error> {
   match read_file_returning_builder_on_error(filename) {
     Ok(data_set) => Ok(data_set),
     Err((e, _)) => Err(e),
@@ -118,8 +118,8 @@ pub fn read_file(filename: &str) -> Result<DataSet, P10Error> {
 /// converted into a partially-complete data set.
 ///
 #[cfg(feature = "std")]
-pub fn read_file_returning_builder_on_error(
-  filename: &str,
+pub fn read_file_returning_builder_on_error<P: AsRef<Path>>(
+  filename: P,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
   match File::open(filename) {
     Ok(mut file) => read_stream(&mut file),
@@ -250,8 +250,8 @@ pub fn read_bytes(
 /// with the given name.
 ///
 #[cfg(feature = "std")]
-pub fn write_file(
-  filename: &str,
+pub fn write_file<P: AsRef<Path>>(
+  filename: P,
   data_set: &DataSet,
   config: Option<P10WriteConfig>,
 ) -> Result<(), P10Error> {
@@ -336,7 +336,7 @@ where
   /// Reads DICOM P10 data from a file into an in-memory data set.
   ///
   #[cfg(feature = "std")]
-  fn read_p10_file(filename: &str) -> Result<Self, P10Error>;
+  fn read_p10_file<P: AsRef<Path>>(filename: P) -> Result<Self, P10Error>;
 
   /// Reads DICOM P10 data from a read stream into an in-memory data set. This
   /// will attempt to consume all data available in the read stream.
@@ -353,9 +353,9 @@ where
   /// file with the given name.
   ///
   #[cfg(feature = "std")]
-  fn write_p10_file(
+  fn write_p10_file<P: AsRef<Path>>(
     &self,
-    filename: &str,
+    filename: P,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error>;
 
@@ -387,7 +387,7 @@ where
 
 impl DataSetP10Extensions for DataSet {
   #[cfg(feature = "std")]
-  fn read_p10_file(filename: &str) -> Result<Self, P10Error> {
+  fn read_p10_file<P: AsRef<Path>>(filename: P) -> Result<Self, P10Error> {
     read_file(filename)
   }
 
@@ -402,9 +402,9 @@ impl DataSetP10Extensions for DataSet {
   }
 
   #[cfg(feature = "std")]
-  fn write_p10_file(
+  fn write_p10_file<P: AsRef<Path>>(
     &self,
-    filename: &str,
+    filename: P,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error> {
     write_file(filename, self, config)

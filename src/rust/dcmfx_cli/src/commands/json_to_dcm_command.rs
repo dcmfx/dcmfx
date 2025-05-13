@@ -25,11 +25,22 @@ pub struct ToDcmArgs {
   #[clap(
     long,
     short,
-    help = "The name of the output DICOM P10 file. This option is only valid \
-      when a single input filename is specified. Specify '-' to write to \
-      stdout."
+    help = "The name of the DICOM P10 output file. By default the output \
+      DICOM P10 file is the name of the input file with '.dcm' appended. \
+      Specify '-' to write to stdout.\n\
+      \n\
+      This argument is not permitted when multiple input files are specified."
   )]
   output_filename: Option<PathBuf>,
+
+  #[clap(
+    long,
+    short = 'd',
+    help = "The directory to write output files into. The names of the output \
+      DICOM P10 files will be the name of the input file with '.dcm' \
+      appended."
+  )]
+  output_directory: Option<PathBuf>,
 
   #[clap(
     long,
@@ -55,16 +66,20 @@ enum ToDcmError {
 pub fn run(args: &ToDcmArgs) -> Result<(), ()> {
   let input_sources = crate::get_input_sources(&args.input_filenames);
 
-  if input_sources.len() > 1 && args.output_filename.is_some() {
-    eprintln!(
-      "When there are multiple input files --output-filename must not be \
-       specified"
-    );
-    return Err(());
-  }
+  crate::validate_output_args(
+    &input_sources,
+    &args.output_filename,
+    &args.output_directory,
+  );
 
   for input_source in input_sources {
-    match input_source_to_dcm(&input_source, args) {
+    let output_filename = if let Some(output_filename) = &args.output_filename {
+      output_filename.clone()
+    } else {
+      input_source.output_path(".dcm", &args.output_directory)
+    };
+
+    match input_source_to_dcm(&input_source, output_filename, args) {
       Ok(()) => (),
 
       Err(e) => {
@@ -85,16 +100,20 @@ pub fn run(args: &ToDcmArgs) -> Result<(), ()> {
 
 fn input_source_to_dcm(
   input_source: &InputSource,
+  output_filename: PathBuf,
   args: &ToDcmArgs,
 ) -> Result<(), ToDcmError> {
   let mut stream = input_source
     .open_read_stream()
     .map_err(ToDcmError::P10Error)?;
 
-  let output_filename = args
-    .output_filename
-    .clone()
-    .unwrap_or_else(|| input_source.clone().append(".dcm"));
+  // Open output stream
+  let mut output_stream: Box<dyn Write> = utils::open_output_stream(
+    &output_filename,
+    Some(&output_filename),
+    args.overwrite,
+  )
+  .map_err(ToDcmError::P10Error)?;
 
   let mut buffer = vec![];
 
@@ -120,14 +139,6 @@ fn input_source_to_dcm(
   // Read DICOM JSON into a data set
   let data_set =
     DataSet::from_json(json).map_err(ToDcmError::JsonDeserializeError)?;
-
-  // Open output stream
-  let mut output_stream: Box<dyn Write> = utils::open_output_stream(
-    &output_filename,
-    Some(&output_filename),
-    args.overwrite,
-  )
-  .map_err(ToDcmError::P10Error)?;
 
   let write_config = P10WriteConfig {
     implementation_version_name: args.implementation_version_name.clone(),
