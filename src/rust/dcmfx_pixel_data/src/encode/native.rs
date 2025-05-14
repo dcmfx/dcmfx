@@ -17,25 +17,16 @@ use crate::{
 pub fn encode_image_pixel_module(
   image_pixel_module: &ImagePixelModule,
 ) -> Result<ImagePixelModule, ()> {
-  let encoded_photometric_interpretation =
-    match image_pixel_module.photometric_interpretation() {
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2
-      | PhotometricInterpretation::PaletteColor { .. }
-      | PhotometricInterpretation::Rgb
-      | PhotometricInterpretation::YbrFull422
-      | PhotometricInterpretation::YbrFull => {
-        image_pixel_module.photometric_interpretation().clone()
-      }
+  match image_pixel_module.photometric_interpretation() {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull422
+    | PhotometricInterpretation::YbrFull => Ok(image_pixel_module.clone()),
 
-      _ => return Err(()),
-    };
-
-  let mut image_pixel_module = image_pixel_module.clone();
-  image_pixel_module
-    .set_photometric_interpretation(encoded_photometric_interpretation);
-
-  Ok(image_pixel_module)
+    _ => Err(()),
+  }
 }
 
 /// Encodes a [`MonochromeImage`] into native pixel data raw bytes.

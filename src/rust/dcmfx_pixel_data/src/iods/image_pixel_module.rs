@@ -325,6 +325,21 @@ impl ImagePixelModule {
     self
   }
 
+  /// If the samples per pixel is three, sets the planar configuration. If the
+  /// samples per pixel is one then this is a no-op.
+  ///
+  pub fn set_planar_configuration(
+    &mut self,
+    new_planar_configuration: PlanarConfiguration,
+  ) {
+    if let SamplesPerPixel::Three {
+      ref mut planar_configuration,
+    } = self.samples_per_pixel
+    {
+      *planar_configuration = new_planar_configuration;
+    }
+  }
+
   /// Returns this image pixel module's number of rows, i.e. its height.
   ///
   pub fn rows(&self) -> u16 {
@@ -470,10 +485,17 @@ impl ImagePixelModule {
       self.samples_per_pixel.to_data_element_value(),
     );
 
-    data_set.insert(
-      dictionary::PLANAR_CONFIGURATION.tag,
-      self.planar_configuration().to_data_element_value(),
-    );
+    // Only include planar configuration when there are three samples per pixel.
+    // Ref: PS3.5 Table 8.2.2-1
+    if let SamplesPerPixel::Three {
+      planar_configuration,
+    } = self.samples_per_pixel
+    {
+      data_set.insert(
+        dictionary::PLANAR_CONFIGURATION.tag,
+        planar_configuration.to_data_element_value(),
+      );
+    }
 
     data_set.insert(
       dictionary::PHOTOMETRIC_INTERPRETATION.tag,

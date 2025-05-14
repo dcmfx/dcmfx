@@ -70,7 +70,7 @@ snapshot_kind: text
 (0020,0060) CS Laterality                           [     0 bytes] ""
 (0028,0002) US Samples per Pixel                    [     2 bytes] 3
 (0028,0004) CS Photometric Interpretation           [     8 bytes] "YBR_FULL"
-(0028,0006) US Planar Configuration                 [     2 bytes] 0
+(0028,0006) US Planar Configuration                 [     2 bytes] 1
 (0028,0008) IS Number of Frames                     [     2 bytes] "30"
 (0028,0009) AT Frame Increment Pointer              [     4 bytes] (0018,1063)
 (0028,0010) US Rows                                 [     2 bytes] 240

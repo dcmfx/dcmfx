@@ -4,7 +4,9 @@ use alloc::{boxed::Box, string::ToString, vec, vec::Vec};
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
   color_image::ColorImageData,
-  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
+  iods::image_pixel_module::{
+    ImagePixelModule, PhotometricInterpretation, PlanarConfiguration,
+  },
   monochrome_image::MonochromeImageData,
 };
 
@@ -14,25 +16,26 @@ use crate::{
 pub fn encode_image_pixel_module(
   image_pixel_module: &ImagePixelModule,
 ) -> Result<ImagePixelModule, ()> {
-  let encoded_photometric_interpretation = match image_pixel_module
-    .photometric_interpretation()
-  {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
-    | PhotometricInterpretation::PaletteColor { .. }
-    | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => {
-      image_pixel_module.photometric_interpretation().clone()
-    }
+  let mut image_pixel_module =
+    match image_pixel_module.photometric_interpretation() {
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2
+      | PhotometricInterpretation::PaletteColor { .. }
+      | PhotometricInterpretation::Rgb
+      | PhotometricInterpretation::YbrFull => image_pixel_module.clone(),
 
-    PhotometricInterpretation::YbrFull422 => PhotometricInterpretation::YbrFull,
+      PhotometricInterpretation::YbrFull422 => {
+        let mut image_pixel_module = image_pixel_module.clone();
+        image_pixel_module
+          .set_photometric_interpretation(PhotometricInterpretation::YbrFull);
 
-    _ => return Err(()),
-  };
+        image_pixel_module
+      }
 
-  let mut image_pixel_module = image_pixel_module.clone();
-  image_pixel_module
-    .set_photometric_interpretation(encoded_photometric_interpretation);
+      _ => return Err(()),
+    };
+
+  image_pixel_module.set_planar_configuration(PlanarConfiguration::Separate);
 
   Ok(image_pixel_module)
 }
