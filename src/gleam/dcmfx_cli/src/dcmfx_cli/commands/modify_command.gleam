@@ -2,13 +2,9 @@ import dcmfx_anonymize
 import dcmfx_cli/input_source.{type InputSource}
 import dcmfx_cli/utils.{bool_to_int}
 import dcmfx_core/data_element_tag.{type DataElementTag}
-import dcmfx_core/data_set.{type DataSet}
-import dcmfx_core/dictionary
-import dcmfx_core/transfer_syntax.{type TransferSyntax}
 import dcmfx_p10
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read
-import dcmfx_p10/p10_token
 import dcmfx_p10/p10_write.{type P10WriteConfig, P10WriteConfig}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import dcmfx_p10/uids
@@ -56,16 +52,6 @@ fn in_place_flag() {
     <> "will not be altered.\n\n"
     <> "WARNING: modification in-place is a potentially irreversible "
     <> "operation.",
-  )
-}
-
-fn transfer_syntax_flag() {
-  glint.string_flag("transfer-syntax")
-  |> glint.flag_help(
-    "The transfer syntax for the output DICOM P10 file. This can only convert "
-    <> "between the following transfer syntaxes: 'implicit-vr-little-endian', "
-    <> "'explicit-vr-little-endian', 'deflated-explicit-vr-little-endian', and "
-    <> "'explicit-vr-big-endian'.",
   )
 }
 
@@ -135,7 +121,6 @@ type ModifyArgs {
     output_filename: Option(String),
     output_directory: Option(String),
     in_place: Bool,
-    transfer_syntax: Option(String),
     zlib_compression_level: Int,
     anonymize: Bool,
     tags_to_delete: List(DataElementTag),
@@ -149,7 +134,6 @@ pub fn run() {
   use output_filename <- glint.flag(output_filename_flag())
   use output_directory <- glint.flag(output_directory_flag())
   use in_place <- glint.flag(in_place_flag())
-  use transfer_syntax_flag <- glint.flag(transfer_syntax_flag())
   use zlib_compression_level_flag <- glint.flag(zlib_compression_level_flag())
   use anonymize_flag <- glint.flag(anonymize_flag())
   use delete_tags_flag <- glint.flag(delete_tags_flag())
@@ -178,7 +162,6 @@ pub fn run() {
       output_filename: output_filename(flags) |> option.from_result,
       output_directory: output_directory(flags) |> option.from_result,
       in_place:,
-      transfer_syntax: transfer_syntax_flag(flags) |> option.from_result,
       zlib_compression_level: zlib_compression_level_flag(flags)
         |> option.from_result
         |> option.unwrap(6),
@@ -286,9 +269,6 @@ fn modify_input_source(
     False -> None
   }
 
-  let output_transfer_syntax = parse_transfer_syntax_flag(args.transfer_syntax)
-  use output_transfer_syntax <- result.try(output_transfer_syntax)
-
   // Setup write config
   let write_config =
     P10WriteConfig(
@@ -305,7 +285,6 @@ fn modify_input_source(
       input_stream,
       tmp_output_filename,
       write_config,
-      output_transfer_syntax,
       filter_context,
     )
 
@@ -330,31 +309,6 @@ fn modify_input_source(
   }
 }
 
-/// Detects and validates the value passed to --transfer-syntax, if present.
-///
-fn parse_transfer_syntax_flag(
-  transfer_syntax: Option(String),
-) -> Result(Option(TransferSyntax), P10Error) {
-  case transfer_syntax {
-    Some("implicit-vr-little-endian") ->
-      Ok(Some(transfer_syntax.implicit_vr_little_endian))
-    Some("explicit-vr-little-endian") ->
-      Ok(Some(transfer_syntax.explicit_vr_little_endian))
-    Some("deflated-explicit-vr-little-endian") ->
-      Ok(Some(transfer_syntax.deflated_explicit_vr_little_endian))
-    Some("explicit-vr-big-endian") ->
-      Ok(Some(transfer_syntax.explicit_vr_big_endian))
-
-    Some(ts) ->
-      Error(p10_error.OtherError(
-        "Unsupported transfer syntax conversion",
-        "The transfer syntax '" <> ts <> "' is not recognized",
-      ))
-
-    None -> Ok(None)
-  }
-}
-
 /// Rewrites by streaming the tokens of the DICOM P10 straight to the output
 /// file.
 ///
@@ -362,7 +316,6 @@ fn streaming_rewrite(
   input_stream: FileStream,
   output_filename: String,
   write_config: P10WriteConfig,
-  output_transfer_syntax: Option(TransferSyntax),
   filter_context: Option(P10FilterTransform),
 ) -> Result(Nil, P10Error) {
   // Open output stream
@@ -394,7 +347,6 @@ fn streaming_rewrite(
       output_stream,
       p10_read_context,
       p10_write_context,
-      output_transfer_syntax,
       filter_context,
     )
 
@@ -418,7 +370,6 @@ fn do_streaming_rewrite(
   output_stream: FileStream,
   p10_read_context: p10_read.P10ReadContext,
   p10_write_context: p10_write.P10WriteContext,
-  output_transfer_syntax: Option(TransferSyntax),
   filter_context: Option(P10FilterTransform),
 ) -> Result(Nil, P10Error) {
   // Read the next P10 tokens from the input stream
@@ -449,22 +400,6 @@ fn do_streaming_rewrite(
   }
   use #(tokens, filter_context) <- result.try(tokens_and_filter_context)
 
-  // If converting the transfer syntax then update the transfer syntax in the
-  // File Meta Information token
-  let tokens =
-    tokens
-    |> list.try_map(fn(token) {
-      case output_transfer_syntax, token {
-        Some(ts), p10_token.FileMetaInformation(file_meta_information) ->
-          file_meta_information
-          |> change_transfer_syntax(ts)
-          |> result.map(p10_token.FileMetaInformation)
-
-        _, _ -> Ok(token)
-      }
-    })
-  use tokens <- result.try(tokens)
-
   // Write tokens to the output stream
   use #(ended, p10_write_context) <- result.try(
     dcmfx_p10.write_tokens_to_stream(tokens, output_stream, p10_write_context),
@@ -479,50 +414,6 @@ fn do_streaming_rewrite(
     output_stream,
     p10_read_context,
     p10_write_context,
-    output_transfer_syntax,
     filter_context,
   )
-}
-
-/// Adds/updates the *'(0002,0010) TransferSyntaxUID'* data element in the data
-/// set. If the current transfer syntax is not able to be converted from then an
-/// error is returned.
-///
-fn change_transfer_syntax(
-  data_set: DataSet,
-  transfer_syntax: TransferSyntax,
-) -> Result(DataSet, P10Error) {
-  // Read the current transfer syntax, defaulting to 'Implicit VR Little Endian'
-  let assert Ok(current_transfer_syntax) =
-    data_set.get_string(data_set, dictionary.transfer_syntax_uid.tag)
-    |> result.unwrap(transfer_syntax.implicit_vr_little_endian.uid)
-    |> transfer_syntax.from_uid
-
-  // The list of transfer syntaxes that can be converted from
-  let valid_source_ts = [
-    transfer_syntax.implicit_vr_little_endian,
-    transfer_syntax.explicit_vr_little_endian,
-    transfer_syntax.deflated_explicit_vr_little_endian,
-    transfer_syntax.explicit_vr_big_endian,
-  ]
-
-  case list.contains(valid_source_ts, current_transfer_syntax) {
-    True -> {
-      let assert Ok(data_set) =
-        data_set
-        |> data_set.insert_string_value(dictionary.transfer_syntax_uid, [
-          transfer_syntax.uid,
-        ])
-
-      Ok(data_set)
-    }
-
-    False ->
-      Error(p10_error.OtherError(
-        "Unsupported transfer syntax conversion",
-        "The transfer syntax '"
-          <> current_transfer_syntax.name
-          <> "' is not able to be converted from",
-      ))
-  }
 }
