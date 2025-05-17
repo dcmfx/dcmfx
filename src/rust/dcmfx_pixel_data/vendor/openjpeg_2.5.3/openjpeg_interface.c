@@ -1,6 +1,7 @@
 // This file contains the C entry point called from Rust to perform decoding of
 // JPEG 2000 data.
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -113,11 +114,12 @@ static void cleanup(opj_codec_t *codec, opj_stream_t *stream,
   }
 }
 
-int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
-                    uint32_t width, uint32_t height, uint32_t samples_per_pixel,
-                    uint32_t bits_allocated, uint8_t *pixel_representation,
-                    uint8_t *output_data, uint64_t output_data_size,
-                    char *error_buffer, uint32_t error_buffer_size) {
+int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
+                        uint32_t width, uint32_t height,
+                        uint32_t samples_per_pixel, uint32_t bits_allocated,
+                        uint8_t *pixel_representation, uint8_t *output_data,
+                        uint64_t output_data_size, char *error_buffer,
+                        uint32_t error_buffer_size) {
   // Determine codec by looking at the initial bytes of the input data
   int codec_format = OPJ_CODEC_UNKNOWN;
   if ((input_data_size >= 12 &&
@@ -178,10 +180,9 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
   // Validate that the dimensions and samples per pixel are as expected
   if (image->x1 != width || image->y1 != height ||
       image->numcomps != samples_per_pixel) {
-    cleanup(
-        codec, stream, image, error_buffer, error_buffer_size,
-        "Image does not have the expected dimensions or samples per pixel",
-        error_details);
+    cleanup(codec, stream, image, error_buffer, error_buffer_size,
+            "Image does not have the expected dimensions or samples per pixel",
+            error_details);
     return -1;
   }
 
@@ -323,6 +324,205 @@ int openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
   } else {
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "Number of components not supported", error_details);
+    return -1;
+  }
+
+  cleanup(codec, stream, image, NULL, 0, NULL, NULL);
+
+  return 0;
+}
+
+// This output stream directs all writes it receives through a callback that
+// is implemented on the Rust side where the data is accumulated in a Vec<u8>.
+typedef struct {
+  void (*callback)(const uint8_t *data, uint32_t len, void *ctx);
+  void *context;
+} output_stream_t;
+
+static OPJ_SIZE_T output_stream_write(void *p_buffer, OPJ_SIZE_T p_size,
+                                      void *p_user_data) {
+  output_stream_t *stream = (output_stream_t *)p_user_data;
+  stream->callback(p_buffer, p_size, stream->context);
+
+  return p_size;
+}
+
+static void output_stream_free(void *p_user_data) {}
+
+int32_t openjpeg_encode(
+    uint8_t *input_data, uint64_t input_data_size, uint32_t width,
+    uint32_t height, uint32_t samples_per_pixel, uint32_t bits_allocated,
+    uint32_t bits_stored, uint8_t pixel_representation, uint32_t is_color_ybr,
+    uint32_t quality,
+    void (*output_data_callback)(const uint8_t *data, uint32_t len, void *ctx),
+    void *output_data_context, char *error_buffer, uint32_t error_buffer_size) {
+  // Create compressor
+  opj_codec_t *codec = opj_create_compress(OPJ_CODEC_J2K);
+  if (codec == NULL) {
+    strcpy(error_buffer, "opj_create_compress() failed");
+    return -1;
+  }
+
+  // Setup error handler that captures detailed error messages
+  char error_details[ERROR_DETAILS_SIZE] = {0};
+  opj_set_error_handler(codec, error_handler, error_details);
+
+  // Create image with components specification
+  opj_image_cmptparm_t component_parameters[3];
+  for (uint32_t i = 0; i < samples_per_pixel; i++) {
+    component_parameters[i].dx = 1;
+    component_parameters[i].dy = 1;
+    component_parameters[i].w = width;
+    component_parameters[i].h = height;
+    component_parameters[i].sgnd = pixel_representation;
+    component_parameters[i].prec = bits_allocated;
+  }
+  OPJ_COLOR_SPACE color_space =
+      samples_per_pixel == 3 ? OPJ_CLRSPC_SYCC : OPJ_CLRSPC_GRAY;
+  opj_image_t *image =
+      opj_image_create(samples_per_pixel, component_parameters, color_space);
+  if (image == NULL) {
+    cleanup(codec, NULL, NULL, error_buffer, error_buffer_size,
+            "opj_image_create() failed", error_details);
+    return -1;
+  }
+
+  // Set reference grid dimensions
+  image->x1 = width;
+  image->y1 = height;
+
+  // Set image content
+  size_t index = 0;
+  if (bits_allocated == 8) {
+    if (pixel_representation == 0) {
+      for (uint32_t y = 0; y < height; y++) {
+        for (uint32_t x = 0; x < width; x++, index++) {
+          for (uint32_t i = 0; i < samples_per_pixel; i++) {
+            image->comps[i].data[index] =
+                input_data[samples_per_pixel * index + i];
+          }
+        }
+      }
+    } else {
+      for (uint32_t y = 0; y < height; y++) {
+        for (uint32_t x = 0; x < width; x++, index++) {
+          for (uint32_t i = 0; i < samples_per_pixel; i++) {
+            image->comps[i].data[index] =
+                ((int8_t *)input_data)[samples_per_pixel * index + i];
+          }
+        }
+      }
+    }
+  } else if (bits_allocated == 16) {
+    if (pixel_representation == 0) {
+      for (uint32_t y = 0; y < height; y++) {
+        for (uint32_t x = 0; x < width; x++, index++) {
+          for (uint32_t i = 0; i < samples_per_pixel; i++) {
+            image->comps[i].data[index] =
+                ((uint16_t *)input_data)[samples_per_pixel * index + i];
+          }
+        }
+      }
+    } else {
+      for (uint32_t y = 0; y < height; y++) {
+        for (uint32_t x = 0; x < width; x++, index++) {
+          for (uint32_t i = 0; i < samples_per_pixel; i++) {
+            image->comps[i].data[index] =
+                ((int16_t *)input_data)[samples_per_pixel * index + i];
+          }
+        }
+      }
+    }
+  } else {
+    cleanup(codec, NULL, image, error_buffer, error_buffer_size,
+            "Bits allocated value is not 8 or 16", error_details);
+    return -1;
+  }
+
+  // Configure encoder parameters
+  opj_cparameters_t parameters;
+  opj_set_default_encoder_parameters(&parameters);
+  parameters.tcp_numlayers = 1;
+
+  // Configure lossy encoding if quality != 0
+  if (quality != 0) {
+    parameters.irreversible = OPJ_TRUE; // YBR_ICT for lossy
+    parameters.cp_fixed_quality = 2;
+
+    // The range of PSNR depends on the bits stored value because higher bit
+    // depths need higher PSNR values to maintain similar error characteristics.
+
+    double t = (double)bits_stored - 8.0;
+    if (t < 0.0) {
+      t = 0.0;
+    }
+
+    double min_quality_psnr = 25.0 + 1.875 * t;
+    double max_quality_psnr = 45.0 + 3.750 * t;
+
+    parameters.tcp_distoratio[0] =
+        min_quality_psnr * pow(max_quality_psnr / min_quality_psnr,
+                               ((double)quality - 1.0) / 99.0);
+  }
+
+  // If the input data is in the YBR color space then don't apply multiple
+  // component transformation (MCT), i.e. compress the components as-is so the
+  // YBR_FULL photometric interpretation can be used
+  if (samples_per_pixel == 3) {
+    parameters.tcp_mct = !is_color_ybr;
+  }
+
+  // Set number of resolutions such that the lowest resolution will be 64x64 in
+  // order to avoid over-decomposition
+  uint32_t min_dimension = width < height ? width : height;
+  if (min_dimension < 64) {
+    min_dimension = 64;
+  }
+  parameters.numresolution = floor(log2(min_dimension / 64)) + 1;
+  if (parameters.numresolution > 5) {
+    parameters.numresolution = 5;
+  }
+
+  // Setup encoder
+  if (!opj_setup_encoder(codec, &parameters, image)) {
+    cleanup(codec, NULL, image, error_buffer, error_buffer_size,
+            "opj_setup_encoder() failed", error_details);
+    return -1;
+  }
+
+  output_stream_t output_stream = {output_data_callback, output_data_context};
+
+  // Create and setup a stream to receive the compressed data
+  opj_stream_t *stream =
+      opj_stream_create(OPJ_J2K_STREAM_CHUNK_SIZE, OPJ_FALSE);
+  if (stream == NULL) {
+    cleanup(codec, stream, image, error_buffer, error_buffer_size,
+            "opj_stream_create() failed", error_details);
+    return -1;
+  }
+
+  opj_stream_set_write_function(stream, output_stream_write);
+  opj_stream_set_user_data(stream, &output_stream, output_stream_free);
+  opj_stream_set_user_data_length(stream, (OPJ_UINT64)-1);
+
+  // Start compressor
+  if (!opj_start_compress(codec, image, stream)) {
+    cleanup(codec, stream, image, error_buffer, error_buffer_size,
+            "opj_start_compress() failed", error_details);
+    return -1;
+  }
+
+  // Perform encode
+  if (!opj_encode(codec, stream)) {
+    cleanup(codec, stream, image, error_buffer, error_buffer_size,
+            "opj_encode() failed", error_details);
+    return -1;
+  }
+
+  // End compression
+  if (!opj_end_compress(codec, stream)) {
+    cleanup(codec, stream, image, error_buffer, error_buffer_size,
+            "opj_end_compress() failed", error_details);
     return -1;
   }
 

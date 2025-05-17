@@ -18,9 +18,9 @@ pub fn decode_photometric_interpretation(
   match photometric_interpretation {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
-    | PhotometricInterpretation::Rgb => Ok(photometric_interpretation),
-
-    PhotometricInterpretation::YbrFull => Ok(&PhotometricInterpretation::Rgb),
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull
+    | PhotometricInterpretation::YbrFull422 => Ok(photometric_interpretation),
 
     _ => Err(PixelDataDecodeError::NotSupported {
       details: format!(
@@ -57,11 +57,10 @@ pub fn decode_color(
 ) -> Result<ColorImage, DataError> {
   let pixels = decode(image_pixel_module, data)?;
 
-  let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
-  {
-    ColorSpace::Ybr
-  } else {
-    ColorSpace::Rgb
+  let color_space = match image_pixel_module.photometric_interpretation() {
+    PhotometricInterpretation::YbrFull => ColorSpace::Ybr { is_422: false },
+    PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr { is_422: true },
+    _ => ColorSpace::Rgb,
   };
 
   ColorImage::new_u16(

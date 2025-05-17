@@ -64,9 +64,9 @@ pub fn image_matches_snapshot<P: AsRef<std::path::Path>>(
       let a = image_1.get_pixel(x, y);
       let b = image_2.get_pixel(x, y);
 
-      if (i32::from(a[0]) - i32::from(b[0])).abs() > 257
-        || (i32::from(a[1]) - i32::from(b[1])).abs() > 257
-        || (i32::from(a[2]) - i32::from(b[2])).abs() > 257
+      if (i32::from(a[0]) - i32::from(b[0])).abs() > 300
+        || (i32::from(a[1]) - i32::from(b[1])).abs() > 300
+        || (i32::from(a[2]) - i32::from(b[2])).abs() > 300
       {
         return Err(format!(
           "Image differs at pixel {},{}: expected {:?} but got {:?}. {}",

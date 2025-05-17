@@ -30,7 +30,7 @@ fn test_native_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules(),
     &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
-    0,
+    0.0,
     0.0,
   );
 }
@@ -40,7 +40,7 @@ fn test_rle_lossless_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules(),
     &transfer_syntax::RLE_LOSSLESS,
-    0,
+    0.0,
     0.0,
   );
 }
@@ -53,8 +53,24 @@ fn test_jpeg_baseline_8bit_encode_decode_cycle() {
       .filter(|m| m.bits_allocated() == BitsAllocated::Eight)
       .collect(),
     &transfer_syntax::JPEG_BASELINE_8BIT,
-    2,
-    0.02,
+    0.01,
+    0.03,
+  );
+}
+
+#[test]
+fn test_jpeg_2k_lossless_only_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| {
+        m.bits_allocated() == BitsAllocated::Eight
+          || m.bits_allocated() == BitsAllocated::Sixteen
+      })
+      .collect(),
+    &transfer_syntax::JPEG_2K_LOSSLESS_ONLY,
+    0.0,
+    0.0,
   );
 }
 
@@ -63,7 +79,7 @@ fn test_deflated_image_frame_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules(),
     &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION,
-    0,
+    0.0,
     0.0,
   );
 }
@@ -71,7 +87,7 @@ fn test_deflated_image_frame_encode_decode_cycle() {
 fn test_encode_decode_cycle(
   image_pixel_modules: Vec<ImagePixelModule>,
   transfer_syntax: &'static TransferSyntax,
-  monochrome_image_max_reencode_delta: i64,
+  monochrome_image_max_reencode_delta: f64,
   color_image_max_reencode_delta: f64,
 ) {
   for image_pixel_module in image_pixel_modules {
@@ -94,7 +110,7 @@ fn test_encode_decode_cycle(
 fn test_monochrome_image_encode_decode_cycle(
   image_pixel_module: &ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
-  max_reencode_delta: i64,
+  max_reencode_delta: f64,
 ) {
   let original_image = create_monochrome_image(&image_pixel_module);
 
@@ -123,6 +139,12 @@ fn test_monochrome_image_encode_decode_cycle(
   let original_image = original_image.to_stored_values();
   let decoded_image = decoded_image.to_stored_values();
 
+  // Convert the max reencode delta to an integer value
+  let max_reencode_delta = ((max_reencode_delta
+    * ((1i64 << i64::from(image_pixel_module.bits_stored())) as f64))
+    as i64)
+    .max(1);
+
   // Compare all pixels
   for i in 0..image_pixel_module.pixel_count() {
     assert!(original_image[i] - decoded_image[i] <= max_reencode_delta);
@@ -136,9 +158,11 @@ fn test_color_image_encode_decode_cycle(
 ) {
   // If the Image Pixel Module isn't supported for encoding then there's
   // nothing to do
-  let Ok(encoded_image_pixel_module) =
-    encode::encode_image_pixel_module(&image_pixel_module, transfer_syntax)
-  else {
+  let Ok(encoded_image_pixel_module) = encode::encode_image_pixel_module(
+    image_pixel_module.clone(),
+    transfer_syntax,
+    &encode_config(),
+  ) else {
     return;
   };
 
@@ -244,6 +268,7 @@ fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
     (32, 16),
     (16, 32),
     (32, 32),
+    (128, 128),
   ];
 
   let mut image_pixel_modules = vec![];
@@ -440,8 +465,8 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
     let color_space = match image_pixel_module.photometric_interpretation() {
       PhotometricInterpretation::PaletteColor { .. }
       | PhotometricInterpretation::Rgb => ColorSpace::Rgb,
-      PhotometricInterpretation::YbrFull => ColorSpace::Ybr,
-      PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr422,
+      PhotometricInterpretation::YbrFull => ColorSpace::Ybr { is_422: false },
+      PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr { is_422: true },
       _ => unreachable!(),
     };
 

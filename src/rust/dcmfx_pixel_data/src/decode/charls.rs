@@ -66,11 +66,13 @@ pub fn decode_color(
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
 
-  let color_space = if image_pixel_module.photometric_interpretation().is_ybr()
-  {
-    ColorSpace::Ybr
-  } else {
-    ColorSpace::Rgb
+  let color_space = match image_pixel_module.photometric_interpretation() {
+    PhotometricInterpretation::YbrFull => ColorSpace::Ybr { is_422: false },
+    PhotometricInterpretation::Rgb => ColorSpace::Rgb,
+    _ => Err(DataError::new_value_invalid(format!(
+      "JPEG LS does not support photometric interpretation '{}'",
+      image_pixel_module.photometric_interpretation()
+    )))?,
   };
 
   if image_pixel_module.bits_allocated() == BitsAllocated::Eight {

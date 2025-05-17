@@ -16,6 +16,7 @@ use crate::{
 
 mod jpeg_encoder;
 mod native;
+mod openjpeg;
 mod rle_lossless;
 
 /// Configuration used when encoding pixel data.
@@ -208,8 +209,9 @@ impl DcmfxError for PixelDataEncodeError {
 ///
 #[allow(clippy::result_unit_err)]
 pub fn encode_image_pixel_module(
-  image_pixel_module: &ImagePixelModule,
+  image_pixel_module: ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
+  encode_config: &PixelDataEncodeConfig,
 ) -> Result<ImagePixelModule, PixelDataEncodeError> {
   use transfer_syntax::*;
 
@@ -220,16 +222,25 @@ pub fn encode_image_pixel_module(
     | &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
     | &EXPLICIT_VR_BIG_ENDIAN
     | &DEFLATED_IMAGE_FRAME_COMPRESSION => {
-      native::encode_image_pixel_module(image_pixel_module)
+      native::encode_image_pixel_module(image_pixel_module.clone())
     }
 
     &RLE_LOSSLESS => {
-      rle_lossless::encode_image_pixel_module(image_pixel_module)
+      rle_lossless::encode_image_pixel_module(image_pixel_module.clone())
     }
 
     &JPEG_BASELINE_8BIT => {
-      jpeg_encoder::encode_image_pixel_module(image_pixel_module)
+      jpeg_encoder::encode_image_pixel_module(image_pixel_module.clone())
     }
+
+    &JPEG_2K_LOSSLESS_ONLY => {
+      openjpeg::encode_image_pixel_module(image_pixel_module.clone(), None)
+    }
+
+    &JPEG_2K => openjpeg::encode_image_pixel_module(
+      image_pixel_module.clone(),
+      Some(encode_config.quality),
+    ),
 
     _ => {
       return Err(PixelDataEncodeError::TransferSyntaxNotSupported {
@@ -270,6 +281,18 @@ pub fn encode_monochrome(
         .map(PixelDataFrame::new_from_bytes)
     }
 
+    &JPEG_2K_LOSSLESS_ONLY => {
+      openjpeg::encode_monochrome(image, image_pixel_module, None)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &JPEG_2K => openjpeg::encode_monochrome(
+      image,
+      image_pixel_module,
+      Some(encode_config.quality),
+    )
+    .map(PixelDataFrame::new_from_bytes),
+
     &DEFLATED_IMAGE_FRAME_COMPRESSION => deflate_frame_data(
       native::encode_monochrome(image, image_pixel_module)?,
       encode_config.zlib_compression_level,
@@ -308,6 +331,18 @@ pub fn encode_color(
       jpeg_encoder::encode_color(image, image_pixel_module, encode_config)
         .map(PixelDataFrame::new_from_bytes)
     }
+
+    &JPEG_2K_LOSSLESS_ONLY => {
+      openjpeg::encode_color(image, image_pixel_module, None)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &JPEG_2K => openjpeg::encode_color(
+      image,
+      image_pixel_module,
+      Some(encode_config.quality),
+    )
+    .map(PixelDataFrame::new_from_bytes),
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => {
       let frame = native::encode_color(image, image_pixel_module)

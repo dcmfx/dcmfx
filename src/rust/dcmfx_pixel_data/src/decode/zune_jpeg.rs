@@ -88,12 +88,14 @@ pub fn decode_color(
       PhotometricInterpretation::Rgb => {
         (zune_core::colorspace::ColorSpace::RGB, ColorSpace::Rgb)
       }
-      PhotometricInterpretation::YbrFull => {
-        (zune_core::colorspace::ColorSpace::YCbCr, ColorSpace::Ybr)
-      }
-      PhotometricInterpretation::YbrFull422 => {
-        (zune_core::colorspace::ColorSpace::YCbCr, ColorSpace::Ybr422)
-      }
+      PhotometricInterpretation::YbrFull => (
+        zune_core::colorspace::ColorSpace::YCbCr,
+        ColorSpace::Ybr { is_422: false },
+      ),
+      PhotometricInterpretation::YbrFull422 => (
+        zune_core::colorspace::ColorSpace::YCbCr,
+        ColorSpace::Ybr { is_422: true },
+      ),
       _ => {
         return Err(DataError::new_value_unsupported(format!(
           "Photometric interpretation '{}' is not supported for color JPEG \

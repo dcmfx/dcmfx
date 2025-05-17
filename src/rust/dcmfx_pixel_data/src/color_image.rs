@@ -46,13 +46,37 @@ pub enum ColorImageData {
 }
 
 /// The color space of the color image's data. This is used when unsigned
-/// integer data is being stored,a s it can be either YBR or RGB.
+/// integer data is being stored, as it can be either RGB or YBR.
+///
+/// Ref: PS3.5 C.7.6.3.1.2.
 ///
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ColorSpace {
+  /// Pixel data represent a color image described by red, green, and blue image
+  /// planes. The minimum sample value for each color plane represents minimum
+  /// intensity of the color.
   Rgb,
-  Ybr,
-  Ybr422,
+
+  /// Pixel data represent a color image described by one luminance (Y) and two
+  /// chrominance planes (CB and CR).
+  ///
+  /// Black is represented by Y equal to zero. The absence of color is
+  /// represented by both CB and CR values equal to half full scale.
+  ///
+  /// If [`ColorSpace::Ybr::is_422`] is true then it indicates that the source
+  /// of the CB and CR data was down-sampled as 4:2:2, i.e. half-resolution
+  /// horizontally. Encoders may elect to take advantage of this hint in order
+  /// to themselves output YBR 4:2:2 data instead of full-resolution
+  /// chrominance.
+  Ybr { is_422: bool },
+}
+
+impl ColorSpace {
+  /// Returns whether this color space is YBR.
+  ///
+  pub fn is_ybr(&self) -> bool {
+    matches!(self, Self::Ybr { .. })
+  }
 }
 
 impl ColorImage {
@@ -78,7 +102,7 @@ impl ColorImage {
       ));
     }
 
-    if color_space == ColorSpace::Ybr422 && width % 2 == 1 {
+    if (color_space == ColorSpace::Ybr { is_422: true }) && width % 2 == 1 {
       return Err(DataError::new_value_invalid(
         "Color image in the YBR 422 color space must have even width"
           .to_string(),
@@ -115,7 +139,7 @@ impl ColorImage {
       ));
     }
 
-    if color_space == ColorSpace::Ybr422 && width % 2 == 1 {
+    if (color_space == ColorSpace::Ybr { is_422: true }) && width % 2 == 1 {
       return Err(DataError::new_value_invalid(
         "Color image in the YBR 422 color space must have even width"
           .to_string(),
@@ -152,7 +176,7 @@ impl ColorImage {
       ));
     }
 
-    if color_space == ColorSpace::Ybr422 && width % 2 == 1 {
+    if (color_space == ColorSpace::Ybr { is_422: true }) && width % 2 == 1 {
       return Err(DataError::new_value_invalid(
         "Color image in the YBR 422 color space must have even width"
           .to_string(),
@@ -314,6 +338,66 @@ impl ColorImage {
     ((1u64 << self.bits_stored) - 1) as u32
   }
 
+  /// Converts this color image into RGB color space if it's in the YBR color
+  /// space.
+  ///
+  pub fn convert_to_rgb_color_space(&mut self) {
+    let max_storable_value = f64::from(self.max_storable_value());
+    let scale = 1.0 / max_storable_value;
+
+    match &mut self.data {
+      ColorImageData::U8 { data, color_space } if color_space.is_ybr() => {
+        for pixel in data.chunks_exact_mut(3) {
+          let y: f64 = pixel[0].into();
+          let cb: f64 = pixel[1].into();
+          let cr: f64 = pixel[2].into();
+
+          let rgb = ybr_to_rgb(y * scale, cb * scale, cr * scale);
+
+          pixel[0] = (rgb[0] * max_storable_value).round() as u8;
+          pixel[1] = (rgb[1] * max_storable_value).round() as u8;
+          pixel[2] = (rgb[2] * max_storable_value).round() as u8;
+        }
+
+        *color_space = ColorSpace::Rgb;
+      }
+
+      ColorImageData::U16 { data, color_space } if color_space.is_ybr() => {
+        for pixel in data.chunks_exact_mut(3) {
+          let y: f64 = pixel[0].into();
+          let cb: f64 = pixel[1].into();
+          let cr: f64 = pixel[2].into();
+
+          let rgb = ybr_to_rgb(y * scale, cb * scale, cr * scale);
+
+          pixel[0] = (rgb[0] * max_storable_value).round() as u16;
+          pixel[1] = (rgb[1] * max_storable_value).round() as u16;
+          pixel[2] = (rgb[2] * max_storable_value).round() as u16;
+        }
+
+        *color_space = ColorSpace::Rgb;
+      }
+
+      ColorImageData::U32 { data, color_space } if color_space.is_ybr() => {
+        for pixel in data.chunks_exact_mut(3) {
+          let y: f64 = pixel[0].into();
+          let cb: f64 = pixel[1].into();
+          let cr: f64 = pixel[2].into();
+
+          let rgb = ybr_to_rgb(y * scale, cb * scale, cr * scale);
+
+          pixel[0] = (rgb[0] * max_storable_value).round() as u32;
+          pixel[1] = (rgb[1] * max_storable_value).round() as u32;
+          pixel[2] = (rgb[2] * max_storable_value).round() as u32;
+        }
+
+        *color_space = ColorSpace::Rgb;
+      }
+
+      _ => (),
+    }
+  }
+
   /// Converts this color image to an 8-bit RGB image.
   ///
   pub fn into_rgb_u8_image(
@@ -358,7 +442,7 @@ impl ColorImage {
               }
             }
 
-            ColorSpace::Ybr | ColorSpace::Ybr422 => {
+            ColorSpace::Ybr { .. } => {
               let scale = 1.0 / f64::from(max_storable_value);
 
               for ybr in data.chunks_exact(3) {
@@ -477,7 +561,7 @@ impl ColorImage {
               }
             }
 
-            ColorSpace::Ybr | ColorSpace::Ybr422 => {
+            ColorSpace::Ybr { .. } => {
               let scale = 1.0 / f64::from(max_storable_value);
 
               for ybr in data.chunks_exact(3) {
@@ -582,7 +666,7 @@ impl ColorImage {
           }
         }
 
-        ColorSpace::Ybr | ColorSpace::Ybr422 => {
+        ColorSpace::Ybr { .. } => {
           for ybr in data.chunks_exact(3) {
             let rgb = ybr_to_rgb(
               ybr[0].into() * scale,

@@ -105,8 +105,9 @@ int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size, uint32_t width,
   // Check image dimensions
   if (dinfo.output_width != width || dinfo.output_height != height ||
       dinfo.output_components != (int)samples_per_pixel) {
-    strcpy(error_message,
-           "Image does not have the expected width, height, or samples per pixel");
+    strcpy(
+        error_message,
+        "Image does not have the expected width, height, or samples per pixel");
     (void)jpeg_destroy_decompress(&dinfo);
     return -1;
   };

@@ -665,3 +665,16 @@ pub fn from_uid(uid: String) -> Result(TransferSyntax, Nil) {
     _ -> Error(Nil)
   }
 }
+
+/// Returns whether this transfer syntax is one of the seven JPEG 2000 or
+/// High-Throughput JPEG 2000 transfer syntaxes.
+///
+pub fn is_jpeg_2k(transfer_syntax: TransferSyntax) -> Bool {
+  transfer_syntax == jpeg_2k_lossless_only
+  || transfer_syntax == jpeg_2k
+  || transfer_syntax == jpeg_2k_multi_component_lossless_only
+  || transfer_syntax == jpeg_2k_multi_component
+  || transfer_syntax == high_throughput_jpeg_2k_lossless_only
+  || transfer_syntax == high_throughput_jpeg_2k_with_rpcl_options_lossless_only
+  || transfer_syntax == high_throughput_jpeg_2k
+}

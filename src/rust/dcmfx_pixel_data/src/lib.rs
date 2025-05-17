@@ -38,6 +38,7 @@ pub use stored_value_output_cache::StoredValueOutputCache;
 pub use transforms::{
   P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
   P10PixelDataTranscodeTransform, P10PixelDataTranscodeTransformError,
+  TranscodeImageDataFunctions,
 };
 
 use dcmfx_core::{
@@ -104,6 +105,7 @@ where
     &self,
     target_transfer_syntax: &'static TransferSyntax,
     encode_config: PixelDataEncodeConfig,
+    image_data_functions: Option<TranscodeImageDataFunctions>,
   ) -> Result<DataSet, P10PixelDataTranscodeTransformError>;
 }
 
@@ -168,10 +170,12 @@ impl DataSetPixelDataExtensions for DataSet {
     &self,
     output_transfer_syntax: &'static TransferSyntax,
     encode_config: PixelDataEncodeConfig,
+    image_data_functions: Option<TranscodeImageDataFunctions>,
   ) -> Result<DataSet, P10PixelDataTranscodeTransformError> {
     let mut transcode_transform = P10PixelDataTranscodeTransform::new(
       output_transfer_syntax,
       encode_config,
+      image_data_functions,
     );
 
     let mut data_set_builder = DataSetBuilder::new();

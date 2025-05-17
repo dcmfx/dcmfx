@@ -14,26 +14,20 @@ use crate::{
 /// data.
 ///
 pub fn encode_image_pixel_module(
-  image_pixel_module: &ImagePixelModule,
+  mut image_pixel_module: ImagePixelModule,
 ) -> Result<ImagePixelModule, ()> {
-  let mut image_pixel_module =
-    match image_pixel_module.photometric_interpretation() {
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2
-      | PhotometricInterpretation::PaletteColor { .. }
-      | PhotometricInterpretation::Rgb
-      | PhotometricInterpretation::YbrFull => image_pixel_module.clone(),
+  match image_pixel_module.photometric_interpretation() {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::PaletteColor { .. }
+    | PhotometricInterpretation::Rgb
+    | PhotometricInterpretation::YbrFull => (),
 
-      PhotometricInterpretation::YbrFull422 => {
-        let mut image_pixel_module = image_pixel_module.clone();
-        image_pixel_module
-          .set_photometric_interpretation(PhotometricInterpretation::YbrFull);
+    PhotometricInterpretation::YbrFull422 => image_pixel_module
+      .set_photometric_interpretation(PhotometricInterpretation::YbrFull),
 
-        image_pixel_module
-      }
-
-      _ => return Err(()),
-    };
+    _ => return Err(()),
+  }
 
   image_pixel_module.set_planar_configuration(PlanarConfiguration::Separate);
 
@@ -297,7 +291,7 @@ pub fn encode_color(
     | (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr | ColorSpace::Ybr422,
+        color_space: ColorSpace::Ybr { .. },
       },
       PhotometricInterpretation::YbrFull,
     ) => {
@@ -324,7 +318,7 @@ pub fn encode_color(
     | (
       ColorImageData::U16 {
         data,
-        color_space: ColorSpace::Ybr | ColorSpace::Ybr422,
+        color_space: ColorSpace::Ybr { .. },
       },
       PhotometricInterpretation::YbrFull,
     ) => {
@@ -367,7 +361,7 @@ pub fn encode_color(
     | (
       ColorImageData::U32 {
         data,
-        color_space: ColorSpace::Ybr | ColorSpace::Ybr422,
+        color_space: ColorSpace::Ybr { .. },
       },
       PhotometricInterpretation::YbrFull,
     ) => {

@@ -292,8 +292,7 @@ pub fn decode_color(
   let bits_stored = image_pixel_module.bits_stored();
 
   let color_space = match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::YbrFull => ColorSpace::Ybr,
-    PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr422,
+    PhotometricInterpretation::YbrFull => ColorSpace::Ybr { is_422: false },
     _ => ColorSpace::Rgb,
   };
 

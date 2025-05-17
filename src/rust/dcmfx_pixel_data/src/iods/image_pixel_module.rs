@@ -305,7 +305,7 @@ impl ImagePixelModule {
   pub fn set_photometric_interpretation(
     &mut self,
     new_photometric_interpretation: PhotometricInterpretation,
-  ) -> &Self {
+  ) {
     self.photometric_interpretation = new_photometric_interpretation;
 
     match self.photometric_interpretation {
@@ -321,8 +321,6 @@ impl ImagePixelModule {
         };
       }
     }
-
-    self
   }
 
   /// If the samples per pixel is three, sets the planar configuration. If the
@@ -501,6 +499,12 @@ impl ImagePixelModule {
       dictionary::PHOTOMETRIC_INTERPRETATION.tag,
       self.photometric_interpretation.to_data_element_value(),
     );
+
+    if let PhotometricInterpretation::PaletteColor { palette } =
+      &self.photometric_interpretation
+    {
+      data_set.merge(palette.to_data_set());
+    }
 
     data_set.insert(
       dictionary::ROWS.tag,
@@ -844,6 +848,13 @@ impl PhotometricInterpretation {
   ///
   pub fn is_palette_color(&self) -> bool {
     matches!(self, Self::PaletteColor { .. })
+  }
+
+  /// Returns whether this photometric interpretation is
+  /// [`PhotometricInterpretation::Rgb`].
+  ///
+  pub fn is_rgb(&self) -> bool {
+    self == &Self::Rgb
   }
 
   /// Converts this photometric interpretation to a data element value that uses

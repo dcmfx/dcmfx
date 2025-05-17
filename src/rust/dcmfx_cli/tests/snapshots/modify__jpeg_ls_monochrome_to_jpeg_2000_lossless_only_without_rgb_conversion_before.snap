@@ -1,0 +1,25 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    64 bytes] "1.2.826.0. …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG-LS Lossy (Near-Lossless) Image Compression)
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    14 bytes] "PYDICOM 3. …
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0008,0018) UI SOP Instance UID                     [    64 bytes] "1.2.826.0. …
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 50
+(0028,0011) US Columns                              [     2 bytes] 10
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     4 bytes] [00 00 00 …
+  (FFFE,E000) Item                                    [   150 bytes] [FF D8 FF …
+(FFFE,E0DD) Sequence Delimitation Item

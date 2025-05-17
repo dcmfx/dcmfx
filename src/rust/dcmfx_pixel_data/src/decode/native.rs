@@ -309,8 +309,8 @@ pub fn decode_color(
   let color_space = match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb => ColorSpace::Rgb,
-    PhotometricInterpretation::YbrFull => ColorSpace::Ybr,
-    PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr422,
+    PhotometricInterpretation::YbrFull => ColorSpace::Ybr { is_422: false },
+    PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr { is_422: true },
     _ => {
       return Err(DataError::new_value_unsupported(format!(
         "Photometric interpretation '{}' is not supported for native color \
@@ -861,7 +861,7 @@ mod tests {
 
     assert_eq!(
       decode_color(&image_pixel_module, &data),
-      ColorImage::new_u8(2, 2, data, ColorSpace::Ybr, 8)
+      ColorImage::new_u8(2, 2, data, ColorSpace::Ybr { is_422: false }, 8)
     );
   }
 
@@ -888,7 +888,7 @@ mod tests {
         2,
         2,
         vec![142, 111, 148, 122, 111, 148, 118, 101, 123, 122, 101, 123],
-        ColorSpace::Ybr422,
+        ColorSpace::Ybr { is_422: true },
         8
       )
     );

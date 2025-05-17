@@ -142,7 +142,7 @@ pub fn decode_color(
   let color_space = if image_pixel_module.photometric_interpretation()
     == &PhotometricInterpretation::YbrFull
   {
-    ColorSpace::Ybr
+    ColorSpace::Ybr { is_422: false }
   } else {
     ColorSpace::Rgb
   };

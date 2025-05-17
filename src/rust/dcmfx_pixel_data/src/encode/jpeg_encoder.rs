@@ -13,32 +13,22 @@ use super::PixelDataEncodeConfig;
 /// Returns the Image Pixel Module resulting from encoding using jpeg-encoder.
 ///
 pub fn encode_image_pixel_module(
-  image_pixel_module: &ImagePixelModule,
+  mut image_pixel_module: ImagePixelModule,
 ) -> Result<ImagePixelModule, ()> {
-  let mut image_pixel_module = image_pixel_module.clone();
-
   match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => {
-      image_pixel_module.set_photometric_interpretation(
-        image_pixel_module.photometric_interpretation().clone(),
-      );
-    }
+    | PhotometricInterpretation::YbrFull => (),
 
-    PhotometricInterpretation::YbrFull422 => {
-      image_pixel_module
-        .set_photometric_interpretation(PhotometricInterpretation::YbrFull);
-    }
+    PhotometricInterpretation::YbrFull422 => image_pixel_module
+      .set_photometric_interpretation(PhotometricInterpretation::YbrFull),
 
-    PhotometricInterpretation::PaletteColor { .. } => {
-      image_pixel_module
-        .set_photometric_interpretation(PhotometricInterpretation::Rgb);
-    }
+    PhotometricInterpretation::PaletteColor { .. } => image_pixel_module
+      .set_photometric_interpretation(PhotometricInterpretation::Rgb),
 
     _ => return Err(()),
-  };
+  }
 
   Ok(image_pixel_module)
 }
@@ -100,7 +90,7 @@ pub fn encode_color(
     (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr | ColorSpace::Ybr422,
+        color_space: ColorSpace::Ybr { .. },
       },
       PhotometricInterpretation::YbrFull,
     ) => encode(data, width, height, jpeg_encoder::ColorType::Ycbcr, quality),
@@ -112,10 +102,8 @@ pub fn encode_color(
       let mut rgb_data = Vec::with_capacity(data.len() * 3);
 
       for index in data {
-        let pixel = palette.lookup(i64::from(*index));
-        rgb_data.push(pixel[0] as u8);
-        rgb_data.push(pixel[1] as u8);
-        rgb_data.push(pixel[2] as u8);
+        let pixel = palette.lookup_normalized_u8(i64::from(*index));
+        rgb_data.extend_from_slice(&pixel);
       }
 
       encode(

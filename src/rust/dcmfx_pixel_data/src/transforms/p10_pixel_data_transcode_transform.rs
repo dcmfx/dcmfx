@@ -17,10 +17,10 @@ use dcmfx_p10::{
 };
 
 use crate::{
-  P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
-  PixelDataDecodeError, PixelDataEncodeConfig, PixelDataEncodeError,
-  PixelDataFrame, PixelDataRenderer, decode, encode,
-  iods::{ImagePixelModule, image_pixel_module::BitsAllocated},
+  ColorImage, MonochromeImage, P10PixelDataFrameTransform,
+  P10PixelDataFrameTransformError, PixelDataDecodeError, PixelDataEncodeConfig,
+  PixelDataEncodeError, PixelDataFrame, PixelDataRenderer, decode, encode,
+  iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 
 /// This transform takes a stream of DICOM P10 tokens and converts it to use a
@@ -30,41 +30,82 @@ use crate::{
 /// interpretation.
 ///
 pub struct P10PixelDataTranscodeTransform {
-  // The transfer syntax of the incoming P10 token stream. This is set when the
-  // File Meta Information token is received.
+  /// The transfer syntax of the incoming P10 token stream. This is set when the
+  /// File Meta Information token is received.
   input_transfer_syntax: &'static TransferSyntax,
 
-  // The output transfer syntax being transcoded to.
+  /// The output transfer syntax being transcoded to.
   output_transfer_syntax: &'static TransferSyntax,
 
-  // Configuration for pixel data encoding.
+  /// Configuration for pixel data encoding.
   encode_config: PixelDataEncodeConfig,
 
-  // Transform that extracts a `PixelDataRenderer` from the token stream so that
-  // incoming frames can be decoded.
+  /// Optional user-provided functions that are able to alter the Image Pixel
+  /// Module as well as the image data for decoded frames prior to them being
+  /// encoded into the output transfer syntax.
+  image_data_functions: Option<TranscodeImageDataFunctions>,
+
+  /// Transform that extracts a `PixelDataRenderer` from the token stream so
+  /// that incoming frames can be decoded.
   pixel_data_renderer_transform: P10CustomTypeTransform<PixelDataRenderer>,
 
-  // output_image_pixel_data_module_transform: P10CustomTypeTransform<ImagePix>,
-
-  // Transform that extracts `PixelDataFrame`s from the token stream one by one
-  // as they become available.
+  /// Transform that extracts `PixelDataFrame`s from the token stream one by one
+  /// as they become available.
   p10_pixel_data_frame_transform: P10PixelDataFrameTransform,
 
-  // Filter that removes the existing '(7FE0,0010) Pixel Data' data element from
-  // the main data set so it can be replaced with a transcoded one.
+  /// Filter that removes the existing '(7FE0,0010) Pixel Data' data element
+  /// from the main data set so it can be replaced with a transcoded one.
   pixel_data_remove_filter: P10FilterTransform,
 
-  // When transcoding to a transfer syntax that uses native pixel data, the
-  // number of bytes of pixel data still to be transcoded. This is reduced with
-  // every frame of pixel data that's emitted.
+  /// When transcoding to a transfer syntax that uses native pixel data, the
+  /// number of bytes of pixel data still to be transcoded. This is reduced with
+  /// every frame of pixel data that's emitted.
   native_pixel_data_bytes_remaining: u32,
 
-  // Tokens that are buffered while waiting for the Image Pixel Module tokens
-  // to be fully received. These tokens may then altered in the output to change
-  // the value of, e.g. the photometric interpretation.
+  /// Tokens that are buffered while waiting for the Image Pixel Module tokens
+  /// to be fully received. These tokens may then altered in the output to
+  /// change the value of, e.g. the photometric interpretation.
   image_pixel_module_transform_token_buffer: Option<Vec<P10Token>>,
 
+  /// The Image Pixel Module for images following decoding and alteration by
+  /// the relevant image data function (if specified). This is set once the
+  /// Image Pixel Module is received via the incoming stream of tokens.
+  decoded_image_pixel_module: Option<ImagePixelModule>,
+
+  /// The Image Pixel Module for the output pixel data following encoding.
+  /// This is set once the Image Pixel Module is received via the incoming
+  /// stream of tokens.
   output_image_pixel_module: Option<ImagePixelModule>,
+}
+
+/// Holds three user-provided functions that can alter the Image Pixel Module as
+/// well as the image data for decoded frames prior to them being encoded into
+/// the output transfer syntax.
+///
+/// These functions allow for arbitrary modifications to frame structure and
+/// content during transcoding, e.g. changing color space, resizing, cropping,
+/// rotating, etc.
+///
+/// The functions must work together to produce well-formed output, e.g. if
+/// [`TranscodeImageDataFunctions::process_color_image()`] changes the color
+/// space under certain circumstances then
+/// [`TranscodeImageDataFunctions::process_image_pixel_module()`] must match its
+/// behavior exactly with corresponding changes to the Image Pixel Module.
+///
+pub struct TranscodeImageDataFunctions {
+  pub process_image_pixel_module: Box<dyn FnMut(&mut ImagePixelModule)>,
+  pub process_monochrome_image: Box<dyn FnMut(&mut MonochromeImage)>,
+  pub process_color_image: Box<dyn FnMut(&mut ColorImage)>,
+}
+
+impl Default for TranscodeImageDataFunctions {
+  fn default() -> Self {
+    Self {
+      process_image_pixel_module: Box::new(|_| {}),
+      process_monochrome_image: Box::new(|_| {}),
+      process_color_image: Box::new(|_| {}),
+    }
+  }
 }
 
 impl P10PixelDataTranscodeTransform {
@@ -74,11 +115,13 @@ impl P10PixelDataTranscodeTransform {
   pub fn new(
     output_transfer_syntax: &'static TransferSyntax,
     encode_config: PixelDataEncodeConfig,
+    image_data_functions: Option<TranscodeImageDataFunctions>,
   ) -> Self {
     Self {
       input_transfer_syntax: &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
       output_transfer_syntax,
       encode_config,
+      image_data_functions,
       pixel_data_renderer_transform:
         P10CustomTypeTransform::<PixelDataRenderer>::new_for_iod_module(),
       pixel_data_remove_filter: P10FilterTransform::new(Box::new(
@@ -89,6 +132,7 @@ impl P10PixelDataTranscodeTransform {
       p10_pixel_data_frame_transform: P10PixelDataFrameTransform::new(),
       native_pixel_data_bytes_remaining: 0,
       image_pixel_module_transform_token_buffer: None,
+      decoded_image_pixel_module: None,
       output_image_pixel_module: None,
     }
   }
@@ -127,12 +171,16 @@ impl P10PixelDataTranscodeTransform {
       };
 
     // If the input and output transfer syntaxes both use native pixel data then
-    // no transcoding is needed. Transcoding is performed when the input and
-    // output transfer syntaxes are the same because different compression
-    // quality and/or effort settings may be in use, e.g. to increase the lossy
-    // compression on pixel data while keeping it in the same transfer syntax.
+    // no transcoding is needed, so long as there are no processing functions
+    // specified that may alter the decoded frames.
+    //
+    // Transcoding is performed when the input and output transfer syntaxes are
+    // the same because different encoding config may be in use, e.g. to
+    // increase the lossy compression on pixel data while keeping it in the same
+    // transfer syntax.
     if !self.input_transfer_syntax.is_encapsulated
       && !self.output_transfer_syntax.is_encapsulated
+      && self.image_data_functions.is_none()
     {
       return Ok(vec![updated_token]);
     }
@@ -211,38 +259,44 @@ impl P10PixelDataTranscodeTransform {
     if let Some(token_buffer) =
       &mut self.image_pixel_module_transform_token_buffer
     {
-      // If this isn't the start of a data element then just add it to the token
-      // buffer
-      let P10Token::DataElementHeader { tag, path, .. } = token else {
-        token_buffer.push(token.clone());
-        return Ok(vec![]);
-      };
+      match token {
+        P10Token::DataElementHeader { tag, path, .. }
+        | P10Token::SequenceStart { tag, path, .. }
+          if !is_image_pixel_module_data_element(*tag) && path.is_root() =>
+        {
+          // Make any required changes/updates to the tokens for the Image Pixel
+          // Module
+          let (
+            mut tokens,
+            decoded_image_pixel_module,
+            output_image_pixel_module,
+          ) = Self::transform_image_pixel_module_tokens(
+            token_buffer,
+            self.input_transfer_syntax,
+            self.output_transfer_syntax,
+            &self.encode_config,
+            &mut self.image_data_functions,
+          )?;
 
-      // If this next data element is within the bounds of the Image Pixel
-      // Module, i.e. buffering is still in progress, then accumulate it into
-      // the token buffer
-      if is_image_pixel_module_data_element(*tag) || !path.is_root() {
-        token_buffer.push(token.clone());
-        return Ok(vec![]);
+          self.decoded_image_pixel_module = Some(decoded_image_pixel_module);
+          self.output_image_pixel_module = Some(output_image_pixel_module);
+
+          tokens.push(token.clone());
+
+          // Token buffering for the Image Pixel Module is now complete
+          self.image_pixel_module_transform_token_buffer = None;
+
+          Ok(tokens)
+        }
+
+        // This token is within the bounds of the Image Pixel Module, i.e.
+        // buffering is still in progress, so accumulate it into the token
+        // buffer
+        _ => {
+          token_buffer.push(token.clone());
+          Ok(vec![])
+        }
       }
-
-      // Make any required changes/updates to the tokens for the Image Pixel
-      // Module
-      let (mut tokens, output_image_pixel_module) =
-        Self::transform_image_pixel_module_tokens(
-          token_buffer,
-          self.input_transfer_syntax,
-          self.output_transfer_syntax,
-        )?;
-
-      self.output_image_pixel_module = Some(output_image_pixel_module);
-
-      tokens.push(token.clone());
-
-      // Token buffering for the Image Pixel Module is now complete
-      self.image_pixel_module_transform_token_buffer = None;
-
-      Ok(tokens)
     } else {
       // Token buffering isn't currently active, so start buffering if this is
       // the first data element for the Image Pixel Module
@@ -270,8 +324,10 @@ impl P10PixelDataTranscodeTransform {
     token_buffer: &[P10Token],
     input_transfer_syntax: &'static TransferSyntax,
     output_transfer_syntax: &'static TransferSyntax,
+    encode_config: &PixelDataEncodeConfig,
+    image_data_functions: &mut Option<TranscodeImageDataFunctions>,
   ) -> Result<
-    (Vec<P10Token>, ImagePixelModule),
+    (Vec<P10Token>, ImagePixelModule, ImagePixelModule),
     P10PixelDataTranscodeTransformError,
   > {
     // Construct the Image Pixel Module from the tokens in the buffer
@@ -287,12 +343,13 @@ impl P10PixelDataTranscodeTransform {
       .add_token(&P10Token::End)
       .map_err(map_p10_custom_type_transform_error)?;
 
-    let image_pixel_module = image_pixel_module_transform.get_output().unwrap();
+    let mut image_pixel_module =
+      image_pixel_module_transform.get_output().unwrap().clone();
 
     // Transcoding of frames that aren't a whole number of bytes isn't
-    // supported. This is an extremely rare occurence as it requires multi-frame
-    // data, bits allocated of one, and a pixel count that's not a multiple of
-    // eight.
+    // supported. This is an extremely rare occurrence as it requires
+    // multi-frame data, bits allocated of one, and a pixel count that's not a
+    // multiple of eight.
     if image_pixel_module.bits_allocated() == BitsAllocated::One
       && image_pixel_module.pixel_count() % 8 != 0
     {
@@ -313,11 +370,21 @@ impl P10PixelDataTranscodeTransform {
       .map_err(P10PixelDataTranscodeTransformError::PixelDataDecodeError)?;
 
     // Determine the output Image Pixel Module after encoding
+    image_pixel_module.set_photometric_interpretation(
+      decoded_photometric_interpretation.clone(),
+    );
+
+    // Pass through the relevant image data function if specified
+    if let Some(image_data_functions) = image_data_functions {
+      (image_data_functions.process_image_pixel_module)(
+        &mut image_pixel_module,
+      );
+    }
+
     let output_image_pixel_module = encode::encode_image_pixel_module(
-      image_pixel_module.clone().set_photometric_interpretation(
-        decoded_photometric_interpretation.clone(),
-      ),
+      image_pixel_module.clone(),
       output_transfer_syntax,
+      encode_config,
     )
     .map_err(P10PixelDataTranscodeTransformError::PixelDataEncodeError)?;
 
@@ -351,14 +418,18 @@ impl P10PixelDataTranscodeTransform {
 
     insert_transform.flush(&mut transformed_tokens);
 
-    Ok((transformed_tokens, output_image_pixel_module))
+    Ok((
+      transformed_tokens,
+      image_pixel_module,
+      output_image_pixel_module,
+    ))
   }
 
   /// Transcodes a single [`PixelDataFrame`] into a frame for the target
   /// transfer syntax.
   ///
   fn transcode_frame(
-    &self,
+    &mut self,
     input_frame: &mut PixelDataFrame,
   ) -> Result<RcByteSlice, P10PixelDataTranscodeTransformError> {
     let pixel_data_renderer =
@@ -366,12 +437,17 @@ impl P10PixelDataTranscodeTransform {
 
     let output_frame = if pixel_data_renderer.image_pixel_module.is_color() {
       // Decode using the input Image Pixel Module
-      let image = crate::decode::decode_color(
+      let mut image = crate::decode::decode_color(
         input_frame,
         self.input_transfer_syntax,
         &pixel_data_renderer.image_pixel_module,
       )
       .map_err(P10PixelDataTranscodeTransformError::DataError)?;
+
+      // Pass through the relevant image data function if specified
+      if let Some(image_data_functions) = &mut self.image_data_functions {
+        (image_data_functions.process_color_image)(&mut image);
+      }
 
       // Encode using the output Image Pixel Module
       crate::encode::encode_color(
@@ -382,12 +458,17 @@ impl P10PixelDataTranscodeTransform {
       )
     } else {
       // Decode using the input Image Pixel Module
-      let image = crate::decode::decode_monochrome(
+      let mut image = crate::decode::decode_monochrome(
         input_frame,
         self.input_transfer_syntax,
         &pixel_data_renderer.image_pixel_module,
       )
       .map_err(P10PixelDataTranscodeTransformError::DataError)?;
+
+      // Pass through the relevant image data function if specified
+      if let Some(image_data_functions) = &mut self.image_data_functions {
+        (image_data_functions.process_monochrome_image)(&mut image);
+      }
 
       // Encode using the output Image Pixel Module
       crate::encode::encode_monochrome(
@@ -412,11 +493,7 @@ impl P10PixelDataTranscodeTransform {
   ) -> Result<Vec<P10Token>, P10PixelDataTranscodeTransformError> {
     // Get the Image Pixel Module. This is safe to unwrap because it must have
     // been fully received by the time pixel data is encountered.
-    let image_pixel_module = &self
-      .pixel_data_renderer_transform
-      .get_output()
-      .unwrap()
-      .image_pixel_module;
+    let image_pixel_module = self.decoded_image_pixel_module.as_ref().unwrap();
 
     let vr = if u8::from(image_pixel_module.bits_allocated()) <= 8 {
       ValueRepresentation::OtherByteString

@@ -107,6 +107,16 @@ fn rle_lossless_to_explicit_vr_little_endian() {
 }
 
 #[test]
+fn explicit_vr_little_endian_palette_color_to_rle_lossless() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "rle-lossless",
+    "explicit_vr_little_endian_palette_color_to_rle_lossless",
+    &[],
+  );
+}
+
+#[test]
 fn rle_lossless_to_deflated_explicit_vr_little_endian() {
   modify_transfer_syntax(
     "../../../test/assets/fo-dicom/D_CLUNIE_CT1_RLE_FRAGS.dcm",
@@ -133,6 +143,16 @@ fn jpeg_baseline_to_rle_lossless() {
     "rle-lossless",
     "jpeg_baseline_to_rle_lossless",
     &[],
+  );
+}
+
+#[test]
+fn jpeg_baseline_to_rle_lossless_with_rgb_conversion() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+    "implicit-vr-little-endian",
+    "jpeg_baseline_to_rle_lossless_with_rgb_conversion",
+    &["--ybr-to-rgb", "true"],
   );
 }
 
@@ -186,6 +206,126 @@ fn palette_color_to_jpeg_baseline() {
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-baseline-8bit",
     "palette_color_to_jpeg_baseline",
+    &[],
+  );
+}
+
+#[test]
+fn monochrome_jpeg_xl_to_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "jpeg-2k-lossless-only",
+    "monochrome_jpeg_xl_to_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn palette_color_to_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "jpeg-2k-lossless-only",
+    "palette_color_to_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_rgb_to_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "jpeg-2k-lossless-only",
+    "explicit_vr_little_endian_rgb_to_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_rgb_to_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "jpeg-2k",
+    "explicit_vr_little_endian_rgb_to_jpeg_2000",
+    &["--quality", "10"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_ybr_to_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
+    "jpeg-2k-lossless-only",
+    "explicit_vr_little_endian_ybr_to_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_ybr_to_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
+    "jpeg-2k",
+    "explicit_vr_little_endian_ybr_to_jpeg_2000",
+    &["--quality", "25"],
+  );
+}
+
+#[test]
+fn rle_lossless_rgb_16_bit_to_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
+    "jpeg-2k-lossless-only",
+    "rle_lossless_rgb_16_bit_to_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn rle_lossless_rgb_16_bit_to_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
+    "jpeg-2k",
+    "rle_lossless_rgb_16_bit_to_jpeg_2000",
+    &["--quality", "40"],
+  );
+}
+
+#[test]
+fn jpeg_baseline_to_jpeg_2000_lossless_only_without_rgb_conversion() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+    "jpeg-2k-lossless-only",
+    "jpeg_baseline_to_jpeg_2000_lossless_only_without_rgb_conversion",
+    &["--ybr-to-rgb", "false"],
+  );
+}
+
+#[test]
+fn jpeg_baseline_to_jpeg_2000_without_rgb_conversion() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+    "jpeg-2k",
+    "jpeg_baseline_to_jpeg_2000_without_rgb_conversion",
+    &["--ybr-to-rgb", "false"],
+  );
+}
+
+#[test]
+fn jpeg_ls_monochrome_to_jpeg_2000_lossless_only_without_rgb_conversion() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm",
+    "jpeg-2k-lossless-only",
+    "jpeg_ls_monochrome_to_jpeg_2000_lossless_only_without_rgb_conversion",
+    &[],
+  );
+}
+
+#[test]
+fn monochrome_jpeg_xl_to_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "jpeg-2k",
+    "monochrome_jpeg_xl_to_jpeg_2000",
     &[],
   );
 }

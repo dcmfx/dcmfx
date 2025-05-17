@@ -7,7 +7,10 @@ use rand::Rng;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
-use dcmfx::pixel_data::*;
+use dcmfx::pixel_data::{
+  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
+  *,
+};
 
 use crate::utils::prompt_to_overwrite_if_exists;
 use crate::{InputSource, transfer_syntax_arg::TransferSyntaxArg, utils};
@@ -57,6 +60,7 @@ pub struct ModifyArgs {
   #[arg(
     long,
     short,
+    help_heading = "Transcoding",
     help = "The transfer syntax for the output DICOM P10 file. Pixel data will \
       be automatically transcoded. For some transfer syntaxes additional \
       arguments are available to control image compression."
@@ -66,12 +70,41 @@ pub struct ModifyArgs {
   #[arg(
     long,
     short,
-    help = "When transcoding to the 'jpeg-baseline-8bit' transfer syntax, \
-      specifies the JPEG quality level in the range 1-100.",
+    help_heading = "Transcoding",
+    help = "When transcoding to a lossy transfer syntax, specifies the \
+      compression quality in the range 1-100. A quality of 100 does not result \
+      in lossless compression.",
     default_value_t = 85,
     value_parser = clap::value_parser!(u8).range(1..=100),
   )]
   quality: u8,
+
+  #[clap(
+    long,
+    help_heading = "Transcoding",
+    help = "When transcoding pixel data using --transfer-syntax, this \
+      specifies whether to perform a color space conversion on data in the YBR \
+      color space to convert it to the RGB color space prior to encoding it \
+      for the output transfer syntax.\n\
+      \n\
+      This may improve the compatibility of the output DICOM file, \
+      particularly when targeting a JPEG 2000 transfer syntax, as some viewers \
+      don't correctly handle the 'YBR_FULL' photometric interpretation with \
+      JPEG 2000. JPEG 2000 compression ratios may also be improved compared to \
+      using the 'YBR_FULL' photometric interpretation.\n\
+      \n\
+      Using this option does not guarantee that the output photometric \
+      interpretation will be 'RGB', because that depends on the behavior of \
+      the encoder for the output transfer syntax. E.g. for JPEG 2000, using \
+      this option will result either the 'YBR_ICT' or 'YBR_RCT' photometric \
+      interpretations being used by the output DICOM P10 file.\n\
+      \n\
+      This option has no effect on the transcoding of monochrome pixel data.\n\
+      \n\
+      Defaults to false, except when --transfer-syntax specifies one of the \
+      seven JPEG 2000 transfer syntaxes, in which case it defaults to true."
+  )]
+  ybr_to_rgb: Option<bool>,
 
   #[arg(
     long,
@@ -230,13 +263,33 @@ fn modify_input_source(
   // Create a filter transform for anonymization and tag deletion if needed
   let tags_to_delete = args.delete_tag.clone();
   let anonymize = args.anonymize;
-  let filter_context = if anonymize || !tags_to_delete.is_empty() {
+  let filter_transform = if anonymize || !tags_to_delete.is_empty() {
     Some(P10FilterTransform::new(Box::new(
       move |tag, vr, _length, _location| {
         (!anonymize || dcmfx::anonymize::filter_tag(tag, vr))
           && !tags_to_delete.contains(&tag)
       },
     )))
+  } else {
+    None
+  };
+
+  // Create an insert transform that sets '(0028,2110) Lossy Image Compression'
+  // if a lossy transfer syntax is being transcoded into
+  let insert_transform = if let Some(transfer_syntax) = args.transfer_syntax {
+    if transfer_syntax == TransferSyntaxArg::JpegBaseline8Bit
+      || transfer_syntax == TransferSyntaxArg::Jpeg2k
+    {
+      let mut lossy_image_compression = DataSet::new();
+      lossy_image_compression.insert(
+        dictionary::LOSSY_IMAGE_COMPRESSION.tag,
+        DataElementValue::new_code_string(&["01"]).unwrap(),
+      );
+
+      Some(P10InsertTransform::new(lossy_image_compression))
+    } else {
+      None
+    }
   } else {
     None
   };
@@ -260,6 +313,7 @@ fn modify_input_source(
       Some(P10PixelDataTranscodeTransform::new(
         output_transfer_syntax.as_transfer_syntax(),
         pixel_data_encode_config,
+        get_transcode_image_data_functions(args),
       ))
     } else {
       None
@@ -273,7 +327,8 @@ fn modify_input_source(
     input_stream,
     tmp_output_filename.as_ref().unwrap_or(&output_filename),
     write_config,
-    filter_context,
+    filter_transform,
+    insert_transform,
     pixel_data_transcode_transform,
   )?;
 
@@ -296,6 +351,56 @@ fn modify_input_source(
   Ok(())
 }
 
+/// Returns the image data functions to use when transcoding pixel data.
+///
+/// Currently the only supported modification to pixel data during transcoding
+/// is color space conversion from YBR to RGB.
+///
+fn get_transcode_image_data_functions(
+  args: &ModifyArgs,
+) -> Option<TranscodeImageDataFunctions> {
+  // Determine if transcoding to a JPEG 2000 transfer syntax
+  let is_jpeg_2k = match args.transfer_syntax {
+    Some(transfer_syntax) => transfer_syntax.as_transfer_syntax().is_jpeg_2k(),
+    None => false,
+  };
+
+  // YBR to RGB conversion defaults to true when transcoding to JPEG 2000
+  let convert_ybr_to_rgb = args.ybr_to_rgb.unwrap_or(is_jpeg_2k);
+
+  // If YBR to RGB conversion is enabled then setup image data functions to
+  // achieve this. These are called during pixel data transcoding.
+  if convert_ybr_to_rgb {
+    Some(TranscodeImageDataFunctions {
+      process_image_pixel_module: Box::new(
+        |image_pixel_module: &mut ImagePixelModule| {
+          // If the decoded photometric interpretation is YBR that will flow
+          // through into the color space of the decoded color image then change
+          // the photometric interpretation to RGB. Other YBR photometric
+          // interpretations such as `YbrIct` and `YbrRct` used by JPEG 2000 are
+          // only used internally in the encoded pixel data and are always
+          // converted from/to RGB when interfacing with the outside world, so
+          // are not considered here.
+          if image_pixel_module.photometric_interpretation()
+            == &PhotometricInterpretation::YbrFull
+            || image_pixel_module.photometric_interpretation()
+              == &PhotometricInterpretation::YbrFull422
+          {
+            image_pixel_module
+              .set_photometric_interpretation(PhotometricInterpretation::Rgb);
+          }
+        },
+      ),
+
+      process_monochrome_image: Box::new(|_image| {}),
+
+      process_color_image: Box::new(|image| image.convert_to_rgb_color_space()),
+    })
+  } else {
+    None
+  }
+}
+
 /// Rewrites by streaming the tokens of the DICOM P10 straight to the output
 /// file.
 ///
@@ -303,7 +408,8 @@ fn streaming_rewrite(
   mut input_stream: Box<dyn Read>,
   output_filename: &PathBuf,
   write_config: P10WriteConfig,
-  mut filter_context: Option<P10FilterTransform>,
+  mut filter_transform: Option<P10FilterTransform>,
+  mut insert_transform: Option<P10InsertTransform>,
   mut pixel_data_transcode_transform: Option<P10PixelDataTranscodeTransform>,
 ) -> Result<(), ModifyCommandError> {
   // Open output stream
@@ -346,15 +452,30 @@ fn streaming_rewrite(
       tokens = new_tokens
     }
 
-    // Pass tokens through the filter if one is specified
-    let tokens = if let Some(filter_context) = filter_context.as_mut() {
+    // Pass tokens through the filter transform if one is specified
+    let tokens = if let Some(filter_transform) = filter_transform.as_mut() {
       tokens.into_iter().try_fold(vec![], |mut acc, token| {
-        if filter_context
+        if filter_transform
           .add_token(&token)
           .map_err(ModifyCommandError::P10Error)?
         {
           acc.push(token);
         }
+
+        Ok(acc)
+      })
+    } else {
+      Ok(tokens)
+    }?;
+
+    // Pass tokens through the insert transform if one is specified
+    let tokens = if let Some(insert_transform) = insert_transform.as_mut() {
+      tokens.into_iter().try_fold(vec![], |mut acc, token| {
+        acc.extend(
+          insert_transform
+            .add_token(&token)
+            .map_err(ModifyCommandError::P10Error)?,
+        );
 
         Ok(acc)
       })

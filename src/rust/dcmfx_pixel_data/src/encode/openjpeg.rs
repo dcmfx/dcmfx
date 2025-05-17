@@ -1,0 +1,291 @@
+#[cfg(not(feature = "std"))]
+use alloc::{boxed::Box, string::ToString, vec::Vec};
+
+use crate::{
+  ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
+  color_image::ColorImageData,
+  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
+  monochrome_image::MonochromeImageData,
+};
+
+/// Returns the Image Pixel Module resulting from encoding using OpenJPEG.
+///
+pub fn encode_image_pixel_module(
+  mut image_pixel_module: ImagePixelModule,
+  quality: Option<u8>,
+) -> Result<ImagePixelModule, ()> {
+  match image_pixel_module.photometric_interpretation() {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2
+    | PhotometricInterpretation::YbrFull => (),
+
+    // Palette color is only permitted for lossless JPEG 2000 encodes
+    PhotometricInterpretation::PaletteColor { .. } => {
+      if quality.is_some() {
+        return Err(());
+      }
+    }
+
+    // RGB data will be stored as YBR_RCT for lossless compression, and YBR_ICT
+    // for lossy compression
+    PhotometricInterpretation::Rgb => {
+      if quality.is_some() {
+        image_pixel_module
+          .set_photometric_interpretation(PhotometricInterpretation::YbrIct);
+      } else {
+        image_pixel_module
+          .set_photometric_interpretation(PhotometricInterpretation::YbrRct);
+      }
+    }
+
+    // YBR_FULL_422 is expanded to YBR_FULL because YBR_FULL_422 isn't supported
+    // by the JPEG 2000 transfer syntaxes
+    //
+    // Ref: PS3.5 Table 8.2.4-1.
+    PhotometricInterpretation::YbrFull422 => {
+      image_pixel_module
+        .set_photometric_interpretation(PhotometricInterpretation::YbrFull);
+    }
+
+    _ => return Err(()),
+  };
+
+  Ok(image_pixel_module)
+}
+
+/// Encodes a [`MonochromeImage`] into JPEG 2000 raw bytes using OpenJPEG.
+///
+pub fn encode_monochrome(
+  image: &MonochromeImage,
+  image_pixel_module: &ImagePixelModule,
+  quality: Option<u8>,
+) -> Result<Vec<u8>, PixelDataEncodeError> {
+  let width = image.width();
+  let height = image.height();
+
+  match (
+    image.data(),
+    image_pixel_module.photometric_interpretation(),
+  ) {
+    (
+      MonochromeImageData::I8(data),
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => encode(
+      bytemuck::cast_slice(data),
+      width,
+      height,
+      image_pixel_module,
+      false,
+      quality,
+    ),
+
+    (
+      MonochromeImageData::U8(data),
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => encode(data, width, height, image_pixel_module, false, quality),
+
+    (
+      MonochromeImageData::I16(data),
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => encode(
+      bytemuck::cast_slice(data),
+      width,
+      height,
+      image_pixel_module,
+      false,
+      quality,
+    ),
+
+    (
+      MonochromeImageData::U16(data),
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+    ) => encode(
+      bytemuck::cast_slice(data),
+      width,
+      height,
+      image_pixel_module,
+      false,
+      quality,
+    ),
+
+    _ => Err(PixelDataEncodeError::NotSupported {
+      image_pixel_module: Box::new(image_pixel_module.clone()),
+      input_bits_allocated: image.bits_allocated(),
+      input_color_space: None,
+    }),
+  }
+}
+
+/// Encodes a [`ColorImage`] into JPEG 2000 raw bytes using OpenJPEG.
+///
+pub fn encode_color(
+  image: &ColorImage,
+  image_pixel_module: &ImagePixelModule,
+  quality: Option<u8>,
+) -> Result<Vec<u8>, PixelDataEncodeError> {
+  let width = image.width();
+  let height = image.height();
+
+  match (
+    image.data(),
+    image_pixel_module.photometric_interpretation(),
+    quality,
+  ) {
+    (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::YbrIct | PhotometricInterpretation::YbrRct,
+      _,
+    )
+    | (
+      ColorImageData::PaletteU8 { data, .. },
+      PhotometricInterpretation::PaletteColor { .. },
+      None,
+    ) => encode(data, width, height, image_pixel_module, false, quality),
+
+    (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Ybr { .. },
+      },
+      PhotometricInterpretation::YbrFull,
+      _,
+    ) => encode(data, width, height, image_pixel_module, true, quality),
+
+    (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::YbrIct | PhotometricInterpretation::YbrRct,
+      _,
+    )
+    | (
+      ColorImageData::PaletteU16 { data, .. },
+      PhotometricInterpretation::PaletteColor { .. },
+      None,
+    ) => encode(
+      bytemuck::cast_slice(data),
+      width,
+      height,
+      image_pixel_module,
+      false,
+      quality,
+    ),
+
+    (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Ybr { .. },
+      },
+      PhotometricInterpretation::YbrFull,
+      _,
+    ) => encode(
+      bytemuck::cast_slice(data),
+      width,
+      height,
+      image_pixel_module,
+      true,
+      quality,
+    ),
+
+    _ => Err(PixelDataEncodeError::NotSupported {
+      image_pixel_module: Box::new(image_pixel_module.clone()),
+      input_bits_allocated: image.bits_allocated(),
+      input_color_space: Some(image.color_space()),
+    }),
+  }
+}
+
+fn encode(
+  data: &[u8],
+  width: u16,
+  height: u16,
+  image_pixel_module: &ImagePixelModule,
+  is_color_ybr: bool,
+  quality: Option<u8>,
+) -> Result<Vec<u8>, PixelDataEncodeError> {
+  let mut output_data = Vec::<u8>::with_capacity(512 * 1024);
+
+  let mut error_buffer = [0 as ::core::ffi::c_char; 256];
+
+  let result = unsafe {
+    ffi::openjpeg_encode(
+      data.as_ptr(),
+      data.len() as u64,
+      width as u32,
+      height as u32,
+      u32::from(u8::from(image_pixel_module.samples_per_pixel())),
+      u32::from(u8::from(image_pixel_module.bits_allocated())),
+      u32::from(image_pixel_module.bits_stored()),
+      u32::from(u8::from(image_pixel_module.pixel_representation())),
+      u32::from(is_color_ybr),
+      u32::from(quality.unwrap_or(0)),
+      append_output_data,
+      &mut output_data as *mut Vec<u8> as *mut core::ffi::c_void,
+      error_buffer.as_mut_ptr(),
+      error_buffer.len() as u32,
+    )
+  };
+
+  if result != 0 {
+    let error = unsafe { core::ffi::CStr::from_ptr(error_buffer.as_ptr()) }
+      .to_str()
+      .unwrap_or("<invalid error>");
+
+    return Err(PixelDataEncodeError::OtherError {
+      name: "JPEG 2000 pixel data encoding failed".to_string(),
+      details: error.to_string(),
+    });
+  }
+
+  Ok(output_data)
+}
+
+/// This function is passed as a callback to [`ffi::openjpeg_encode()`] and
+/// is then called with output data as it becomes available so it can be
+/// accumulated in a [`Vec<u8>`].
+///
+extern "C" fn append_output_data(
+  data: *const u8,
+  len: u32,
+  context: *mut core::ffi::c_void,
+) {
+  unsafe {
+    let output_data = &mut *(context as *mut Vec<u8>);
+
+    (*output_data)
+      .extend_from_slice(core::slice::from_raw_parts(data, len as usize));
+  }
+}
+
+mod ffi {
+  unsafe extern "C" {
+    pub fn openjpeg_encode(
+      input_data: *const u8,
+      input_data_size: u64,
+      width: u32,
+      height: u32,
+      samples_per_pixel: u32,
+      bits_allocated: u32,
+      bits_stored: u32,
+      pixel_representation: u32,
+      is_color_ybr: u32,
+      quality: u32,
+      output_data_callback: extern "C" fn(
+        *const u8,
+        u32,
+        *mut core::ffi::c_void,
+      ),
+      output_data_context: *mut core::ffi::c_void,
+      error_buffer: *mut ::core::ffi::c_char,
+      error_buffer_size: u32,
+    ) -> i32;
+  }
+}

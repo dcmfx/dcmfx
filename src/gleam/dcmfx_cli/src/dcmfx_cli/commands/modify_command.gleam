@@ -257,7 +257,7 @@ fn modify_input_source(
   }
 
   // Create a filter transform for anonymization and tag deletion if needed
-  let filter_context = case
+  let filter_transform = case
     args.anonymize || !list.is_empty(args.tags_to_delete)
   {
     True ->
@@ -285,7 +285,7 @@ fn modify_input_source(
       input_stream,
       tmp_output_filename,
       write_config,
-      filter_context,
+      filter_transform,
     )
 
   let _ = file_stream.close(input_stream)
@@ -316,7 +316,7 @@ fn streaming_rewrite(
   input_stream: FileStream,
   output_filename: String,
   write_config: P10WriteConfig,
-  filter_context: Option(P10FilterTransform),
+  filter_transform: Option(P10FilterTransform),
 ) -> Result(Nil, P10Error) {
   // Open output stream
   let output_stream =
@@ -347,7 +347,7 @@ fn streaming_rewrite(
       output_stream,
       p10_read_context,
       p10_write_context,
-      filter_context,
+      filter_transform,
     )
 
   // Close input stream
@@ -370,7 +370,7 @@ fn do_streaming_rewrite(
   output_stream: FileStream,
   p10_read_context: p10_read.P10ReadContext,
   p10_write_context: p10_write.P10WriteContext,
-  filter_context: Option(P10FilterTransform),
+  filter_transform: Option(P10FilterTransform),
 ) -> Result(Nil, P10Error) {
   // Read the next P10 tokens from the input stream
   use #(tokens, p10_read_context) <- result.try(
@@ -378,27 +378,27 @@ fn do_streaming_rewrite(
   )
 
   // Pass tokens through the filter if one is specified
-  let tokens_and_filter_context = case filter_context {
-    Some(filter_context) ->
+  let tokens_and_filter_transform = case filter_transform {
+    Some(filter_transform) ->
       tokens
-      |> list.try_fold(#([], filter_context), fn(acc, token) {
-        let #(final_tokens, filter_context) = acc
+      |> list.try_fold(#([], filter_transform), fn(acc, token) {
+        let #(final_tokens, filter_transform) = acc
         let add_token_result =
-          p10_filter_transform.add_token(filter_context, token)
-        use #(filter_result, filter_context) <- result.map(add_token_result)
+          p10_filter_transform.add_token(filter_transform, token)
+        use #(filter_result, filter_transform) <- result.map(add_token_result)
 
         let final_tokens = case filter_result {
           True -> list.append(final_tokens, [token])
           False -> final_tokens
         }
 
-        #(final_tokens, filter_context)
+        #(final_tokens, filter_transform)
       })
       |> result.map(fn(acc) { #(acc.0, Some(acc.1)) })
 
-    None -> Ok(#(tokens, filter_context))
+    None -> Ok(#(tokens, filter_transform))
   }
-  use #(tokens, filter_context) <- result.try(tokens_and_filter_context)
+  use #(tokens, filter_transform) <- result.try(tokens_and_filter_transform)
 
   // Write tokens to the output stream
   use #(ended, p10_write_context) <- result.try(
@@ -414,6 +414,6 @@ fn do_streaming_rewrite(
     output_stream,
     p10_read_context,
     p10_write_context,
-    filter_context,
+    filter_transform,
   )
 }

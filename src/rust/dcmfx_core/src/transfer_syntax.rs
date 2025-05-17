@@ -713,6 +713,19 @@ impl TransferSyntax {
       _ => Err(()),
     }
   }
+
+  /// Returns whether this transfer syntax is one of the seven JPEG 2000 or
+  /// High-Throughput JPEG 2000 transfer syntaxes.
+  ///
+  pub fn is_jpeg_2k(&self) -> bool {
+    self == &JPEG_2K_LOSSLESS_ONLY
+      || self == &JPEG_2K
+      || self == &JPEG_2K_MULTI_COMPONENT_LOSSLESS_ONLY
+      || self == &JPEG_2K_MULTI_COMPONENT
+      || self == &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
+      || self == &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
+      || self == &HIGH_THROUGHPUT_JPEG_2K
+  }
 }
 
 #[cfg(test)]
