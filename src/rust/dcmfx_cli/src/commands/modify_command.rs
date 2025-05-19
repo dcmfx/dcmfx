@@ -2,7 +2,7 @@ use std::ffi::OsStr;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
-use clap::Args;
+use clap::{Args, ValueEnum};
 use rand::Rng;
 
 use dcmfx::core::*;
@@ -83,28 +83,31 @@ pub struct ModifyArgs {
     long,
     help_heading = "Transcoding",
     help = "When transcoding pixel data using --transfer-syntax, this \
-      specifies whether to perform a color space conversion on data in the YBR \
-      color space to convert it to the RGB color space prior to encoding it \
-      for the output transfer syntax.\n\
-      \n\
-      This may improve the compatibility of the output DICOM file, \
-      particularly when targeting a JPEG 2000 transfer syntax, as some viewers \
-      don't correctly handle the 'YBR_FULL' photometric interpretation with \
-      JPEG 2000. JPEG 2000 compression ratios may also be improved compared to \
-      using the 'YBR_FULL' photometric interpretation.\n\
-      \n\
-      Using this option does not guarantee that the output photometric \
-      interpretation will be 'RGB', because that depends on the behavior of \
-      the encoder for the output transfer syntax. E.g. for JPEG 2000, using \
-      this option will result either the 'YBR_ICT' or 'YBR_RCT' photometric \
-      interpretations being used by the output DICOM P10 file.\n\
+      specifies the color space conversion to perform on decoded color images \
+      prior to them being encoded for the output transfer syntax.\n\
       \n\
       This option has no effect on the transcoding of monochrome pixel data.\n\
       \n\
-      Defaults to false, except when --transfer-syntax specifies one of the \
-      seven JPEG 2000 transfer syntaxes, in which case it defaults to true."
+      When the output transfer syntax is 'JPEG Baseline 8-bit' the color space \
+      conversion defaults to 'ybr'. This is because the 'RGB' photometric \
+      interpretation in JPEG isn't always well-supported by older systems, and \
+      YBR generally gives more favorable compression ratios.\n\
+      \n\
+      When the output transfer syntax is a JPEG 2000 transfer syntax the color \
+      space conversion defaults to 'rgb'. This is because RGB input allows the \
+      encoder to target the 'YBR_ICT' and 'YBR_RCT' photometric \
+      interpretations, which are generally preferred in JPEG 2000.\n\
+      \n\
+      For all other output transfer syntaxes no default color space conversion \
+      is active.\n\
+      \n\
+      Note that this option does not directly control the output photometric \
+      interpretation in all cases, however it does map through for many output \
+      transfer syntaxes. The notable exception is JPEG 2000, where specifying \
+      'rgb' will result in either the 'YBR_ICT' or 'YBR_RCT' photometric \
+      interpretations being used by the output DICOM P10 file.\n"
   )]
-  ybr_to_rgb: Option<bool>,
+  convert_color_space: Option<ConvertColorSpaceArg>,
 
   #[arg(
     long,
@@ -156,6 +159,13 @@ pub struct ModifyArgs {
 fn validate_data_element_tag(s: &str) -> Result<DataElementTag, String> {
   DataElementTag::from_hex_string(s)
     .map_err(|_| "Invalid data element tag".to_string())
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
+enum ConvertColorSpaceArg {
+  False,
+  Rgb,
+  Ybr,
 }
 
 enum ModifyCommandError {
@@ -359,46 +369,64 @@ fn modify_input_source(
 fn get_transcode_image_data_functions(
   args: &ModifyArgs,
 ) -> Option<TranscodeImageDataFunctions> {
+  // Determine if transcoding to a JPEG Baseline 8-bit transfer syntax
+  let is_jpeg_baseline_8bit =
+    args.transfer_syntax == Some(TransferSyntaxArg::JpegBaseline8Bit);
+
   // Determine if transcoding to a JPEG 2000 transfer syntax
   let is_jpeg_2k = match args.transfer_syntax {
     Some(transfer_syntax) => transfer_syntax.as_transfer_syntax().is_jpeg_2k(),
     None => false,
   };
 
-  // YBR to RGB conversion defaults to true when transcoding to JPEG 2000
-  let convert_ybr_to_rgb = args.ybr_to_rgb.unwrap_or(is_jpeg_2k);
-
-  // If YBR to RGB conversion is enabled then setup image data functions to
-  // achieve this. These are called during pixel data transcoding.
-  if convert_ybr_to_rgb {
-    Some(TranscodeImageDataFunctions {
-      process_image_pixel_module: Box::new(
-        |image_pixel_module: &mut ImagePixelModule| {
-          // If the decoded photometric interpretation is YBR that will flow
-          // through into the color space of the decoded color image then change
-          // the photometric interpretation to RGB. Other YBR photometric
-          // interpretations such as `YbrIct` and `YbrRct` used by JPEG 2000 are
-          // only used internally in the encoded pixel data and are always
-          // converted from/to RGB when interfacing with the outside world, so
-          // are not considered here.
-          if image_pixel_module.photometric_interpretation()
-            == &PhotometricInterpretation::YbrFull
-            || image_pixel_module.photometric_interpretation()
-              == &PhotometricInterpretation::YbrFull422
-          {
-            image_pixel_module
-              .set_photometric_interpretation(PhotometricInterpretation::Rgb);
-          }
-        },
-      ),
-
-      process_monochrome_image: Box::new(|_image| {}),
-
-      process_color_image: Box::new(|image| image.convert_to_rgb_color_space()),
-    })
+  // Determine what the target color space for conversion is, if any
+  let target_color_space = if let Some(color_space) = args.convert_color_space {
+    if color_space == ConvertColorSpaceArg::False {
+      None
+    } else {
+      Some(color_space)
+    }
+  } else if is_jpeg_baseline_8bit {
+    Some(ConvertColorSpaceArg::Ybr)
+  } else if is_jpeg_2k {
+    Some(ConvertColorSpaceArg::Rgb)
   } else {
     None
-  }
+  };
+
+  // If a color space conversion is active then setup image data functions to do
+  // so. These are called during pixel data transcoding.
+  target_color_space.map(|target_color_space| TranscodeImageDataFunctions {
+    process_image_pixel_module: Box::new(
+      move |image_pixel_module: &mut ImagePixelModule| {
+        let photometric_interpretation =
+          image_pixel_module.photometric_interpretation();
+
+        if target_color_space == ConvertColorSpaceArg::Rgb
+          && (photometric_interpretation.is_ybr_full()
+            || photometric_interpretation.is_ybr_full_422())
+        {
+          image_pixel_module
+            .set_photometric_interpretation(PhotometricInterpretation::Rgb);
+        } else if target_color_space == ConvertColorSpaceArg::Ybr
+          && photometric_interpretation.is_rgb()
+        {
+          image_pixel_module
+            .set_photometric_interpretation(PhotometricInterpretation::YbrFull);
+        }
+      },
+    ),
+
+    process_monochrome_image: Box::new(|_image| {}),
+
+    process_color_image: Box::new(move |image| {
+      if target_color_space == ConvertColorSpaceArg::Rgb {
+        image.convert_to_rgb_color_space()
+      } else if target_color_space == ConvertColorSpaceArg::Ybr {
+        image.convert_to_ybr_color_space()
+      }
+    }),
+  })
 }
 
 /// Rewrites by streaming the tokens of the DICOM P10 straight to the output

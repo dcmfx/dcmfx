@@ -4,7 +4,9 @@ use alloc::{boxed::Box, string::ToString, vec::Vec};
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
   color_image::ColorImageData,
-  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
+  iods::image_pixel_module::{
+    ImagePixelModule, PhotometricInterpretation, PlanarConfiguration,
+  },
   monochrome_image::MonochromeImageData,
 };
 
@@ -49,6 +51,8 @@ pub fn encode_image_pixel_module(
 
     _ => return Err(()),
   };
+
+  image_pixel_module.set_planar_configuration(PlanarConfiguration::Interleaved);
 
   Ok(image_pixel_module)
 }

@@ -829,10 +829,17 @@ impl PhotometricInterpretation {
     }
   }
 
+  /// Returns whether this photometric interpretation specifies YBR 444 color
+  /// data.
+  ///
+  pub fn is_ybr_full(&self) -> bool {
+    self == &Self::YbrFull
+  }
+
   /// Returns whether this photometric interpretation specifies YBR 422 color
   /// data.
   ///
-  pub fn is_ybr_422(&self) -> bool {
+  pub fn is_ybr_full_422(&self) -> bool {
     self == &Self::YbrFull422
   }
 

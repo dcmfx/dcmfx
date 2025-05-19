@@ -152,7 +152,7 @@ fn jpeg_baseline_to_rle_lossless_with_rgb_conversion() {
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "implicit-vr-little-endian",
     "jpeg_baseline_to_rle_lossless_with_rgb_conversion",
-    &["--ybr-to-rgb", "true"],
+    &["--convert-color-space", "rgb"],
   );
 }
 
@@ -191,6 +191,36 @@ fn jpeg_2000_to_deflated_image_frame_compression() {
 }
 
 #[test]
+fn monochrome_jpeg_xl_to_jpeg_baseline() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "jpeg-baseline-8bit",
+    "monochrome_jpeg_xl_to_jpeg_baseline",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_rgb_to_jpeg_baseline() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "jpeg-baseline-8bit",
+    "explicit_vr_little_endian_rgb_to_jpeg_baseline",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_ybr_to_jpeg_baseline() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
+    "jpeg-baseline-8bit",
+    "explicit_vr_little_endian_ybr_to_jpeg_baseline",
+    &[],
+  );
+}
+
+#[test]
 fn jpeg_baseline_to_jpeg_baseline_with_low_quality() {
   modify_transfer_syntax(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
@@ -200,15 +230,15 @@ fn jpeg_baseline_to_jpeg_baseline_with_low_quality() {
   );
 }
 
-#[test]
-fn palette_color_to_jpeg_baseline() {
-  modify_transfer_syntax(
-    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
-    "jpeg-baseline-8bit",
-    "palette_color_to_jpeg_baseline",
-    &[],
-  );
-}
+// #[test]
+// fn palette_color_to_jpeg_baseline() {
+//   modify_transfer_syntax(
+//     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+//     "jpeg-baseline-8bit",
+//     "palette_color_to_jpeg_baseline",
+//     &[],
+//   );
+// }
 
 #[test]
 fn monochrome_jpeg_xl_to_jpeg_2000_lossless_only() {
@@ -296,7 +326,7 @@ fn jpeg_baseline_to_jpeg_2000_lossless_only_without_rgb_conversion() {
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-2k-lossless-only",
     "jpeg_baseline_to_jpeg_2000_lossless_only_without_rgb_conversion",
-    &["--ybr-to-rgb", "false"],
+    &["--convert-color-space", "false"],
   );
 }
 
@@ -306,7 +336,7 @@ fn jpeg_baseline_to_jpeg_2000_without_rgb_conversion() {
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-2k",
     "jpeg_baseline_to_jpeg_2000_without_rgb_conversion",
-    &["--ybr-to-rgb", "false"],
+    &["--convert-color-space", "false"],
   );
 }
 

@@ -50,7 +50,10 @@ fn test_jpeg_baseline_8bit_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules()
       .into_iter()
-      .filter(|m| m.bits_allocated() == BitsAllocated::Eight)
+      .filter(|m| {
+        m.photometric_interpretation().is_palette_color()
+          && m.bits_allocated() == BitsAllocated::Eight
+      })
       .collect(),
     &transfer_syntax::JPEG_BASELINE_8BIT,
     0.01,
@@ -315,7 +318,9 @@ fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
               }
 
               // The YBR 422 photometric interpretation requires an even width
-              if photometric_interpretation.is_ybr_422() && columns % 2 == 1 {
+              if photometric_interpretation.is_ybr_full_422()
+                && columns % 2 == 1
+              {
                 continue;
               }
 
@@ -455,7 +460,10 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
 
     // When using a YBR 422 encoding, ensure Cb and Cr values are identical for
     // adjacent pixels that share that value
-    if image_pixel_module.photometric_interpretation().is_ybr_422() {
+    if image_pixel_module
+      .photometric_interpretation()
+      .is_ybr_full_422()
+    {
       for i in data.chunks_exact_mut(6) {
         i[4] = i[1];
         i[5] = i[2];

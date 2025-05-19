@@ -72,6 +72,12 @@ pub enum ColorSpace {
 }
 
 impl ColorSpace {
+  /// Returns whether this color space is RGB.
+  ///
+  pub fn is_rgb(&self) -> bool {
+    matches!(self, Self::Rgb)
+  }
+
   /// Returns whether this color space is YBR.
   ///
   pub fn is_ybr(&self) -> bool {
@@ -338,8 +344,8 @@ impl ColorImage {
     ((1u64 << self.bits_stored) - 1) as u32
   }
 
-  /// Converts this color image into RGB color space if it's in the YBR color
-  /// space.
+  /// Converts this color image into the RGB color space if it's in the YBR
+  /// color space.
   ///
   pub fn convert_to_rgb_color_space(&mut self) {
     let max_storable_value = f64::from(self.max_storable_value());
@@ -392,6 +398,66 @@ impl ColorImage {
         }
 
         *color_space = ColorSpace::Rgb;
+      }
+
+      _ => (),
+    }
+  }
+
+  /// Converts this color image into the YBR color space if it's in the RGB
+  /// color space.
+  ///
+  pub fn convert_to_ybr_color_space(&mut self) {
+    let max_storable_value = f64::from(self.max_storable_value());
+    let scale = 1.0 / max_storable_value;
+
+    match &mut self.data {
+      ColorImageData::U8 { data, color_space } if color_space.is_rgb() => {
+        for pixel in data.chunks_exact_mut(3) {
+          let r: f64 = pixel[0].into();
+          let g: f64 = pixel[1].into();
+          let b: f64 = pixel[2].into();
+
+          let ybr = rgb_to_ybr(r * scale, g * scale, b * scale);
+
+          pixel[0] = (ybr[0] * max_storable_value).round() as u8;
+          pixel[1] = (ybr[1] * max_storable_value).round() as u8;
+          pixel[2] = (ybr[2] * max_storable_value).round() as u8;
+        }
+
+        *color_space = ColorSpace::Ybr { is_422: false };
+      }
+
+      ColorImageData::U16 { data, color_space } if color_space.is_rgb() => {
+        for pixel in data.chunks_exact_mut(3) {
+          let r: f64 = pixel[0].into();
+          let g: f64 = pixel[1].into();
+          let b: f64 = pixel[2].into();
+
+          let ybr = rgb_to_ybr(r * scale, g * scale, b * scale);
+
+          pixel[0] = (ybr[0] * max_storable_value).round() as u16;
+          pixel[1] = (ybr[1] * max_storable_value).round() as u16;
+          pixel[2] = (ybr[2] * max_storable_value).round() as u16;
+        }
+
+        *color_space = ColorSpace::Ybr { is_422: false };
+      }
+
+      ColorImageData::U32 { data, color_space } if color_space.is_rgb() => {
+        for pixel in data.chunks_exact_mut(3) {
+          let r: f64 = pixel[0].into();
+          let g: f64 = pixel[1].into();
+          let b: f64 = pixel[2].into();
+
+          let ybr = rgb_to_ybr(r * scale, g * scale, b * scale);
+
+          pixel[0] = (ybr[0] * max_storable_value).round() as u32;
+          pixel[1] = (ybr[1] * max_storable_value).round() as u32;
+          pixel[2] = (ybr[2] * max_storable_value).round() as u32;
+        }
+
+        *color_space = ColorSpace::Ybr { is_422: false };
       }
 
       _ => (),
@@ -740,4 +806,14 @@ fn ybr_to_rgb(y: f64, cb: f64, cr: f64) -> [f64; 3] {
   let b = y + 1.772 * (cb - 0.5);
 
   [r.clamp(0.0, 1.0), g.clamp(0.0, 1.0), b.clamp(0.0, 1.0)]
+}
+
+/// Converts a YBR color into RGB.
+///
+fn rgb_to_ybr(r: f64, g: f64, b: f64) -> [f64; 3] {
+  let y = 0.299 * r + 0.587 * g + 0.114 * b;
+  let cb = -0.168736 * r - 0.331264 * g + 0.5 * b + 0.5;
+  let cr = 0.5 * r - 0.418688 * g - 0.081312 * b + 0.5;
+
+  [y.clamp(0.0, 1.0), cb.clamp(0.0, 1.0), cr.clamp(0.0, 1.0)]
 }
