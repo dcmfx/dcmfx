@@ -70,7 +70,7 @@ impl RcByteSlice {
   /// Consumes this reference counted byte slice and turns it into a `Vec<u8>`.
   /// Avoids a copy when possible.
   ///
-  /// This function does copies data if there are multiple references to the
+  /// This function copies data if there are multiple references to the
   /// underlying buffer, or its slice bounds do not cover the whole buffer.
   ///
   pub fn into_vec(self) -> Vec<u8> {

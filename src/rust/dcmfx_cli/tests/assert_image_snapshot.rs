@@ -64,9 +64,18 @@ pub fn image_matches_snapshot<P: AsRef<std::path::Path>>(
       let a = image_1.get_pixel(x, y);
       let b = image_2.get_pixel(x, y);
 
-      if (i32::from(a[0]) - i32::from(b[0])).abs() > 300
-        || (i32::from(a[1]) - i32::from(b[1])).abs() > 300
-        || (i32::from(a[2]) - i32::from(b[2])).abs() > 300
+      #[cfg(target_arch = "aarch64")]
+      let epsilon = 257;
+
+      // When compiled for different architectures some codec libraries, e.g.
+      // OpenJPEG, give a slightly different result, so increase the epsilon
+      // value a little in order to account for this
+      #[cfg(not(target_arch = "aarch64"))]
+      let epsilon = 771;
+
+      if (i32::from(a[0]) - i32::from(b[0])).abs() > epsilon
+        || (i32::from(a[1]) - i32::from(b[1])).abs() > epsilon
+        || (i32::from(a[2]) - i32::from(b[2])).abs() > epsilon
       {
         return Err(format!(
           "Image differs at pixel {},{}: expected {:?} but got {:?}. {}",

@@ -21,5 +21,5 @@ snapshot_kind: text
 (0028,0103) US Pixel Representation                 [     2 bytes] 0
 (7FE0,0010) OB Pixel Data
   (FFFE,E000) Item                                    [     0 bytes] []
-  (FFFE,E000) Item                                    [   575 bytes] [FF 4F FF …
+  (FFFE,E000) Item                                    [   576 bytes] [FF 4F FF …
 (FFFE,E0DD) Sequence Delimitation Item

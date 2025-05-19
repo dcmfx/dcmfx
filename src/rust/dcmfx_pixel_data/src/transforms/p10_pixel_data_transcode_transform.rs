@@ -227,11 +227,11 @@ impl P10PixelDataTranscodeTransform {
 
       if self.output_transfer_syntax.is_encapsulated {
         output_tokens.extend(
-          self.encapsulated_pixel_data_tokens(frame_index, &encoded_frame)?,
+          self.encapsulated_pixel_data_tokens(frame_index, encoded_frame)?,
         );
       } else {
         output_tokens
-          .extend(self.native_pixel_data_tokens(frame_index, &encoded_frame)?);
+          .extend(self.native_pixel_data_tokens(frame_index, encoded_frame)?);
       }
     }
 
@@ -489,7 +489,7 @@ impl P10PixelDataTranscodeTransform {
   fn native_pixel_data_tokens(
     &mut self,
     frame_index: usize,
-    encoded_frame: &RcByteSlice,
+    encoded_frame: RcByteSlice,
   ) -> Result<Vec<P10Token>, P10PixelDataTranscodeTransformError> {
     // Get the Image Pixel Module. This is safe to unwrap because it must have
     // been fully received by the time pixel data is encountered.
@@ -570,7 +570,7 @@ impl P10PixelDataTranscodeTransform {
   fn encapsulated_pixel_data_tokens(
     &self,
     frame_index: usize,
-    encoded_frame: &RcByteSlice,
+    encoded_frame: RcByteSlice,
   ) -> Result<Vec<P10Token>, P10PixelDataTranscodeTransformError> {
     let mut tokens = vec![];
 
@@ -608,6 +608,11 @@ impl P10PixelDataTranscodeTransform {
       ));
     }
 
+    let mut encoded_frame = encoded_frame.into_vec();
+    if encoded_frame.len() & 1 == 1 {
+      encoded_frame.push(0);
+    }
+
     tokens.push(P10Token::PixelDataItem {
       index: frame_index,
       length: encoded_frame.len() as u32,
@@ -616,7 +621,7 @@ impl P10PixelDataTranscodeTransform {
     tokens.push(P10Token::DataElementValueBytes {
       tag: dictionary::ITEM.tag,
       vr: ValueRepresentation::OtherByteString,
-      data: encoded_frame.clone(),
+      data: encoded_frame.into(),
       bytes_remaining: 0,
     });
 
