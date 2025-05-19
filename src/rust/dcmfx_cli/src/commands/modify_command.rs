@@ -364,11 +364,19 @@ fn modify_input_source(
 /// Returns the image data functions to use when transcoding pixel data.
 ///
 /// Currently the only supported modification to pixel data during transcoding
-/// is color space conversion from YBR to RGB.
+/// is color space conversion and sampling of palette color data when the output
+/// transfer syntax doesn't natively support palette color.
 ///
 fn get_transcode_image_data_functions(
   args: &ModifyArgs,
 ) -> Option<TranscodeImageDataFunctions> {
+  // Convert out of color palette data if the target transfer syntax doesn't
+  // support color palettes
+  let convert_palette_color_to_rgb = match args.transfer_syntax {
+    Some(transfer_syntax) => !transfer_syntax.supports_palette_color(),
+    None => true,
+  };
+
   // Determine if transcoding to a JPEG Baseline 8-bit transfer syntax
   let is_jpeg_baseline_8bit =
     args.transfer_syntax == Some(TransferSyntaxArg::JpegBaseline8Bit);
@@ -381,52 +389,74 @@ fn get_transcode_image_data_functions(
 
   // Determine what the target color space for conversion is, if any
   let target_color_space = if let Some(color_space) = args.convert_color_space {
-    if color_space == ConvertColorSpaceArg::False {
-      None
-    } else {
-      Some(color_space)
-    }
+    color_space
   } else if is_jpeg_baseline_8bit {
-    Some(ConvertColorSpaceArg::Ybr)
+    ConvertColorSpaceArg::Ybr
   } else if is_jpeg_2k {
-    Some(ConvertColorSpaceArg::Rgb)
+    ConvertColorSpaceArg::Rgb
   } else {
-    None
+    ConvertColorSpaceArg::False
   };
 
   // If a color space conversion is active then setup image data functions to do
   // so. These are called during pixel data transcoding.
-  target_color_space.map(|target_color_space| TranscodeImageDataFunctions {
-    process_image_pixel_module: Box::new(
-      move |image_pixel_module: &mut ImagePixelModule| {
-        let photometric_interpretation =
-          image_pixel_module.photometric_interpretation();
+  if target_color_space != ConvertColorSpaceArg::False
+    || convert_palette_color_to_rgb
+  {
+    Some(TranscodeImageDataFunctions {
+      process_image_pixel_module: Box::new(
+        move |image_pixel_module: &mut ImagePixelModule| {
+          // Handle palette color conversion to RGB if requested
+          if image_pixel_module
+            .photometric_interpretation()
+            .is_palette_color()
+            && convert_palette_color_to_rgb
+          {
+            image_pixel_module
+              .set_photometric_interpretation(PhotometricInterpretation::Rgb);
+          }
 
-        if target_color_space == ConvertColorSpaceArg::Rgb
-          && (photometric_interpretation.is_ybr_full()
-            || photometric_interpretation.is_ybr_full_422())
-        {
-          image_pixel_module
-            .set_photometric_interpretation(PhotometricInterpretation::Rgb);
-        } else if target_color_space == ConvertColorSpaceArg::Ybr
-          && photometric_interpretation.is_rgb()
-        {
-          image_pixel_module
-            .set_photometric_interpretation(PhotometricInterpretation::YbrFull);
+          let photometric_interpretation =
+            image_pixel_module.photometric_interpretation().clone();
+
+          // Handle color space conversion if requested
+          if target_color_space == ConvertColorSpaceArg::Rgb {
+            if photometric_interpretation.is_ybr_full()
+              || photometric_interpretation.is_ybr_full_422()
+            {
+              image_pixel_module
+                .set_photometric_interpretation(PhotometricInterpretation::Rgb);
+            }
+          } else if target_color_space == ConvertColorSpaceArg::Ybr
+            && photometric_interpretation.is_rgb()
+          {
+            image_pixel_module.set_photometric_interpretation(
+              PhotometricInterpretation::YbrFull,
+            );
+          }
+        },
+      ),
+
+      process_monochrome_image: Box::new(|_image| {}),
+
+      process_color_image: Box::new(move |image| {
+        // Handle palette color conversion to RGB if requested
+        if convert_palette_color_to_rgb {
+          image.convert_palette_color_to_rgb();
         }
-      },
-    ),
 
-    process_monochrome_image: Box::new(|_image| {}),
-
-    process_color_image: Box::new(move |image| {
-      if target_color_space == ConvertColorSpaceArg::Rgb {
-        image.convert_to_rgb_color_space()
-      } else if target_color_space == ConvertColorSpaceArg::Ybr {
-        image.convert_to_ybr_color_space()
-      }
-    }),
-  })
+        // Handle color space conversion if requested
+        if target_color_space == ConvertColorSpaceArg::Rgb {
+          image.convert_to_rgb_color_space()
+        } else if target_color_space == ConvertColorSpaceArg::Ybr {
+          image.convert_palette_color_to_rgb();
+          image.convert_to_ybr_color_space()
+        }
+      }),
+    })
+  } else {
+    None
+  }
 }
 
 /// Rewrites by streaming the tokens of the DICOM P10 straight to the output

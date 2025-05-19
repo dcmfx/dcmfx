@@ -45,6 +45,13 @@ impl TransferSyntaxArg {
       Self::Jpeg2k => &transfer_syntax::JPEG_2K,
     }
   }
+
+  /// Returns whether this transfer syntax natively supports encoding palette
+  /// color pixel data.
+  ///
+  pub fn supports_palette_color(&self) -> bool {
+    !matches!(self, Self::JpegBaseline8Bit | Self::Jpeg2k)
+  }
 }
 
 impl ValueEnum for TransferSyntaxArg {

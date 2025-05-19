@@ -230,15 +230,15 @@ fn jpeg_baseline_to_jpeg_baseline_with_low_quality() {
   );
 }
 
-// #[test]
-// fn palette_color_to_jpeg_baseline() {
-//   modify_transfer_syntax(
-//     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
-//     "jpeg-baseline-8bit",
-//     "palette_color_to_jpeg_baseline",
-//     &[],
-//   );
-// }
+#[test]
+fn palette_color_to_jpeg_baseline() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "jpeg-baseline-8bit",
+    "palette_color_to_jpeg_baseline",
+    &[],
+  );
+}
 
 #[test]
 fn monochrome_jpeg_xl_to_jpeg_2000_lossless_only() {
@@ -256,6 +256,16 @@ fn palette_color_to_jpeg_2000_lossless_only() {
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-2k-lossless-only",
     "palette_color_to_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn palette_color_to_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "jpeg-2k",
+    "palette_color_to_jpeg_2000",
     &[],
   );
 }

@@ -131,6 +131,18 @@ impl PaletteColorLookupTableModule {
     red_int_max.max(green_int_max).max(blue_int_max)
   }
 
+  /// Returns the maximum bits per entry of the red, green and blue LUTs.
+  ///
+  pub fn bits_per_entry(&self) -> u16 {
+    let red_bits_per_entry = self.red_lut.bits_per_entry();
+    let green_bits_per_entry = self.green_lut.bits_per_entry();
+    let blue_bits_per_entry = self.blue_lut.bits_per_entry();
+
+    red_bits_per_entry
+      .max(green_bits_per_entry)
+      .max(blue_bits_per_entry)
+  }
+
   /// Converts this Palette Color Lookup Table Module to a data set.
   ///
   pub fn to_data_set(&self) -> DataSet {

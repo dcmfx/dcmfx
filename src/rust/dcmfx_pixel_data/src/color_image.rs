@@ -404,6 +404,63 @@ impl ColorImage {
     }
   }
 
+  /// Converts this color image to an image in the RGB color space if it's using
+  /// a color palette. The sampled data will be either 8-bit or 16-bit depending
+  /// on the bits per entry of the underlying lookup tables.
+  ///
+  pub fn convert_palette_color_to_rgb(&mut self) {
+    fn sample_color_palette<T>(
+      data: &[T],
+      palette: &PaletteColorLookupTableModule,
+    ) -> ColorImageData
+    where
+      T: Copy,
+      i64: From<T>,
+    {
+      if palette.bits_per_entry() <= 8 {
+        let mut rgb_data = Vec::with_capacity(data.len() * 3);
+
+        for index in data {
+          let pixel = palette.lookup(i64::from(*index));
+          rgb_data.push(pixel[0] as u8);
+          rgb_data.push(pixel[1] as u8);
+          rgb_data.push(pixel[2] as u8);
+        }
+
+        ColorImageData::U8 {
+          data: rgb_data,
+          color_space: ColorSpace::Rgb,
+        }
+      } else {
+        let mut rgb_data = Vec::with_capacity(data.len() * 3);
+
+        for index in data {
+          let pixel = palette.lookup(i64::from(*index));
+          rgb_data.extend_from_slice(&pixel);
+        }
+
+        ColorImageData::U16 {
+          data: rgb_data,
+          color_space: ColorSpace::Rgb,
+        }
+      }
+    }
+
+    match &self.data {
+      ColorImageData::PaletteU8 { data, palette } => {
+        self.bits_stored = palette.bits_per_entry();
+        self.data = sample_color_palette(data, palette);
+      }
+
+      ColorImageData::PaletteU16 { data, palette } => {
+        self.bits_stored = palette.bits_per_entry();
+        self.data = sample_color_palette(data, palette);
+      }
+
+      _ => (),
+    }
+  }
+
   /// Converts this color image into the YBR color space if it's in the RGB
   /// color space.
   ///

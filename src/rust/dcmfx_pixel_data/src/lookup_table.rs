@@ -33,6 +33,9 @@ pub struct LookupTable {
   /// The raw data for the LUT.
   data: Vec<u16>,
 
+  /// The number of bits needed to store each lookup table entry.
+  bits_per_entry: u16,
+
   /// The largest number that can be stored in the LUT. This is calculated using
   /// the `bits_per_entry` value.
   int_max: u16,
@@ -135,6 +138,7 @@ impl LookupTable {
       first_input_value: first_input_value.into(),
       explanation,
       data,
+      bits_per_entry,
       int_max,
       normalization_scale,
     })
@@ -264,8 +268,15 @@ impl LookupTable {
     self.data.len()
   }
 
+  /// Returns the number of bits needed to store an entry in this LUT. This will
+  /// always be in the range `8..=16`.
+  ///
+  pub fn bits_per_entry(&self) -> u16 {
+    self.bits_per_entry
+  }
+
   /// Returns the maximum value that can be stored by this LUT given its
-  /// `bits_per_entry` value.
+  /// [`Self::bits_per_entry()`] value.
   ///
   pub fn int_max(&self) -> u16 {
     self.int_max
@@ -387,6 +398,7 @@ mod tests {
       first_input_value: 50,
       explanation: None,
       data: vec![1, 4, 9, 16, 64],
+      bits_per_entry: 8,
       int_max: 255,
       normalization_scale: 1.0 / 255.0,
     };
