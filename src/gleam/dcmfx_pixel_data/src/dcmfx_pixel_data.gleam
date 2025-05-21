@@ -85,13 +85,13 @@ pub fn file_extension_for_transfer_syntax(ts: TransferSyntax) -> String {
       || ts == transfer_syntax.jpeg_ls_lossy_near_lossless
     -> ".jls"
 
-    // JPEG 2000 uses the .jp2 extension
+    // JPEG 2000 uses the .j2k extension
     ts
       if ts == transfer_syntax.jpeg_2k_lossless_only
       || ts == transfer_syntax.jpeg_2k
       || ts == transfer_syntax.jpeg_2k_multi_component_lossless_only
       || ts == transfer_syntax.jpeg_2k_multi_component
-    -> ".jp2"
+    -> ".j2k"
 
     // MPEG-2 uses the .mp2 extension
     ts

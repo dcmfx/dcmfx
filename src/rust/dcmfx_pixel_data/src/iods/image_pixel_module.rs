@@ -30,7 +30,7 @@ pub struct ImagePixelModule {
   bits_stored: u16,
   high_bit: u16,
   pixel_representation: PixelRepresentation,
-  pixel_aspect_ratio: Option<(i32, i32)>,
+  pixel_aspect_ratio: Option<DataElementValue>,
   smallest_image_pixel_value: Option<i64>,
   largest_image_pixel_value: Option<i64>,
   icc_profile: Option<RcByteSlice>,
@@ -108,20 +108,10 @@ impl IodModule for ImagePixelModule {
 
     let pixel_aspect_ratio = if data_set.has(dictionary::PIXEL_ASPECT_RATIO.tag)
     {
-      match data_set
-        .get_ints::<i32>(dictionary::PIXEL_ASPECT_RATIO.tag)?
-        .as_slice()
-      {
-        [] => None,
-        [a, b] => Some((*a, *b)),
-        _ => {
-          return Err(DataError::MultiplicityMismatch {
-            path: Some(DataSetPath::new_with_data_element(
-              dictionary::PIXEL_ASPECT_RATIO.tag,
-            )),
-          });
-        }
-      }
+      data_set
+        .get_value(dictionary::PIXEL_ASPECT_RATIO.tag)
+        .ok()
+        .cloned()
     } else {
       None
     };
@@ -194,7 +184,7 @@ impl ImagePixelModule {
     bits_stored: u16,
     high_bit: u16,
     pixel_representation: PixelRepresentation,
-    pixel_aspect_ratio: Option<(i32, i32)>,
+    pixel_aspect_ratio: Option<DataElementValue>,
     smallest_image_pixel_value: Option<i64>,
     largest_image_pixel_value: Option<i64>,
     icc_profile: Option<RcByteSlice>,
@@ -536,10 +526,10 @@ impl ImagePixelModule {
       self.pixel_representation.to_data_element_value(),
     );
 
-    if let Some((a, b)) = self.pixel_aspect_ratio {
+    if let Some(pixel_aspect_ratio) = &self.pixel_aspect_ratio {
       data_set.insert(
         dictionary::PIXEL_ASPECT_RATIO.tag,
-        DataElementValue::new_integer_string(&[a, b])?,
+        pixel_aspect_ratio.clone(),
       );
     }
 
@@ -862,6 +852,20 @@ impl PhotometricInterpretation {
   ///
   pub fn is_rgb(&self) -> bool {
     self == &Self::Rgb
+  }
+
+  /// Returns whether this photometric interpretation is
+  /// [`PhotometricInterpretation::YbrIct`].
+  ///
+  pub fn is_ybr_ict(&self) -> bool {
+    self == &Self::YbrIct
+  }
+
+  /// Returns whether this photometric interpretation is
+  /// [`PhotometricInterpretation::YbrRct`].
+  ///
+  pub fn is_ybr_rct(&self) -> bool {
+    self == &Self::YbrRct
   }
 
   /// Converts this photometric interpretation to a data element value that uses

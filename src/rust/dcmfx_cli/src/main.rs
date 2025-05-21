@@ -3,6 +3,7 @@
 mod commands;
 mod input_source;
 mod mp4_encoder;
+mod photometric_interpretation_arg;
 mod transfer_syntax_arg;
 mod utils;
 

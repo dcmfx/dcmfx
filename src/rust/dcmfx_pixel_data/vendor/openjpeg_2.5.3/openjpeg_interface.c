@@ -352,8 +352,8 @@ static void output_stream_free(void *p_user_data) {}
 int32_t openjpeg_encode(
     uint8_t *input_data, uint64_t input_data_size, uint32_t width,
     uint32_t height, uint32_t samples_per_pixel, uint32_t bits_allocated,
-    uint32_t bits_stored, uint8_t pixel_representation, uint32_t is_color_ybr,
-    uint32_t quality,
+    uint32_t bits_stored, uint8_t pixel_representation,
+    uint32_t color_photometric_interpretation, float tcp_distoratio,
     void (*output_data_callback)(const uint8_t *data, uint32_t len, void *ctx),
     void *output_data_context, char *error_buffer, uint32_t error_buffer_size) {
   // Create compressor
@@ -367,18 +367,65 @@ int32_t openjpeg_encode(
   char error_details[ERROR_DETAILS_SIZE] = {0};
   opj_set_error_handler(codec, error_handler, error_details);
 
-  // Create image with components specification
+  // Configure encoder parameters
+  opj_cparameters_t parameters;
+  opj_set_default_encoder_parameters(&parameters);
+  parameters.tcp_numlayers = 1;
+
+  // Configure lossy encoding if quality != 0
+  if (tcp_distoratio != 0) {
+    parameters.cp_fixed_quality = 1;
+    parameters.irreversible = 1;
+    parameters.tcp_distoratio[0] = tcp_distoratio;
+  }
+
+  // Set number of resolutions such that the lowest resolution will be 64x64 in
+  // order to avoid over-decomposition
+  uint32_t min_dimension = width < height ? width : height;
+  if (min_dimension < 64) {
+    min_dimension = 64;
+  }
+  parameters.numresolution = floor(log2(min_dimension / 64)) + 1;
+  if (parameters.numresolution > 6) {
+    parameters.numresolution = 6;
+  }
+
+  // Determine color space and setup compressor parameters appropriately for it
+  OPJ_COLOR_SPACE color_space = OPJ_CLRSPC_SYCC;
+  if (samples_per_pixel == 3) {
+    if (color_photometric_interpretation == 1) { // RGB
+      color_space = OPJ_CLRSPC_SRGB;
+      parameters.tcp_mct = 0;
+    } else if (color_photometric_interpretation == 2) { // YBR_FULL
+      parameters.tcp_mct = 0;
+    } else if (color_photometric_interpretation == 3) { // YBR_ICT
+      parameters.tcp_mct = 1;
+    } else if (color_photometric_interpretation == 4) { // YBR_RCT
+      parameters.irreversible = 0;
+      parameters.tcp_mct = 1;
+    } else {
+      cleanup(codec, NULL, NULL, error_buffer, error_buffer_size,
+              "Invalid color_photometric_interpretation", error_details);
+      return -1;
+    }
+  } else {
+    color_space = OPJ_CLRSPC_GRAY;
+  }
+
+  // Create image component specifications
   opj_image_cmptparm_t component_parameters[3];
   for (uint32_t i = 0; i < samples_per_pixel; i++) {
     component_parameters[i].dx = 1;
     component_parameters[i].dy = 1;
     component_parameters[i].w = width;
     component_parameters[i].h = height;
+    component_parameters[i].x0 = 0;
+    component_parameters[i].y0 = 0;
     component_parameters[i].sgnd = pixel_representation;
     component_parameters[i].prec = bits_allocated;
   }
-  OPJ_COLOR_SPACE color_space =
-      samples_per_pixel == 3 ? OPJ_CLRSPC_SYCC : OPJ_CLRSPC_GRAY;
+
+  // Create image to compress
   opj_image_t *image =
       opj_image_create(samples_per_pixel, component_parameters, color_space);
   if (image == NULL) {
@@ -437,50 +484,6 @@ int32_t openjpeg_encode(
     cleanup(codec, NULL, image, error_buffer, error_buffer_size,
             "Bits allocated value is not 8 or 16", error_details);
     return -1;
-  }
-
-  // Configure encoder parameters
-  opj_cparameters_t parameters;
-  opj_set_default_encoder_parameters(&parameters);
-  parameters.tcp_numlayers = 1;
-
-  // Configure lossy encoding if quality != 0
-  if (quality != 0) {
-    parameters.irreversible = OPJ_TRUE; // YBR_ICT for lossy
-    parameters.cp_fixed_quality = 2;
-
-    // The range of PSNR depends on the bits stored value because higher bit
-    // depths need higher PSNR values to maintain similar error characteristics.
-
-    double t = (double)bits_stored - 8.0;
-    if (t < 0.0) {
-      t = 0.0;
-    }
-
-    double min_quality_psnr = 25.0 + 1.875 * t;
-    double max_quality_psnr = 45.0 + 3.750 * t;
-
-    parameters.tcp_distoratio[0] =
-        min_quality_psnr * pow(max_quality_psnr / min_quality_psnr,
-                               ((double)quality - 1.0) / 99.0);
-  }
-
-  // If the input data is in the YBR color space then don't apply multiple
-  // component transformation (MCT), i.e. compress the components as-is so the
-  // YBR_FULL photometric interpretation can be used
-  if (samples_per_pixel == 3) {
-    parameters.tcp_mct = !is_color_ybr;
-  }
-
-  // Set number of resolutions such that the lowest resolution will be 64x64 in
-  // order to avoid over-decomposition
-  uint32_t min_dimension = width < height ? width : height;
-  if (min_dimension < 64) {
-    min_dimension = 64;
-  }
-  parameters.numresolution = floor(log2(min_dimension / 64)) + 1;
-  if (parameters.numresolution > 5) {
-    parameters.numresolution = 5;
   }
 
   // Setup encoder

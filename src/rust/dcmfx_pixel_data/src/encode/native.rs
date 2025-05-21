@@ -219,7 +219,7 @@ pub fn encode_color(
     | (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr { is_422: false },
+        color_space: ColorSpace::Ybr { .. },
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::YbrFull,
@@ -241,7 +241,7 @@ pub fn encode_color(
     | (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr { is_422: false },
+        color_space: ColorSpace::Ybr { .. },
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::YbrFull,
@@ -264,7 +264,7 @@ pub fn encode_color(
     | (
       ColorImageData::U16 {
         data,
-        color_space: ColorSpace::Ybr { is_422: false },
+        color_space: ColorSpace::Ybr { .. },
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::YbrFull,
@@ -300,7 +300,7 @@ pub fn encode_color(
     | (
       ColorImageData::U16 {
         data,
-        color_space: ColorSpace::Ybr { is_422: false },
+        color_space: ColorSpace::Ybr { .. },
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::YbrFull,
@@ -331,7 +331,7 @@ pub fn encode_color(
     | (
       ColorImageData::U32 {
         data,
-        color_space: ColorSpace::Ybr { is_422: false },
+        color_space: ColorSpace::Ybr { .. },
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::YbrFull,
@@ -362,7 +362,7 @@ pub fn encode_color(
     | (
       ColorImageData::U32 {
         data,
-        color_space: ColorSpace::Ybr { is_422: false },
+        color_space: ColorSpace::Ybr { .. },
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::YbrFull,

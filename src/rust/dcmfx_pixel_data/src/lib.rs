@@ -239,13 +239,13 @@ pub fn file_extension_for_transfer_syntax(ts: &TransferSyntax) -> &'static str {
       ".jls"
     }
 
-    // JPEG 2000 uses the .jp2 extension
+    // JPEG 2000 uses the .j2k extension
     ts if ts == &JPEG_2K_LOSSLESS_ONLY
       || ts == &JPEG_2K
       || ts == &JPEG_2K_MULTI_COMPONENT_LOSSLESS_ONLY
       || ts == &JPEG_2K_MULTI_COMPONENT =>
     {
-      ".jp2"
+      ".j2k"
     }
 
     // MPEG-2 uses the .mp2 extension

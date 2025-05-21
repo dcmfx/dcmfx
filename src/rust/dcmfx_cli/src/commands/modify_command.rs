@@ -2,7 +2,7 @@ use std::ffi::OsStr;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
-use clap::{Args, ValueEnum};
+use clap::Args;
 use rand::Rng;
 
 use dcmfx::core::*;
@@ -13,7 +13,11 @@ use dcmfx::pixel_data::{
 };
 
 use crate::utils::prompt_to_overwrite_if_exists;
-use crate::{InputSource, transfer_syntax_arg::TransferSyntaxArg, utils};
+use crate::{
+  InputSource,
+  photometric_interpretation_arg::PhotometricInterpretationColorArg,
+  transfer_syntax_arg::TransferSyntaxArg, utils,
+};
 
 pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
 
@@ -82,32 +86,33 @@ pub struct ModifyArgs {
   #[clap(
     long,
     help_heading = "Transcoding",
-    help = "When transcoding pixel data using --transfer-syntax, this \
-      specifies the color space conversion to perform on decoded color images \
-      prior to them being encoded for the output transfer syntax.\n\
+    help = "When transcoding color pixel data using --transfer-syntax, this \
+      specifies the photometric interpretation to be used by the output DICOM \
+      P10 files. This option has no effect on monochrome pixel data.\n\
       \n\
-      This option has no effect on the transcoding of monochrome pixel data.\n\
+      When the output transfer syntax is 'JPEG Baseline 8-bit' the output \
+      photometric interpretation defaults to 'YBR_FULL' if the color data \
+      is not YBR following decoding. This is because the 'RGB' photometric \
+      interpretation in JPEG is uncommon, and a YBR color space usually yields \
+      better compression ratios.\n\
       \n\
-      When the output transfer syntax is 'JPEG Baseline 8-bit' the color space \
-      conversion defaults to 'ybr'. This is because the 'RGB' photometric \
-      interpretation in JPEG isn't always well-supported by older systems, and \
-      YBR generally gives more favorable compression ratios.\n\
+      When the output transfer syntax is JPEG 2000 the output photometric \
+      interpretation defaults to 'YBR_RCT' for lossless encoding, and \
+      'YBR_ICT' for lossy encoding. These two photometric interpretations are \
+      generally preferred in JPEG 2000, however others may be used if there is \
+      a need to compress with no risk of loss from color space conversions.\n\
       \n\
-      When the output transfer syntax is a JPEG 2000 transfer syntax the color \
-      space conversion defaults to 'rgb'. This is because RGB input allows the \
-      encoder to target the 'YBR_ICT' and 'YBR_RCT' photometric \
-      interpretations, which are generally preferred in JPEG 2000.\n\
+      For all other output transfer syntaxes there is no default output \
+      photometric interpretation, however the output photometric \
+      interpretation may differ from the input for the following reasons:\n\
       \n\
-      For all other output transfer syntaxes no default color space conversion \
-      is active.\n\
+      1. If the output transfer syntax doesn't support 'PALETTE_COLOR' then \
+         the color image's data will be automatically expanded to 'RGB'.\n\
       \n\
-      Note that this option does not directly control the output photometric \
-      interpretation in all cases, however it does map through for many output \
-      transfer syntaxes. The notable exception is JPEG 2000, where specifying \
-      'rgb' will result in either the 'YBR_ICT' or 'YBR_RCT' photometric \
-      interpretations being used by the output DICOM P10 file.\n"
+      2. If the output transfer syntax doesn't support 'YBR_FULL_422' then the \
+         color image's data will be automatically expanded to 'YBR_FULL'."
   )]
-  convert_color_space: Option<ConvertColorSpaceArg>,
+  photometric_interpretation_color: Option<PhotometricInterpretationColorArg>,
 
   #[arg(
     long,
@@ -159,13 +164,6 @@ pub struct ModifyArgs {
 fn validate_data_element_tag(s: &str) -> Result<DataElementTag, String> {
   DataElementTag::from_hex_string(s)
     .map_err(|_| "Invalid data element tag".to_string())
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
-enum ConvertColorSpaceArg {
-  False,
-  Rgb,
-  Ybr,
 }
 
 enum ModifyCommandError {
@@ -323,7 +321,10 @@ fn modify_input_source(
       Some(P10PixelDataTranscodeTransform::new(
         output_transfer_syntax.as_transfer_syntax(),
         pixel_data_encode_config,
-        get_transcode_image_data_functions(args),
+        Some(get_transcode_image_data_functions(
+          output_transfer_syntax,
+          args.photometric_interpretation_color,
+        )),
       ))
     } else {
       None
@@ -364,98 +365,123 @@ fn modify_input_source(
 /// Returns the image data functions to use when transcoding pixel data.
 ///
 /// Currently the only supported modification to pixel data during transcoding
-/// is color space conversion and sampling of palette color data when the output
-/// transfer syntax doesn't natively support palette color.
+/// is specifying the desired output photometric interpretation, sampling of
+/// PALETTE_COLOR data into RGB when the output transfer syntax doesn't support
+/// PALETTE_COLOR, and expansion of YBR_FULL_422 to YBR_FULL when the
+/// output transfer syntax doesn't support YBR_FULL_422.
 ///
 fn get_transcode_image_data_functions(
-  args: &ModifyArgs,
-) -> Option<TranscodeImageDataFunctions> {
-  // Convert out of color palette data if the target transfer syntax doesn't
-  // support color palettes
-  let convert_palette_color_to_rgb = match args.transfer_syntax {
-    Some(transfer_syntax) => !transfer_syntax.supports_palette_color(),
-    None => true,
-  };
-
-  // Determine if transcoding to a JPEG Baseline 8-bit transfer syntax
-  let is_jpeg_baseline_8bit =
-    args.transfer_syntax == Some(TransferSyntaxArg::JpegBaseline8Bit);
-
-  // Determine if transcoding to a JPEG 2000 transfer syntax
-  let is_jpeg_2k = match args.transfer_syntax {
-    Some(transfer_syntax) => transfer_syntax.as_transfer_syntax().is_jpeg_2k(),
-    None => false,
-  };
-
-  // Determine what the target color space for conversion is, if any
-  let target_color_space = if let Some(color_space) = args.convert_color_space {
-    color_space
-  } else if is_jpeg_baseline_8bit {
-    ConvertColorSpaceArg::Ybr
-  } else if is_jpeg_2k {
-    ConvertColorSpaceArg::Rgb
-  } else {
-    ConvertColorSpaceArg::False
-  };
-
-  // If a color space conversion is active then setup image data functions to do
-  // so. These are called during pixel data transcoding.
-  if target_color_space != ConvertColorSpaceArg::False
-    || convert_palette_color_to_rgb
-  {
-    Some(TranscodeImageDataFunctions {
-      process_image_pixel_module: Box::new(
-        move |image_pixel_module: &mut ImagePixelModule| {
-          // Handle palette color conversion to RGB if requested
+  transfer_syntax_arg: TransferSyntaxArg,
+  photometric_interpretation_color_arg: Option<
+    PhotometricInterpretationColorArg,
+  >,
+) -> TranscodeImageDataFunctions {
+  TranscodeImageDataFunctions {
+    process_image_pixel_module: Box::new(
+      move |image_pixel_module: &mut ImagePixelModule| {
+        if image_pixel_module.is_color() {
+          // If the input is palette color and the output transfer syntax doesn't
+          // support palette color then expand to RGB by default
           if image_pixel_module
             .photometric_interpretation()
             .is_palette_color()
-            && convert_palette_color_to_rgb
+            && !transfer_syntax_arg.supports_palette_color()
           {
             image_pixel_module
               .set_photometric_interpretation(PhotometricInterpretation::Rgb);
           }
 
-          let photometric_interpretation =
-            image_pixel_module.photometric_interpretation().clone();
-
-          // Handle color space conversion if requested
-          if target_color_space == ConvertColorSpaceArg::Rgb {
-            if photometric_interpretation.is_ybr_full()
-              || photometric_interpretation.is_ybr_full_422()
-            {
-              image_pixel_module
-                .set_photometric_interpretation(PhotometricInterpretation::Rgb);
+          match (photometric_interpretation_color_arg, transfer_syntax_arg) {
+            // If a photometric interpretation has been explicitly specified
+            // then use it for output
+            (Some(photometric_interpretation_color), _) => {
+              if let Some(photometric_interpretation) =
+                photometric_interpretation_color.as_photometric_interpretation()
+              {
+                image_pixel_module
+                  .set_photometric_interpretation(photometric_interpretation);
+              }
             }
-          } else if target_color_space == ConvertColorSpaceArg::Ybr
-            && photometric_interpretation.is_rgb()
-          {
-            image_pixel_module.set_photometric_interpretation(
-              PhotometricInterpretation::YbrFull,
-            );
+
+            // When transcoding to JPEG Baseline 8-bit default to YBR if the
+            // incoming data is RGB
+            (_, TransferSyntaxArg::JpegBaseline8Bit) => {
+              if image_pixel_module.photometric_interpretation().is_rgb() {
+                image_pixel_module.set_photometric_interpretation(
+                  PhotometricInterpretation::YbrFull,
+                );
+              }
+            }
+
+            // When transcoding to JPEG 2000 Lossless Only default to YBR_RCT
+            // unless the incoming data is PALETTE_COLOR
+            (_, TransferSyntaxArg::Jpeg2kLosslessOnly)
+              if !image_pixel_module
+                .photometric_interpretation()
+                .is_palette_color() =>
+            {
+              image_pixel_module.set_photometric_interpretation(
+                PhotometricInterpretation::YbrRct,
+              )
+            }
+
+            // When transcoding to JPEG 2000 Lossy default to YBR_ICT
+            (_, TransferSyntaxArg::Jpeg2k) => image_pixel_module
+              .set_photometric_interpretation(
+                PhotometricInterpretation::YbrIct,
+              ),
+
+            _ => (),
           }
-        },
-      ),
-
-      process_monochrome_image: Box::new(|_image| {}),
-
-      process_color_image: Box::new(move |image| {
-        // Handle palette color conversion to RGB if requested
-        if convert_palette_color_to_rgb {
-          image.convert_palette_color_to_rgb();
         }
 
-        // Handle color space conversion if requested
-        if target_color_space == ConvertColorSpaceArg::Rgb {
-          image.convert_to_rgb_color_space()
-        } else if target_color_space == ConvertColorSpaceArg::Ybr {
-          image.convert_palette_color_to_rgb();
-          image.convert_to_ybr_color_space()
-        }
-      }),
-    })
-  } else {
-    None
+        Ok(())
+      },
+    ),
+
+    process_monochrome_image: Box::new(|_image, _image_pixel_module| Ok(())),
+
+    process_color_image: Box::new(move |image, image_pixel_module| {
+      // Convert palette color to RGB if the output image pixel module isn't in
+      // palette color
+      if image.is_palette_color()
+        && !image_pixel_module
+          .photometric_interpretation()
+          .is_palette_color()
+      {
+        image.convert_palette_color_to_rgb();
+      }
+
+      let photometric_interpretation =
+        image_pixel_module.photometric_interpretation();
+
+      // If the output image pixel module is using RGB, or needs RGB color data
+      // as its input, then convert the color image to RGB
+      if photometric_interpretation.is_rgb()
+        || photometric_interpretation.is_ybr_ict()
+        || photometric_interpretation.is_ybr_rct()
+      {
+        image.convert_to_rgb_color_space()
+      }
+
+      // If the output image pixel module is using YBR then convert the color
+      // image to YBR
+      if photometric_interpretation.is_ybr_full() {
+        image.convert_to_ybr_color_space();
+      }
+
+      if photometric_interpretation.is_ybr_full_422() {
+        image.convert_to_ybr_422_color_space().map_err(|_| {
+          P10PixelDataTranscodeTransformError::DataError(
+            DataError::new_value_invalid(
+              "Can't convert to YBR 422 because width is odd".to_string(),
+            ),
+          )
+        })?;
+      }
+
+      Ok(())
+    }),
   }
 }
 

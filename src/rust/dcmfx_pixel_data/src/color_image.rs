@@ -300,6 +300,17 @@ impl ColorImage {
     }
   }
 
+  /// Returns whether this color image stores palette color data. Palette color
+  /// data can be converted to plain RGB by calling
+  /// [`Self::convert_palette_color_to_rgb()`].
+  ///
+  pub fn is_palette_color(&self) -> bool {
+    matches!(
+      self.data,
+      ColorImageData::PaletteU8 { .. } | ColorImageData::PaletteU16 { .. }
+    )
+  }
+
   /// Returns the number of bits allocated for each sample.
   ///
   pub fn bits_allocated(&self) -> BitsAllocated {
@@ -519,6 +530,70 @@ impl ColorImage {
 
       _ => (),
     }
+  }
+
+  /// Converts this color image into the YBR 422 color space if it's in the RGB
+  /// or YBR 444 color space.
+  ///
+  /// An error is returned if the width of this color image is odd, as YBR 422
+  /// requires even width.
+  ///
+  #[allow(clippy::result_unit_err)]
+  pub fn convert_to_ybr_422_color_space(&mut self) -> Result<(), ()> {
+    if self.width() % 2 == 1 {
+      return Err(());
+    }
+
+    self.convert_to_ybr_color_space();
+
+    // Ensure YBR 422 data has identical Cb and Cr values
+    match &mut self.data {
+      ColorImageData::U8 { data, color_space } => {
+        for pixels in data.chunks_exact_mut(6) {
+          let cb = (u64::from(pixels[1]) + u64::from(pixels[4])).div_ceil(2);
+          let cr = (u64::from(pixels[2]) + u64::from(pixels[5])).div_ceil(2);
+
+          pixels[1] = cb as u8;
+          pixels[2] = cr as u8;
+          pixels[4] = cb as u8;
+          pixels[5] = cr as u8;
+        }
+
+        *color_space = ColorSpace::Ybr { is_422: true };
+      }
+
+      ColorImageData::U16 { data, color_space } => {
+        for pixels in data.chunks_exact_mut(6) {
+          let cb = (u64::from(pixels[1]) + u64::from(pixels[4])).div_ceil(2);
+          let cr = (u64::from(pixels[2]) + u64::from(pixels[5])).div_ceil(2);
+
+          pixels[1] = cb as u16;
+          pixels[2] = cr as u16;
+          pixels[4] = cb as u16;
+          pixels[5] = cr as u16;
+        }
+
+        *color_space = ColorSpace::Ybr { is_422: true };
+      }
+
+      ColorImageData::U32 { data, color_space } => {
+        for pixels in data.chunks_exact_mut(6) {
+          let cb = (u64::from(pixels[1]) + u64::from(pixels[4])).div_ceil(2);
+          let cr = (u64::from(pixels[2]) + u64::from(pixels[5])).div_ceil(2);
+
+          pixels[1] = cb as u32;
+          pixels[2] = cr as u32;
+          pixels[4] = cb as u32;
+          pixels[5] = cr as u32;
+        }
+
+        *color_space = ColorSpace::Ybr { is_422: true };
+      }
+
+      _ => (),
+    }
+
+    Ok(())
   }
 
   /// Converts this color image to an 8-bit RGB image.

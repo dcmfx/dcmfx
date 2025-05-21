@@ -19,24 +19,22 @@ pub fn encode_image_pixel_module(
   match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
-    | PhotometricInterpretation::YbrFull => (),
+    | PhotometricInterpretation::Rgb => (),
 
-    // Palette color is only permitted for lossless JPEG 2000 encodes
-    PhotometricInterpretation::PaletteColor { .. } => {
-      if quality.is_some() {
+    // YBR_ICT is only permitted for lossy JPEG 2000 encodes
+    PhotometricInterpretation::YbrIct => {
+      if quality.is_none() {
         return Err(());
       }
     }
 
-    // RGB data will be stored as YBR_RCT for lossless compression, and YBR_ICT
-    // for lossy compression
-    PhotometricInterpretation::Rgb => {
+    // YBR_FULL, YBR_RCT and PALETTE_COLOR are only permitted for lossless JPEG
+    // 2000 encodes
+    PhotometricInterpretation::YbrFull
+    | PhotometricInterpretation::YbrRct
+    | PhotometricInterpretation::PaletteColor { .. } => {
       if quality.is_some() {
-        image_pixel_module
-          .set_photometric_interpretation(PhotometricInterpretation::YbrIct);
-      } else {
-        image_pixel_module
-          .set_photometric_interpretation(PhotometricInterpretation::YbrRct);
+        return Err(());
       }
     }
 
@@ -80,7 +78,6 @@ pub fn encode_monochrome(
       width,
       height,
       image_pixel_module,
-      false,
       quality,
     ),
 
@@ -88,7 +85,7 @@ pub fn encode_monochrome(
       MonochromeImageData::U8(data),
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2,
-    ) => encode(data, width, height, image_pixel_module, false, quality),
+    ) => encode(data, width, height, image_pixel_module, quality),
 
     (
       MonochromeImageData::I16(data),
@@ -99,7 +96,6 @@ pub fn encode_monochrome(
       width,
       height,
       image_pixel_module,
-      false,
       quality,
     ),
 
@@ -112,7 +108,6 @@ pub fn encode_monochrome(
       width,
       height,
       image_pixel_module,
-      false,
       quality,
     ),
 
@@ -144,14 +139,30 @@ pub fn encode_color(
         data,
         color_space: ColorSpace::Rgb,
       },
-      PhotometricInterpretation::YbrIct | PhotometricInterpretation::YbrRct,
+      PhotometricInterpretation::Rgb,
       _,
+    )
+    | (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::YbrRct,
+      None,
+    )
+    | (
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::YbrIct,
+      Some(_),
     )
     | (
       ColorImageData::PaletteU8 { data, .. },
       PhotometricInterpretation::PaletteColor { .. },
       None,
-    ) => encode(data, width, height, image_pixel_module, false, quality),
+    ) => encode(data, width, height, image_pixel_module, quality),
 
     (
       ColorImageData::U8 {
@@ -160,15 +171,31 @@ pub fn encode_color(
       },
       PhotometricInterpretation::YbrFull,
       _,
-    ) => encode(data, width, height, image_pixel_module, true, quality),
+    ) => encode(data, width, height, image_pixel_module, quality),
 
     (
       ColorImageData::U16 {
         data,
         color_space: ColorSpace::Rgb,
       },
-      PhotometricInterpretation::YbrIct | PhotometricInterpretation::YbrRct,
+      PhotometricInterpretation::Rgb,
       _,
+    )
+    | (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::YbrRct,
+      None,
+    )
+    | (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::YbrIct,
+      Some(_),
     )
     | (
       ColorImageData::PaletteU16 { data, .. },
@@ -179,7 +206,6 @@ pub fn encode_color(
       width,
       height,
       image_pixel_module,
-      false,
       quality,
     ),
 
@@ -195,7 +221,6 @@ pub fn encode_color(
       width,
       height,
       image_pixel_module,
-      true,
       quality,
     ),
 
@@ -212,12 +237,26 @@ fn encode(
   width: u16,
   height: u16,
   image_pixel_module: &ImagePixelModule,
-  is_color_ybr: bool,
   quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let mut output_data = Vec::<u8>::with_capacity(512 * 1024);
 
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
+
+  let color_photometric_interpretation =
+    match image_pixel_module.photometric_interpretation() {
+      PhotometricInterpretation::Rgb => 1,
+      PhotometricInterpretation::YbrFull => 2,
+      PhotometricInterpretation::YbrIct => 3,
+      PhotometricInterpretation::YbrRct => 4,
+      _ => 0,
+    };
+
+  let tcp_distoratio = if let Some(quality) = quality {
+    quality_to_psnr(quality, image_pixel_module.bits_stored())
+  } else {
+    0.0
+  };
 
   let result = unsafe {
     ffi::openjpeg_encode(
@@ -229,8 +268,8 @@ fn encode(
       u32::from(u8::from(image_pixel_module.bits_allocated())),
       u32::from(image_pixel_module.bits_stored()),
       u32::from(u8::from(image_pixel_module.pixel_representation())),
-      u32::from(is_color_ybr),
-      u32::from(quality.unwrap_or(0)),
+      color_photometric_interpretation,
+      tcp_distoratio,
       append_output_data,
       &mut output_data as *mut Vec<u8> as *mut core::ffi::c_void,
       error_buffer.as_mut_ptr(),
@@ -250,6 +289,21 @@ fn encode(
   }
 
   Ok(output_data)
+}
+
+/// Converts a quality value in the range 1-100 to a PSNR value for lossy
+/// compression. The value depends on the bits stored value because higher bit
+/// depths need higher PSNR values to maintain similar error characteristics.
+///
+fn quality_to_psnr(quality: u8, bits_stored: u16) -> f32 {
+  let t = (f32::from(bits_stored) - 8.0).max(0.0);
+
+  let min_quality_psnr = 28.0 + 1.875 * t;
+  let max_quality_psnr = 50.0 + 3.750 * t;
+
+  min_quality_psnr
+    + (max_quality_psnr - min_quality_psnr)
+      * ((f32::from(quality) - 1.0) / 99.0).powf(2.0)
 }
 
 /// This function is passed as a callback to [`ffi::openjpeg_encode()`] and
@@ -280,8 +334,8 @@ mod ffi {
       bits_allocated: u32,
       bits_stored: u32,
       pixel_representation: u32,
-      is_color_ybr: u32,
-      quality: u32,
+      color_photometric_interpretation: u32,
+      tcp_distoratio: f32,
       output_data_callback: extern "C" fn(
         *const u8,
         u32,

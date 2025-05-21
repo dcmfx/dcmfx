@@ -152,7 +152,7 @@ fn jpeg_baseline_to_rle_lossless_with_rgb_conversion() {
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "implicit-vr-little-endian",
     "jpeg_baseline_to_rle_lossless_with_rgb_conversion",
-    &["--convert-color-space", "rgb"],
+    &["--photometric-interpretation-color", "RGB"],
   );
 }
 
@@ -251,6 +251,16 @@ fn monochrome_jpeg_xl_to_jpeg_2000_lossless_only() {
 }
 
 #[test]
+fn monochrome_jpeg_xl_to_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "jpeg-2k",
+    "monochrome_jpeg_xl_to_jpeg_2000",
+    &[],
+  );
+}
+
+#[test]
 fn palette_color_to_jpeg_2000_lossless_only() {
   modify_transfer_syntax(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
@@ -336,36 +346,26 @@ fn jpeg_baseline_to_jpeg_2000_lossless_only_without_rgb_conversion() {
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-2k-lossless-only",
     "jpeg_baseline_to_jpeg_2000_lossless_only_without_rgb_conversion",
-    &["--convert-color-space", "false"],
+    &["--photometric-interpretation-color", "pass-through"],
   );
 }
 
 #[test]
-fn jpeg_baseline_to_jpeg_2000_without_rgb_conversion() {
+fn jpeg_baseline_to_jpeg_2000_lossless_only_ybr_full() {
   modify_transfer_syntax(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
-    "jpeg-2k",
-    "jpeg_baseline_to_jpeg_2000_without_rgb_conversion",
-    &["--convert-color-space", "false"],
+    "jpeg-2k-lossless-only",
+    "jpeg_baseline_to_jpeg_2000_lossless_only_ybr_full",
+    &["--photometric-interpretation-color", "pass-through"],
   );
 }
 
 #[test]
-fn jpeg_ls_monochrome_to_jpeg_2000_lossless_only_without_rgb_conversion() {
+fn jpeg_ls_monochrome_to_jpeg_2000_lossless_only() {
   modify_transfer_syntax(
     "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm",
     "jpeg-2k-lossless-only",
-    "jpeg_ls_monochrome_to_jpeg_2000_lossless_only_without_rgb_conversion",
-    &[],
-  );
-}
-
-#[test]
-fn monochrome_jpeg_xl_to_jpeg_2000() {
-  modify_transfer_syntax(
-    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
-    "jpeg-2k",
-    "monochrome_jpeg_xl_to_jpeg_2000",
+    "jpeg_ls_monochrome_to_jpeg_2000_lossless_only",
     &[],
   );
 }

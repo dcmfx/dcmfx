@@ -73,5 +73,5 @@ snapshot_kind: text
 (0028,2114) CS Lossy Image Compression Method       [    12 bytes] "ISO_109 … (JPEG Lossy Compression [ISO/IEC 10918-1])
 (7FE0,0010) OB Pixel Data
   (FFFE,E000) Item                                    [     0 bytes] []
-  (FFFE,E000) Item                                    [   722 bytes] [FF 4F FF …
+  (FFFE,E000) Item                                    [   786 bytes] [FF 4F FF …
 (FFFE,E0DD) Sequence Delimitation Item
