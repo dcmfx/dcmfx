@@ -22,7 +22,7 @@ dcmfx_pixel_data = { path = "../dcmfx_pixel_data", default-features = false }
 [dev-dependencies]
 either = "1.15.0"
 image = "0.25.6"
-rand = { version = "0.9.0", features = ["small_rng"] }
+rand = { version = "0.9.1", features = ["small_rng"] }
 serde = "1.0.219"
 serde_json = "1.0.140"
 walkdir = "2.5.0"
