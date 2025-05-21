@@ -96,7 +96,7 @@ pub enum PixelDataEncodeError {
   /// requested transfer syntax. This error may be returned by
   /// [`encode_image_pixel_module()`].
   ImagePixelModuleNotSupported {
-    image_pixel_module: ImagePixelModule,
+    image_pixel_module: Box<ImagePixelModule>,
     transfer_syntax: &'static TransferSyntax,
   },
 
@@ -249,7 +249,7 @@ pub fn encode_image_pixel_module(
     }
   }
   .map_err(|_| PixelDataEncodeError::ImagePixelModuleNotSupported {
-    image_pixel_module: image_pixel_module.clone(),
+    image_pixel_module: Box::new(image_pixel_module.clone()),
     transfer_syntax,
   })
 }

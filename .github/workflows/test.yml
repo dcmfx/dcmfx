@@ -89,7 +89,7 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.86-${{ matrix.rust-target }}
+          toolchain: 1.87-${{ matrix.rust-target }}
           components: clippy, rustfmt
           cache-workspaces: src/rust
 
@@ -147,7 +147,7 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.86
+          toolchain: 1.87
           target: wasm32-unknown-unknown
           cache-workspaces: src/rust
 
@@ -171,7 +171,7 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.86-pc-windows-msvc
+          toolchain: 1.87-pc-windows-msvc
           cache-workspaces: src/rust
 
       - name: Fetch dependencies
@@ -194,7 +194,7 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.86
+          toolchain: 1.87
           cache-workspaces: src/rust/dcmfx_fuzz
 
       - name: Fetch dependencies
@@ -227,7 +227,7 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.86
+          toolchain: 1.87
           components: clippy, rustfmt
           cache-workspaces: examples/*/rust
 
