@@ -67,12 +67,18 @@ pub fn encode_monochrome(
 
   match (
     image.data(),
+    image.is_monochrome1(),
     image_pixel_module.photometric_interpretation(),
   ) {
     (
       MonochromeImageData::I8(data),
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      true,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I8(data),
+      false,
+      PhotometricInterpretation::Monochrome2,
     ) => encode(
       bytemuck::cast_slice(data),
       width,
@@ -83,14 +89,24 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::U8(data),
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      true,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::U8(data),
+      false,
+      PhotometricInterpretation::Monochrome2,
     ) => encode(data, width, height, image_pixel_module, quality),
 
     (
       MonochromeImageData::I16(data),
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      true,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I16(data),
+      false,
+      PhotometricInterpretation::Monochrome2,
     ) => encode(
       bytemuck::cast_slice(data),
       width,
@@ -101,8 +117,13 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::U16(data),
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      true,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::U16(data),
+      false,
+      PhotometricInterpretation::Monochrome2,
     ) => encode(
       bytemuck::cast_slice(data),
       width,

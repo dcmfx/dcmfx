@@ -15,8 +15,11 @@ use dcmfx::pixel_data::{
 use crate::utils::prompt_to_overwrite_if_exists;
 use crate::{
   InputSource,
-  photometric_interpretation_arg::PhotometricInterpretationColorArg,
-  transfer_syntax_arg::TransferSyntaxArg, utils,
+  photometric_interpretation_arg::{
+    PhotometricInterpretationColorArg, PhotometricInterpretationMonochromeArg,
+  },
+  transfer_syntax_arg::TransferSyntaxArg,
+  utils,
 };
 
 pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
@@ -83,6 +86,16 @@ pub struct ModifyArgs {
     value_parser = clap::value_parser!(u8).range(1..=100),
   )]
   quality: Option<u8>,
+
+  #[clap(
+    long,
+    help_heading = "Transcoding",
+    help = "When transcoding monochrome pixel data using --transfer-syntax, \
+      this specifies the photometric interpretation to be used by the output \
+      DICOM P10 files. This option has no effect on color pixel data."
+  )]
+  photometric_interpretation_monochrome:
+    Option<PhotometricInterpretationMonochromeArg>,
 
   #[clap(
     long,
@@ -187,6 +200,14 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
   }
 
   if args.transfer_syntax.is_none() {
+    if args.photometric_interpretation_monochrome.is_some() {
+      eprintln!(
+        "The --photometric-interpretation-monochrome option is only valid when \
+         --transfer-syntax is specified"
+      );
+      return Err(());
+    }
+
     if args.photometric_interpretation_color.is_some() {
       eprintln!(
         "The --photometric-interpretation-color option is only valid when \
@@ -370,91 +391,128 @@ fn modify_input_source(
 ///
 fn get_transcode_image_data_functions(
   transfer_syntax_arg: TransferSyntaxArg,
+  photometric_interpretation_monochrome_arg: Option<
+    PhotometricInterpretationMonochromeArg,
+  >,
   photometric_interpretation_color_arg: Option<
     PhotometricInterpretationColorArg,
   >,
 ) -> TranscodeImageDataFunctions {
-  TranscodeImageDataFunctions {
-    process_image_pixel_module: Box::new(
-      move |image_pixel_module: &mut ImagePixelModule| {
-        if image_pixel_module.is_color() {
-          // If a photometric interpretation has been explicitly specified
-          // then use it for output
-          if let Some(photometric_interpretation_color_arg) =
-            photometric_interpretation_color_arg
+  let process_image_pixel_module =
+    move |image_pixel_module: &mut ImagePixelModule| {
+      // For grayscale pixel data, the photometric interpretation, if set, can
+      // be either MONOCHROME1 or MONOCHROME2
+      if image_pixel_module.is_grayscale() {
+        if let Some(photometric_interpretation_monochrome_arg) =
+          photometric_interpretation_monochrome_arg
+        {
+          if let Some(photometric_interpretation) =
+            photometric_interpretation_monochrome_arg
+              .as_photometric_interpretation()
           {
-            if let Some(photometric_interpretation) =
-              photometric_interpretation_color_arg
-                .as_photometric_interpretation()
-            {
-              image_pixel_module
-                .set_photometric_interpretation(photometric_interpretation);
-            }
-          } else {
-            // If the input is palette color and the output transfer syntax
-            // doesn't support palette color then expand to RGB by default
-            if image_pixel_module
-              .photometric_interpretation()
-              .is_palette_color()
-              && !transfer_syntax_arg.supports_palette_color()
-            {
-              image_pixel_module
-                .set_photometric_interpretation(PhotometricInterpretation::Rgb);
+            image_pixel_module
+              .set_photometric_interpretation(photometric_interpretation);
+          }
+        }
+      }
+
+      if image_pixel_module.is_color() {
+        // If a photometric interpretation has been explicitly specified
+        // then use it for output
+        if let Some(photometric_interpretation_color_arg) =
+          photometric_interpretation_color_arg
+        {
+          if let Some(photometric_interpretation) =
+            photometric_interpretation_color_arg.as_photometric_interpretation()
+          {
+            image_pixel_module
+              .set_photometric_interpretation(photometric_interpretation);
+          }
+        } else {
+          // If the input is palette color and the output transfer syntax
+          // doesn't support palette color then expand to RGB by default
+          if image_pixel_module
+            .photometric_interpretation()
+            .is_palette_color()
+            && !transfer_syntax_arg.supports_palette_color()
+          {
+            image_pixel_module
+              .set_photometric_interpretation(PhotometricInterpretation::Rgb);
+          }
+
+          // If the input is YBR_FULL_422 and the output transfer syntax
+          // doesn't support YBR_FULL_422 then expand to YBR_FULL by default
+          if image_pixel_module
+            .photometric_interpretation()
+            .is_ybr_full_422()
+            && !transfer_syntax_arg.supports_ybr_full_422()
+          {
+            image_pixel_module.set_photometric_interpretation(
+              PhotometricInterpretation::YbrFull,
+            );
+          }
+
+          match transfer_syntax_arg {
+            // When transcoding to JPEG Baseline 8-bit default to YBR if the
+            // incoming data is RGB
+            TransferSyntaxArg::JpegBaseline8Bit => {
+              if image_pixel_module.photometric_interpretation().is_rgb() {
+                image_pixel_module.set_photometric_interpretation(
+                  PhotometricInterpretation::YbrFull,
+                );
+              }
             }
 
-            // If the input is YBR_FULL_422 and the output transfer syntax
-            // doesn't support YBR_FULL_422 then expand to YBR_FULL by default
-            if image_pixel_module
-              .photometric_interpretation()
-              .is_ybr_full_422()
-              && !transfer_syntax_arg.supports_ybr_full_422()
+            // When transcoding to JPEG 2000 Lossless Only default to YBR_RCT
+            // unless the incoming data is PALETTE_COLOR
+            TransferSyntaxArg::Jpeg2kLosslessOnly
+              if !image_pixel_module
+                .photometric_interpretation()
+                .is_palette_color() =>
             {
               image_pixel_module.set_photometric_interpretation(
-                PhotometricInterpretation::YbrFull,
-              );
+                PhotometricInterpretation::YbrRct,
+              )
             }
 
-            match transfer_syntax_arg {
-              // When transcoding to JPEG Baseline 8-bit default to YBR if the
-              // incoming data is RGB
-              TransferSyntaxArg::JpegBaseline8Bit => {
-                if image_pixel_module.photometric_interpretation().is_rgb() {
-                  image_pixel_module.set_photometric_interpretation(
-                    PhotometricInterpretation::YbrFull,
-                  );
-                }
-              }
+            // When transcoding to JPEG 2000 Lossy default to YBR_ICT
+            TransferSyntaxArg::Jpeg2k => image_pixel_module
+              .set_photometric_interpretation(
+                PhotometricInterpretation::YbrIct,
+              ),
 
-              // When transcoding to JPEG 2000 Lossless Only default to YBR_RCT
-              // unless the incoming data is PALETTE_COLOR
-              TransferSyntaxArg::Jpeg2kLosslessOnly
-                if !image_pixel_module
-                  .photometric_interpretation()
-                  .is_palette_color() =>
-              {
-                image_pixel_module.set_photometric_interpretation(
-                  PhotometricInterpretation::YbrRct,
-                )
-              }
+            _ => (),
+          }
+        }
+      }
 
-              // When transcoding to JPEG 2000 Lossy default to YBR_ICT
-              TransferSyntaxArg::Jpeg2k => image_pixel_module
-                .set_photometric_interpretation(
-                  PhotometricInterpretation::YbrIct,
-                ),
+      Ok(())
+    };
 
-              _ => (),
-            }
+  let process_monochrome_image =
+    move |image: &mut MonochromeImage,
+          image_pixel_module: &ImagePixelModule| {
+      match image_pixel_module.photometric_interpretation() {
+        PhotometricInterpretation::Monochrome1 => {
+          if !image.is_monochrome1() {
+            image.change_monochrome_representation();
           }
         }
 
-        Ok(())
-      },
-    ),
+        PhotometricInterpretation::Monochrome2 => {
+          if image.is_monochrome1() {
+            image.change_monochrome_representation();
+          }
+        }
 
-    process_monochrome_image: Box::new(|_image, _image_pixel_module| Ok(())),
+        _ => (),
+      }
 
-    process_color_image: Box::new(move |image, image_pixel_module| {
+      Ok(())
+    };
+
+  let process_color_image =
+    move |image: &mut ColorImage, image_pixel_module: &ImagePixelModule| {
       // Convert palette color to RGB if the output image pixel module isn't in
       // palette color
       if image.is_palette_color()
@@ -496,7 +554,12 @@ fn get_transcode_image_data_functions(
       }
 
       Ok(())
-    }),
+    };
+
+  TranscodeImageDataFunctions {
+    process_image_pixel_module: Box::new(process_image_pixel_module),
+    process_monochrome_image: Box::new(process_monochrome_image),
+    process_color_image: Box::new(process_color_image),
   }
 }
 
@@ -559,6 +622,7 @@ fn streaming_rewrite(
               pixel_data_encode_config,
               Some(get_transcode_image_data_functions(
                 transfer_syntax_arg,
+                args.photometric_interpretation_monochrome,
                 args.photometric_interpretation_color,
               )),
             ));

@@ -41,28 +41,47 @@ pub fn encode_monochrome(
 
   match (
     image.data(),
+    image.is_monochrome1(),
     image.bits_stored(),
     image_pixel_module.photometric_interpretation(),
   ) {
     (
       MonochromeImageData::Bitmap { data, .. },
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::Bitmap { data, .. },
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => result.copy_from_slice(data),
 
     (
       MonochromeImageData::I8(data),
+      true,
       8,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I8(data),
+      false,
+      8,
+      PhotometricInterpretation::Monochrome2,
     ) => result.copy_from_slice(bytemuck::cast_slice(data)),
 
     (
       MonochromeImageData::I8(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I8(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mask = (1 << image.bits_stored()) - 1;
 
@@ -73,16 +92,28 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::U8(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::U8(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => result.copy_from_slice(data),
 
     (
       MonochromeImageData::I16(data),
+      true,
       16,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I16(data),
+      false,
+      16,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       #[cfg(target_endian = "little")]
       unsafe {
@@ -101,9 +132,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::I16(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I16(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mask = (1 << image.bits_stored()) - 1;
 
@@ -115,9 +152,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::U16(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::U16(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       #[cfg(target_endian = "little")]
       unsafe {
@@ -136,16 +179,28 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::I32(data),
+      true,
       16,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I32(data),
+      false,
+      16,
+      PhotometricInterpretation::Monochrome2,
     ) => result.copy_from_slice(bytemuck::cast_slice(data)),
 
     (
       MonochromeImageData::I32(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I32(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mask = (1 << image.bits_stored()) - 1;
 
@@ -157,9 +212,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::U32(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::U32(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       #[cfg(target_endian = "little")]
       unsafe {

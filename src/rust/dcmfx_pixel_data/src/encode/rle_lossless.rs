@@ -42,14 +42,21 @@ pub fn encode_monochrome(
 
   match (
     image.data(),
+    image.is_monochrome1(),
     image.bits_stored(),
     image_pixel_module.photometric_interpretation(),
   ) {
     (
       MonochromeImageData::Bitmap { data, .. },
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::Bitmap { data, .. },
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let segment_0 = data.to_vec();
 
@@ -64,9 +71,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::I8(data),
+      true,
       8,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I8(data),
+      false,
+      8,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let segment_0 = bytemuck::cast_slice(data).to_vec();
 
@@ -75,9 +88,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::I8(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I8(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
 
@@ -92,9 +111,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::U8(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::U8(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let segment_0 = data.to_vec();
 
@@ -103,9 +128,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::I16(data),
+      true,
       16,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I16(data),
+      false,
+      16,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -122,9 +153,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::I16(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I16(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -143,9 +180,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::U16(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::U16(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -162,9 +205,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::I32(data),
+      true,
       32,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I32(data),
+      false,
+      32,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -185,9 +234,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::I32(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::I32(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -210,9 +265,15 @@ pub fn encode_monochrome(
 
     (
       MonochromeImageData::U32(data),
+      true,
       _,
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1,
+    )
+    | (
+      MonochromeImageData::U32(data),
+      false,
+      _,
+      PhotometricInterpretation::Monochrome2,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];

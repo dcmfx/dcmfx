@@ -2,6 +2,48 @@ use clap::{ValueEnum, builder::PossibleValue};
 
 use dcmfx::pixel_data::iods::image_pixel_module::PhotometricInterpretation;
 
+/// Enum for specifying a monochrome photometric interpretation as a CLI
+/// argument.
+///
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PhotometricInterpretationMonochromeArg {
+  PassThrough,
+  Monochrome1,
+  Monochrome2,
+}
+
+impl ValueEnum for PhotometricInterpretationMonochromeArg {
+  fn value_variants<'a>() -> &'a [Self] {
+    &[Self::PassThrough, Self::Monochrome1, Self::Monochrome2]
+  }
+
+  fn to_possible_value(&self) -> Option<PossibleValue> {
+    Some(match self {
+      Self::PassThrough => PossibleValue::new("pass-through"),
+      Self::Monochrome1 => PossibleValue::new("MONOCHROME1"),
+      Self::Monochrome2 => PossibleValue::new("MONOCHROME2"),
+    })
+  }
+}
+
+impl PhotometricInterpretationMonochromeArg {
+  /// Converts to the underlying [`PhotometricInterpretation`].
+  ///
+  pub fn as_photometric_interpretation(
+    &self,
+  ) -> Option<PhotometricInterpretation> {
+    match self {
+      PhotometricInterpretationMonochromeArg::PassThrough => None,
+      PhotometricInterpretationMonochromeArg::Monochrome1 => {
+        Some(PhotometricInterpretation::Monochrome1)
+      }
+      PhotometricInterpretationMonochromeArg::Monochrome2 => {
+        Some(PhotometricInterpretation::Monochrome2)
+      }
+    }
+  }
+}
+
 /// Enum for specifying a color photometric interpretation as a CLI argument.
 ///
 #[derive(Debug, Clone, Copy, PartialEq)]

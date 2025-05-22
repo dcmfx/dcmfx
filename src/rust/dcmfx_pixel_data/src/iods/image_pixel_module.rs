@@ -663,7 +663,7 @@ pub enum PhotometricInterpretation {
   /// transformations have been performed.
   ///
   /// This photometric interpretation may be used only when the samples per
-  /// pixel has a value of [`SamplesPerPixel::One`].
+  /// pixel is one.
   Monochrome1,
 
   /// Pixel data represent a single monochrome image plane. The minimum sample

@@ -97,7 +97,25 @@ fn modify_in_place() {
 }
 
 #[test]
-fn errors_on_photometric_interpretation_without_transfer_syntax() {
+fn errors_on_photometric_interpretation_monochrome_without_transfer_syntax() {
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg("--photometric-interpretation-monochrome")
+    .arg("MONOCHROME1")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(
+    "errors_on_photometric_interpretation_monochrome_without_transfer_syntax",
+    get_stderr(assert)
+  );
+}
+
+#[test]
+fn errors_on_photometric_interpretation_color_without_transfer_syntax() {
   let assert = Command::cargo_bin("dcmfx_cli")
     .unwrap()
     .arg("modify")
@@ -109,7 +127,7 @@ fn errors_on_photometric_interpretation_without_transfer_syntax() {
     .failure();
 
   assert_snapshot!(
-    "errors_on_photometric_interpretation_without_transfer_syntax",
+    "errors_on_photometric_interpretation_color_without_transfer_syntax",
     get_stderr(assert)
   );
 }
@@ -133,22 +151,31 @@ fn errors_on_quality_without_transfer_syntax() {
 }
 
 #[test]
-fn explicit_vr_little_endian_change_photometric_interpretation() {
+fn explicit_vr_little_endian_monochrome1_to_monochrome2() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/dicomdirtests/77654033/CR1/6154.dcm",
+    "pass-through",
+    "explicit_vr_little_endian_monochrome1_to_monochrome2",
+    &["--photometric-interpretation-monochrome", "MONOCHROME2"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_rgb_to_ybr_full() {
   modify_transfer_syntax(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "pass-through",
-    "explicit_vr_little_endian_change_photometric_interpretation",
+    "explicit_vr_little_endian_rgb_to_ybr_full",
     &["--photometric-interpretation-color", "YBR_FULL"],
   );
 }
 
 #[test]
-fn explicit_vr_little_endian_change_photometric_interpretation_to_ybr_full_422()
-{
+fn explicit_vr_little_endian_rgb_to_ybr_full_422() {
   modify_transfer_syntax(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "pass-through",
-    "explicit_vr_little_endian_change_photometric_interpretation_to_ybr_full_422",
+    "explicit_vr_little_endian_rgb_to_ybr_full_422",
     &["--photometric-interpretation-color", "YBR_FULL_422"],
   );
 }
@@ -220,6 +247,16 @@ fn monochrome_jpeg_xl_to_rle_lossless() {
     "rle-lossless",
     "monochrome_jpeg_xl_to_rle_lossless",
     &[],
+  );
+}
+
+#[test]
+fn monochrome_jpeg_xl_to_rle_lossless_monochrome1() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "rle-lossless",
+    "monochrome_jpeg_xl_to_rle_lossless_monochrome1",
+    &["--photometric-interpretation-monochrome", "MONOCHROME1"],
   );
 }
 

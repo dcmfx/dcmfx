@@ -381,6 +381,66 @@ impl MonochromeImage {
     })
   }
 
+  /// Returns whether this monochrome image's data uses the `MONOCHROME1`
+  /// representation internally.
+  ///
+  pub fn is_monochrome1(&self) -> bool {
+    self.is_monochrome1
+  }
+
+  /// Converts between `MONOCHROME1` and `MONOCHROME2` internal representations.
+  ///
+  pub fn change_monochrome_representation(&mut self) {
+    self.is_monochrome1 = !self.is_monochrome1;
+
+    match &mut self.data {
+      MonochromeImageData::Bitmap { data, .. } => {
+        for pixel in data.iter_mut() {
+          *pixel = !*pixel;
+        }
+      }
+
+      MonochromeImageData::I8(data) => {
+        for pixel in data.iter_mut() {
+          *pixel = (-isize::from(*pixel) - 1) as i8;
+        }
+      }
+
+      MonochromeImageData::U8(data) => {
+        let offset = (1u16 << self.bits_stored) - 1;
+        for pixel in data.iter_mut() {
+          *pixel = (offset - u16::from(*pixel)) as u8;
+        }
+      }
+
+      MonochromeImageData::I16(data) => {
+        for pixel in data.iter_mut() {
+          *pixel = (-i32::from(*pixel) - 1) as i16;
+        }
+      }
+
+      MonochromeImageData::U16(data) => {
+        let offset = (1u32 << self.bits_stored) - 1;
+        for pixel in data.iter_mut() {
+          *pixel = (offset - u32::from(*pixel)) as u16;
+        }
+      }
+
+      MonochromeImageData::I32(data) => {
+        for pixel in data.iter_mut() {
+          *pixel = (-i64::from(*pixel) - 1) as i32;
+        }
+      }
+
+      MonochromeImageData::U32(data) => {
+        let offset = (1u64 << self.bits_stored) - 1;
+        for pixel in data.iter_mut() {
+          *pixel = (offset - u64::from(*pixel)) as u32;
+        }
+      }
+    }
+  }
+
   /// Converts this monochrome image to an 8-bit grayscale image by passing
   /// its values through the given grayscale LUT pipeline.
   ///

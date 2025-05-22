@@ -461,7 +461,7 @@ impl P10PixelDataTranscodeTransform {
       // Pass through the relevant image data function
       (self.image_data_functions.process_monochrome_image)(
         &mut image,
-        &pixel_data_renderer.image_pixel_module,
+        self.output_image_pixel_module.as_ref().unwrap(),
       )?;
 
       // Encode using the output Image Pixel Module
