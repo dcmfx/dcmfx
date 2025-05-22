@@ -23,9 +23,6 @@ pub fn encode_image_pixel_module(
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull => (),
 
-    PhotometricInterpretation::YbrFull422 => image_pixel_module
-      .set_photometric_interpretation(PhotometricInterpretation::YbrFull),
-
     _ => return Err(()),
   }
 
@@ -291,7 +288,7 @@ pub fn encode_color(
     | (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
     ) => {
@@ -318,7 +315,7 @@ pub fn encode_color(
     | (
       ColorImageData::U16 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
     ) => {
@@ -361,7 +358,7 @@ pub fn encode_color(
     | (
       ColorImageData::U32 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
     ) => {

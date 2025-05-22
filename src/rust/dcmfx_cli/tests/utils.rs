@@ -27,3 +27,8 @@ pub fn generate_temp_filename() -> std::path::PathBuf {
 pub fn get_stdout(assert: Assert) -> String {
   String::from_utf8(assert.get_output().stdout.clone()).unwrap()
 }
+
+#[allow(dead_code)]
+pub fn get_stderr(assert: Assert) -> String {
+  String::from_utf8(assert.get_output().stderr.clone()).unwrap()
+}

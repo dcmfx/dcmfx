@@ -5,7 +5,7 @@ use insta::assert_snapshot;
 
 #[macro_use]
 mod assert_image_snapshot;
-use utils::{generate_temp_filename, get_stdout, to_native_path};
+use utils::{generate_temp_filename, get_stderr, get_stdout, to_native_path};
 
 #[test]
 fn modify() {
@@ -94,6 +94,63 @@ fn modify_in_place() {
     .success();
 
   assert_snapshot!("modify_in_place_after", get_stdout(assert));
+}
+
+#[test]
+fn errors_on_photometric_interpretation_without_transfer_syntax() {
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg("--photometric-interpretation-color")
+    .arg("RGB")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(
+    "errors_on_photometric_interpretation_without_transfer_syntax",
+    get_stderr(assert)
+  );
+}
+
+#[test]
+fn errors_on_quality_without_transfer_syntax() {
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg("--quality")
+    .arg("50")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(
+    "errors_on_quality_without_transfer_syntax",
+    get_stderr(assert)
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_change_photometric_interpretation() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "pass-through",
+    "explicit_vr_little_endian_change_photometric_interpretation",
+    &["--photometric-interpretation-color", "YBR_FULL"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_change_photometric_interpretation_to_ybr_full_422()
+{
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "pass-through",
+    "explicit_vr_little_endian_change_photometric_interpretation_to_ybr_full_422",
+    &["--photometric-interpretation-color", "YBR_FULL_422"],
+  );
 }
 
 #[test]

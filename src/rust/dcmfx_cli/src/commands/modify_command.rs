@@ -77,11 +77,12 @@ pub struct ModifyArgs {
     help_heading = "Transcoding",
     help = "When transcoding to a lossy transfer syntax, specifies the \
       compression quality in the range 1-100. A quality of 100 does not result \
-      in lossless compression.",
-    default_value_t = 85,
+      in lossless compression.\n\
+      \n\
+      Default value: 85",
     value_parser = clap::value_parser!(u8).range(1..=100),
   )]
-  quality: u8,
+  quality: Option<u8>,
 
   #[clap(
     long,
@@ -155,7 +156,8 @@ pub struct ModifyArgs {
   #[clap(
     long,
     help = "Specifies the value of the Implementation Version Name data \
-      element in output DICOM P10 files.",
+      element in output DICOM P10 files. The value must conform to the \
+      specification of the SS (Short String) value representation.",
     default_value_t = uids::DCMFX_IMPLEMENTATION_VERSION_NAME.to_string(),
   )]
   implementation_version_name: String,
@@ -182,6 +184,23 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
        must be specified"
     );
     return Err(());
+  }
+
+  if args.transfer_syntax.is_none() {
+    if args.photometric_interpretation_color.is_some() {
+      eprintln!(
+        "The --photometric-interpretation-color option is only valid when \
+         --transfer-syntax is specified"
+      );
+      return Err(());
+    }
+
+    if args.quality.is_some() {
+      eprintln!(
+        "The --quality option is only valid when --transfer-syntax is specified"
+      );
+      return Err(());
+    }
   }
 
   let input_sources = crate::get_input_sources(&args.input_filenames);
@@ -309,27 +328,6 @@ fn modify_input_source(
     ..P10WriteConfig::default()
   };
 
-  // Setup a pixel data transcode transform if an output transfer syntax is
-  // specified
-  let pixel_data_transcode_transform =
-    if let Some(output_transfer_syntax) = args.transfer_syntax {
-      let mut pixel_data_encode_config = PixelDataEncodeConfig::new();
-      pixel_data_encode_config.set_quality(args.quality);
-      pixel_data_encode_config
-        .set_zlib_compression_level(args.zlib_compression_level);
-
-      Some(P10PixelDataTranscodeTransform::new(
-        output_transfer_syntax.as_transfer_syntax(),
-        pixel_data_encode_config,
-        Some(get_transcode_image_data_functions(
-          output_transfer_syntax,
-          args.photometric_interpretation_color,
-        )),
-      ))
-    } else {
-      None
-    };
-
   let input_stream = input_source
     .open_read_stream()
     .map_err(ModifyCommandError::P10Error)?;
@@ -340,7 +338,7 @@ fn modify_input_source(
     write_config,
     filter_transform,
     insert_transform,
-    pixel_data_transcode_transform,
+    args,
   )?;
 
   // Rename the temporary file to the desired output filename
@@ -380,58 +378,73 @@ fn get_transcode_image_data_functions(
     process_image_pixel_module: Box::new(
       move |image_pixel_module: &mut ImagePixelModule| {
         if image_pixel_module.is_color() {
-          // If the input is palette color and the output transfer syntax doesn't
-          // support palette color then expand to RGB by default
-          if image_pixel_module
-            .photometric_interpretation()
-            .is_palette_color()
-            && !transfer_syntax_arg.supports_palette_color()
+          // If a photometric interpretation has been explicitly specified
+          // then use it for output
+          if let Some(photometric_interpretation_color_arg) =
+            photometric_interpretation_color_arg
           {
-            image_pixel_module
-              .set_photometric_interpretation(PhotometricInterpretation::Rgb);
-          }
-
-          match (photometric_interpretation_color_arg, transfer_syntax_arg) {
-            // If a photometric interpretation has been explicitly specified
-            // then use it for output
-            (Some(photometric_interpretation_color), _) => {
-              if let Some(photometric_interpretation) =
-                photometric_interpretation_color.as_photometric_interpretation()
-              {
-                image_pixel_module
-                  .set_photometric_interpretation(photometric_interpretation);
-              }
+            if let Some(photometric_interpretation) =
+              photometric_interpretation_color_arg
+                .as_photometric_interpretation()
+            {
+              image_pixel_module
+                .set_photometric_interpretation(photometric_interpretation);
+            }
+          } else {
+            // If the input is palette color and the output transfer syntax
+            // doesn't support palette color then expand to RGB by default
+            if image_pixel_module
+              .photometric_interpretation()
+              .is_palette_color()
+              && !transfer_syntax_arg.supports_palette_color()
+            {
+              image_pixel_module
+                .set_photometric_interpretation(PhotometricInterpretation::Rgb);
             }
 
-            // When transcoding to JPEG Baseline 8-bit default to YBR if the
-            // incoming data is RGB
-            (_, TransferSyntaxArg::JpegBaseline8Bit) => {
-              if image_pixel_module.photometric_interpretation().is_rgb() {
-                image_pixel_module.set_photometric_interpretation(
-                  PhotometricInterpretation::YbrFull,
-                );
-              }
-            }
-
-            // When transcoding to JPEG 2000 Lossless Only default to YBR_RCT
-            // unless the incoming data is PALETTE_COLOR
-            (_, TransferSyntaxArg::Jpeg2kLosslessOnly)
-              if !image_pixel_module
-                .photometric_interpretation()
-                .is_palette_color() =>
+            // If the input is YBR_FULL_422 and the output transfer syntax
+            // doesn't support YBR_FULL_422 then expand to YBR_FULL by default
+            if image_pixel_module
+              .photometric_interpretation()
+              .is_ybr_full_422()
+              && !transfer_syntax_arg.supports_ybr_full_422()
             {
               image_pixel_module.set_photometric_interpretation(
-                PhotometricInterpretation::YbrRct,
-              )
+                PhotometricInterpretation::YbrFull,
+              );
             }
 
-            // When transcoding to JPEG 2000 Lossy default to YBR_ICT
-            (_, TransferSyntaxArg::Jpeg2k) => image_pixel_module
-              .set_photometric_interpretation(
-                PhotometricInterpretation::YbrIct,
-              ),
+            match transfer_syntax_arg {
+              // When transcoding to JPEG Baseline 8-bit default to YBR if the
+              // incoming data is RGB
+              TransferSyntaxArg::JpegBaseline8Bit => {
+                if image_pixel_module.photometric_interpretation().is_rgb() {
+                  image_pixel_module.set_photometric_interpretation(
+                    PhotometricInterpretation::YbrFull,
+                  );
+                }
+              }
 
-            _ => (),
+              // When transcoding to JPEG 2000 Lossless Only default to YBR_RCT
+              // unless the incoming data is PALETTE_COLOR
+              TransferSyntaxArg::Jpeg2kLosslessOnly
+                if !image_pixel_module
+                  .photometric_interpretation()
+                  .is_palette_color() =>
+              {
+                image_pixel_module.set_photometric_interpretation(
+                  PhotometricInterpretation::YbrRct,
+                )
+              }
+
+              // When transcoding to JPEG 2000 Lossy default to YBR_ICT
+              TransferSyntaxArg::Jpeg2k => image_pixel_module
+                .set_photometric_interpretation(
+                  PhotometricInterpretation::YbrIct,
+                ),
+
+              _ => (),
+            }
           }
         }
 
@@ -465,11 +478,13 @@ fn get_transcode_image_data_functions(
       }
 
       // If the output image pixel module is using YBR then convert the color
-      // image to YBR
+      // image to YBR full
       if photometric_interpretation.is_ybr_full() {
         image.convert_to_ybr_color_space();
       }
 
+      // If the output image pixel module is using YBR 422 then convert the
+      // color image to YBR 422
       if photometric_interpretation.is_ybr_full_422() {
         image.convert_to_ybr_422_color_space().map_err(|_| {
           P10PixelDataTranscodeTransformError::DataError(
@@ -494,7 +509,7 @@ fn streaming_rewrite(
   write_config: P10WriteConfig,
   mut filter_transform: Option<P10FilterTransform>,
   mut insert_transform: Option<P10InsertTransform>,
-  mut pixel_data_transcode_transform: Option<P10PixelDataTranscodeTransform>,
+  args: &ModifyArgs,
 ) -> Result<(), ModifyCommandError> {
   // Open output stream
   let mut output_stream: Box<dyn Write> =
@@ -510,6 +525,8 @@ fn streaming_rewrite(
   let mut p10_write_context = P10WriteContext::new();
   p10_write_context.set_config(&write_config);
 
+  let mut pixel_data_transcode_transform = None;
+
   // Stream P10 tokens from the input stream to the output stream
   loop {
     // Read the next P10 tokens from the input stream
@@ -518,6 +535,36 @@ fn streaming_rewrite(
       &mut p10_read_context,
     )
     .map_err(ModifyCommandError::P10Error)?;
+
+    // If transcoding is active, setup a transcode transform when the File Meta
+    // Information token is received
+    if let Some(transfer_syntax_arg) = args.transfer_syntax {
+      for token in tokens.iter() {
+        if let P10Token::FileMetaInformation { data_set } = token {
+          let output_transfer_syntax =
+            transfer_syntax_arg.as_transfer_syntax().unwrap_or_else(|| {
+              data_set
+                .get_transfer_syntax()
+                .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
+            });
+
+          let mut pixel_data_encode_config = PixelDataEncodeConfig::new();
+          pixel_data_encode_config.set_quality(args.quality.unwrap_or(85));
+          pixel_data_encode_config
+            .set_zlib_compression_level(args.zlib_compression_level);
+
+          pixel_data_transcode_transform =
+            Some(P10PixelDataTranscodeTransform::new(
+              output_transfer_syntax,
+              pixel_data_encode_config,
+              Some(get_transcode_image_data_functions(
+                transfer_syntax_arg,
+                args.photometric_interpretation_color,
+              )),
+            ));
+        }
+      }
+    }
 
     // Pass tokens through the pixel data transcode transform if one is active
     if let Some(pixel_data_transcode_transform) =

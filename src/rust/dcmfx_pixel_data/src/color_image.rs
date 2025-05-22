@@ -496,6 +496,10 @@ impl ColorImage {
         *color_space = ColorSpace::Ybr { is_422: false };
       }
 
+      ColorImageData::U8 { color_space, .. } if color_space.is_ybr() => {
+        *color_space = ColorSpace::Ybr { is_422: false };
+      }
+
       ColorImageData::U16 { data, color_space } if color_space.is_rgb() => {
         for pixel in data.chunks_exact_mut(3) {
           let r: f64 = pixel[0].into();
@@ -512,6 +516,10 @@ impl ColorImage {
         *color_space = ColorSpace::Ybr { is_422: false };
       }
 
+      ColorImageData::U16 { color_space, .. } if color_space.is_ybr() => {
+        *color_space = ColorSpace::Ybr { is_422: false };
+      }
+
       ColorImageData::U32 { data, color_space } if color_space.is_rgb() => {
         for pixel in data.chunks_exact_mut(3) {
           let r: f64 = pixel[0].into();
@@ -525,6 +533,10 @@ impl ColorImage {
           pixel[2] = (ybr[2] * max_storable_value).round() as u32;
         }
 
+        *color_space = ColorSpace::Ybr { is_422: false };
+      }
+
+      ColorImageData::U32 { color_space, .. } if color_space.is_ybr() => {
         *color_space = ColorSpace::Ybr { is_422: false };
       }
 

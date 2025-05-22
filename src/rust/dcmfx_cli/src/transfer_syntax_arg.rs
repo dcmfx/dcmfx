@@ -6,6 +6,7 @@ use dcmfx::core::{TransferSyntax, transfer_syntax};
 ///
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TransferSyntaxArg {
+  PassThrough,
   ImplicitVrLittleEndian,
   ExplicitVrLittleEndian,
   ExplicitVrBigEndian,
@@ -21,42 +22,56 @@ pub enum TransferSyntaxArg {
 impl TransferSyntaxArg {
   /// Converts to the underlying [`TransferSyntax`].
   ///
-  pub fn as_transfer_syntax(&self) -> &'static TransferSyntax {
+  pub fn as_transfer_syntax(&self) -> Option<&'static TransferSyntax> {
     match self {
+      Self::PassThrough => None,
       Self::ImplicitVrLittleEndian => {
-        &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
+        Some(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
       }
       Self::ExplicitVrLittleEndian => {
-        &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
+        Some(&transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN)
       }
-      Self::EncapsulatedUncompressedExplicitVrLittleEndian => {
-        &transfer_syntax::ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
-      }
+      Self::EncapsulatedUncompressedExplicitVrLittleEndian => Some(
+        &transfer_syntax::ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN,
+      ),
       Self::DeflatedExplicitVrLittleEndian => {
-        &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+        Some(&transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN)
       }
-      Self::ExplicitVrBigEndian => &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN,
-      Self::RleLossless => &transfer_syntax::RLE_LOSSLESS,
+      Self::ExplicitVrBigEndian => {
+        Some(&transfer_syntax::EXPLICIT_VR_BIG_ENDIAN)
+      }
+      Self::RleLossless => Some(&transfer_syntax::RLE_LOSSLESS),
       Self::DeflatedImageFrameCompression => {
-        &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION
+        Some(&transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION)
       }
-      Self::JpegBaseline8Bit => &transfer_syntax::JPEG_BASELINE_8BIT,
-      Self::Jpeg2kLosslessOnly => &transfer_syntax::JPEG_2K_LOSSLESS_ONLY,
-      Self::Jpeg2k => &transfer_syntax::JPEG_2K,
+      Self::JpegBaseline8Bit => Some(&transfer_syntax::JPEG_BASELINE_8BIT),
+      Self::Jpeg2kLosslessOnly => Some(&transfer_syntax::JPEG_2K_LOSSLESS_ONLY),
+      Self::Jpeg2k => Some(&transfer_syntax::JPEG_2K),
     }
   }
 
-  /// Returns whether this transfer syntax natively supports encoding palette
-  /// color pixel data.
+  /// Returns whether this transfer syntax supports the `PALETTE_COLOR``
+  /// photometric interpretation.
   ///
   pub fn supports_palette_color(&self) -> bool {
     !matches!(self, Self::JpegBaseline8Bit | Self::Jpeg2k)
+  }
+
+  /// Returns whether this transfer syntax supports the `YBR_FULL_422`
+  /// photometric interpretation.
+  ///
+  pub fn supports_ybr_full_422(&self) -> bool {
+    !matches!(
+      self,
+      Self::RleLossless | Self::Jpeg2kLosslessOnly | Self::Jpeg2k
+    )
   }
 }
 
 impl ValueEnum for TransferSyntaxArg {
   fn value_variants<'a>() -> &'a [Self] {
     &[
+      Self::PassThrough,
       Self::ImplicitVrLittleEndian,
       Self::ExplicitVrLittleEndian,
       Self::ExplicitVrBigEndian,
@@ -72,6 +87,14 @@ impl ValueEnum for TransferSyntaxArg {
 
   fn to_possible_value(&self) -> Option<PossibleValue> {
     Some(match self {
+      Self::PassThrough => PossibleValue::new("pass-through").help(
+        "\n\
+          Keep the original transfer syntax when transcoding. This option can \
+          be used to force a full decode/encode cycle that allows for \
+          modifications such as changing the photometric interpretation, but \
+          without having to explicitly specify an output transfer syntax.",
+      ),
+
       Self::ImplicitVrLittleEndian => {
         PossibleValue::new("implicit-vr-little-endian").help(
           "\n\

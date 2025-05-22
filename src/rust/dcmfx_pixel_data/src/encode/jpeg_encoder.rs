@@ -103,7 +103,7 @@ pub fn encode_color(
     (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
     ) => encode(
@@ -118,7 +118,7 @@ pub fn encode_color(
     (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: true },
       },
       PhotometricInterpretation::YbrFull422,
     ) => encode(
