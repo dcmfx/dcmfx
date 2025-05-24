@@ -115,7 +115,7 @@ impl P10Error {
     }
   }
 
-  /// Returns the `details`` field of the error, if one exists.
+  /// Returns the `details` field of the error, if one exists.
   ///
   pub fn details(&self) -> &str {
     match self {

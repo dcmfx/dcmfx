@@ -38,15 +38,6 @@ pub fn encode_image_pixel_module(
       }
     }
 
-    // YBR_FULL_422 is expanded to YBR_FULL because YBR_FULL_422 isn't supported
-    // by the JPEG 2000 transfer syntaxes
-    //
-    // Ref: PS3.5 Table 8.2.4-1.
-    PhotometricInterpretation::YbrFull422 => {
-      image_pixel_module
-        .set_photometric_interpretation(PhotometricInterpretation::YbrFull);
-    }
-
     _ => return Err(()),
   };
 
@@ -188,7 +179,7 @@ pub fn encode_color(
     (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
       _,
@@ -233,7 +224,7 @@ pub fn encode_color(
     (
       ColorImageData::U16 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
       _,

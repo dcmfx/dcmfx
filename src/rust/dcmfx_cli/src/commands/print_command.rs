@@ -21,9 +21,8 @@ pub struct PrintArgs {
   #[arg(
     long,
     short,
-    help = "\
-      The maximum width in characters of the printed output. By default this \
-      is set to the width of the active terminal, or 80 characters if the \
+    help = "The maximum width in characters of the printed output. By default \
+      this is set to the width of the active terminal, or 80 characters if the \
       terminal width can't be detected.",
     value_parser = clap::value_parser!(u32).range(0..10000),
   )]
@@ -32,9 +31,8 @@ pub struct PrintArgs {
   #[arg(
     long,
     short,
-    help = "\
-      Whether to print output using color and bold text. By default this is \
-      set based on whether there is an active output terminal that supports \
+    help = "Whether to print output using color and bold text. By default this \
+      is set based on whether there is an active output terminal that supports \
       colored output."
   )]
   styled: Option<bool>,

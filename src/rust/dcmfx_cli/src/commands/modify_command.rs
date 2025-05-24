@@ -15,10 +15,13 @@ use dcmfx::pixel_data::{
 use crate::utils::prompt_to_overwrite_if_exists;
 use crate::{
   InputSource,
-  photometric_interpretation_arg::{
-    PhotometricInterpretationColorArg, PhotometricInterpretationMonochromeArg,
+  args::{
+    photometric_interpretation_arg::{
+      PhotometricInterpretationColorArg, PhotometricInterpretationMonochromeArg,
+    },
+    planar_configuration_arg::PlanarConfigurationArg,
+    transfer_syntax_arg::{self, TransferSyntaxArg},
   },
-  transfer_syntax_arg::TransferSyntaxArg,
   utils,
 };
 
@@ -101,8 +104,8 @@ pub struct ModifyArgs {
     long,
     help_heading = "Transcoding",
     help = "When transcoding color pixel data using --transfer-syntax, this \
-      specifies the photometric interpretation to be used by the output DICOM \
-      P10 files. This option has no effect on monochrome pixel data.\n\
+      specifies the photometric interpretation to be used by the transcoded \
+      pixel data. This option has no effect on monochrome pixel data.\n\
       \n\
       When the output transfer syntax is 'JPEG Baseline 8-bit' the output \
       photometric interpretation defaults to 'YBR_FULL' if the color data \
@@ -130,8 +133,29 @@ pub struct ModifyArgs {
 
   #[arg(
     long,
-    help = "\
-      The zlib compression level to use when outputting to the 'Deflated \
+    help_heading = "Transcoding",
+    help = "When transcoding color pixel data using --transfer-syntax, this \
+      specifies the planar configuration to be used by the transcoded pixel \
+      data. This option has no effect on monochrome pixel data.\n\
+      \n\
+      The planar configuration can only be specified for the following \
+      transfer syntaxes:\n\
+      \n\
+      - Implicit VR Little Endian\n\
+      - Explicit VR Little Endian\n\
+      - Encapsulated Uncompressed Explicit VR Little Endian\n\
+      - Deflated Explicit VR Little Endian\n\
+      - Explicit VR Big Endian\n\
+      - Deflated Image Frame Compression\n\
+      \n\
+      The planar configuration is ignored when transcoding into other transfer \
+      syntaxes."
+  )]
+  planar_configuration: Option<PlanarConfigurationArg>,
+
+  #[arg(
+    long,
+    help = "The zlib compression level to use when outputting to the 'Deflated \
       Explicit VR Little Endian' and 'Deflated Image Frame Compression' \
       transfer syntaxes. The level ranges from 0, meaning no compression, \
       through to 9, which gives the best compression at the cost of speed.",
@@ -383,20 +407,25 @@ fn modify_input_source(
 
 /// Returns the image data functions to use when transcoding pixel data.
 ///
-/// Currently the only supported modification to pixel data during transcoding
-/// is specifying the desired output photometric interpretation, sampling of
-/// PALETTE_COLOR data into RGB when the output transfer syntax doesn't support
-/// PALETTE_COLOR, and expansion of YBR_FULL_422 to YBR_FULL when the
-/// output transfer syntax doesn't support YBR_FULL_422.
+/// These are currently able to perform the following alterations to pixel data
+/// as it is transcoded:
+///
+/// - Setting a desired photometric interpretation for the transcoded output.
+/// - Sampling of PALETTE_COLOR data into RGB when the output transfer syntax
+///   doesn't support PALETTE_COLOR.
+/// - Expansion of YBR_FULL_422 to YBR_FULL when the output transfer syntax
+///   doesn't support YBR_FULL_422.
+/// - Setting a desired planar configuration for the transcoded output.
 ///
 fn get_transcode_image_data_functions(
-  transfer_syntax_arg: TransferSyntaxArg,
+  output_transfer_syntax: &'static TransferSyntax,
   photometric_interpretation_monochrome_arg: Option<
     PhotometricInterpretationMonochromeArg,
   >,
   photometric_interpretation_color_arg: Option<
     PhotometricInterpretationColorArg,
   >,
+  planar_configuration_arg: Option<PlanarConfigurationArg>,
 ) -> TranscodeImageDataFunctions {
   let process_image_pixel_module =
     move |image_pixel_module: &mut ImagePixelModule| {
@@ -418,7 +447,7 @@ fn get_transcode_image_data_functions(
 
       if image_pixel_module.is_color() {
         // If a photometric interpretation has been explicitly specified
-        // then use it for output
+        // then use it for the output
         if let Some(photometric_interpretation_color_arg) =
           photometric_interpretation_color_arg
         {
@@ -434,7 +463,9 @@ fn get_transcode_image_data_functions(
           if image_pixel_module
             .photometric_interpretation()
             .is_palette_color()
-            && !transfer_syntax_arg.supports_palette_color()
+            && !transfer_syntax_arg::supports_palette_color(
+              output_transfer_syntax,
+            )
           {
             image_pixel_module
               .set_photometric_interpretation(PhotometricInterpretation::Rgb);
@@ -445,17 +476,19 @@ fn get_transcode_image_data_functions(
           if image_pixel_module
             .photometric_interpretation()
             .is_ybr_full_422()
-            && !transfer_syntax_arg.supports_ybr_full_422()
+            && !transfer_syntax_arg::supports_ybr_full_422(
+              output_transfer_syntax,
+            )
           {
             image_pixel_module.set_photometric_interpretation(
               PhotometricInterpretation::YbrFull,
             );
           }
 
-          match transfer_syntax_arg {
+          match *output_transfer_syntax {
             // When transcoding to JPEG Baseline 8-bit default to YBR if the
             // incoming data is RGB
-            TransferSyntaxArg::JpegBaseline8Bit => {
+            transfer_syntax::JPEG_BASELINE_8BIT => {
               if image_pixel_module.photometric_interpretation().is_rgb() {
                 image_pixel_module.set_photometric_interpretation(
                   PhotometricInterpretation::YbrFull,
@@ -465,7 +498,7 @@ fn get_transcode_image_data_functions(
 
             // When transcoding to JPEG 2000 Lossless Only default to YBR_RCT
             // unless the incoming data is PALETTE_COLOR
-            TransferSyntaxArg::Jpeg2kLosslessOnly
+            transfer_syntax::JPEG_2K_LOSSLESS_ONLY
               if !image_pixel_module
                 .photometric_interpretation()
                 .is_palette_color() =>
@@ -476,12 +509,23 @@ fn get_transcode_image_data_functions(
             }
 
             // When transcoding to JPEG 2000 Lossy default to YBR_ICT
-            TransferSyntaxArg::Jpeg2k => image_pixel_module
+            transfer_syntax::JPEG_2K => image_pixel_module
               .set_photometric_interpretation(
                 PhotometricInterpretation::YbrIct,
               ),
 
             _ => (),
+          }
+        }
+
+        // If a planar configuration has been explicitly specified then use it
+        // for the output
+        if let Some(planar_configuration_arg) = planar_configuration_arg {
+          if transfer_syntax_arg::supports_planar_configuration(
+            output_transfer_syntax,
+          ) {
+            image_pixel_module
+              .set_planar_configuration(planar_configuration_arg.into());
           }
         }
       }
@@ -492,6 +536,8 @@ fn get_transcode_image_data_functions(
   let process_monochrome_image =
     move |image: &mut MonochromeImage,
           image_pixel_module: &ImagePixelModule| {
+      // Convert to MONOCHROME1/MONOCHROME1 based on the output photometric
+      // interpretation
       match image_pixel_module.photometric_interpretation() {
         PhotometricInterpretation::Monochrome1 => {
           if !image.is_monochrome1() {
@@ -621,9 +667,10 @@ fn streaming_rewrite(
               output_transfer_syntax,
               pixel_data_encode_config,
               Some(get_transcode_image_data_functions(
-                transfer_syntax_arg,
+                output_transfer_syntax,
                 args.photometric_interpretation_monochrome,
                 args.photometric_interpretation_color,
+                args.planar_configuration,
               )),
             ));
         }

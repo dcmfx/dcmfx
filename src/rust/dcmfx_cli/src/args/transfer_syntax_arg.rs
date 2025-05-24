@@ -49,23 +49,6 @@ impl TransferSyntaxArg {
       Self::Jpeg2k => Some(&transfer_syntax::JPEG_2K),
     }
   }
-
-  /// Returns whether this transfer syntax supports the `PALETTE_COLOR``
-  /// photometric interpretation.
-  ///
-  pub fn supports_palette_color(&self) -> bool {
-    !matches!(self, Self::JpegBaseline8Bit | Self::Jpeg2k)
-  }
-
-  /// Returns whether this transfer syntax supports the `YBR_FULL_422`
-  /// photometric interpretation.
-  ///
-  pub fn supports_ybr_full_422(&self) -> bool {
-    !matches!(
-      self,
-      Self::RleLossless | Self::Jpeg2kLosslessOnly | Self::Jpeg2k
-    )
-  }
 }
 
 impl ValueEnum for TransferSyntaxArg {
@@ -224,4 +207,46 @@ impl ValueEnum for TransferSyntaxArg {
       ),
     })
   }
+}
+
+/// Returns whether a transfer syntax supports the `PALETTE_COLOR` photometric
+/// interpretation.
+///
+pub fn supports_palette_color(transfer_syntax: &TransferSyntax) -> bool {
+  transfer_syntax == &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax == &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax
+      == &transfer_syntax::ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax == &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax == &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN
+    || transfer_syntax == &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION
+    || transfer_syntax == &transfer_syntax::RLE_LOSSLESS
+    || transfer_syntax == &transfer_syntax::JPEG_2K_LOSSLESS_ONLY
+}
+
+/// Returns whether a transfer syntax supports the `YBR_FULL_422` photometric
+/// interpretation.
+///
+pub fn supports_ybr_full_422(transfer_syntax: &TransferSyntax) -> bool {
+  transfer_syntax == &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax == &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax
+      == &transfer_syntax::ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax == &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax == &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN
+    || transfer_syntax == &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION
+    || transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
+}
+
+/// Returns whether a transfer syntax supports control of the planar
+/// configuration.
+///
+pub fn supports_planar_configuration(transfer_syntax: &TransferSyntax) -> bool {
+  transfer_syntax == &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax == &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax
+      == &transfer_syntax::ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax == &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+    || transfer_syntax == &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN
+    || transfer_syntax == &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION
 }

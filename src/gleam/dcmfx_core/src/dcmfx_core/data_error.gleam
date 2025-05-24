@@ -164,7 +164,7 @@ pub fn name(error: DataError) -> String {
   }
 }
 
-/// Returns the `details`` field of the error, if one exists.
+/// Returns the `details` field of the error, if one exists.
 ///
 pub fn details(error: DataError) -> String {
   case error {

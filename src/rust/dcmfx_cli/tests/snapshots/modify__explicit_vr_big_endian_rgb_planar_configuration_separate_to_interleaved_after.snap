@@ -1,0 +1,42 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (Ultrasound Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    58 bytes] "1.2.840.11 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Big Endian)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    10 bytes] "DCMfx Test"
+(0008,0008) CS Image Type                           [    28 bytes] "ORIGINAL", …
+(0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Ultrasound Image Storage)
+(0008,0018) UI SOP Instance UID                     [    58 bytes] "1.2.840.11 …
+(0008,0020) DA Study Date                           [    10 bytes] "1997.04.24"
+(0008,0030) TM Study Time                           [     8 bytes] "14:04:38"
+(0008,0060) CS Modality                             [     2 bytes] "US" (Ultrasound)
+(0008,0070) LO Manufacturer                         [    20 bytes] "G.E. Medic …
+(0008,0080) LO Institution Name                     [    18 bytes] "GE MEDICAL …
+(0008,1010) SH Station Name                         [     6 bytes] "mvme87"
+(0008,1090) LO Manufacturer's Model Name            [    10 bytes] "LOGIQ 700"
+(0008,2122) IS Stage Number                         [     2 bytes] "0"
+(0008,2124) IS Number of Stages                     [     2 bytes] "1"
+(0008,2128) IS View Number                          [     2 bytes] "0"
+(0008,212A) IS Number of Views in Stage             [     2 bytes] "1"
+(0010,0010) PN Patient's Name                       [    10 bytes] "Anonymized"
+(0018,1000) LO Device Serial Number                 [     8 bytes] "4131101"
+(0018,1020) LO Software Versions                    [     4 bytes] "R6.1"
+(0020,000D) UI Study Instance UID                   [    48 bytes] "1.2.840.11 …
+(0020,000E) UI Series Instance UID                  [    50 bytes] "1.2.840.11 …
+(0020,0011) IS Series Number                        [     2 bytes] "0"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 3
+(0028,0004) CS Photometric Interpretation           [     4 bytes] "RGB"
+(0028,0006) US Planar Configuration                 [     2 bytes] 0
+(0028,0010) US Rows                                 [     2 bytes] 60
+(0028,0011) US Columns                              [     2 bytes] 80
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 8
+(0028,0102) US High Bit                             [     2 bytes] 7
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(7FE0,0010) OB Pixel Data                           [ 14400 bytes] [AB AB AB A …

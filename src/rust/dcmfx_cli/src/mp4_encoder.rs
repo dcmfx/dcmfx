@@ -197,7 +197,7 @@ impl Mp4Encoder {
   /// Copies data for an incoming frame into the raw frame frame ready for
   /// pixel format conversion and encoding.
   ///
-  /// This copy respects the `linesize`` of the target frame.
+  /// This copy respects the `linesize` of the target frame.
   ///
   fn update_raw_frame<T: bytemuck::Pod>(
     &mut self,

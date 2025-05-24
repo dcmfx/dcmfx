@@ -181,6 +181,42 @@ fn explicit_vr_little_endian_rgb_to_ybr_full_422() {
 }
 
 #[test]
+fn explicit_vr_little_endian_planar_configuration_interleaved_to_separate() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "pass-through",
+    "explicit_vr_little_endian_planar_configuration_interleaved_to_separate",
+    &["--planar-configuration", "separate"],
+  );
+}
+
+#[test]
+fn explicit_vr_big_endian_rgb_planar_configuration_separate_to_interleaved() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/ExplVR_BigEnd.dcm",
+    "pass-through",
+    "explicit_vr_big_endian_rgb_planar_configuration_separate_to_interleaved",
+    &["--planar-configuration", "interleaved"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_planar_configuration_interleaved_rgb_to_separate_ybr()
+ {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "pass-through",
+    "explicit_vr_little_endian_planar_configuration_interleaved_rgb_to_separate_ybr",
+    &[
+      "--photometric-interpretation-color",
+      "YBR_FULL",
+      "--planar-configuration",
+      "separate",
+    ],
+  );
+}
+
+#[test]
 fn rle_lossless_to_explicit_vr_little_endian() {
   modify_transfer_syntax(
     "../../../test/assets/fo-dicom/D_CLUNIE_CT1_RLE_FRAGS.dcm",
@@ -435,12 +471,12 @@ fn rle_lossless_rgb_16_bit_to_jpeg_2000() {
 }
 
 #[test]
-fn jpeg_baseline_to_jpeg_2000_lossless_only_without_rgb_conversion() {
+fn jpeg_baseline_to_jpeg_2000_lossless_only_rgb() {
   modify_transfer_syntax(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-2k-lossless-only",
-    "jpeg_baseline_to_jpeg_2000_lossless_only_without_rgb_conversion",
-    &["--photometric-interpretation-color", "pass-through"],
+    "jpeg_baseline_to_jpeg_2000_lossless_only_rgb",
+    &["--photometric-interpretation-color", "RGB"],
   );
 }
 
@@ -450,7 +486,7 @@ fn jpeg_baseline_to_jpeg_2000_lossless_only_ybr_full() {
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-2k-lossless-only",
     "jpeg_baseline_to_jpeg_2000_lossless_only_ybr_full",
-    &["--photometric-interpretation-color", "pass-through"],
+    &["--photometric-interpretation-color", "YBR_FULL"],
   );
 }
 

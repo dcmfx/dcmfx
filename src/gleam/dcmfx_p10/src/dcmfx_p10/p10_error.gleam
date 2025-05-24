@@ -90,7 +90,7 @@ pub fn name(error: P10Error) -> String {
   }
 }
 
-/// Returns the `details`` field of the error, if one exists.
+/// Returns the `details` field of the error, if one exists.
 ///
 pub fn details(error: P10Error) -> String {
   case error {
