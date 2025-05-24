@@ -3,7 +3,7 @@ name = "dicom_read"
 [dependencies]
 dcmfx_core = { path = "../../../src/gleam/dcmfx_core" }
 dcmfx_p10 = { path = "../../../src/gleam/dcmfx_p10" }
-gleam_stdlib = ">= 0.59.0 and < 2.0.0"
+gleam_stdlib = ">= 0.60.0 and < 2.0.0"
 
 [javascript]
 deno = { allow_env = true, allow_read = true }
