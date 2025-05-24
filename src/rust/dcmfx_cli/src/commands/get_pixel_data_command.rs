@@ -709,7 +709,7 @@ fn frame_to_dynamic_image(
   pixel_data_renderer: &mut PixelDataRenderer,
   args: &GetPixelDataArgs,
 ) -> Result<image::DynamicImage, GetPixelDataError> {
-  if pixel_data_renderer.image_pixel_module.is_grayscale() {
+  if pixel_data_renderer.image_pixel_module.is_monochrome() {
     let monochrome_image = pixel_data_renderer
       .decode_monochrome_frame(frame)
       .map_err(GetPixelDataError::DataError)?;

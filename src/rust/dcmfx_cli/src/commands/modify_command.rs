@@ -431,7 +431,7 @@ fn get_transcode_image_data_functions(
     move |image_pixel_module: &mut ImagePixelModule| {
       // For grayscale pixel data, the photometric interpretation, if set, can
       // be either MONOCHROME1 or MONOCHROME2
-      if image_pixel_module.is_grayscale() {
+      if image_pixel_module.is_monochrome() {
         if let Some(photometric_interpretation_monochrome_arg) =
           photometric_interpretation_monochrome_arg
         {

@@ -437,7 +437,7 @@ fn test_pixel_data_read(
   {
     let frame_index = frame.index().unwrap();
 
-    if pixel_data_renderer.image_pixel_module.is_grayscale() {
+    if pixel_data_renderer.image_pixel_module.is_monochrome() {
       let image = pixel_data_renderer
         .decode_monochrome_frame(&mut frame)
         .map_err(|e| {

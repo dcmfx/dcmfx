@@ -94,7 +94,7 @@ fn test_encode_decode_cycle(
   color_image_max_reencode_delta: f64,
 ) {
   for image_pixel_module in image_pixel_modules {
-    if image_pixel_module.is_grayscale() {
+    if image_pixel_module.is_monochrome() {
       test_monochrome_image_encode_decode_cycle(
         &image_pixel_module,
         transfer_syntax,
@@ -291,7 +291,7 @@ fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
 
         for bits_stored in bits_stored {
           for (rows, columns) in dimensions {
-            if photometric_interpretation.is_grayscale() {
+            if photometric_interpretation.is_monochrome() {
               image_pixel_modules.push(
                 ImagePixelModule::new_basic(
                   SamplesPerPixel::One,

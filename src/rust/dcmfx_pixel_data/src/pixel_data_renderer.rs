@@ -72,7 +72,7 @@ impl PixelDataRenderer {
     frame: &mut PixelDataFrame,
     color_palette: Option<&StandardColorPalette>,
   ) -> Result<image::RgbImage, DataError> {
-    if self.image_pixel_module.is_grayscale() {
+    if self.image_pixel_module.is_monochrome() {
       let image = decode::decode_monochrome(
         frame,
         self.transfer_syntax,

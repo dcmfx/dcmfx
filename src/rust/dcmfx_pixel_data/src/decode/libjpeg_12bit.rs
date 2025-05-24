@@ -83,6 +83,14 @@ fn decode(
     )));
   }
 
+  // Determine whether the output wil be in the YBR color space
+  let is_ybr_color_space = image_pixel_module
+    .photometric_interpretation()
+    .is_ybr_full()
+    || image_pixel_module
+      .photometric_interpretation()
+      .is_ybr_full_422();
+
   let mut error_message = [0 as ::core::ffi::c_char; 200];
 
   // Allocate output buffer
@@ -101,7 +109,7 @@ fn decode(
       image_pixel_module.columns().into(),
       image_pixel_module.rows().into(),
       u8::from(image_pixel_module.samples_per_pixel()).into(),
-      u32::from(image_pixel_module.photometric_interpretation().is_ybr()),
+      u32::from(is_ybr_color_space),
       output_buffer.as_mut_ptr(),
       output_buffer.len() as u64,
       error_message.as_mut_ptr(),

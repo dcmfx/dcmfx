@@ -443,16 +443,16 @@ impl ImagePixelModule {
     self.frame_size_in_bits().div_ceil(8) as usize
   }
 
-  /// Returns whether this image pixel module defines grayscale pixel data.
+  /// Returns whether this image pixel module defines monochrome pixel data.
   ///
-  pub fn is_grayscale(&self) -> bool {
-    self.photometric_interpretation.is_grayscale()
+  pub fn is_monochrome(&self) -> bool {
+    self.photometric_interpretation.is_monochrome()
   }
 
   /// Returns whether this image pixel module defines color data.
   ///
   pub fn is_color(&self) -> bool {
-    !self.photometric_interpretation.is_grayscale()
+    !self.photometric_interpretation.is_monochrome()
   }
 
   /// Returns whether this image pixel module has unused high bits in its
@@ -782,41 +782,17 @@ impl PhotometricInterpretation {
     }
   }
 
-  /// Returns whether this photometric interpretation stores grayscale pixel
+  /// Returns whether this photometric interpretation stores monochrome pixel
   /// data.
   ///
-  pub fn is_grayscale(&self) -> bool {
-    match self {
-      Self::Monochrome1 | Self::Monochrome2 => true,
-
-      Self::PaletteColor { .. }
-      | Self::Rgb
-      | Self::YbrFull
-      | Self::YbrFull422
-      | Self::YbrIct
-      | Self::YbrRct
-      | Self::Xyb => false,
-    }
+  pub fn is_monochrome(&self) -> bool {
+    self == &Self::Monochrome1 || self == &Self::Monochrome2
   }
 
   /// Returns whether this photometric interpretation defines color data.
   ///
   pub fn is_color(&self) -> bool {
-    !self.is_grayscale()
-  }
-
-  /// Returns whether this photometric interpretation specifies YBR color data.
-  ///
-  pub fn is_ybr(&self) -> bool {
-    match self {
-      Self::Monochrome1
-      | Self::Monochrome2
-      | Self::PaletteColor { .. }
-      | Self::Rgb
-      | Self::Xyb => false,
-
-      Self::YbrFull | Self::YbrFull422 | Self::YbrIct | Self::YbrRct => true,
-    }
+    !self.is_monochrome()
   }
 
   /// Returns whether this photometric interpretation specifies YBR 444 color

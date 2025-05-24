@@ -67,9 +67,9 @@ where
   /// images. Output image data may have been subjected to a lossy conversion to
   /// 8-bit depth.
   ///
-  /// For grayscale frames, any Modality LUT and VOI LUT present in the data set
-  /// are applied to reach a final grayscale value, which is duplicated across
-  /// the RGB components.
+  /// For monochrome frames, any Modality LUT and VOI LUT present in the data
+  /// set are applied to reach a final grayscale value, which is duplicated
+  /// across the RGB components.
   ///
   /// Grayscale values can optionally be visualized using a color palette. The
   /// well-known color palettes defined in PS3.6 B.1 are provided in
