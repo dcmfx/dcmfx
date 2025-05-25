@@ -1,7 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::{string::ToString, vec::Vec};
-
-use dcmfx_core::DataError;
+use alloc::vec::Vec;
 
 use crate::{
   GrayscalePipeline,
@@ -43,11 +41,9 @@ impl MonochromeImage {
     data: Vec<u8>,
     is_signed: bool,
     is_monochrome1: bool,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != (usize::from(width) * usize::from(height)).div_ceil(8) {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image bitmap data size is incorrect".to_string(),
-      ));
+      return Err("Monochrome image bitmap data size is incorrect");
     }
 
     Ok(Self {
@@ -68,17 +64,13 @@ impl MonochromeImage {
     data: Vec<i8>,
     bits_stored: u16,
     is_monochrome1: bool,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image i8 data size is incorrect".to_string(),
-      ));
+      return Err("Monochrome image i8 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 8 {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image i8 bits stored must be <= 8".to_string(),
-      ));
+      return Err("Monochrome image i8 bits stored must be <= 8");
     }
 
     Ok(Self {
@@ -99,17 +91,13 @@ impl MonochromeImage {
     data: Vec<u8>,
     bits_stored: u16,
     is_monochrome1: bool,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image u8 data size is incorrect".to_string(),
-      ));
+      return Err("Monochrome image u8 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 8 {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image u8 bits stored must be <= 8".to_string(),
-      ));
+      return Err("Monochrome image u8 bits stored must be <= 8");
     }
 
     Ok(Self {
@@ -130,17 +118,13 @@ impl MonochromeImage {
     data: Vec<i16>,
     bits_stored: u16,
     is_monochrome1: bool,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image i16 data size is incorrect".to_string(),
-      ));
+      return Err("Monochrome image i16 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 16 {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image i16 bits stored must be <= 16".to_string(),
-      ));
+      return Err("Monochrome image i16 bits stored must be <= 16");
     }
 
     Ok(Self {
@@ -161,17 +145,13 @@ impl MonochromeImage {
     data: Vec<u16>,
     bits_stored: u16,
     is_monochrome1: bool,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image u16 data size is incorrect".to_string(),
-      ));
+      return Err("Monochrome image u16 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 16 {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image u16 bits stored must be <= 16".to_string(),
-      ));
+      return Err("Monochrome image u16 bits stored must be <= 16");
     }
 
     Ok(Self {
@@ -192,17 +172,13 @@ impl MonochromeImage {
     data: Vec<i32>,
     bits_stored: u16,
     is_monochrome1: bool,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image i32 data size is incorrect".to_string(),
-      ));
+      return Err("Monochrome image i32 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 32 {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image i32 bits stored must be <= 32".to_string(),
-      ));
+      return Err("Monochrome image i32 bits stored must be <= 32");
     }
 
     Ok(Self {
@@ -223,17 +199,13 @@ impl MonochromeImage {
     data: Vec<u32>,
     bits_stored: u16,
     is_monochrome1: bool,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image u32 data size is incorrect".to_string(),
-      ));
+      return Err("Monochrome image u32 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 32 {
-      return Err(DataError::new_value_invalid(
-        "Monochrome image u32 bits stored must be <= 32".to_string(),
-      ));
+      return Err("Monochrome image u32 bits stored must be <= 32");
     }
 
     Ok(Self {

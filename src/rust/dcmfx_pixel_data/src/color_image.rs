@@ -2,9 +2,7 @@
 use std::rc::Rc;
 
 #[cfg(not(feature = "std"))]
-use alloc::{rc::Rc, string::ToString, vec::Vec};
-
-use dcmfx_core::DataError;
+use alloc::{rc::Rc, vec::Vec};
 
 use crate::{
   iods::{PaletteColorLookupTableModule, image_pixel_module::BitsAllocated},
@@ -95,24 +93,19 @@ impl ColorImage {
     data: Vec<u8>,
     color_space: ColorSpace,
     bits_stored: u16,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) * 3 {
-      return Err(DataError::new_value_invalid(
-        "Color image u8 data size is incorrect".to_string(),
-      ));
+      return Err("Color image u8 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 8 {
-      return Err(DataError::new_value_invalid(
-        "Color image u8 bits stored must be <= 8".to_string(),
-      ));
+      return Err("Color image u8 bits stored must be <= 8");
     }
 
     if (color_space == ColorSpace::Ybr { is_422: true }) && width % 2 == 1 {
-      return Err(DataError::new_value_invalid(
-        "Color image in the YBR 422 color space must have even width"
-          .to_string(),
-      ));
+      return Err(
+        "Color image in the YBR 422 color space must have even width",
+      );
     }
 
     Ok(Self {
@@ -132,24 +125,19 @@ impl ColorImage {
     data: Vec<u16>,
     color_space: ColorSpace,
     bits_stored: u16,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) * 3 {
-      return Err(DataError::new_value_invalid(
-        "Color image u16 data size is incorrect".to_string(),
-      ));
+      return Err("Color image u16 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 16 {
-      return Err(DataError::new_value_invalid(
-        "Color image u8 bits stored must be <= 16".to_string(),
-      ));
+      return Err("Color image u8 bits stored must be <= 16");
     }
 
     if (color_space == ColorSpace::Ybr { is_422: true }) && width % 2 == 1 {
-      return Err(DataError::new_value_invalid(
-        "Color image in the YBR 422 color space must have even width"
-          .to_string(),
-      ));
+      return Err(
+        "Color image in the YBR 422 color space must have even width",
+      );
     }
 
     Ok(Self {
@@ -169,24 +157,19 @@ impl ColorImage {
     data: Vec<u32>,
     color_space: ColorSpace,
     bits_stored: u16,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) * 3 {
-      return Err(DataError::new_value_invalid(
-        "Color image u32 data size is incorrect".to_string(),
-      ));
+      return Err("Color image u32 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 32 {
-      return Err(DataError::new_value_invalid(
-        "Color image u8 bits stored must be <= 32".to_string(),
-      ));
+      return Err("Color image u8 bits stored must be <= 32");
     }
 
     if (color_space == ColorSpace::Ybr { is_422: true }) && width % 2 == 1 {
-      return Err(DataError::new_value_invalid(
-        "Color image in the YBR 422 color space must have even width"
-          .to_string(),
-      ));
+      return Err(
+        "Color image in the YBR 422 color space must have even width",
+      );
     }
 
     Ok(Self {
@@ -206,17 +189,13 @@ impl ColorImage {
     data: Vec<u8>,
     palette: Rc<PaletteColorLookupTableModule>,
     bits_stored: u16,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) {
-      return Err(DataError::new_value_invalid(
-        "Color image palette8 data size is incorrect".to_string(),
-      ));
+      return Err("Color image palette8 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 8 {
-      return Err(DataError::new_value_invalid(
-        "Color image palette8 bits stored must be <= 8".to_string(),
-      ));
+      return Err("Color image palette8 bits stored must be <= 8");
     }
 
     Ok(Self {
@@ -236,17 +215,13 @@ impl ColorImage {
     data: Vec<u16>,
     palette: Rc<PaletteColorLookupTableModule>,
     bits_stored: u16,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Self, &'static str> {
     if data.len() != usize::from(width) * usize::from(height) {
-      return Err(DataError::new_value_invalid(
-        "Color image palette16 data size is incorrect".to_string(),
-      ));
+      return Err("Color image palette16 data size is incorrect");
     }
 
     if bits_stored == 0 || bits_stored > 16 {
-      return Err(DataError::new_value_invalid(
-        "Color image palette8 bits stored must be <= 16".to_string(),
-      ));
+      return Err("Color image palette8 bits stored must be <= 16");
     }
 
     Ok(Self {

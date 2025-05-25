@@ -8,8 +8,8 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
 use dcmfx_core::{
-  DataElementValue, DataError, DataSet, TransferSyntax, ValueRepresentation,
-  dictionary, transfer_syntax,
+  DataElementValue, DataSet, TransferSyntax, ValueRepresentation, dictionary,
+  transfer_syntax,
 };
 
 use dcmfx_pixel_data::{
@@ -369,7 +369,7 @@ fn create_monochrome_image(
       Vec<T>,
       u16,
       bool,
-    ) -> Result<MonochromeImage, DataError>,
+    ) -> Result<MonochromeImage, &'static str>,
   ) -> MonochromeImage
   where
     T: TryFrom<i64> + Copy + Default,
@@ -440,7 +440,7 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
       Vec<T>,
       ColorSpace,
       u16,
-    ) -> Result<ColorImage, DataError>,
+    ) -> Result<ColorImage, &'static str>,
   ) -> ColorImage
   where
     T: TryFrom<u64> + Copy + std::fmt::Debug,

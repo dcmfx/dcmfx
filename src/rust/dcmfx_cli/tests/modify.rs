@@ -500,6 +500,28 @@ fn jpeg_ls_monochrome_to_jpeg_2000_lossless_only() {
   );
 }
 
+#[test]
+fn errors_on_unaligned_multiframe_bitmap() {
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg("../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm")
+    .arg("--transfer-syntax")
+    .arg("pass-through")
+    .arg("--in-place")
+    .assert()
+    .failure();
+
+  #[cfg(not(windows))]
+  assert_snapshot!("errors_on_unaligned_multiframe_bitmap", get_stderr(assert));
+
+  #[cfg(windows)]
+  assert_snapshot!(
+    "errors_on_unaligned_multiframe_bitmap_windows",
+    get_stderr(assert)
+  );
+}
+
 fn modify_transfer_syntax(
   dicom_file: &str,
   transfer_syntax: &str,

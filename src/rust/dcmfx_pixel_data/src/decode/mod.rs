@@ -6,7 +6,7 @@ use alloc::{
   vec::Vec,
 };
 
-use dcmfx_core::{DataError, DcmfxError, TransferSyntax, transfer_syntax};
+use dcmfx_core::{DcmfxError, TransferSyntax, transfer_syntax};
 
 use crate::{
   ColorImage, MonochromeImage, PixelDataFrame,
@@ -33,9 +33,20 @@ pub enum PixelDataDecodeError {
     transfer_syntax: &'static TransferSyntax,
   },
 
-  /// The pixel data configuration is not supported for decoding from the source
-  /// transfer syntax.
-  NotSupported { details: String },
+  /// The configuration of the Image Pixel Module is not supported for decoding,
+  /// so decoding can't be attempted.
+  ///
+  /// For example, if the Image Pixel Module states that Bits Allocated is 32
+  /// but the decoder only supports decoding up to 16 bits.
+  ImagePixelModuleNotSupported { details: String },
+
+  /// There was an error reading or parsing the provided raw pixel data, i.e. it
+  /// is invalid for the given Image Pixel Module and transfer syntax.
+  DataInvalid { details: String },
+
+  /// Decode succeeded but there was an error when constructing the
+  /// [`MonochromeImage`] or [`ColorImage`] to be returned.
+  ImageCreationFailed(&'static str),
 }
 
 impl PixelDataDecodeError {
@@ -47,7 +58,11 @@ impl PixelDataDecodeError {
       Self::TransferSyntaxNotSupported { .. } => {
         "Transfer syntax not supported".to_string()
       }
-      Self::NotSupported { .. } => "Configuration not supported".to_string(),
+      Self::ImagePixelModuleNotSupported { .. } => {
+        "Image pixel module not supported for decode".to_string()
+      }
+      Self::DataInvalid { .. } => "Data invalid".to_string(),
+      Self::ImageCreationFailed { .. } => "Image creation failed".to_string(),
     }
   }
 }
@@ -56,14 +71,21 @@ impl core::fmt::Display for PixelDataDecodeError {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     match self {
       Self::TransferSyntaxNotSupported { transfer_syntax } => {
-        write!(f, "Transfer syntax not supported: {}", transfer_syntax.name)
+        write!(
+          f,
+          "Transfer syntax '{}' is not supported",
+          transfer_syntax.name
+        )
       }
-
-      Self::NotSupported { details } => write!(
-        f,
-        "Pixel data configuration not supported, details: {}",
-        details
-      ),
+      Self::ImagePixelModuleNotSupported { details } => {
+        write!(f, "Image pixel module not supported, details: {}", details)
+      }
+      Self::DataInvalid { details } => {
+        write!(f, "Data invalid, details: '{}'", details)
+      }
+      Self::ImageCreationFailed(details) => {
+        write!(f, "Image creation failed, details: '{}'", details)
+      }
     }
   }
 }
@@ -80,7 +102,11 @@ impl DcmfxError for PixelDataDecodeError {
       Self::TransferSyntaxNotSupported { transfer_syntax } => {
         lines.push(format!("  Transfer syntax: {}", transfer_syntax.name));
       }
-      Self::NotSupported { details } => {
+      Self::ImagePixelModuleNotSupported { details }
+      | Self::DataInvalid { details } => {
+        lines.push(format!("  Details: {}", details));
+      }
+      Self::ImageCreationFailed(details) => {
         lines.push(format!("  Details: {}", details));
       }
     }
@@ -161,9 +187,9 @@ pub fn decode_photometric_interpretation<'a>(
 ///
 pub fn decode_monochrome(
   frame: &mut PixelDataFrame,
-  transfer_syntax: &TransferSyntax,
+  transfer_syntax: &'static TransferSyntax,
   image_pixel_module: &ImagePixelModule,
-) -> Result<MonochromeImage, DataError> {
+) -> Result<MonochromeImage, PixelDataDecodeError> {
   let frame_bit_offset = frame.bit_offset();
   let data = frame.combine_chunks();
 
@@ -215,10 +241,9 @@ pub fn decode_monochrome(
       0,
     ),
 
-    _ => Err(DataError::new_value_unsupported(format!(
-      "Transfer syntax '{}' is not able to be decoded",
-      transfer_syntax.name,
-    ))),
+    _ => {
+      Err(PixelDataDecodeError::TransferSyntaxNotSupported { transfer_syntax })
+    }
   }
 }
 
@@ -226,9 +251,9 @@ pub fn decode_monochrome(
 ///
 pub fn decode_color(
   frame: &mut PixelDataFrame,
-  transfer_syntax: &TransferSyntax,
+  transfer_syntax: &'static TransferSyntax,
   image_pixel_module: &ImagePixelModule,
-) -> Result<ColorImage, DataError> {
+) -> Result<ColorImage, PixelDataDecodeError> {
   let data = frame.combine_chunks();
 
   use transfer_syntax::*;
@@ -274,10 +299,9 @@ pub fn decode_color(
       &inflate_frame_data(data, image_pixel_module)?,
     ),
 
-    _ => Err(DataError::new_value_unsupported(format!(
-      "Transfer syntax '{}' is not able to be decoded",
-      transfer_syntax.name
-    ))),
+    _ => {
+      Err(PixelDataDecodeError::TransferSyntaxNotSupported { transfer_syntax })
+    }
   }
 }
 
@@ -287,7 +311,7 @@ pub fn decode_color(
 fn inflate_frame_data(
   data: &[u8],
   image_pixel_module: &ImagePixelModule,
-) -> Result<Vec<u8>, DataError> {
+) -> Result<Vec<u8>, PixelDataDecodeError> {
   let mut decompressor = flate2::Decompress::new(false);
   let mut inflated_data = vec![0; image_pixel_module.frame_size_in_bytes()];
 
@@ -298,24 +322,27 @@ fn inflate_frame_data(
   ) {
     Ok(status) => {
       if status != flate2::Status::StreamEnd {
-        return Err(DataError::new_value_invalid(
-          "Frame data inflate did not reach the end of the stream".to_string(),
-        ));
+        return Err(PixelDataDecodeError::DataInvalid {
+          details: "Frame data inflate did not reach the end of the stream"
+            .to_string(),
+        });
       }
 
       if decompressor.total_out() != inflated_data.len() as u64 {
-        return Err(DataError::new_value_invalid(format!(
-          "Frame data inflate produced {} bytes but {} bytes were expected",
-          decompressor.total_out(),
-          inflated_data.len()
-        )));
+        return Err(PixelDataDecodeError::DataInvalid {
+          details: format!(
+            "Frame data inflate produced {} bytes but {} bytes were expected",
+            decompressor.total_out(),
+            inflated_data.len()
+          ),
+        });
       }
 
       Ok(inflated_data)
     }
 
-    Err(_) => Err(DataError::new_value_invalid(
-      "Frame data inflate failed".to_string(),
-    )),
+    Err(e) => Err(PixelDataDecodeError::DataInvalid {
+      details: format!("Frame data inflate failed with '{}'", e),
+    }),
   }
 }

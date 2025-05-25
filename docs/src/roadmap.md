@@ -3,9 +3,11 @@
 DCMfx has no formal roadmap, but future additions are likely to include the
 following:
 
-- Broaden transfer syntax support in pixel data encoding/transcoding
+- Encode JPEG XL pixel data
 
-- Decoding of 'JPEG-LS' pixel data on WASM
+- Encode JPEG LS pixel data
+
+- Decode JPEG-LS pixel data on WASM
 
 - DIMSE networking
 

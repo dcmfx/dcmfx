@@ -109,7 +109,7 @@ enum DicomValidationError {
   RewriteMismatch,
   JitteredReadError { error: P10Error },
   JitteredReadMismatch,
-  PixelDataRenderError(Either<DataError, String>),
+  PixelDataRenderError(Either<PixelDataDecodeError, String>),
 }
 
 /// Loads a DICOM file and checks that its JSON serialization by this library

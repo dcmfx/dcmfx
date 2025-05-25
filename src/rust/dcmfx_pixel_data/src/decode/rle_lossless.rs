@@ -3,13 +3,11 @@ use alloc::{format, string::ToString, vec, vec::Vec};
 
 use byteorder::ByteOrder;
 
-use dcmfx_core::DataError;
-
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
-    PixelRepresentation, SamplesPerPixel,
+    PixelRepresentation,
   },
 };
 
@@ -26,9 +24,9 @@ pub fn decode_photometric_interpretation(
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
 
-    _ => Err(PixelDataDecodeError::NotSupported {
+    _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "Decoding photometric interpretation '{}' is not supported",
+        "Photometric interpretation '{}' is not supported",
         photometric_interpretation
       ),
     }),
@@ -42,14 +40,7 @@ pub fn decode_photometric_interpretation(
 pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<MonochromeImage, DataError> {
-  // Check that there is one sample per pixel
-  if image_pixel_module.samples_per_pixel() != SamplesPerPixel::One {
-    return Err(DataError::new_value_invalid(
-      "Samples per pixel is not one for grayscale pixel data".to_string(),
-    ));
-  }
-
+) -> Result<MonochromeImage, PixelDataDecodeError> {
   let expected_segment_length =
     if image_pixel_module.bits_allocated() == BitsAllocated::One {
       image_pixel_module.frame_size_in_bytes()
@@ -68,7 +59,7 @@ pub fn decode_monochrome(
     .is_monochrome1();
 
   match (
-    &image_pixel_module.photometric_interpretation(),
+    image_pixel_module.photometric_interpretation(),
     image_pixel_module.pixel_representation(),
     image_pixel_module.bits_allocated(),
     segments.as_slice(),
@@ -90,6 +81,7 @@ pub fn decode_monochrome(
         is_signed,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -120,6 +112,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -137,6 +130,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -172,6 +166,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -194,6 +189,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -239,6 +235,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -266,15 +263,20 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    _ => Err(DataError::new_value_invalid(format!(
-      "RLE Lossless decode not supported with photometric interpretation '{}', \
-       bits allocated '{}', segment count '{}'",
-      image_pixel_module.photometric_interpretation(),
-      u8::from(image_pixel_module.bits_allocated()),
-      segments.len(),
-    ))),
+    (photometric_interpretation, _, bits_allocated, segments) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "RLE Lossless monochrome decode not supported for photometric \
+           interpretation '{}', bits allocated '{}', segment count '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated),
+          segments.len(),
+        ),
+      })
+    }
   }
 }
 
@@ -285,7 +287,7 @@ pub fn decode_monochrome(
 pub fn decode_color(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<ColorImage, DataError> {
+) -> Result<ColorImage, PixelDataDecodeError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let pixel_count = image_pixel_module.pixel_count();
@@ -316,6 +318,7 @@ pub fn decode_color(
         palette.clone(),
         bits_stored,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -336,6 +339,7 @@ pub fn decode_color(
         palette.clone(),
         bits_stored,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -352,6 +356,7 @@ pub fn decode_color(
       }
 
       ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -378,6 +383,7 @@ pub fn decode_color(
       }
 
       ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -422,15 +428,20 @@ pub fn decode_color(
       }
 
       ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    _ => Err(DataError::new_value_invalid(format!(
-      "Photometric interpretation '{}' is invalid for RLE Lossless color \
-       pixel data when bits allocated is {} and there are {} segments",
-      image_pixel_module.photometric_interpretation(),
-      u8::from(image_pixel_module.bits_allocated()),
-      segments.len(),
-    ))),
+    (photometric_interpretation, bits_allocated, segments) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "RLE Lossless color decode not supported for photometric \
+           interpretation '{}', bits allocated '{}', segment count '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated),
+          segments.len(),
+        ),
+      })
+    }
   }
 }
 
@@ -441,21 +452,23 @@ pub fn decode_color(
 fn decode_rle_segments(
   data: &[u8],
   expected_length: usize,
-) -> Result<Vec<Vec<u8>>, DataError> {
+) -> Result<Vec<Vec<u8>>, PixelDataDecodeError> {
   // Check there is a complete RLE Lossless header
   if data.len() < 64 {
-    return Err(DataError::new_value_invalid(
-      "RLE Lossless header is incomplete".to_string(),
-    ));
+    return Err(PixelDataDecodeError::DataInvalid {
+      details: "RLE Lossless header is incomplete".to_string(),
+    });
   }
 
   // Read and validate the number of RLE segments
   let number_of_segments =
     u32::from_le_bytes([data[0], data[1], data[2], data[3]]) as usize;
   if number_of_segments > 15 {
-    return Err(DataError::new_value_invalid(format!(
-      "RLE Lossless data segment count '{number_of_segments}' is invalid"
-    )));
+    return Err(PixelDataDecodeError::DataInvalid {
+      details: format!(
+        "RLE Lossless data segment count '{number_of_segments}' is invalid"
+      ),
+    });
   }
 
   // Read the segment offsets
@@ -481,16 +494,18 @@ fn decode_rle_segments(
       match decode_rle_segment(rle_data, expected_length) {
         Ok(segment) => segments.push(segment),
         Err(()) => {
-          return Err(DataError::new_value_invalid(format!(
-            "RLE Lossless data segment {i} is invalid"
-          )));
+          return Err(PixelDataDecodeError::DataInvalid {
+            details: format!("RLE Lossless data segment {i} is invalid"),
+          });
         }
       }
     } else {
-      return Err(DataError::new_value_invalid(format!(
-        "RLE Lossless data segment {}'s bounds {}-{} are invalid",
-        i, segment_offset, next_segment_offset,
-      )));
+      return Err(PixelDataDecodeError::DataInvalid {
+        details: format!(
+          "RLE Lossless data segment {}'s bounds {}-{} are invalid",
+          i, segment_offset, next_segment_offset,
+        ),
+      });
     }
   }
 

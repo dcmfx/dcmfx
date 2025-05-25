@@ -48,13 +48,13 @@ pub fn encode_monochrome(
     (
       MonochromeImageData::Bitmap { data, .. },
       true,
-      _,
+      1,
       PhotometricInterpretation::Monochrome1,
     )
     | (
       MonochromeImageData::Bitmap { data, .. },
       false,
-      _,
+      1,
       PhotometricInterpretation::Monochrome2,
     ) => result.copy_from_slice(data),
 

@@ -1,8 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec};
 
-use dcmfx_core::DataError;
-
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
@@ -24,9 +22,9 @@ pub fn decode_photometric_interpretation(
     | PhotometricInterpretation::YbrFull
     | PhotometricInterpretation::YbrFull422 => Ok(photometric_interpretation),
 
-    _ => Err(PixelDataDecodeError::NotSupported {
+    _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "Decoding photometric interpretation '{}' is not supported",
+        "Photometric interpretation '{}' is not supported",
         photometric_interpretation
       ),
     }),
@@ -41,14 +39,7 @@ pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
   data_bit_offset: usize,
-) -> Result<MonochromeImage, DataError> {
-  // Check that there is one sample per pixel
-  if image_pixel_module.samples_per_pixel() != SamplesPerPixel::One {
-    return Err(DataError::new_value_invalid(
-      "Samples per pixel is not one for grayscale pixel data".to_string(),
-    ));
-  }
-
+) -> Result<MonochromeImage, PixelDataDecodeError> {
   validate_data_length(image_pixel_module, data)?;
 
   let width = image_pixel_module.columns();
@@ -89,6 +80,7 @@ pub fn decode_monochrome(
             is_signed,
             is_monochrome1,
           )
+          .map_err(PixelDataDecodeError::ImageCreationFailed)
         }
 
         (PixelRepresentation::Signed, BitsAllocated::Eight) => {
@@ -118,6 +110,7 @@ pub fn decode_monochrome(
             bits_stored,
             is_monochrome1,
           )
+          .map_err(PixelDataDecodeError::ImageCreationFailed)
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::Eight) => {
@@ -128,6 +121,7 @@ pub fn decode_monochrome(
             bits_stored,
             is_monochrome1,
           )
+          .map_err(PixelDataDecodeError::ImageCreationFailed)
         }
 
         (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
@@ -170,6 +164,7 @@ pub fn decode_monochrome(
             bits_stored,
             is_monochrome1,
           )
+          .map_err(PixelDataDecodeError::ImageCreationFailed)
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
@@ -196,6 +191,7 @@ pub fn decode_monochrome(
             bits_stored,
             is_monochrome1,
           )
+          .map_err(PixelDataDecodeError::ImageCreationFailed)
         }
 
         (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
@@ -247,6 +243,7 @@ pub fn decode_monochrome(
             bits_stored,
             is_monochrome1,
           )
+          .map_err(PixelDataDecodeError::ImageCreationFailed)
         }
 
         (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
@@ -278,15 +275,20 @@ pub fn decode_monochrome(
             bits_stored,
             is_monochrome1,
           )
+          .map_err(PixelDataDecodeError::ImageCreationFailed)
         }
       }
     }
 
-    _ => Err(DataError::new_value_invalid(format!(
-      "Photometric interpretation '{}' is invalid for grayscale pixel data \
-       when samples per pixel is one",
-      image_pixel_module.photometric_interpretation()
-    ))),
+    photometric_interpretation => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "Native monochrome decode not supported for photometric interpretation \
+           '{}'",
+          photometric_interpretation,
+        ),
+      })
+    }
   }
 }
 
@@ -298,27 +300,13 @@ pub fn decode_monochrome(
 pub fn decode_color(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<ColorImage, DataError> {
+) -> Result<ColorImage, PixelDataDecodeError> {
   validate_data_length(image_pixel_module, data)?;
 
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let pixel_count = image_pixel_module.pixel_count();
   let bits_stored = image_pixel_module.bits_stored();
-
-  let color_space = match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::PaletteColor { .. }
-    | PhotometricInterpretation::Rgb => ColorSpace::Rgb,
-    PhotometricInterpretation::YbrFull => ColorSpace::Ybr { is_422: false },
-    PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr { is_422: true },
-    _ => {
-      return Err(DataError::new_value_unsupported(format!(
-        "Photometric interpretation '{}' is not supported for native color \
-         decode",
-        image_pixel_module.photometric_interpretation()
-      )));
-    }
-  };
 
   match image_pixel_module.samples_per_pixel() {
     SamplesPerPixel::One => match (
@@ -334,7 +322,8 @@ pub fn decode_color(
         data.to_vec(),
         palette.clone(),
         bits_stored,
-      ),
+      )
+      .map_err(PixelDataDecodeError::ImageCreationFailed),
 
       (
         PhotometricInterpretation::PaletteColor { palette },
@@ -363,15 +352,18 @@ pub fn decode_color(
           palette.clone(),
           bits_stored,
         )
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
       }
 
       (photometric_interpretation, bits_allocated) => {
-        Err(DataError::new_value_invalid(format!(
-          "Photometric interpretation '{}' is invalid for color pixel data \
-           when samples per pixel is one and bits allocated is '{}'",
-          photometric_interpretation,
-          u8::from(bits_allocated)
-        )))
+        Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+          details: format!(
+            "Native color decode does not support palette color when the \
+             photometric interpretation is '{}' and bits allocated is '{}'",
+            photometric_interpretation,
+            u8::from(bits_allocated)
+          ),
+        })
       }
     },
 
@@ -379,15 +371,26 @@ pub fn decode_color(
       planar_configuration,
     } => match image_pixel_module.photometric_interpretation() {
       PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull => {
+        let color_space =
+          if image_pixel_module.photometric_interpretation().is_rgb() {
+            ColorSpace::Rgb
+          } else {
+            ColorSpace::Ybr { is_422: false }
+          };
+
         match (planar_configuration, image_pixel_module.bits_allocated()) {
-          (_, BitsAllocated::One) => Err(DataError::new_value_invalid(
-            "Bits allocated value '1' is not supported for color data"
-              .to_string(),
-          )),
+          (_, BitsAllocated::One) => {
+            Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+              details:
+                "Color data does not support a bits allocated value of 1"
+                  .to_string(),
+            })
+          }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Eight) => {
             let pixels = data[..(pixel_count * 3)].to_vec();
             ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
@@ -408,6 +411,7 @@ pub fn decode_color(
             }
 
             ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
@@ -433,6 +437,7 @@ pub fn decode_color(
             }
 
             ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Eight) => {
@@ -445,6 +450,7 @@ pub fn decode_color(
             }
 
             ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Sixteen) => {
@@ -466,6 +472,7 @@ pub fn decode_color(
             }
 
             ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::ThirtyTwo) => {
@@ -495,16 +502,22 @@ pub fn decode_color(
             }
 
             ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
         }
       }
 
       PhotometricInterpretation::YbrFull422 => {
+        let color_space = ColorSpace::Ybr { is_422: true };
+
         match (planar_configuration, image_pixel_module.bits_allocated()) {
-          (_, BitsAllocated::One) => Err(DataError::new_value_invalid(
-            "Bits allocated value '1' is not supported for color data"
-              .to_string(),
-          )),
+          (_, BitsAllocated::One) => {
+            Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+              details:
+                "Color data does not support a bits allocated value of 1"
+                  .to_string(),
+            })
+          }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Eight) => {
             let mut pixels = vec![0u8; pixel_count * 3];
@@ -524,6 +537,7 @@ pub fn decode_color(
             }
 
             ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::Sixteen) => {
@@ -544,6 +558,7 @@ pub fn decode_color(
             }
 
             ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Interleaved, BitsAllocated::ThirtyTwo) => {
@@ -584,6 +599,7 @@ pub fn decode_color(
             }
 
             ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Eight) => {
@@ -604,6 +620,7 @@ pub fn decode_color(
             }
 
             ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::Sixteen) => {
@@ -630,6 +647,7 @@ pub fn decode_color(
             }
 
             ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
 
           (PlanarConfiguration::Separate, BitsAllocated::ThirtyTwo) => {
@@ -670,15 +688,18 @@ pub fn decode_color(
             }
 
             ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
+              .map_err(PixelDataDecodeError::ImageCreationFailed)
           }
         }
       }
 
-      _ => Err(DataError::new_value_invalid(format!(
-        "Photometric interpretation '{}' is invalid for color pixel data \
-           when samples per pixel is three",
-        image_pixel_module.photometric_interpretation()
-      ))),
+      _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "Native color decode does not support photometric interpretation \
+           '{}'",
+          image_pixel_module.photometric_interpretation()
+        ),
+      }),
     },
   }
 }
@@ -688,17 +709,19 @@ pub fn decode_color(
 fn validate_data_length(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<(), DataError> {
+) -> Result<(), PixelDataDecodeError> {
   let expected_size_in_bits = image_pixel_module.pixel_count() as u64
     * u64::from(image_pixel_module.pixel_size_in_bits());
 
   // Validate that the provided data is of the expected size
   if data.len() as u64 * 8 < expected_size_in_bits {
-    return Err(DataError::new_value_invalid(format!(
-      "Pixel data has incorrect length, expected {} bits but found {} bits",
-      expected_size_in_bits,
-      data.len() * 8,
-    )));
+    return Err(PixelDataDecodeError::DataInvalid {
+      details: format!(
+        "Pixel data has incorrect length, expected {} bits but found {} bits",
+        expected_size_in_bits,
+        data.len() * 8,
+      ),
+    });
   }
 
   Ok(())
@@ -729,8 +752,8 @@ mod tests {
     let data = [0, 1, 2, 3];
 
     assert_eq!(
-      decode_monochrome(&image_pixel_module, &data, 0),
-      MonochromeImage::new_u8(2, 2, vec![0, 1, 2, 3], 8, false)
+      decode_monochrome(&image_pixel_module, &data, 0).unwrap(),
+      MonochromeImage::new_u8(2, 2, vec![0, 1, 2, 3], 8, false).unwrap()
     );
   }
 
@@ -750,8 +773,9 @@ mod tests {
     let data: Vec<_> = (0..=127).collect();
 
     assert_eq!(
-      decode_monochrome(&image_pixel_module, &data, 0),
+      decode_monochrome(&image_pixel_module, &data, 0).unwrap(),
       MonochromeImage::new_i8(16, 8, (0..64).chain(-64..0).collect(), 7, false)
+        .unwrap()
     );
   }
 
@@ -771,7 +795,7 @@ mod tests {
     let data: Vec<_> = (0..4096u16).flat_map(|i| i.to_le_bytes()).collect();
 
     assert_eq!(
-      decode_monochrome(&image_pixel_module, &data, 0),
+      decode_monochrome(&image_pixel_module, &data, 0).unwrap(),
       MonochromeImage::new_i16(
         64,
         64,
@@ -779,6 +803,7 @@ mod tests {
         12,
         false
       )
+      .unwrap()
     );
   }
 
@@ -800,7 +825,7 @@ mod tests {
     let data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
     assert_eq!(
-      decode_color(&image_pixel_module, &data),
+      decode_color(&image_pixel_module, &data).unwrap(),
       ColorImage::new_u8(
         2,
         2,
@@ -808,6 +833,7 @@ mod tests {
         ColorSpace::Rgb,
         8
       )
+      .unwrap()
     );
   }
 
@@ -831,7 +857,7 @@ mod tests {
     ];
 
     assert_eq!(
-      decode_color(&image_pixel_module, &data),
+      decode_color(&image_pixel_module, &data).unwrap(),
       ColorImage::new_u16(
         2,
         2,
@@ -839,6 +865,7 @@ mod tests {
         ColorSpace::Rgb,
         16
       )
+      .unwrap()
     );
   }
 
@@ -860,8 +887,9 @@ mod tests {
     let data = vec![142, 122, 111, 148, 118, 122, 101, 123, 127, 116, 133, 142];
 
     assert_eq!(
-      decode_color(&image_pixel_module, &data),
+      decode_color(&image_pixel_module, &data).unwrap(),
       ColorImage::new_u8(2, 2, data, ColorSpace::Ybr { is_422: false }, 8)
+        .unwrap()
     );
   }
 
@@ -883,7 +911,7 @@ mod tests {
     let data = vec![142, 122, 111, 148, 118, 122, 101, 123];
 
     assert_eq!(
-      decode_color(&image_pixel_module, &data),
+      decode_color(&image_pixel_module, &data).unwrap(),
       ColorImage::new_u8(
         2,
         2,
@@ -891,6 +919,7 @@ mod tests {
         ColorSpace::Ybr { is_422: true },
         8
       )
+      .unwrap()
     );
   }
 }

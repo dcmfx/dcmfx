@@ -295,7 +295,7 @@ fn encode(
       .unwrap_or("<invalid error>");
 
     return Err(PixelDataEncodeError::OtherError {
-      name: "JPEG 2000 pixel data encoding failed".to_string(),
+      name: "JPEG 2000 encode failed".to_string(),
       details: error.to_string(),
     });
   }

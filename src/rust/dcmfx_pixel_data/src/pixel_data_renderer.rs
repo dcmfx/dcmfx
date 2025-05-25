@@ -7,8 +7,8 @@ use dcmfx_core::{
 };
 
 use crate::{
-  ColorImage, GrayscalePipeline, MonochromeImage, PixelDataFrame,
-  StandardColorPalette, decode, iods::ImagePixelModule,
+  ColorImage, GrayscalePipeline, MonochromeImage, PixelDataDecodeError,
+  PixelDataFrame, StandardColorPalette, decode, iods::ImagePixelModule,
 };
 
 /// Defines a pixel data renderer that can take a [`PixelDataFrame`] and render
@@ -71,7 +71,7 @@ impl PixelDataRenderer {
     &self,
     frame: &mut PixelDataFrame,
     color_palette: Option<&StandardColorPalette>,
-  ) -> Result<image::RgbImage, DataError> {
+  ) -> Result<image::RgbImage, PixelDataDecodeError> {
     if self.image_pixel_module.is_monochrome() {
       let image = decode::decode_monochrome(
         frame,
@@ -131,7 +131,7 @@ impl PixelDataRenderer {
   pub fn decode_monochrome_frame(
     &self,
     frame: &mut PixelDataFrame,
-  ) -> Result<MonochromeImage, DataError> {
+  ) -> Result<MonochromeImage, PixelDataDecodeError> {
     decode::decode_monochrome(
       frame,
       self.transfer_syntax,
@@ -144,7 +144,7 @@ impl PixelDataRenderer {
   pub fn decode_color_frame(
     &self,
     frame: &mut PixelDataFrame,
-  ) -> Result<ColorImage, DataError> {
+  ) -> Result<ColorImage, PixelDataDecodeError> {
     decode::decode_color(frame, self.transfer_syntax, &self.image_pixel_module)
   }
 }

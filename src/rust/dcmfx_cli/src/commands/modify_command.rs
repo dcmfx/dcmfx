@@ -387,19 +387,17 @@ fn modify_input_source(
   )?;
 
   // Rename the temporary file to the desired output filename
-  if output_filename != PathBuf::from("-") {
-    if let Some(tmp_output_filename) = tmp_output_filename {
-      std::fs::rename(&tmp_output_filename, &output_filename).map_err(|e| {
-        ModifyCommandError::P10Error(P10Error::FileError {
-          when: format!(
-            "Renaming '{}' to '{}'",
-            tmp_output_filename.display(),
-            output_filename.display()
-          ),
-          details: e.to_string(),
-        })
-      })?;
-    }
+  if let Some(tmp_output_filename) = tmp_output_filename {
+    std::fs::rename(&tmp_output_filename, &output_filename).map_err(|e| {
+      ModifyCommandError::P10Error(P10Error::FileError {
+        when: format!(
+          "Renaming '{}' to '{}'",
+          tmp_output_filename.display(),
+          output_filename.display()
+        ),
+        details: e.to_string(),
+      })
+    })?;
   }
 
   Ok(())

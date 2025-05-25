@@ -78,7 +78,7 @@ where
   fn get_pixel_data_images(
     &self,
     color_palette: Option<&StandardColorPalette>,
-  ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameTransformError>;
+  ) -> Result<Vec<image::RgbImage>, GetPixelDataError>;
 
   /// Returns the frames of pixel data in this data set as [`MonochromeImage`]s.
   ///
@@ -88,7 +88,7 @@ where
   ///
   fn get_pixel_data_monochrome_images(
     &self,
-  ) -> Result<Vec<MonochromeImage>, P10PixelDataFrameTransformError>;
+  ) -> Result<Vec<MonochromeImage>, GetPixelDataError>;
 
   /// Returns the frames of pixel data in this data set as [`ColorImage`]s.
   ///
@@ -96,7 +96,7 @@ where
   ///
   fn get_pixel_data_color_images(
     &self,
-  ) -> Result<Vec<ColorImage>, P10PixelDataFrameTransformError>;
+  ) -> Result<Vec<ColorImage>, GetPixelDataError>;
 
   /// Transcode's the pixel data in this data set into a new data set that uses
   /// the specified [`TransferSyntax`].
@@ -146,7 +146,7 @@ impl DataSetPixelDataExtensions for DataSet {
   fn get_pixel_data_images(
     &self,
     color_palette: Option<&StandardColorPalette>,
-  ) -> Result<Vec<image::RgbImage>, P10PixelDataFrameTransformError> {
+  ) -> Result<Vec<image::RgbImage>, GetPixelDataError> {
     get_pixel_data(self, |renderer, frame| {
       renderer.render_frame(frame, color_palette)
     })
@@ -154,7 +154,7 @@ impl DataSetPixelDataExtensions for DataSet {
 
   fn get_pixel_data_monochrome_images(
     &self,
-  ) -> Result<Vec<MonochromeImage>, P10PixelDataFrameTransformError> {
+  ) -> Result<Vec<MonochromeImage>, GetPixelDataError> {
     get_pixel_data(self, |renderer, frame| {
       renderer.decode_monochrome_frame(frame)
     })
@@ -162,7 +162,7 @@ impl DataSetPixelDataExtensions for DataSet {
 
   fn get_pixel_data_color_images(
     &self,
-  ) -> Result<Vec<ColorImage>, P10PixelDataFrameTransformError> {
+  ) -> Result<Vec<ColorImage>, GetPixelDataError> {
     get_pixel_data(self, |renderer, frame| renderer.decode_color_frame(frame))
   }
 
@@ -196,23 +196,52 @@ impl DataSetPixelDataExtensions for DataSet {
   }
 }
 
+/// An error that occurred getting pixel data using one of the functions in the
+/// [`DataSetPixelDataExtensions`] trait.
+///
+#[derive(Clone, Debug, PartialEq)]
+pub enum GetPixelDataError {
+  /// An error that occurred when reading the pixel data renderer from the data
+  /// elements from the stream of DICOM P10 tokens.
+  DataError(DataError),
+
+  /// An error that occurred when reading the raw frames of pixel data from the
+  /// stream of DICOM P10 tokens.
+  P10PixelDataFrameTransformError(P10PixelDataFrameTransformError),
+
+  /// An error that occurred when decoding a raw frame of pixel data.
+  PixelDataDecodeError {
+    frame_index: usize,
+    error: PixelDataDecodeError,
+  },
+}
+
 fn get_pixel_data<T, F>(
   data_set: &DataSet,
   mut process_frame: F,
-) -> Result<Vec<T>, P10PixelDataFrameTransformError>
+) -> Result<Vec<T>, GetPixelDataError>
 where
-  F: FnMut(&PixelDataRenderer, &mut PixelDataFrame) -> Result<T, DataError>,
+  F: FnMut(
+    &PixelDataRenderer,
+    &mut PixelDataFrame,
+  ) -> Result<T, PixelDataDecodeError>,
 {
   let renderer = PixelDataRenderer::from_data_set(data_set)
-    .map_err(P10PixelDataFrameTransformError::DataError)?;
+    .map_err(GetPixelDataError::DataError)?;
 
-  let frames = data_set.get_pixel_data_frames()?;
+  let frames = data_set
+    .get_pixel_data_frames()
+    .map_err(GetPixelDataError::P10PixelDataFrameTransformError)?;
 
   frames
     .into_iter()
     .map(|mut frame| {
-      process_frame(&renderer, &mut frame)
-        .map_err(P10PixelDataFrameTransformError::DataError)
+      process_frame(&renderer, &mut frame).map_err(|error| {
+        GetPixelDataError::PixelDataDecodeError {
+          frame_index: frame.index().unwrap(),
+          error,
+        }
+      })
     })
     .collect()
 }

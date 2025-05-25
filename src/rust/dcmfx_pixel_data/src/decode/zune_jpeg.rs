@@ -1,12 +1,10 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec::Vec};
 
-use dcmfx_core::DataError;
-
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
-    ImagePixelModule, PhotometricInterpretation, SamplesPerPixel,
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
   },
 };
 
@@ -22,9 +20,9 @@ pub fn decode_photometric_interpretation(
     | PhotometricInterpretation::YbrFull
     | PhotometricInterpretation::YbrFull422 => Ok(photometric_interpretation),
 
-    _ => Err(PixelDataDecodeError::NotSupported {
+    _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "Decoding photometric interpretation '{}' is not supported",
+        "Photometric interpretation '{}' is not supported",
         photometric_interpretation
       ),
     }),
@@ -36,16 +34,16 @@ pub fn decode_photometric_interpretation(
 pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<MonochromeImage, DataError> {
-  if image_pixel_module.samples_per_pixel() != SamplesPerPixel::One {
-    return Err(DataError::new_value_unsupported(
-      "Samples per pixel must be one for monochrome JPEG decode".to_string(),
-    ));
-  }
-
-  match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2 => {
+) -> Result<MonochromeImage, PixelDataDecodeError> {
+  match (
+    image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
+  ) {
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
+    ) => {
       let pixels = decode(
         image_pixel_module,
         data,
@@ -61,13 +59,19 @@ pub fn decode_monochrome(
           .photometric_interpretation()
           .is_monochrome1(),
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    _ => Err(DataError::new_value_unsupported(format!(
-      "Photometric interpretation '{}' is not supported for monochrome JPEG \
-       decode",
-      image_pixel_module.photometric_interpretation()
-    ))),
+    (photometric_interpretation, bits_allocated) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "JPEG monochrome decode not supported for photometric interpretation \
+           '{}', bits allocated '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated)
+        ),
+      })
+    }
   }
 }
 
@@ -76,75 +80,85 @@ pub fn decode_monochrome(
 pub fn decode_color(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<ColorImage, DataError> {
-  if u8::from(image_pixel_module.samples_per_pixel()) != 3 {
-    return Err(DataError::new_value_unsupported(
-      "Samples per pixel must be three for color JPEG decode".to_string(),
-    ));
+) -> Result<ColorImage, PixelDataDecodeError> {
+  match (
+    image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
+  ) {
+    (
+      PhotometricInterpretation::Rgb
+      | PhotometricInterpretation::YbrFull
+      | PhotometricInterpretation::YbrFull422,
+      BitsAllocated::Eight,
+    ) => {
+      let (zune_color_space, output_color_space) =
+        match image_pixel_module.photometric_interpretation() {
+          PhotometricInterpretation::Rgb => {
+            (zune_core::colorspace::ColorSpace::RGB, ColorSpace::Rgb)
+          }
+          PhotometricInterpretation::YbrFull => (
+            zune_core::colorspace::ColorSpace::YCbCr,
+            ColorSpace::Ybr { is_422: false },
+          ),
+          PhotometricInterpretation::YbrFull422 => (
+            zune_core::colorspace::ColorSpace::YCbCr,
+            ColorSpace::Ybr { is_422: true },
+          ),
+          _ => unreachable!(),
+        };
+
+      let pixels = decode(image_pixel_module, data, zune_color_space)?;
+
+      ColorImage::new_u8(
+        image_pixel_module.columns(),
+        image_pixel_module.rows(),
+        pixels,
+        output_color_space,
+        image_pixel_module.bits_stored(),
+      )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (photometric_interpretation, bits_allocated) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "JPEG color decode not supported for photometric interpretation \
+           '{}', bits allocated '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated)
+        ),
+      })
+    }
   }
-
-  let (zune_color_space, output_color_space) =
-    match image_pixel_module.photometric_interpretation() {
-      PhotometricInterpretation::Rgb => {
-        (zune_core::colorspace::ColorSpace::RGB, ColorSpace::Rgb)
-      }
-      PhotometricInterpretation::YbrFull => (
-        zune_core::colorspace::ColorSpace::YCbCr,
-        ColorSpace::Ybr { is_422: false },
-      ),
-      PhotometricInterpretation::YbrFull422 => (
-        zune_core::colorspace::ColorSpace::YCbCr,
-        ColorSpace::Ybr { is_422: true },
-      ),
-      _ => {
-        return Err(DataError::new_value_unsupported(format!(
-          "Photometric interpretation '{}' is not supported for color JPEG \
-           decode",
-          image_pixel_module.photometric_interpretation()
-        )));
-      }
-    };
-
-  let pixels = decode(image_pixel_module, data, zune_color_space)?;
-
-  ColorImage::new_u8(
-    image_pixel_module.columns(),
-    image_pixel_module.rows(),
-    pixels,
-    output_color_space,
-    image_pixel_module.bits_stored(),
-  )
 }
 
 fn decode(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
   color_space: zune_core::colorspace::ColorSpace,
-) -> Result<Vec<u8>, DataError> {
+) -> Result<Vec<u8>, PixelDataDecodeError> {
   let mut decoder = zune_jpeg::JpegDecoder::new(data);
 
   decoder
     .set_options(decoder.get_options().jpeg_set_out_colorspace(color_space));
 
-  decoder.decode_headers().map_err(|e| {
-    DataError::new_value_invalid(format!(
-      "JPEG pixel data decoding failed with '{}'",
-      e
-    ))
-  })?;
+  decoder
+    .decode_headers()
+    .map_err(|e| PixelDataDecodeError::DataInvalid {
+      details: format!("JPEG header decode failed with '{}'", e),
+    })?;
 
   if decoder.info().unwrap().width != image_pixel_module.columns()
     || decoder.info().unwrap().height != image_pixel_module.rows()
   {
-    return Err(DataError::new_value_invalid(
-      "JPEG pixel data has incorrect dimensions".to_string(),
-    ));
+    return Err(PixelDataDecodeError::DataInvalid {
+      details: "JPEG image has incorrect dimensions".to_string(),
+    });
   }
 
-  decoder.decode().map_err(|e| {
-    DataError::new_value_invalid(format!(
-      "JPEG pixel data decoding failed with '{}'",
-      e
-    ))
-  })
+  decoder
+    .decode()
+    .map_err(|e| PixelDataDecodeError::DataInvalid {
+      details: format!("JPEG decode failed with '{}'", e),
+    })
 }

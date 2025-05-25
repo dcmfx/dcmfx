@@ -20,7 +20,7 @@ use crate::{
   ColorImage, MonochromeImage, P10PixelDataFrameTransform,
   P10PixelDataFrameTransformError, PixelDataDecodeError, PixelDataEncodeConfig,
   PixelDataEncodeError, PixelDataFrame, PixelDataRenderer, decode, encode,
-  iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
+  iods::image_pixel_module::ImagePixelModule,
 };
 
 /// This transform takes a stream of DICOM P10 tokens and converts it to use a
@@ -342,21 +342,6 @@ impl P10PixelDataTranscodeTransform {
     let mut image_pixel_module =
       image_pixel_module_transform.get_output().unwrap().clone();
 
-    // Transcoding of frames that aren't a whole number of bytes isn't
-    // supported. This is an extremely rare occurrence as it requires
-    // multi-frame data, bits allocated of one, and a pixel count that's not a
-    // multiple of eight.
-    if image_pixel_module.bits_allocated() == BitsAllocated::One
-      && image_pixel_module.pixel_count() % 8 != 0
-    {
-      return Err(P10PixelDataTranscodeTransformError::PixelDataDecodeError(
-        PixelDataDecodeError::NotSupported {
-          details: "Transcoding of unaligned bitmap data is not supported"
-            .to_string(),
-        },
-      ));
-    }
-
     // Determine the photometric interpretation after decoding
     let decoded_photometric_interpretation =
       decode::decode_photometric_interpretation(
@@ -434,7 +419,7 @@ impl P10PixelDataTranscodeTransform {
         self.input_transfer_syntax,
         &pixel_data_renderer.image_pixel_module,
       )
-      .map_err(P10PixelDataTranscodeTransformError::DataError)?;
+      .map_err(P10PixelDataTranscodeTransformError::PixelDataDecodeError)?;
 
       // Pass through the relevant image data function
       (self.image_data_functions.process_color_image)(
@@ -449,6 +434,7 @@ impl P10PixelDataTranscodeTransform {
         self.output_transfer_syntax,
         &self.encode_config,
       )
+      .map_err(P10PixelDataTranscodeTransformError::PixelDataEncodeError)?
     } else {
       // Decode using the input Image Pixel Module
       let mut image = crate::decode::decode_monochrome(
@@ -456,7 +442,7 @@ impl P10PixelDataTranscodeTransform {
         self.input_transfer_syntax,
         &pixel_data_renderer.image_pixel_module,
       )
-      .map_err(P10PixelDataTranscodeTransformError::DataError)?;
+      .map_err(P10PixelDataTranscodeTransformError::PixelDataDecodeError)?;
 
       // Pass through the relevant image data function
       (self.image_data_functions.process_monochrome_image)(
@@ -465,14 +451,30 @@ impl P10PixelDataTranscodeTransform {
       )?;
 
       // Encode using the output Image Pixel Module
-      crate::encode::encode_monochrome(
+      let frame = crate::encode::encode_monochrome(
         &image,
         self.output_image_pixel_module.as_ref().unwrap(),
         self.output_transfer_syntax,
         &self.encode_config,
       )
-    }
-    .map_err(P10PixelDataTranscodeTransformError::PixelDataEncodeError)?;
+      .map_err(P10PixelDataTranscodeTransformError::PixelDataEncodeError)?;
+
+      // Transcoding of multi-frame data where the frames aren't a whole number
+      // of bytes isn't supported. This is an extremely rare occurrence as it
+      // only occurs on non-encapsulated multi-frame data where bits allocated
+      // is one and the pixel count isn't a multiple of eight.
+      if !self.output_transfer_syntax.is_encapsulated
+        && input_frame.index().unwrap() != 0
+        && frame.len_bits() % 8 != 0
+      {
+        return Err(P10PixelDataTranscodeTransformError::NotSupported {
+          details: "Transcoding multi-frame bitmap pixel data that isn't \
+            byte-aligned is not supported",
+        });
+      }
+
+      frame
+    };
 
     Ok(output_frame.to_bytes())
   }
@@ -640,6 +642,7 @@ pub enum P10PixelDataTranscodeTransformError {
   P10Error(P10Error),
   PixelDataDecodeError(PixelDataDecodeError),
   PixelDataEncodeError(PixelDataEncodeError),
+  NotSupported { details: &'static str },
 }
 
 impl core::fmt::Display for P10PixelDataTranscodeTransformError {
@@ -649,6 +652,9 @@ impl core::fmt::Display for P10PixelDataTranscodeTransformError {
       Self::P10Error(e) => e.fmt(f),
       Self::PixelDataDecodeError(e) => e.fmt(f),
       Self::PixelDataEncodeError(e) => e.fmt(f),
+      Self::NotSupported { details } => {
+        write!(f, "Transcode not supported, details: {}", details)
+      }
     }
   }
 }
@@ -660,6 +666,13 @@ impl DcmfxError for P10PixelDataTranscodeTransformError {
       Self::P10Error(e) => e.to_lines(task_description),
       Self::PixelDataDecodeError(e) => e.to_lines(task_description),
       Self::PixelDataEncodeError(e) => e.to_lines(task_description),
+      Self::NotSupported { details } => {
+        vec![
+          format!("Pixel data transcode error {}", task_description),
+          "".to_string(),
+          format!("  Details: {}", details),
+        ]
+      }
     }
   }
 }

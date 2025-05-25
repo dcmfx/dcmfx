@@ -7,7 +7,6 @@ use crate::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
   },
 };
-use dcmfx_core::DataError;
 
 /// Returns the photometric interpretation used by data decoded using
 /// libjpeg_12bit.
@@ -22,9 +21,9 @@ pub fn decode_photometric_interpretation(
     | PhotometricInterpretation::YbrFull
     | PhotometricInterpretation::YbrFull422 => Ok(photometric_interpretation),
 
-    _ => Err(PixelDataDecodeError::NotSupported {
+    _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "Decoding photometric interpretation '{}' is not supported",
+        "Photometric interpretation '{}' is not supported",
         photometric_interpretation
       ),
     }),
@@ -36,17 +35,40 @@ pub fn decode_photometric_interpretation(
 pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<MonochromeImage, DataError> {
-  let pixels = decode(image_pixel_module, data)?;
-  MonochromeImage::new_u16(
-    image_pixel_module.columns(),
-    image_pixel_module.rows(),
-    pixels,
-    image_pixel_module.bits_stored(),
-    image_pixel_module
-      .photometric_interpretation()
-      .is_monochrome1(),
-  )
+) -> Result<MonochromeImage, PixelDataDecodeError> {
+  match (
+    image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
+  ) {
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
+    ) => {
+      let pixels = decode(image_pixel_module, data)?;
+      MonochromeImage::new_u16(
+        image_pixel_module.columns(),
+        image_pixel_module.rows(),
+        pixels,
+        image_pixel_module.bits_stored(),
+        image_pixel_module
+          .photometric_interpretation()
+          .is_monochrome1(),
+      )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (photometric_interpretation, bits_allocated) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "JPEG 12-bit monochrome decode not supported for photometric \
+           interpretation '{}', bits allocated '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated)
+        ),
+      })
+    }
+  }
 }
 
 /// Decodes color pixel data using libjpeg_12bit.
@@ -54,35 +76,54 @@ pub fn decode_monochrome(
 pub fn decode_color(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<ColorImage, DataError> {
-  let pixels = decode(image_pixel_module, data)?;
+) -> Result<ColorImage, PixelDataDecodeError> {
+  match (
+    image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
+  ) {
+    (
+      PhotometricInterpretation::Rgb
+      | PhotometricInterpretation::YbrFull
+      | PhotometricInterpretation::YbrFull422,
+      BitsAllocated::Sixteen,
+    ) => {
+      let color_space = match image_pixel_module.photometric_interpretation() {
+        PhotometricInterpretation::YbrFull => ColorSpace::Ybr { is_422: false },
+        PhotometricInterpretation::YbrFull422 => {
+          ColorSpace::Ybr { is_422: true }
+        }
+        _ => ColorSpace::Rgb,
+      };
 
-  let color_space = match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::YbrFull => ColorSpace::Ybr { is_422: false },
-    PhotometricInterpretation::YbrFull422 => ColorSpace::Ybr { is_422: true },
-    _ => ColorSpace::Rgb,
-  };
+      let pixels = decode(image_pixel_module, data)?;
 
-  ColorImage::new_u16(
-    image_pixel_module.columns(),
-    image_pixel_module.rows(),
-    pixels,
-    color_space,
-    image_pixel_module.bits_stored(),
-  )
+      ColorImage::new_u16(
+        image_pixel_module.columns(),
+        image_pixel_module.rows(),
+        pixels,
+        color_space,
+        image_pixel_module.bits_stored(),
+      )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (photometric_interpretation, bits_allocated) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "JPEG 12-bit color decode not supported for photometric \
+           interpretation '{}', bits allocated '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated)
+        ),
+      })
+    }
+  }
 }
 
 fn decode(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<Vec<u16>, DataError> {
-  if image_pixel_module.bits_allocated() != BitsAllocated::Sixteen {
-    return Err(DataError::new_value_invalid(format!(
-      "JPEG 12-bit pixel data must have 16 bits allocated but has {}",
-      u8::from(image_pixel_module.bits_allocated())
-    )));
-  }
-
+) -> Result<Vec<u16>, PixelDataDecodeError> {
   // Determine whether the output wil be in the YBR color space
   let is_ybr_color_space = image_pixel_module
     .photometric_interpretation()
@@ -122,9 +163,9 @@ fn decode(
       unsafe { core::ffi::CStr::from_ptr(error_message.as_ptr()) };
     let error_str = error_c_str.to_str().unwrap_or("<invalid error>");
 
-    return Err(DataError::new_value_invalid(format!(
-      "JPEG 12-bit pixel data decoding failed with '{error_str}'"
-    )));
+    return Err(PixelDataDecodeError::DataInvalid {
+      details: format!("JPEG 12-bit decode failed with '{error_str}'"),
+    });
   }
 
   Ok(output_buffer)

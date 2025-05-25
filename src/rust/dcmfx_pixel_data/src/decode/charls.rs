@@ -1,8 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec, vec::Vec};
 
-use dcmfx_core::DataError;
-
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
@@ -21,9 +19,9 @@ pub fn decode_photometric_interpretation(
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
 
-    _ => Err(PixelDataDecodeError::NotSupported {
+    _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "Decoding photometric interpretation '{}' is not supported",
+        "Photometric interpretation '{}' is not supported",
         photometric_interpretation
       ),
     }),
@@ -35,7 +33,7 @@ pub fn decode_photometric_interpretation(
 pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<MonochromeImage, DataError> {
+) -> Result<MonochromeImage, PixelDataDecodeError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
@@ -43,16 +41,52 @@ pub fn decode_monochrome(
     .photometric_interpretation()
     .is_monochrome1();
 
-  if image_pixel_module.bits_allocated() == BitsAllocated::Eight {
-    let pixels = decode(data, image_pixel_module)?;
-    MonochromeImage::new_u8(width, height, pixels, bits_stored, is_monochrome1)
-  } else if image_pixel_module.bits_allocated() == BitsAllocated::Sixteen {
-    let pixels = decode(data, image_pixel_module)?;
-    MonochromeImage::new_u16(width, height, pixels, bits_stored, is_monochrome1)
-  } else {
-    Err(DataError::new_value_invalid(
-      "JPEG LS pixel data is not monochrome".to_string(),
-    ))
+  match (
+    image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
+  ) {
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
+    ) => {
+      let pixels = decode(data, image_pixel_module)?;
+      MonochromeImage::new_u8(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (
+      PhotometricInterpretation::Monochrome1
+      | PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
+    ) => {
+      let pixels = decode(data, image_pixel_module)?;
+      MonochromeImage::new_u16(
+        width,
+        height,
+        pixels,
+        bits_stored,
+        is_monochrome1,
+      )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (photometric_interpretation, bits_allocated) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "JPEG LS monochrome decode not supported for photometric \
+           interpretation '{}', bits allocated '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated)
+        ),
+      })
+    }
   }
 }
 
@@ -61,37 +95,57 @@ pub fn decode_monochrome(
 pub fn decode_color(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<ColorImage, DataError> {
+) -> Result<ColorImage, PixelDataDecodeError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
 
-  let color_space = match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::YbrFull => ColorSpace::Ybr { is_422: false },
-    PhotometricInterpretation::Rgb => ColorSpace::Rgb,
-    _ => Err(DataError::new_value_invalid(format!(
-      "JPEG LS does not support photometric interpretation '{}'",
-      image_pixel_module.photometric_interpretation()
-    )))?,
+  let color_space = if image_pixel_module.photometric_interpretation().is_rgb()
+  {
+    ColorSpace::Rgb
+  } else {
+    ColorSpace::Ybr { is_422: false }
   };
 
-  if image_pixel_module.bits_allocated() == BitsAllocated::Eight {
-    let pixels = decode(data, image_pixel_module)?;
-    ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
-  } else if image_pixel_module.bits_allocated() == BitsAllocated::Sixteen {
-    let pixels = decode(data, image_pixel_module)?;
-    ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
-  } else {
-    Err(DataError::new_value_invalid(
-      "JPEG LS pixel data is not color".to_string(),
-    ))
+  match (
+    image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
+  ) {
+    (
+      PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull,
+      BitsAllocated::Eight,
+    ) => {
+      let pixels = decode(data, image_pixel_module)?;
+      ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (
+      PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull,
+      BitsAllocated::Sixteen,
+    ) => {
+      let pixels = decode(data, image_pixel_module)?;
+      ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (photometric_interpretation, bits_allocated) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "JPEG LS color decode not supported for photometric interpretation \
+           '{}', bits allocated '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated)
+        ),
+      })
+    }
   }
 }
 
 fn decode<T: Clone + Default>(
   data: &[u8],
   image_pixel_module: &ImagePixelModule,
-) -> Result<Vec<T>, DataError> {
+) -> Result<Vec<T>, PixelDataDecodeError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let samples_per_pixel = u8::from(image_pixel_module.samples_per_pixel());
@@ -125,9 +179,9 @@ fn decode<T: Clone + Default>(
       .to_str()
       .unwrap_or("<invalid error>");
 
-    return Err(DataError::new_value_invalid(format!(
-      "JPEG LS pixel data decoding failed with '{error}'"
-    )));
+    return Err(PixelDataDecodeError::DataInvalid {
+      details: format!("JPEG LS pixel data decode failed with '{error}'"),
+    });
   }
 
   Ok(output_buffer)

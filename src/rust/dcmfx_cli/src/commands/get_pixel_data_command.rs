@@ -6,8 +6,9 @@ use clap::{Args, ValueEnum};
 use dcmfx::core::*;
 use dcmfx::p10::*;
 use dcmfx::pixel_data::{
-  P10PixelDataFrameTransform, P10PixelDataFrameTransformError, PixelDataFrame,
-  PixelDataRenderer, StandardColorPalette,
+  P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
+  PixelDataDecodeError, PixelDataFrame, PixelDataRenderer,
+  StandardColorPalette,
   iods::{
     CineModule, MultiFrameModule, OverlayPlaneModule,
     voi_lut_module::{VoiLutFunction, VoiWindow},
@@ -345,6 +346,7 @@ impl StandardColorPaletteArg {
 enum GetPixelDataError {
   P10Error(P10Error),
   DataError(DataError),
+  PixelDataDecodeError(PixelDataDecodeError),
   ImageError(image::ImageError),
   FFmpegError(ffmpeg_next::Error),
   OtherError(String),
@@ -368,6 +370,9 @@ pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
         match e {
           GetPixelDataError::DataError(e) => e.print(&task_description),
           GetPixelDataError::P10Error(e) => e.print(&task_description),
+          GetPixelDataError::PixelDataDecodeError(e) => {
+            e.print(&task_description)
+          }
           GetPixelDataError::ImageError(e) => {
             let lines = vec![
               format!("Image error {}", task_description),
@@ -712,7 +717,7 @@ fn frame_to_dynamic_image(
   if pixel_data_renderer.image_pixel_module.is_monochrome() {
     let monochrome_image = pixel_data_renderer
       .decode_monochrome_frame(frame)
-      .map_err(GetPixelDataError::DataError)?;
+      .map_err(GetPixelDataError::PixelDataDecodeError)?;
 
     // Apply the VOI override if it's set
     if let Some(voi_window_override) = &args.voi_window {
@@ -731,7 +736,7 @@ fn frame_to_dynamic_image(
     else if pixel_data_renderer.grayscale_pipeline.voi_lut().is_empty() {
       let image = pixel_data_renderer
         .decode_monochrome_frame(frame)
-        .map_err(GetPixelDataError::DataError)?;
+        .map_err(GetPixelDataError::PixelDataDecodeError)?;
 
       if let Some(window) = image.default_voi_window() {
         pixel_data_renderer
@@ -768,7 +773,7 @@ fn frame_to_dynamic_image(
   } else {
     let image = pixel_data_renderer
       .decode_color_frame(frame)
-      .map_err(GetPixelDataError::DataError)?;
+      .map_err(GetPixelDataError::PixelDataDecodeError)?;
 
     if args.is_output_hdr()
       && pixel_data_renderer.image_pixel_module.bits_stored() > 8

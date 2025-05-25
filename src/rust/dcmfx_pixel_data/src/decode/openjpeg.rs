@@ -1,8 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec, vec::Vec};
 
-use dcmfx_core::DataError;
-
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
@@ -28,9 +26,9 @@ pub fn decode_photometric_interpretation(
     }
 
     PhotometricInterpretation::YbrFull422 | PhotometricInterpretation::Xyb => {
-      Err(PixelDataDecodeError::NotSupported {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
         details: format!(
-          "Decoding photometric interpretation '{}' is not supported",
+          "Photometric interpretation '{}' is not supported",
           photometric_interpretation
         ),
       })
@@ -43,7 +41,7 @@ pub fn decode_photometric_interpretation(
 pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<MonochromeImage, DataError> {
+) -> Result<MonochromeImage, PixelDataDecodeError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
@@ -67,6 +65,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -81,6 +80,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
@@ -92,6 +92,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
@@ -103,6 +104,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
@@ -114,6 +116,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
@@ -125,6 +128,7 @@ pub fn decode_monochrome(
         bits_stored,
         is_monochrome1,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
   }
 }
@@ -134,7 +138,7 @@ pub fn decode_monochrome(
 pub fn decode_color(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<ColorImage, DataError> {
+) -> Result<ColorImage, PixelDataDecodeError> {
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
@@ -163,6 +167,7 @@ pub fn decode_color(
         palette.clone(),
         bits_stored,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (
@@ -177,28 +182,34 @@ pub fn decode_color(
         palette.clone(),
         bits_stored,
       )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (PhotometricInterpretation::PaletteColor { .. }, _) => {
-      Err(DataError::new_value_invalid(format!(
-        "OpenJPEG palette color data has invalid bits allocated '{}'",
-        u8::from(image_pixel_module.bits_allocated())
-      )))
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "Photometric interpretation is invalid when bits allocated is '{}'",
+          u8::from(image_pixel_module.bits_allocated())
+        ),
+      })
     }
 
     (_, BitsAllocated::One | BitsAllocated::Eight) => {
       let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (_, BitsAllocated::Sixteen) => {
       let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
     (_, BitsAllocated::ThirtyTwo) => {
       let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
   }
 }
@@ -206,7 +217,7 @@ pub fn decode_color(
 fn decode<T: Clone + Default + bytemuck::Pod>(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<Vec<T>, DataError> {
+) -> Result<Vec<T>, PixelDataDecodeError> {
   let samples_per_pixel = u8::from(image_pixel_module.samples_per_pixel());
   let bits_allocated = u8::from(image_pixel_module.bits_allocated()).max(8);
   let mut pixel_representation =
@@ -243,9 +254,9 @@ fn decode<T: Clone + Default + bytemuck::Pod>(
       .to_str()
       .unwrap_or("<invalid error>");
 
-    return Err(DataError::new_value_invalid(format!(
-      "JPEG 2000 pixel data decoding failed with '{error}'"
-    )));
+    return Err(PixelDataDecodeError::DataInvalid {
+      details: format!("JPEG 2000 decode failed with '{error}'"),
+    });
   }
 
   if pixel_representation != u8::from(image_pixel_module.pixel_representation())
@@ -260,11 +271,12 @@ fn decode<T: Clone + Default + bytemuck::Pod>(
         bytemuck::cast_slice_mut(&mut output_buffer),
       );
     } else {
-      return Err(DataError::new_value_invalid(
-        "OpenJPEG decode returned signed data but the pixel representation \
-         specifies unsigned data"
-          .to_string(),
-      ));
+      return Err(PixelDataDecodeError::DataInvalid {
+        details:
+          "JPEG 2000 image has signed data but the pixel representation \
+           specifies unsigned data"
+            .to_string(),
+      });
     }
   }
 
