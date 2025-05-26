@@ -528,6 +528,26 @@ fn jpeg_ls_ybr_color_space_to_jpg() {
 }
 
 #[test]
+fn jpeg_ls_palette_color_to_png() {
+  let dicom_file =
+    "../../../test/assets/other/TestPattern_Palette_16.jpeg_ls_lossless.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--overwrite")
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "jpeg_ls_palette_color_to_png.png");
+}
+
+#[test]
 fn jpeg_lossless_12bit_to_jpg() {
   let dicom_file = "../../../test/assets/fo-dicom/IM-0001-0001-0001.dcm";
   let output_file = format!("{}.0000.jpg", dicom_file);

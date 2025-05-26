@@ -6,7 +6,8 @@ use crate::{
   PixelDataFrame,
   color_image::ColorImageData,
   iods::image_pixel_module::{
-    ImagePixelModule, PhotometricInterpretation, PlanarConfiguration,
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+    PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -44,18 +45,21 @@ pub fn encode_monochrome(
     image.is_monochrome1(),
     image.bits_stored(),
     image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
   ) {
     (
       MonochromeImageData::Bitmap { data, .. },
       true,
       1,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::One,
     )
     | (
       MonochromeImageData::Bitmap { data, .. },
       false,
       1,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::One,
     ) => result.copy_from_slice(data),
 
     (
@@ -63,12 +67,14 @@ pub fn encode_monochrome(
       true,
       8,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::I8(data),
       false,
       8,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
     ) => result.copy_from_slice(bytemuck::cast_slice(data)),
 
     (
@@ -76,12 +82,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::I8(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
     ) => {
       let mask = (1 << image.bits_stored()) - 1;
 
@@ -95,12 +103,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::U8(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
     ) => result.copy_from_slice(data),
 
     (
@@ -108,12 +118,14 @@ pub fn encode_monochrome(
       true,
       16,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::I16(data),
       false,
       16,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
     ) => {
       #[cfg(target_endian = "little")]
       unsafe {
@@ -135,12 +147,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::I16(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
     ) => {
       let mask = (1 << image.bits_stored()) - 1;
 
@@ -155,12 +169,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::U16(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
     ) => {
       #[cfg(target_endian = "little")]
       unsafe {
@@ -182,12 +198,14 @@ pub fn encode_monochrome(
       true,
       16,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::ThirtyTwo,
     )
     | (
       MonochromeImageData::I32(data),
       false,
       16,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::ThirtyTwo,
     ) => result.copy_from_slice(bytemuck::cast_slice(data)),
 
     (
@@ -195,12 +213,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::ThirtyTwo,
     )
     | (
       MonochromeImageData::I32(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::ThirtyTwo,
     ) => {
       let mask = (1 << image.bits_stored()) - 1;
 
@@ -215,12 +235,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::ThirtyTwo,
     )
     | (
       MonochromeImageData::U32(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::ThirtyTwo,
     ) => {
       #[cfg(target_endian = "little")]
       unsafe {
@@ -268,6 +290,7 @@ pub fn encode_color(
     image.data(),
     planar_configuration,
     photometric_interpretation,
+    image_pixel_module.bits_allocated(),
   ) {
     (
       ColorImageData::U8 {
@@ -276,19 +299,22 @@ pub fn encode_color(
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Eight,
     )
     | (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::Eight,
     )
     | (
       ColorImageData::PaletteU8 { data, .. },
       _,
       PhotometricInterpretation::PaletteColor { .. },
+      BitsAllocated::Eight,
     ) => result.copy_from_slice(data),
 
     (
@@ -298,14 +324,16 @@ pub fn encode_color(
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Eight,
     )
     | (
       ColorImageData::U8 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::Eight,
     ) => {
       for i in 0..image.pixel_count() {
         result[i] = data[i * 3];
@@ -321,19 +349,22 @@ pub fn encode_color(
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Sixteen,
     )
     | (
       ColorImageData::U16 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::Sixteen,
     )
     | (
       ColorImageData::PaletteU16 { data, .. },
       _,
       PhotometricInterpretation::PaletteColor { .. },
+      BitsAllocated::Sixteen,
     ) => {
       #[cfg(target_endian = "little")]
       unsafe {
@@ -357,14 +388,16 @@ pub fn encode_color(
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Sixteen,
     )
     | (
       ColorImageData::U16 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::Sixteen,
     ) => {
       let mut i0 = 0;
       let mut i1 = image.pixel_count() * 2;
@@ -388,14 +421,16 @@ pub fn encode_color(
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::Rgb,
+      BitsAllocated::ThirtyTwo,
     )
     | (
       ColorImageData::U32 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::ThirtyTwo,
     ) => {
       #[cfg(target_endian = "little")]
       unsafe {
@@ -419,14 +454,16 @@ pub fn encode_color(
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::Rgb,
+      BitsAllocated::ThirtyTwo,
     )
     | (
       ColorImageData::U32 {
         data,
-        color_space: ColorSpace::Ybr { .. },
+        color_space: ColorSpace::Ybr { is_422: false },
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::ThirtyTwo,
     ) => {
       let mut i0 = 0;
       let mut i1 = image.pixel_count() * 4;
@@ -444,9 +481,13 @@ pub fn encode_color(
     }
 
     (
-      ColorImageData::U8 { data, .. },
+      ColorImageData::U8 {
+        data,
+        color_space: ColorSpace::Ybr { is_422: true },
+      },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::YbrFull422,
+      BitsAllocated::Eight,
     ) => {
       for (i, pixels) in data.chunks_exact(6).enumerate() {
         let y0 = pixels[0];
@@ -469,6 +510,7 @@ pub fn encode_color(
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::YbrFull422,
+      BitsAllocated::Eight,
     ) => {
       for (i, pixels) in data.chunks_exact(6).enumerate() {
         let y0 = pixels[0];
@@ -495,6 +537,7 @@ pub fn encode_color(
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::YbrFull422,
+      BitsAllocated::Sixteen,
     ) => {
       for (i, pixels) in data.chunks_exact(6).enumerate() {
         let y0 = pixels[0];
@@ -517,6 +560,7 @@ pub fn encode_color(
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::YbrFull422,
+      BitsAllocated::Sixteen,
     ) => {
       for (i, pixels) in data.chunks_exact(6).enumerate() {
         let y0 = pixels[0];
@@ -543,6 +587,7 @@ pub fn encode_color(
       },
       PlanarConfiguration::Interleaved,
       PhotometricInterpretation::YbrFull422,
+      BitsAllocated::ThirtyTwo,
     ) => {
       for (i, pixels) in data.chunks_exact(6).enumerate() {
         let y0 = pixels[0];
@@ -565,6 +610,7 @@ pub fn encode_color(
       },
       PlanarConfiguration::Separate,
       PhotometricInterpretation::YbrFull422,
+      BitsAllocated::ThirtyTwo,
     ) => {
       for (i, pixels) in data.chunks_exact(6).enumerate() {
         let y0 = pixels[0];

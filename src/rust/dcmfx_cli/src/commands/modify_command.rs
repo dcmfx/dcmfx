@@ -354,6 +354,7 @@ fn modify_input_source(
   // if a lossy transfer syntax is being transcoded into
   let insert_transform = if let Some(transfer_syntax) = args.transfer_syntax {
     if transfer_syntax == TransferSyntaxArg::JpegBaseline8Bit
+      || transfer_syntax == TransferSyntaxArg::JpegLsLossyNearLossless
       || transfer_syntax == TransferSyntaxArg::Jpeg2k
     {
       let mut lossy_image_compression = DataSet::new();

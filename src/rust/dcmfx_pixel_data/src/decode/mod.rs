@@ -154,6 +154,11 @@ pub fn decode_photometric_interpretation<'a>(
       )
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
+      charls::decode_photometric_interpretation(photometric_interpretation)
+    }
+
     &JPEG_2K
     | &JPEG_2K_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2K
@@ -164,11 +169,6 @@ pub fn decode_photometric_interpretation<'a>(
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
       jxl_oxide::decode_photometric_interpretation(photometric_interpretation)
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-      charls::decode_photometric_interpretation(photometric_interpretation)
     }
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => {
@@ -218,6 +218,11 @@ pub fn decode_monochrome(
       jpeg_decoder::decode_monochrome(image_pixel_module, data)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
+      charls::decode_monochrome(image_pixel_module, data)
+    }
+
     &JPEG_2K
     | &JPEG_2K_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2K
@@ -228,11 +233,6 @@ pub fn decode_monochrome(
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
       jxl_oxide::decode_monochrome(image_pixel_module, data)
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-      charls::decode_monochrome(image_pixel_module, data)
     }
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => native::decode_monochrome(
@@ -277,6 +277,11 @@ pub fn decode_color(
       jpeg_decoder::decode_color(image_pixel_module, data)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
+      charls::decode_color(image_pixel_module, data)
+    }
+
     &JPEG_2K
     | &JPEG_2K_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2K
@@ -287,11 +292,6 @@ pub fn decode_color(
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
       jxl_oxide::decode_color(image_pixel_module, data)
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-      charls::decode_color(image_pixel_module, data)
     }
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => native::decode_color(

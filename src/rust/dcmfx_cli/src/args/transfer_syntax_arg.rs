@@ -15,6 +15,8 @@ pub enum TransferSyntaxArg {
   DeflatedImageFrameCompression,
   RleLossless,
   JpegBaseline8Bit,
+  JpegLsLossless,
+  JpegLsLossyNearLossless,
   Jpeg2kLosslessOnly,
   Jpeg2k,
 }
@@ -45,6 +47,10 @@ impl TransferSyntaxArg {
         Some(&transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION)
       }
       Self::JpegBaseline8Bit => Some(&transfer_syntax::JPEG_BASELINE_8BIT),
+      Self::JpegLsLossless => Some(&transfer_syntax::JPEG_LS_LOSSLESS),
+      Self::JpegLsLossyNearLossless => {
+        Some(&transfer_syntax::JPEG_LS_LOSSY_NEAR_LOSSLESS)
+      }
       Self::Jpeg2kLosslessOnly => Some(&transfer_syntax::JPEG_2K_LOSSLESS_ONLY),
       Self::Jpeg2k => Some(&transfer_syntax::JPEG_2K),
     }
@@ -63,6 +69,8 @@ impl ValueEnum for TransferSyntaxArg {
       Self::DeflatedImageFrameCompression,
       Self::RleLossless,
       Self::JpegBaseline8Bit,
+      Self::JpegLsLossless,
+      Self::JpegLsLossyNearLossless,
       Self::Jpeg2kLosslessOnly,
       Self::Jpeg2k,
     ]
@@ -72,10 +80,10 @@ impl ValueEnum for TransferSyntaxArg {
     Some(match self {
       Self::PassThrough => PossibleValue::new("pass-through").help(
         "\n\
-          Keep the original transfer syntax when transcoding. This option can \
-          be used to force a full decode/encode cycle that allows for \
-          modifications such as changing the photometric interpretation, but \
-          without having to explicitly specify an output transfer syntax.",
+        Keep the original transfer syntax when transcoding. This option can be \
+        used to force a full decode/encode cycle that allows for modifications \
+        such as changing the photometric interpretation, but without having to \
+        explicitly specify an output transfer syntax.",
       ),
 
       Self::ImplicitVrLittleEndian => {
@@ -174,15 +182,35 @@ impl ValueEnum for TransferSyntaxArg {
 
       Self::JpegBaseline8Bit => PossibleValue::new("jpeg-baseline-8bit").help(
         "\n\
-          Lossy image compression using the widely supported JPEG Baseline \
-          (Process 1) format. Limited to 8-bit pixel data. The quality level \
-          to use for the JPEG encoding can be set with the --quality \
-          argument.\n\
-          \n\
-          Pixel data: JPEG Baseline (8-bit) compressed\n\
-          Encapsulated: Yes\n\
-          UID: 1.2.840.10008.1.2.4.50",
+        Lossy image compression using the widely supported JPEG Baseline \
+        (Process 1) format. Limited to 8-bit pixel data. The quality level to \
+        use for the JPEG encoding can be set with the --quality argument.\n\
+        \n\
+        Pixel data: JPEG Baseline (8-bit) compressed\n\
+        Encapsulated: Yes\n\
+        UID: 1.2.840.10008.1.2.4.50",
       ),
+
+      Self::JpegLsLossless => PossibleValue::new("jpeg-ls-lossless").help(
+        "\n\
+        Lossless image compression using the JPEG-LS image compresion format.\n\
+        \n\
+        Pixel data: JPEG-LS Lossless Image Compression\n\
+        Encapsulated: Yes\n\
+        UID: 1.2.840.10008.1.2.4.80",
+      ),
+
+      Self::JpegLsLossyNearLossless => {
+        PossibleValue::new("jpeg-ls-lossy-near-lossless").help(
+          "\n\
+          Lossy near-lossless image compression using the JPEG-LS image \
+          compression format.\n\
+          \n\
+          Pixel data: JPEG-LS Lossy (Near-Lossless) Image Compression\n\
+          Encapsulated: Yes\n\
+          UID: 1.2.840.10008.1.2.4.81",
+        )
+      }
 
       Self::Jpeg2kLosslessOnly => PossibleValue::new("jpeg-2k-lossless-only")
         .help(
@@ -221,6 +249,7 @@ pub fn supports_palette_color(transfer_syntax: &TransferSyntax) -> bool {
     || transfer_syntax == &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN
     || transfer_syntax == &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION
     || transfer_syntax == &transfer_syntax::RLE_LOSSLESS
+    || transfer_syntax == &transfer_syntax::JPEG_LS_LOSSLESS
     || transfer_syntax == &transfer_syntax::JPEG_2K_LOSSLESS_ONLY
 }
 

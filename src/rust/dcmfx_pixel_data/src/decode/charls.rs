@@ -80,7 +80,7 @@ pub fn decode_monochrome(
     (photometric_interpretation, bits_allocated) => {
       Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
         details: format!(
-          "JPEG LS monochrome decode not supported for photometric \
+          "JPEG-LS monochrome decode not supported for photometric \
            interpretation '{}', bits allocated '{}'",
           photometric_interpretation,
           u8::from(bits_allocated)
@@ -121,6 +121,21 @@ pub fn decode_color(
     }
 
     (
+      PhotometricInterpretation::PaletteColor { palette },
+      BitsAllocated::Eight,
+    ) => {
+      let pixels = decode(data, image_pixel_module)?;
+      ColorImage::new_palette8(
+        width,
+        height,
+        pixels,
+        palette.clone(),
+        bits_stored,
+      )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (
       PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull,
       BitsAllocated::Sixteen,
     ) => {
@@ -129,10 +144,25 @@ pub fn decode_color(
         .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
+    (
+      PhotometricInterpretation::PaletteColor { palette },
+      BitsAllocated::Sixteen,
+    ) => {
+      let pixels = decode(data, image_pixel_module)?;
+      ColorImage::new_palette16(
+        width,
+        height,
+        pixels,
+        palette.clone(),
+        bits_stored,
+      )
+      .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
     (photometric_interpretation, bits_allocated) => {
       Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
         details: format!(
-          "JPEG LS color decode not supported for photometric interpretation \
+          "JPEG-LS color decode not supported for photometric interpretation \
            '{}', bits allocated '{}'",
           photometric_interpretation,
           u8::from(bits_allocated)
@@ -180,7 +210,7 @@ fn decode<T: Clone + Default>(
       .unwrap_or("<invalid error>");
 
     return Err(PixelDataDecodeError::DataInvalid {
-      details: format!("JPEG LS pixel data decode failed with '{error}'"),
+      details: format!("JPEG-LS pixel data decode failed with '{error}'"),
     });
   }
 

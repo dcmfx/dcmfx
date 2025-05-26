@@ -62,6 +62,40 @@ fn test_jpeg_baseline_8bit_encode_decode_cycle() {
 }
 
 #[test]
+fn test_jpeg_ls_lossless_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| {
+        (m.bits_allocated() == BitsAllocated::Eight
+          || m.bits_allocated() == BitsAllocated::Sixteen)
+          && !m.photometric_interpretation().is_ybr_full_422()
+      })
+      .collect(),
+    &transfer_syntax::JPEG_LS_LOSSLESS,
+    0.0,
+    0.0,
+  );
+}
+
+#[test]
+fn test_jpeg_ls_near_lossless_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| {
+        (m.bits_allocated() == BitsAllocated::Eight
+          || m.bits_allocated() == BitsAllocated::Sixteen)
+          && !m.photometric_interpretation().is_ybr_full_422()
+      })
+      .collect(),
+    &transfer_syntax::JPEG_LS_LOSSY_NEAR_LOSSLESS,
+    0.01,
+    0.02,
+  );
+}
+
+#[test]
 fn test_jpeg_2k_lossless_only_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules()
@@ -236,9 +270,6 @@ fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
   let photometric_interpretations = &[
     PhotometricInterpretation::Monochrome1,
     PhotometricInterpretation::Monochrome2,
-    PhotometricInterpretation::PaletteColor {
-      palette: create_palette_color_lookup_table_module(),
-    },
     PhotometricInterpretation::PaletteColor {
       palette: create_palette_color_lookup_table_module(),
     },

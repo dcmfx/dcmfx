@@ -5,8 +5,6 @@ following:
 
 - Encode JPEG XL pixel data
 
-- Encode JPEG LS pixel data
-
 - Decode JPEG-LS pixel data on WASM
 
 - DIMSE networking

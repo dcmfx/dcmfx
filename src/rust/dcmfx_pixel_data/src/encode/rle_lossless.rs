@@ -5,7 +5,8 @@ use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
   color_image::ColorImageData,
   iods::image_pixel_module::{
-    ImagePixelModule, PhotometricInterpretation, PlanarConfiguration,
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+    PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -45,18 +46,21 @@ pub fn encode_monochrome(
     image.is_monochrome1(),
     image.bits_stored(),
     image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
   ) {
     (
       MonochromeImageData::Bitmap { data, .. },
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::One,
     )
     | (
       MonochromeImageData::Bitmap { data, .. },
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::One,
     ) => {
       let segment_0 = data.to_vec();
 
@@ -74,12 +78,14 @@ pub fn encode_monochrome(
       true,
       8,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::I8(data),
       false,
       8,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
     ) => {
       let segment_0 = bytemuck::cast_slice(data).to_vec();
 
@@ -91,12 +97,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::I8(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
 
@@ -114,12 +122,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::U8(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
     ) => {
       let segment_0 = data.to_vec();
 
@@ -131,12 +141,14 @@ pub fn encode_monochrome(
       true,
       16,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::I16(data),
       false,
       16,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -156,12 +168,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::I16(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -183,12 +197,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::U16(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -208,12 +224,14 @@ pub fn encode_monochrome(
       true,
       32,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::ThirtyTwo,
     )
     | (
       MonochromeImageData::I32(data),
       false,
       32,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::ThirtyTwo,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -237,12 +255,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::ThirtyTwo,
     )
     | (
       MonochromeImageData::I32(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::ThirtyTwo,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -268,12 +288,14 @@ pub fn encode_monochrome(
       true,
       _,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::ThirtyTwo,
     )
     | (
       MonochromeImageData::U32(data),
       false,
       _,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::ThirtyTwo,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -312,10 +334,12 @@ pub fn encode_color(
   match (
     image.data(),
     image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
   ) {
     (
       ColorImageData::PaletteU8 { data, .. },
       PhotometricInterpretation::PaletteColor { .. },
+      BitsAllocated::Eight,
     ) => {
       let segment_0 = data.to_vec();
 
@@ -325,6 +349,7 @@ pub fn encode_color(
     (
       ColorImageData::PaletteU16 { data, .. },
       PhotometricInterpretation::PaletteColor { .. },
+      BitsAllocated::Sixteen,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -345,6 +370,7 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Eight,
     )
     | (
       ColorImageData::U8 {
@@ -352,6 +378,7 @@ pub fn encode_color(
         color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::Eight,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -372,6 +399,7 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Sixteen,
     )
     | (
       ColorImageData::U16 {
@@ -379,6 +407,7 @@ pub fn encode_color(
         color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::Sixteen,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];
@@ -415,6 +444,7 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::Rgb,
+      BitsAllocated::ThirtyTwo,
     )
     | (
       ColorImageData::U32 {
@@ -422,6 +452,7 @@ pub fn encode_color(
         color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::ThirtyTwo,
     ) => {
       let mut segment_0 = vec![0; pixel_count];
       let mut segment_1 = vec![0; pixel_count];

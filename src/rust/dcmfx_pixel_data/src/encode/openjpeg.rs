@@ -5,7 +5,8 @@ use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
   color_image::ColorImageData,
   iods::image_pixel_module::{
-    ImagePixelModule, PhotometricInterpretation, PlanarConfiguration,
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+    PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -60,16 +61,19 @@ pub fn encode_monochrome(
     image.data(),
     image.is_monochrome1(),
     image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
   ) {
     (
       MonochromeImageData::I8(data),
       true,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::I8(data),
       false,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
     ) => encode(
       bytemuck::cast_slice(data),
       width,
@@ -82,22 +86,26 @@ pub fn encode_monochrome(
       MonochromeImageData::U8(data),
       true,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::U8(data),
       false,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
     ) => encode(data, width, height, image_pixel_module, quality),
 
     (
       MonochromeImageData::I16(data),
       true,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::I16(data),
       false,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
     ) => encode(
       bytemuck::cast_slice(data),
       width,
@@ -110,11 +118,13 @@ pub fn encode_monochrome(
       MonochromeImageData::U16(data),
       true,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::U16(data),
       false,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Sixteen,
     ) => encode(
       bytemuck::cast_slice(data),
       width,
@@ -144,6 +154,7 @@ pub fn encode_color(
   match (
     image.data(),
     image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
     quality,
   ) {
     (
@@ -152,6 +163,7 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Eight,
       _,
     )
     | (
@@ -160,6 +172,7 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::YbrRct,
+      BitsAllocated::Eight,
       None,
     )
     | (
@@ -168,11 +181,13 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::YbrIct,
+      BitsAllocated::Eight,
       Some(_),
     )
     | (
       ColorImageData::PaletteU8 { data, .. },
       PhotometricInterpretation::PaletteColor { .. },
+      BitsAllocated::Eight,
       None,
     ) => encode(data, width, height, image_pixel_module, quality),
 
@@ -182,6 +197,7 @@ pub fn encode_color(
         color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::Eight,
       _,
     ) => encode(data, width, height, image_pixel_module, quality),
 
@@ -191,6 +207,7 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Sixteen,
       _,
     )
     | (
@@ -199,6 +216,7 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::YbrRct,
+      BitsAllocated::Sixteen,
       None,
     )
     | (
@@ -207,11 +225,13 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::YbrIct,
+      BitsAllocated::Sixteen,
       Some(_),
     )
     | (
       ColorImageData::PaletteU16 { data, .. },
       PhotometricInterpretation::PaletteColor { .. },
+      BitsAllocated::Sixteen,
       None,
     ) => encode(
       bytemuck::cast_slice(data),
@@ -227,6 +247,7 @@ pub fn encode_color(
         color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::Sixteen,
       _,
     ) => encode(
       bytemuck::cast_slice(data),

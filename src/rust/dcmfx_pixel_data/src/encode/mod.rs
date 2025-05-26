@@ -14,6 +14,7 @@ use crate::{
   iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 
+mod charls;
 mod jpeg_encoder;
 mod native;
 mod openjpeg;
@@ -233,6 +234,14 @@ pub fn encode_image_pixel_module(
       jpeg_encoder::encode_image_pixel_module(image_pixel_module.clone())
     }
 
+    &JPEG_LS_LOSSLESS => {
+      charls::encode_image_pixel_module(image_pixel_module.clone(), false)
+    }
+
+    &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
+      charls::encode_image_pixel_module(image_pixel_module.clone(), true)
+    }
+
     &JPEG_2K_LOSSLESS_ONLY => {
       openjpeg::encode_image_pixel_module(image_pixel_module.clone(), None)
     }
@@ -278,6 +287,16 @@ pub fn encode_monochrome(
 
     &JPEG_BASELINE_8BIT => {
       jpeg_encoder::encode_monochrome(image, image_pixel_module, encode_config)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &JPEG_LS_LOSSLESS => {
+      charls::encode_monochrome(image, image_pixel_module, false)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
+      charls::encode_monochrome(image, image_pixel_module, true)
         .map(PixelDataFrame::new_from_bytes)
     }
 
@@ -329,6 +348,14 @@ pub fn encode_color(
 
     &JPEG_BASELINE_8BIT => {
       jpeg_encoder::encode_color(image, image_pixel_module, encode_config)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &JPEG_LS_LOSSLESS => charls::encode_color(image, image_pixel_module, false)
+      .map(PixelDataFrame::new_from_bytes),
+
+    &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
+      charls::encode_color(image, image_pixel_module, true)
         .map(PixelDataFrame::new_from_bytes)
     }
 

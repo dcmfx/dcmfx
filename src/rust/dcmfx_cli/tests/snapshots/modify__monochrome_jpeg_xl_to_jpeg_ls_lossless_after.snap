@@ -1,0 +1,185 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    46 bytes] "1.3.6.1.4. …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG-LS Lossless Image Compression)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    10 bytes] "DCMfx Test"
+(0002,0016) AE Source Application Entity Title      [     8 bytes] "CLUNIE1"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    36 bytes] "DERIVED",  …
+(0008,0012) DA Instance Creation Date               [     8 bytes] 1997-09-11
+(0008,0013) TM Instance Creation Time               [     6 bytes] 12:52:06
+(0008,0014) UI Instance Creator UID                 [    18 bytes] "1.3.6.1.4. …
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0008,0018) UI SOP Instance UID                     [    46 bytes] "1.3.6.1.4. …
+(0008,0020) DA Study Date                           [     8 bytes] 2004-08-26
+(0008,0021) DA Series Date                          [     8 bytes] 1997-08-06
+(0008,0022) DA Acquisition Date                     [     8 bytes] 1997-08-06
+(0008,0023) DA Content Date                         [     8 bytes] 1997-08-06
+(0008,0030) TM Study Time                           [     6 bytes] 18:50:59
+(0008,0031) TM Series Time                          [     6 bytes] 12:29:31
+(0008,0032) TM Acquisition Time                     [     6 bytes] 12:29:31
+(0008,0033) TM Content Time                         [     6 bytes] 12:29:31
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "NM" (Nuclear Medicine)
+(0008,0064) CS Conversion Type                      [     4 bytes] "WSD" (Workstation)
+(0008,0070) LO Manufacturer                         [    18 bytes] "GE Medical …
+(0008,0080) LO Institution Name                     [    20 bytes] "St. John's …
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,0201) SH Timezone Offset From UTC             [     6 bytes] "-0400"
+(0008,1010) SH Station Name                         [     8 bytes] "genieacq"
+(0008,1030) LO Study Description                    [    16 bytes] "Whole Body …
+(0008,1060) PN Name of Physician(s) Reading Study   [     0 bytes] ""
+(0008,1070) PN Operators' Name                      [     0 bytes] ""
+(0008,1090) LO Manufacturer's Model Name            [    14 bytes] "MILLENNIUM …
+(0008,2111) ST Derivation Description               [    16 bytes] "JPEG lossy …
+(0008,2112) SQ Source Image Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+    (0008,1155) UI Referenced SOP Instance UID          [    46 bytes] "1.3.6.1 …
+    (0040,A170) SQ Purpose of Reference Code Sequence
+      (FFFE,E000) Item
+        (0008,0100) SH Code Value                           [     6 bytes] "121320"
+        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+        (0008,0104) LO Code Meaning                         [    24 bytes] "Uncompr …
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,9215) SQ Derivation Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     6 bytes] "113040"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+    (0008,0104) LO Code Meaning                         [    18 bytes] "Lossy C …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0009,0010) LO Private Creator                      [    12 bytes] "GEMS_GENIE …
+(0009,1010) LO Study Name                           [     8 bytes] "WB BONE"
+(0009,1011) SL Study Flags                          [     4 bytes] 1
+(0009,1012) SL Study Type                           [     4 bytes] 1
+(0009,101E) UI Dataset UID                          [    52 bytes] "1.2.840.11 …
+(0009,1020) LO Series Object Name                   [    10 bytes] "WHOLE BODY"
+(0009,1021) SL Series Flags                         [     4 bytes] 1
+(0009,1022) SH User Orientation                     [     0 bytes] ""
+(0009,1023) SL Initiation Type                      [     4 bytes] 2
+(0009,1024) SL Initiation Delay                     [     4 bytes] 60000
+(0009,1025) SL Initiation Count Rate                [     4 bytes] 20000
+(0009,1026) SL Number Energy Sets                   [     4 bytes] 1
+(0009,1027) SL Number Detectors                     [     4 bytes] 2
+(0009,102A) SL Number View Sets                     [     4 bytes] 0
+(0009,102C) LO Series Comments                      [     0 bytes] ""
+(0009,102E) FD Distance Prescribed                  [     8 bytes] 1.899999976 …
+(0009,1030) LO Unknown                              [    10 bytes] "WHOLE BODY"
+(0009,1040) LO Patient Object Name                  [    12 bytes] "BERRA,JAMES"
+(0009,1041) SL Patient Flags                        [     4 bytes] 1
+(0009,1042) DA Patient Creation Date                [     8 bytes] 1997-08-06
+(0009,1043) TM Patient Creation Time                [     6 bytes] 12:25:38
+(0010,0010) PN Patient's Name                       [    22 bytes] "Compressed …
+(0010,0020) LO Patient ID                           [     4 bytes] "8NM1"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     2 bytes] "M" (Male)
+(0010,1000) LO Other Patient IDs                    [     0 bytes] ""
+(0010,1001) PN Other Patient Names                  [     0 bytes] ""
+(0010,1010) AS Patient's Age                        [     0 bytes] ""
+(0010,1020) DS Patient's Size                       [     8 bytes] "0.000000"
+(0010,1030) DS Patient's Weight                     [     8 bytes] "0.000000"
+(0010,2160) SH Ethnic Group                         [     0 bytes] ""
+(0010,21B0) LT Additional Patient History           [     0 bytes] ""
+(0010,4000) LT Patient Comments                     [     0 bytes] ""
+(0011,0010) LO Private Creator                      [    12 bytes] "GEMS_GENIE …
+(0011,100A) SL Series Type                          [     4 bytes] 1
+(0011,100B) SL Effective Series Duration            [     4 bytes] 1210632
+(0011,100D) LO Radio Nuclide Name                   [     6 bytes] "Tc99m"
+(0011,1010) LO Dataset Object Name                  [    12 bytes] "WHOLE BODY …
+(0011,1012) LO Dataset Name                         [    12 bytes] "WHOLE BODY …
+(0011,1013) SL Dataset Type                         [     4 bytes] 2
+(0011,1015) SL Detector Number                      [     4 bytes] 1
+(0011,1016) SL Energy Number                        [     4 bytes] 1
+(0011,1019) FD Radius Of Rotation                   [     8 bytes] 221.3640064 …
+(0011,101A) SL Detector Count Zone                  [     4 bytes] 1
+(0011,101B) SL Num Energy Windows                   [     4 bytes] 1
+(0011,101C) SL Energy Offset                        [    16 bytes] 0, 0, 0, 0
+(0011,101F) SL Image Orientation                    [     4 bytes] 4
+(0011,1023) SL Use FOV Mask                         [     4 bytes] 1
+(0011,1027) SL ROI Top Left                         [     8 bytes] 0, 0
+(0011,1028) SL ROI Bottom Right                     [     8 bytes] 0, 0
+(0011,1030) LO Picture Object Name                  [    12 bytes] "WHOLE BODY …
+(0011,1033) LO Energy Correct Name                  [     4 bytes] "ECOR"
+(0011,1034) LO Spatial Correct Name                 [     6 bytes] "Tc99m"
+(0011,1035) LO Tuning Calib Name                    [     4 bytes] "PMT"
+(0011,1038) SL Byte Order                           [     4 bytes] 66
+(0011,103A) SL Picture Format                       [     4 bytes] 5
+(0011,103B) FD Pixel Scale                          [     8 bytes] 1.0
+(0011,103C) FD Pixel Offset                         [     8 bytes] 0.0
+(0011,103E) SL FOV Shape                            [     4 bytes] 10
+(0011,103F) SL Dataset Flags                        [     4 bytes] 1
+(0011,1044) FD Threshold Center                     [     8 bytes] 2048.0
+(0011,1045) FD Threshold Width                      [     8 bytes] 4096.0
+(0011,1046) SL Interpolation Type                   [     4 bytes] 2
+(0011,1055) FD Period                               [     8 bytes] 1.0
+(0011,1056) FD Elapsed Time                         [     8 bytes] 1.0
+(0013,0010) LO Private Creator                      [    12 bytes] "GEMS_GENIE …
+(0013,1010) FD Digital FOV                          [    16 bytes] 578.5599975 …
+(0013,1011) SL Source Translator                    [     4 bytes] 5
+(0013,1012) SL RAL Flags                            [     4 bytes] 0
+(0013,1016) SL AutoTrack Peak                       [     4 bytes] 140
+(0013,1017) SL AutoTrack Width                      [     4 bytes] 5
+(0013,1018) FD Transmission Scan Time               [     8 bytes] 0.0
+(0013,1019) FD Transmission Mask Width              [     8 bytes] 70.0
+(0013,101A) FD Copper Attenuator Thickness          [     8 bytes] 0.0
+(0013,101C) FD Axial Acceptance Angle               [     8 bytes] 0.0
+(0013,101D) FD Theta Acceptance Value               [     8 bytes] 0.0
+(0013,1026) LT Study Comments                       [     0 bytes] ""
+(0018,0015) CS Body Part Examined                   [    10 bytes] "WHOLE BODY"
+(0018,0070) IS Counts Accumulated                   [     8 bytes] "3596452"
+(0018,0071) CS Acquisition Termination Condition    [     4 bytes] "MANU" (Acquisition was terminated manually)
+(0018,1000) LO Device Serial Number                 [    12 bytes] "172.16.193 …
+(0018,1020) LO Software Versions                    [     4 bytes] "2.0"
+(0018,1030) LO Protocol Name                        [    16 bytes] "Whole Body …
+(0018,1130) DS Table Height                         [    10 bytes] "654.820025"
+(0018,1131) DS Table Traverse                       [    12 bytes] "1572.260022"
+(0018,1242) IS Actual Frame Duration                [     8 bytes] "1210434"
+(0018,1243) IS Count Rate                           [     4 bytes] "950"
+(0018,1300) DS Scan Velocity                        [     8 bytes] "1.671598"
+(0018,1301) CS Whole Body Technique                 [     4 bytes] "1PS" (One pass)
+(0018,1302) IS Scan Length                          [     4 bytes] "1899"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0020,000D) UI Study Instance UID                   [    42 bytes] "1.3.6.1.4. …
+(0020,000E) UI Series Instance UID                  [    44 bytes] "1.3.6.1.4. …
+(0020,0010) SH Study ID                             [     4 bytes] "8NM1"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "5"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,0052) UI Frame of Reference UID               [    44 bytes] "1.3.6.1.4. …
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0020,4000) LT Image Comments                       [    10 bytes] "JPEG lossy"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0008) IS Number of Frames                     [     2 bytes] "1"
+(0028,0009) AT Frame Increment Pointer              [     8 bytes] (0054,0010) …
+(0028,0010) US Rows                                 [     2 bytes] 1024
+(0028,0011) US Columns                              [     2 bytes] 256
+(0028,0030) DS Pixel Spacing                        [    18 bytes] "2.260000", …
+(0028,0051) CS Corrected Image                      [     8 bytes] "NRGY", "LIN"
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 8
+(0028,0102) US High Bit                             [     2 bytes] 7
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,0106) US Smallest Image Pixel Value           [     2 bytes] 0
+(0028,0107) US Largest Image Pixel Value            [     2 bytes] 278
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
+(0028,2112) DS Lossy Image Compression Ratio        [     2 bytes] "76"
+(0054,0010) US Energy Window Vector                 [     2 bytes] 1
+(0054,0011) US Number of Energy Windows             [     2 bytes] 1
+(0054,0020) US Detector Vector                      [     2 bytes] 1
+(0054,0021) US Number of Detectors                  [     2 bytes] 1
+(0054,0400) SH Image ID                             [    12 bytes] "WHOLE BODY …
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [ 39326 bytes] [FF D8 FF …
+(FFFE,E0DD) Sequence Delimitation Item

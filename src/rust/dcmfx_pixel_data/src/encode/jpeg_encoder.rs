@@ -5,7 +5,8 @@ use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
   color_image::ColorImageData,
   iods::image_pixel_module::{
-    ImagePixelModule, PhotometricInterpretation, PlanarConfiguration,
+    BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+    PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -48,16 +49,19 @@ pub fn encode_monochrome(
     image.data(),
     image.is_monochrome1(),
     image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
   ) {
     (
       MonochromeImageData::U8(data),
       true,
       PhotometricInterpretation::Monochrome1,
+      BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::U8(data),
       false,
       PhotometricInterpretation::Monochrome2,
+      BitsAllocated::Eight,
     ) => encode(
       data,
       width,
@@ -90,6 +94,7 @@ pub fn encode_color(
   match (
     image.data(),
     image_pixel_module.photometric_interpretation(),
+    image_pixel_module.bits_allocated(),
   ) {
     (
       ColorImageData::U8 {
@@ -97,6 +102,7 @@ pub fn encode_color(
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Eight,
     ) => encode(
       data,
       width,
@@ -112,6 +118,7 @@ pub fn encode_color(
         color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
+      BitsAllocated::Eight,
     ) => encode(
       data,
       width,
@@ -127,6 +134,7 @@ pub fn encode_color(
         color_space: ColorSpace::Ybr { is_422: true },
       },
       PhotometricInterpretation::YbrFull422,
+      BitsAllocated::Eight,
     ) => encode(
       data,
       width,
