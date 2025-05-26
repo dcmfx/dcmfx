@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.14
+          node-version: 22.16
 
       - name: Semantic release dry run
         id: semantic-release
@@ -123,7 +123,8 @@ jobs:
           echo 'export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"' >> ~/.bash_profile
 
           # Copy mm_malloc.h into place. Why is it not there by default?
-          cp /mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mm_malloc.h /mingw64/include
+          MM_MALLOC_H=$(find /mingw64/lib/gcc/x86_64-w64-mingw32 -name mm_malloc.h | head -n 1)
+          cp $MM_MALLOC_H /mingw64/include
 
       - name: Install platform-specific dependencies (macOS)
         if: matrix.target == 'aarch64-apple-darwin' || matrix.target == 'x86_64-apple-darwin'
@@ -413,7 +414,7 @@ jobs:
       - name: Setup Gleam
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 27.3
+          otp-version: 28.0
           gleam-version: 1.10.0
           version-type: strict
 
@@ -637,7 +638,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.14
+          node-version: 22.16
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
