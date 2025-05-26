@@ -22,7 +22,7 @@ use crate::{
     planar_configuration_arg::PlanarConfigurationArg,
     transfer_syntax_arg::{self, TransferSyntaxArg},
   },
-  utils,
+  utils::{self, TempFileRenamer},
 };
 
 pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
@@ -314,23 +314,27 @@ fn modify_input_source(
 
   // Append a random suffix to get a unique name for a temporary output file.
   // This isn't needed when outputting to stdout.
-  let tmp_output_filename = if output_filename == PathBuf::from("-") {
-    None
-  } else {
-    let mut rng = rand::rng();
-    let random_suffix: String = (0..16)
-      .map(|_| char::from(rng.sample(rand::distr::Alphanumeric)))
-      .collect();
+  let (tmp_output_filename, mut temp_file_guard) =
+    if output_filename == PathBuf::from("-") {
+      (None, None)
+    } else {
+      let mut rng = rand::rng();
+      let random_suffix: String = (0..16)
+        .map(|_| char::from(rng.sample(rand::distr::Alphanumeric)))
+        .collect();
 
-    let file_name = output_filename.file_name().unwrap_or(OsStr::new(""));
-    let file_name =
-      format!("{}.{}.tmp", file_name.to_string_lossy(), random_suffix);
+      let file_name = output_filename.file_name().unwrap_or(OsStr::new(""));
+      let file_name =
+        format!("{}.{}.tmp", file_name.to_string_lossy(), random_suffix);
 
-    let mut new_path = output_filename.clone();
-    new_path.set_file_name(file_name);
+      let mut new_path = output_filename.clone();
+      new_path.set_file_name(file_name);
 
-    Some(new_path)
-  };
+      (
+        Some(new_path.clone()),
+        Some(TempFileRenamer::new(new_path, output_filename.clone())),
+      )
+    };
 
   // Create a filter transform for anonymization and tag deletion if needed
   let tags_to_delete = args.delete_tag.clone();
@@ -387,16 +391,9 @@ fn modify_input_source(
   )?;
 
   // Rename the temporary file to the desired output filename
-  if let Some(tmp_output_filename) = tmp_output_filename {
-    std::fs::rename(&tmp_output_filename, &output_filename).map_err(|e| {
-      ModifyCommandError::P10Error(P10Error::FileError {
-        when: format!(
-          "Renaming '{}' to '{}'",
-          tmp_output_filename.display(),
-          output_filename.display()
-        ),
-        details: e.to_string(),
-      })
+  if let Some(temp_file_guard) = &mut temp_file_guard {
+    temp_file_guard.commit().map_err(|(when, details)| {
+      ModifyCommandError::P10Error(P10Error::FileError { when, details })
     })?;
   }
 

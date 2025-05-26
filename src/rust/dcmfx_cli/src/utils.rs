@@ -88,3 +88,45 @@ pub fn path_append(mut path: PathBuf, suffix: &str) -> PathBuf {
 
   path
 }
+
+/// Renames a temporary file to an output filename when [`Self::commit()`] is
+/// called, otherwise deletes the temporary file on drop.
+///
+pub struct TempFileRenamer {
+  temp_filename: PathBuf,
+  output_filename: PathBuf,
+  committed: bool,
+}
+
+impl TempFileRenamer {
+  pub fn new(temp_filename: PathBuf, output_filename: PathBuf) -> Self {
+    Self {
+      temp_filename,
+      output_filename,
+      committed: false,
+    }
+  }
+
+  pub fn commit(&mut self) -> Result<(), (String, String)> {
+    self.committed = true;
+
+    std::fs::rename(&self.temp_filename, &self.output_filename).map_err(|e| {
+      (
+        format!(
+          "Renaming '{}' to '{}'",
+          self.temp_filename.display(),
+          self.output_filename.display()
+        ),
+        e.to_string(),
+      )
+    })
+  }
+}
+
+impl Drop for TempFileRenamer {
+  fn drop(&mut self) {
+    if !self.committed {
+      let _ = std::fs::remove_file(&self.temp_filename);
+    }
+  }
+}
