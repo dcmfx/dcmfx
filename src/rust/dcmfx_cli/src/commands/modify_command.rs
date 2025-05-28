@@ -577,21 +577,19 @@ fn get_transcode_image_data_functions(
         image.convert_to_rgb_color_space()
       }
 
-      // If the output image pixel module is using YBR then convert the color
-      // image to YBR full
+      // If the output image pixel module is using YBR_FULL then convert the
+      // color image
       if photometric_interpretation.is_ybr_full() {
         image.convert_to_ybr_color_space();
       }
 
-      // If the output image pixel module is using YBR 422 then convert the
-      // color image to YBR 422
+      // If the output image pixel module is using YBR_FULL_422 then convert the
+      // color image
       if photometric_interpretation.is_ybr_full_422() {
         image.convert_to_ybr_422_color_space().map_err(|_| {
-          P10PixelDataTranscodeTransformError::DataError(
-            DataError::new_value_invalid(
-              "Can't convert to YBR 422 because width is odd".to_string(),
-            ),
-          )
+          P10PixelDataTranscodeTransformError::NotSupported {
+            details: "Can't convert to YBR_FULL_422 because width is odd",
+          }
         })?;
       }
 

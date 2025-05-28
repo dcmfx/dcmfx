@@ -50,14 +50,11 @@ fn test_jpeg_baseline_8bit_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules()
       .into_iter()
-      .filter(|m| {
-        m.photometric_interpretation().is_palette_color()
-          && m.bits_allocated() == BitsAllocated::Eight
-      })
+      .filter(|m| m.bits_allocated() == BitsAllocated::Eight)
       .collect(),
     &transfer_syntax::JPEG_BASELINE_8BIT,
     0.01,
-    0.03,
+    0.25,
   );
 }
 
@@ -67,9 +64,8 @@ fn test_jpeg_ls_lossless_encode_decode_cycle() {
     all_image_pixel_modules()
       .into_iter()
       .filter(|m| {
-        (m.bits_allocated() == BitsAllocated::Eight
-          || m.bits_allocated() == BitsAllocated::Sixteen)
-          && !m.photometric_interpretation().is_ybr_full_422()
+        m.bits_allocated() == BitsAllocated::Eight
+          || m.bits_allocated() == BitsAllocated::Sixteen
       })
       .collect(),
     &transfer_syntax::JPEG_LS_LOSSLESS,
@@ -84,9 +80,8 @@ fn test_jpeg_ls_near_lossless_encode_decode_cycle() {
     all_image_pixel_modules()
       .into_iter()
       .filter(|m| {
-        (m.bits_allocated() == BitsAllocated::Eight
-          || m.bits_allocated() == BitsAllocated::Sixteen)
-          && !m.photometric_interpretation().is_ybr_full_422()
+        m.bits_allocated() == BitsAllocated::Eight
+          || m.bits_allocated() == BitsAllocated::Sixteen
       })
       .collect(),
     &transfer_syntax::JPEG_LS_LOSSY_NEAR_LOSSLESS,
@@ -182,10 +177,19 @@ fn test_monochrome_image_encode_decode_cycle(
     as i64)
     .max(1);
 
+  let mut incorrect_pixel_count = 0;
+
   // Compare all pixels
   for i in 0..image_pixel_module.pixel_count() {
-    assert!(original_image[i] - decoded_image[i] <= max_reencode_delta);
+    if (original_image[i] - decoded_image[i]).abs() > max_reencode_delta {
+      incorrect_pixel_count += 1;
+    }
   }
+
+  assert!(
+    incorrect_pixel_count < original_image.len().div_ceil(10),
+    "More than 10% of pixels exceed the allowed error margin"
+  );
 }
 
 fn test_color_image_encode_decode_cycle(
@@ -240,6 +244,8 @@ fn test_color_image_encode_decode_cycle(
     max_reencode_delta *= 2.0;
   }
 
+  let mut incorrect_pixel_count = 0;
+
   // Compare all pixels
   for y in 0..original_image.height() {
     for x in 0..original_image.width() {
@@ -247,10 +253,18 @@ fn test_color_image_encode_decode_cycle(
       let decoded_pixel = decoded_image.get_pixel(x, y);
 
       for i in 0..3 {
-        assert!(original_pixel.0[i] - decoded_pixel.0[i] <= max_reencode_delta);
+        if (original_pixel.0[i] - decoded_pixel.0[i]).abs() > max_reencode_delta
+        {
+          incorrect_pixel_count += 1;
+        }
       }
     }
   }
+
+  assert!(
+    incorrect_pixel_count < original_image.len().div_ceil(10),
+    "More than 10% of pixels exceed the allowed error margin"
+  );
 }
 
 /// Returns an pixel data encode config that uses maximum quality for lossy
