@@ -19,7 +19,7 @@ typedef struct {
 
 
   /* Coefficient buffer control */
-  JMETHOD(void, coef_start_pass, (j_compress_ptr cinfo, J_BUF_MODE pass_mode));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t , coef_start_pass, (j_compress_ptr cinfo, J_BUF_MODE pass_mode));
   /*  JMETHOD(boolean, coef_compress_data, (j_compress_ptr cinfo,
 					JSAMPIMAGE input_buf));*/
 
@@ -28,7 +28,7 @@ typedef struct {
 
 
   /* Forward DCT (also controls coefficient quantization) */
-  JMETHOD(void, fdct_start_pass, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, fdct_start_pass, (j_compress_ptr cinfo));
   /* perhaps this should be an array??? */
   JMETHOD(void, fdct_forward_DCT, (j_compress_ptr cinfo,
 				   jpeg_component_info * compptr,
@@ -41,7 +41,7 @@ typedef struct {
 
 
   /* Entropy encoding */
-  JMETHOD(boolean, entropy_encode_mcu, (j_compress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(boolean_result_t, entropy_encode_mcu, (j_compress_ptr cinfo,
 					JBLOCKROW *MCU_data));
 
   /* Pointer to data which is private to entropy module */
@@ -102,12 +102,12 @@ typedef jpeg_lossy_d_codec * j_lossy_d_ptr;
 
 
 /* Compression module initialization routines */
-EXTERN(void) jinit_lossy_c_codec JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_c_coef_controller JPP((j_compress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_lossy_c_codec JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_c_coef_controller JPP((j_compress_ptr cinfo,
 					  boolean need_full_buffer));
-EXTERN(void) jinit_forward_dct JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_shuff_encoder JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_phuff_encoder JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_forward_dct JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_shuff_encoder JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_phuff_encoder JPP((j_compress_ptr cinfo));
 
 /* Decompression module initialization routines */
 J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_lossy_d_codec JPP((j_decompress_ptr cinfo));

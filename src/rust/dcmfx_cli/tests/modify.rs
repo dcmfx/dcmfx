@@ -371,6 +371,16 @@ fn palette_color_to_jpeg_baseline() {
 }
 
 #[test]
+fn jpeg_lossless_monochrome_to_jpeg_extended_12bit() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/IM-0001-0001-0001.dcm",
+    "jpeg-extended-12bit",
+    "jpeg_lossless_monochrome_to_jpeg_extended_12bit",
+    &[],
+  );
+}
+
+#[test]
 fn monochrome_jpeg_xl_to_jpeg_ls_lossless() {
   modify_transfer_syntax(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",

@@ -64,10 +64,9 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
   }
 
   // Get required destination size
-  size_t stride = 0;
   size_t destination_size_bytes = 0;
   if (charls_jpegls_decoder_get_destination_size(
-          decoder, stride, &destination_size_bytes) != 0) {
+          decoder, 0, &destination_size_bytes) != 0) {
     strncpy(error_buffer, "charls_jpegls_decoder_get_destination_size() failed",
             error_buffer_size - 1);
     charls_jpegls_decoder_destroy(decoder);
@@ -84,7 +83,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
 
   // Perform decode
   if (charls_jpegls_decoder_decode_to_buffer(
-          decoder, output_buffer, destination_size_bytes, stride) != 0) {
+          decoder, output_buffer, destination_size_bytes, 0) != 0) {
     strncpy(error_buffer, "charls_jpegls_decoder_decode_to_buffer() failed",
             error_buffer_size - 1);
     charls_jpegls_decoder_destroy(decoder);
@@ -96,7 +95,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
   return 0;
 }
 
-int64_t charls_encode(uint8_t *input_data, uint64_t input_data_size,
+int64_t charls_encode(uint8_t *input_data,
                       uint32_t width, uint32_t height,
                       uint32_t samples_per_pixel, uint32_t bits_allocated,
                       uint32_t is_near_lossless,

@@ -2,7 +2,8 @@
 use alloc::{boxed::Box, string::ToString, vec, vec::Vec};
 
 use crate::{
-  ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
+  ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeConfig,
+  PixelDataEncodeError,
   color_image::ColorImageData,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
@@ -11,24 +12,17 @@ use crate::{
   monochrome_image::MonochromeImageData,
 };
 
-/// Returns the Image Pixel Module resulting from encoding using CharLS.
+/// Returns the Image Pixel Module resulting from encoding using libjpeg_12bit.
 ///
 pub fn encode_image_pixel_module(
   mut image_pixel_module: ImagePixelModule,
-  is_near_lossless: bool,
 ) -> Result<ImagePixelModule, ()> {
   match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::Monochrome1
     | PhotometricInterpretation::Monochrome2
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => (),
-
-    // PALETTE_COLOR is only permitted for lossless JPEG-LS encodes
-    PhotometricInterpretation::PaletteColor { .. } => {
-      if is_near_lossless {
-        return Err(());
-      }
-    }
+    | PhotometricInterpretation::YbrFull
+    | PhotometricInterpretation::YbrFull422 => (),
 
     _ => return Err(()),
   };
@@ -38,15 +32,17 @@ pub fn encode_image_pixel_module(
   Ok(image_pixel_module)
 }
 
-/// Encodes a [`MonochromeImage`] into JPEG-LS raw bytes using CharLS.
+/// Encodes a [`MonochromeImage`] into JPEG Extended 12-bit raw bytes using
+/// libjpeg_12bit.
 ///
 pub fn encode_monochrome(
   image: &MonochromeImage,
   image_pixel_module: &ImagePixelModule,
-  is_near_lossless: bool,
+  encode_config: &PixelDataEncodeConfig,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let width = image.width();
   let height = image.height();
+  let quality = encode_config.quality;
 
   match (
     image.data(),
@@ -54,23 +50,16 @@ pub fn encode_monochrome(
     image_pixel_module.bits_allocated(),
   ) {
     (
-      MonochromeImageData::U8(data),
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      BitsAllocated::Eight,
-    ) => encode(data, width, height, image_pixel_module, is_near_lossless),
-
-    (
       MonochromeImageData::U16(data),
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2,
       BitsAllocated::Sixteen,
-    ) => encode(
+    ) if image_pixel_module.bits_stored() <= 12 => encode(
       bytemuck::cast_slice(data),
       width,
       height,
       image_pixel_module,
-      is_near_lossless,
+      quality,
     ),
 
     _ => Err(PixelDataEncodeError::NotSupported {
@@ -81,50 +70,28 @@ pub fn encode_monochrome(
   }
 }
 
-/// Encodes a [`ColorImage`] into JPEG-LS raw bytes using CharLS.
+/// Encodes a [`ColorImage`] into JPEG Extended 12-bit raw bytes using
+/// libjpeg_12bit.
 ///
 pub fn encode_color(
   image: &ColorImage,
   image_pixel_module: &ImagePixelModule,
-  is_near_lossless: bool,
+  encode_config: &PixelDataEncodeConfig,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let width = image.width();
   let height = image.height();
+  let quality = encode_config.quality;
 
   match (
     image.data(),
     image_pixel_module.photometric_interpretation(),
-    is_near_lossless,
   ) {
     (
-      ColorImageData::U8 {
-        data,
-        color_space: ColorSpace::Rgb,
-      },
-      PhotometricInterpretation::Rgb,
-      _,
-    )
-    | (
-      ColorImageData::U8 {
-        data,
-        color_space: ColorSpace::Ybr { is_422: false },
-      },
-      PhotometricInterpretation::YbrFull,
-      _,
-    )
-    | (
-      ColorImageData::PaletteU8 { data, .. },
-      PhotometricInterpretation::PaletteColor { .. },
-      false,
-    ) => encode(data, width, height, image_pixel_module, is_near_lossless),
-
-    (
       ColorImageData::U16 {
         data,
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::Rgb,
-      _,
     )
     | (
       ColorImageData::U16 {
@@ -132,18 +99,19 @@ pub fn encode_color(
         color_space: ColorSpace::Ybr { is_422: false },
       },
       PhotometricInterpretation::YbrFull,
-      _,
     )
     | (
-      ColorImageData::PaletteU16 { data, .. },
-      PhotometricInterpretation::PaletteColor { .. },
-      false,
-    ) => encode(
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Ybr { is_422: true },
+      },
+      PhotometricInterpretation::YbrFull422,
+    ) if image_pixel_module.bits_stored() <= 12 => encode(
       bytemuck::cast_slice(data),
       width,
       height,
       image_pixel_module,
-      is_near_lossless,
+      quality,
     ),
 
     _ => Err(PixelDataEncodeError::NotSupported {
@@ -155,78 +123,97 @@ pub fn encode_color(
 }
 
 fn encode(
-  data: &[u8],
+  data: &[u16],
   width: u16,
   height: u16,
   image_pixel_module: &ImagePixelModule,
-  is_near_lossless: bool,
+  quality: u8,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let mut output_buffer = vec![];
-
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
 
-  let bytes_written = unsafe {
-    ffi::charls_encode(
+  let color_space = match image_pixel_module.photometric_interpretation() {
+    PhotometricInterpretation::Monochrome1
+    | PhotometricInterpretation::Monochrome2 => 1,
+    PhotometricInterpretation::Rgb => 2,
+    PhotometricInterpretation::YbrFull
+    | PhotometricInterpretation::YbrFull422 => 3,
+    _ => unreachable!(),
+  };
+
+  let photometric_interpretation =
+    match image_pixel_module.photometric_interpretation() {
+      PhotometricInterpretation::Monochrome1 => 1,
+      PhotometricInterpretation::Monochrome2 => 2,
+      PhotometricInterpretation::Rgb => 3,
+      PhotometricInterpretation::YbrFull => 4,
+      PhotometricInterpretation::YbrFull422 => 5,
+      _ => unreachable!(),
+    };
+
+  let result = unsafe {
+    ffi::libjpeg_12bit_encode(
       data.as_ptr(),
-      width as u32,
-      height as u32,
+      data.len() as u64,
+      width.into(),
+      height.into(),
       u32::from(u8::from(image_pixel_module.samples_per_pixel())),
-      u32::from(u8::from(image_pixel_module.bits_allocated())),
-      u32::from(is_near_lossless),
-      output_buffer_allocate,
+      photometric_interpretation,
+      color_space,
+      quality,
+      output_data_callback,
       &mut output_buffer as *mut Vec<u8> as *mut core::ffi::c_void,
       error_buffer.as_mut_ptr(),
-      error_buffer.len() as u32,
     )
   };
 
-  if bytes_written < 0 {
+  if result != 0 {
     let error = unsafe { core::ffi::CStr::from_ptr(error_buffer.as_ptr()) }
       .to_str()
       .unwrap_or("<invalid error>");
 
     return Err(PixelDataEncodeError::OtherError {
-      name: "CharLS encode failed".to_string(),
+      name: "libjpeg_12bit encode failed".to_string(),
       details: error.to_string(),
     });
   }
 
-  output_buffer.truncate(bytes_written as usize);
-
   Ok(output_buffer)
 }
 
-/// This function is passed as a callback to [`ffi::charls_encode()`] and
-/// is then called to allocate output data.
+/// This function is passed as a callback to [`ffi::libjpeg_12bit_encode()`] and
+/// is then called to receive output data.
 ///
-extern "C" fn output_buffer_allocate(
+extern "C" fn output_data_callback(
+  data: *mut u8,
   len: usize,
   context: *mut core::ffi::c_void,
-) -> *mut core::ffi::c_void {
+) {
   unsafe {
     let output_buffer = &mut *(context as *mut Vec<u8>);
 
-    output_buffer.resize(len, 0);
-    output_buffer.as_mut_ptr() as *mut core::ffi::c_void
+    output_buffer.extend_from_slice(core::slice::from_raw_parts(data, len));
   }
 }
 
 mod ffi {
   unsafe extern "C" {
-    pub fn charls_encode(
-      input_data: *const u8,
+    pub fn libjpeg_12bit_encode(
+      input_data: *const u16,
+      input_data_size: u64,
       width: u32,
       height: u32,
       samples_per_pixel: u32,
-      bits_allocated: u32,
-      is_near_lossless: u32,
-      output_buffer_allocate: extern "C" fn(
+      photometric_interpretation: u32,
+      color_space: u32,
+      quality: u8,
+      output_data_callback: extern "C" fn(
+        *mut u8,
         usize,
         *mut core::ffi::c_void,
-      ) -> *mut core::ffi::c_void,
+      ),
       output_buffer_context: *mut core::ffi::c_void,
-      error_buffer: *mut ::core::ffi::c_char,
-      error_buffer_size: u32,
-    ) -> i64;
+      error_message: *mut ::core::ffi::c_char,
+    ) -> i32;
   }
 }

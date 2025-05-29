@@ -482,9 +482,10 @@ fn get_transcode_image_data_functions(
           }
 
           match *output_transfer_syntax {
-            // When transcoding to JPEG Baseline 8-bit default to YBR if the
-            // incoming data is RGB
-            transfer_syntax::JPEG_BASELINE_8BIT => {
+            // When transcoding to JPEG Baseline 8-bit and JPEG Extended 12-bit,
+            // default to YBR if the incoming data is RGB
+            transfer_syntax::JPEG_BASELINE_8BIT
+            | transfer_syntax::JPEG_EXTENDED_12BIT => {
               if image_pixel_module.photometric_interpretation().is_rgb() {
                 image_pixel_module.set_photometric_interpretation(
                   PhotometricInterpretation::YbrFull,

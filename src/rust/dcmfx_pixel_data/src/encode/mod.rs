@@ -16,6 +16,7 @@ use crate::{
 
 mod charls;
 mod jpeg_encoder;
+mod libjpeg_12bit;
 mod native;
 mod openjpeg;
 mod rle_lossless;
@@ -234,6 +235,10 @@ pub fn encode_image_pixel_module(
       jpeg_encoder::encode_image_pixel_module(image_pixel_module.clone())
     }
 
+    &JPEG_EXTENDED_12BIT => {
+      libjpeg_12bit::encode_image_pixel_module(image_pixel_module.clone())
+    }
+
     &JPEG_LS_LOSSLESS => {
       charls::encode_image_pixel_module(image_pixel_module.clone(), false)
     }
@@ -287,6 +292,11 @@ pub fn encode_monochrome(
 
     &JPEG_BASELINE_8BIT => {
       jpeg_encoder::encode_monochrome(image, image_pixel_module, encode_config)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &JPEG_EXTENDED_12BIT => {
+      libjpeg_12bit::encode_monochrome(image, image_pixel_module, encode_config)
         .map(PixelDataFrame::new_from_bytes)
     }
 
@@ -348,6 +358,11 @@ pub fn encode_color(
 
     &JPEG_BASELINE_8BIT => {
       jpeg_encoder::encode_color(image, image_pixel_module, encode_config)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &JPEG_EXTENDED_12BIT => {
+      libjpeg_12bit::encode_color(image, image_pixel_module, encode_config)
         .map(PixelDataFrame::new_from_bytes)
     }
 

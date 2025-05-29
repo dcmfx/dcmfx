@@ -42,7 +42,7 @@ typedef struct {
 
 
   /* Difference buffer control */
-  JMETHOD(void, diff_start_pass, (j_compress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, diff_start_pass, (j_compress_ptr cinfo,
 				  J_BUF_MODE pass_mode));
 
   /* Pointer to data which is private to diff controller */
@@ -50,7 +50,7 @@ typedef struct {
 
 
   /* Entropy encoding */
-  JMETHOD(JDIMENSION, entropy_encode_mcus, (j_compress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(jdimension_result_t, entropy_encode_mcus, (j_compress_ptr cinfo,
 					    JDIFFIMAGE diff_buf,
 					    JDIMENSION MCU_row_num,
 					    JDIMENSION MCU_col_num,
@@ -138,9 +138,9 @@ typedef jpeg_lossless_d_codec * j_lossless_d_ptr;
 
 
 /* Compression module initialization routines */
-EXTERN(void) jinit_lossless_c_codec JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_lhuff_encoder JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_differencer JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_lossless_c_codec JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_lhuff_encoder JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_differencer JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_c_scaler JPP((j_compress_ptr cinfo));
 /* Decompression module initialization routines */
 J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_lossless_d_codec JPP((j_decompress_ptr cinfo));

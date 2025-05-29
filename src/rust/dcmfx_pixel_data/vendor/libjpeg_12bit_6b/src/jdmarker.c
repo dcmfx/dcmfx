@@ -137,7 +137,10 @@ typedef my_marker_reader * my_marker_ptr;
  */
 #define MAKE_BYTE_AVAIL(cinfo,action)  \
     if (bytes_in_buffer == 0) {  \
-      if (! (*datasrc->fill_input_buffer) (cinfo))  \
+      boolean_result_t fill_input_buffer_result = (*datasrc->fill_input_buffer) (cinfo); \
+      if (fill_input_buffer_result.is_err) \
+        return fill_input_buffer_result; \
+      if (! fill_input_buffer_result.value)  \
         { action; }  \
       INPUT_RELOAD(cinfo);  \
     }
@@ -893,14 +896,14 @@ skip_variable (j_decompress_ptr cinfo)
  * but it will never be 0 or FF.
  */
 
-LOCAL(boolean)
+J_WARN_UNUSED_RESULT LOCAL(boolean_result_t)
 next_marker (j_decompress_ptr cinfo)
 {
   int c;
   INPUT_VARS(cinfo);
 
   for (;;) {
-    INPUT_BYTE(cinfo, c, return FALSE);
+    INPUT_BYTE(cinfo, c, return RESULT_OK(boolean, FALSE));
     /* Skip any non-FF bytes.
      * This may look a bit inefficient, but it will not occur in a valid file.
      * We sync after each discarded byte so that a suspending data source
@@ -909,7 +912,7 @@ next_marker (j_decompress_ptr cinfo)
     while (c != 0xFF) {
       cinfo->marker->discarded_bytes++;
       INPUT_SYNC(cinfo);
-      INPUT_BYTE(cinfo, c, return FALSE);
+      INPUT_BYTE(cinfo, c, return RESULT_OK(boolean, FALSE));
     }
     /* This loop swallows any duplicate FF bytes.  Extra FFs are legal as
      * pad bytes, so don't count them in discarded_bytes.  We assume there
@@ -917,7 +920,7 @@ next_marker (j_decompress_ptr cinfo)
      * data source's input buffer.
      */
     do {
-      INPUT_BYTE(cinfo, c, return FALSE);
+      INPUT_BYTE(cinfo, c, return RESULT_OK(boolean, FALSE));
     } while (c == 0xFF);
     if (c != 0)
       break;            /* found a valid marker, exit loop */
@@ -936,7 +939,7 @@ next_marker (j_decompress_ptr cinfo)
   cinfo->unread_marker = c;
 
   INPUT_SYNC(cinfo);
-  return TRUE;
+  return RESULT_OK(boolean, TRUE);
 }
 
 
@@ -986,7 +989,12 @@ read_markers (j_decompress_ptr cinfo)
         if (! first_marker_result.value)
           return RESULT_OK(int, JPEG_SUSPENDED);
       } else {
-    if (! next_marker(cinfo))
+        boolean_result_t next_marker_result = next_marker(cinfo);
+        if (next_marker_result.is_err) {
+          return RESULT_ERR(int, next_marker_result.err_code);
+        }
+
+    if (! next_marker_result.value)
       return RESULT_OK(int, JPEG_SUSPENDED);
       }
     }
@@ -1211,7 +1219,11 @@ read_restart_marker (j_decompress_ptr cinfo)
   /* Obtain a marker unless we already did. */
   /* Note that next_marker will complain if it skips any data. */
   if (cinfo->unread_marker == 0) {
-    if (! next_marker(cinfo))
+    boolean_result_t next_marker_result = next_marker(cinfo);
+    if (next_marker_result.is_err) {
+      return next_marker_result;
+    }
+    if (! next_marker_result.value)
       return RESULT_OK(boolean, FALSE);
   }
 
@@ -1223,8 +1235,12 @@ read_restart_marker (j_decompress_ptr cinfo)
   } else {
     /* Uh-oh, the restart markers have been messed up. */
     /* Let the data source manager determine how to resync. */
-    if (! (*cinfo->src->resync_to_restart) (cinfo,
-                        cinfo->marker->next_restart_num))
+    boolean_result_t resync_to_restart_result = (*cinfo->src->resync_to_restart) (cinfo,
+                        cinfo->marker->next_restart_num);
+    if (resync_to_restart_result.is_err) {
+      return resync_to_restart_result;
+    }
+    if (! resync_to_restart_result.value)
       return RESULT_OK(boolean, FALSE);
   }
 
@@ -1284,7 +1300,7 @@ read_restart_marker (j_decompress_ptr cinfo)
  * any other marker would have to be bogus data in that case.
  */
 
-GLOBAL(boolean)
+GLOBAL(boolean_result_t)
 jpeg_resync_to_restart (j_decompress_ptr cinfo, int desired)
 {
   int marker = cinfo->unread_marker;
@@ -1314,17 +1330,22 @@ jpeg_resync_to_restart (j_decompress_ptr cinfo, int desired)
     case 1:
       /* Discard marker and let entropy decoder resume processing. */
       cinfo->unread_marker = 0;
-      return TRUE;
-    case 2:
+      return RESULT_OK(boolean, TRUE);
+    case 2: {
       /* Scan to the next marker, and repeat the decision loop. */
-      if (! next_marker(cinfo))
-    return FALSE;
+      boolean_result_t next_marker_result = next_marker(cinfo);
+      if (next_marker_result.is_err) {
+        return next_marker_result;
+      }
+      if (! next_marker_result.value)
+        return RESULT_OK(boolean, FALSE);
       marker = cinfo->unread_marker;
       break;
+    }
     case 3:
       /* Return without advancing past this marker. */
       /* Entropy decoder will be forced to process an empty segment. */
-      return TRUE;
+      return RESULT_OK(boolean, TRUE);
     }
   } /* end loop */
 }

@@ -276,9 +276,9 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       /* Decode a single block's worth of coefficients */
 
       /* Section F.2.2.1: decode the DC coefficient difference */
-      HUFF_DECODE(s, br_state, dctbl, return RESULT_OK(boolean, FALSE), label1);
+      HUFF_DECODE(s, br_state, dctbl, return RESULT_OK(boolean, FALSE), label1, ERR_BOOL);
       if (s) {
-    CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE));
+    CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE), ERR_BOOL);
     r = GET_BITS(s);
     s = HUFF_EXTEND(r, s);
       }
@@ -297,14 +297,14 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     /* Section F.2.2.2: decode the AC coefficients */
     /* Since zeroes are skipped, output area must be cleared beforehand */
     for (k = 1; k < DCTSIZE2; k++) {
-      HUFF_DECODE(s, br_state, actbl, return RESULT_OK(boolean, FALSE), label2);
+      HUFF_DECODE(s, br_state, actbl, return RESULT_OK(boolean, FALSE), label2, ERR_BOOL);
 
       r = s >> 4;
       s &= 15;
 
       if (s) {
         k += r;
-        CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE));
+        CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE), ERR_BOOL);
         r = GET_BITS(s);
         s = HUFF_EXTEND(r, s);
         /* Output coefficient in natural (dezigzagged) order.
@@ -324,14 +324,14 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     /* Section F.2.2.2: decode the AC coefficients */
     /* In this path we just discard the values */
     for (k = 1; k < DCTSIZE2; k++) {
-      HUFF_DECODE(s, br_state, actbl, return RESULT_OK(boolean, FALSE), label3);
+      HUFF_DECODE(s, br_state, actbl, return RESULT_OK(boolean, FALSE), label3, ERR_BOOL);
 
       r = s >> 4;
       s &= 15;
 
       if (s) {
         k += r;
-        CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE));
+        CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE), ERR_BOOL);
         DROP_BITS(s);
       } else {
         if (r != 15)

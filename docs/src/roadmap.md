@@ -3,9 +3,11 @@
 DCMfx has no formal roadmap, but future additions are likely to include the
 following:
 
+- Encode High-Throughput JPEG 2000 pixel data
+
 - Encode JPEG XL pixel data
 
-- Decode JPEG-LS pixel data on WASM
+- Decode and encode JPEG-LS pixel data on WASM
 
 - DIMSE networking
 

@@ -15,6 +15,7 @@ pub enum TransferSyntaxArg {
   DeflatedImageFrameCompression,
   RleLossless,
   JpegBaseline8Bit,
+  JpegExtended12Bit,
   JpegLsLossless,
   JpegLsLossyNearLossless,
   Jpeg2kLosslessOnly,
@@ -47,6 +48,7 @@ impl TransferSyntaxArg {
         Some(&transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION)
       }
       Self::JpegBaseline8Bit => Some(&transfer_syntax::JPEG_BASELINE_8BIT),
+      Self::JpegExtended12Bit => Some(&transfer_syntax::JPEG_EXTENDED_12BIT),
       Self::JpegLsLossless => Some(&transfer_syntax::JPEG_LS_LOSSLESS),
       Self::JpegLsLossyNearLossless => {
         Some(&transfer_syntax::JPEG_LS_LOSSY_NEAR_LOSSLESS)
@@ -69,6 +71,7 @@ impl ValueEnum for TransferSyntaxArg {
       Self::DeflatedImageFrameCompression,
       Self::RleLossless,
       Self::JpegBaseline8Bit,
+      Self::JpegExtended12Bit,
       Self::JpegLsLossless,
       Self::JpegLsLossyNearLossless,
       Self::Jpeg2kLosslessOnly,
@@ -191,6 +194,18 @@ impl ValueEnum for TransferSyntaxArg {
         UID: 1.2.840.10008.1.2.4.50",
       ),
 
+      Self::JpegExtended12Bit => PossibleValue::new("jpeg-extended-12bit")
+        .help(
+          "\n\
+          Lossy image compression using the JPEG Extended (Process 2 & 4) \
+          format. Limited to 12-bit pixel data. The quality level to use for \
+          the JPEG encoding can be set with the --quality argument.\n\
+          \n\
+          Pixel data: JPEG Extended (Process 2 & 4) compressed\n\
+          Encapsulated: Yes\n\
+          UID: 1.2.840.10008.1.2.4.51",
+        ),
+
       Self::JpegLsLossless => PossibleValue::new("jpeg-ls-lossless").help(
         "\n\
         Lossless image compression using the JPEG-LS image compresion format.\n\
@@ -265,6 +280,7 @@ pub fn supports_ybr_full_422(transfer_syntax: &TransferSyntax) -> bool {
     || transfer_syntax == &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN
     || transfer_syntax == &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION
     || transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
+    || transfer_syntax == &transfer_syntax::JPEG_EXTENDED_12BIT
 }
 
 /// Returns whether a transfer syntax supports control of the planar

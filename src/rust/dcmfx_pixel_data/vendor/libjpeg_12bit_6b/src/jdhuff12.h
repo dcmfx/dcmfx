@@ -136,9 +136,12 @@ typedef struct {		/* Bitreading working state within an MCU */
  * is evaluated multiple times.
  */
 
-#define CHECK_BIT_BUFFER(state,nbits,action) \
+#define CHECK_BIT_BUFFER(state,nbits,action, err_type) \
 	{ if (bits_left < (nbits)) {  \
-	    if (! jpeg_fill_bit_buffer(&(state),get_buffer,bits_left,nbits))  \
+      boolean_result_t jpeg_fill_bit_buffer_result = jpeg_fill_bit_buffer(&(state),get_buffer,bits_left,nbits); \
+      if (jpeg_fill_bit_buffer_result.is_err) \
+        return err_type(jpeg_fill_bit_buffer_result.err_code); \
+	    if (! jpeg_fill_bit_buffer_result.value)  \
 	      { action; }  \
 	    get_buffer = (state).get_buffer; bits_left = (state).bits_left; } }
 
@@ -152,7 +155,7 @@ typedef struct {		/* Bitreading working state within an MCU */
 	(bits_left -= (nbits))
 
 /* Load up the bit buffer to a depth of at least nbits */
-EXTERN(boolean) jpeg_fill_bit_buffer
+J_WARN_UNUSED_RESULT EXTERN(boolean_result_t) jpeg_fill_bit_buffer
 	JPP((bitread_working_state * state, register bit_buf_type get_buffer,
 	     register int bits_left, int nbits));
 
@@ -174,10 +177,14 @@ EXTERN(boolean) jpeg_fill_bit_buffer
  * 3. jpeg_huff_decode returns -1 if forced to suspend.
  */
 
-#define HUFF_DECODE(result,state,htbl,failaction,slowlabel) \
+#define HUFF_DECODE(result,state,htbl,failaction,slowlabel,err_type) \
 { register int nb, look; \
+  int_result_t jpeg_huff_decode_result; \
   if (bits_left < HUFF_LOOKAHEAD) { \
-    if (! jpeg_fill_bit_buffer(&state,get_buffer,bits_left, 0)) {failaction;} \
+    boolean_result_t jpeg_fill_bit_buffer_result = jpeg_fill_bit_buffer(&state,get_buffer,bits_left, 0); \
+    if (jpeg_fill_bit_buffer_result.is_err) \
+      return err_type(jpeg_fill_bit_buffer_result.err_code);\
+    if (! jpeg_fill_bit_buffer_result.value) {failaction;} \
     get_buffer = state.get_buffer; bits_left = state.bits_left; \
     if (bits_left < HUFF_LOOKAHEAD) { \
       nb = 1; goto slowlabel; \
@@ -190,14 +197,17 @@ EXTERN(boolean) jpeg_fill_bit_buffer
   } else { \
     nb = HUFF_LOOKAHEAD+1; \
 slowlabel: \
-    if ((result=jpeg_huff_decode(&state,get_buffer,bits_left,htbl,nb)) < 0) \
+    jpeg_huff_decode_result = jpeg_huff_decode(&state,get_buffer,bits_left,htbl,nb);\
+    if (jpeg_huff_decode_result.is_err) \
+      return err_type(jpeg_huff_decode_result.err_code); \
+    if ((result=jpeg_huff_decode_result.value) < 0) \
 	{ failaction; } \
     get_buffer = state.get_buffer; bits_left = state.bits_left; \
   } \
 }
 
 /* Out-of-line case for Huffman code fetching */
-EXTERN(int) jpeg_huff_decode
+J_WARN_UNUSED_RESULT EXTERN(int_result_t) jpeg_huff_decode
 	JPP((bitread_working_state * state, register bit_buf_type get_buffer,
 	     register int bits_left, d_derived_tbl * htbl, int min_bits));
 

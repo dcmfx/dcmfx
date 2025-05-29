@@ -344,9 +344,9 @@ decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       /* Decode a single block's worth of coefficients */
 
       /* Section F.2.2.1: decode the DC coefficient difference */
-      HUFF_DECODE(s, br_state, tbl, return RESULT_OK(boolean, FALSE), label1);
+      HUFF_DECODE(s, br_state, tbl, return RESULT_OK(boolean, FALSE), label1, ERR_BOOL);
       if (s) {
-    CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE));
+    CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE), ERR_BOOL);
     r = GET_BITS(s);
     s = HUFF_EXTEND(r, s);
       }
@@ -419,12 +419,12 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       tbl = entropy->ac_derived_tbl;
 
       for (k = cinfo->Ss; k <= Se; k++) {
-    HUFF_DECODE(s, br_state, tbl, return RESULT_OK(boolean, FALSE), label2);
+    HUFF_DECODE(s, br_state, tbl, return RESULT_OK(boolean, FALSE), label2, ERR_BOOL);
     r = s >> 4;
     s &= 15;
     if (s) {
       k += r;
-      CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE));
+      CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(boolean, FALSE), ERR_BOOL);
       r = GET_BITS(s);
       s = HUFF_EXTEND(r, s);
       /* Scale and output coefficient in natural (dezigzagged) order */
@@ -435,7 +435,7 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       } else {      /* EOBr, run length is 2^r + appended bits */
         EOBRUN = (unsigned int)(1 << r);
         if (r) {        /* EOBr, r > 0 */
-          CHECK_BIT_BUFFER(br_state, r, return RESULT_OK(boolean, FALSE));
+          CHECK_BIT_BUFFER(br_state, r, return RESULT_OK(boolean, FALSE), ERR_BOOL);
           r = GET_BITS(r);
           EOBRUN += (unsigned int)r;
         }
@@ -499,7 +499,7 @@ decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     block = MCU_data[blkn];
 
     /* Encoded data is simply the next bit of the two's-complement DC value */
-    CHECK_BIT_BUFFER(br_state, 1, return RESULT_OK(boolean, FALSE));
+    CHECK_BIT_BUFFER(br_state, 1, return RESULT_OK(boolean, FALSE), ERR_BOOL);
     if (GET_BITS(1))
       (*block)[0] |= (JCOEF)p1;
     /* Note: since we use |=, repeating the assignment later is safe */
@@ -578,13 +578,13 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 
     if (EOBRUN == 0) {
       for (; k <= Se; k++) {
-    HUFF_DECODE(s, br_state, tbl, goto undoit, label3);
+    HUFF_DECODE(s, br_state, tbl, goto undoit, label3, ERR_BOOL);
     r = s >> 4;
     s &= 15;
     if (s) {
       if (s != 1)       /* size of new coef should always be 1 */
         WARNMS(cinfo, JWRN_HUFF_BAD_CODE);
-      CHECK_BIT_BUFFER(br_state, 1, goto undoit);
+      CHECK_BIT_BUFFER(br_state, 1, goto undoit, ERR_BOOL);
       if (GET_BITS(1))
         s = p1;     /* newly nonzero coef is positive */
       else
@@ -593,7 +593,7 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       if (r != 15) {
         EOBRUN = (unsigned int)(1 << r);    /* EOBr, run length is 2^r + appended bits */
         if (r) {
-          CHECK_BIT_BUFFER(br_state, r, goto undoit);
+          CHECK_BIT_BUFFER(br_state, r, goto undoit, ERR_BOOL);
           r = GET_BITS(r);
           EOBRUN += (unsigned int)r;
         }
@@ -608,7 +608,7 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     do {
       thiscoef = *block + jpeg_natural_order[k];
       if (*thiscoef != 0) {
-        CHECK_BIT_BUFFER(br_state, 1, goto undoit);
+        CHECK_BIT_BUFFER(br_state, 1, goto undoit, ERR_BOOL);
         if (GET_BITS(1)) {
           if ((*thiscoef & p1) == 0) { /* do nothing if already set it */
         if (*thiscoef >= 0)
@@ -642,7 +642,7 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       for (; k <= Se; k++) {
     thiscoef = *block + jpeg_natural_order[k];
     if (*thiscoef != 0) {
-      CHECK_BIT_BUFFER(br_state, 1, goto undoit);
+      CHECK_BIT_BUFFER(br_state, 1, goto undoit, ERR_BOOL);
       if (GET_BITS(1)) {
         if ((*thiscoef & p1) == 0) { /* do nothing if already changed it */
           if (*thiscoef >= 0)

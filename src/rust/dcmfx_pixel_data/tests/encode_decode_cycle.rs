@@ -38,7 +38,10 @@ fn test_native_encode_decode_cycle() {
 #[test]
 fn test_rle_lossless_encode_decode_cycle() {
   test_encode_decode_cycle(
-    all_image_pixel_modules(),
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| !m.photometric_interpretation().is_ybr_full_422())
+      .collect(),
     &transfer_syntax::RLE_LOSSLESS,
     0.0,
     0.0,
@@ -50,11 +53,31 @@ fn test_jpeg_baseline_8bit_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules()
       .into_iter()
-      .filter(|m| m.bits_allocated() == BitsAllocated::Eight)
+      .filter(|m| {
+        !m.photometric_interpretation().is_palette_color()
+          && m.bits_allocated() == BitsAllocated::Eight
+      })
       .collect(),
     &transfer_syntax::JPEG_BASELINE_8BIT,
     0.01,
     0.25,
+  );
+}
+
+#[test]
+fn test_jpeg_extended_12bit_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| {
+        !m.photometric_interpretation().is_palette_color()
+          && m.bits_allocated() == BitsAllocated::Sixteen
+          && m.bits_stored() <= 12
+      })
+      .collect(),
+    &transfer_syntax::JPEG_EXTENDED_12BIT,
+    0.0,
+    0.01,
   );
 }
 
@@ -64,8 +87,10 @@ fn test_jpeg_ls_lossless_encode_decode_cycle() {
     all_image_pixel_modules()
       .into_iter()
       .filter(|m| {
-        m.bits_allocated() == BitsAllocated::Eight
-          || m.bits_allocated() == BitsAllocated::Sixteen
+        !m.photometric_interpretation().is_palette_color()
+          && !m.photometric_interpretation().is_ybr_full_422()
+          && (m.bits_allocated() == BitsAllocated::Eight
+            || m.bits_allocated() == BitsAllocated::Sixteen)
       })
       .collect(),
     &transfer_syntax::JPEG_LS_LOSSLESS,
@@ -80,8 +105,10 @@ fn test_jpeg_ls_near_lossless_encode_decode_cycle() {
     all_image_pixel_modules()
       .into_iter()
       .filter(|m| {
-        m.bits_allocated() == BitsAllocated::Eight
-          || m.bits_allocated() == BitsAllocated::Sixteen
+        !m.photometric_interpretation().is_palette_color()
+          && !m.photometric_interpretation().is_ybr_full_422()
+          && (m.bits_allocated() == BitsAllocated::Eight
+            || m.bits_allocated() == BitsAllocated::Sixteen)
       })
       .collect(),
     &transfer_syntax::JPEG_LS_LOSSY_NEAR_LOSSLESS,
@@ -96,8 +123,9 @@ fn test_jpeg_2k_lossless_only_encode_decode_cycle() {
     all_image_pixel_modules()
       .into_iter()
       .filter(|m| {
-        m.bits_allocated() == BitsAllocated::Eight
-          || m.bits_allocated() == BitsAllocated::Sixteen
+        !m.photometric_interpretation().is_ybr_full_422()
+          && (m.bits_allocated() == BitsAllocated::Eight
+            || m.bits_allocated() == BitsAllocated::Sixteen)
       })
       .collect(),
     &transfer_syntax::JPEG_2K_LOSSLESS_ONLY,
@@ -171,7 +199,7 @@ fn test_monochrome_image_encode_decode_cycle(
   let original_image = original_image.to_stored_values();
   let decoded_image = decoded_image.to_stored_values();
 
-  // Convert the max reencode delta to an integer value
+  // Convert the max re-encode delta to an integer value
   let max_reencode_delta = ((max_reencode_delta
     * ((1i64 << i64::from(image_pixel_module.bits_stored())) as f64))
     as i64)
@@ -199,13 +227,12 @@ fn test_color_image_encode_decode_cycle(
 ) {
   // If the Image Pixel Module isn't supported for encoding then there's
   // nothing to do
-  let Ok(encoded_image_pixel_module) = encode::encode_image_pixel_module(
+  let encoded_image_pixel_module = encode::encode_image_pixel_module(
     image_pixel_module.clone(),
     transfer_syntax,
     &encode_config(),
-  ) else {
-    return;
-  };
+  )
+  .unwrap();
 
   // Create a random color image to test with
   let original_image = create_color_image(&image_pixel_module);

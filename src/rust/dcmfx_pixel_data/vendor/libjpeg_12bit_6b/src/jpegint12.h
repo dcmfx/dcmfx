@@ -43,9 +43,9 @@ typedef enum {			/* Operating modes for buffer controllers */
 
 /* Master control module */
 struct jpeg_comp_master {
-  JMETHOD(void, prepare_for_pass, (j_compress_ptr cinfo));
-  JMETHOD(void, pass_startup, (j_compress_ptr cinfo));
-  JMETHOD(void, finish_pass, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, prepare_for_pass, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, pass_startup, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, finish_pass, (j_compress_ptr cinfo));
 
   /* State variables made visible to other modules */
   boolean call_pass_startup;	/* True if pass_startup must be called */
@@ -54,15 +54,15 @@ struct jpeg_comp_master {
 
 /* Main buffer control (downsampled-data buffer) */
 struct jpeg_c_main_controller {
-  JMETHOD(void, start_pass, (j_compress_ptr cinfo, J_BUF_MODE pass_mode));
-  JMETHOD(void, process_data, (j_compress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_pass, (j_compress_ptr cinfo, J_BUF_MODE pass_mode));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, process_data, (j_compress_ptr cinfo,
 			       JSAMPARRAY input_buf, JDIMENSION *in_row_ctr,
 			       JDIMENSION in_rows_avail));
 };
 
 /* Compression preprocessing (downsampling input buffer control) */
 struct jpeg_c_prep_controller {
-  JMETHOD(void, start_pass, (j_compress_ptr cinfo, J_BUF_MODE pass_mode));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_pass, (j_compress_ptr cinfo, J_BUF_MODE pass_mode));
   JMETHOD(void, pre_process_data, (j_compress_ptr cinfo,
 				   JSAMPARRAY input_buf,
 				   JDIMENSION *in_row_ctr,
@@ -74,18 +74,18 @@ struct jpeg_c_prep_controller {
 
 /* Compression codec (compressor proper) */
 struct jpeg_c_codec {
-  JMETHOD(void, entropy_start_pass, (j_compress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, entropy_start_pass, (j_compress_ptr cinfo,
 				     boolean gather_statistics));
-  JMETHOD(void, entropy_finish_pass, (j_compress_ptr cinfo));
-  JMETHOD(boolean, need_optimization_pass, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, entropy_finish_pass, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(boolean_result_t, need_optimization_pass, (j_compress_ptr cinfo));
   J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_pass, (j_compress_ptr cinfo, J_BUF_MODE pass_mode));
-  JMETHOD(boolean, compress_data, (j_compress_ptr cinfo,
+  J_WARN_UNUSED_RESULT JMETHOD(boolean_result_t, compress_data, (j_compress_ptr cinfo,
 				   JSAMPIMAGE input_buf));
 };
 
 /* Colorspace conversion */
 struct jpeg_color_converter {
-  JMETHOD(void, start_pass, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, start_pass, (j_compress_ptr cinfo));
   JMETHOD(void, color_convert, (j_compress_ptr cinfo,
 				JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
 				JDIMENSION output_row, int num_rows));
@@ -104,16 +104,16 @@ struct jpeg_downsampler {
 
 /* Marker writing */
 struct jpeg_marker_writer {
-  JMETHOD(void, write_file_header, (j_compress_ptr cinfo));
-  JMETHOD(void, write_frame_header, (j_compress_ptr cinfo));
-  JMETHOD(void, write_scan_header, (j_compress_ptr cinfo));
-  JMETHOD(void, write_file_trailer, (j_compress_ptr cinfo));
-  JMETHOD(void, write_tables_only, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, write_file_header, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, write_frame_header, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, write_scan_header, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, write_file_trailer, (j_compress_ptr cinfo));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, write_tables_only, (j_compress_ptr cinfo));
   /* These routines are exported to allow insertion of extra markers */
   /* Probably only COM and APPn markers should be written this way */
-  JMETHOD(void, write_marker_header, (j_compress_ptr cinfo, int marker,
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, write_marker_header, (j_compress_ptr cinfo, int marker,
 				      unsigned int datalen));
-  JMETHOD(void, write_marker_byte, (j_compress_ptr cinfo, int val));
+  J_WARN_UNUSED_RESULT JMETHOD(void_result_t, write_marker_byte, (j_compress_ptr cinfo, int val));
 };
 
 
@@ -311,18 +311,18 @@ struct jpeg_color_quantizer {
 
 /* Compression module initialization routines */
 J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_c_codec JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_c_diff_controller JPP((j_compress_ptr cinfo, boolean need_full_buffer));
-EXTERN(void) jinit_compress_master JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_c_master_control JPP((j_compress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_c_diff_controller JPP((j_compress_ptr cinfo, boolean need_full_buffer));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_compress_master JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_c_master_control JPP((j_compress_ptr cinfo,
 					 boolean transcode_only));
-EXTERN(void) jinit_c_main_controller JPP((j_compress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_c_main_controller JPP((j_compress_ptr cinfo,
 					  boolean need_full_buffer));
-EXTERN(void) jinit_c_prep_controller JPP((j_compress_ptr cinfo,
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_c_prep_controller JPP((j_compress_ptr cinfo,
 					  boolean need_full_buffer));
 EXTERN(void) jinit_compressor JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_color_converter JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_downsampler JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_marker_writer JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_color_converter JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_downsampler JPP((j_compress_ptr cinfo));
+J_WARN_UNUSED_RESULT EXTERN(void_result_t) jinit_marker_writer JPP((j_compress_ptr cinfo));
 #ifdef WITH_ARITHMETIC_PATCH
 EXTERN(void) jinit_arith_encoder JPP((j_compress_ptr cinfo));
 #endif

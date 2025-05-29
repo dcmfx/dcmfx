@@ -172,7 +172,7 @@ jpeg_make_d_derived_tbl (j_decompress_ptr cinfo, boolean isDC, int tblno,
 #endif
 
 
-GLOBAL(boolean)
+J_WARN_UNUSED_RESULT GLOBAL(boolean_result_t)
 jpeg_fill_bit_buffer (bitread_working_state * state,
               register bit_buf_type get_buffer, register int bits_left,
               int nbits)
@@ -193,8 +193,12 @@ jpeg_fill_bit_buffer (bitread_working_state * state,
 
       /* Attempt to read a byte */
       if (bytes_in_buffer == 0) {
-    if (! (*cinfo->src->fill_input_buffer) (cinfo))
-      return FALSE;
+        boolean_result_t fill_input_buffer_result = (*cinfo->src->fill_input_buffer) (cinfo);
+        if (fill_input_buffer_result.is_err) {
+          return fill_input_buffer_result;
+        }
+    if (! fill_input_buffer_result.value)
+      return RESULT_OK(boolean, FALSE);
     next_input_byte = cinfo->src->next_input_byte;
     bytes_in_buffer = cinfo->src->bytes_in_buffer;
       }
@@ -210,8 +214,12 @@ jpeg_fill_bit_buffer (bitread_working_state * state,
      */
     do {
       if (bytes_in_buffer == 0) {
-        if (! (*cinfo->src->fill_input_buffer) (cinfo))
-          return FALSE;
+        boolean_result_t fill_input_buffer_result = (*cinfo->src->fill_input_buffer) (cinfo);
+        if (fill_input_buffer_result.is_err) {
+          return fill_input_buffer_result;
+        }
+        if (! fill_input_buffer_result.value)
+          return RESULT_OK(boolean, FALSE);
         next_input_byte = cinfo->src->next_input_byte;
         bytes_in_buffer = cinfo->src->bytes_in_buffer;
       }
@@ -274,7 +282,7 @@ jpeg_fill_bit_buffer (bitread_working_state * state,
   state->get_buffer = get_buffer;
   state->bits_left = bits_left;
 
-  return TRUE;
+  return RESULT_OK(boolean, TRUE);
 }
 
 
@@ -283,7 +291,7 @@ jpeg_fill_bit_buffer (bitread_working_state * state,
  * See jdhuff.h for info about usage.
  */
 
-GLOBAL(int)
+J_WARN_UNUSED_RESULT GLOBAL(int_result_t)
 jpeg_huff_decode (bitread_working_state * state,
           register bit_buf_type get_buffer, register int bits_left,
           d_derived_tbl * htbl, int min_bits)
@@ -294,7 +302,7 @@ jpeg_huff_decode (bitread_working_state * state,
   /* HUFF_DECODE has determined that the code is at least min_bits */
   /* bits long, so fetch that many bits in one swoop. */
 
-  CHECK_BIT_BUFFER(*state, l, return -1);
+  CHECK_BIT_BUFFER(*state, l, return RESULT_OK(int, -1), ERR_INT);
   code = GET_BITS(l);
 
   /* Collect the rest of the Huffman code one bit at a time. */
@@ -302,7 +310,7 @@ jpeg_huff_decode (bitread_working_state * state,
 
   while (code > htbl->maxcode[l]) {
     code <<= 1;
-    CHECK_BIT_BUFFER(*state, 1, return -1);
+    CHECK_BIT_BUFFER(*state, 1, return RESULT_OK(int, -1), ERR_INT);
     code |= GET_BITS(1);
     l++;
   }
@@ -315,8 +323,8 @@ jpeg_huff_decode (bitread_working_state * state,
 
   if (l > 16) {
     WARNMS(state->cinfo, JWRN_HUFF_BAD_CODE);
-    return 0;           /* fake a zero as the safest result */
+    return RESULT_OK(int, 0);           /* fake a zero as the safest result */
   }
 
-  return htbl->pub->huffval[ (int) (code + htbl->valoffset[l]) ];
+  return RESULT_OK(int, htbl->pub->huffval[ (int) (code + htbl->valoffset[l]) ]);
 }

@@ -254,12 +254,12 @@ decode_mcus (j_decompress_ptr cinfo, JDIFFIMAGE diff_buf,
     register int s, r;
 
     /* Section H.2.2: decode the sample difference */
-    HUFF_DECODE(s, br_state, dctbl, return RESULT_OK(jdimension, mcu_num), label1);
+    HUFF_DECODE(s, br_state, dctbl, return RESULT_OK(jdimension, mcu_num), label1, ERR_JDIMENSION);
     if (s) {
       if (s == 16)  /* special case: always output 32768 */
         s = 32768;
       else {    /* normal case: fetch subsequent bits */
-        CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(jdimension, mcu_num));
+        CHECK_BIT_BUFFER(br_state, s, return RESULT_OK(jdimension, mcu_num), ERR_JDIMENSION);
         r = GET_BITS(s);
         s = HUFF_EXTEND(r, s);
       }

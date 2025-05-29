@@ -13,32 +13,20 @@
 #include "./src/jpeglib12.h"
 
 static void output_message(j_common_ptr _cinfo) {}
-
+static void error_exit(j_common_ptr cinfo) {}
 static void init_source(j_decompress_ptr _dinfo) {}
-
-static boolean fill_input_buffer(j_decompress_ptr _dinfo) { return FALSE; }
-
-static void skip_input_data(j_decompress_ptr dinfo, long num_bytes) {
-  if (num_bytes <= 0) {
-    return;
-  }
-
-  if ((size_t)num_bytes > dinfo->src->bytes_in_buffer) {
-    num_bytes = dinfo->src->bytes_in_buffer;
-  }
-
-  dinfo->src->bytes_in_buffer -= num_bytes;
-  dinfo->src->next_input_byte += num_bytes;
-}
-
+static boolean_result_t fill_input_buffer(j_decompress_ptr _dinfo);
+static void skip_input_data(j_decompress_ptr dinfo, long num_bytes);
 static void term_source(j_decompress_ptr _dinfo) {}
 
 // Decodes the given bytes as a 12-bit JPEG.
-int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size, uint32_t width,
-                         uint32_t height, uint32_t samples_per_pixel,
-                         uint32_t is_ybr_color_space, uint16_t *output_buffer,
-                         uint64_t output_buffer_size,
-                         char error_message[JMSG_LENGTH_MAX]) {
+int32_t libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
+                             uint32_t width, uint32_t height,
+                             uint32_t samples_per_pixel,
+                             uint32_t is_ybr_color_space,
+                             uint16_t *output_buffer,
+                             uint64_t output_buffer_size,
+                             char error_message[JMSG_LENGTH_MAX]) {
   struct jpeg_decompress_struct dinfo;
   struct jpeg_error_mgr jerr;
   dinfo.err = jpeg_std_error(&jerr);
@@ -143,9 +131,192 @@ int libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size, uint32_t width,
     output_buffer += row_stride;
   }
 
-  // Clean up
-  (void)jpeg_finish_decompress(&dinfo);
+  // Finish decompression
+  if (jpeg_finish_decompress(&dinfo).is_err) {
+    strcpy(error_message, "jpeg_finish_decompress() failed");
+    (void)jpeg_destroy_decompress(&dinfo);
+    return -1;
+  }
+
   (void)jpeg_destroy_decompress(&dinfo);
 
   return 0;
+}
+
+static boolean_result_t fill_input_buffer(j_decompress_ptr _dinfo) {
+  return RESULT_OK(boolean, FALSE);
+}
+
+static void skip_input_data(j_decompress_ptr dinfo, long num_bytes) {
+  if (num_bytes <= 0) {
+    return;
+  }
+
+  if ((size_t)num_bytes > dinfo->src->bytes_in_buffer) {
+    num_bytes = dinfo->src->bytes_in_buffer;
+  }
+
+  dinfo->src->bytes_in_buffer -= num_bytes;
+  dinfo->src->next_input_byte += num_bytes;
+}
+
+// Callback that receives compressed data
+typedef void (*output_data_callback_t)(const uint8_t *data, size_t len,
+                                       void *context);
+
+// This struct defines a JPEG destination that emits chunks to an output data
+// callback
+typedef struct {
+  struct jpeg_destination_mgr pub;
+
+  // Reusable buffer that is sent to the output callback once full
+  JOCTET buffer[16384];
+
+  // Output callback and context
+  output_data_callback_t output_data_callback;
+  void *output_data_context;
+} jpeg_mem_destination_mgr;
+
+// Forward declarations
+static void_result_t init_destination(j_compress_ptr _cinfo);
+static boolean_result_t empty_output_buffer(j_compress_ptr cinfo);
+static void_result_t term_destination(j_compress_ptr cinfo);
+static void jpeg_mem_dest(j_compress_ptr cinfo,
+                          output_data_callback_t output_data_callback,
+                          void *output_data_context);
+
+// Encodes the given image as a 12-bit JPEG.
+int32_t libjpeg_12bit_encode(int16_t *input_data, uint64_t input_data_size,
+                             uint32_t width, uint32_t height,
+                             uint32_t samples_per_pixel,
+                             uint32_t photometric_interpretation,
+                             uint32_t color_space, uint8_t quality,
+                             output_data_callback_t output_data_callback,
+                             void *output_data_context,
+                             char error_message[JMSG_LENGTH_MAX]) {
+
+  struct jpeg_compress_struct cinfo;
+  struct jpeg_error_mgr jerr;
+  cinfo.err = jpeg_std_error(&jerr);
+  cinfo.err->error_exit = error_exit;
+
+  // Silence all output messages. Comment out the following line to see any
+  // warning messages on stdout.
+  cinfo.err->output_message = output_message;
+
+  if (jpeg_create_compress(&cinfo).is_err) {
+    strcpy(error_message, "jpeg_create_compress() failed");
+    return -1;
+  }
+
+  // Setup destination that sends chunks to the output callback
+  jpeg_mem_destination_mgr dest;
+  memset(&dest, 0, sizeof(dest));
+  cinfo.dest = &dest.pub;
+  jpeg_mem_dest(&cinfo, output_data_callback, output_data_context);
+
+  // Setup compressor info
+  cinfo.image_width = width;
+  cinfo.image_height = height;
+  cinfo.input_components = samples_per_pixel;
+  cinfo.in_color_space = color_space;
+
+  if (jpeg_set_defaults(&cinfo).is_err) {
+    strcpy(error_message, "jpeg_set_defaults() failed");
+    (void)jpeg_destroy_compress(&cinfo);
+    return -1;
+  }
+
+  if (jpeg_set_quality(&cinfo, quality, FALSE).is_err) {
+    strcpy(error_message, "jpeg_set_quality() failed");
+    (void)jpeg_destroy_compress(&cinfo);
+    return -1;
+  }
+
+  // Set sampling factors for RGB/YBR_FULL/YBR_FULL_422
+  if (samples_per_pixel == 3) {
+    if (photometric_interpretation == 3 || photometric_interpretation == 4) {
+      cinfo.comp_info[0].h_samp_factor = 1;
+    } else if (photometric_interpretation == 5) {
+      cinfo.comp_info[0].h_samp_factor = 2;
+    }
+    cinfo.comp_info[0].v_samp_factor = 1;
+    cinfo.comp_info[1].h_samp_factor = 1;
+    cinfo.comp_info[1].v_samp_factor = 1;
+    cinfo.comp_info[2].h_samp_factor = 1;
+    cinfo.comp_info[2].v_samp_factor = 1;
+  }
+
+  // Bootstrap the compressor
+  if (jpeg_start_compress(&cinfo, TRUE).is_err) {
+    strcpy(error_message, "jpeg_start_compress() failed");
+    (void)jpeg_destroy_compress(&cinfo);
+    return -1;
+  }
+
+  JSAMPROW row_pointer[1];
+  size_t row_stride = width * samples_per_pixel;
+
+  // Write all scanlines into the compressor
+  while (cinfo.next_scanline < cinfo.image_height) {
+    row_pointer[0] = &input_data[cinfo.next_scanline * row_stride];
+    if (jpeg_write_scanlines(&cinfo, row_pointer, 1).is_err) {
+      strcpy(error_message, "jpeg_write_scanlines() failed");
+      (void)jpeg_destroy_compress(&cinfo);
+      return -1;
+    }
+  }
+
+  // Finish the compression
+  if (jpeg_finish_compress(&cinfo).is_err) {
+    strcpy(error_message, "jpeg_finish_compress() failed");
+    (void)jpeg_destroy_compress(&cinfo);
+    return -1;
+  }
+
+  (void)jpeg_destroy_compress(&cinfo);
+
+  return 0;
+}
+
+static void_result_t init_destination(j_compress_ptr _cinfo) { return OK_VOID; }
+
+static boolean_result_t empty_output_buffer(j_compress_ptr cinfo) {
+  jpeg_mem_destination_mgr *dest = (jpeg_mem_destination_mgr *)cinfo->dest;
+
+  dest->output_data_callback(dest->buffer,
+                             sizeof(dest->buffer) - dest->pub.free_in_buffer,
+                             dest->output_data_context);
+
+  dest->pub.next_output_byte = dest->buffer;
+  dest->pub.free_in_buffer = sizeof(dest->buffer);
+
+  return RESULT_OK(boolean, TRUE);
+}
+
+static void_result_t term_destination(j_compress_ptr cinfo) {
+  jpeg_mem_destination_mgr *dest = (jpeg_mem_destination_mgr *)cinfo->dest;
+
+  dest->output_data_callback(dest->buffer,
+                             sizeof(dest->buffer) - dest->pub.free_in_buffer,
+                             dest->output_data_context);
+
+  return OK_VOID;
+}
+
+static void jpeg_mem_dest(j_compress_ptr cinfo,
+                          void (*output_data_callback)(const uint8_t *data,
+                                                       size_t len, void *ctx),
+                          void *output_data_context) {
+  jpeg_mem_destination_mgr *dest = (jpeg_mem_destination_mgr *)cinfo->dest;
+
+  dest->output_data_callback = output_data_callback;
+  dest->output_data_context = output_data_context;
+
+  dest->pub.next_output_byte = dest->buffer;
+  dest->pub.free_in_buffer = sizeof(dest->buffer);
+
+  dest->pub.init_destination = init_destination;
+  dest->pub.empty_output_buffer = empty_output_buffer;
+  dest->pub.term_destination = term_destination;
 }

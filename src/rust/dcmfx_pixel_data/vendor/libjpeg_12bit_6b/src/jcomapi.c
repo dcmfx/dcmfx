@@ -91,7 +91,7 @@ jpeg_destroy (j_common_ptr cinfo)
  * (Would jutils.c be a more reasonable place to put these?)
  */
 
-GLOBAL(jquant_tbl_ptr_result_t)
+J_WARN_UNUSED_RESULT GLOBAL(jquant_tbl_ptr_result_t)
 jpeg_alloc_quant_table (j_common_ptr cinfo)
 {
   JQUANT_TBL *tbl;
@@ -105,7 +105,7 @@ jpeg_alloc_quant_table (j_common_ptr cinfo)
 }
 
 
-GLOBAL(jhuff_tbl_ptr_result_t)
+J_WARN_UNUSED_RESULT GLOBAL(jhuff_tbl_ptr_result_t)
 jpeg_alloc_huff_table (j_common_ptr cinfo)
 {
   JHUFF_TBL *tbl;
