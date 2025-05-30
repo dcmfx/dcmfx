@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx_cli"
-version = "0.19.0"
+version = "0.20.0"
 description = "DCMfx CLI tool"
 categories = ["command-line-utilities"]
 
