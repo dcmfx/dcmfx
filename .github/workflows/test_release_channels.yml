@@ -79,15 +79,15 @@ jobs:
     steps:
       - name: Update CA certificates
         run: |
-          apt update
-          apt install --reinstall -y ca-certificates
+          apt-get update
+          apt-get install --reinstall -y ca-certificates
           update-ca-certificates
 
       - name: Install DCMfx
         run: |
           echo "deb [trusted=yes] https://dcmfx.github.io/apt-repository stable main" | tee /etc/apt/sources.list.d/dcmfx.list
           apt update
-          apt install -y dcmfx
+          apt-get install -y dcmfx
 
       - name: Run DCMfx
         run: dcmfx --version

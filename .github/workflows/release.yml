@@ -136,7 +136,7 @@ jobs:
           sudo apt-get install nasm
 
           # Download and install the musl toolchain into /opt/musl-cross
-          wget -q https://musl.cc/${{ matrix.musl-target }}-cross.tgz
+          wget -q https://dcmfx.s3.ap-southeast-2.amazonaws.com/${{ matrix.musl-target }}-cross.tgz
           tar -xzf ${{ matrix.musl-target }}-cross.tgz
           mv ${{ matrix.musl-target }}-cross /opt/musl-cross
           echo "/opt/musl-cross/bin" >> $GITHUB_PATH
