@@ -222,7 +222,7 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
 
   // Copy decoded pixels into the output data
   if (image->numcomps == 1) {
-    if (bits_allocated == 1 || bits_allocated == 8) {
+    if (bits_allocated == 8) {
       if (output_data_size != width * height) {
         cleanup(codec, stream, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
@@ -280,7 +280,7 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
     OPJ_INT32 *green_data = image->comps[1].data;
     OPJ_INT32 *blue_data = image->comps[2].data;
 
-    if (bits_allocated == 1 || bits_allocated == 8) {
+    if (bits_allocated == 8) {
       if (output_data_size != width * height * 3) {
         cleanup(codec, stream, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
@@ -375,7 +375,6 @@ int32_t openjpeg_encode(
   // Configure lossy encoding if quality != 0
   if (tcp_distoratio != 0) {
     parameters.cp_fixed_quality = 1;
-    parameters.irreversible = 1;
     parameters.tcp_distoratio[0] = tcp_distoratio;
   }
 
@@ -399,6 +398,7 @@ int32_t openjpeg_encode(
     } else if (color_photometric_interpretation == 2) { // YBR_FULL
       parameters.tcp_mct = 0;
     } else if (color_photometric_interpretation == 3) { // YBR_ICT
+      parameters.irreversible = 1;
       parameters.tcp_mct = 1;
     } else if (color_photometric_interpretation == 4) { // YBR_RCT
       parameters.irreversible = 0;
@@ -422,7 +422,7 @@ int32_t openjpeg_encode(
     component_parameters[i].x0 = 0;
     component_parameters[i].y0 = 0;
     component_parameters[i].sgnd = pixel_representation;
-    component_parameters[i].prec = bits_allocated;
+    component_parameters[i].prec = bits_stored;
   }
 
   // Create image to compress
@@ -438,7 +438,7 @@ int32_t openjpeg_encode(
   image->x1 = width;
   image->y1 = height;
 
-  // Set image content
+  // Set input image content
   size_t index = 0;
   if (bits_allocated == 8) {
     if (pixel_representation == 0) {
@@ -480,9 +480,29 @@ int32_t openjpeg_encode(
         }
       }
     }
+  } else if (bits_allocated == 32) {
+    if (pixel_representation == 0) {
+      for (uint32_t y = 0; y < height; y++) {
+        for (uint32_t x = 0; x < width; x++, index++) {
+          for (uint32_t i = 0; i < samples_per_pixel; i++) {
+            image->comps[i].data[index] =
+                ((uint32_t *)input_data)[samples_per_pixel * index + i];
+          }
+        }
+      }
+    } else {
+      for (uint32_t y = 0; y < height; y++) {
+        for (uint32_t x = 0; x < width; x++, index++) {
+          for (uint32_t i = 0; i < samples_per_pixel; i++) {
+            image->comps[i].data[index] =
+                ((int32_t *)input_data)[samples_per_pixel * index + i];
+          }
+        }
+      }
+    }
   } else {
     cleanup(codec, NULL, image, error_buffer, error_buffer_size,
-            "Bits allocated value is not 8 or 16", error_details);
+            "Bits allocated value not supported", error_details);
     return -1;
   }
 

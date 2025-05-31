@@ -56,6 +56,7 @@ fn test_jpeg_baseline_8bit_encode_decode_cycle() {
       .filter(|m| {
         !m.photometric_interpretation().is_palette_color()
           && m.bits_allocated() == BitsAllocated::Eight
+          && m.pixel_representation().is_unsigned()
       })
       .collect(),
     &transfer_syntax::JPEG_BASELINE_8BIT,
@@ -73,6 +74,7 @@ fn test_jpeg_extended_12bit_encode_decode_cycle() {
         !m.photometric_interpretation().is_palette_color()
           && m.bits_allocated() == BitsAllocated::Sixteen
           && m.bits_stored() <= 12
+          && m.pixel_representation().is_unsigned()
       })
       .collect(),
     &transfer_syntax::JPEG_EXTENDED_12BIT,
@@ -91,6 +93,7 @@ fn test_jpeg_ls_lossless_encode_decode_cycle() {
           && !m.photometric_interpretation().is_ybr_full_422()
           && (m.bits_allocated() == BitsAllocated::Eight
             || m.bits_allocated() == BitsAllocated::Sixteen)
+          && m.pixel_representation().is_unsigned()
       })
       .collect(),
     &transfer_syntax::JPEG_LS_LOSSLESS,
@@ -109,6 +112,7 @@ fn test_jpeg_ls_near_lossless_encode_decode_cycle() {
           && !m.photometric_interpretation().is_ybr_full_422()
           && (m.bits_allocated() == BitsAllocated::Eight
             || m.bits_allocated() == BitsAllocated::Sixteen)
+          && m.pixel_representation().is_unsigned()
       })
       .collect(),
     &transfer_syntax::JPEG_LS_LOSSY_NEAR_LOSSLESS,
@@ -124,13 +128,30 @@ fn test_jpeg_2k_lossless_only_encode_decode_cycle() {
       .into_iter()
       .filter(|m| {
         !m.photometric_interpretation().is_ybr_full_422()
-          && (m.bits_allocated() == BitsAllocated::Eight
-            || m.bits_allocated() == BitsAllocated::Sixteen)
+          && (2..=30).contains(&m.bits_stored())
       })
       .collect(),
     &transfer_syntax::JPEG_2K_LOSSLESS_ONLY,
     0.0,
     0.0,
+  );
+}
+
+#[test]
+fn test_jpeg_2k_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| {
+        !m.photometric_interpretation().is_palette_color()
+          && !m.photometric_interpretation().is_ybr_full()
+          && !m.photometric_interpretation().is_ybr_full_422()
+          && (2..=30).contains(&m.bits_stored())
+      })
+      .collect(),
+    &transfer_syntax::JPEG_2K,
+    0.15,
+    0.1,
   );
 }
 
@@ -159,7 +180,7 @@ fn test_encode_decode_cycle(
       );
     } else {
       test_color_image_encode_decode_cycle(
-        image_pixel_module,
+        &image_pixel_module,
         transfer_syntax,
         color_image_max_reencode_delta,
       );
@@ -221,7 +242,7 @@ fn test_monochrome_image_encode_decode_cycle(
 }
 
 fn test_color_image_encode_decode_cycle(
-  image_pixel_module: ImagePixelModule,
+  image_pixel_module: &ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
   mut max_reencode_delta: f64,
 ) {
@@ -309,8 +330,18 @@ fn encode_config() -> PixelDataEncodeConfig {
 ///
 fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
   let photometric_interpretations = &[
-    PhotometricInterpretation::Monochrome1,
-    PhotometricInterpretation::Monochrome2,
+    PhotometricInterpretation::Monochrome1 {
+      pixel_representation: PixelRepresentation::Signed,
+    },
+    PhotometricInterpretation::Monochrome1 {
+      pixel_representation: PixelRepresentation::Unsigned,
+    },
+    PhotometricInterpretation::Monochrome2 {
+      pixel_representation: PixelRepresentation::Signed,
+    },
+    PhotometricInterpretation::Monochrome2 {
+      pixel_representation: PixelRepresentation::Unsigned,
+    },
     PhotometricInterpretation::PaletteColor {
       palette: create_palette_color_lookup_table_module(),
     },
@@ -372,7 +403,6 @@ fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
                   *columns,
                   *bits_allocated,
                   bits_stored.into(),
-                  PixelRepresentation::Unsigned,
                 )
                 .unwrap(),
               );
@@ -413,7 +443,6 @@ fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
                   *columns,
                   *bits_allocated,
                   bits_stored.into(),
-                  PixelRepresentation::Unsigned,
                 )
                 .unwrap(),
               );
@@ -449,7 +478,9 @@ fn create_monochrome_image(
   {
     let mut rng = SmallRng::seed_from_u64(RNG_SEED);
 
-    let range = if image_pixel_module.pixel_representation().is_signed() {
+    let range = if image_pixel_module.pixel_representation().is_signed()
+      && image_pixel_module.bits_allocated() != BitsAllocated::One
+    {
       let m = 1i64 << (image_pixel_module.bits_stored() - 1);
       (-m)..m
     } else {
@@ -462,6 +493,7 @@ fn create_monochrome_image(
       image_pixel_module.frame_size_in_bytes()
         / core::mem::size_of::<T>()
     ];
+
     for i in 0..data.len() {
       data[i] = T::try_from(rng.random_range(range.clone())).unwrap();
     }
@@ -478,23 +510,44 @@ fn create_monochrome_image(
     .unwrap()
   }
 
-  match image_pixel_module.bits_allocated() {
-    BitsAllocated::One => create_image(
+  match (
+    image_pixel_module.bits_allocated(),
+    image_pixel_module.pixel_representation(),
+  ) {
+    (BitsAllocated::One, pixel_representation) => create_image(
       &image_pixel_module,
       |width, height, data, _bits_stored, is_monochrome1| {
-        MonochromeImage::new_bitmap(width, height, data, false, is_monochrome1)
+        MonochromeImage::new_bitmap(
+          width,
+          height,
+          data,
+          pixel_representation.is_signed(),
+          is_monochrome1,
+        )
       },
     ),
 
-    BitsAllocated::Eight => {
+    (BitsAllocated::Eight, PixelRepresentation::Signed) => {
+      create_image(&image_pixel_module, MonochromeImage::new_i8)
+    }
+
+    (BitsAllocated::Eight, PixelRepresentation::Unsigned) => {
       create_image(&image_pixel_module, MonochromeImage::new_u8)
     }
 
-    BitsAllocated::Sixteen => {
+    (BitsAllocated::Sixteen, PixelRepresentation::Signed) => {
+      create_image(&image_pixel_module, MonochromeImage::new_i16)
+    }
+
+    (BitsAllocated::Sixteen, PixelRepresentation::Unsigned) => {
       create_image(&image_pixel_module, MonochromeImage::new_u16)
     }
 
-    BitsAllocated::ThirtyTwo => {
+    (BitsAllocated::ThirtyTwo, PixelRepresentation::Signed) => {
+      create_image(&image_pixel_module, MonochromeImage::new_i32)
+    }
+
+    (BitsAllocated::ThirtyTwo, PixelRepresentation::Unsigned) => {
       create_image(&image_pixel_module, MonochromeImage::new_u32)
     }
   }

@@ -7,6 +7,7 @@ use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+    PixelRepresentation,
   },
 };
 
@@ -16,8 +17,8 @@ pub fn decode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
 ) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
   match photometric_interpretation {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::Rgb => Ok(photometric_interpretation),
 
     PhotometricInterpretation::YbrFull422
@@ -54,8 +55,12 @@ pub fn decode_monochrome(
     jxl_image.image_header().metadata.bit_depth,
   ) {
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
       BitDepth::IntegerSample { bits_per_sample: 8 },
     ) => {
@@ -72,8 +77,12 @@ pub fn decode_monochrome(
       .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Sixteen,
       BitDepth::IntegerSample {
         bits_per_sample: 16,

@@ -5,6 +5,7 @@ use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
+    PixelRepresentation,
   },
 };
 
@@ -14,8 +15,8 @@ pub fn decode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
 ) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
   match photometric_interpretation {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
 
@@ -46,8 +47,12 @@ pub fn decode_monochrome(
     image_pixel_module.bits_allocated(),
   ) {
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
     ) => {
       let pixels = decode(data, image_pixel_module)?;
@@ -62,8 +67,12 @@ pub fn decode_monochrome(
     }
 
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Sixteen,
     ) => {
       let pixels = decode(data, image_pixel_module)?;

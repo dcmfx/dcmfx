@@ -3,7 +3,9 @@ use alloc::{format, string::ToString, vec::Vec};
 
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
-  iods::image_pixel_module::{ImagePixelModule, PhotometricInterpretation},
+  iods::image_pixel_module::{
+    ImagePixelModule, PhotometricInterpretation, PixelRepresentation,
+  },
 };
 
 /// Returns the photometric interpretation used by data decoded using
@@ -13,8 +15,8 @@ pub fn decode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
 ) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
   match photometric_interpretation {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb => Ok(photometric_interpretation),
 
@@ -49,8 +51,12 @@ pub fn decode_monochrome(
     pixel_format,
   ) {
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       jpeg_decoder::PixelFormat::L8,
     ) => MonochromeImage::new_u8(
       width,
@@ -62,8 +68,12 @@ pub fn decode_monochrome(
     .map_err(PixelDataDecodeError::ImageCreationFailed),
 
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       jpeg_decoder::PixelFormat::L16,
     ) => {
       let data = bytemuck::cast_slice(&pixels).to_vec();

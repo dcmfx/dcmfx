@@ -18,8 +18,8 @@ pub fn decode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
 ) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
   match photometric_interpretation {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
@@ -60,19 +60,21 @@ pub fn decode_monochrome(
 
   match (
     image_pixel_module.photometric_interpretation(),
-    image_pixel_module.pixel_representation(),
     image_pixel_module.bits_allocated(),
     segments.as_slice(),
   ) {
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      _,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation,
+      },
       BitsAllocated::One,
       [_],
     ) => {
       let segment = segments.pop().unwrap();
-      let is_signed = image_pixel_module.pixel_representation().is_signed();
+      let is_signed = pixel_representation.is_signed();
 
       MonochromeImage::new_bitmap(
         width,
@@ -85,9 +87,12 @@ pub fn decode_monochrome(
     }
 
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      PixelRepresentation::Signed,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Eight,
       [_],
     ) => {
@@ -116,9 +121,12 @@ pub fn decode_monochrome(
     }
 
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      PixelRepresentation::Unsigned,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
       [_],
     ) => {
@@ -134,9 +142,12 @@ pub fn decode_monochrome(
     }
 
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      PixelRepresentation::Signed,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Sixteen,
       [segment_0, segment_1],
     ) => {
@@ -170,9 +181,12 @@ pub fn decode_monochrome(
     }
 
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      PixelRepresentation::Unsigned,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Sixteen,
       [segment_0, segment_1],
     ) => {
@@ -193,9 +207,12 @@ pub fn decode_monochrome(
     }
 
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      PixelRepresentation::Signed,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::ThirtyTwo,
       [segment_0, segment_1, segment_2, segment_3],
     ) => {
@@ -239,9 +256,12 @@ pub fn decode_monochrome(
     }
 
     (
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
-      PixelRepresentation::Unsigned,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::ThirtyTwo,
       [segment_0, segment_1, segment_2, segment_3],
     ) => {
@@ -266,7 +286,7 @@ pub fn decode_monochrome(
       .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (photometric_interpretation, _, bits_allocated, segments) => {
+    (photometric_interpretation, bits_allocated, segments) => {
       Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
         details: format!(
           "RLE Lossless monochrome decode not supported for photometric \

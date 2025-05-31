@@ -1,6 +1,8 @@
 use clap::{ValueEnum, builder::PossibleValue};
 
-use dcmfx::pixel_data::iods::image_pixel_module::PhotometricInterpretation;
+use dcmfx::pixel_data::iods::image_pixel_module::{
+  PhotometricInterpretation, PixelRepresentation,
+};
 
 /// Enum for specifying a monochrome photometric interpretation as a CLI
 /// argument.
@@ -31,14 +33,19 @@ impl PhotometricInterpretationMonochromeArg {
   ///
   pub fn as_photometric_interpretation(
     &self,
+    pixel_representation: PixelRepresentation,
   ) -> Option<PhotometricInterpretation> {
     match self {
       PhotometricInterpretationMonochromeArg::PassThrough => None,
       PhotometricInterpretationMonochromeArg::Monochrome1 => {
-        Some(PhotometricInterpretation::Monochrome1)
+        Some(PhotometricInterpretation::Monochrome1 {
+          pixel_representation,
+        })
       }
       PhotometricInterpretationMonochromeArg::Monochrome2 => {
-        Some(PhotometricInterpretation::Monochrome2)
+        Some(PhotometricInterpretation::Monochrome2 {
+          pixel_representation,
+        })
       }
     }
   }

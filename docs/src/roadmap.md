@@ -9,6 +9,8 @@ following:
 
 - Decode and encode JPEG-LS pixel data on WASM
 
+- Encode/decode 1-bit monochrome JPEG 2000 pixel data
+
 - DIMSE networking
 
 - Decoding and encoding of waveform data

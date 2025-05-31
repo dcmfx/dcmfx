@@ -15,8 +15,8 @@ pub fn decode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
 ) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
   match photometric_interpretation {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull
@@ -51,14 +51,18 @@ pub fn decode_monochrome(
     .is_monochrome1();
 
   match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2 => {
+    PhotometricInterpretation::Monochrome1 {
+      pixel_representation,
+    }
+    | PhotometricInterpretation::Monochrome2 {
+      pixel_representation,
+    } => {
       match (
         image_pixel_module.pixel_representation(),
         image_pixel_module.bits_allocated(),
       ) {
         (_, BitsAllocated::One) => {
-          let is_signed = image_pixel_module.pixel_representation().is_signed();
+          let is_signed = pixel_representation.is_signed();
           let mut data = data.to_vec();
 
           if data_bit_offset > 0 {
@@ -283,8 +287,8 @@ pub fn decode_monochrome(
     photometric_interpretation => {
       Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
         details: format!(
-          "Native monochrome decode not supported for photometric interpretation \
-           '{}'",
+          "Native monochrome decode not supported for photometric \
+           interpretation '{}'",
           photometric_interpretation,
         ),
       })
@@ -740,12 +744,13 @@ mod tests {
   fn decode_monochrome_8_bit_unsigned() {
     let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       2,
       2,
       BitsAllocated::Eight,
       8,
-      PixelRepresentation::Unsigned,
     )
     .unwrap();
 
@@ -761,12 +766,13 @@ mod tests {
   fn decode_monochrome_8_bit_signed_with_7_bits_stored() {
     let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       8,
       16,
       BitsAllocated::Eight,
       7,
-      PixelRepresentation::Signed,
     )
     .unwrap();
 
@@ -783,12 +789,13 @@ mod tests {
   fn decode_monochrome_16_bit_signed_with_12_bits_stored() {
     let image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       64,
       64,
       BitsAllocated::Sixteen,
       12,
-      PixelRepresentation::Signed,
     )
     .unwrap();
 
@@ -818,7 +825,6 @@ mod tests {
       2,
       BitsAllocated::Eight,
       8,
-      PixelRepresentation::Unsigned,
     )
     .unwrap();
 
@@ -848,7 +854,6 @@ mod tests {
       2,
       BitsAllocated::Sixteen,
       16,
-      PixelRepresentation::Unsigned,
     )
     .unwrap();
 
@@ -880,7 +885,6 @@ mod tests {
       2,
       BitsAllocated::Eight,
       8,
-      PixelRepresentation::Unsigned,
     )
     .unwrap();
 
@@ -904,7 +908,6 @@ mod tests {
       2,
       BitsAllocated::Eight,
       8,
-      PixelRepresentation::Unsigned,
     )
     .unwrap();
 

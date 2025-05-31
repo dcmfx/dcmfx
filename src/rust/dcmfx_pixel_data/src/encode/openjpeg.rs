@@ -6,10 +6,14 @@ use crate::{
   color_image::ColorImageData,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
-    PlanarConfiguration,
+    PixelRepresentation, PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
+
+// The OpenJPEG library only seems to support bits stored of 2..=30. 1-bit and
+// 31-bit data (even unsigned 31-bit data), didn't encode/decode correctly.
+const OPENJPEG_BITS_STORED_RANGE: core::ops::RangeInclusive<u16> = 2..=30;
 
 /// Returns the Image Pixel Module resulting from encoding using OpenJPEG.
 ///
@@ -18,8 +22,8 @@ pub fn encode_image_pixel_module(
   quality: Option<u8>,
 ) -> Result<ImagePixelModule, ()> {
   match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::Rgb => (),
 
     // YBR_ICT is only permitted for lossy JPEG 2000 encodes
@@ -54,6 +58,14 @@ pub fn encode_monochrome(
   image_pixel_module: &ImagePixelModule,
   quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
+  if !OPENJPEG_BITS_STORED_RANGE.contains(&image_pixel_module.bits_stored()) {
+    return Err(PixelDataEncodeError::NotSupported {
+      image_pixel_module: Box::new(image_pixel_module.clone()),
+      input_bits_allocated: image.bits_allocated(),
+      input_color_space: None,
+    });
+  }
+
   let width = image.width();
   let height = image.height();
 
@@ -66,13 +78,17 @@ pub fn encode_monochrome(
     (
       MonochromeImageData::I8(data),
       true,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::I8(data),
       false,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Eight,
     ) => encode(
       bytemuck::cast_slice(data),
@@ -85,26 +101,34 @@ pub fn encode_monochrome(
     (
       MonochromeImageData::U8(data),
       true,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::U8(data),
       false,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
     ) => encode(data, width, height, image_pixel_module, quality),
 
     (
       MonochromeImageData::I16(data),
       true,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::I16(data),
       false,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Sixteen,
     ) => encode(
       bytemuck::cast_slice(data),
@@ -117,14 +141,64 @@ pub fn encode_monochrome(
     (
       MonochromeImageData::U16(data),
       true,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::U16(data),
       false,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Sixteen,
+    ) => encode(
+      bytemuck::cast_slice(data),
+      width,
+      height,
+      image_pixel_module,
+      quality,
+    ),
+
+    (
+      MonochromeImageData::I32(data),
+      true,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
+      BitsAllocated::ThirtyTwo,
+    )
+    | (
+      MonochromeImageData::I32(data),
+      false,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
+      BitsAllocated::ThirtyTwo,
+    ) => encode(
+      bytemuck::cast_slice(data),
+      width,
+      height,
+      image_pixel_module,
+      quality,
+    ),
+
+    (
+      MonochromeImageData::U32(data),
+      true,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
+      BitsAllocated::ThirtyTwo,
+    )
+    | (
+      MonochromeImageData::U32(data),
+      false,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
+      BitsAllocated::ThirtyTwo,
     ) => encode(
       bytemuck::cast_slice(data),
       width,
@@ -148,6 +222,14 @@ pub fn encode_color(
   image_pixel_module: &ImagePixelModule,
   quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
+  if !OPENJPEG_BITS_STORED_RANGE.contains(&image_pixel_module.bits_stored()) {
+    return Err(PixelDataEncodeError::NotSupported {
+      image_pixel_module: Box::new(image_pixel_module.clone()),
+      input_bits_allocated: image.bits_allocated(),
+      input_color_space: None,
+    });
+  }
+
   let width = image.width();
   let height = image.height();
 
@@ -248,6 +330,56 @@ pub fn encode_color(
       },
       PhotometricInterpretation::YbrFull,
       BitsAllocated::Sixteen,
+      _,
+    ) => encode(
+      bytemuck::cast_slice(data),
+      width,
+      height,
+      image_pixel_module,
+      quality,
+    ),
+
+    (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::Rgb,
+      BitsAllocated::ThirtyTwo,
+      _,
+    )
+    | (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::YbrRct,
+      BitsAllocated::ThirtyTwo,
+      None,
+    )
+    | (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Rgb,
+      },
+      PhotometricInterpretation::YbrIct,
+      BitsAllocated::ThirtyTwo,
+      Some(_),
+    ) => encode(
+      bytemuck::cast_slice(data),
+      width,
+      height,
+      image_pixel_module,
+      quality,
+    ),
+
+    (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Ybr { is_422: false },
+      },
+      PhotometricInterpretation::YbrFull,
+      BitsAllocated::ThirtyTwo,
       _,
     ) => encode(
       bytemuck::cast_slice(data),

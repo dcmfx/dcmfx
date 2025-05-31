@@ -433,7 +433,9 @@ fn get_transcode_image_data_functions(
         {
           if let Some(photometric_interpretation) =
             photometric_interpretation_monochrome_arg
-              .as_photometric_interpretation()
+              .as_photometric_interpretation(
+                image_pixel_module.pixel_representation(),
+              )
           {
             image_pixel_module
               .set_photometric_interpretation(photometric_interpretation);
@@ -536,13 +538,13 @@ fn get_transcode_image_data_functions(
       // Convert to MONOCHROME1/MONOCHROME1 based on the output photometric
       // interpretation
       match image_pixel_module.photometric_interpretation() {
-        PhotometricInterpretation::Monochrome1 => {
+        PhotometricInterpretation::Monochrome1 { .. } => {
           if !image.is_monochrome1() {
             image.change_monochrome_representation();
           }
         }
 
-        PhotometricInterpretation::Monochrome2 => {
+        PhotometricInterpretation::Monochrome2 { .. } => {
           if image.is_monochrome1() {
             image.change_monochrome_representation();
           }

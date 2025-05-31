@@ -29,7 +29,6 @@ pub struct ImagePixelModule {
   bits_allocated: BitsAllocated,
   bits_stored: u16,
   high_bit: u16,
-  pixel_representation: PixelRepresentation,
   pixel_aspect_ratio: Option<DataElementValue>,
   smallest_image_pixel_value: Option<i64>,
   largest_image_pixel_value: Option<i64>,
@@ -49,7 +48,7 @@ impl core::fmt::Display for ImagePixelModule {
       .field("columns", &self.columns)
       .field("bits_allocated", &self.bits_allocated)
       .field("bits_stored", &self.bits_stored)
-      .field("pixel_representation", &self.pixel_representation)
+      .field("pixel_representation", &self.pixel_representation())
       .finish()
   }
 }
@@ -97,8 +96,6 @@ impl IodModule for ImagePixelModule {
 
     let photometric_interpretation =
       PhotometricInterpretation::from_data_set(data_set)?;
-
-    let pixel_representation = PixelRepresentation::from_data_set(data_set)?;
 
     let rows = data_set.get_int::<u16>(dictionary::ROWS.tag)?;
     let columns = data_set.get_int::<u16>(dictionary::COLUMNS.tag)?;
@@ -160,7 +157,6 @@ impl IodModule for ImagePixelModule {
       bits_allocated,
       bits_stored,
       high_bit,
-      pixel_representation,
       pixel_aspect_ratio,
       smallest_image_pixel_value,
       largest_image_pixel_value,
@@ -183,7 +179,6 @@ impl ImagePixelModule {
     bits_allocated: BitsAllocated,
     bits_stored: u16,
     high_bit: u16,
-    pixel_representation: PixelRepresentation,
     pixel_aspect_ratio: Option<DataElementValue>,
     smallest_image_pixel_value: Option<i64>,
     largest_image_pixel_value: Option<i64>,
@@ -227,7 +222,6 @@ impl ImagePixelModule {
       bits_allocated,
       bits_stored,
       high_bit,
-      pixel_representation,
       pixel_aspect_ratio,
       smallest_image_pixel_value,
       largest_image_pixel_value,
@@ -235,7 +229,7 @@ impl ImagePixelModule {
       color_space,
     };
 
-    // Check that the the frame size in bytes isn't too large to represent
+    // Check that the frame size in bytes isn't too large to represent
     if image_pixel_module.frame_size_in_bits().div_ceil(8)
       > u64::from(u32::MAX - 1)
     {
@@ -258,7 +252,6 @@ impl ImagePixelModule {
     columns: u16,
     bits_allocated: BitsAllocated,
     bits_stored: u16,
-    pixel_representation: PixelRepresentation,
   ) -> Result<Self, DataError> {
     Self::new(
       samples_per_pixel,
@@ -268,7 +261,6 @@ impl ImagePixelModule {
       bits_allocated,
       bits_stored,
       bits_stored.saturating_sub(1),
-      pixel_representation,
       None,
       None,
       None,
@@ -299,8 +291,8 @@ impl ImagePixelModule {
     self.photometric_interpretation = new_photometric_interpretation;
 
     match self.photometric_interpretation {
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2
+      PhotometricInterpretation::Monochrome1 { .. }
+      | PhotometricInterpretation::Monochrome2 { .. }
       | PhotometricInterpretation::PaletteColor { .. } => {
         self.samples_per_pixel = SamplesPerPixel::One;
       }
@@ -364,7 +356,16 @@ impl ImagePixelModule {
   /// it stores signed or unsigned values.
   ///
   pub fn pixel_representation(&self) -> PixelRepresentation {
-    self.pixel_representation
+    match self.photometric_interpretation() {
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation,
+      } => *pixel_representation,
+
+      _ => PixelRepresentation::Unsigned,
+    }
   }
 
   /// Returns the planar configuration in use when there are three samples per
@@ -384,13 +385,13 @@ impl ImagePixelModule {
   /// Returns the range of integer values that can be stored.
   ///
   pub fn stored_value_range(&self) -> core::ops::RangeInclusive<i64> {
-    let min = if self.pixel_representation.is_signed() {
+    let min = if self.pixel_representation().is_signed() {
       -(1i64 << (self.bits_stored - 1))
     } else {
       0
     };
 
-    let max = if self.pixel_representation.is_signed() {
+    let max = if self.pixel_representation().is_signed() {
       (1i64 << (self.bits_stored - 1)) - 1
     } else {
       (1i64 << self.bits_stored) - 1
@@ -403,8 +404,8 @@ impl ImagePixelModule {
   ///
   pub fn pixel_size_in_bits(&self) -> u8 {
     match self.photometric_interpretation {
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2
+      PhotometricInterpretation::Monochrome1 { .. }
+      | PhotometricInterpretation::Monochrome2 { .. }
       | PhotometricInterpretation::PaletteColor { .. }
       | PhotometricInterpretation::Rgb
       | PhotometricInterpretation::YbrFull
@@ -497,6 +498,11 @@ impl ImagePixelModule {
     }
 
     data_set.insert(
+      dictionary::PIXEL_REPRESENTATION.tag,
+      self.pixel_representation().to_data_element_value(),
+    );
+
+    data_set.insert(
       dictionary::ROWS.tag,
       DataElementValue::new_unsigned_short(&[self.rows])?,
     );
@@ -521,11 +527,6 @@ impl ImagePixelModule {
       DataElementValue::new_unsigned_short(&[self.high_bit])?,
     );
 
-    data_set.insert(
-      dictionary::PIXEL_REPRESENTATION.tag,
-      self.pixel_representation.to_data_element_value(),
-    );
-
     if let Some(pixel_aspect_ratio) = &self.pixel_aspect_ratio {
       data_set.insert(
         dictionary::PIXEL_ASPECT_RATIO.tag,
@@ -534,7 +535,7 @@ impl ImagePixelModule {
     }
 
     if let Some(smallest_image_pixel_value) = self.smallest_image_pixel_value {
-      if self.pixel_representation.is_signed() {
+      if self.pixel_representation().is_signed() {
         data_set.insert(
           dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag,
           DataElementValue::new_signed_short(&[
@@ -552,7 +553,7 @@ impl ImagePixelModule {
     }
 
     if let Some(largest_image_pixel_value) = self.largest_image_pixel_value {
-      if self.pixel_representation.is_signed() {
+      if self.pixel_representation().is_signed() {
         data_set.insert(
           dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag,
           DataElementValue::new_signed_short(&[
@@ -664,7 +665,9 @@ pub enum PhotometricInterpretation {
   ///
   /// This photometric interpretation may be used only when the samples per
   /// pixel is one.
-  Monochrome1,
+  Monochrome1 {
+    pixel_representation: PixelRepresentation,
+  },
 
   /// Pixel data represent a single monochrome image plane. The minimum sample
   /// value is intended to be displayed as black after any VOI grayscale
@@ -672,7 +675,9 @@ pub enum PhotometricInterpretation {
   ///
   /// This photometric interpretation may be used only when the samples per
   /// pixel is one.
-  Monochrome2,
+  Monochrome2 {
+    pixel_representation: PixelRepresentation,
+  },
 
   /// Pixel data describe a color image with a single sample per pixel (single
   /// image plane). The pixel value is used as an index into each of the Red,
@@ -732,9 +737,15 @@ impl PhotometricInterpretation {
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let tag = dictionary::PHOTOMETRIC_INTERPRETATION.tag;
 
+    let pixel_representation = PixelRepresentation::from_data_set(data_set)?;
+
     match data_set.get_string(tag)? {
-      "MONOCHROME1" => Ok(Self::Monochrome1),
-      "MONOCHROME2" => Ok(Self::Monochrome2),
+      "MONOCHROME1" => Ok(Self::Monochrome1 {
+        pixel_representation,
+      }),
+      "MONOCHROME2" => Ok(Self::Monochrome2 {
+        pixel_representation,
+      }),
       "PALETTE COLOR" => Ok(Self::PaletteColor {
         palette: Rc::new(PaletteColorLookupTableModule::from_data_set(
           data_set,
@@ -786,7 +797,7 @@ impl PhotometricInterpretation {
   /// data.
   ///
   pub fn is_monochrome(&self) -> bool {
-    self == &Self::Monochrome1 || self == &Self::Monochrome2
+    matches!(self, Self::Monochrome1 { .. } | Self::Monochrome2 { .. })
   }
 
   /// Returns whether this photometric interpretation defines color data.
@@ -813,7 +824,7 @@ impl PhotometricInterpretation {
   /// [`PhotometricInterpretation::Monochrome1`].
   ///
   pub fn is_monochrome1(&self) -> bool {
-    self == &Self::Monochrome1
+    matches!(self, Self::Monochrome1 { .. })
   }
 
   /// Returns whether this photometric interpretation is
@@ -849,8 +860,8 @@ impl PhotometricInterpretation {
   ///
   pub fn to_data_element_value(&self) -> DataElementValue {
     let s = match self {
-      Self::Monochrome1 => "MONOCHROME1",
-      Self::Monochrome2 => "MONOCHROME2",
+      Self::Monochrome1 { .. } => "MONOCHROME1",
+      Self::Monochrome2 { .. } => "MONOCHROME2",
       Self::PaletteColor { .. } => "PALETTE COLOR",
       Self::Rgb => "RGB",
       Self::YbrFull => "YBR_FULL",
@@ -867,8 +878,8 @@ impl PhotometricInterpretation {
 impl core::fmt::Display for PhotometricInterpretation {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     let s = match self {
-      Self::Monochrome1 => "Monochrome1",
-      Self::Monochrome2 => "Monochrome2",
+      Self::Monochrome1 { .. } => "Monochrome1",
+      Self::Monochrome2 { .. } => "Monochrome2",
       Self::PaletteColor { .. } => "PaletteColor",
       Self::Rgb => "Rgb",
       Self::YbrFull => "YbrFull",
@@ -1025,6 +1036,12 @@ impl PixelRepresentation {
     *self == Self::Signed
   }
 
+  /// Returns whether the pixel representation is for unsigned integer data.
+  ///
+  pub fn is_unsigned(&self) -> bool {
+    *self == Self::Unsigned
+  }
+
   /// Converts this [`PixelRepresentation`] to a data element value that uses
   /// the [`ValueRepresentation::UnsignedShort`] value representation.
   ///
@@ -1052,18 +1069,22 @@ mod tests {
   fn test_stored_value_range() {
     let mut image_pixel_module = ImagePixelModule::new_basic(
       SamplesPerPixel::One,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       1,
       1,
       BitsAllocated::Sixteen,
       12,
-      PixelRepresentation::Unsigned,
     )
     .unwrap();
 
     assert_eq!(image_pixel_module.stored_value_range(), 0..=4095);
 
-    image_pixel_module.pixel_representation = PixelRepresentation::Signed;
+    image_pixel_module.photometric_interpretation =
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      };
     assert_eq!(image_pixel_module.stored_value_range(), -2048..=2047);
 
     image_pixel_module.bits_allocated = BitsAllocated::ThirtyTwo;
@@ -1073,7 +1094,10 @@ mod tests {
       i64::from(i32::MIN)..=i64::from(i32::MAX)
     );
 
-    image_pixel_module.pixel_representation = PixelRepresentation::Unsigned;
+    image_pixel_module.photometric_interpretation =
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      };
     assert_eq!(
       image_pixel_module.stored_value_range(),
       0..=i64::from(u32::MAX)

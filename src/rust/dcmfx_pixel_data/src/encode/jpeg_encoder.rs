@@ -6,7 +6,7 @@ use crate::{
   color_image::ColorImageData,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
-    PlanarConfiguration,
+    PixelRepresentation, PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -19,8 +19,8 @@ pub fn encode_image_pixel_module(
   mut image_pixel_module: ImagePixelModule,
 ) -> Result<ImagePixelModule, ()> {
   match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull
     | PhotometricInterpretation::YbrFull422 => (),
@@ -54,13 +54,17 @@ pub fn encode_monochrome(
     (
       MonochromeImageData::U8(data),
       true,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::U8(data),
       false,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
     ) => encode(
       data,

@@ -7,7 +7,7 @@ use crate::{
   color_image::ColorImageData,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
-    PlanarConfiguration,
+    PixelRepresentation, PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -18,8 +18,8 @@ pub fn encode_image_pixel_module(
   mut image_pixel_module: ImagePixelModule,
 ) -> Result<ImagePixelModule, ()> {
   match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull
     | PhotometricInterpretation::YbrFull422 => (),
@@ -51,8 +51,12 @@ pub fn encode_monochrome(
   ) {
     (
       MonochromeImageData::U16(data),
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Sixteen,
     ) if image_pixel_module.bits_stored() <= 12 => encode(
       bytemuck::cast_slice(data),
@@ -133,8 +137,8 @@ fn encode(
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
 
   let color_space = match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2 => 1,
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. } => 1,
     PhotometricInterpretation::Rgb => 2,
     PhotometricInterpretation::YbrFull
     | PhotometricInterpretation::YbrFull422 => 3,
@@ -143,8 +147,8 @@ fn encode(
 
   let photometric_interpretation =
     match image_pixel_module.photometric_interpretation() {
-      PhotometricInterpretation::Monochrome1 => 1,
-      PhotometricInterpretation::Monochrome2 => 2,
+      PhotometricInterpretation::Monochrome1 { .. } => 1,
+      PhotometricInterpretation::Monochrome2 { .. } => 2,
       PhotometricInterpretation::Rgb => 3,
       PhotometricInterpretation::YbrFull => 4,
       PhotometricInterpretation::YbrFull422 => 5,

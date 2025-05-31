@@ -15,8 +15,8 @@ pub fn decode_photometric_interpretation(
   photometric_interpretation: &PhotometricInterpretation,
 ) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
   match photometric_interpretation {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
@@ -50,12 +50,17 @@ pub fn decode_monochrome(
     .is_monochrome1();
 
   match (
-    image_pixel_module.pixel_representation(),
+    image_pixel_module.photometric_interpretation(),
     image_pixel_module.bits_allocated(),
   ) {
     (
-      PixelRepresentation::Unsigned,
-      BitsAllocated::One | BitsAllocated::Eight,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
+      BitsAllocated::Eight,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
       MonochromeImage::new_u8(
@@ -69,8 +74,13 @@ pub fn decode_monochrome(
     }
 
     (
-      PixelRepresentation::Signed,
-      BitsAllocated::One | BitsAllocated::Eight,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
+      BitsAllocated::Eight,
     ) => {
       let pixels = decode(image_pixel_module, data)?;
       MonochromeImage::new_i8(
@@ -83,7 +93,15 @@ pub fn decode_monochrome(
       .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (PixelRepresentation::Unsigned, BitsAllocated::Sixteen) => {
+    (
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
+      BitsAllocated::Sixteen,
+    ) => {
       let pixels = decode(image_pixel_module, data)?;
       MonochromeImage::new_u16(
         width,
@@ -95,7 +113,15 @@ pub fn decode_monochrome(
       .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (PixelRepresentation::Signed, BitsAllocated::Sixteen) => {
+    (
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
+      BitsAllocated::Sixteen,
+    ) => {
       let pixels = decode(image_pixel_module, data)?;
       MonochromeImage::new_i16(
         width,
@@ -107,7 +133,15 @@ pub fn decode_monochrome(
       .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (PixelRepresentation::Unsigned, BitsAllocated::ThirtyTwo) => {
+    (
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
+      BitsAllocated::ThirtyTwo,
+    ) => {
       let pixels = decode(image_pixel_module, data)?;
       MonochromeImage::new_u32(
         width,
@@ -119,7 +153,15 @@ pub fn decode_monochrome(
       .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (PixelRepresentation::Signed, BitsAllocated::ThirtyTwo) => {
+    (
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
+      BitsAllocated::ThirtyTwo,
+    ) => {
       let pixels = decode(image_pixel_module, data)?;
       MonochromeImage::new_i32(
         width,
@@ -129,6 +171,17 @@ pub fn decode_monochrome(
         is_monochrome1,
       )
       .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (photometric_interpretation, bits_allocated) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "OpenJPEG monochrome decode not supported with photometric \
+           interpretation '{}' and bits allocated '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated),
+        ),
+      })
     }
   }
 }
@@ -185,31 +238,51 @@ pub fn decode_color(
       .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (PhotometricInterpretation::PaletteColor { .. }, _) => {
-      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
-        details: format!(
-          "Photometric interpretation is invalid when bits allocated is '{}'",
-          u8::from(image_pixel_module.bits_allocated())
-        ),
-      })
-    }
-
-    (_, BitsAllocated::One | BitsAllocated::Eight) => {
+    (
+      PhotometricInterpretation::Rgb
+      | PhotometricInterpretation::YbrFull
+      | PhotometricInterpretation::YbrIct
+      | PhotometricInterpretation::YbrRct,
+      BitsAllocated::Eight,
+    ) => {
       let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_u8(width, height, pixels, color_space, bits_stored)
         .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (_, BitsAllocated::Sixteen) => {
+    (
+      PhotometricInterpretation::Rgb
+      | PhotometricInterpretation::YbrFull
+      | PhotometricInterpretation::YbrIct
+      | PhotometricInterpretation::YbrRct,
+      BitsAllocated::Sixteen,
+    ) => {
       let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_u16(width, height, pixels, color_space, bits_stored)
         .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (_, BitsAllocated::ThirtyTwo) => {
+    (
+      PhotometricInterpretation::Rgb
+      | PhotometricInterpretation::YbrFull
+      | PhotometricInterpretation::YbrIct
+      | PhotometricInterpretation::YbrRct,
+      BitsAllocated::ThirtyTwo,
+    ) => {
       let pixels = decode(image_pixel_module, data)?;
       ColorImage::new_u32(width, height, pixels, color_space, bits_stored)
         .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (photometric_interpretation, bits_allocated) => {
+      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
+        details: format!(
+          "OpenJPEG color decode not supported with photometric interpretation \
+           '{}' and bits allocated '{}'",
+          photometric_interpretation,
+          u8::from(bits_allocated)
+        ),
+      })
     }
   }
 }

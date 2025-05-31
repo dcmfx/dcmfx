@@ -6,7 +6,7 @@ use crate::{
   color_image::ColorImageData,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
-    PlanarConfiguration,
+    PixelRepresentation, PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -18,8 +18,8 @@ pub fn encode_image_pixel_module(
   is_near_lossless: bool,
 ) -> Result<ImagePixelModule, ()> {
   match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull => (),
 
@@ -55,15 +55,23 @@ pub fn encode_monochrome(
   ) {
     (
       MonochromeImageData::U8(data),
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
     ) => encode(data, width, height, image_pixel_module, is_near_lossless),
 
     (
       MonochromeImageData::U16(data),
-      PhotometricInterpretation::Monochrome1
-      | PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Sixteen,
     ) => encode(
       bytemuck::cast_slice(data),

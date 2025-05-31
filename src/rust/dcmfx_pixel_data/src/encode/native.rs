@@ -7,7 +7,7 @@ use crate::{
   color_image::ColorImageData,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
-    PlanarConfiguration,
+    PixelRepresentation, PlanarConfiguration,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -19,8 +19,8 @@ pub fn encode_image_pixel_module(
   image_pixel_module: ImagePixelModule,
 ) -> Result<ImagePixelModule, ()> {
   match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::Monochrome1
-    | PhotometricInterpretation::Monochrome2
+    PhotometricInterpretation::Monochrome1 { .. }
+    | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::PaletteColor { .. }
     | PhotometricInterpretation::Rgb
     | PhotometricInterpretation::YbrFull422
@@ -51,14 +51,14 @@ pub fn encode_monochrome(
       MonochromeImageData::Bitmap { data, .. },
       true,
       1,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 { .. },
       BitsAllocated::One,
     )
     | (
       MonochromeImageData::Bitmap { data, .. },
       false,
       1,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 { .. },
       BitsAllocated::One,
     ) => result.copy_from_slice(data),
 
@@ -66,14 +66,18 @@ pub fn encode_monochrome(
       MonochromeImageData::I8(data),
       true,
       8,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::I8(data),
       false,
       8,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Eight,
     ) => result.copy_from_slice(bytemuck::cast_slice(data)),
 
@@ -81,14 +85,18 @@ pub fn encode_monochrome(
       MonochromeImageData::I8(data),
       true,
       _,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::I8(data),
       false,
       _,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Eight,
     ) => {
       let mask = (1 << image.bits_stored()) - 1;
@@ -102,14 +110,18 @@ pub fn encode_monochrome(
       MonochromeImageData::U8(data),
       true,
       _,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
     )
     | (
       MonochromeImageData::U8(data),
       false,
       _,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Eight,
     ) => result.copy_from_slice(data),
 
@@ -117,14 +129,18 @@ pub fn encode_monochrome(
       MonochromeImageData::I16(data),
       true,
       16,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::I16(data),
       false,
       16,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Sixteen,
     ) => {
       #[cfg(target_endian = "little")]
@@ -146,14 +162,18 @@ pub fn encode_monochrome(
       MonochromeImageData::I16(data),
       true,
       _,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::I16(data),
       false,
       _,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::Sixteen,
     ) => {
       let mask = (1 << image.bits_stored()) - 1;
@@ -168,14 +188,18 @@ pub fn encode_monochrome(
       MonochromeImageData::U16(data),
       true,
       _,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Sixteen,
     )
     | (
       MonochromeImageData::U16(data),
       false,
       _,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::Sixteen,
     ) => {
       #[cfg(target_endian = "little")]
@@ -197,14 +221,18 @@ pub fn encode_monochrome(
       MonochromeImageData::I32(data),
       true,
       16,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::ThirtyTwo,
     )
     | (
       MonochromeImageData::I32(data),
       false,
       16,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::ThirtyTwo,
     ) => result.copy_from_slice(bytemuck::cast_slice(data)),
 
@@ -212,14 +240,18 @@ pub fn encode_monochrome(
       MonochromeImageData::I32(data),
       true,
       _,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::ThirtyTwo,
     )
     | (
       MonochromeImageData::I32(data),
       false,
       _,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
       BitsAllocated::ThirtyTwo,
     ) => {
       let mask = (1 << image.bits_stored()) - 1;
@@ -234,14 +266,18 @@ pub fn encode_monochrome(
       MonochromeImageData::U32(data),
       true,
       _,
-      PhotometricInterpretation::Monochrome1,
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::ThirtyTwo,
     )
     | (
       MonochromeImageData::U32(data),
       false,
       _,
-      PhotometricInterpretation::Monochrome2,
+      PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Unsigned,
+      },
       BitsAllocated::ThirtyTwo,
     ) => {
       #[cfg(target_endian = "little")]
