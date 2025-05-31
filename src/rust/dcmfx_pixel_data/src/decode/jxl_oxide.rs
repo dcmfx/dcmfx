@@ -74,7 +74,7 @@ pub fn decode_monochrome(
     (
       PhotometricInterpretation::Monochrome1
       | PhotometricInterpretation::Monochrome2,
-      BitsAllocated::Eight,
+      BitsAllocated::Sixteen,
       BitDepth::IntegerSample {
         bits_per_sample: 16,
       },

@@ -672,6 +672,25 @@ fn jpeg_xl_monochrome_to_png() {
 }
 
 #[test]
+fn jpeg_xl_monochrome_12bit_to_png() {
+  let dicom_file = "../../../test/assets/other/monochrome_jpeg_xl_12bit.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--overwrite")
+    .arg("-f")
+    .arg("png")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "jpeg_xl_monochrome_12bit_to_png.png");
+}
+
+#[test]
 fn jpeg_xl_color_to_jpg() {
   let dicom_file = "../../../test/assets/other/ultrasound_jpeg_xl.dcm";
   let output_file = format!("{}.0000.png", dicom_file);

@@ -1,0 +1,90 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    44 bytes] "2.25.4456060959140041164486646 …
+(0002,0010) UI Transfer Syntax UID                  [    24 bytes] "1.2.840.100 … (JPEG XL Lossless)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0.1.3680043.10.1462.2.0"
+(0002,0013) SH Implementation Version Name          [    12 bytes] "DCMfx 0.20.0"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "AXIAL"
+(0008,0012) DA Instance Creation Date               [     8 bytes] 2018-10-29
+(0008,0013) TM Instance Creation Time               [    10 bytes] 15:50:44.637
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (CT Image Storage)
+(0008,0018) UI SOP Instance UID                     [    44 bytes] "2.25.4456060959140041164486646 …
+(0008,0020) DA Study Date                           [     0 bytes] ""
+(0008,0023) DA Content Date                         [     0 bytes] ""
+(0008,0030) TM Study Time                           [     0 bytes] ""
+(0008,0033) TM Content Time                         [     0 bytes] ""
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
+(0008,0070) LO Manufacturer                         [     8 bytes] "Philips"
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1090) LO Manufacturer's Model Name            [    12 bytes] "Ingenuity CT"
+(0008,3010) UI Irradiation Event UID                [    44 bytes] "2.25.8304149035246967279928896 …
+(0010,0010) PN Patient's Name                       [     0 bytes] ""
+(0010,0020) LO Patient ID                           [     0 bytes] ""
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     0 bytes] ""
+(0018,0015) CS Body Part Examined                   [     6 bytes] "CSPINE"
+(0018,0022) CS Scan Options                         [     6 bytes] "HELIX"
+(0018,0050) DS Slice Thickness                      [     2 bytes] "2"
+(0018,0060) DS KVP                                  [     4 bytes] "140"
+(0018,0088) DS Spacing Between Slices               [     2 bytes] "2"
+(0018,0090) DS Data Collection Diameter             [     4 bytes] "500"
+(0018,1020) LO Software Versions                    [     4 bytes] "4.1"
+(0018,1100) DS Reconstruction Diameter              [     4 bytes] "149"
+(0018,1110) DS Distance Source to Detector          [     4 bytes] "1040"
+(0018,1111) DS Distance Source to Patient           [     4 bytes] "570"
+(0018,1120) DS Gantry/Detector Tilt                 [     2 bytes] "0"
+(0018,1130) DS Table Height                         [     6 bytes] "159.9"
+(0018,1150) IS Exposure Time                        [     4 bytes] "472"
+(0018,1151) IS X-Ray Tube Current                   [     4 bytes] "212"
+(0018,1152) IS Exposure                             [     4 bytes] "100"
+(0018,1160) SH Filter Type                          [     2 bytes] "C"
+(0018,1210) SH Convolution Kernel                   [     2 bytes] "C"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0018,9302) CS Acquisition Type                     [     6 bytes] "SPIRAL"
+(0018,9305) FD Revolution Time                      [     8 bytes] 0.5
+(0018,9306) FD Single Collimation Width             [     8 bytes] 0.625
+(0018,9307) FD Total Collimation Width              [     8 bytes] 40.0
+(0018,9309) FD Table Speed                          [     8 bytes] 85.0
+(0018,9310) FD Table Feed per Rotation              [     8 bytes] 68.032
+(0018,9311) FD Spiral Pitch Factor                  [     8 bytes] 1.063
+(0018,9323) CS Exposure Modulation Type             [    12 bytes] "Z MODULATION"
+(0018,9324) FD Estimated Dose Saving                [     8 bytes] 25.0
+(0018,9345) FD CTDIvol                              [     8 bytes] 9.696969696969697
+(0020,000D) UI Study Instance UID                   [    44 bytes] "2.25.1549174071469871123805656 …
+(0020,000E) UI Series Instance UID                  [    44 bytes] "2.25.1365616168115336699998681 …
+(0020,0010) SH Study ID                             [     0 bytes] ""
+(0020,0011) IS Series Number                        [     4 bytes] "302"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "3"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0032) DS Image Position (Patient)             [    22 bytes] "-66.454", "40.566", "-249.65"
+(0020,0037) DS Image Orientation (Patient)          [    12 bytes] "1", "0", "0", "0", "1", "0"
+(0020,0052) UI Frame of Reference UID               [    44 bytes] "2.25.2216963208861745221324898 …
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0020,1041) DS Slice Location                       [     8 bytes] "-249.65"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 512
+(0028,0011) US Columns                              [     2 bytes] 512
+(0028,0030) DS Pixel Spacing                        [    24 bytes] "0.291015625", "0.291015625"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 12
+(0028,0102) US High Bit                             [     2 bytes] 11
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,1050) DS Window Center                        [     6 bytes] "60", "60"
+(0028,1051) DS Window Width                         [     8 bytes] "360", "360"
+(0028,1052) DS Rescale Intercept                    [     6 bytes] "-1024"
+(0028,1053) DS Rescale Slope                        [     2 bytes] "1"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
+(6000,0010) US Overlay Rows                         [     2 bytes] 512
+(6000,0011) US Overlay Columns                      [     2 bytes] 512
+(6000,0022) LO Overlay Description                  [    26 bytes] "A.L.I. Technologies, Inc."
+(6000,0040) CS Overlay Type                         [     2 bytes] "G" (Graphics)
+(6000,0050) SS Overlay Origin                       [     4 bytes] 1, 1
+(6000,0100) US Overlay Bits Allocated               [     2 bytes] 1
+(6000,0102) US Overlay Bit Position                 [     2 bytes] 0
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [171544 bytes] [FF 0A F8 0F FE E3 07 28 6E …]
+(FFFE,E0DD) Sequence Delimitation Item
