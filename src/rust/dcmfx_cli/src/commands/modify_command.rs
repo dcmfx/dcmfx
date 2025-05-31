@@ -85,6 +85,12 @@ pub struct ModifyArgs {
       compression quality in the range 1-100. A quality of 100 does not result \
       in lossless compression.\n\
       \n\
+      The quality value applies to the following transfer syntaxes:\n\
+      \n\
+      - JPEG Baseline 8-bit\n\
+      - JPEG Extended 12-bit\n\
+      - JPEG 2000 (Lossy)\n\
+      \n\
       Default value: 85",
     value_parser = clap::value_parser!(u8).range(1..=100),
   )]
@@ -107,11 +113,11 @@ pub struct ModifyArgs {
       specifies the photometric interpretation to be used by the transcoded \
       pixel data. This option has no effect on monochrome pixel data.\n\
       \n\
-      When the output transfer syntax is 'JPEG Baseline 8-bit' the output \
-      photometric interpretation defaults to 'YBR_FULL' if the color data \
-      is not YBR following decoding. This is because the 'RGB' photometric \
-      interpretation in JPEG is uncommon, and a YBR color space usually yields \
-      better compression ratios.\n\
+      When the output transfer syntax is 'JPEG Baseline 8-bit' or 'JPEG \
+      Extended 12-bit' the output photometric interpretation defaults to \
+      'YBR_FULL' if the color data is not YBR following decoding. This is \
+      because the 'RGB' photometric interpretation in JPEG is uncommon, and a \
+      YBR color space usually yields better compression ratios.\n\
       \n\
       When the output transfer syntax is JPEG 2000 the output photometric \
       interpretation defaults to 'YBR_RCT' for lossless encoding, and \
@@ -124,7 +130,8 @@ pub struct ModifyArgs {
       interpretation may differ from the input for the following reasons:\n\
       \n\
       1. If the output transfer syntax doesn't support 'PALETTE_COLOR' then \
-         the color image's data will be automatically expanded to 'RGB'.\n\
+         the palette color image data will be automatically expanded to \
+         'RGB'.\n\
       \n\
       2. If the output transfer syntax doesn't support 'YBR_FULL_422' then the \
          color image's data will be automatically expanded to 'YBR_FULL'."
@@ -441,9 +448,7 @@ fn get_transcode_image_data_functions(
               .set_photometric_interpretation(photometric_interpretation);
           }
         }
-      }
-
-      if image_pixel_module.is_color() {
+      } else if image_pixel_module.is_color() {
         // If a photometric interpretation has been explicitly specified
         // then use it for the output
         if let Some(photometric_interpretation_color_arg) =

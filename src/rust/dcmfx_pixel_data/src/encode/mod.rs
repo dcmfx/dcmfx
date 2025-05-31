@@ -39,11 +39,14 @@ impl PixelDataEncodeConfig {
     }
   }
 
-  /// Returns the quality to use when performing lossy compression of pixel
-  /// data, e.g. in the JPEG (Process 1) transfer syntax.
+  /// Returns the quality to use when lossy compressing pixel data.
   ///
-  /// The level ranges from 1 (lowest quality), through to 100 (highest
-  /// quality).
+  /// The value ranges from 1 (lowest quality), through to 100 (highest
+  /// quality). It is used by the following transfer syntaxes:
+  ///
+  /// - JPEG Baseline 8-bit
+  /// - JPEG Extended 12-bit
+  /// - JPEG 2000 (Lossy)
   ///
   /// Default: 85.
   ///
