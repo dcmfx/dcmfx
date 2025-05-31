@@ -203,7 +203,7 @@ fn decode(
 
   // Convert colors to sRGB
   if image_pixel_module.is_color() {
-    image.request_color_encoding(jxl_oxide::EnumColourEncoding::srgb_gamma22(
+    image.request_color_encoding(jxl_oxide::EnumColourEncoding::srgb(
       jxl_oxide::RenderingIntent::default(),
     ));
   }

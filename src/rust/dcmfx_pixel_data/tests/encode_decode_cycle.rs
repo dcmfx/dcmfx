@@ -143,9 +143,8 @@ fn test_jpeg_2k_encode_decode_cycle() {
     all_image_pixel_modules()
       .into_iter()
       .filter(|m| {
-        !m.photometric_interpretation().is_palette_color()
-          && !m.photometric_interpretation().is_ybr_full()
-          && !m.photometric_interpretation().is_ybr_full_422()
+        (m.photometric_interpretation().is_monochrome()
+          || m.photometric_interpretation().is_rgb())
           && (2..=30).contains(&m.bits_stored())
       })
       .collect(),
