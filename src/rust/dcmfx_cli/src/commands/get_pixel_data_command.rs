@@ -1,4 +1,3 @@
-use std::time::Duration;
 use std::{fs::File, io::Write, path::Path, path::PathBuf};
 
 use clap::{Args, ValueEnum};
@@ -348,7 +347,7 @@ enum GetPixelDataError {
   DataError(DataError),
   PixelDataDecodeError(PixelDataDecodeError),
   ImageError(image::ImageError),
-  FFmpegError(ffmpeg_next::Error),
+  FFmpegError(String),
   OtherError(String),
 }
 
@@ -790,6 +789,8 @@ fn frame_to_dynamic_image(
 fn create_mp4_encoder(
   output_prefix: &Path,
   first_frame: &image::DynamicImage,
+  cine_module: &CineModule,
+  multiframe_module: &MultiFrameModule,
   args: &GetPixelDataArgs,
 ) -> Result<Mp4Encoder, GetPixelDataError> {
   let mp4_path = crate::utils::path_append(output_prefix.to_path_buf(), ".mp4");
@@ -820,9 +821,18 @@ fn create_mp4_encoder(
     .new_dimensions(first_frame.width(), first_frame.height())
     .unwrap_or((first_frame.width(), first_frame.height()));
 
+  // Use the Cine Module to determine the frame rate. This can be overridden by
+  // a CLI argument if desired. The fallback value is one frame per second.
+  let frame_rate = if let Some(frame_rate) = args.mp4_frame_rate {
+    frame_rate
+  } else {
+    cine_module.frame_rate(multiframe_module).unwrap_or(1.0)
+  };
+
   Mp4Encoder::new(
-    &mp4_path,
+    &mp4_path.to_string_lossy(),
     first_frame,
+    frame_rate,
     output_width,
     output_height,
     encoder_config,
@@ -855,7 +865,13 @@ fn write_frame_to_mp4_file(
   // If this is the first frame then the MP4 encoder won't have been created,
   // so create it now
   if mp4_encoder.is_none() {
-    *mp4_encoder = Some(create_mp4_encoder(output_prefix, &image, args)?);
+    *mp4_encoder = Some(create_mp4_encoder(
+      output_prefix,
+      &image,
+      cine_module,
+      multiframe_module,
+      args,
+    )?);
   }
 
   // Update progress readout
@@ -864,27 +880,16 @@ fn write_frame_to_mp4_file(
     / (cine_module.number_of_frames(multiframe_module) as f64);
   print!(
     "\rWriting \"{}\" … {:.1}%",
-    mp4_encoder.as_ref().unwrap().path().display(),
+    mp4_encoder.as_ref().unwrap().path(),
     100.0 * progress
   );
   let _ = std::io::stdout().flush();
-
-  // Use the Cine Module to Determine the duration of this frame. This can be
-  // overridden by a CLI argument if desired. The fallback value is one second
-  // per frame.
-  let frame_duration = if let Some(frame_rate) = args.mp4_frame_rate {
-    Duration::from_secs_f64(1.0 / frame_rate)
-  } else {
-    cine_module
-      .frame_duration(frame.index().unwrap(), multiframe_module)
-      .unwrap_or(Duration::from_secs(1))
-  };
 
   // Add the frame to the MP4 encoder
   mp4_encoder
     .as_mut()
     .unwrap()
-    .add_frame(&image, frame_duration)
+    .add_frame(&image)
     .map_err(GetPixelDataError::FFmpegError)
 }
 

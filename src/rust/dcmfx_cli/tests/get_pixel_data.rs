@@ -1,12 +1,6 @@
 mod utils;
 
-use std::{
-  path::{Path, PathBuf},
-  str::FromStr,
-};
-
 use assert_cmd::Command;
-use ffmpeg_next as ffmpeg;
 
 #[macro_use]
 mod assert_image_snapshot;
@@ -812,7 +806,7 @@ fn render_overlays_multiframe_unaligned() {
 fn single_bit_unaligned_to_mp4_h264() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm";
-  let output_file = &format!("{}.mp4", dicom_file);
+  let output_file = format!("{}.mp4", dicom_file);
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
@@ -831,19 +825,19 @@ fn single_bit_unaligned_to_mp4_h264() {
       "\rWriting \"{0}\" … 33.3%\r\
        Writing \"{0}\" … 66.7%\r\
        Writing \"{0}\" … 100.0%\n",
-      to_native_path(output_file),
+      to_native_path(&output_file),
     ));
 
   assert_eq!(
-    get_video_stream_details(PathBuf::from_str(output_file).unwrap()),
+    get_video_stream_details(&output_file),
     Ok(VideoStreamDetails {
-      codec: "h264",
-      profile: 110,
+      codec_name: "h264".to_string(),
+      profile: "High 10".to_string(),
       width: 510,
       height: 510,
-      pixel_format: 62,
-      frame_count: 3,
-      frame_rate: (1, 1),
+      pix_fmt: "yuv420p10le".to_string(),
+      nb_frames: "3".to_string(),
+      r_frame_rate: "1/1".to_string(),
     })
   );
 }
@@ -890,15 +884,15 @@ fn single_bit_unaligned_to_mp4_h265() {
     ));
 
   assert_eq!(
-    get_video_stream_details(output_filename),
+    get_video_stream_details(&output_filename),
     Ok(VideoStreamDetails {
-      codec: "hevc",
-      profile: 4,
+      codec_name: "hevc".to_string(),
+      profile: "Rext".to_string(),
       width: 510,
       height: 510,
-      pixel_format: 127,
-      frame_count: 3,
-      frame_rate: (2, 1),
+      pix_fmt: "yuv422p12le".to_string(),
+      nb_frames: "3".to_string(),
+      r_frame_rate: "2/1".to_string(),
     })
   );
 }
@@ -989,47 +983,40 @@ fn with_output_directory() {
 
 /// Returns details on the video stream of a video file.
 ///
-fn get_video_stream_details<P: AsRef<Path>>(
-  path: P,
-) -> Result<VideoStreamDetails, ffmpeg::Error> {
-  ffmpeg::init()?;
+fn get_video_stream_details(path: &str) -> Result<VideoStreamDetails, String> {
+  let output = Command::new("ffprobe")
+    .args([
+      "-v",
+      "error",
+      "-select_streams",
+      "v:0",
+      "-show_entries",
+      "stream=codec_name,profile,width,height,pix_fmt,nb_frames,r_frame_rate",
+      "-of",
+      "json",
+      &path,
+    ])
+    .output()
+    .map_err(|e| e.to_string())?;
 
-  // Open the input file
-  let input = ffmpeg::format::input(&path)?;
+  let mut parsed: FfprobeOutput =
+    serde_json::from_slice(&output.stdout).map_err(|e| e.to_string())?;
 
-  // Find the first video stream
-  let video_stream = input
-    .streams()
-    .find(|stream| stream.parameters().medium() == ffmpeg::media::Type::Video)
-    .ok_or_else(|| ffmpeg::Error::StreamNotFound)?;
-
-  // Gather stream details
-  let codec = video_stream.parameters().id();
-  let profile = unsafe { (*video_stream.parameters().as_ptr()).profile };
-  let width = unsafe { (*video_stream.parameters().as_ptr()).width };
-  let height = unsafe { (*video_stream.parameters().as_ptr()).height };
-  let pixel_format = unsafe { (*video_stream.parameters().as_ptr()).format };
-  let frame_count = video_stream.frames();
-  let frame_rate = video_stream.rate();
-
-  Ok(VideoStreamDetails {
-    codec: codec.name(),
-    profile,
-    width,
-    height,
-    pixel_format,
-    frame_count,
-    frame_rate: (frame_rate.numerator(), frame_rate.denominator()),
-  })
+  Ok(parsed.streams.remove(0))
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, serde::Deserialize)]
+struct FfprobeOutput {
+  streams: Vec<VideoStreamDetails>,
+}
+
+#[derive(Debug, serde::Deserialize, PartialEq)]
 pub struct VideoStreamDetails {
-  pub codec: &'static str,
-  pub profile: i32,
+  pub codec_name: String,
+  pub profile: String,
   pub width: i32,
   pub height: i32,
-  pixel_format: i32,
-  pub frame_count: i64,
-  pub frame_rate: (i32, i32),
+  pub pix_fmt: String,
+  pub nb_frames: String,
+  pub r_frame_rate: String,
 }

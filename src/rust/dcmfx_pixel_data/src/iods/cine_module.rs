@@ -183,6 +183,37 @@ impl CineModule {
     last_frame.saturating_sub(start_trim)
   }
 
+  /// Returns the frame rate that should be used to play back pixel data
+  /// content. This ignores any Frame Time Vector value because it is for
+  /// specifying a variable frame rate.
+  ///
+  pub fn frame_rate(
+    &self,
+    multiframe_module: &MultiFrameModule,
+  ) -> Option<f64> {
+    if multiframe_module.frame_increment_pointer
+      == Some(dictionary::FRAME_TIME.tag)
+    {
+      if let Some(time) = self.frame_time {
+        return Some(1000.0 / time);
+      }
+    }
+
+    if let Some(time) = self.frame_time {
+      return Some(1000.0 / time);
+    }
+
+    if let Some(rate) = self.recommended_display_frame_rate {
+      return Some(rate.into());
+    }
+
+    if let Some(rate) = self.cine_rate {
+      return Some(rate.into());
+    }
+
+    None
+  }
+
   /// Returns the duration of the specified frame, taking into account the Frame
   /// Increment Pointer if specified.
   ///
@@ -198,7 +229,7 @@ impl CineModule {
         }
       }
 
-      Some(tag) if tag == dictionary::FRAME_TIME_VECTOR.tag => {
+      Some(tag) if tag == dictionary::FRAME_TIME.tag => {
         if let Some(time) = self.frame_time {
           return Some(Duration::from_secs_f64(time / 1000.0));
         }

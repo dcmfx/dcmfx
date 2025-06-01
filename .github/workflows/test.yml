@@ -100,24 +100,27 @@ jobs:
           release: false
           install: >-
             git
-            mingw-w64-x86_64-autotools
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-libx264
-            mingw-w64-x86_64-nasm
-            mingw-w64-x86_64-x265
-
-      - name: Add Cargo to MSYS2 path (Windows)
-        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
-        run: echo 'export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"' >> ~/.bash_profile
 
       - name: Install platform-specific dependencies (macOS)
         if: matrix.rust-target == 'aarch64-apple-darwin' || matrix.rust-target == 'x86_64-apple-darwin'
-        run: brew install nasm x264 x265
+        run: brew install ffmpeg
 
       - name: Install platform-specific dependencies (Linux)
         if: matrix.rust-target == 'x86_64-unknown-linux-gnu'
-        run: sudo apt-get install -y libnuma-dev libx264-dev libx265-dev nasm
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Install platform-specific dependencies (Windows)
+        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
+        shell: powershell
+        run: choco install ffmpeg -y --no-progress
+
+      - name: Add Cargo and FFmpeg to MSYS2 path (Windows)
+        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
+        run: |
+          echo 'export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"' >> ~/.bash_profile
+          echo 'export PATH="/c/ProgramData/chocolatey/lib/ffmpeg/tools/ffmpeg/bin:$PATH"' >> ~/.bash_profile
 
       - name: Check code formatting
         working-directory: src/rust

@@ -1,236 +1,182 @@
-use std::{
-  path::{Path, PathBuf},
-  time::Duration,
-};
+use std::io::Write;
 
 use clap::ValueEnum;
-use ffmpeg_next::{self as ffmpeg};
 
-const TIME_BASE: (i32, i32) = (100, 90000);
-
-/// Writes a stream of RGB24 frames to an MP4 video file using FFmpeg.
+/// Writes a stream of RGB or Luma frames to an MP4 video file using FFmpeg.
 ///
 pub struct Mp4Encoder {
-  path: PathBuf,
-  output: ffmpeg::format::context::Output,
-  video_encoder: ffmpeg::codec::encoder::video::Encoder,
-  duration: Duration,
-
-  raw_frame: ffmpeg::frame::Video,
-  yuv_frame: ffmpeg::frame::Video,
-  scaling_context: ffmpeg::software::scaling::Context,
+  path: String,
+  ffmpeg_child_process: std::process::Child,
 }
 
 impl Mp4Encoder {
   /// Initializes MP4 encoding to the specified output file.
   ///
   pub fn new(
-    filename: &PathBuf,
+    filename: &str,
     first_frame: &image::DynamicImage,
+    frame_rate: f64,
     mut output_width: u32,
     mut output_height: u32,
     encoder_config: Mp4EncoderConfig,
-  ) -> Result<Self, ffmpeg::Error> {
-    ffmpeg::init()?;
-    ffmpeg::util::log::set_level(encoder_config.log_level.ffmpeg_log_level());
+  ) -> Result<Self, String> {
+    Self::check_ffmpeg_is_available()?;
 
     // Ensure output dimensions are divisible by two. This is required by
     // libx264 and libx265.
     output_width &= !1;
     output_height &= !1;
 
+    // Start building FFmpeg command line arguments
+    let mut ffmpeg_args = vec![
+      "-loglevel".to_string(),
+      encoder_config.log_level.ffmpeg_log_level().to_string(),
+    ];
+
+    // Specify how input will be sent as raw data on stdin
+    ffmpeg_args.push("-f".to_string());
+    ffmpeg_args.push("rawvideo".to_string());
+    ffmpeg_args.push("-pix_fmt".to_string());
+    match first_frame.color() {
+      image::ColorType::L8 => ffmpeg_args.push("gray".to_string()),
+      image::ColorType::L16 => ffmpeg_args.push("gray16le".to_string()),
+      image::ColorType::Rgb8 => ffmpeg_args.push("rgb24".to_string()),
+      image::ColorType::Rgb16 => ffmpeg_args.push("rgb48le".to_string()),
+      _ => unreachable!(),
+    };
+    ffmpeg_args.push("-s".to_string());
+    ffmpeg_args.push(format!(
+      "{}x{}",
+      first_frame.width(),
+      first_frame.height()
+    ));
+    ffmpeg_args.push("-framerate".to_string());
+    ffmpeg_args.push(frame_rate.to_string());
+    ffmpeg_args.push("-i".to_string());
+    ffmpeg_args.push("-".to_string());
+
+    // Output an MP4 video
+    ffmpeg_args.push("-f".to_string());
+    ffmpeg_args.push("mp4".to_string());
+
+    // Specify the codec
+    ffmpeg_args.push("-c:v".to_string());
+    ffmpeg_args.push(encoder_config.codec.ffmpeg_id().to_string());
+
     // Configure output to put the 'moov' atom at the start of the file. This
     // requires a second pass so is a little slower, but is recommended for any
     // streaming usage.
-    let mut options = ffmpeg::Dictionary::new();
-    options.set("movflags", "faststart");
+    ffmpeg_args.push("-movflags".to_string());
+    ffmpeg_args.push("+faststart".to_string());
 
-    // Create MP4 output
-    let mut output = ffmpeg::format::output_as_with(filename, "mp4", options)?;
+    // Add rescale filter if the output size doesn't match the input
+    let is_resizing = first_frame.width() != output_width
+      || first_frame.height() != output_height;
+    if is_resizing {
+      ffmpeg_args.push("-vf".to_string());
+      ffmpeg_args.push(format!(
+        "scale={}:{}:{}",
+        output_width,
+        output_height,
+        encoder_config.resize_filter.ffmpeg_flag()
+      ));
+    };
 
-    // Look up the codec
-    let codec = ffmpeg::codec::encoder::find(encoder_config.codec.ffmpeg_id())
-      .ok_or(ffmpeg::Error::EncoderNotFound)?;
-
-    // Create video encoder
-    let context = ffmpeg::codec::Context::new_with_codec(codec);
-    let mut video_encoder = context.encoder().video()?;
-
-    // Configure video encoder
-    video_encoder.set_width(output_width);
-    video_encoder.set_height(output_height);
-    video_encoder.set_max_b_frames(2);
-    video_encoder.set_time_base(TIME_BASE);
-    video_encoder.set_format(encoder_config.pixel_format.ffmpeg_id());
-
-    // Open the encoder
-    let encoder = video_encoder
-      .open_as_with(codec, encoder_config.ffmpeg_encoder_options())?;
-    let mut parameters = ffmpeg::codec::Parameters::from(&encoder);
+    // Add extra encoder options
+    ffmpeg_args.extend(encoder_config.ffmpeg_encoder_options());
 
     // For H.265 output, set an 'HVC1' codec tag to improve compatibility on
     // Apple devices
-    if encoder_config.codec.is_h265() {
-      let hvc1_fourcc = u32::from_le_bytes([b'h', b'v', b'c', b'1']);
-      unsafe {
-        (*parameters.as_mut_ptr()).codec_tag = hvc1_fourcc;
-      }
+    if encoder_config.codec == Mp4Codec::Libx265 {
+      ffmpeg_args.push("-tag:v".to_string());
+      ffmpeg_args.push("hvc1".to_string());
     }
 
-    // Add an output stream for the video codec/encoder
-    let mut output_stream = output.add_stream(codec)?;
-    output_stream.set_parameters(parameters);
+    // Specify output filename
+    ffmpeg_args.push(filename.to_string());
+    ffmpeg_args.push("-y".to_string());
 
-    // Write the MP4 header
-    output.write_header()?;
-
-    // Create a scaling context for converting incoming raw frame data to the
-    // pixel format expected by the video encoder. The scaling context will also
-    // resize the incoming frame if needed.
-
-    let input_format = match first_frame.color() {
-      image::ColorType::L8 => ffmpeg::format::Pixel::GRAY8,
-      image::ColorType::L16 => ffmpeg::format::Pixel::GRAY16,
-      image::ColorType::Rgb8 => ffmpeg::format::Pixel::RGB24,
-      image::ColorType::Rgb16 => ffmpeg::format::Pixel::RGB48,
-      _ => unreachable!(),
-    };
-
-    let raw_frame = ffmpeg::frame::Video::new(
-      input_format,
-      first_frame.width(),
-      first_frame.height(),
-    );
-
-    let yuv_frame = ffmpeg::frame::Video::new(
-      encoder_config.pixel_format.ffmpeg_id(),
-      output_width,
-      output_height,
-    );
-
-    let is_resizing = first_frame.width() != output_width
-      || first_frame.height() != output_height;
-    let filter = if is_resizing {
-      encoder_config.resize_filter.ffmpeg_flag()
-    } else {
-      ffmpeg::software::scaling::Flags::POINT
-    };
-
-    let scaling_context = ffmpeg::software::scaling::Context::get(
-      raw_frame.format(),
-      raw_frame.width(),
-      raw_frame.height(),
-      yuv_frame.format(),
-      yuv_frame.width(),
-      yuv_frame.height(),
-      filter,
-    )?;
+    // Spawn the ffmpeg process
+    let ffmpeg_child_process =
+      std::process::Command::new(Self::ffmpeg_binary())
+        .args(ffmpeg_args)
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::inherit())
+        .spawn()
+        .map_err(|e| e.to_string())?;
 
     Ok(Self {
-      path: filename.clone(),
-      output,
-      video_encoder: encoder,
-      duration: Duration::ZERO,
-
-      raw_frame,
-      yuv_frame,
-      scaling_context,
+      path: filename.to_string(),
+      ffmpeg_child_process,
     })
+  }
+
+  /// Returns the name of the FFmpeg binary to use.
+  ///
+  fn ffmpeg_binary() -> &'static str {
+    #[cfg(not(windows))]
+    return "ffmpeg";
+
+    #[cfg(windows)]
+    return "ffmpeg.exe";
+  }
+
+  /// Returns an error if the required FFmpeg binary isn't present.
+  ///
+  fn check_ffmpeg_is_available() -> Result<(), String> {
+    std::process::Command::new(Self::ffmpeg_binary())
+      .args(["-version"])
+      .stdout(std::process::Stdio::null())
+      .stderr(std::process::Stdio::null())
+      .spawn()
+      .map(|_| ())
+      .map_err(|_| {
+        format!(
+          "\"{}\" binary is not available on the path, install it using a \
+           package manager or download from https://ffmpeg.org/download.html",
+          Self::ffmpeg_binary()
+        )
+      })
   }
 
   /// Returns the output path this MP4 encoder is writing to.
   ///
-  pub fn path(&self) -> &Path {
+  pub fn path(&self) -> &str {
     &self.path
   }
 
-  /// Writes the next frame to be encoded to MP4. The duration that the frame is
-  /// to be displayed must be specified.
+  /// Writes the next frame of video.
   ///
   pub fn add_frame(
     &mut self,
     frame_image: &image::DynamicImage,
-    frame_duration: Duration,
-  ) -> Result<(), ffmpeg::Error> {
-    // Copy frame data into the FFmpeg frame
-    match frame_image {
-      image::DynamicImage::ImageLuma8(image) => {
-        self.update_raw_frame(image.width() as usize, image.as_raw())
-      }
+  ) -> Result<(), String> {
+    let stdin = self
+      .ffmpeg_child_process
+      .stdin
+      .as_mut()
+      .expect("Failed to open FFmpeg stdin");
 
-      image::DynamicImage::ImageRgb8(image) => {
-        self.update_raw_frame(image.width() as usize * 3, image.as_raw())
-      }
-
-      image::DynamicImage::ImageLuma16(image) => {
-        self.update_raw_frame(image.width() as usize * 2, image.as_raw())
-      }
-
-      image::DynamicImage::ImageRgb16(image) => {
-        self.update_raw_frame(image.width() as usize * 6, image.as_raw())
-      }
-
-      _ => unreachable!(),
-    }
-
-    // Convert the RGB24 frame to the video encoder's expected pixel format and
-    // dimensions
-    self
-      .scaling_context
-      .run(&self.raw_frame, &mut self.yuv_frame)?;
-
-    // Set presentation time stamp on the input frame
-    self.yuv_frame.set_pts(Some(
-      self.duration.as_micros() as i64 * i64::from(TIME_BASE.1) / 1000000,
-    ));
-
-    // Send the frame to the video encoder
-    self.video_encoder.send_frame(&self.yuv_frame)?;
-    self.flush_packets_to_output()?;
-
-    // Update total video duration
-    self.duration += frame_duration;
-
-    Ok(())
-  }
-
-  /// Copies data for an incoming frame into the raw frame frame ready for
-  /// pixel format conversion and encoding.
-  ///
-  /// This copy respects the `linesize` of the target frame.
-  ///
-  fn update_raw_frame<T: bytemuck::Pod>(
-    &mut self,
-    row_size: usize,
-    data: &[T],
-  ) {
-    let linesize = unsafe { (*self.raw_frame.as_ptr()).linesize }[0] as usize;
-
-    let mut dst = self.raw_frame.data_mut(0);
-
-    if row_size == linesize {
-      dst.copy_from_slice(bytemuck::cast_slice(data));
-    } else {
-      for src_row in bytemuck::cast_slice(data).chunks_exact(row_size) {
-        dst[..row_size].copy_from_slice(src_row);
-        dst = &mut dst[linesize..];
-      }
-    }
+    // Write frame data to the FFmpeg child process' stdin
+    stdin
+      .write_all(frame_image.as_bytes())
+      .map_err(|e| e.to_string())
   }
 
   /// Completes encoding once all frames have been written.
   ///
-  pub fn finish(&mut self) -> Result<(), ffmpeg::Error> {
-    self.video_encoder.send_eof()?;
-    self.flush_packets_to_output()?;
-    self.output.write_trailer()
-  }
+  pub fn finish(&mut self) -> Result<(), String> {
+    let exit_status = self
+      .ffmpeg_child_process
+      .wait()
+      .map_err(|e| e.to_string())?;
 
-  fn flush_packets_to_output(&mut self) -> Result<(), ffmpeg::Error> {
-    let mut packet = ffmpeg::Packet::empty();
-
-    while let Ok(()) = self.video_encoder.receive_packet(&mut packet) {
-      packet.write_interleaved(&mut self.output)?;
+    if !exit_status.success() {
+      return Err(format!(
+        "FFMpeg process returned exit code {:?}",
+        exit_status.code()
+      ));
     }
 
     Ok(())
@@ -265,29 +211,32 @@ impl Mp4EncoderConfig {
   /// Converts the encoder configuration to an FFmpeg dictionary of encoder
   /// options.
   ///
-  fn ffmpeg_encoder_options(&self) -> ffmpeg::Dictionary {
-    let mut opts = ffmpeg::Dictionary::new();
+  fn ffmpeg_encoder_options(&self) -> Vec<String> {
+    let mut args = vec![
+      "-preset".to_string(),
+      self.preset.to_string(),
+      "-crf".to_string(),
+      self.crf.to_string(),
+    ];
 
-    opts.set("preset", &self.preset.to_string());
-    opts.set("crf", &self.crf.to_string());
-
-    let codec_params = if self.codec == Mp4Codec::Libx265 {
-      // Pass log level through to libx265
-      format!(
-        "log-level={}:{}",
-        self.log_level.x265_log_level(),
-        self.codec_params
-      )
-    } else {
-      self.codec_params.clone()
-    };
-
+    // Set max B frames
+    args.push("-bf".to_string());
     match self.codec {
-      Mp4Codec::Libx264 => opts.set("x264-params", &codec_params),
-      Mp4Codec::Libx265 => opts.set("x265-params", &codec_params),
-    };
+      Mp4Codec::Libx264 => args.push("2".to_string()),
+      Mp4Codec::Libx265 => args.push("4".to_string()),
+    }
 
-    opts
+    // Set output pixel format
+    args.push("-pix_fmt".to_string());
+    args.push(self.pixel_format.ffmpeg_id().to_string());
+
+    // Pass log level through to libx265
+    if self.codec == Mp4Codec::Libx265 {
+      args.push("-x265-params".to_string());
+      args.push(format!("log-level={}", self.log_level.x265_log_level()));
+    }
+
+    args
   }
 }
 
@@ -303,18 +252,12 @@ pub enum Mp4Codec {
 }
 
 impl Mp4Codec {
-  /// Returns whether this codec produces H.265 video.
-  ///
-  pub fn is_h265(&self) -> bool {
-    *self == Self::Libx265
-  }
-
   /// Converts to an FFmpeg codec ID.
   ///
-  pub fn ffmpeg_id(&self) -> ffmpeg::codec::Id {
+  pub fn ffmpeg_id(&self) -> &'static str {
     match self {
-      Self::Libx264 => ffmpeg::codec::Id::H264,
-      Self::Libx265 => ffmpeg::codec::Id::H265,
+      Self::Libx264 => "libx264",
+      Self::Libx265 => "libx265",
     }
   }
 }
@@ -389,18 +332,17 @@ impl Mp4PixelFormat {
       || *self == Self::Yuv444p12
   }
 
-  fn ffmpeg_id(&self) -> ffmpeg::format::Pixel {
-    use ffmpeg::format::Pixel;
+  fn ffmpeg_id(&self) -> &'static str {
     match self {
-      Self::Yuv420p => Pixel::YUV420P,
-      Self::Yuv422p => Pixel::YUV422P,
-      Self::Yuv444p => Pixel::YUV444P,
-      Self::Yuv420p10 => Pixel::YUV420P10,
-      Self::Yuv422p10 => Pixel::YUV422P10,
-      Self::Yuv444p10 => Pixel::YUV444P10,
-      Self::Yuv420p12 => Pixel::YUV420P12,
-      Self::Yuv422p12 => Pixel::YUV422P12,
-      Self::Yuv444p12 => Pixel::YUV444P12,
+      Self::Yuv420p => "yuv420p",
+      Self::Yuv422p => "yuv422p",
+      Self::Yuv444p => "yuv444p",
+      Self::Yuv420p10 => "yuv420p10",
+      Self::Yuv422p10 => "yuv422p10",
+      Self::Yuv444p10 => "yuv444p10",
+      Self::Yuv420p12 => "yuv420p12",
+      Self::Yuv422p12 => "yuv422p12",
+      Self::Yuv444p12 => "yuv444p12",
     }
   }
 }
@@ -421,17 +363,17 @@ pub enum LogLevel {
 }
 
 impl LogLevel {
-  fn ffmpeg_log_level(&self) -> ffmpeg::util::log::Level {
+  fn ffmpeg_log_level(&self) -> &'static str {
     match self {
-      Self::Quiet => ffmpeg::util::log::Level::Quiet,
-      Self::Panic => ffmpeg::util::log::Level::Panic,
-      Self::Fatal => ffmpeg::util::log::Level::Fatal,
-      Self::Error => ffmpeg::util::log::Level::Error,
-      Self::Warning => ffmpeg::util::log::Level::Warning,
-      Self::Info => ffmpeg::util::log::Level::Info,
-      Self::Verbose => ffmpeg::util::log::Level::Verbose,
-      Self::Debug => ffmpeg::util::log::Level::Debug,
-      Self::Trace => ffmpeg::util::log::Level::Trace,
+      Self::Quiet => "quiet",
+      Self::Panic => "panic",
+      Self::Fatal => "fatal",
+      Self::Error => "error",
+      Self::Warning => "warning",
+      Self::Info => "info",
+      Self::Verbose => "verbose",
+      Self::Debug => "debug",
+      Self::Trace => "trace",
     }
   }
 
@@ -484,12 +426,12 @@ pub enum ResizeFilter {
 }
 
 impl ResizeFilter {
-  fn ffmpeg_flag(&self) -> ffmpeg::software::scaling::Flags {
+  fn ffmpeg_flag(&self) -> &'static str {
     match self {
-      Self::Bilinear => ffmpeg::software::scaling::Flags::BILINEAR,
-      Self::Bicubic => ffmpeg::software::scaling::Flags::BICUBIC,
-      Self::Gaussian => ffmpeg::software::scaling::Flags::GAUSS,
-      Self::Lanczos3 => ffmpeg::software::scaling::Flags::LANCZOS,
+      Self::Bilinear => "bilinear",
+      Self::Bicubic => "bicubic",
+      Self::Gaussian => "gauss",
+      Self::Lanczos3 => "lanczos",
     }
   }
 
