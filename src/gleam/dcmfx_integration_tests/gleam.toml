@@ -1,7 +1,7 @@
 name = "dcmfx_integration_tests"
 description = "DCMfx integration tests"
 licences = ["AGPL-3.0-only"]
-gleam = ">= 1.9.0"
+gleam = ">= 1.11.0"
 
 [dependencies]
 dcmfx_core = { path = "../dcmfx_core" }
@@ -11,7 +11,7 @@ dcmfx_pixel_data = { path = "../dcmfx_pixel_data" }
 gleam_json = ">= 3.0.1 and < 4.0.0"
 gleam_stdlib = ">= 0.60.0 and < 2.0.0"
 simplifile = ">= 2.2.1 and < 3.0.0"
-file_streams = ">= 1.5.0 and < 2.0.0"
+file_streams = ">= 1.6.0 and < 2.0.0"
 
 [javascript]
 deno = { allow_read = true, allow_write = true }

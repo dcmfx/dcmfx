@@ -2,7 +2,7 @@ name = "dcmfx_p10"
 version = "0.21.0"
 description = "DCMfx Part 10 library"
 licences = ["AGPL-3.0-only"]
-gleam = ">= 1.9.0"
+gleam = ">= 1.11.0"
 
 [repository]
 type = "github"
@@ -13,7 +13,7 @@ path = "src/gleam/dcmfx_p10"
 [dependencies]
 dcmfx_character_set = { path = "../dcmfx_character_set" }
 dcmfx_core = { path = "../dcmfx_core" }
-file_streams = ">= 1.5.0 and < 2.0.0"
+file_streams = ">= 1.6.0 and < 2.0.0"
 gleam_deque = ">= 1.0.0 and < 2.0.0"
 gleam_stdlib = ">= 0.60.0 and < 2.0.0"
 

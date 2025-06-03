@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 #
 # Runs all examples in this directory to check they work.
 

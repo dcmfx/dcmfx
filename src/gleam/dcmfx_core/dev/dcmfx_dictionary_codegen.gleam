@@ -46,7 +46,7 @@ type DictionaryItem {
 ///
 fn read_attributes_json() -> List(DictionaryItem) {
   let assert Ok(attributes_json) =
-    simplifile.read("data/innolitics_attributes.json")
+    simplifile.read("dev/data/innolitics_attributes.json")
 
   // Decode the JSON content
   let items_decoder = {
@@ -158,7 +158,7 @@ type PrivateTags =
 /// Reads the raw private tags file sourced from GDCM.
 ///
 fn read_private_tags_json() -> PrivateTags {
-  let assert Ok(json_data) = simplifile.read("data/gdcm_private_tags.json")
+  let assert Ok(json_data) = simplifile.read("dev/data/gdcm_private_tags.json")
 
   // Decode the JSON content
   let private_tags_decoder =
@@ -817,7 +817,7 @@ type UidDefinition {
 /// Reads the raw UIDs file sourced from pydicom.
 ///
 fn read_uid_definitions_json() -> List(UidDefinition) {
-  let assert Ok(uids_json) = simplifile.read("data/uids.json")
+  let assert Ok(uids_json) = simplifile.read("dev/data/uids.json")
 
   // Decode the JSON content
   let uid_definition_decoder = {

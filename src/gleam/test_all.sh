@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 #
 # Runs the tests for all dcmfx_* libraries in this directory,
 
@@ -11,12 +11,10 @@ for dir in dcmfx_*; do
   cd "$dir"
   gleam format --check
 
-  if [ "$dir" != "dcmfx_dictionary_codegen" ]; then
-    gleam test --target erlang
-    gleam test --target javascript --runtime node
-    gleam test --target javascript --runtime deno
-    gleam test --target javascript --runtime bun
-  fi
+  gleam test --target erlang
+  gleam test --target javascript --runtime node
+  gleam test --target javascript --runtime deno
+  gleam test --target javascript --runtime bun
 
   cd ..
 done
