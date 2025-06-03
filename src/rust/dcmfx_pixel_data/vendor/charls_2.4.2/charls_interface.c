@@ -1,5 +1,5 @@
-// This file contains the C entry point called from Rust to perform decoding of
-// JPEG-LS data.
+// This file contains the C entry points called from Rust to perform JPEG-LS
+// decoding and encoding with CharLS.
 
 #ifndef __wasm__
 

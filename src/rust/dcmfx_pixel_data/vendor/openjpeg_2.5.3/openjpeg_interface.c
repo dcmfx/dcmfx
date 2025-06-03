@@ -1,5 +1,5 @@
-// This file contains the C entry point called from Rust to perform decoding of
-// JPEG 2000 data.
+// This file contains the C entry points called from Rust to perform JPEG 2000
+// decoding and encoding with OpenJPEG.
 
 #include <math.h>
 #include <stdlib.h>

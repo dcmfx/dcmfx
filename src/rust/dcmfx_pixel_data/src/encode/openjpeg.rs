@@ -251,6 +251,15 @@ pub fn encode_color(
     | (
       ColorImageData::U8 {
         data,
+        color_space: ColorSpace::Ybr { is_422: false },
+      },
+      PhotometricInterpretation::YbrFull,
+      BitsAllocated::Eight,
+      _,
+    )
+    | (
+      ColorImageData::U8 {
+        data,
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::YbrRct,
@@ -274,21 +283,20 @@ pub fn encode_color(
     ) => encode(data, width, height, image_pixel_module, quality),
 
     (
-      ColorImageData::U8 {
-        data,
-        color_space: ColorSpace::Ybr { is_422: false },
-      },
-      PhotometricInterpretation::YbrFull,
-      BitsAllocated::Eight,
-      _,
-    ) => encode(data, width, height, image_pixel_module, quality),
-
-    (
       ColorImageData::U16 {
         data,
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::Rgb,
+      BitsAllocated::Sixteen,
+      _,
+    )
+    | (
+      ColorImageData::U16 {
+        data,
+        color_space: ColorSpace::Ybr { is_422: false },
+      },
+      PhotometricInterpretation::YbrFull,
       BitsAllocated::Sixteen,
       _,
     )
@@ -324,27 +332,20 @@ pub fn encode_color(
     ),
 
     (
-      ColorImageData::U16 {
-        data,
-        color_space: ColorSpace::Ybr { is_422: false },
-      },
-      PhotometricInterpretation::YbrFull,
-      BitsAllocated::Sixteen,
-      _,
-    ) => encode(
-      bytemuck::cast_slice(data),
-      width,
-      height,
-      image_pixel_module,
-      quality,
-    ),
-
-    (
       ColorImageData::U32 {
         data,
         color_space: ColorSpace::Rgb,
       },
       PhotometricInterpretation::Rgb,
+      BitsAllocated::ThirtyTwo,
+      _,
+    )
+    | (
+      ColorImageData::U32 {
+        data,
+        color_space: ColorSpace::Ybr { is_422: false },
+      },
+      PhotometricInterpretation::YbrFull,
       BitsAllocated::ThirtyTwo,
       _,
     )
@@ -365,22 +366,6 @@ pub fn encode_color(
       PhotometricInterpretation::YbrIct,
       BitsAllocated::ThirtyTwo,
       Some(_),
-    ) => encode(
-      bytemuck::cast_slice(data),
-      width,
-      height,
-      image_pixel_module,
-      quality,
-    ),
-
-    (
-      ColorImageData::U32 {
-        data,
-        color_space: ColorSpace::Ybr { is_422: false },
-      },
-      PhotometricInterpretation::YbrFull,
-      BitsAllocated::ThirtyTwo,
-      _,
     ) => encode(
       bytemuck::cast_slice(data),
       width,
@@ -448,7 +433,7 @@ fn encode(
       .unwrap_or("<invalid error>");
 
     return Err(PixelDataEncodeError::OtherError {
-      name: "JPEG 2000 encode failed".to_string(),
+      name: "OpenJPEG encode failed".to_string(),
       details: error.to_string(),
     });
   }

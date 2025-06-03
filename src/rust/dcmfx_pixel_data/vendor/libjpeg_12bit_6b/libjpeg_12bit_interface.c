@@ -1,5 +1,5 @@
-// This file contains the C entry point called from Rust to perform decoding of
-// 12-bit JPEG data.
+// This file contains the C entry points called from Rust to perform 12-bit JPEG
+// decoding and encoding.
 
 #include <stdint.h>
 #include <stdlib.h>
