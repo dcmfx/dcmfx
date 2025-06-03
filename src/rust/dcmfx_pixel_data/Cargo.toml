@@ -23,7 +23,7 @@ jxl-oxide = "0.12.2"
 miniz_oxide = "0.8.8"
 num-traits = "0.2.19"
 zune-core = "0.4.12"
-zune-jpeg = "0.4.14"
+zune-jpeg = "0.4.15"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm32-unknown-unknown-openbsd-libc = "0.2.0"
