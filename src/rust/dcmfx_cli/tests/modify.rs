@@ -641,6 +641,136 @@ fn jpeg_ls_monochrome_to_jpeg_2000_lossless_only() {
 }
 
 #[test]
+fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "ht-jpeg-2k-lossless-only",
+    "monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "ht-jpeg-2k",
+    "monochrome_jpeg_xl_to_high_throughput_jpeg_2000",
+    &[],
+  );
+}
+
+#[test]
+fn palette_color_to_high_throughput_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "ht-jpeg-2k-lossless-only",
+    "palette_color_to_high_throughput_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn palette_color_to_high_throughput_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "ht-jpeg-2k",
+    "palette_color_to_high_throughput_jpeg_2000",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "ht-jpeg-2k-lossless-only",
+    "explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "ht-jpeg-2k",
+    "explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000",
+    &["--quality", "10"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
+    "ht-jpeg-2k-lossless-only",
+    "explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
+    "ht-jpeg-2k",
+    "explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000",
+    &["--quality", "25"],
+  );
+}
+
+#[test]
+fn rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
+    "ht-jpeg-2k-lossless-only",
+    "rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
+fn rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
+    "ht-jpeg-2k",
+    "rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000",
+    &["--quality", "40"],
+  );
+}
+
+#[test]
+fn jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_rgb() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+    "ht-jpeg-2k-lossless-only",
+    "jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_rgb",
+    &["--photometric-interpretation-color", "RGB"],
+  );
+}
+
+#[test]
+fn jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_ybr_full() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+    "ht-jpeg-2k-lossless-only",
+    "jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_ybr_full",
+    &["--photometric-interpretation-color", "YBR_FULL"],
+  );
+}
+
+#[test]
+fn jpeg_ls_monochrome_to_high_throughput_jpeg_2000_lossless_only() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm",
+    "ht-jpeg-2k-lossless-only",
+    "jpeg_ls_monochrome_to_high_throughput_jpeg_2000_lossless_only",
+    &[],
+  );
+}
+
+#[test]
 fn errors_on_unaligned_multiframe_bitmap() {
   let assert = Command::cargo_bin("dcmfx_cli")
     .unwrap()

@@ -109,7 +109,7 @@ jobs:
 
       - name: Install platform-specific dependencies (Linux)
         if: matrix.rust-target == 'x86_64-unknown-linux-gnu'
-        run: sudo apt-get install -y ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: Install platform-specific dependencies (Windows)
         if: matrix.rust-target == 'x86_64-pc-windows-gnu'
@@ -213,7 +213,7 @@ jobs:
 
   test_examples:
     name: Test examples
-    timeout-minutes: 10
+    timeout-minutes: 15
     runs-on: ubuntu-22.04
 
     steps:

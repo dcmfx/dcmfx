@@ -447,7 +447,8 @@ jobs:
         run: |
           find dcmfx-linux-packages-* -type f -name "*.rpm" -exec cp {} . \;
 
-          sudo apt-get install createrepo-c
+          sudo apt-get update
+          sudo apt-get install -y createrepo-c
           createrepo_c .
 
       - name: Commit and push changes

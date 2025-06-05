@@ -155,6 +155,39 @@ fn test_jpeg_2k_encode_decode_cycle() {
 }
 
 #[test]
+fn test_high_throughput_jpeg_2k_lossless_only_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| {
+        !m.photometric_interpretation().is_ybr_full_422()
+          && (2..=30).contains(&m.bits_stored())
+      })
+      .collect(),
+    &transfer_syntax::HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY,
+    0.0,
+    0.0,
+  );
+}
+
+#[test]
+fn test_high_throughput_jpeg_2k_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| {
+        !m.photometric_interpretation().is_palette_color()
+          && !m.photometric_interpretation().is_ybr_full_422()
+          && (2..=30).contains(&m.bits_stored())
+      })
+      .collect(),
+    &transfer_syntax::HIGH_THROUGHPUT_JPEG_2K,
+    0.02,
+    0.02,
+  );
+}
+
+#[test]
 fn test_deflated_image_frame_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules(),

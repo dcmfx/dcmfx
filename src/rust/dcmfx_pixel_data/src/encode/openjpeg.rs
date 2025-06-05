@@ -6,7 +6,7 @@ use crate::{
   color_image::ColorImageData,
   iods::image_pixel_module::{
     BitsAllocated, ImagePixelModule, PhotometricInterpretation,
-    PixelRepresentation, PlanarConfiguration,
+    PixelRepresentation,
   },
   monochrome_image::MonochromeImageData,
 };
@@ -14,42 +14,6 @@ use crate::{
 // The OpenJPEG library only seems to support bits stored of 2..=30. 1-bit and
 // 31-bit data (even unsigned 31-bit data), didn't encode/decode correctly.
 const OPENJPEG_BITS_STORED_RANGE: core::ops::RangeInclusive<u16> = 2..=30;
-
-/// Returns the Image Pixel Module resulting from encoding using OpenJPEG.
-///
-pub fn encode_image_pixel_module(
-  mut image_pixel_module: ImagePixelModule,
-  quality: Option<u8>,
-) -> Result<ImagePixelModule, ()> {
-  match image_pixel_module.photometric_interpretation() {
-    PhotometricInterpretation::Monochrome1 { .. }
-    | PhotometricInterpretation::Monochrome2 { .. }
-    | PhotometricInterpretation::Rgb => (),
-
-    // YBR_ICT is only permitted for lossy JPEG 2000 encodes
-    PhotometricInterpretation::YbrIct => {
-      if quality.is_none() {
-        return Err(());
-      }
-    }
-
-    // YBR_FULL, YBR_RCT and PALETTE_COLOR are only permitted for lossless JPEG
-    // 2000 encodes
-    PhotometricInterpretation::YbrFull
-    | PhotometricInterpretation::YbrRct
-    | PhotometricInterpretation::PaletteColor { .. } => {
-      if quality.is_some() {
-        return Err(());
-      }
-    }
-
-    _ => return Err(()),
-  };
-
-  image_pixel_module.set_planar_configuration(PlanarConfiguration::Interleaved);
-
-  Ok(image_pixel_module)
-}
 
 /// Encodes a [`MonochromeImage`] into JPEG 2000 raw bytes using OpenJPEG.
 ///

@@ -90,6 +90,7 @@ pub struct ModifyArgs {
       - JPEG Baseline 8-bit\n\
       - JPEG Extended 12-bit\n\
       - JPEG 2000 (Lossy)\n\
+      - High-Throughput JPEG 2000 (Lossy)\n\
       \n\
       Default value: 85",
     value_parser = clap::value_parser!(u8).range(1..=100),
@@ -363,6 +364,7 @@ fn modify_input_source(
     if transfer_syntax == TransferSyntaxArg::JpegBaseline8Bit
       || transfer_syntax == TransferSyntaxArg::JpegLsLossyNearLossless
       || transfer_syntax == TransferSyntaxArg::Jpeg2k
+      || transfer_syntax == TransferSyntaxArg::HighThroughputJpeg2k
     {
       let mut lossy_image_compression = DataSet::new();
       lossy_image_compression.insert(
@@ -503,6 +505,7 @@ fn get_transcode_image_data_functions(
             // When transcoding to JPEG 2000 Lossless Only default to YBR_RCT
             // unless the incoming data is PALETTE_COLOR
             transfer_syntax::JPEG_2K_LOSSLESS_ONLY
+            | transfer_syntax::HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
               if !image_pixel_module
                 .photometric_interpretation()
                 .is_palette_color() =>
@@ -513,7 +516,8 @@ fn get_transcode_image_data_functions(
             }
 
             // When transcoding to JPEG 2000 Lossy default to YBR_ICT
-            transfer_syntax::JPEG_2K => image_pixel_module
+            transfer_syntax::JPEG_2K
+            | transfer_syntax::HIGH_THROUGHPUT_JPEG_2K => image_pixel_module
               .set_photometric_interpretation(
                 PhotometricInterpretation::YbrIct,
               ),

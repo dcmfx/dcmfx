@@ -20,6 +20,8 @@ pub enum TransferSyntaxArg {
   JpegLsLossyNearLossless,
   Jpeg2kLosslessOnly,
   Jpeg2k,
+  HighThroughputJpeg2kLosslessOnly,
+  HighThroughputJpeg2k,
 }
 
 impl TransferSyntaxArg {
@@ -55,6 +57,12 @@ impl TransferSyntaxArg {
       }
       Self::Jpeg2kLosslessOnly => Some(&transfer_syntax::JPEG_2K_LOSSLESS_ONLY),
       Self::Jpeg2k => Some(&transfer_syntax::JPEG_2K),
+      Self::HighThroughputJpeg2kLosslessOnly => {
+        Some(&transfer_syntax::HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY)
+      }
+      Self::HighThroughputJpeg2k => {
+        Some(&transfer_syntax::HIGH_THROUGHPUT_JPEG_2K)
+      }
     }
   }
 }
@@ -76,6 +84,8 @@ impl ValueEnum for TransferSyntaxArg {
       Self::JpegLsLossyNearLossless,
       Self::Jpeg2kLosslessOnly,
       Self::Jpeg2k,
+      Self::HighThroughputJpeg2kLosslessOnly,
+      Self::HighThroughputJpeg2k,
     ]
   }
 
@@ -97,7 +107,6 @@ impl ValueEnum for TransferSyntaxArg {
           Prefer the 'Explicit VR Little Endian' transfer syntax over this one \
           whenever possible.\n\
           \n\
-          Pixel data: Native uncompressed\n\
           Encapsulated: No\n\
           UID: 1.2.840.10008.1.2
           ",
@@ -111,7 +120,6 @@ impl ValueEnum for TransferSyntaxArg {
           representations that improve reliability and clarity of the DICOM \
           P10 data.\n\
           \n\
-          Pixel data: Native uncompressed\n\
           Encapsulated: No\n\
           UID: 1.2.840.10008.1.2.1
           ",
@@ -125,7 +133,6 @@ impl ValueEnum for TransferSyntaxArg {
           ordering. This transfer syntax was retired in DICOM 2017c and is \
           only relevant for legacy compatibility.\n\
           \n\
-          Pixel data: Native uncompressed\n\
           Encapsulated: No\n\
           UID: 1.2.840.10008.1.2.2",
         ),
@@ -139,7 +146,6 @@ impl ValueEnum for TransferSyntaxArg {
           Similar to Explicit VR Little Endian but stores the pixel data as \
           uncompressed encapsulated data.\n\
           \n\
-          Pixel data: Native uncompressed\n\
           Encapsulated: Yes\n\
           UID: 1.2.840.10008.1.2.1.98",
         )
@@ -152,7 +158,6 @@ impl ValueEnum for TransferSyntaxArg {
           compressed using the DEFLATE algorithm. The compression level can be \
           set with the --zlib-compression-level argument.\n\
           \n\
-          Pixel data: Native uncompressed\n\
           Encapsulated: No\n\
           UID: 1.2.840.10008.1.2.1.99
           ",
@@ -162,12 +167,11 @@ impl ValueEnum for TransferSyntaxArg {
       Self::DeflatedImageFrameCompression => {
         PossibleValue::new("deflated-image-frame-compression").help(
           "\n\
-          Similar to Explicit VR Little Endian but stores the pixel data as \
-          encapsulated data and compresses each pixel data fragment using the \
-          DEFLATE algorithm. The compression level can be set with the \
-          --zlib-compression-level argument.\n\
+          Similar to Explicit VR Little Endian but encapsulates the pixel data \
+          and compresses each frame using the DEFLATE algorithm. The \
+          compression level can be set with the --zlib-compression-level \
+          argument.\n\
           \n\
-          Pixel data: Native deflated\n\
           Encapsulated: Yes\n\
           UID: 1.2.840.10008.1.2.1.98",
         )
@@ -178,7 +182,6 @@ impl ValueEnum for TransferSyntaxArg {
         Encodes pixel data using DICOM's Run-Length Encoding for lossless \
         compression of monochrome and color pixel data.\n\
         \n\
-        Pixel data: RLE Lossless compressed\n\
         Encapsulated: Yes\n\
         UID: 1.2.840.10008.1.2.5",
       ),
@@ -187,9 +190,8 @@ impl ValueEnum for TransferSyntaxArg {
         "\n\
         Lossy image compression using the widely supported JPEG Baseline \
         (Process 1) format. Limited to 8-bit pixel data. The quality level to \
-        use for the JPEG encoding can be set with the --quality argument.\n\
+        use for the encoding can be set with the --quality argument.\n\
         \n\
-        Pixel data: JPEG Baseline (8-bit) compressed\n\
         Encapsulated: Yes\n\
         UID: 1.2.840.10008.1.2.4.50",
       ),
@@ -199,18 +201,16 @@ impl ValueEnum for TransferSyntaxArg {
           "\n\
           Lossy image compression using the JPEG Extended (Process 2 & 4) \
           format. Limited to 12-bit pixel data. The quality level to use for \
-          the JPEG encoding can be set with the --quality argument.\n\
+          the encoding can be set with the --quality argument.\n\
           \n\
-          Pixel data: JPEG Extended (Process 2 & 4) compressed\n\
           Encapsulated: Yes\n\
           UID: 1.2.840.10008.1.2.4.51",
         ),
 
       Self::JpegLsLossless => PossibleValue::new("jpeg-ls-lossless").help(
         "\n\
-        Lossless image compression using the JPEG-LS image compresion format.\n\
+        Lossless image compression using the JPEG-LS format.\n\
         \n\
-        Pixel data: JPEG-LS Lossless Image Compression\n\
         Encapsulated: Yes\n\
         UID: 1.2.840.10008.1.2.4.80",
       ),
@@ -218,10 +218,8 @@ impl ValueEnum for TransferSyntaxArg {
       Self::JpegLsLossyNearLossless => {
         PossibleValue::new("jpeg-ls-lossy-near-lossless").help(
           "\n\
-          Lossy near-lossless image compression using the JPEG-LS image \
-          compression format.\n\
+          Lossy near-lossless image compression using the JPEG-LS format.\n\
           \n\
-          Pixel data: JPEG-LS Lossy (Near-Lossless) Image Compression\n\
           Encapsulated: Yes\n\
           UID: 1.2.840.10008.1.2.4.81",
         )
@@ -230,23 +228,40 @@ impl ValueEnum for TransferSyntaxArg {
       Self::Jpeg2kLosslessOnly => PossibleValue::new("jpeg-2k-lossless-only")
         .help(
           "\n\
-          Lossless image compression using the JPEG 2000 image compression \
-          format.\n\
+          Lossless image compression using the JPEG 2000 format.\n\
           \n\
-          Pixel data: JPEG 2000 Image Compression (Lossless Only)\n\
           Encapsulated: Yes\n\
           UID: 1.2.840.10008.1.2.4.90",
         ),
 
       Self::Jpeg2k => PossibleValue::new("jpeg-2k").help(
         "\n\
-          Lossy image compression using the JPEG 2000 image compression \
-          format. The quality level to use for the JPEG encoding can be set \
-          with the --quality argument.\n\
+        Lossy image compression using the JPEG 2000 format. The quality level \
+        to use for the encoding can be set with the --quality argument.\n\
+        \n\
+        Encapsulated: Yes\n\
+        UID: 1.2.840.10008.1.2.4.91",
+      ),
+
+      Self::HighThroughputJpeg2kLosslessOnly => {
+        PossibleValue::new("ht-jpeg-2k-lossless-only").help(
+          "\n\
+          Lossless image compression using the High-Throughput JPEG 2000 \
+          format.\n\
           \n\
-          Pixel data: JPEG 2000 Image Compression\n\
           Encapsulated: Yes\n\
-          UID: 1.2.840.10008.1.2.4.91",
+          UID: 1.2.840.10008.1.2.4.201",
+        )
+      }
+
+      &Self::HighThroughputJpeg2k => PossibleValue::new("ht-jpeg-2k").help(
+        "\n\
+        Lossy image compression using the High-Throughput JPEG 2000 format. \
+        The quality level to use for the encoding can be set with the \
+        --quality argument.\n\
+        \n\
+        Encapsulated: Yes\n\
+        UID: 1.2.840.10008.1.2.4.202",
       ),
     })
   }
@@ -266,6 +281,8 @@ pub fn supports_palette_color(transfer_syntax: &TransferSyntax) -> bool {
     || transfer_syntax == &transfer_syntax::RLE_LOSSLESS
     || transfer_syntax == &transfer_syntax::JPEG_LS_LOSSLESS
     || transfer_syntax == &transfer_syntax::JPEG_2K_LOSSLESS_ONLY
+    || transfer_syntax
+      == &transfer_syntax::HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
 }
 
 /// Returns whether a transfer syntax supports the `YBR_FULL_422` photometric

@@ -15,10 +15,12 @@ use crate::{
 };
 
 mod charls;
+mod jpeg_2000;
 mod jpeg_encoder;
 mod libjpeg_12bit;
 mod native;
 mod openjpeg;
+mod openjph;
 mod rle_lossless;
 
 /// Configuration used when encoding pixel data.
@@ -47,6 +49,7 @@ impl PixelDataEncodeConfig {
   /// - JPEG Baseline 8-bit
   /// - JPEG Extended 12-bit
   /// - JPEG 2000 (Lossy)
+  /// - High-Throughput JPEG 2000 (Lossy)
   ///
   /// Default: 85.
   ///
@@ -251,10 +254,19 @@ pub fn encode_image_pixel_module(
     }
 
     &JPEG_2K_LOSSLESS_ONLY => {
-      openjpeg::encode_image_pixel_module(image_pixel_module.clone(), None)
+      jpeg_2000::encode_image_pixel_module(image_pixel_module.clone(), None)
     }
 
-    &JPEG_2K => openjpeg::encode_image_pixel_module(
+    &JPEG_2K => jpeg_2000::encode_image_pixel_module(
+      image_pixel_module.clone(),
+      Some(encode_config.quality),
+    ),
+
+    &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY => {
+      jpeg_2000::encode_image_pixel_module(image_pixel_module.clone(), None)
+    }
+
+    &HIGH_THROUGHPUT_JPEG_2K => jpeg_2000::encode_image_pixel_module(
       image_pixel_module.clone(),
       Some(encode_config.quality),
     ),
@@ -325,6 +337,18 @@ pub fn encode_monochrome(
     )
     .map(PixelDataFrame::new_from_bytes),
 
+    &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY => {
+      openjph::encode_monochrome(image, image_pixel_module, None)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &HIGH_THROUGHPUT_JPEG_2K => openjph::encode_monochrome(
+      image,
+      image_pixel_module,
+      Some(encode_config.quality),
+    )
+    .map(PixelDataFrame::new_from_bytes),
+
     &DEFLATED_IMAGE_FRAME_COMPRESSION => deflate_frame_data(
       native::encode_monochrome(image, image_pixel_module)?,
       encode_config.zlib_compression_level,
@@ -383,6 +407,18 @@ pub fn encode_color(
     }
 
     &JPEG_2K => openjpeg::encode_color(
+      image,
+      image_pixel_module,
+      Some(encode_config.quality),
+    )
+    .map(PixelDataFrame::new_from_bytes),
+
+    &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY => {
+      openjph::encode_color(image, image_pixel_module, None)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    &HIGH_THROUGHPUT_JPEG_2K => openjph::encode_color(
       image,
       image_pixel_module,
       Some(encode_config.quality),
