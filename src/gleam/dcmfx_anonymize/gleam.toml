@@ -2,7 +2,7 @@ name = "dcmfx_anonymize"
 version = "0.21.0"
 description = "DCMfx anonymize library"
 licences = ["AGPL-3.0-only"]
-gleam = ">= 1.11.0"
+gleam = ">= 1.11.1"
 
 [repository]
 type = "github"
