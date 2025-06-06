@@ -14,12 +14,14 @@ use crate::{
   iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 
+#[cfg(not(target_arch = "wasm32"))]
 mod charls;
 mod jpeg_2000;
 mod jpeg_encoder;
 mod libjpeg_12bit;
 mod native;
 mod openjpeg;
+#[cfg(not(target_arch = "wasm32"))]
 mod openjph;
 mod rle_lossless;
 
@@ -245,10 +247,12 @@ pub fn encode_image_pixel_module(
       libjpeg_12bit::encode_image_pixel_module(image_pixel_module.clone())
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     &JPEG_LS_LOSSLESS => {
       charls::encode_image_pixel_module(image_pixel_module.clone(), false)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::encode_image_pixel_module(image_pixel_module.clone(), true)
     }
@@ -262,10 +266,12 @@ pub fn encode_image_pixel_module(
       Some(encode_config.quality),
     ),
 
+    #[cfg(not(target_arch = "wasm32"))]
     &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY => {
       jpeg_2000::encode_image_pixel_module(image_pixel_module.clone(), None)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     &HIGH_THROUGHPUT_JPEG_2K => jpeg_2000::encode_image_pixel_module(
       image_pixel_module.clone(),
       Some(encode_config.quality),
@@ -315,11 +321,13 @@ pub fn encode_monochrome(
         .map(PixelDataFrame::new_from_bytes)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     &JPEG_LS_LOSSLESS => {
       charls::encode_monochrome(image, image_pixel_module, false)
         .map(PixelDataFrame::new_from_bytes)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::encode_monochrome(image, image_pixel_module, true)
         .map(PixelDataFrame::new_from_bytes)
@@ -337,11 +345,13 @@ pub fn encode_monochrome(
     )
     .map(PixelDataFrame::new_from_bytes),
 
+    #[cfg(not(target_arch = "wasm32"))]
     &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY => {
       openjph::encode_monochrome(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     &HIGH_THROUGHPUT_JPEG_2K => openjph::encode_monochrome(
       image,
       image_pixel_module,
@@ -393,9 +403,11 @@ pub fn encode_color(
         .map(PixelDataFrame::new_from_bytes)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     &JPEG_LS_LOSSLESS => charls::encode_color(image, image_pixel_module, false)
       .map(PixelDataFrame::new_from_bytes),
 
+    #[cfg(not(target_arch = "wasm32"))]
     &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::encode_color(image, image_pixel_module, true)
         .map(PixelDataFrame::new_from_bytes)
@@ -413,11 +425,13 @@ pub fn encode_color(
     )
     .map(PixelDataFrame::new_from_bytes),
 
+    #[cfg(not(target_arch = "wasm32"))]
     &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY => {
       openjph::encode_color(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     &HIGH_THROUGHPUT_JPEG_2K => openjph::encode_color(
       image,
       image_pixel_module,
