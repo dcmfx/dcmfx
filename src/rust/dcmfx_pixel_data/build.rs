@@ -281,6 +281,7 @@ fn compile(
     .any(|f| f.ends_with(".cpp") || f.ends_with(".cxx"))
   {
     build.cpp(true);
+    build.static_crt(true);
 
     // Target C++14
     if std::env::var("TARGET").unwrap().contains("msvc") {
@@ -291,8 +292,10 @@ fn compile(
   }
 
   // Optimize builds
-  build.define("NDEBUG", "1");
-  build.opt_level(3);
+  if std::env::var("PROFILE").unwrap() == "release" {
+    build.define("NDEBUG", "1");
+    build.opt_level(3);
+  }
 
   // Add build flags
   for build_flag in build_flags {

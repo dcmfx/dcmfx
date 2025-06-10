@@ -31,7 +31,6 @@ jobs:
     strategy:
       matrix:
         runs-on:
-          - windows-2019
           - windows-2022
           - windows-2025
 
@@ -48,7 +47,7 @@ jobs:
           $version = (Invoke-RestMethod -Uri "https://api.github.com/repos/dcmfx/dcmfx/releases/latest").tag_name
 
           # Download the release
-          $downloadUrl = "https://github.com/dcmfx/dcmfx/releases/download/$version/dcmfx-$version-x86_64-pc-windows-gnu.tar.gz"
+          $downloadUrl = "https://github.com/dcmfx/dcmfx/releases/download/$version/dcmfx-$version-x86_64-pc-windows-msvc.tar.gz"
           Invoke-WebRequest -Uri $downloadUrl -OutFile "dcmfx.tar.gz"
 
           # Extract it

@@ -58,7 +58,7 @@ jobs:
           - aarch64-apple-darwin
           - aarch64-unknown-linux-musl
           - x86_64-apple-darwin
-          - x86_64-pc-windows-gnu
+          - x86_64-pc-windows-msvc
           - x86_64-unknown-linux-musl
         include:
           - rust-target: aarch64-apple-darwin
@@ -74,10 +74,9 @@ jobs:
             toolchain: x86_64-apple-darwin
             runs-on: macos-13
             shell: bash
-          - rust-target: x86_64-pc-windows-gnu
-            toolchain: x86_64-pc-windows-gnu
-            runs-on: windows-2022
-            shell: msys2 {0}
+          - rust-target: x86_64-pc-windows-msvc
+            toolchain: x86_64-pc-windows-msvc
+            runs-on: windows-2025
           - rust-target: x86_64-unknown-linux-musl
             toolchain: x86_64-unknown-linux-gnu
             musl-target: x86_64-linux-musl
@@ -103,20 +102,6 @@ jobs:
           toolchain: 1.87-${{ matrix.toolchain }}
           cache-workspaces: src/rust
           target: ${{ matrix.rust-target }}
-
-      - name: Setup MSYS2 (Windows)
-        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
-        uses: msys2/setup-msys2@v2
-        with:
-          release: false
-          install: >-
-            git
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-gcc
-
-      - name: Add Cargo to MSYS2 path (Windows)
-        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
-        run: echo 'export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"' >> ~/.bash_profile
 
       - name: Setup musl toolchain (Linux)
         if: matrix.rust-target == 'aarch64-unknown-linux-musl' || matrix.rust-target == 'x86_64-unknown-linux-musl'
@@ -156,7 +141,7 @@ jobs:
 
       - name: Package
         run: |
-          if [ "${{ matrix.rust-target }}" = "x86_64-pc-windows-gnu" ]; then
+          if [ "${{ matrix.rust-target }}" = "x86_64-pc-windows-msvc" ]; then
             BINARY_SUFFIX=".exe"
           else
             BINARY_SUFFIX=""

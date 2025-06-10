@@ -57,30 +57,22 @@ jobs:
         rust-target:
           - aarch64-apple-darwin
           - x86_64-apple-darwin
-          - x86_64-pc-windows-gnu
+          - x86_64-pc-windows-msvc
           - x86_64-unknown-linux-gnu
         include:
           - rust-target: aarch64-apple-darwin
             runs-on: macos-14
-            shell: bash
           - rust-target: x86_64-apple-darwin
             runs-on: macos-13
-            shell: bash
-          - rust-target: x86_64-pc-windows-gnu
-            runs-on: windows-2022
-            shell: msys2 {0}
+          - rust-target: x86_64-pc-windows-msvc
+            runs-on: windows-2025
           - rust-target: x86_64-unknown-linux-gnu
             runs-on: ubuntu-24.04
-            shell: bash
 
     runs-on: ${{ matrix.runs-on }}
 
     env:
       CARGO_TERM_COLOR: always
-
-    defaults:
-      run:
-        shell: ${{ matrix.shell }}
 
     steps:
       - name: Checkout repository
@@ -93,16 +85,6 @@ jobs:
           components: clippy, rustfmt
           cache-workspaces: src/rust
 
-      - name: Install MSYS2 (Windows)
-        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
-        uses: msys2/setup-msys2@v2
-        with:
-          release: false
-          install: >-
-            git
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-gcc
-
       - name: Install platform-specific dependencies (macOS)
         if: matrix.rust-target == 'aarch64-apple-darwin' || matrix.rust-target == 'x86_64-apple-darwin'
         run: brew install ffmpeg
@@ -112,15 +94,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: Install platform-specific dependencies (Windows)
-        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
-        shell: powershell
+        if: matrix.rust-target == 'x86_64-pc-windows-msvc'
         run: choco install ffmpeg -y --no-progress
-
-      - name: Add Cargo and FFmpeg to MSYS2 path (Windows)
-        if: matrix.rust-target == 'x86_64-pc-windows-gnu'
-        run: |
-          echo 'export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"' >> ~/.bash_profile
-          echo 'export PATH="/c/ProgramData/chocolatey/lib/ffmpeg/tools/ffmpeg/bin:$PATH"' >> ~/.bash_profile
 
       - name: Check code formatting
         working-directory: src/rust
@@ -162,10 +137,14 @@ jobs:
         working-directory: src/rust
         run: cargo build --frozen --package dcmfx --target wasm32-unknown-unknown --no-default-features
 
-  test_dcmfx_rust_windows_msvc_library_build:
-    name: Test DCMfx Rust Windows MSVC library build
+  test_dcmfx_rust_windows_gnu_library_build:
+    name: Test DCMfx Rust Windows GNU library build
     timeout-minutes: 10
-    runs-on: windows-2022
+    runs-on: windows-2025
+
+    defaults:
+      run:
+        shell: msys2 {0}
 
     steps:
       - name: Checkout repository
@@ -174,14 +153,26 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.87-pc-windows-msvc
+          toolchain: 1.87-pc-windows-gnu
           cache-workspaces: src/rust
+
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          release: false
+          install: >-
+            git
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-gcc
+
+      - name: Add Cargo to MSYS2 path
+        run: echo 'export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"' >> ~/.bash_profile
 
       - name: Fetch dependencies
         working-directory: src/rust
         run: cargo fetch --locked
 
-      - name: Build for Windows MSVC target
+      - name: Build for Windows GNU target
         working-directory: src/rust
         run: cargo build --frozen --package dcmfx
 
