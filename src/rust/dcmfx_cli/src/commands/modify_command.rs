@@ -85,7 +85,7 @@ pub struct ModifyArgs {
       compression quality in the range 1-100. A quality of 100 does not result \
       in lossless compression.\n\
       \n\
-      The quality value applies to the following transfer syntaxes:\n\
+      The quality value applies to:\n\
       \n\
       - JPEG Baseline 8-bit\n\
       - JPEG Extended 12-bit\n\
@@ -131,8 +131,7 @@ pub struct ModifyArgs {
       interpretation may differ from the input for the following reasons:\n\
       \n\
       1. If the output transfer syntax doesn't support 'PALETTE_COLOR' then \
-         the palette color image data will be automatically expanded to \
-         'RGB'.\n\
+         palette color image data will be automatically expanded to 'RGB'.\n\
       \n\
       2. If the output transfer syntax doesn't support 'YBR_FULL_422' then the \
          color image's data will be automatically expanded to 'YBR_FULL'."
@@ -515,7 +514,7 @@ fn get_transcode_image_data_functions(
               )
             }
 
-            // When transcoding to JPEG 2000 Lossy default to YBR_ICT
+            // When transcoding to JPEG 2000 lossy default to YBR_ICT
             transfer_syntax::JPEG_2K
             | transfer_syntax::HIGH_THROUGHPUT_JPEG_2K => image_pixel_module
               .set_photometric_interpretation(

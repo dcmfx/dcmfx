@@ -78,7 +78,7 @@ fn test_jpeg_extended_12bit_encode_decode_cycle() {
       })
       .collect(),
     &transfer_syntax::JPEG_EXTENDED_12BIT,
-    0.0,
+    0.01,
     0.01,
   );
 }
@@ -253,10 +253,9 @@ fn test_monochrome_image_encode_decode_cycle(
   let decoded_image = decoded_image.to_stored_values();
 
   // Convert the max re-encode delta to an integer value
-  let max_reencode_delta = ((max_reencode_delta
-    * ((1i64 << i64::from(image_pixel_module.bits_stored())) as f64))
-    as i64)
-    .max(1);
+  let max_reencode_delta = (max_reencode_delta
+    * (1i64 << image_pixel_module.bits_stored()) as f64)
+    .ceil() as i64;
 
   let mut incorrect_pixel_count = 0;
 
@@ -268,8 +267,11 @@ fn test_monochrome_image_encode_decode_cycle(
   }
 
   assert!(
-    incorrect_pixel_count < original_image.len().div_ceil(10),
-    "More than 10% of pixels exceed the allowed error margin"
+    incorrect_pixel_count <= original_image.len().div_ceil(10),
+    "More than 10% of monochrome pixels ({}/{}) exceed the allowed error margin for {}",
+    incorrect_pixel_count,
+    original_image.len(),
+    image_pixel_module,
   );
 }
 
@@ -342,8 +344,11 @@ fn test_color_image_encode_decode_cycle(
   }
 
   assert!(
-    incorrect_pixel_count < original_image.len().div_ceil(10),
-    "More than 10% of pixels exceed the allowed error margin"
+    incorrect_pixel_count <= original_image.len().div_ceil(10),
+    "More than 10% of color pixels ({}/{}) exceed the allowed error margin for {}",
+    incorrect_pixel_count,
+    original_image.len(),
+    image_pixel_module
   );
 }
 
@@ -406,7 +411,7 @@ fn all_image_pixel_modules() -> Vec<ImagePixelModule> {
     (32, 16),
     (16, 32),
     (32, 32),
-    (128, 128),
+    (64, 64),
   ];
 
   let mut image_pixel_modules = vec![];

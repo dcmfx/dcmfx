@@ -62,8 +62,8 @@ pub fn decode_monochrome(
         pixel_representation: PixelRepresentation::Unsigned,
       },
       BitsAllocated::Eight,
-      BitDepth::IntegerSample { bits_per_sample: 8 },
-    ) => {
+      BitDepth::IntegerSample { bits_per_sample },
+    ) if bits_per_sample <= 8 => {
       let mut buffer = vec![0u8; image_pixel_module.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 
@@ -84,10 +84,8 @@ pub fn decode_monochrome(
         pixel_representation: PixelRepresentation::Unsigned,
       },
       BitsAllocated::Sixteen,
-      BitDepth::IntegerSample {
-        bits_per_sample: 16,
-      },
-    ) => {
+      BitDepth::IntegerSample { bits_per_sample },
+    ) if bits_per_sample <= 16 => {
       let mut buffer = vec![0u16; image_pixel_module.pixel_count()];
       render_samples(&jxl_render, &mut buffer)?;
 

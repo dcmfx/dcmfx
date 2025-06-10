@@ -190,7 +190,7 @@ pub fn encode_color(
     return Err(PixelDataEncodeError::NotSupported {
       image_pixel_module: Box::new(image_pixel_module.clone()),
       input_bits_allocated: image.bits_allocated(),
-      input_color_space: None,
+      input_color_space: Some(image.color_space()),
     });
   }
 
