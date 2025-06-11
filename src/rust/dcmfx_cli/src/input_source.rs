@@ -104,7 +104,13 @@ pub fn get_input_sources(input_filenames: &[PathBuf]) -> Vec<InputSource> {
           } else {
             for path in paths {
               match path {
-                Ok(path) => input_sources.push(InputSource::LocalFile { path }),
+                Ok(path) => {
+                  if path.is_dir() {
+                    continue;
+                  }
+
+                  input_sources.push(InputSource::LocalFile { path });
+                }
 
                 Err(e) => {
                   eprintln!(
