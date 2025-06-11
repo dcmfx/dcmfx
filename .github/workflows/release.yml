@@ -64,16 +64,13 @@ jobs:
           - rust-target: aarch64-apple-darwin
             toolchain: aarch64-apple-darwin
             runs-on: macos-14
-            shell: bash
           - rust-target: aarch64-unknown-linux-musl
             toolchain: x86_64-unknown-linux-gnu
             musl-target: aarch64-linux-musl
             runs-on: ubuntu-24.04
-            shell: bash
           - rust-target: x86_64-apple-darwin
             toolchain: x86_64-apple-darwin
             runs-on: macos-13
-            shell: bash
           - rust-target: x86_64-pc-windows-msvc
             toolchain: x86_64-pc-windows-msvc
             runs-on: windows-2025
@@ -81,16 +78,11 @@ jobs:
             toolchain: x86_64-unknown-linux-gnu
             musl-target: x86_64-linux-musl
             runs-on: ubuntu-24.04
-            shell: bash
 
     runs-on: ${{ matrix.runs-on }}
 
     env:
       CARGO_TERM_COLOR: always
-
-    defaults:
-      run:
-        shell: ${{ matrix.shell }}
 
     steps:
       - name: Checkout repository
@@ -140,6 +132,7 @@ jobs:
         run: cargo build --release --offline --target ${{ matrix.rust-target }} --package dcmfx_cli
 
       - name: Package
+        shell: bash
         run: |
           if [ "${{ matrix.rust-target }}" = "x86_64-pc-windows-msvc" ]; then
             BINARY_SUFFIX=".exe"
