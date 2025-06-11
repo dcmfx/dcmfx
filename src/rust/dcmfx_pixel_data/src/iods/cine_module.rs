@@ -171,7 +171,9 @@ impl CineModule {
     &self,
     multiframe_module: &MultiFrameModule,
   ) -> usize {
-    let number_of_frames = multiframe_module.number_of_frames;
+    let Some(number_of_frames) = multiframe_module.number_of_frames else {
+      return 1;
+    };
 
     let start_trim = self.start_trim.unwrap_or(0);
 

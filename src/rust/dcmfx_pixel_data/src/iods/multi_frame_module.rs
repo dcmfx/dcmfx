@@ -13,7 +13,7 @@ use dcmfx_core::{
 ///
 #[derive(Clone, Debug, PartialEq)]
 pub struct MultiFrameModule {
-  pub number_of_frames: usize,
+  pub number_of_frames: Option<usize>,
   pub frame_increment_pointer: Option<DataElementTag>,
   pub stereo_pairs_present: Option<bool>,
   pub encapsulated_pixel_data_value_total_length: Option<usize>,
@@ -41,8 +41,11 @@ impl IodModule for MultiFrameModule {
   }
 
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
-    let number_of_frames =
-      data_set.get_int::<usize>(dictionary::NUMBER_OF_FRAMES.tag)?;
+    let number_of_frames = if data_set.has(dictionary::NUMBER_OF_FRAMES.tag) {
+      Some(data_set.get_int::<usize>(dictionary::NUMBER_OF_FRAMES.tag)?)
+    } else {
+      None
+    };
 
     let tag = dictionary::FRAME_INCREMENT_POINTER.tag;
     let frame_increment_pointer = if data_set.has(tag) {

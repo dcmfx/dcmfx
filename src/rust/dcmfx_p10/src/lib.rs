@@ -75,7 +75,7 @@ pub use transforms::p10_print_transform::P10PrintTransform;
 /// Length data element.
 ///
 #[cfg(feature = "std")]
-pub fn is_valid_file(filename: String) -> bool {
+pub fn is_valid_file<P: AsRef<Path>>(filename: P) -> bool {
   match File::open(filename) {
     Ok(mut file) => {
       let mut buffer = vec![0u8, 138];
