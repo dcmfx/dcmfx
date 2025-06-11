@@ -78,7 +78,7 @@ pub use transforms::p10_print_transform::P10PrintTransform;
 pub fn is_valid_file<P: AsRef<Path>>(filename: P) -> bool {
   match File::open(filename) {
     Ok(mut file) => {
-      let mut buffer = vec![0u8, 138];
+      let mut buffer = vec![0u8; 138];
       match file.read_exact(&mut buffer) {
         Ok(_) => is_valid_bytes(&buffer),
         Err(_) => false,

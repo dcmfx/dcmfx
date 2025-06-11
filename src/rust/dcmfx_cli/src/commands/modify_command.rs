@@ -36,6 +36,13 @@ pub struct ModifyArgs {
   )]
   input_filenames: Vec<PathBuf>,
 
+  #[arg(
+    long,
+    help = "Whether to ignore input files that don't contain DICOM P10 data.",
+    default_value_t = false
+  )]
+  ignore_invalid: bool,
+
   #[clap(
     long,
     short,
@@ -269,6 +276,10 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
   }
 
   for input_source in input_sources {
+    if args.ignore_invalid && !input_source.is_dicom_p10() {
+      continue;
+    }
+
     let output_filename: PathBuf = if args.in_place {
       input_source.path()
     } else if let Some(output_filename) = &args.output_filename {

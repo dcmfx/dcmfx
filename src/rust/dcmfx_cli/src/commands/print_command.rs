@@ -20,6 +20,13 @@ pub struct PrintArgs {
 
   #[arg(
     long,
+    help = "Whether to ignore input files that don't contain DICOM P10 data.",
+    default_value_t = false
+  )]
+  ignore_invalid: bool,
+
+  #[arg(
+    long,
     short,
     help = "The maximum width in characters of the printed output. By default \
       this is set to the width of the active terminal, or 80 characters if the \
@@ -50,6 +57,10 @@ pub fn run(args: &PrintArgs) -> Result<(), ()> {
   }
 
   for input_source in input_sources {
+    if args.ignore_invalid && !input_source.is_dicom_p10() {
+      continue;
+    }
+
     match print_input_source(&input_source, &print_options) {
       Ok(()) => (),
 

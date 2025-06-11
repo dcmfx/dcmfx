@@ -30,6 +30,15 @@ impl InputSource {
     }
   }
 
+  /// Returns whether the input source is valid DICOM P10 data.
+  ///
+  pub fn is_dicom_p10(&self) -> bool {
+    match self {
+      InputSource::Stdin => true,
+      InputSource::LocalFile { path } => dcmfx::p10::is_valid_file(path),
+    }
+  }
+
   /// Returns path to the output file for this input source taking into account
   /// the specified output suffix and output directory.
   ///

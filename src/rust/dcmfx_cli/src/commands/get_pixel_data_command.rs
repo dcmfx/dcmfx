@@ -35,6 +35,13 @@ pub struct GetPixelDataArgs {
 
   #[arg(
     long,
+    help = "Whether to ignore input files that don't contain DICOM P10 data.",
+    default_value_t = false
+  )]
+  ignore_invalid: bool,
+
+  #[arg(
+    long,
     short = 'd',
     help = "The directory to write output files into. The names of the output \
       files will be the name of the input file suffixed with a 4-digit frame \
@@ -357,6 +364,10 @@ pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
   crate::validate_output_args(&input_sources, &None, &args.output_directory);
 
   for input_source in input_sources {
+    if args.ignore_invalid && !input_source.is_dicom_p10() {
+      continue;
+    }
+
     let output_prefix = input_source.output_path("", &args.output_directory);
 
     match get_pixel_data_from_input_source(&input_source, output_prefix, args) {
