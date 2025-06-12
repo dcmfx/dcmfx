@@ -1040,11 +1040,18 @@ fn read_data_element_header(
     False -> transfer_syntax.vr_serialization
   }
 
-  // File Meta Information data elements aren't allowed in the main data set
-  let is_invalid_data_element = case tag.group, context.next_action {
-    0x0002, ReadFileMetaInformation(..) -> False
-    0x0002, _ -> True
-    _, _ -> False
+  // File Meta Information data elements aren't allowed in the root of the main
+  // data set. They are allowed in sequence items only because this has been
+  // observed in the wild (specifically TransferSyntaxUID as the first data
+  // element in an item), however this is not valid according to the spec.
+  let is_invalid_data_element = case
+    tag.group,
+    data_set_path.is_root(context.path),
+    context.next_action
+  {
+    0x0002, _, ReadFileMetaInformation(..) -> False
+    0x0002, True, _ -> True
+    _, _, _ -> False
   }
   use <- bool.guard(
     is_invalid_data_element,

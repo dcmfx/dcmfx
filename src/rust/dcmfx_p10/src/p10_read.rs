@@ -904,8 +904,13 @@ impl P10ReadContext {
       transfer_syntax.vr_serialization
     };
 
-    // File Meta Information data elements aren't allowed in the main data set
+    // File Meta Information data elements aren't allowed in the root of the
+    // main data set. They are allowed in sequence items only because this has
+    // been observed in the wild (specifically TransferSyntaxUID as the first
+    // data element in an item), however this is not valid according to the
+    // spec.
     if tag.group == 0x0002
+      && self.path.is_root()
       && !matches!(self.next_action, NextAction::ReadFileMetaInformation { .. })
     {
       return Err(P10Error::DataInvalid {
