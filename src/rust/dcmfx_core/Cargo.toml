@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx_core"
-version = "0.22.0"
+version = "0.22.1"
 description = "DCMfx core library"
 
 repository.workspace = true
