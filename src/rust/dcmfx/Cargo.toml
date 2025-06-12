@@ -12,7 +12,7 @@ homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
-dcmfx_anonymize = { path = "../dcmfx_anonymize" }
+dcmfx_anonymize = { path = "../dcmfx_anonymize", default-features = false }
 dcmfx_character_set = { path = "../dcmfx_character_set", default-features = false }
 dcmfx_core = { path = "../dcmfx_core", default-features = false }
 dcmfx_json = { path = "../dcmfx_json", default-features = false }
@@ -30,6 +30,7 @@ walkdir = "2.5.0"
 [features]
 default = ["std"]
 std = [
+  "dcmfx_anonymize/std",
   "dcmfx_character_set/std",
   "dcmfx_core/std",
   "dcmfx_json/std",

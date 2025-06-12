@@ -11,4 +11,8 @@ homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
-dcmfx_core = { path = "../dcmfx_core" }
+dcmfx_core = { path = "../dcmfx_core", default-features = false }
+
+[features]
+default = ["std"]
+std = ["dcmfx_core/std"]

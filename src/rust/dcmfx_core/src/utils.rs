@@ -2,7 +2,7 @@
 use std::rc::Rc;
 
 #[cfg(not(feature = "std"))]
-use alloc::{format, rc::Rc, string::String, vec::Vec};
+use alloc::{format, rc::Rc, string::String, vec, vec::Vec};
 
 /// A reference counted byte slice holds an `Rc<Vec<u8>>` to a shareable buffer,
 /// along with a range that specifies the part of that buffer that this slice
@@ -14,7 +14,7 @@ use alloc::{format, rc::Rc, string::String, vec::Vec};
 #[derive(Clone)]
 pub struct RcByteSlice {
   data: Rc<Vec<u8>>,
-  range: std::ops::Range<usize>,
+  range: core::ops::Range<usize>,
 }
 
 impl RcByteSlice {
@@ -101,7 +101,7 @@ impl PartialEq for RcByteSlice {
   }
 }
 
-impl std::ops::Deref for RcByteSlice {
+impl core::ops::Deref for RcByteSlice {
   type Target = [u8];
 
   fn deref(&self) -> &Self::Target {
