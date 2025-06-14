@@ -291,9 +291,16 @@ fn compile(
     }
   }
 
-  // Optimize builds
-  if std::env::var("PROFILE").unwrap() == "release" {
+  let is_release = std::env::var("PROFILE").unwrap() == "release";
+
+  // Remove asserts and debug code from release builds, and also from WASM
+  // builds because assert() doesn't work on that target
+  if is_release || std::env::var("TARGET").unwrap().contains("wasm") {
     build.define("NDEBUG", "1");
+  }
+
+  // Optimize release builds
+  if is_release {
     build.opt_level(3);
   }
 

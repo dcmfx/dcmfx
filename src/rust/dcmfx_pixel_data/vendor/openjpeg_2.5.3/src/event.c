@@ -120,21 +120,21 @@ OPJ_BOOL opj_event_msg(opj_event_mgr_t* p_event_mgr, OPJ_INT32 event_type,
     }
 
     if ((fmt != 00) && (p_event_mgr != 00)) {
-        va_list arg;
         char message[OPJ_MSG_SIZE];
         memset(message, 0, OPJ_MSG_SIZE);
-        /* initialize the optional parameter list */
-        va_start(arg, fmt);
 #ifdef __wasm__
         strcpy(message, fmt);
 #else
+        va_list arg;
+        /* initialize the optional parameter list */
+        va_start(arg, fmt);
         /* parse the format string and put the result in 'message' */
         vsnprintf(message, OPJ_MSG_SIZE, fmt, arg);
-#endif
         /* force zero termination for Windows _vsnprintf() of old MSVC */
         message[OPJ_MSG_SIZE - 1] = '\0';
         /* deinitialize the optional parameter list */
         va_end(arg);
+#endif
 
         /* output the message to the user program */
         msg_handler(message, l_data);
