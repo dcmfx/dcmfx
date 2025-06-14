@@ -20,13 +20,11 @@ static void skip_input_data(j_decompress_ptr dinfo, long num_bytes);
 static void term_source(j_decompress_ptr _dinfo) {}
 
 // Decodes the given bytes as a 12-bit JPEG.
-int32_t libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
-                             uint32_t width, uint32_t height,
-                             uint32_t samples_per_pixel,
-                             uint32_t is_ybr_color_space,
-                             uint16_t *output_buffer,
-                             uint64_t output_buffer_size,
-                             char error_message[JMSG_LENGTH_MAX]) {
+size_t libjpeg_12bit_decode(const void *input_data, size_t input_data_size,
+                            size_t width, size_t height,
+                            size_t samples_per_pixel, size_t is_ybr_color_space,
+                            uint16_t *output_buffer, size_t output_buffer_size,
+                            char error_message[JMSG_LENGTH_MAX]) {
   struct jpeg_decompress_struct dinfo;
   struct jpeg_error_mgr jerr;
   dinfo.err = jpeg_std_error(&jerr);
@@ -38,7 +36,7 @@ int32_t libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
   // Initialize decompression object
   if (jpeg_create_decompress(&dinfo).is_err) {
     strcpy(error_message, "jpeg_create_decompress() failed");
-    return -1;
+    return 1;
   }
 
   // Use an in-memory data source
@@ -49,8 +47,8 @@ int32_t libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
   src.skip_input_data = skip_input_data;
   src.resync_to_restart = jpeg_resync_to_restart;
   src.term_source = term_source;
-  src.bytes_in_buffer = jpeg_size;
-  src.next_input_byte = jpeg_data;
+  src.bytes_in_buffer = input_data_size;
+  src.next_input_byte = input_data;
   dinfo.src = &src;
 
   // Read JPEG header
@@ -58,21 +56,21 @@ int32_t libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
   if (read_result.is_err || read_result.value != JPEG_HEADER_OK) {
     strcpy(error_message, "jpeg_read_header() failed");
     (void)jpeg_destroy_decompress(&dinfo);
-    return -1;
+    return 1;
   }
 
   // Check that the data uses the expected 12-bit precision
   if (dinfo.data_precision != 12) {
     strcpy(error_message, "Data precision is not 12-bit");
     (void)jpeg_destroy_decompress(&dinfo);
-    return -1;
+    return 1;
   }
 
   // Start decompression
   if (jpeg_start_decompress(&dinfo).is_err) {
     strcpy(error_message, "jpeg_start_decompress() failed");
     (void)jpeg_destroy_decompress(&dinfo);
-    return -1;
+    return 1;
   }
 
   // Set output color space to RGB for color images
@@ -87,7 +85,7 @@ int32_t libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
   } else {
     strcpy(error_message, "Output components is not 1 or 3");
     (void)jpeg_destroy_decompress(&dinfo);
-    return -1;
+    return 1;
   }
 
   // Check image dimensions
@@ -97,24 +95,24 @@ int32_t libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
         error_message,
         "Image does not have the expected width, height, or samples per pixel");
     (void)jpeg_destroy_decompress(&dinfo);
-    return -1;
+    return 1;
   };
 
   // Check output buffer size
   if (output_buffer_size != width * height * samples_per_pixel) {
     strcpy(error_message, "Output buffer has incorrect size");
     (void)jpeg_destroy_decompress(&dinfo);
-    return -1;
+    return 1;
   }
 
   // Allocate buffer to store a single scanline
-  int row_stride = dinfo.output_width * dinfo.output_components;
+  size_t row_stride = dinfo.output_width * dinfo.output_components;
   jsamparray_result_t buffer_alloc_result = (*dinfo.mem->alloc_sarray)(
       (j_common_ptr)&dinfo, JPOOL_IMAGE, row_stride, 1);
   if (buffer_alloc_result.is_err) {
     strcpy(error_message, "Scanline allocation failed");
     (void)jpeg_destroy_decompress(&dinfo);
-    return -1;
+    return 1;
   }
 
   JSAMPARRAY buffer = buffer_alloc_result.value;
@@ -124,7 +122,7 @@ int32_t libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
     if (jpeg_read_scanlines(&dinfo, buffer, 1).is_err) {
       strcpy(error_message, "jpeg_read_scanlines() failed");
       (void)jpeg_destroy_decompress(&dinfo);
-      return -1;
+      return 1;
     }
 
     memcpy(output_buffer, buffer[0], row_stride * sizeof(JSAMPLE));
@@ -135,7 +133,7 @@ int32_t libjpeg_12bit_decode(uint8_t *jpeg_data, uint64_t jpeg_size,
   if (jpeg_finish_decompress(&dinfo).is_err) {
     strcpy(error_message, "jpeg_finish_decompress() failed");
     (void)jpeg_destroy_decompress(&dinfo);
-    return -1;
+    return 1;
   }
 
   (void)jpeg_destroy_decompress(&dinfo);
@@ -186,14 +184,14 @@ static void jpeg_mem_dest(j_compress_ptr cinfo,
                           void *output_data_context);
 
 // Encodes the given image as a 12-bit JPEG.
-int32_t libjpeg_12bit_encode(int16_t *input_data, uint64_t input_data_size,
-                             uint32_t width, uint32_t height,
-                             uint32_t samples_per_pixel,
-                             uint32_t photometric_interpretation,
-                             uint32_t color_space, uint8_t quality,
-                             output_data_callback_t output_data_callback,
-                             void *output_data_context,
-                             char error_message[JMSG_LENGTH_MAX]) {
+size_t libjpeg_12bit_encode(int16_t *input_data, size_t input_data_size,
+                            size_t width, size_t height,
+                            size_t samples_per_pixel,
+                            size_t photometric_interpretation,
+                            size_t color_space, size_t quality,
+                            output_data_callback_t output_data_callback,
+                            void *output_data_context,
+                            char error_message[JMSG_LENGTH_MAX]) {
 
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
@@ -206,7 +204,7 @@ int32_t libjpeg_12bit_encode(int16_t *input_data, uint64_t input_data_size,
 
   if (jpeg_create_compress(&cinfo).is_err) {
     strcpy(error_message, "jpeg_create_compress() failed");
-    return -1;
+    return 1;
   }
 
   // Setup destination that sends chunks to the output callback
@@ -224,13 +222,13 @@ int32_t libjpeg_12bit_encode(int16_t *input_data, uint64_t input_data_size,
   if (jpeg_set_defaults(&cinfo).is_err) {
     strcpy(error_message, "jpeg_set_defaults() failed");
     (void)jpeg_destroy_compress(&cinfo);
-    return -1;
+    return 1;
   }
 
   if (jpeg_set_quality(&cinfo, quality, FALSE).is_err) {
     strcpy(error_message, "jpeg_set_quality() failed");
     (void)jpeg_destroy_compress(&cinfo);
-    return -1;
+    return 1;
   }
 
   // Set sampling factors for RGB/YBR_FULL/YBR_FULL_422
@@ -251,7 +249,7 @@ int32_t libjpeg_12bit_encode(int16_t *input_data, uint64_t input_data_size,
   if (jpeg_start_compress(&cinfo, TRUE).is_err) {
     strcpy(error_message, "jpeg_start_compress() failed");
     (void)jpeg_destroy_compress(&cinfo);
-    return -1;
+    return 1;
   }
 
   JSAMPROW row_pointer[1];
@@ -263,7 +261,7 @@ int32_t libjpeg_12bit_encode(int16_t *input_data, uint64_t input_data_size,
     if (jpeg_write_scanlines(&cinfo, row_pointer, 1).is_err) {
       strcpy(error_message, "jpeg_write_scanlines() failed");
       (void)jpeg_destroy_compress(&cinfo);
-      return -1;
+      return 1;
     }
   }
 
@@ -271,7 +269,7 @@ int32_t libjpeg_12bit_encode(int16_t *input_data, uint64_t input_data_size,
   if (jpeg_finish_compress(&cinfo).is_err) {
     strcpy(error_message, "jpeg_finish_compress() failed");
     (void)jpeg_destroy_compress(&cinfo);
-    return -1;
+    return 1;
   }
 
   (void)jpeg_destroy_compress(&cinfo);

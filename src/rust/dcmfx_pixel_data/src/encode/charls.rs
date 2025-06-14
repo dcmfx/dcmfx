@@ -171,24 +171,24 @@ fn encode(
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let mut output_buffer = vec![];
 
-  let mut error_buffer = [0 as ::core::ffi::c_char; 256];
+  let mut error_buffer = [0 as core::ffi::c_char; 256];
 
   let bytes_written = unsafe {
     ffi::charls_encode(
-      data.as_ptr(),
-      width as u32,
-      height as u32,
-      u32::from(u8::from(image_pixel_module.samples_per_pixel())),
-      u32::from(u8::from(image_pixel_module.bits_allocated())),
-      u32::from(is_near_lossless),
+      data.as_ptr() as *const core::ffi::c_void,
+      width.into(),
+      height.into(),
+      u8::from(image_pixel_module.samples_per_pixel()).into(),
+      u8::from(image_pixel_module.bits_allocated()).into(),
+      is_near_lossless.into(),
       output_buffer_allocate,
       &mut output_buffer as *mut Vec<u8> as *mut core::ffi::c_void,
       error_buffer.as_mut_ptr(),
-      error_buffer.len() as u32,
+      error_buffer.len(),
     )
   };
 
-  if bytes_written < 0 {
+  if bytes_written == 0 {
     let error = unsafe { core::ffi::CStr::from_ptr(error_buffer.as_ptr()) }
       .to_str()
       .unwrap_or("<invalid error>");
@@ -222,19 +222,19 @@ extern "C" fn output_buffer_allocate(
 mod ffi {
   unsafe extern "C" {
     pub fn charls_encode(
-      input_data: *const u8,
-      width: u32,
-      height: u32,
-      samples_per_pixel: u32,
-      bits_allocated: u32,
-      is_near_lossless: u32,
+      input_data: *const core::ffi::c_void,
+      width: usize,
+      height: usize,
+      samples_per_pixel: usize,
+      bits_allocated: usize,
+      is_near_lossless: usize,
       output_buffer_allocate: extern "C" fn(
         usize,
         *mut core::ffi::c_void,
       ) -> *mut core::ffi::c_void,
       output_buffer_context: *mut core::ffi::c_void,
-      error_buffer: *mut ::core::ffi::c_char,
-      error_buffer_size: u32,
-    ) -> i64;
+      error_buffer: *mut core::ffi::c_char,
+      error_buffer_size: usize,
+    ) -> usize;
   }
 }

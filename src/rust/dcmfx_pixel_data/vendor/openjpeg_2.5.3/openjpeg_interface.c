@@ -20,9 +20,9 @@ static void error_handler(char const *msg, void *client_data) {
 }
 
 typedef struct {
-  uint8_t *data;
-  uint64_t data_length;
-  uint64_t offset;
+  const uint8_t *data;
+  size_t data_length;
+  size_t offset;
 } openjpeg_data_source;
 
 size_t stream_read(void *p_buffer, size_t n_bytes, void *p_user_data) {
@@ -114,12 +114,11 @@ static void cleanup(opj_codec_t *codec, opj_stream_t *stream,
   }
 }
 
-int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
-                        uint32_t width, uint32_t height,
-                        uint32_t samples_per_pixel, uint32_t bits_allocated,
-                        uint8_t *pixel_representation, uint8_t *output_data,
-                        uint64_t output_data_size, char *error_buffer,
-                        uint32_t error_buffer_size) {
+size_t openjpeg_decode(const void *input_data, size_t input_data_size,
+                       size_t width, size_t height, size_t samples_per_pixel,
+                       size_t bits_allocated, size_t *pixel_representation,
+                       void *output_data, size_t output_data_size,
+                       char *error_buffer, size_t error_buffer_size) {
   // Determine codec by looking at the initial bytes of the input data
   int codec_format = OPJ_CODEC_UNKNOWN;
   if ((input_data_size >= 12 &&
@@ -131,14 +130,14 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
     codec_format = OPJ_CODEC_J2K;
   } else {
     strcpy(error_buffer, "Input is not JPEG 2000 data");
-    return -1;
+    return 1;
   }
 
   // Create decompressor for the codec format
   opj_codec_t *codec = opj_create_decompress(codec_format);
   if (codec == NULL) {
     strcpy(error_buffer, "opj_create_decompress() failed");
-    return -1;
+    return 1;
   }
 
   // Setup error handler that captures detailed error messages
@@ -151,7 +150,7 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
   if (!opj_setup_decoder(codec, &parameters)) {
     cleanup(codec, NULL, NULL, error_buffer, error_buffer_size,
             "opj_setup_decoder() failed", error_details);
-    return -1;
+    return 1;
   }
 
   // Create and setup a stream to read from the input data
@@ -159,7 +158,7 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
   if (stream == NULL) {
     cleanup(codec, stream, NULL, error_buffer, error_buffer_size,
             "opj_stream_create() failed", error_details);
-    return -1;
+    return 1;
   }
 
   openjpeg_data_source data_source = {input_data, input_data_size, 0};
@@ -174,7 +173,7 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
   if (!opj_read_header(stream, codec, &image)) {
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "opj_read_header() failed", error_details);
-    return -1;
+    return 1;
   }
 
   // Validate that the dimensions and samples per pixel are as expected
@@ -183,7 +182,7 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "Image does not have the expected dimensions or samples per pixel",
             error_details);
-    return -1;
+    return 1;
   }
 
   // Return the pixel representation of the data being read
@@ -195,14 +194,14 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
       cleanup(codec, stream, image, error_buffer, error_buffer_size,
               "Image component precision exceeds the bits allocated",
               error_details);
-      return -1;
+      return 1;
     }
 
     if (image->comps[i].w != width || image->comps[i].h != height) {
       cleanup(codec, stream, image, error_buffer, error_buffer_size,
               "Image component does not have the expected dimensions",
               error_details);
-      return -1;
+      return 1;
     }
   }
 
@@ -210,14 +209,14 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
   if (!opj_decode(codec, stream, image)) {
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "opj_decode() failed", error_details);
-    return -1;
+    return 1;
   }
 
   // Clean up decompressor
   if (!opj_end_decompress(codec, stream)) {
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "opj_end_decompress() failed", error_details);
-    return -1;
+    return 1;
   }
 
   // Copy decoded pixels into the output data
@@ -226,15 +225,15 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
       if (output_data_size != width * height) {
         cleanup(codec, stream, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
-        return -1;
+        return 1;
       }
 
       if (pixel_representation == 0) {
-        for (uint32_t i = 0; i < width * height; i++) {
-          output_data[i] = image->comps[0].data[i];
+        for (size_t i = 0; i < width * height; i++) {
+          ((uint8_t *)output_data)[i] = image->comps[0].data[i];
         }
       } else {
-        for (uint32_t i = 0; i < width * height; i++) {
+        for (size_t i = 0; i < width * height; i++) {
           ((int8_t *)output_data)[i] = image->comps[0].data[i];
         }
       }
@@ -242,15 +241,15 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
       if (output_data_size != width * height * 2) {
         cleanup(codec, stream, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
-        return -1;
+        return 1;
       }
 
       if (pixel_representation == 0) {
-        for (uint32_t i = 0; i < width * height; i++) {
+        for (size_t i = 0; i < width * height; i++) {
           ((uint16_t *)output_data)[i] = image->comps[0].data[i];
         }
       } else {
-        for (uint32_t i = 0; i < width * height; i++) {
+        for (size_t i = 0; i < width * height; i++) {
           ((int16_t *)output_data)[i] = image->comps[0].data[i];
         }
       }
@@ -258,22 +257,22 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
       if (output_data_size != width * height * 4) {
         cleanup(codec, stream, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
-        return -1;
+        return 1;
       }
 
       if (pixel_representation == 0) {
-        for (uint32_t i = 0; i < width * height; i++) {
+        for (size_t i = 0; i < width * height; i++) {
           ((uint32_t *)output_data)[i] = image->comps[0].data[i];
         }
       } else {
-        for (uint32_t i = 0; i < width * height; i++) {
+        for (size_t i = 0; i < width * height; i++) {
           ((int32_t *)output_data)[i] = image->comps[0].data[i];
         }
       }
     } else {
       cleanup(codec, stream, image, error_buffer, error_buffer_size,
               "Precision not supported", error_details);
-      return -1;
+      return 1;
     }
   } else if (image->numcomps == 3) {
     OPJ_INT32 *red_data = image->comps[0].data;
@@ -284,19 +283,19 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
       if (output_data_size != width * height * 3) {
         cleanup(codec, stream, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
-        return -1;
+        return 1;
       }
 
       for (uint32_t i = 0; i < width * height; i++) {
-        output_data[i * 3] = red_data[i];
-        output_data[i * 3 + 1] = green_data[i];
-        output_data[i * 3 + 2] = blue_data[i];
+        ((uint8_t *)output_data)[i * 3] = red_data[i];
+        ((uint8_t *)output_data)[i * 3 + 1] = green_data[i];
+        ((uint8_t *)output_data)[i * 3 + 2] = blue_data[i];
       }
     } else if (bits_allocated == 16) {
       if (output_data_size != width * height * 2 * 3) {
         cleanup(codec, stream, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
-        return -1;
+        return 1;
       }
 
       for (uint32_t i = 0; i < width * height; i++) {
@@ -308,7 +307,7 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
       if (output_data_size != width * height * 4 * 3) {
         cleanup(codec, stream, image, error_buffer, error_buffer_size,
                 "Output data is not the expected size", error_details);
-        return -1;
+        return 1;
       }
 
       for (uint32_t i = 0; i < width * height; i++) {
@@ -319,12 +318,12 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
     } else {
       cleanup(codec, stream, image, error_buffer, error_buffer_size,
               "Precision not supported", error_details);
-      return -1;
+      return 1;
     }
   } else {
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "Number of components not supported", error_details);
-    return -1;
+    return 1;
   }
 
   cleanup(codec, stream, image, NULL, 0, NULL, NULL);
@@ -335,7 +334,7 @@ int32_t openjpeg_decode(uint8_t *input_data, uint64_t input_data_size,
 // This output stream directs all writes it receives through a callback that
 // is implemented on the Rust side where the data is accumulated in a Vec<u8>.
 typedef struct {
-  void (*callback)(const uint8_t *data, uint32_t len, void *ctx);
+  void (*callback)(const uint8_t *data, size_t len, void *ctx);
   void *context;
 } output_stream_t;
 
@@ -349,18 +348,18 @@ static OPJ_SIZE_T output_stream_write(void *p_buffer, OPJ_SIZE_T p_size,
 
 static void output_stream_free(void *p_user_data) {}
 
-int32_t openjpeg_encode(
-    uint8_t *input_data, uint64_t input_data_size, uint32_t width,
-    uint32_t height, uint32_t samples_per_pixel, uint32_t bits_allocated,
-    uint32_t bits_stored, uint8_t pixel_representation,
-    uint32_t color_photometric_interpretation, float tcp_distoratio,
-    void (*output_data_callback)(const uint8_t *data, uint32_t len, void *ctx),
-    void *output_data_context, char *error_buffer, uint32_t error_buffer_size) {
+size_t openjpeg_encode(
+    const void *input_data, size_t input_data_size, size_t width, size_t height,
+    size_t samples_per_pixel, size_t bits_allocated, size_t bits_stored,
+    size_t pixel_representation, size_t color_photometric_interpretation,
+    float tcp_distoratio,
+    void (*output_data_callback)(const uint8_t *data, size_t len, void *ctx),
+    void *output_data_context, char *error_buffer, size_t error_buffer_size) {
   // Create compressor
   opj_codec_t *codec = opj_create_compress(OPJ_CODEC_J2K);
   if (codec == NULL) {
     strcpy(error_buffer, "opj_create_compress() failed");
-    return -1;
+    return 1;
   }
 
   // Setup error handler that captures detailed error messages
@@ -406,7 +405,7 @@ int32_t openjpeg_encode(
     } else {
       cleanup(codec, NULL, NULL, error_buffer, error_buffer_size,
               "Invalid color_photometric_interpretation", error_details);
-      return -1;
+      return 1;
     }
   } else {
     color_space = OPJ_CLRSPC_GRAY;
@@ -431,7 +430,7 @@ int32_t openjpeg_encode(
   if (image == NULL) {
     cleanup(codec, NULL, NULL, error_buffer, error_buffer_size,
             "opj_image_create() failed", error_details);
-    return -1;
+    return 1;
   }
 
   // Set reference grid dimensions
@@ -446,7 +445,7 @@ int32_t openjpeg_encode(
         for (uint32_t x = 0; x < width; x++, index++) {
           for (uint32_t i = 0; i < samples_per_pixel; i++) {
             image->comps[i].data[index] =
-                input_data[samples_per_pixel * index + i];
+                ((uint8_t *)input_data)[samples_per_pixel * index + i];
           }
         }
       }
@@ -503,14 +502,14 @@ int32_t openjpeg_encode(
   } else {
     cleanup(codec, NULL, image, error_buffer, error_buffer_size,
             "Bits allocated value not supported", error_details);
-    return -1;
+    return 1;
   }
 
   // Setup encoder
   if (!opj_setup_encoder(codec, &parameters, image)) {
     cleanup(codec, NULL, image, error_buffer, error_buffer_size,
             "opj_setup_encoder() failed", error_details);
-    return -1;
+    return 1;
   }
 
   output_stream_t output_stream = {output_data_callback, output_data_context};
@@ -521,7 +520,7 @@ int32_t openjpeg_encode(
   if (stream == NULL) {
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "opj_stream_create() failed", error_details);
-    return -1;
+    return 1;
   }
 
   opj_stream_set_write_function(stream, output_stream_write);
@@ -532,21 +531,21 @@ int32_t openjpeg_encode(
   if (!opj_start_compress(codec, image, stream)) {
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "opj_start_compress() failed", error_details);
-    return -1;
+    return 1;
   }
 
   // Perform encode
   if (!opj_encode(codec, stream)) {
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "opj_encode() failed", error_details);
-    return -1;
+    return 1;
   }
 
   // End compression
   if (!opj_end_compress(codec, stream)) {
     cleanup(codec, stream, image, error_buffer, error_buffer_size,
             "opj_end_compress() failed", error_details);
-    return -1;
+    return 1;
   }
 
   cleanup(codec, stream, image, NULL, 0, NULL, NULL);

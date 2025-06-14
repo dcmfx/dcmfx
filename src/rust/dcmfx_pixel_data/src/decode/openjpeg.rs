@@ -294,8 +294,8 @@ fn decode<T: Clone + Default + bytemuck::Pod>(
   let samples_per_pixel = u8::from(image_pixel_module.samples_per_pixel());
   let bits_allocated = u8::from(image_pixel_module.bits_allocated()).max(8);
   let mut pixel_representation =
-    u8::from(image_pixel_module.pixel_representation());
-  let mut error_buffer = [0 as ::core::ffi::c_char; 256];
+    u8::from(image_pixel_module.pixel_representation()) as usize;
+  let mut error_buffer = [0 as core::ffi::c_char; 256];
 
   // Allocate output buffer
   let mut output_buffer: Vec<T> = vec![
@@ -307,17 +307,17 @@ fn decode<T: Clone + Default + bytemuck::Pod>(
   // Make FFI call into openjpeg to perform the decompression
   let result = unsafe {
     ffi::openjpeg_decode(
-      data.as_ptr(),
-      data.len() as u64,
+      data.as_ptr() as *const core::ffi::c_void,
+      data.len(),
       image_pixel_module.columns().into(),
       image_pixel_module.rows().into(),
       samples_per_pixel.into(),
       bits_allocated.into(),
       &mut pixel_representation,
-      output_buffer.as_mut_ptr() as *mut u8,
-      (output_buffer.len() * core::mem::size_of::<T>()) as u64,
+      output_buffer.as_mut_ptr() as *mut core::ffi::c_void,
+      output_buffer.len() * core::mem::size_of::<T>(),
       error_buffer.as_mut_ptr(),
-      error_buffer.len() as u32,
+      error_buffer.len(),
     )
   };
 
@@ -332,7 +332,8 @@ fn decode<T: Clone + Default + bytemuck::Pod>(
     });
   }
 
-  if pixel_representation != u8::from(image_pixel_module.pixel_representation())
+  if pixel_representation
+    != u8::from(image_pixel_module.pixel_representation()) as usize
   {
     // If the data returned by OpenJPEG is unsigned, but signed data is expected
     // to be returned, then reinterpret it as signed two's complement integer
@@ -408,17 +409,17 @@ fn convert_unsigned_values_to_signed_values(
 mod ffi {
   unsafe extern "C" {
     pub fn openjpeg_decode(
-      input_data: *const u8,
-      input_data_size: u64,
-      width: u32,
-      height: u32,
-      samples_per_pixel: u32,
-      bits_allocated: u32,
-      pixel_representation: *mut u8,
-      output_data: *mut u8,
-      output_data_size: u64,
-      error_buffer: *mut ::core::ffi::c_char,
-      error_buffer_size: u32,
-    ) -> i32;
+      input_data: *const core::ffi::c_void,
+      input_data_size: usize,
+      width: usize,
+      height: usize,
+      samples_per_pixel: usize,
+      bits_allocated: usize,
+      pixel_representation: *mut usize,
+      output_data: *mut core::ffi::c_void,
+      output_data_size: usize,
+      error_buffer: *mut core::ffi::c_char,
+      error_buffer_size: usize,
+    ) -> usize;
   }
 }

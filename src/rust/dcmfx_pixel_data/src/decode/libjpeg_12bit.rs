@@ -137,7 +137,7 @@ fn decode(
       .photometric_interpretation()
       .is_ybr_full_422();
 
-  let mut error_message = [0 as ::core::ffi::c_char; 200];
+  let mut error_message = [0 as core::ffi::c_char; 200];
 
   // Allocate output buffer
   let mut output_buffer =
@@ -150,14 +150,14 @@ fn decode(
   // Make FFI call into libjpeg_12bit to perform the decompression
   let result = unsafe {
     ffi::libjpeg_12bit_decode(
-      data.as_ptr(),
-      data.len() as u64,
+      data.as_ptr() as *const core::ffi::c_void,
+      data.len(),
       image_pixel_module.columns().into(),
       image_pixel_module.rows().into(),
       u8::from(image_pixel_module.samples_per_pixel()).into(),
-      u32::from(is_ybr_color_space),
+      is_ybr_color_space.into(),
       output_buffer.as_mut_ptr(),
-      output_buffer.len() as u64,
+      output_buffer.len(),
       error_message.as_mut_ptr(),
     )
   };
@@ -179,15 +179,15 @@ fn decode(
 mod ffi {
   unsafe extern "C" {
     pub fn libjpeg_12bit_decode(
-      jpeg_data: *const u8,
-      jpeg_size: u64,
-      width: u32,
-      height: u32,
-      samples_per_pixel: u32,
-      is_ybr_color_space: u32,
+      input_data: *const core::ffi::c_void,
+      input_data_size: usize,
+      width: usize,
+      height: usize,
+      samples_per_pixel: usize,
+      is_ybr_color_space: usize,
       output_buffer: *mut u16,
-      output_buffer_size: u64,
-      error_message: *mut ::core::ffi::c_char,
-    ) -> i32;
+      output_buffer_size: usize,
+      error_message: *mut core::ffi::c_char,
+    ) -> usize;
   }
 }

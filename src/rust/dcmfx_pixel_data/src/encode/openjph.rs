@@ -355,7 +355,7 @@ fn encode(
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let mut output_data = Vec::<u8>::with_capacity(512 * 1024);
 
-  let mut error_buffer = [0 as ::core::ffi::c_char; 256];
+  let mut error_buffer = [0 as core::ffi::c_char; 256];
 
   let color_photometric_interpretation =
     match image_pixel_module.photometric_interpretation() {
@@ -456,7 +456,7 @@ mod ffi {
         *mut core::ffi::c_void,
       ),
       output_data_context: *mut core::ffi::c_void,
-      error_buffer: *mut ::core::ffi::c_char,
+      error_buffer: *mut core::ffi::c_char,
       error_buffer_size: usize,
     ) -> usize;
   }

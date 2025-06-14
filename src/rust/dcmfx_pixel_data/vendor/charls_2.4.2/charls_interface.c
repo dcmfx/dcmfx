@@ -11,17 +11,17 @@
 #include <charls/charls_jpegls_decoder.h>
 #include <charls/charls_jpegls_encoder.h>
 
-int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
-                  uint32_t height, uint32_t samples_per_pixel,
-                  uint32_t bits_allocated, uint8_t *output_buffer,
-                  uint64_t output_buffer_size, char *error_buffer,
-                  uint32_t error_buffer_size) {
+size_t charls_decode(const void *input_data, size_t input_data_size,
+                     size_t width, size_t height, size_t samples_per_pixel,
+                     size_t bits_allocated, void *output_buffer,
+                     size_t output_buffer_size, char *error_buffer,
+                     size_t error_buffer_size) {
   // Create decoder
   struct charls_jpegls_decoder *decoder = charls_jpegls_decoder_create();
   if (!decoder) {
     strncpy(error_buffer, "charls_jpegls_decoder_create() failed",
             error_buffer_size - 1);
-    return -1;
+    return 1;
   }
 
   // Set decoder source
@@ -30,7 +30,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
     strncpy(error_buffer, "charls_jpegls_decoder_set_source_buffer() failed",
             error_buffer_size - 1);
     charls_jpegls_decoder_destroy(decoder);
-    return -1;
+    return 1;
   }
 
   // Read header
@@ -38,7 +38,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
     strncpy(error_buffer, "charls_jpegls_decoder_read_header() failed",
             error_buffer_size - 1);
     charls_jpegls_decoder_destroy(decoder);
-    return -1;
+    return 1;
   }
 
   // Get frame info
@@ -47,7 +47,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
     strncpy(error_buffer, "charls_jpegls_decoder_read_spiff_header() failed",
             error_buffer_size - 1);
     charls_jpegls_decoder_destroy(decoder);
-    return -1;
+    return 1;
   }
 
   // Check frame into matches the expected format
@@ -60,7 +60,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
         "or bits allocated",
         error_buffer_size - 1);
     charls_jpegls_decoder_destroy(decoder);
-    return -1;
+    return 1;
   }
 
   // Get required destination size
@@ -70,7 +70,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
     strncpy(error_buffer, "charls_jpegls_decoder_get_destination_size() failed",
             error_buffer_size - 1);
     charls_jpegls_decoder_destroy(decoder);
-    return -1;
+    return 1;
   }
 
   // Check the required destination size matches the output buffer's size
@@ -78,7 +78,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
     strncpy(error_buffer, "Output buffer has incorrect size",
             error_buffer_size - 1);
     charls_jpegls_decoder_destroy(decoder);
-    return -1;
+    return 1;
   }
 
   // Perform decode
@@ -87,7 +87,7 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
     strncpy(error_buffer, "charls_jpegls_decoder_decode_to_buffer() failed",
             error_buffer_size - 1);
     charls_jpegls_decoder_destroy(decoder);
-    return -1;
+    return 1;
   }
 
   charls_jpegls_decoder_destroy(decoder);
@@ -95,18 +95,18 @@ int charls_decode(uint8_t *input_data, uint64_t input_data_size, uint32_t width,
   return 0;
 }
 
-int64_t charls_encode(uint8_t *input_data, uint32_t width, uint32_t height,
-                      uint32_t samples_per_pixel, uint32_t bits_allocated,
-                      uint32_t is_near_lossless,
-                      void *(*output_buffer_allocate)(size_t len, void *ctx),
-                      void *output_buffer_context, char *error_buffer,
-                      uint32_t error_buffer_size) {
+size_t charls_encode(const void *input_data, size_t width, size_t height,
+                     size_t samples_per_pixel, size_t bits_allocated,
+                     size_t is_near_lossless,
+                     void *(*output_buffer_allocate)(size_t len, void *ctx),
+                     void *output_buffer_context, char *error_buffer,
+                     size_t error_buffer_size) {
   // Create encoder
   struct charls_jpegls_encoder *encoder = charls_jpegls_encoder_create();
   if (!encoder) {
     strncpy(error_buffer, "charls_jpegls_encoder_create() failed",
             error_buffer_size - 1);
-    return -1;
+    return 0;
   }
 
   // Enable near-lossless encoding if requested
@@ -114,7 +114,7 @@ int64_t charls_encode(uint8_t *input_data, uint32_t width, uint32_t height,
     strncpy(error_buffer, "charls_jpegls_encoder_set_near_lossless() failed",
             error_buffer_size - 1);
     charls_jpegls_encoder_destroy(encoder);
-    return -1;
+    return 0;
   }
 
   struct charls_frame_info frame_info = {.width = width,
@@ -127,7 +127,7 @@ int64_t charls_encode(uint8_t *input_data, uint32_t width, uint32_t height,
     strncpy(error_buffer, "charls_jpegls_encoder_set_frame_info() failed",
             error_buffer_size - 1);
     charls_jpegls_encoder_destroy(encoder);
-    return -1;
+    return 0;
   }
 
   // Estimate output size
@@ -138,7 +138,7 @@ int64_t charls_encode(uint8_t *input_data, uint32_t width, uint32_t height,
             "charls_jpegls_encoder_get_estimated_destination_size() failed",
             error_buffer_size - 1);
     charls_jpegls_encoder_destroy(encoder);
-    return -1;
+    return 0;
   }
 
   // The above size is meant to be the worst case size, however for purely
@@ -149,7 +149,7 @@ int64_t charls_encode(uint8_t *input_data, uint32_t width, uint32_t height,
   void *encoded_buffer =
       output_buffer_allocate(encoded_length, output_buffer_context);
   if (encoded_buffer == NULL) {
-    return -1;
+    return 0;
   }
 
   if (charls_jpegls_encoder_set_destination_buffer(encoder, encoded_buffer,
@@ -158,7 +158,7 @@ int64_t charls_encode(uint8_t *input_data, uint32_t width, uint32_t height,
             "charls_jpegls_encoder_set_destination_buffer() failed",
             error_buffer_size - 1);
     charls_jpegls_encoder_destroy(encoder);
-    return -1;
+    return 0;
   }
 
   // Encode the image
@@ -168,7 +168,7 @@ int64_t charls_encode(uint8_t *input_data, uint32_t width, uint32_t height,
     strncpy(error_buffer, "charls_jpegls_encoder_encode_from_buffer() failed",
             error_buffer_size - 1);
     charls_jpegls_encoder_destroy(encoder);
-    return -1;
+    return 0;
   }
 
   // Get the actual size of the encoded data
@@ -177,7 +177,7 @@ int64_t charls_encode(uint8_t *input_data, uint32_t width, uint32_t height,
     strncpy(error_buffer, "charls_jpegls_encoder_get_bytes_written() failed",
             error_buffer_size - 1);
     charls_jpegls_encoder_destroy(encoder);
-    return -1;
+    return 0;
   }
 
   charls_jpegls_encoder_destroy(encoder);

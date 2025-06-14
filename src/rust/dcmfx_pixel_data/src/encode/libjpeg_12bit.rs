@@ -134,7 +134,7 @@ fn encode(
   quality: u8,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let mut output_buffer = vec![];
-  let mut error_buffer = [0 as ::core::ffi::c_char; 256];
+  let mut error_buffer = [0 as core::ffi::c_char; 256];
 
   let color_space = match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::Monochrome1 { .. }
@@ -158,13 +158,13 @@ fn encode(
   let result = unsafe {
     ffi::libjpeg_12bit_encode(
       data.as_ptr(),
-      data.len() as u64,
+      data.len(),
       width.into(),
       height.into(),
-      u32::from(u8::from(image_pixel_module.samples_per_pixel())),
+      u8::from(image_pixel_module.samples_per_pixel()).into(),
       photometric_interpretation,
       color_space,
-      quality,
+      quality.into(),
       output_data_callback,
       &mut output_buffer as *mut Vec<u8> as *mut core::ffi::c_void,
       error_buffer.as_mut_ptr(),
@@ -189,7 +189,7 @@ fn encode(
 /// is then called to receive output data.
 ///
 extern "C" fn output_data_callback(
-  data: *mut u8,
+  data: *const u8,
   len: usize,
   context: *mut core::ffi::c_void,
 ) {
@@ -204,20 +204,20 @@ mod ffi {
   unsafe extern "C" {
     pub fn libjpeg_12bit_encode(
       input_data: *const u16,
-      input_data_size: u64,
-      width: u32,
-      height: u32,
-      samples_per_pixel: u32,
-      photometric_interpretation: u32,
-      color_space: u32,
-      quality: u8,
+      input_data_size: usize,
+      width: usize,
+      height: usize,
+      samples_per_pixel: usize,
+      photometric_interpretation: usize,
+      color_space: usize,
+      quality: usize,
       output_data_callback: extern "C" fn(
-        *mut u8,
+        *const u8,
         usize,
         *mut core::ffi::c_void,
       ),
       output_buffer_context: *mut core::ffi::c_void,
-      error_message: *mut ::core::ffi::c_char,
-    ) -> i32;
+      error_message: *mut core::ffi::c_char,
+    ) -> usize;
   }
 }

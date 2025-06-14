@@ -355,7 +355,7 @@ fn encode(
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let mut output_data = Vec::<u8>::with_capacity(512 * 1024);
 
-  let mut error_buffer = [0 as ::core::ffi::c_char; 256];
+  let mut error_buffer = [0 as core::ffi::c_char; 256];
 
   let color_photometric_interpretation =
     match image_pixel_module.photometric_interpretation() {
@@ -374,20 +374,20 @@ fn encode(
 
   let result = unsafe {
     ffi::openjpeg_encode(
-      data.as_ptr(),
-      data.len() as u64,
-      width as u32,
-      height as u32,
-      u32::from(u8::from(image_pixel_module.samples_per_pixel())),
-      u32::from(u8::from(image_pixel_module.bits_allocated())),
-      u32::from(image_pixel_module.bits_stored()),
-      u32::from(u8::from(image_pixel_module.pixel_representation())),
+      data.as_ptr() as *const core::ffi::c_void,
+      data.len(),
+      width.into(),
+      height.into(),
+      u8::from(image_pixel_module.samples_per_pixel()).into(),
+      u8::from(image_pixel_module.bits_allocated()).into(),
+      image_pixel_module.bits_stored().into(),
+      u8::from(image_pixel_module.pixel_representation()).into(),
       color_photometric_interpretation,
       tcp_distoratio,
       append_output_data,
       &mut output_data as *mut Vec<u8> as *mut core::ffi::c_void,
       error_buffer.as_mut_ptr(),
-      error_buffer.len() as u32,
+      error_buffer.len(),
     )
   };
 
@@ -426,38 +426,37 @@ fn quality_to_psnr(quality: u8, bits_stored: u16) -> f32 {
 ///
 extern "C" fn append_output_data(
   data: *const u8,
-  len: u32,
+  len: usize,
   context: *mut core::ffi::c_void,
 ) {
   unsafe {
     let output_data = &mut *(context as *mut Vec<u8>);
 
-    (*output_data)
-      .extend_from_slice(core::slice::from_raw_parts(data, len as usize));
+    (*output_data).extend_from_slice(core::slice::from_raw_parts(data, len));
   }
 }
 
 mod ffi {
   unsafe extern "C" {
     pub fn openjpeg_encode(
-      input_data: *const u8,
-      input_data_size: u64,
-      width: u32,
-      height: u32,
-      samples_per_pixel: u32,
-      bits_allocated: u32,
-      bits_stored: u32,
-      pixel_representation: u32,
-      color_photometric_interpretation: u32,
+      input_data: *const core::ffi::c_void,
+      input_data_size: usize,
+      width: usize,
+      height: usize,
+      samples_per_pixel: usize,
+      bits_allocated: usize,
+      bits_stored: usize,
+      pixel_representation: usize,
+      color_photometric_interpretation: usize,
       tcp_distoratio: f32,
       output_data_callback: extern "C" fn(
         *const u8,
-        u32,
+        usize,
         *mut core::ffi::c_void,
       ),
       output_data_context: *mut core::ffi::c_void,
-      error_buffer: *mut ::core::ffi::c_char,
-      error_buffer_size: u32,
+      error_buffer: *mut core::ffi::c_char,
+      error_buffer_size: usize,
     ) -> i32;
   }
 }
