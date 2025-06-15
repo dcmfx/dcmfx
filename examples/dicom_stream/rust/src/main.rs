@@ -1,7 +1,7 @@
 use dcmfx::p10::*;
 use std::fs::File;
 
-const INPUT_FILE: &str = "../../example.dcm";
+const INPUT_FILE: &str = "./example.dcm";
 const OUTPUT_FILE: &str = "output.dcm";
 
 pub fn main() -> Result<(), P10Error> {

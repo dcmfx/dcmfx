@@ -375,7 +375,6 @@ fn encode(
   let result = unsafe {
     ffi::openjpeg_encode(
       data.as_ptr() as *const core::ffi::c_void,
-      data.len(),
       width.into(),
       height.into(),
       u8::from(image_pixel_module.samples_per_pixel()).into(),
@@ -440,7 +439,6 @@ mod ffi {
   unsafe extern "C" {
     pub fn openjpeg_encode(
       input_data: *const core::ffi::c_void,
-      input_data_size: usize,
       width: usize,
       height: usize,
       samples_per_pixel: usize,

@@ -855,6 +855,13 @@ impl PhotometricInterpretation {
     self == &Self::YbrRct
   }
 
+  /// Returns whether this photometric interpretation is
+  /// [`PhotometricInterpretation::Xyb`].
+  ///
+  pub fn is_xyb(&self) -> bool {
+    self == &Self::Xyb
+  }
+
   /// Converts this photometric interpretation to a data element value that uses
   /// the [`ValueRepresentation::CodeString`] value representation.
   ///

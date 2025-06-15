@@ -61,6 +61,7 @@ pub enum PhotometricInterpretationColorArg {
   YbrFull422,
   YbrIct,
   YbrRct,
+  Xyb,
 }
 
 impl ValueEnum for PhotometricInterpretationColorArg {
@@ -72,6 +73,7 @@ impl ValueEnum for PhotometricInterpretationColorArg {
       Self::YbrFull422,
       Self::YbrIct,
       Self::YbrRct,
+      Self::Xyb,
     ]
   }
 
@@ -83,6 +85,7 @@ impl ValueEnum for PhotometricInterpretationColorArg {
       Self::YbrFull422 => PossibleValue::new("YBR_FULL_422"),
       Self::YbrIct => PossibleValue::new("YBR_ICT"),
       Self::YbrRct => PossibleValue::new("YBR_RCT"),
+      Self::Xyb => PossibleValue::new("XYB"),
     })
   }
 }
@@ -109,6 +112,9 @@ impl PhotometricInterpretationColorArg {
       }
       PhotometricInterpretationColorArg::YbrRct => {
         Some(PhotometricInterpretation::YbrRct)
+      }
+      PhotometricInterpretationColorArg::Xyb => {
+        Some(PhotometricInterpretation::Xyb)
       }
     }
   }

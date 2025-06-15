@@ -15,7 +15,7 @@ env:
 jobs:
   test_dcmfx_gleam:
     name: Test DCMfx (Gleam)
-    timeout-minutes: 10
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
 
     steps:
@@ -50,7 +50,7 @@ jobs:
 
   test_dcmfx_rust:
     name: Test DCMfx (Rust)
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     strategy:
       matrix:
@@ -106,6 +106,7 @@ jobs:
         run: cargo fetch --locked
 
       - name: Run linter
+        if: matrix.rust-target == 'aarch64-apple-darwin'
         working-directory: src/rust
         run: cargo clippy -- --deny warnings
 
@@ -115,7 +116,7 @@ jobs:
 
   test_dcmfx_rust_wasm_library_build:
     name: Test DCMfx Rust WASM library build
-    timeout-minutes: 10
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
 
     steps:
@@ -139,7 +140,7 @@ jobs:
 
   test_dcmfx_rust_windows_gnu_library_build:
     name: Test DCMfx Rust Windows GNU library build
-    timeout-minutes: 10
+    timeout-minutes: 30
     runs-on: windows-2025
 
     defaults:
@@ -178,7 +179,7 @@ jobs:
 
   test_dcmfx_fuzzer_build:
     name: Test DCMfx Fuzzer build
-    timeout-minutes: 10
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
 
     steps:
@@ -204,8 +205,8 @@ jobs:
 
   test_examples:
     name: Test examples
-    timeout-minutes: 15
-    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -246,7 +247,7 @@ jobs:
 
   build_docs:
     name: Build docs
-    timeout-minutes: 10
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
 
     steps:

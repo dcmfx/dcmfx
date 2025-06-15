@@ -39,7 +39,7 @@ private:
 template <typename T> void fill_lines(ojph::codestream &cs, const T *in);
 
 extern "C" size_t openjph_encode(
-    const void *input_data, size_t input_data_size, size_t width, size_t height,
+    const void *input_data, size_t width, size_t height,
     size_t samples_per_pixel, size_t bits_allocated, size_t bits_stored,
     size_t pixel_representation, size_t color_photometric_interpretation,
     float quantization_step_size, output_data_callback_t output_data_callback,

@@ -1,8 +1,9 @@
-/**/build/
 /**/cache/
 /**/dist/
 /**/node_modules/
 /**/target/
+/examples/**/gleam/build/
+/src/gleam/**/build/
 
 .DS_Store
 *.beam

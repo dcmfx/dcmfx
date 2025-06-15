@@ -188,6 +188,44 @@ fn test_high_throughput_jpeg_2k_encode_decode_cycle() {
 }
 
 #[test]
+fn test_jpeg_xl_lossless_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| {
+        (m.photometric_interpretation().is_monochrome()
+          || m.photometric_interpretation().is_rgb())
+          && (m.bits_allocated() == BitsAllocated::Eight
+            || m.bits_allocated() == BitsAllocated::Sixteen)
+          && m.pixel_representation().is_unsigned()
+      })
+      .collect(),
+    &transfer_syntax::JPEG_XL_LOSSLESS,
+    0.0,
+    0.0,
+  );
+}
+
+#[test]
+fn test_jpeg_xl_encode_decode_cycle() {
+  test_encode_decode_cycle(
+    all_image_pixel_modules()
+      .into_iter()
+      .filter(|m| {
+        (m.photometric_interpretation().is_monochrome()
+          || m.photometric_interpretation().is_rgb())
+          && (m.bits_allocated() == BitsAllocated::Eight
+            || m.bits_allocated() == BitsAllocated::Sixteen)
+          && m.pixel_representation().is_unsigned()
+      })
+      .collect(),
+    &transfer_syntax::JPEG_XL,
+    0.05,
+    0.05,
+  );
+}
+
+#[test]
 fn test_deflated_image_frame_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules(),
@@ -357,6 +395,7 @@ fn test_color_image_encode_decode_cycle(
 ///
 fn encode_config() -> PixelDataEncodeConfig {
   let mut encode_config = PixelDataEncodeConfig::new();
+  encode_config.set_effort(1);
   encode_config.set_quality(100);
   encode_config
 }

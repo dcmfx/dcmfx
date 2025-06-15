@@ -3,11 +3,12 @@
   "editor.tabSize": 2,
 
   "files.exclude": {
-    "**/build/": true,
     "**/cache/": true,
     "**/dist/": true,
     "**/node_modules/": true,
-    "**/target/": true
+    "**/target/": true,
+    "examples/**/gleam/build/": true,
+    "src/gleam/**/build/": true
   },
 
   "rust-analyzer.linkedProjects": [
@@ -43,6 +44,7 @@
     "jpegls",
     "libc",
     "libjpeg",
+    "libjxl",
     "lut",
     "luts",
     "msvc",
@@ -59,5 +61,8 @@
     "submatches",
     "uids",
     "walkdir"
-  ]
+  ],
+  "files.associations": {
+    "jpeglib12.h": "c"
+  }
 }

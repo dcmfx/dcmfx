@@ -22,6 +22,8 @@ pub enum TransferSyntaxArg {
   Jpeg2k,
   HighThroughputJpeg2kLosslessOnly,
   HighThroughputJpeg2k,
+  JpegXlLossless,
+  JpegXl,
 }
 
 impl TransferSyntaxArg {
@@ -63,6 +65,8 @@ impl TransferSyntaxArg {
       Self::HighThroughputJpeg2k => {
         Some(&transfer_syntax::HIGH_THROUGHPUT_JPEG_2K)
       }
+      Self::JpegXlLossless => Some(&transfer_syntax::JPEG_XL_LOSSLESS),
+      Self::JpegXl => Some(&transfer_syntax::JPEG_XL),
     }
   }
 }
@@ -86,6 +90,8 @@ impl ValueEnum for TransferSyntaxArg {
       Self::Jpeg2k,
       Self::HighThroughputJpeg2kLosslessOnly,
       Self::HighThroughputJpeg2k,
+      Self::JpegXlLossless,
+      Self::JpegXl,
     ]
   }
 
@@ -262,6 +268,24 @@ impl ValueEnum for TransferSyntaxArg {
         \n\
         Encapsulated: Yes\n\
         UID: 1.2.840.10008.1.2.4.202",
+      ),
+
+      Self::JpegXlLossless => PossibleValue::new("jpeg-xl-lossless").help(
+        "\n\
+        Lossless image compression using the JPEG XL format. The compression \
+        effort to use can be set with the --effort argument.\n\
+        \n\
+        Encapsulated: Yes\n\
+        UID: 1.2.840.10008.1.2.4.110",
+      ),
+
+      Self::JpegXl => PossibleValue::new("jpeg-xl").help(
+        "\n\
+        Lossy image compression using the JPEG XL format. The compression \
+        effort to use can be set with the --effort argument.\n\
+        \n\
+        Encapsulated: Yes\n\
+        UID: 1.2.840.10008.1.2.4.112",
       ),
     })
   }

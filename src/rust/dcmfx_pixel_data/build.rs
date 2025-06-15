@@ -4,6 +4,7 @@ fn main() {
 
   if !std::env::var("TARGET").unwrap().contains("wasm") {
     build_charls();
+    build_libjxl();
     build_openjph();
 
     // Link the C++ standard library statically on windows-gnu targets
@@ -162,6 +163,255 @@ fn build_charls() {
   );
 }
 
+fn build_libjxl() {
+  compile(
+    &[
+      "vendor/libjxl_0.11.1/lib/jxl/ac_strategy.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/alpha.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/ans_common.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/blending.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/box_content_decoder.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/butteraugli/butteraugli.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/chroma_from_luma.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/cms/jxl_cms.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/coeff_order.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/color_encoding_internal.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/compressed_dc.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/convolve_separable5.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/convolve_slow.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/convolve_symmetric3.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/convolve_symmetric5.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_ans.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_cache.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_context_map.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_external_image.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_frame.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_group_border.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_group.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_huffman.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_modular.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_noise.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_patch_dictionary.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_transforms_testonly.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/dec_xyb.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/decode_to_jpeg.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/decode.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_ac_strategy.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_adaptive_quantization.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_ans.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_aux_out.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_bit_writer.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_butteraugli_comparator.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_cache.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_chroma_from_luma.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_cluster.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_coeff_order.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_comparator.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_context_map.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_debug_image.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_detect_dots.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_dot_dictionary.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_entropy_coder.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_external_image.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_fast_lossless.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_fields.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_frame.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_gaborish.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_group.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_heuristics.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_huffman_tree.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_huffman.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_icc_codec.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_image_bundle.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_linalg.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_modular.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_noise.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_patch_dictionary.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_photon_noise.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_progressive_split.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_quant_weights.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_splines.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_toc.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_transforms.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/enc_xyb.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/encode.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/entropy_coder.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/epf.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/fields.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/frame_header.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/headers.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/huffman_table.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/icc_codec_common.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/icc_codec.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/image_bundle.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/image_metadata.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/image_ops.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/image.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/jpeg/dec_jpeg_data_writer.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/jpeg/dec_jpeg_data.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/jpeg/enc_jpeg_data_reader.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/jpeg/enc_jpeg_data.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/jpeg/enc_jpeg_huffman_decode.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/jpeg/jpeg_data.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/loop_filter.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/luminance.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/memory_manager_internal.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/encoding/dec_ma.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/encoding/enc_debug_tree.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/encoding/enc_encoding.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/encoding/enc_ma.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/encoding/encoding.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/modular_image.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/transform/enc_palette.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/transform/enc_rct.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/transform/enc_squeeze.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/transform/enc_transform.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/transform/palette.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/transform/rct.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/transform/squeeze.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/modular/transform/transform.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/opsin_params.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/passes_state.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/quant_weights.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/quantizer.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/low_memory_render_pipeline.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/render_pipeline.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/simple_render_pipeline.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_blending.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_chroma_upsampling.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_cms.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_epf.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_from_linear.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_gaborish.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_noise.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_patches.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_splines.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_spot.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_to_linear.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_tone_mapping.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_upsampling.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_write.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_xyb.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/render_pipeline/stage_ycbcr.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/simd_util.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/splines.cc",
+      "vendor/libjxl_0.11.1/lib/jxl/toc.cc",
+      "vendor/libjxl_0.11.1/lib/threads/resizable_parallel_runner.cc",
+      "vendor/libjxl_0.11.1/lib/threads/thread_parallel_runner_internal.cc",
+      "vendor/libjxl_0.11.1/lib/threads/thread_parallel_runner.cc",
+      "vendor/libjxl_0.11.1/libjxl_interface.cpp",
+    ],
+    &[
+      "vendor/libjxl_0.11.1",
+      "vendor/libjxl_0.11.1/build/lib/include",
+      "vendor/libjxl_0.11.1/lib/include",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/include",
+      "vendor/libjxl_0.11.1/third_party/highway",
+      "vendor/libjxl_0.11.1/third_party/lcms/include",
+    ],
+    &[
+      ("JXL_STATIC_DEFINE", "1"),
+      ("JXL_THREADS_STATIC_DEFINE", "1"),
+      ("JXL_CMS_STATIC_DEFINE", "1"),
+      ("CMS_NO_REGISTER_KEYWORD", "1"),
+    ],
+    &[],
+    "dcmfx_pixel_data_libjxl",
+  );
+
+  compile(
+    &[
+      "vendor/libjxl_0.11.1/third_party/brotli/c/common/constants.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/common/context.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/common/dictionary.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/common/platform.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/common/shared_dictionary.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/common/transform.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/dec/bit_reader.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/dec/decode.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/dec/huffman.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/dec/state.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/backward_references_hq.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/backward_references.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/bit_cost.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/block_splitter.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/brotli_bit_stream.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/cluster.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/command.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/compound_dictionary.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/compress_fragment_two_pass.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/compress_fragment.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/dictionary_hash.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/encode.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/encoder_dict.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/entropy_encode.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/fast_log.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/histogram.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/literal_cost.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/memory.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/metablock.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/static_dict.c",
+      "vendor/libjxl_0.11.1/third_party/brotli/c/enc/utf8_util.c",
+    ],
+    &["vendor/libjxl_0.11.1/third_party/brotli/c/include"],
+    &[],
+    &[],
+    "dcmfx_pixel_data_libjxl_brotli",
+  );
+
+  compile(
+    &[
+      "vendor/libjxl_0.11.1/third_party/highway/hwy/abort.cc",
+      "vendor/libjxl_0.11.1/third_party/highway/hwy/aligned_allocator.cc",
+      "vendor/libjxl_0.11.1/third_party/highway/hwy/nanobenchmark.cc",
+      "vendor/libjxl_0.11.1/third_party/highway/hwy/per_target.cc",
+      "vendor/libjxl_0.11.1/third_party/highway/hwy/print.cc",
+      "vendor/libjxl_0.11.1/third_party/highway/hwy/stats.cc",
+      "vendor/libjxl_0.11.1/third_party/highway/hwy/targets.cc",
+      "vendor/libjxl_0.11.1/third_party/highway/hwy/timer.cc",
+    ],
+    &["vendor/libjxl_0.11.1/third_party/highway"],
+    &[],
+    &[],
+    "dcmfx_pixel_data_libjxl_highway",
+  );
+
+  compile(
+    &[
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsalpha.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmscam02.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmscgats.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmscnvrt.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmserr.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsgamma.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsgmt.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmshalf.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsintrp.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsio0.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsio1.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmslut.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsmd5.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsmtrx.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsnamed.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsopt.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmspack.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmspcs.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsplugin.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsps2.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmssamp.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmssm.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmstypes.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsvirt.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmswtpnt.c",
+      "vendor/libjxl_0.11.1/third_party/lcms/src/cmsxform.c",
+    ],
+    &["vendor/libjxl_0.11.1/third_party/lcms/include"],
+    &[],
+    &[],
+    "dcmfx_pixel_data_libjxl_lcms",
+  );
+}
+
 fn build_openjph() {
   compile(
     &[
@@ -278,17 +528,32 @@ fn compile(
   // Enable C++ support if there are any C++ source files
   if src_files
     .iter()
-    .any(|f| f.ends_with(".cpp") || f.ends_with(".cxx"))
+    .any(|f| f.ends_with(".cpp") || f.ends_with(".cxx") || f.ends_with(".cc"))
   {
     build.cpp(true);
     build.static_crt(true);
 
-    // Target C++14
-    if std::env::var("TARGET").unwrap().contains("msvc") {
-      build.flag("/std:c++14");
+    // Target C++17
+    if is_msvc() {
+      build.flag("/std:c++17");
     } else {
-      build.flag("-std=c++14");
+      build.flag("-std=c++17");
     }
+
+    // Enable exception handling on MSVC
+    if is_msvc() {
+      build.flag("/EHsc");
+    }
+  }
+
+  // Disable warnings
+  if is_msvc() {
+    build.warnings(false);
+    build.define("_CRT_SECURE_NO_WARNINGS", "1");
+  } else {
+    build.flag("-Wno-unused-but-set-parameter");
+    build.flag("-Wno-unused-but-set-variable");
+    build.flag("-Wno-unused-parameter");
   }
 
   let is_release = std::env::var("PROFILE").unwrap() == "release";
@@ -321,13 +586,6 @@ fn compile(
     build.define(define.0, define.1);
   }
 
-  // Silence build warnings on GCC/Clang
-  if !std::env::var("TARGET").unwrap().contains("msvc") {
-    build.flag("-Wno-unused-but-set-variable");
-    build.flag("-Wno-unused-parameter");
-    build.flag("-Wno-implicit-fallthrough");
-  }
-
   // When targeting WASM, add OpenBSD libc include path
   if let Some(libc) =
     std::env::var_os("DEP_WASM32_UNKNOWN_UNKNOWN_OPENBSD_LIBC_INCLUDE")
@@ -356,7 +614,7 @@ enum BuildFlag {
 
 impl BuildFlag {
   fn compiler_flags(&self) -> &[&str] {
-    if std::env::var("TARGET").unwrap().contains("msvc") {
+    if is_msvc() {
       match self {
         Self::ArchitectureAVX => &["/arch:AVX"],
         Self::ArchitectureAVX2 => &["/arch:AVX2"],
@@ -376,4 +634,8 @@ impl BuildFlag {
       }
     }
   }
+}
+
+fn is_msvc() -> bool {
+  std::env::var("TARGET").unwrap().contains("msvc")
 }

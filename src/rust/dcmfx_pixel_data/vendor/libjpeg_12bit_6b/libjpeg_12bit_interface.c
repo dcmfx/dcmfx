@@ -12,12 +12,12 @@
 #include "./src/jerror12.h"
 #include "./src/jpeglib12.h"
 
-static void output_message(j_common_ptr _cinfo) {}
+static void output_message(j_common_ptr cinfo) {}
 static void error_exit(j_common_ptr cinfo) {}
-static void init_source(j_decompress_ptr _dinfo) {}
-static boolean_result_t fill_input_buffer(j_decompress_ptr _dinfo);
+static void init_source(j_decompress_ptr dinfo) {}
+static boolean_result_t fill_input_buffer(j_decompress_ptr dinfo);
 static void skip_input_data(j_decompress_ptr dinfo, long num_bytes);
-static void term_source(j_decompress_ptr _dinfo) {}
+static void term_source(j_decompress_ptr dinfo) {}
 
 // Decodes the given bytes as a 12-bit JPEG.
 size_t libjpeg_12bit_decode(const void *input_data, size_t input_data_size,
@@ -151,7 +151,7 @@ static void skip_input_data(j_decompress_ptr dinfo, long num_bytes) {
   }
 
   if ((size_t)num_bytes > dinfo->src->bytes_in_buffer) {
-    num_bytes = dinfo->src->bytes_in_buffer;
+    num_bytes = (long)dinfo->src->bytes_in_buffer;
   }
 
   dinfo->src->bytes_in_buffer -= num_bytes;
@@ -176,7 +176,7 @@ typedef struct {
 } jpeg_mem_destination_mgr;
 
 // Forward declarations
-static void_result_t init_destination(j_compress_ptr _cinfo);
+static void_result_t init_destination(j_compress_ptr cinfo);
 static boolean_result_t empty_output_buffer(j_compress_ptr cinfo);
 static void_result_t term_destination(j_compress_ptr cinfo);
 static void jpeg_mem_dest(j_compress_ptr cinfo,
@@ -184,8 +184,7 @@ static void jpeg_mem_dest(j_compress_ptr cinfo,
                           void *output_data_context);
 
 // Encodes the given image as a 12-bit JPEG.
-size_t libjpeg_12bit_encode(int16_t *input_data, size_t input_data_size,
-                            size_t width, size_t height,
+size_t libjpeg_12bit_encode(int16_t *input_data, size_t width, size_t height,
                             size_t samples_per_pixel,
                             size_t photometric_interpretation,
                             size_t color_space, size_t quality,
@@ -214,10 +213,10 @@ size_t libjpeg_12bit_encode(int16_t *input_data, size_t input_data_size,
   jpeg_mem_dest(&cinfo, output_data_callback, output_data_context);
 
   // Setup compressor info
-  cinfo.image_width = width;
-  cinfo.image_height = height;
-  cinfo.input_components = samples_per_pixel;
-  cinfo.in_color_space = color_space;
+  cinfo.image_width = (JDIMENSION)width;
+  cinfo.image_height = (JDIMENSION)height;
+  cinfo.input_components = (int)samples_per_pixel;
+  cinfo.in_color_space = (J_COLOR_SPACE)color_space;
 
   if (jpeg_set_defaults(&cinfo).is_err) {
     strcpy(error_message, "jpeg_set_defaults() failed");
@@ -277,7 +276,7 @@ size_t libjpeg_12bit_encode(int16_t *input_data, size_t input_data_size,
   return 0;
 }
 
-static void_result_t init_destination(j_compress_ptr _cinfo) { return OK_VOID; }
+static void_result_t init_destination(j_compress_ptr cinfo) { return OK_VOID; }
 
 static boolean_result_t empty_output_buffer(j_compress_ptr cinfo) {
   jpeg_mem_destination_mgr *dest = (jpeg_mem_destination_mgr *)cinfo->dest;

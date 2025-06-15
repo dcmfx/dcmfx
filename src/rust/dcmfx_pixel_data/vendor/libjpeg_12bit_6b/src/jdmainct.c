@@ -183,7 +183,7 @@ alloc_funny_pointers (j_decompress_ptr cinfo)
     /* Get space for pointer lists --- M+4 row groups in each list.
      * We alloc both pointer lists with one call to save a few cycles.
      */
-    void_ptr_result_t alloc_small_result =
+    alloc_small_result =
       (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				  2 * (size_t)(rgroup * (M + 4)) * SIZEOF(JSAMPROW));
     if (alloc_small_result.is_err)

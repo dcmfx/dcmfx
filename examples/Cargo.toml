@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+  "dicom_anonymize/rust",
+  "dicom_json_read/rust",
+  "dicom_json_write/rust",
+  "dicom_read/rust",
+  "dicom_read_pixel_data/rust",
+  "dicom_stream/rust",
+  "dicom_write/rust",
+]
+
+[workspace.package]
+license = "AGPL-3.0-only"
+edition = "2024"

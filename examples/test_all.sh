@@ -4,23 +4,22 @@
 
 set -e
 
-for dir in dicom_*/; do
+cargo fmt --check
+
+for dir in dicom_*; do
   echo ""
   echo "Testing $dir …"
 
-  cd "$dir"/gleam
+  cd $dir/gleam
   gleam format --check .
   gleam run --target erlang
   gleam run --target javascript --runtime node
   gleam run --target javascript --runtime deno
   gleam run --target javascript --runtime bun
 
-  cd ../rust
-  cargo fmt --check
-  cargo clippy -- --deny warnings
-  cargo run --locked
-
   cd ../..
+
+  cargo run --locked -p $dir
 done
 
 echo ""

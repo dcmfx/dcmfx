@@ -29,7 +29,7 @@ size_t stream_read(void *p_buffer, size_t n_bytes, void *p_user_data) {
   openjpeg_data_source *data_source = (openjpeg_data_source *)p_user_data;
 
   if (n_bytes == 0 || data_source->offset >= data_source->data_length) {
-    return -1;
+    return SIZE_MAX;
   }
 
   size_t remaining_data = data_source->data_length - data_source->offset;
@@ -74,7 +74,7 @@ OPJ_BOOL stream_seek(OPJ_OFF_T n_bytes, void *p_user_data) {
 
 static void cleanup(opj_codec_t *codec, opj_stream_t *stream,
                     opj_image_t *image, char *error_buffer,
-                    uint32_t error_buffer_size, char *error,
+                    size_t error_buffer_size, char *error,
                     char *error_details) {
   opj_image_destroy(image);
   opj_stream_destroy(stream);
@@ -85,7 +85,7 @@ static void cleanup(opj_codec_t *codec, opj_stream_t *stream,
 
     // If there are error details present then append them to the error buffer
     if (error_details != NULL && strlen(error_details) > 0) {
-      int chars_remaining = error_buffer_size - strlen(error_buffer) - 1;
+      size_t chars_remaining = error_buffer_size - strlen(error_buffer) - 1;
       if (chars_remaining < 7) {
         return;
       }
@@ -230,11 +230,11 @@ size_t openjpeg_decode(const void *input_data, size_t input_data_size,
 
       if (pixel_representation == 0) {
         for (size_t i = 0; i < width * height; i++) {
-          ((uint8_t *)output_data)[i] = image->comps[0].data[i];
+          ((uint8_t *)output_data)[i] = (uint8_t) image->comps[0].data[i];
         }
       } else {
         for (size_t i = 0; i < width * height; i++) {
-          ((int8_t *)output_data)[i] = image->comps[0].data[i];
+          ((int8_t *)output_data)[i] = (int8_t)  image->comps[0].data[i];
         }
       }
     } else if (bits_allocated == 16) {
@@ -246,11 +246,11 @@ size_t openjpeg_decode(const void *input_data, size_t input_data_size,
 
       if (pixel_representation == 0) {
         for (size_t i = 0; i < width * height; i++) {
-          ((uint16_t *)output_data)[i] = image->comps[0].data[i];
+          ((uint16_t *)output_data)[i] =(uint16_t)  image->comps[0].data[i];
         }
       } else {
         for (size_t i = 0; i < width * height; i++) {
-          ((int16_t *)output_data)[i] = image->comps[0].data[i];
+          ((int16_t *)output_data)[i] = (int16_t) image->comps[0].data[i];
         }
       }
     } else if (bits_allocated == 32) {
@@ -262,11 +262,11 @@ size_t openjpeg_decode(const void *input_data, size_t input_data_size,
 
       if (pixel_representation == 0) {
         for (size_t i = 0; i < width * height; i++) {
-          ((uint32_t *)output_data)[i] = image->comps[0].data[i];
+          ((uint32_t *)output_data)[i] = (uint32_t) image->comps[0].data[i];
         }
       } else {
         for (size_t i = 0; i < width * height; i++) {
-          ((int32_t *)output_data)[i] = image->comps[0].data[i];
+          ((int32_t *)output_data)[i] = (int32_t) image->comps[0].data[i];
         }
       }
     } else {
@@ -287,9 +287,9 @@ size_t openjpeg_decode(const void *input_data, size_t input_data_size,
       }
 
       for (uint32_t i = 0; i < width * height; i++) {
-        ((uint8_t *)output_data)[i * 3] = red_data[i];
-        ((uint8_t *)output_data)[i * 3 + 1] = green_data[i];
-        ((uint8_t *)output_data)[i * 3 + 2] = blue_data[i];
+        ((uint8_t *)output_data)[i * 3] = (uint8_t) red_data[i];
+        ((uint8_t *)output_data)[i * 3 + 1] = (uint8_t) green_data[i];
+        ((uint8_t *)output_data)[i * 3 + 2] = (uint8_t) blue_data[i];
       }
     } else if (bits_allocated == 16) {
       if (output_data_size != width * height * 2 * 3) {
@@ -299,9 +299,9 @@ size_t openjpeg_decode(const void *input_data, size_t input_data_size,
       }
 
       for (uint32_t i = 0; i < width * height; i++) {
-        ((uint16_t *)output_data)[i * 3] = red_data[i];
-        ((uint16_t *)output_data)[i * 3 + 1] = green_data[i];
-        ((uint16_t *)output_data)[i * 3 + 2] = blue_data[i];
+        ((uint16_t *)output_data)[i * 3] = (uint16_t) red_data[i];
+        ((uint16_t *)output_data)[i * 3 + 1] = (uint16_t) green_data[i];
+        ((uint16_t *)output_data)[i * 3 + 2] = (uint16_t) blue_data[i];
       }
     } else if (bits_allocated == 32) {
       if (output_data_size != width * height * 4 * 3) {
@@ -311,9 +311,9 @@ size_t openjpeg_decode(const void *input_data, size_t input_data_size,
       }
 
       for (uint32_t i = 0; i < width * height; i++) {
-        ((uint32_t *)output_data)[i * 3] = red_data[i];
-        ((uint32_t *)output_data)[i * 3 + 1] = green_data[i];
-        ((uint32_t *)output_data)[i * 3 + 2] = blue_data[i];
+        ((uint32_t *)output_data)[i * 3] = (uint32_t) red_data[i];
+        ((uint32_t *)output_data)[i * 3 + 1] = (uint32_t) green_data[i];
+        ((uint32_t *)output_data)[i * 3 + 2] = (uint32_t) blue_data[i];
       }
     } else {
       cleanup(codec, stream, image, error_buffer, error_buffer_size,
@@ -346,10 +346,10 @@ static OPJ_SIZE_T output_stream_write(void *p_buffer, OPJ_SIZE_T p_size,
   return p_size;
 }
 
-static void output_stream_free(void *p_user_data) {}
+static void output_stream_free(void *p_user_data) { (void)p_user_data; }
 
 size_t openjpeg_encode(
-    const void *input_data, size_t input_data_size, size_t width, size_t height,
+    const void *input_data, size_t width, size_t height,
     size_t samples_per_pixel, size_t bits_allocated, size_t bits_stored,
     size_t pixel_representation, size_t color_photometric_interpretation,
     float tcp_distoratio,
@@ -379,11 +379,11 @@ size_t openjpeg_encode(
 
   // Set number of resolutions such that the lowest resolution will be 64x64 in
   // order to avoid over-decomposition
-  uint32_t min_dimension = width < height ? width : height;
+  size_t min_dimension = width < height ? width : height;
   if (min_dimension < 64) {
     min_dimension = 64;
   }
-  parameters.numresolution = floor(log2(min_dimension / 64)) + 1;
+  parameters.numresolution = (int) floor(log2(min_dimension / 64)) + 1;
   if (parameters.numresolution > 6) {
     parameters.numresolution = 6;
   }

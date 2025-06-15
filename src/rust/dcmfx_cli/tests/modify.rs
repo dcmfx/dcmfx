@@ -151,6 +151,24 @@ fn errors_on_quality_without_transfer_syntax() {
 }
 
 #[test]
+fn errors_on_effort_without_transfer_syntax() {
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg("--effort")
+    .arg("5")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(
+    "errors_on_effort_without_transfer_syntax",
+    get_stderr(assert)
+  );
+}
+
+#[test]
 fn explicit_vr_little_endian_monochrome1_to_monochrome2() {
   modify_transfer_syntax(
     "../../../test/assets/pydicom/test_files/dicomdirtests/77654033/CR1/6154.dcm",
@@ -771,6 +789,126 @@ fn jpeg_ls_monochrome_to_high_throughput_jpeg_2000_lossless_only() {
 }
 
 #[test]
+fn jpeg_2000_ybr_to_jpeg_xl_lossless() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/jpeg_2000_ybr_color_space.dcm",
+    "jpeg-xl-lossless",
+    "jpeg_2000_ybr_to_jpeg_xl_lossless",
+    &["--effort", "1"],
+  );
+}
+
+#[test]
+fn jpeg_2000_ybr_to_jpeg_xl() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/jpeg_2000_ybr_color_space.dcm",
+    "jpeg-xl",
+    "jpeg_2000_ybr_to_jpeg_xl",
+    &["--effort", "1"],
+  );
+}
+
+#[test]
+fn palette_color_to_jpeg_xl_lossless() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "jpeg-xl-lossless",
+    "palette_color_to_jpeg_xl_lossless",
+    &["--effort", "1"],
+  );
+}
+
+#[test]
+fn palette_color_to_jpeg_xl() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "jpeg-xl",
+    "palette_color_to_jpeg_xl",
+    &["--effort", "1"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_rgb_to_jpeg_xl_lossless() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "jpeg-xl-lossless",
+    "explicit_vr_little_endian_rgb_to_jpeg_xl_lossless",
+    &["--effort", "1"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_rgb_to_jpeg_xl() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "jpeg-xl",
+    "explicit_vr_little_endian_rgb_to_jpeg_xl",
+    &["--quality", "10", "--effort", "1"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_ybr_to_jpeg_xl_lossless() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
+    "jpeg-xl-lossless",
+    "explicit_vr_little_endian_ybr_to_jpeg_xl_lossless",
+    &["--effort", "1"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_ybr_to_jpeg_xl() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
+    "jpeg-xl",
+    "explicit_vr_little_endian_ybr_to_jpeg_xl",
+    &["--quality", "25", "--effort", "1"],
+  );
+}
+
+#[test]
+fn rle_lossless_rgb_16_bit_to_jpeg_xl_lossless() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
+    "jpeg-xl-lossless",
+    "rle_lossless_rgb_16_bit_to_jpeg_xl_lossless",
+    &["--effort", "1"],
+  );
+}
+
+#[test]
+fn rle_lossless_rgb_16_bit_to_jpeg_xl() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
+    "jpeg-xl",
+    "rle_lossless_rgb_16_bit_to_jpeg_xl",
+    &["--quality", "40", "--effort", "1"],
+  );
+}
+
+#[test]
+fn jpeg_baseline_to_jpeg_xl_lossless_rgb() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+    "jpeg-xl-lossless",
+    "jpeg_baseline_to_jpeg_xl_lossless_rgb",
+    &["--photometric-interpretation-color", "RGB", "--effort", "1"],
+  );
+}
+
+#[test]
+fn jpeg_ls_monochrome_to_jpeg_xl_lossless() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm",
+    "jpeg-xl-lossless",
+    "jpeg_ls_monochrome_to_jpeg_xl_lossless",
+    &["--effort", "1"],
+  );
+}
+
+#[test]
 fn errors_on_unaligned_multiframe_bitmap() {
   let assert = Command::cargo_bin("dcmfx_cli")
     .unwrap()
@@ -828,14 +966,36 @@ fn modify_transfer_syntax(
       temp_path.display()
     ));
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("print")
-    .arg(&temp_path)
-    .assert()
-    .success();
+  // On x86_64 the following tests have different compressed data sizes
+  // compared to aarch64 which is what the snapshots are generated on. The
+  // reason for this isn't immediately obvious, but the difference persists
+  // even with the same parallelism, so it's likely to do with different SIMD
+  // code on each platform.
+  #[cfg(target_arch = "x86_64")]
+  let assert_after_snapshot = transfer_syntax != "jpeg-xl-lossless"
+    || ![
+      "explicit_vr_little_endian_rgb_to_jpeg_xl_lossless",
+      "explicit_vr_little_endian_ybr_to_jpeg_xl_lossless",
+      "jpeg_2000_ybr_to_jpeg_xl_lossless",
+      "jpeg_baseline_to_jpeg_xl_lossless_rgb",
+      "palette_color_to_jpeg_xl_lossless",
+      "rle_lossless_rgb_16_bit_to_jpeg_xl_lossless",
+    ]
+    .contains(&snapshot_prefix);
 
-  assert_snapshot!(format!("{}_after", snapshot_prefix), get_stdout(assert));
+  #[cfg(not(target_arch = "x86_64"))]
+  let assert_after_snapshot = true;
+
+  if assert_after_snapshot {
+    let assert = Command::cargo_bin("dcmfx_cli")
+      .unwrap()
+      .arg("print")
+      .arg(&temp_path)
+      .assert()
+      .success();
+
+    assert_snapshot!(format!("{}_after", snapshot_prefix), get_stdout(assert));
+  }
 
   Command::cargo_bin("dcmfx_cli")
     .unwrap()

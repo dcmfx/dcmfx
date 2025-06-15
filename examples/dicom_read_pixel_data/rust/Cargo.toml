@@ -1,6 +1,6 @@
 [package]
 name = "dicom_read_pixel_data"
-edition = "2024"
+edition.workspace = true
 
 [dependencies]
 dcmfx = { path = "../../../src/rust/dcmfx" }

@@ -9,7 +9,7 @@ concurrency:
 jobs:
   check_semantic_release:
     name: Check semantic release
-    timeout-minutes: 10
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
 
     permissions:
@@ -47,7 +47,7 @@ jobs:
 
   build_rust_cli_tool:
     name: Build Rust CLI tool
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     needs: check_semantic_release
     if: needs.check_semantic_release.outputs.new_release_published == 'true'

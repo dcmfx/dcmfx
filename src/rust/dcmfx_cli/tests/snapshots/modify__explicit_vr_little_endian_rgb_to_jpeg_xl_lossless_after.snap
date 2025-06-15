@@ -1,0 +1,52 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    52 bytes] "1.3.6.1.4. …
+(0002,0010) UI Transfer Syntax UID                  [    24 bytes] "1.2.840 … (JPEG XL Lossless)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    10 bytes] "DCMfx Test"
+(0002,0016) AE Source Application Entity Title      [    12 bytes] "DicomBrows …
+(0008,0008) CS Image Type                           [    32 bytes] "DERIVED",  …
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0008,0018) UI SOP Instance UID                     [    52 bytes] "1.3.6.1.4. …
+(0008,0020) DA Study Date                           [     8 bytes] 2019-03-20
+(0008,0023) DA Content Date                         [     8 bytes] 2019-03-20
+(0008,0030) TM Study Time                           [    14 bytes] 13:30:24.526
+(0008,0033) TM Content Time                         [    14 bytes] 13:30:24.526
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "OT" (Other)
+(0008,0064) CS Conversion Type                      [     4 bytes] "WSD" (Workstation)
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0010,0010) PN Patient's Name                       [    12 bytes] "Test^Patte …
+(0010,0020) LO Patient ID                           [    12 bytes] "Test^Patte …
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 2013-10-05
+(0010,0040) CS Patient's Sex                        [     2 bytes] "O" (Other)
+(0020,000D) UI Study Instance UID                   [    52 bytes] "1.3.6.1.4. …
+(0020,000E) UI Series Instance UID                  [    52 bytes] "1.3.6.1.4. …
+(0020,0010) SH Study ID                             [     2 bytes] "1"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,0032) DS Image Position (Patient)             [    12 bytes] "0.5", "0.5 …
+(0020,0037) DS Image Orientation (Patient)          [    12 bytes] "1", "0", " …
+(0020,4000) LT Image Comments                       [    98 bytes] "MeVisLab,  …
+(0028,0002) US Samples per Pixel                    [     2 bytes] 3
+(0028,0004) CS Photometric Interpretation           [     4 bytes] "RGB"
+(0028,0006) US Planar Configuration                 [     2 bytes] 0
+(0028,0010) US Rows                                 [     2 bytes] 400
+(0028,0011) US Columns                              [     2 bytes] 640
+(0028,0030) DS Pixel Spacing                        [     4 bytes] "1", "1"
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 8
+(0028,0102) US High Bit                             [     2 bytes] 7
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(0028,0106) US Smallest Image Pixel Value           [     2 bytes] 0
+(0028,0107) US Largest Image Pixel Value            [     2 bytes] 255
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     0 bytes] []
+  (FFFE,E000) Item                                    [ 34424 bytes] [FF 0A 78 …
+(FFFE,E0DD) Sequence Delimitation Item

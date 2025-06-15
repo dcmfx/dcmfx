@@ -158,7 +158,6 @@ fn encode(
   let result = unsafe {
     ffi::libjpeg_12bit_encode(
       data.as_ptr(),
-      data.len(),
       width.into(),
       height.into(),
       u8::from(image_pixel_module.samples_per_pixel()).into(),
@@ -204,7 +203,6 @@ mod ffi {
   unsafe extern "C" {
     pub fn libjpeg_12bit_encode(
       input_data: *const u16,
-      input_data_size: usize,
       width: usize,
       height: usize,
       samples_per_pixel: usize,

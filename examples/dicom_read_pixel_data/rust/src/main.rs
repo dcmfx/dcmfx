@@ -2,7 +2,7 @@ use dcmfx::core::*;
 use dcmfx::p10::*;
 use dcmfx::pixel_data::*;
 
-const INPUT_FILE: &str = "../../example.dcm";
+const INPUT_FILE: &str = "./example.dcm";
 
 pub fn main() {
     let ds = DataSet::read_p10_file(INPUT_FILE).unwrap();

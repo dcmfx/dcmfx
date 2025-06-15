@@ -19,6 +19,8 @@ mod charls;
 mod jpeg_2000;
 mod jpeg_encoder;
 mod libjpeg_12bit;
+#[cfg(not(target_arch = "wasm32"))]
+mod libjxl;
 mod native;
 mod openjpeg;
 #[cfg(not(target_arch = "wasm32"))]
@@ -30,6 +32,7 @@ mod rle_lossless;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PixelDataEncodeConfig {
   quality: u8,
+  effort: u8,
   zlib_compression_level: u32,
 }
 
@@ -39,6 +42,7 @@ impl PixelDataEncodeConfig {
   pub fn new() -> Self {
     PixelDataEncodeConfig {
       quality: 85,
+      effort: 7,
       zlib_compression_level: 6,
     }
   }
@@ -59,11 +63,33 @@ impl PixelDataEncodeConfig {
     self.quality
   }
 
-  /// Sets the quality to use when performing lossy image compression of pixel
-  /// data, e.g. in the JPEG (Process 1) transfer syntax.
+  /// Sets the quality to use when lossy compressing pixel.
   ///
   pub fn set_quality(&mut self, quality: u8) {
     self.quality = quality.clamp(1, 100);
+  }
+
+  /// Returns the effort to use when compressing pixel data. Higher values allow
+  /// the compressor to take more processing time in order to try and achieve a
+  /// better compression ratio at the same quality level.
+  ///
+  /// The value ranges from 1 (lowest effort), through to 10 (highest effort).
+  ///
+  /// The effort value is used by the following transfer syntaxes:
+  ///
+  /// - JPEG XL Lossless
+  /// - JPEG XL
+  ///
+  /// Default: 7.
+  ///
+  pub fn effort(&self) -> u8 {
+    self.effort
+  }
+
+  /// Sets the effort to use when compressing pixel data.
+  ///
+  pub fn set_effort(&mut self, effort: u8) {
+    self.effort = effort.clamp(1, 10);
   }
 
   /// Returns the zlib compression level used when encoding pixel data into the
@@ -277,6 +303,16 @@ pub fn encode_image_pixel_module(
       Some(encode_config.quality),
     ),
 
+    #[cfg(not(target_arch = "wasm32"))]
+    &JPEG_XL_LOSSLESS => {
+      libjxl::encode_image_pixel_module(image_pixel_module.clone(), true)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    &JPEG_XL => {
+      libjxl::encode_image_pixel_module(image_pixel_module.clone(), false)
+    }
+
     _ => {
       return Err(PixelDataEncodeError::TransferSyntaxNotSupported {
         transfer_syntax,
@@ -359,6 +395,18 @@ pub fn encode_monochrome(
     )
     .map(PixelDataFrame::new_from_bytes),
 
+    #[cfg(not(target_arch = "wasm32"))]
+    &JPEG_XL_LOSSLESS => {
+      libjxl::encode_monochrome(image, image_pixel_module, encode_config, true)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    &JPEG_XL => {
+      libjxl::encode_monochrome(image, image_pixel_module, encode_config, false)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
     &DEFLATED_IMAGE_FRAME_COMPRESSION => deflate_frame_data(
       native::encode_monochrome(image, image_pixel_module)?,
       encode_config.zlib_compression_level,
@@ -438,6 +486,18 @@ pub fn encode_color(
       Some(encode_config.quality),
     )
     .map(PixelDataFrame::new_from_bytes),
+
+    #[cfg(not(target_arch = "wasm32"))]
+    &JPEG_XL_LOSSLESS => {
+      libjxl::encode_color(image, image_pixel_module, encode_config, true)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    &JPEG_XL => {
+      libjxl::encode_color(image, image_pixel_module, encode_config, false)
+        .map(PixelDataFrame::new_from_bytes)
+    }
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => {
       let frame = native::encode_color(image, image_pixel_module)

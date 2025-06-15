@@ -104,6 +104,25 @@ pub struct ModifyArgs {
   )]
   quality: Option<u8>,
 
+  #[arg(
+    long,
+    short,
+    help_heading = "Transcoding",
+    help = "When transcoding to a compressed transfer syntax, specifies the \
+      effort to put into the compression process, in the range 1-10. Higher \
+      values allow the compressor to take more processing time in order to try \
+      and achieve a better compression ratio at the same quality.\n\
+      \n\
+      The effort value applies to:\n\
+      \n\
+      - JPEG XL Lossless\n\
+      - JPEG XL\n\
+      \n\
+      Default value: 7",
+    value_parser = clap::value_parser!(u8).range(1..=100),
+  )]
+  effort: Option<u8>,
+
   #[clap(
     long,
     help_heading = "Transcoding",
@@ -132,6 +151,10 @@ pub struct ModifyArgs {
       'YBR_ICT' for lossy encoding. These two photometric interpretations are \
       generally preferred in JPEG 2000, however others may be used if there is \
       a need to compress with no risk of loss from color space conversions.\n\
+      \n\
+      When the output transfer syntax is JPEG XL the output photometric \
+      interpretation defaults to 'RGB' for lossless encoding, and 'XYB' for \
+      lossy encoding.\n\
       \n\
       For all other output transfer syntaxes there is no default output \
       photometric interpretation, however the output photometric \
@@ -257,6 +280,13 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
     if args.quality.is_some() {
       eprintln!(
         "The --quality option is only valid when --transfer-syntax is specified"
+      );
+      return Err(());
+    }
+
+    if args.effort.is_some() {
+      eprintln!(
+        "The --effort option is only valid when --transfer-syntax is specified"
       );
       return Err(());
     }
@@ -532,6 +562,14 @@ fn get_transcode_image_data_functions(
                 PhotometricInterpretation::YbrIct,
               ),
 
+            // When transcoding to JPEG XL lossless default to RGB
+            transfer_syntax::JPEG_XL_LOSSLESS => image_pixel_module
+              .set_photometric_interpretation(PhotometricInterpretation::Rgb),
+
+            // When transcoding to JPEG XL lossy default to XYB
+            transfer_syntax::JPEG_XL => image_pixel_module
+              .set_photometric_interpretation(PhotometricInterpretation::Xyb),
+
             _ => (),
           }
         }
@@ -595,6 +633,7 @@ fn get_transcode_image_data_functions(
       if photometric_interpretation.is_rgb()
         || photometric_interpretation.is_ybr_ict()
         || photometric_interpretation.is_ybr_rct()
+        || photometric_interpretation.is_xyb()
       {
         image.convert_to_rgb_color_space()
       }
@@ -675,6 +714,7 @@ fn streaming_rewrite(
 
           let mut pixel_data_encode_config = PixelDataEncodeConfig::new();
           pixel_data_encode_config.set_quality(args.quality.unwrap_or(85));
+          pixel_data_encode_config.set_effort(args.effort.unwrap_or(7));
           pixel_data_encode_config
             .set_zlib_compression_level(args.zlib_compression_level);
 

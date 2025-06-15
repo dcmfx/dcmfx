@@ -1,7 +1,7 @@
 use dcmfx::core::*;
 use dcmfx::p10::*;
 
-const INPUT_FILE: &str = "../../example.dcm";
+const INPUT_FILE: &str = "./example.dcm";
 const OUTPUT_FILE: &str = "output.dcm";
 
 pub fn main() {
