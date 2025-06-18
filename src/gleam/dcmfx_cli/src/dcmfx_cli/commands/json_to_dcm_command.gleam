@@ -39,8 +39,9 @@ fn output_directory_flag() {
 fn implementation_version_name_flag() {
   glint.string_flag("implementation-version-name")
   |> glint.flag_help(
-    "Specifies the value of the Implementation Version Name data element in "
-    <> "output DICOM P10 files.",
+    "The value of the Implementation Version Name data element in output DICOM "
+    <> "P10 files. The value must conform to the specification of the SS "
+    <> "(Short String) value representation.",
   )
   |> glint.flag_default(uids.dcmfx_implementation_version_name)
 }

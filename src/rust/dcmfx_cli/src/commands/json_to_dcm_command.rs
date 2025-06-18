@@ -51,8 +51,9 @@ pub struct ToDcmArgs {
 
   #[clap(
     long,
-    help = "Specifies the value of the Implementation Version Name data \
-      element in output DICOM P10 files.",
+    help = "The value of the Implementation Version Name data element in \
+      output DICOM P10 files. The value must conform to the specification of \
+      the SS (Short String) value representation.",
     default_value_t = uids::DCMFX_IMPLEMENTATION_VERSION_NAME.to_string(),
   )]
   implementation_version_name: String,

@@ -93,6 +93,14 @@ pub struct P10ReadConfig {
   ///
   pub max_sequence_depth: usize,
 
+  /// Whether to require input data have 'DICM' at bytes 128-132. This is
+  /// required for well-formed DICOM P10 data, but it may be absent in some
+  /// cases. If this is set to `false` then such data will be readable.
+  ///
+  /// By default the 'DICM' prefix at bytes 128-132 is not required.
+  ///
+  pub require_dicm_prefix: bool,
+
   /// Whether to error if data elements are not in ascending order in the DICOM
   /// P10 data. Such data is malformed but is still able to read, however doing
   /// so can potentially lead to incorrect results. For example:
@@ -117,6 +125,7 @@ impl Default for P10ReadConfig {
       max_token_size: 0xFFFFFFFE,
       max_string_size: 0xFFFFFFFE,
       max_sequence_depth: 10_000,
+      require_dicm_prefix: false,
       require_ordered_data_elements: true,
     }
   }
@@ -347,15 +356,26 @@ impl P10ReadContext {
           preamble.copy_from_slice(&data[0..128]);
 
           Ok(Box::new(preamble))
+        } else if self.config.require_dicm_prefix {
+          Err(P10Error::DataInvalid {
+            when: "Reading file header".to_string(),
+            details: "The required 'DICM' prefix is missing".to_string(),
+            path: DataSetPath::new(),
+            offset: 128,
+          })
         } else {
-          // There is no DICM prefix, so return empty preamble bytes
+          // The 'DICM' prefix is absent but is not configured as required, so
+          // return empty preamble bytes
           Ok(Box::new([0u8; 128]))
         }
       }
 
       // If the end of the data is encountered when trying to read the first 132
       // bytes then there is no File Preamble so return empty preamble bytes
-      Err(ByteStreamError::DataEnd) => Ok(Box::new([0; 128])),
+      // unless the 'DICM' prefix is configured as required
+      Err(ByteStreamError::DataEnd) if !self.config.require_dicm_prefix => {
+        Ok(Box::new([0; 128]))
+      }
 
       Err(e) => Err(self.map_byte_stream_error(e, "Reading file header")),
     }?;

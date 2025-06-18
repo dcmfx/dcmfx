@@ -96,6 +96,14 @@ import gleam/result
 /// By default the maximum sequence depth is set to ten thousand, i.e. no
 /// meaningful maximum is enforced.
 ///
+/// ### `require_dicm_prefix: Bool`
+///
+/// Whether to require input data have 'DICM' at bytes 128-132. This is required
+/// for well-formed DICOM P10 data, but it may be absent in some cases. If this
+/// is set to `False` then such data will be readable.
+///
+/// By default the 'DICM' prefix at bytes 128-132 is not required.
+///
 /// ### `require_ordered_data_elements: Bool`
 ///
 /// Whether to error if data elements are not in ascending order in the DICOM
@@ -118,6 +126,7 @@ pub type P10ReadConfig {
     max_token_size: Int,
     max_string_size: Int,
     max_sequence_depth: Int,
+    require_dicm_prefix: Bool,
     require_ordered_data_elements: Bool,
   )
 }
@@ -129,6 +138,7 @@ pub fn default_config() -> P10ReadConfig {
     max_token_size: 0xFFFFFFFE,
     max_string_size: 0xFFFFFFFE,
     max_sequence_depth: 10_000,
+    require_dicm_prefix: False,
     require_ordered_data_elements: True,
   )
 }
@@ -364,15 +374,24 @@ fn read_file_preamble_and_dicm_prefix_token(
 ) -> Result(#(List(P10Token), P10ReadContext), P10Error) {
   let preamble_and_stream = case byte_stream.peek(context.stream, 132) {
     Ok(data) ->
-      case data {
-        <<preamble:bytes-size(128), "DICM">> -> {
+      case data, context.config.require_dicm_prefix {
+        <<preamble:bytes-size(128), "DICM">>, _ -> {
           let assert Ok(new_stream) = byte_stream.read(context.stream, 132)
 
           Ok(#(preamble, new_stream.1))
         }
 
-        // There is no DICM prefix, so return an empty preamble
-        _ -> Ok(#(<<0:size(8)-unit(128)>>, context.stream))
+        _, True ->
+          Error(p10_error.DataInvalid(
+            "Reading file header",
+            "The required 'DICM' prefix is missing",
+            data_set_path.new(),
+            128,
+          ))
+
+        // The 'DICM' prefix is absent but is not configured as required, so
+        // return empty preamble bytes
+        _, False -> Ok(#(<<0:size(8)-unit(128)>>, context.stream))
       }
 
     // If the end of the data is encountered when trying to read the first 132
