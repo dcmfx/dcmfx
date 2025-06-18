@@ -1,6 +1,7 @@
 use std::{fs::File, io::Write, path::Path, path::PathBuf};
 
 use clap::{Args, ValueEnum};
+use rayon::prelude::*;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
@@ -20,6 +21,7 @@ use crate::mp4_encoder::{
   LogLevel, Mp4Codec, Mp4CompressionPreset, Mp4Encoder, Mp4EncoderConfig,
   Mp4PixelFormat, ResizeFilter,
 };
+use crate::utils;
 
 pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
   to image and video files";
@@ -48,6 +50,17 @@ pub struct GetPixelDataArgs {
       number, and an appropriate file extension."
   )]
   output_directory: Option<PathBuf>,
+
+  #[clap(
+    long,
+    help = "Specifies the number of threads to use to perform work. Each \
+      thread operates on one input file at a time, so using more threads may \
+      improve performance when processing many input files.\n\
+      \n\
+      The default thread count is the number of logical CPUs available.",
+    default_value_t = rayon::current_num_threads()
+  )]
+  threads: usize,
 
   #[arg(
     long,
@@ -363,61 +376,58 @@ pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
 
   crate::validate_output_args(&input_sources, &None, &args.output_directory);
 
-  for input_source in input_sources {
-    if args.ignore_invalid && !input_source.is_dicom_p10() {
-      continue;
-    }
+  let result = utils::create_thread_pool(args.threads).install(move || {
+    input_sources.into_par_iter().try_for_each(|input_source| {
+      if args.ignore_invalid && !input_source.is_dicom_p10() {
+        return Ok(());
+      }
 
-    let output_prefix = input_source.output_path("", &args.output_directory);
+      let output_prefix = input_source.output_path("", &args.output_directory);
 
-    match get_pixel_data_from_input_source(&input_source, output_prefix, args) {
-      Ok(()) => (),
+      match get_pixel_data_from_input_source(&input_source, output_prefix, args)
+      {
+        Ok(()) => Ok(()),
 
-      Err(e) => {
-        let task_description =
-          format!("extracting pixel data from \"{}\"", input_source);
+        Err(e) => {
+          let task_description =
+            format!("extracting pixel data from \"{}\"", input_source);
 
-        match e {
-          GetPixelDataError::DataError(e) => e.print(&task_description),
-          GetPixelDataError::P10Error(e) => e.print(&task_description),
-          GetPixelDataError::PixelDataDecodeError(e) => {
-            e.print(&task_description)
-          }
-          GetPixelDataError::ImageError(e) => {
-            let lines = vec![
+          Err(match e {
+            GetPixelDataError::DataError(e) => e.to_lines(&task_description),
+            GetPixelDataError::P10Error(e) => e.to_lines(&task_description),
+            GetPixelDataError::PixelDataDecodeError(e) => {
+              e.to_lines(&task_description)
+            }
+            GetPixelDataError::ImageError(e) => vec![
               format!("Image error {}", task_description),
               "".to_string(),
               format!("  Error: {}", e),
-            ];
+            ],
 
-            error::print_error_lines(&lines);
-          }
-          GetPixelDataError::FFmpegError(e) => {
-            let lines = vec![
+            GetPixelDataError::FFmpegError(e) => vec![
               format!("FFmpeg encoding error {}", task_description),
               "".to_string(),
               format!("  Error: {}", e),
-            ];
-
-            error::print_error_lines(&lines);
-          }
-          GetPixelDataError::OtherError(s) => {
-            let lines = vec![
+            ],
+            GetPixelDataError::OtherError(s) => vec![
               format!("Error {}", task_description),
               "".to_string(),
               format!("  Error: {}", s),
-            ];
-
-            error::print_error_lines(&lines);
-          }
+            ],
+          })
         }
-
-        return Err(());
       }
+    })
+  });
+
+  match result {
+    Ok(()) => Ok(()),
+
+    Err(lines) => {
+      dcmfx::core::error::print_error_lines(&lines);
+      Err(())
     }
   }
-
-  Ok(())
 }
 
 fn get_pixel_data_from_input_source(

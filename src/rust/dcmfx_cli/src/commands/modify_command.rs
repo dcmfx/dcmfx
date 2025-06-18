@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use clap::Args;
 use rand::Rng;
+use rayon::prelude::*;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
@@ -12,7 +13,6 @@ use dcmfx::pixel_data::{
   *,
 };
 
-use crate::utils::prompt_to_overwrite_if_exists;
 use crate::{
   InputSource,
   args::{
@@ -22,7 +22,7 @@ use crate::{
     planar_configuration_arg::PlanarConfigurationArg,
     transfer_syntax_arg::{self, TransferSyntaxArg},
   },
-  utils::{self, TempFileRenamer},
+  utils::{self, TempFileRenamer, prompt_to_overwrite_if_exists},
 };
 
 pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
@@ -73,6 +73,17 @@ pub struct ModifyArgs {
     default_value_t = false
   )]
   in_place: bool,
+
+  #[clap(
+    long,
+    help = "Specifies the number of threads to use to perform work. Each \
+      thread operates on one input file at a time, so using more threads may \
+      improve performance when processing many input files.\n\
+      \n\
+      The default thread count is the number of logical CPUs available.",
+    default_value_t = rayon::current_num_threads()
+  )]
+  threads: usize,
 
   #[arg(
     long,
@@ -305,38 +316,45 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
     return Err(());
   }
 
-  for input_source in input_sources {
-    if args.ignore_invalid && !input_source.is_dicom_p10() {
-      continue;
-    }
-
-    let output_filename: PathBuf = if args.in_place {
-      input_source.path()
-    } else if let Some(output_filename) = &args.output_filename {
-      output_filename.clone()
-    } else {
-      input_source.output_path("", &args.output_directory)
-    };
-
-    match modify_input_source(&input_source, output_filename, args) {
-      Ok(()) => (),
-
-      Err(e) => {
-        let task_description = format!("modifying \"{}\"", input_source);
-
-        match e {
-          ModifyCommandError::P10Error(e) => e.print(&task_description),
-          ModifyCommandError::P10PixelDataTranscodeTransformError(e) => {
-            e.print(&task_description);
-          }
-        }
-
-        return Err(());
+  let result = utils::create_thread_pool(args.threads).install(move || {
+    input_sources.into_par_iter().try_for_each(|input_source| {
+      if args.ignore_invalid && !input_source.is_dicom_p10() {
+        return Ok(());
       }
+
+      let output_filename: PathBuf = if args.in_place {
+        input_source.path()
+      } else if let Some(output_filename) = &args.output_filename {
+        output_filename.clone()
+      } else {
+        input_source.output_path("", &args.output_directory)
+      };
+
+      match modify_input_source(&input_source, output_filename, args) {
+        Ok(()) => Ok(()),
+
+        Err(e) => {
+          let task_description = format!("modifying \"{}\"", input_source);
+
+          Err(match e {
+            ModifyCommandError::P10Error(e) => e.to_lines(&task_description),
+            ModifyCommandError::P10PixelDataTranscodeTransformError(e) => {
+              e.to_lines(&task_description)
+            }
+          })
+        }
+      }
+    })
+  });
+
+  match result {
+    Ok(()) => Ok(()),
+
+    Err(lines) => {
+      dcmfx::core::error::print_error_lines(&lines);
+      Err(())
     }
   }
-
-  Ok(())
 }
 
 fn modify_input_source(

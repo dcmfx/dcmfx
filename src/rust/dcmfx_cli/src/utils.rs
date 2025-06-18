@@ -7,6 +7,15 @@ use std::{
 
 use dcmfx::p10::P10Error;
 
+/// Creates a Rayon thread pool with the specified number of threads.
+///
+pub fn create_thread_pool(threads: usize) -> rayon::ThreadPool {
+  rayon::ThreadPoolBuilder::new()
+    .num_threads(threads)
+    .build()
+    .unwrap()
+}
+
 /// Opens an output stream for the given path, first checking whether it exists
 /// and prompting the user about overwriting it if necessary. This prompt isn't
 /// presented to the user if `overwrite` is true.
