@@ -952,6 +952,9 @@ impl DataElementValue {
         let strings = string
           .split('\\')
           .map(|s| match vr {
+            ValueRepresentation::CodeString => {
+              s.trim_end_matches('\0').trim_matches([' '])
+            }
             ValueRepresentation::UniqueIdentifier => s.trim_end_matches('\0'),
             ValueRepresentation::UnlimitedCharacters => s.trim_end_matches(' '),
             _ => s.trim_matches([' ']),
@@ -1591,6 +1594,13 @@ mod tests {
         .unwrap()
         .get_string(),
       Ok("A")
+    );
+
+    assert_eq!(
+      DataElementValue::new_code_string(&["AA \0"])
+        .unwrap()
+        .get_string(),
+      Ok("AA")
     );
 
     assert_eq!(

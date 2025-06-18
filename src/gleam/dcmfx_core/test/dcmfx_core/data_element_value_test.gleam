@@ -77,6 +77,11 @@ pub fn get_string_test() {
   |> result.then(data_element_value.get_string)
   |> should.equal(Ok("A"))
 
+  ["AA \u{0}"]
+  |> data_element_value.new_code_string
+  |> result.then(data_element_value.get_string)
+  |> should.equal(Ok("AA"))
+
   "A"
   |> data_element_value.new_long_text
   |> result.then(data_element_value.get_string)

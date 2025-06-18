@@ -1024,10 +1024,17 @@ pub fn get_strings(value: DataElementValue) -> Result(List(String), DataError) {
       |> result.map(
         list.map(_, fn(s) {
           case value_representation(value) {
+            value_representation.CodeString ->
+              s
+              |> utils.trim_ascii_end(0x00)
+              |> utils.trim_ascii(0x20)
+
             value_representation.UniqueIdentifier ->
               utils.trim_ascii_end(s, 0x00)
+
             value_representation.UnlimitedCharacters ->
               utils.trim_ascii_end(s, 0x20)
+
             _ -> utils.trim_ascii(s, 0x20)
           }
         }),
