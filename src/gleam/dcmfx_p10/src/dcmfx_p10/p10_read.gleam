@@ -1170,11 +1170,12 @@ fn read_explicit_vr_and_length(
         Ok(vr) -> Ok(vr)
 
         _ ->
-          // If the VR is two spaces then treat it as UN, and there will be an
-          // attempt to infer it in due course. This is not part of the DICOM
-          // P10 spec, but such data has been observed in the wild.
+          // If the VR is two spaces or two NULL characters then treat it as UN,
+          // and there will be an attempt to infer it in due course. This is not
+          // part of the DICOM P10 spec, but such data has been observed in the
+          // wild.
           case vr_bytes {
-            <<0x20, 0x20>> -> Ok(value_representation.Unknown)
+            <<0, 0>> | <<0x20, 0x20>> -> Ok(value_representation.Unknown)
 
             _ ->
               Error(p10_error.DataInvalid(

@@ -1031,11 +1031,12 @@ impl P10ReadContext {
         match ValueRepresentation::from_bytes(vr_bytes) {
           Ok(vr) => Ok(vr),
 
-          // If the VR is two spaces then treat it as UN, and there will be an
-          // attempt to infer it in due course. This is not part of the DICOM
-          // P10 spec, but such data has been observed in the wild.
+          // If the VR is two spaces or two NULL characters then treat it as UN,
+          // and there will be an attempt to infer it in due course. This is not
+          // part of the DICOM P10 spec, but such data has been observed in the
+          // wild.
           _ => match vr_bytes {
-            [0x20, 0x20] => Ok(ValueRepresentation::Unknown),
+            [0x00, 0x00] | [0x20, 0x20] => Ok(ValueRepresentation::Unknown),
 
             _ => Err(P10Error::DataInvalid {
               when: "Reading data element VR".to_string(),
