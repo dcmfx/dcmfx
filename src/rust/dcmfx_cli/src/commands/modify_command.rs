@@ -351,7 +351,7 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
     Ok(()) => Ok(()),
 
     Err(lines) => {
-      dcmfx::core::error::print_error_lines(&lines);
+      error::print_error_lines(&lines);
       Err(())
     }
   }

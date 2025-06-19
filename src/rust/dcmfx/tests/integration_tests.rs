@@ -5,6 +5,7 @@ use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path};
 use either::Either;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
+use rayon::prelude::*;
 use walkdir::WalkDir;
 
 use dcmfx_core::*;
@@ -36,8 +37,8 @@ fn integration_tests() -> Result<(), ()> {
 
   // Validate each file
   let validation_results: Vec<_> = dicoms
-    .iter()
-    .map(|dicom| validate_dicom(dicom).map_err(|e| (dicom, e)))
+    .par_iter()
+    .map(|dicom| validate_dicom(dicom).map_err(|e| e.to_lines(dicom)))
     .collect();
 
   // Print results
@@ -48,52 +49,7 @@ fn integration_tests() -> Result<(), ()> {
     for validation_result in validation_results {
       match validation_result {
         Ok(()) => (),
-
-        Err((dicom, DicomValidationError::LoadError { error })) => {
-          error.print(&format!("reading {:?}", dicom));
-        }
-
-        Err((dicom, DicomValidationError::PrintedOutputMismatch)) => {
-          eprintln!(
-            "Error: printed output mismatch with {:?}, compare the two files",
-            dicom
-          );
-        }
-
-        Err((dicom, DicomValidationError::JsonOutputMissing)) => {
-          eprintln!("Error: No JSON file for {:?}", dicom);
-        }
-
-        Err((dicom, DicomValidationError::JsonOutputMismatch)) => {
-          eprintln!(
-            "Error: JSON mismatch with {:?}, compare the two files",
-            dicom
-          );
-        }
-
-        Err((dicom, DicomValidationError::RewriteMismatch)) => {
-          eprintln!("Error: Rewrite of {:?} was different", dicom);
-        }
-
-        Err((dicom, DicomValidationError::JitteredReadError { error })) => {
-          error.print(&format!("reading {:?} (jittered)", dicom));
-        }
-
-        Err((dicom, DicomValidationError::JitteredReadMismatch)) => {
-          eprintln!("Error: Jittered read of {:?} was different", dicom);
-        }
-
-        Err((dicom, DicomValidationError::PixelDataRenderError(e))) => {
-          match e {
-            Either::Left(error) => {
-              error.print(&format!("rendering pixel data from {:?}", dicom))
-            }
-            Either::Right(details) => eprintln!(
-              "Error: Pixel data read of {:?}, details: {}",
-              dicom, details
-            ),
-          }
-        }
+        Err(lines) => error::print_error_lines(&lines),
       }
     }
 
@@ -110,6 +66,52 @@ enum DicomValidationError {
   JitteredReadError { error: P10Error },
   JitteredReadMismatch,
   PixelDataRenderError(Either<PixelDataDecodeError, String>),
+}
+
+impl DicomValidationError {
+  fn to_lines(&self, dicom: &Path) -> Vec<String> {
+    match self {
+      DicomValidationError::LoadError { error } => {
+        error.to_lines(&format!("reading {:?}", dicom))
+      }
+
+      DicomValidationError::PrintedOutputMismatch => vec![format!(
+        "Error: printed output mismatch with {:?}, compare the two files",
+        dicom
+      )],
+
+      DicomValidationError::JsonOutputMissing => {
+        vec![format!("Error: No JSON file for {:?}", dicom)]
+      }
+
+      DicomValidationError::JsonOutputMismatch => vec![format!(
+        "Error: JSON mismatch with {:?}, compare the two files",
+        dicom
+      )],
+
+      DicomValidationError::RewriteMismatch => {
+        vec![format!("Error: Rewrite of {:?} was different", dicom)]
+      }
+
+      DicomValidationError::JitteredReadError { error } => {
+        error.to_lines(&format!("reading {:?} (jittered)", dicom))
+      }
+
+      DicomValidationError::JitteredReadMismatch => {
+        vec![format!("Error: Jittered read of {:?} was different", dicom)]
+      }
+
+      DicomValidationError::PixelDataRenderError(e) => match e {
+        Either::Left(error) => {
+          error.to_lines(&format!("rendering pixel data from {:?}", dicom))
+        }
+        Either::Right(details) => vec![format!(
+          "Error: Pixel data read of {:?}, details: {}",
+          dicom, details
+        )],
+      },
+    }
+  }
 }
 
 /// Loads a DICOM file and checks that its JSON serialization by this library

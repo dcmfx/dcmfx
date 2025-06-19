@@ -16,12 +16,11 @@ use dcmfx::pixel_data::{
   standard_color_palettes,
 };
 
-use crate::InputSource;
 use crate::mp4_encoder::{
   LogLevel, Mp4Codec, Mp4CompressionPreset, Mp4Encoder, Mp4EncoderConfig,
   Mp4PixelFormat, ResizeFilter,
 };
-use crate::utils;
+use crate::{InputSource, utils};
 
 pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
   to image and video files";
@@ -424,7 +423,7 @@ pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
     Ok(()) => Ok(()),
 
     Err(lines) => {
-      dcmfx::core::error::print_error_lines(&lines);
+      error::print_error_lines(&lines);
       Err(())
     }
   }

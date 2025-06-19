@@ -4,6 +4,7 @@ use std::{
 };
 
 use clap::Args;
+use rayon::prelude::*;
 
 use dcmfx::core::*;
 use dcmfx::json::*;
@@ -44,6 +45,17 @@ pub struct ToDcmArgs {
 
   #[clap(
     long,
+    help = "Specifies the number of threads to use to perform work. Each \
+      thread operates on one input file at a time, so using more threads may \
+      improve performance when processing many input files.\n\
+      \n\
+      The default thread count is the number of logical CPUs available.",
+    default_value_t = rayon::current_num_threads()
+  )]
+  threads: usize,
+
+  #[clap(
+    long,
     help = "Overwrite files without prompting",
     default_value_t = false
   )]
@@ -73,30 +85,40 @@ pub fn run(args: &ToDcmArgs) -> Result<(), ()> {
     &args.output_directory,
   );
 
-  for input_source in input_sources {
-    let output_filename = if let Some(output_filename) = &args.output_filename {
-      output_filename.clone()
-    } else {
-      input_source.output_path(".dcm", &args.output_directory)
-    };
+  let result = utils::create_thread_pool(args.threads).install(move || {
+    input_sources.into_par_iter().try_for_each(|input_source| {
+      let output_filename = if let Some(output_filename) = &args.output_filename
+      {
+        output_filename.clone()
+      } else {
+        input_source.output_path(".dcm", &args.output_directory)
+      };
 
-    match input_source_to_dcm(&input_source, output_filename, args) {
-      Ok(()) => (),
+      match input_source_to_dcm(&input_source, output_filename, args) {
+        Ok(()) => Ok(()),
 
-      Err(e) => {
-        let task_description = format!("converting \"{}\"", input_source);
+        Err(e) => {
+          let task_description = format!("converting \"{}\"", input_source);
 
-        match e {
-          ToDcmError::P10Error(e) => e.print(&task_description),
-          ToDcmError::JsonDeserializeError(e) => e.print(&task_description),
+          Err(match e {
+            ToDcmError::P10Error(e) => e.to_lines(&task_description),
+            ToDcmError::JsonDeserializeError(e) => {
+              e.to_lines(&task_description)
+            }
+          })
         }
-
-        return Err(());
       }
+    })
+  });
+
+  match result {
+    Ok(()) => Ok(()),
+
+    Err(lines) => {
+      error::print_error_lines(&lines);
+      Err(())
     }
   }
-
-  Ok(())
 }
 
 fn input_source_to_dcm(

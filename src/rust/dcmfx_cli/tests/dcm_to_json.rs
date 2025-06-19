@@ -66,6 +66,9 @@ fn with_output_directory() {
     .arg("--pretty")
     .arg("--output-directory")
     .arg(output_directory)
+        .arg("--threads")
+    .arg("1")
+
     .assert()
     .success()
     .stdout(format!(
@@ -108,6 +111,8 @@ fn with_multiple_inputs() {
     .arg("dcm-to-json")
     .args(dicom_files)
     .arg("--pretty")
+    .arg("--threads")
+    .arg("1")
     .assert()
     .success()
     .stdout(format!(
