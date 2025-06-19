@@ -1,8 +1,7 @@
-#[cfg(feature = "std")]
-use std::rc::Rc;
-
 #[cfg(not(feature = "std"))]
-use alloc::{rc::Rc, vec::Vec};
+use alloc::vec::Vec;
+
+use dcmfx_core::Rc;
 
 use crate::{
   iods::{PaletteColorLookupTableModule, image_pixel_module::BitsAllocated},

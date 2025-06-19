@@ -490,6 +490,7 @@ dependencies = [
  "miniz_oxide",
  "num-traits",
  "rand 0.9.1",
+ "rayon",
  "wasm32-unknown-unknown-openbsd-libc",
  "zune-core",
  "zune-jpeg",

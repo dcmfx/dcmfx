@@ -1,18 +1,14 @@
 //! Specifies values of data elements relevant to parsing pixel data.
 
-#[cfg(feature = "std")]
-use std::rc::Rc;
-
 #[cfg(not(feature = "std"))]
 use alloc::{
   format,
-  rc::Rc,
   string::{String, ToString},
 };
 
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataError, DataSet, DataSetPath, IodModule,
-  RcByteSlice, ValueRepresentation, dictionary,
+  Rc, RcByteSlice, ValueRepresentation, dictionary,
 };
 
 use crate::iods::PaletteColorLookupTableModule;

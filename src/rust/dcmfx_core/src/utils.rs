@@ -1,8 +1,11 @@
+#[cfg(not(feature = "std"))]
+use alloc::{format, string::String, vec, vec::Vec};
+
 #[cfg(feature = "std")]
-use std::rc::Rc;
+pub type Rc<T> = std::sync::Arc<T>;
 
 #[cfg(not(feature = "std"))]
-use alloc::{format, rc::Rc, string::String, vec, vec::Vec};
+pub type Rc<T> = alloc::rc::Rc<T>;
 
 /// A reference counted byte slice holds an `Rc<Vec<u8>>` to a shareable buffer,
 /// along with a range that specifies the part of that buffer that this slice

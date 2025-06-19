@@ -66,9 +66,8 @@ fn with_output_directory() {
     .arg("--pretty")
     .arg("--output-directory")
     .arg(output_directory)
-        .arg("--threads")
+    .arg("--threads")
     .arg("1")
-
     .assert()
     .success()
     .stdout(format!(

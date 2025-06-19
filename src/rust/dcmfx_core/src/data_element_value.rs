@@ -53,8 +53,8 @@ pub mod unique_identifier;
 ///    list of nested data sets used to create hierarchies of data elements in a
 ///    DICOM data set.
 ///
-/// Data element values that hold binary data always store it in an
-/// [`Rc<Vec<u8>>`] which is parsed and converted to a more usable type on
+/// Data element values that hold binary data always store it in a
+/// [`RcByteSlice`] which is parsed and converted to a more usable type on
 /// request. This improves efficiency as parsing only occurs when the value of a
 /// data element is requested, and allows any data to be passed through even if
 /// it is non-conformant with the DICOM standard, which is a common occurrence.

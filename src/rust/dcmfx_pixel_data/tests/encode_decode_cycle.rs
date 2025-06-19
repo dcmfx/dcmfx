@@ -1,15 +1,11 @@
-use std::rc::Rc;
-
-#[cfg(not(feature = "std"))]
-use alloc::rc::Rc;
-
 use dcmfx_pixel_data::PixelDataEncodeConfig;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
+use rayon::prelude::*;
 
 use dcmfx_core::{
-  DataElementValue, DataSet, TransferSyntax, ValueRepresentation, dictionary,
-  transfer_syntax,
+  DataElementValue, DataSet, Rc, TransferSyntax, ValueRepresentation,
+  dictionary, transfer_syntax,
 };
 
 use dcmfx_pixel_data::{
@@ -241,21 +237,23 @@ fn test_encode_decode_cycle(
   monochrome_image_max_reencode_delta: f64,
   color_image_max_reencode_delta: f64,
 ) {
-  for image_pixel_module in image_pixel_modules {
-    if image_pixel_module.is_monochrome() {
-      test_monochrome_image_encode_decode_cycle(
-        &image_pixel_module,
-        transfer_syntax,
-        monochrome_image_max_reencode_delta,
-      );
-    } else {
-      test_color_image_encode_decode_cycle(
-        &image_pixel_module,
-        transfer_syntax,
-        color_image_max_reencode_delta,
-      );
-    }
-  }
+  image_pixel_modules
+    .into_par_iter()
+    .for_each(|image_pixel_module| {
+      if image_pixel_module.is_monochrome() {
+        test_monochrome_image_encode_decode_cycle(
+          &image_pixel_module,
+          transfer_syntax,
+          monochrome_image_max_reencode_delta,
+        );
+      } else {
+        test_color_image_encode_decode_cycle(
+          &image_pixel_module,
+          transfer_syntax,
+          color_image_max_reencode_delta,
+        );
+      }
+    });
 }
 
 fn test_monochrome_image_encode_decode_cycle(
