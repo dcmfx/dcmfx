@@ -138,21 +138,14 @@ fn build_openjpeg() {
 
 fn build_charls() {
   compile(
-    &["vendor/charls_2.4.2/charls_interface.c"],
-    &["vendor/charls_2.4.2/include"],
-    &[("CHARLS_STATIC", "1")],
-    &[],
-    "dcmfx_pixel_data_charls_c",
-  );
-
-  compile(
     &[
+      "vendor/charls_2.4.2/charls_interface.cpp",
       "vendor/charls_2.4.2/src/charls_jpegls_decoder.cpp",
       "vendor/charls_2.4.2/src/charls_jpegls_encoder.cpp",
       "vendor/charls_2.4.2/src/jpeg_stream_reader.cpp",
       "vendor/charls_2.4.2/src/jpeg_stream_writer.cpp",
-      "vendor/charls_2.4.2/src/jpegls.cpp",
       "vendor/charls_2.4.2/src/jpegls_error.cpp",
+      "vendor/charls_2.4.2/src/jpegls.cpp",
       "vendor/charls_2.4.2/src/validate_spiff_header.cpp",
       "vendor/charls_2.4.2/src/version.cpp",
     ],
