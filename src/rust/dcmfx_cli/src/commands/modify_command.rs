@@ -265,8 +265,8 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
     != 1
   {
     eprintln!(
-      "Exactly one of --output-filename, --output-directory, or --in-place \
-       must be specified"
+      "Error: Exactly one of --output-filename, --output-directory, or \
+       --in-place must be specified"
     );
     return Err(());
   }
@@ -274,30 +274,32 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
   if args.transfer_syntax.is_none() {
     if args.photometric_interpretation_monochrome.is_some() {
       eprintln!(
-        "The --photometric-interpretation-monochrome option is only valid when \
-         --transfer-syntax is specified"
+        "Error: The --photometric-interpretation-monochrome option is only \
+         valid when --transfer-syntax is specified"
       );
       return Err(());
     }
 
     if args.photometric_interpretation_color.is_some() {
       eprintln!(
-        "The --photometric-interpretation-color option is only valid when \
-         --transfer-syntax is specified"
+        "Error: The --photometric-interpretation-color option is only valid \
+         when --transfer-syntax is specified"
       );
       return Err(());
     }
 
     if args.quality.is_some() {
       eprintln!(
-        "The --quality option is only valid when --transfer-syntax is specified"
+        "Error: The --quality option is only valid when --transfer-syntax is \
+         specified"
       );
       return Err(());
     }
 
     if args.effort.is_some() {
       eprintln!(
-        "The --effort option is only valid when --transfer-syntax is specified"
+        "Error: The --effort option is only valid when --transfer-syntax is \
+         specified"
       );
       return Err(());
     }

@@ -8,19 +8,20 @@ use dcmfx::p10::*;
 use dcmfx::pixel_data::{
   P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
   PixelDataDecodeError, PixelDataFrame, PixelDataRenderer,
-  StandardColorPalette,
   iods::{
     CineModule, MultiFrameModule, OverlayPlaneModule,
     voi_lut_module::{VoiLutFunction, VoiWindow},
   },
-  standard_color_palettes,
 };
 
 use crate::mp4_encoder::{
   LogLevel, Mp4Codec, Mp4CompressionPreset, Mp4Encoder, Mp4EncoderConfig,
   Mp4PixelFormat, ResizeFilter,
 };
-use crate::{InputSource, utils};
+use crate::{
+  InputSource, args::standard_color_palette_arg::StandardColorPaletteArg,
+  args::transform_arg::TransformArg, utils,
+};
 
 pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
   to image and video files";
@@ -75,7 +76,7 @@ pub struct GetPixelDataArgs {
     help = "When the output format is not 'raw', specifies a transform to \
       apply to the frames of image data."
   )]
-  transform: Option<OutputTransform>,
+  transform: Option<TransformArg>,
 
   #[arg(
     long,
@@ -288,76 +289,6 @@ enum OutputFormat {
 
   /// Decodes the pixel data and writes each frame to a lossless WebP image.
   Webp,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
-enum OutputTransform {
-  /// Rotate by 90 degrees clockwise.
-  Rotate90,
-
-  /// Rotate by 180 degrees.
-  Rotate180,
-
-  /// Rotate by 270 degrees clockwise. Equivalent to rotating by 90 degrees
-  /// counter-clockwise.
-  Rotate270,
-
-  /// Flip horizontally.
-  FlipHorizontal,
-
-  /// Flip vertically.
-  FlipVertical,
-
-  /// Rotate by 90 degrees clockwise then flip horizontally.
-  Rotate90FlipH,
-
-  /// Rotate by 270 degrees clockwise then flip horizontally.
-  Rotate270FlipH,
-}
-
-impl OutputTransform {
-  fn orientation(&self) -> image::metadata::Orientation {
-    match self {
-      Self::Rotate90 => image::metadata::Orientation::Rotate90,
-      Self::Rotate180 => image::metadata::Orientation::Rotate180,
-      Self::Rotate270 => image::metadata::Orientation::Rotate270,
-      Self::FlipHorizontal => image::metadata::Orientation::FlipHorizontal,
-      Self::FlipVertical => image::metadata::Orientation::FlipVertical,
-      Self::Rotate90FlipH => image::metadata::Orientation::Rotate90FlipH,
-      Self::Rotate270FlipH => image::metadata::Orientation::Rotate270FlipH,
-    }
-  }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
-enum StandardColorPaletteArg {
-  HotIron,
-  Pet,
-  HotMetalBlue,
-  Pet20Step,
-  Spring,
-  Summer,
-  Fall,
-  Winter,
-}
-
-impl StandardColorPaletteArg {
-  fn color_palette(&self) -> &'static StandardColorPalette {
-    match self {
-      StandardColorPaletteArg::HotIron => &standard_color_palettes::HOT_IRON,
-      StandardColorPaletteArg::Pet => &standard_color_palettes::PET,
-      StandardColorPaletteArg::HotMetalBlue => {
-        &standard_color_palettes::HOT_METAL_BLUE
-      }
-      StandardColorPaletteArg::Pet20Step => {
-        &standard_color_palettes::PET_20_STEP
-      }
-      StandardColorPaletteArg::Spring => &standard_color_palettes::SPRING,
-      StandardColorPaletteArg::Summer => &standard_color_palettes::SUMMER,
-      StandardColorPaletteArg::Fall => &standard_color_palettes::FALL,
-      StandardColorPaletteArg::Winter => &standard_color_palettes::WINTER,
-    }
-  }
 }
 
 #[allow(clippy::enum_variant_names)]
@@ -617,8 +548,12 @@ fn write_frame_to_image_file(
   } else {
     let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
 
-    let image =
-      frame_to_image(frame, pixel_data_renderer, overlay_plane_module, args)?;
+    let image = frame_to_final_image(
+      frame,
+      pixel_data_renderer,
+      overlay_plane_module,
+      args,
+    )?;
 
     let output_file =
       File::create(filename).expect("Failed to create output file");
@@ -675,11 +610,11 @@ fn write_fragments(
   stream.flush()
 }
 
-/// Turns a raw frame of pixel data into a an [`image::DynamicImage`] with
+/// Turns a raw frame of pixel data into an [`image::DynamicImage`] with
 /// all alterations performed, including overlay rendering and any active
 /// transform or resize.
 ///
-fn frame_to_image(
+fn frame_to_final_image(
   frame: &mut PixelDataFrame,
   pixel_data_renderer: &mut PixelDataRenderer,
   overlay_plane_module: Option<&OverlayPlaneModule>,
@@ -724,9 +659,10 @@ fn frame_to_image(
   Ok(image)
 }
 
-/// Turns a raw frame of pixel data into a an [`image::DynamicImage`]. The most
-/// optimal storage format will be used, e.g. 8-bit/16-bit and grayscale where
-/// possible.
+/// Turns a raw frame of pixel data into an [`image::DynamicImage`], applying
+/// the grayscale pipeline to monochrome images to reach a final display value.
+/// The most optimal storage format will be used, e.g. 8-bit/16-bit, and
+/// grayscale will be returned when possible for monochrome input frames.
 ///
 fn frame_to_dynamic_image(
   frame: &mut PixelDataFrame,
@@ -764,8 +700,8 @@ fn frame_to_dynamic_image(
       }
     }
 
-    // For HDR outputs emit a Luma16 buffer. A color palette implies 8-bit
-    // output because looking up a color palette returns 8-bit values.
+    // For HDR outputs, emit a Luma16 buffer. A color palette implies 8-bit
+    // output because looking up a color palette always returns 8-bit values.
     if args.is_output_hdr() && args.color_palette.is_none() {
       let image = monochrome_image
         .to_gray_u16_image(&pixel_data_renderer.grayscale_pipeline);
@@ -794,6 +730,8 @@ fn frame_to_dynamic_image(
       .decode_color_frame(frame)
       .map_err(GetPixelDataError::PixelDataDecodeError)?;
 
+    // Emit a 16-bit color image if the output format supports HDR and there are
+    // more than 8 bits per pixel
     if args.is_output_hdr()
       && pixel_data_renderer.image_pixel_module.bits_stored() > 8
     {
@@ -878,9 +816,13 @@ fn write_frame_to_mp4_file(
     return Ok(());
   }
 
-  // Convert the raw frame into an image
-  let image =
-    frame_to_image(frame, pixel_data_renderer, overlay_plane_module, args)?;
+  // Convert the raw frame into an image ready for MP4 encoding
+  let image = frame_to_final_image(
+    frame,
+    pixel_data_renderer,
+    overlay_plane_module,
+    args,
+  )?;
 
   // If this is the first frame then the MP4 encoder won't have been created,
   // so create it now
