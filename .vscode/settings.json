@@ -52,6 +52,7 @@
     "openjpeg",
     "openjph",
     "println",
+    "pydicom",
     "rngs",
     "rposition",
     "seedable",
@@ -62,7 +63,4 @@
     "uids",
     "walkdir"
   ],
-  "files.associations": {
-    "jpeglib12.h": "c"
-  }
 }

@@ -7,8 +7,9 @@ use dcmfx_core::{
 };
 
 use crate::{
-  ColorImage, GrayscalePipeline, MonochromeImage, PixelDataDecodeError,
-  PixelDataFrame, StandardColorPalette, decode, iods::ImagePixelModule,
+  ColorImage, GrayscalePipeline, MonochromeImage, PixelDataDecodeConfig,
+  PixelDataDecodeError, PixelDataFrame, StandardColorPalette, decode,
+  iods::ImagePixelModule,
 };
 
 /// Defines a pixel data renderer that can take a [`PixelDataFrame`] and render
@@ -19,6 +20,7 @@ pub struct PixelDataRenderer {
   pub transfer_syntax: &'static TransferSyntax,
   pub image_pixel_module: ImagePixelModule,
   pub grayscale_pipeline: GrayscalePipeline,
+  pub decode_config: PixelDataDecodeConfig,
 }
 
 impl IodModule for PixelDataRenderer {
@@ -54,6 +56,7 @@ impl IodModule for PixelDataRenderer {
       transfer_syntax,
       image_pixel_module,
       grayscale_pipeline,
+      decode_config: PixelDataDecodeConfig::default(),
     })
   }
 }
@@ -77,6 +80,7 @@ impl PixelDataRenderer {
         frame,
         self.transfer_syntax,
         &self.image_pixel_module,
+        &self.decode_config,
       )?;
 
       Ok(self.render_monochrome_image(&image, color_palette))
@@ -85,6 +89,7 @@ impl PixelDataRenderer {
         frame,
         self.transfer_syntax,
         &self.image_pixel_module,
+        &self.decode_config,
       )?;
 
       Ok(image.into_rgb_u8_image())
@@ -136,6 +141,7 @@ impl PixelDataRenderer {
       frame,
       self.transfer_syntax,
       &self.image_pixel_module,
+      &self.decode_config,
     )
   }
 
@@ -145,6 +151,11 @@ impl PixelDataRenderer {
     &self,
     frame: &mut PixelDataFrame,
   ) -> Result<ColorImage, PixelDataDecodeError> {
-    decode::decode_color(frame, self.transfer_syntax, &self.image_pixel_module)
+    decode::decode_color(
+      frame,
+      self.transfer_syntax,
+      &self.image_pixel_module,
+      &self.decode_config,
+    )
   }
 }

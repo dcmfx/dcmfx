@@ -315,6 +315,16 @@ fn monochrome_jpeg_xl_to_rle_lossless_monochrome1() {
 }
 
 #[test]
+fn monochrome_jpeg_xl_to_rle_lossless_using_jxl_oxide() {
+  modify_transfer_syntax(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "rle-lossless",
+    "monochrome_jpeg_xl_to_rle_lossless",
+    &["--jpeg-xl-decoder", "jxl-oxide"],
+  );
+}
+
+#[test]
 fn jpeg_ls_to_encapsulated_uncompressed_explicit_vr_little_endian() {
   modify_transfer_syntax(
     "../../../test/assets/other/jpeg_ls_ybr_color_space.dcm",

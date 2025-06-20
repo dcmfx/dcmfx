@@ -18,8 +18,9 @@ use dcmfx_p10::{
 
 use crate::{
   ColorImage, MonochromeImage, P10PixelDataFrameTransform,
-  P10PixelDataFrameTransformError, PixelDataDecodeError, PixelDataEncodeConfig,
-  PixelDataEncodeError, PixelDataFrame, PixelDataRenderer, decode, encode,
+  P10PixelDataFrameTransformError, PixelDataDecodeConfig, PixelDataDecodeError,
+  PixelDataEncodeConfig, PixelDataEncodeError, PixelDataFrame,
+  PixelDataRenderer, decode, encode,
   iods::image_pixel_module::ImagePixelModule,
 };
 
@@ -36,6 +37,9 @@ pub struct P10PixelDataTranscodeTransform {
 
   /// The output transfer syntax being transcoded to.
   output_transfer_syntax: &'static TransferSyntax,
+
+  /// Configuration for pixel data decoding.
+  decode_config: PixelDataDecodeConfig,
 
   /// Configuration for pixel data encoding.
   encode_config: PixelDataEncodeConfig,
@@ -125,12 +129,14 @@ impl P10PixelDataTranscodeTransform {
   ///
   pub fn new(
     output_transfer_syntax: &'static TransferSyntax,
+    decode_config: PixelDataDecodeConfig,
     encode_config: PixelDataEncodeConfig,
     image_data_functions: Option<TranscodeImageDataFunctions>,
   ) -> Self {
     Self {
       input_transfer_syntax: &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
       output_transfer_syntax,
+      decode_config,
       encode_config,
       image_data_functions: image_data_functions.unwrap_or_default(),
       pixel_data_renderer_transform:
@@ -418,6 +424,7 @@ impl P10PixelDataTranscodeTransform {
         input_frame,
         self.input_transfer_syntax,
         &pixel_data_renderer.image_pixel_module,
+        &self.decode_config,
       )
       .map_err(P10PixelDataTranscodeTransformError::PixelDataDecodeError)?;
 
@@ -441,6 +448,7 @@ impl P10PixelDataTranscodeTransform {
         input_frame,
         self.input_transfer_syntax,
         &pixel_data_renderer.image_pixel_module,
+        &self.decode_config,
       )
       .map_err(P10PixelDataTranscodeTransformError::PixelDataDecodeError)?;
 

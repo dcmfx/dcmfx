@@ -16,6 +16,7 @@ use dcmfx::pixel_data::{
 use crate::{
   InputSource,
   args::{
+    jpeg_xl_decoder_arg::{self, JpegXlDecoderArg},
     photometric_interpretation_arg::{
       PhotometricInterpretationColorArg, PhotometricInterpretationMonochromeArg,
     },
@@ -200,6 +201,14 @@ pub struct ModifyArgs {
       syntaxes."
   )]
   planar_configuration: Option<PlanarConfigurationArg>,
+
+  #[arg(
+    long,
+    help_heading = "Transcoding",
+    help = jpeg_xl_decoder_arg::HELP,
+    default_value_t = JpegXlDecoderArg::LibJxl
+  )]
+  jpeg_xl_decoder: JpegXlDecoderArg,
 
   #[arg(
     long,
@@ -732,7 +741,11 @@ fn streaming_rewrite(
                 .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
             });
 
-          let mut pixel_data_encode_config = PixelDataEncodeConfig::new();
+          let pixel_data_decode_config = PixelDataDecodeConfig {
+            jpeg_xl_decoder: args.jpeg_xl_decoder.into(),
+          };
+
+          let mut pixel_data_encode_config = PixelDataEncodeConfig::default();
           pixel_data_encode_config.set_quality(args.quality.unwrap_or(85));
           pixel_data_encode_config.set_effort(args.effort.unwrap_or(7));
           pixel_data_encode_config
@@ -741,6 +754,7 @@ fn streaming_rewrite(
           pixel_data_transcode_transform =
             Some(P10PixelDataTranscodeTransform::new(
               output_transfer_syntax,
+              pixel_data_decode_config,
               pixel_data_encode_config,
               Some(get_transcode_image_data_functions(
                 output_transfer_syntax,

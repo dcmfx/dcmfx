@@ -677,6 +677,8 @@ fn jpeg_xl_monochrome_12bit_to_png() {
     .arg("--overwrite")
     .arg("-f")
     .arg("png")
+    .arg("--jpeg-xl-decoder")
+    .arg("jxl-oxide")
     .assert()
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));

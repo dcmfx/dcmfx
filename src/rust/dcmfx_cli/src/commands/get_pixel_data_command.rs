@@ -19,8 +19,13 @@ use crate::mp4_encoder::{
   Mp4PixelFormat, ResizeFilter,
 };
 use crate::{
-  InputSource, args::standard_color_palette_arg::StandardColorPaletteArg,
-  args::transform_arg::TransformArg, utils,
+  InputSource,
+  args::{
+    jpeg_xl_decoder_arg::{self, JpegXlDecoderArg},
+    standard_color_palette_arg::StandardColorPaletteArg,
+    transform_arg::TransformArg,
+  },
+  utils,
 };
 
 pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
@@ -214,6 +219,14 @@ pub struct GetPixelDataArgs {
     default_value_t = false
   )]
   overwrite: bool,
+
+  #[arg(
+    long,
+    help_heading = "Transcoding",
+    help = jpeg_xl_decoder_arg::HELP,
+    default_value_t = JpegXlDecoderArg::LibJxl
+  )]
+  jpeg_xl_decoder: JpegXlDecoderArg,
 }
 
 impl GetPixelDataArgs {
@@ -469,6 +482,9 @@ fn get_pixel_data_from_input_source(
       for frame in frames.iter_mut() {
         if args.format == OutputFormat::Mp4 {
           let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
+
+          pixel_data_renderer.decode_config.jpeg_xl_decoder =
+            args.jpeg_xl_decoder.into();
 
           let cine_module = cine_module_transform
             .as_ref()

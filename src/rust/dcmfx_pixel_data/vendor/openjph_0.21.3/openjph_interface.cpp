@@ -15,7 +15,7 @@ typedef void (*output_data_callback_t)(const void *data, uint32_t len,
                                        void *ctx);
 
 // Outfile implementation that writes all bytes through to an output data
-// callback on the Rust side
+// callback provided by the Rust code
 class callback_outfile : public ojph::outfile_base {
 public:
   callback_outfile(output_data_callback_t output_data_callback,
@@ -99,9 +99,7 @@ extern "C" size_t openjph_encode(
         fill_lines(cs, reinterpret_cast<const int32_t *>(input_data));
       }
     } else {
-      strncpy(error_buffer, "Bits allocated value not supported",
-              error_buffer_size - 1);
-      return -1;
+      throw std::runtime_error("Bits allocated value not supported");
     }
 
     cs.flush();

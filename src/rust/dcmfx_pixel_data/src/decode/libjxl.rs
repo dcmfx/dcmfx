@@ -1,7 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::{format, string::ToString, vec};
-
-use jxl_oxide::{FrameBufferSample, JxlImage, Render, image::BitDepth};
+use alloc::{format, vec, vec::Vec};
 
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
@@ -11,14 +9,12 @@ use crate::{
   },
 };
 
-/// Decodes monochrome pixel data using jxl-oxide.
+/// Decodes monochrome pixel data using libjxl.
 ///
 pub fn decode_monochrome(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<MonochromeImage, PixelDataDecodeError> {
-  let (jxl_image, jxl_render) = decode(image_pixel_module, data)?;
-
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
@@ -29,7 +25,6 @@ pub fn decode_monochrome(
   match (
     image_pixel_module.photometric_interpretation(),
     image_pixel_module.bits_allocated(),
-    jxl_image.image_header().metadata.bit_depth,
   ) {
     (
       PhotometricInterpretation::Monochrome1 {
@@ -39,10 +34,8 @@ pub fn decode_monochrome(
         pixel_representation: PixelRepresentation::Unsigned,
       },
       BitsAllocated::Eight,
-      BitDepth::IntegerSample { bits_per_sample },
-    ) if bits_per_sample <= 8 => {
-      let mut buffer = vec![0u8; image_pixel_module.pixel_count()];
-      render_samples(&jxl_render, &mut buffer)?;
+    ) => {
+      let buffer = decode::<u8>(image_pixel_module, data)?;
 
       MonochromeImage::new_u8(
         width,
@@ -53,6 +46,7 @@ pub fn decode_monochrome(
       )
       .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
+
     (
       PhotometricInterpretation::Monochrome1 {
         pixel_representation: PixelRepresentation::Unsigned,
@@ -61,10 +55,8 @@ pub fn decode_monochrome(
         pixel_representation: PixelRepresentation::Unsigned,
       },
       BitsAllocated::Sixteen,
-      BitDepth::IntegerSample { bits_per_sample },
-    ) if bits_per_sample <= 16 => {
-      let mut buffer = vec![0u16; image_pixel_module.pixel_count()];
-      render_samples(&jxl_render, &mut buffer)?;
+    ) => {
+      let buffer = decode::<u16>(image_pixel_module, data)?;
 
       MonochromeImage::new_u16(
         width,
@@ -76,27 +68,25 @@ pub fn decode_monochrome(
       .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (photometric_interpretation, bits_allocated, bit_depth) => {
+    (photometric_interpretation, bits_allocated) => {
       Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
         details: format!(
-          "JPEG XL monochrome decode not supported for photometric \
-           interpretation '{}', bits allocated '{}', input bit depth '{}'",
+          "JPEG XL monochrome decode with libjxl not supported for photometric \
+           interpretation '{}', bits allocated '{}'",
           photometric_interpretation,
           u8::from(bits_allocated),
-          bit_depth.bits_per_sample()
         ),
       })
     }
   }
 }
 
-/// Decodes color pixel data using jxl-oxide.
+/// Decodes color pixel data using libjxl.
 ///
 pub fn decode_color(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
 ) -> Result<ColorImage, PixelDataDecodeError> {
-  let (jxl_image, jxl_render) = decode(image_pixel_module, data)?;
   let width = image_pixel_module.columns();
   let height = image_pixel_module.rows();
   let bits_stored = image_pixel_module.bits_stored();
@@ -104,7 +94,6 @@ pub fn decode_color(
   match (
     image_pixel_module.photometric_interpretation(),
     image_pixel_module.bits_allocated(),
-    jxl_image.image_header().metadata.bit_depth,
   ) {
     (
       PhotometricInterpretation::Rgb
@@ -112,10 +101,8 @@ pub fn decode_color(
       | PhotometricInterpretation::YbrRct
       | PhotometricInterpretation::Xyb,
       BitsAllocated::Eight,
-      BitDepth::IntegerSample { bits_per_sample: 8 },
     ) => {
-      let mut buffer = vec![0u8; image_pixel_module.pixel_count() * 3];
-      render_samples(&jxl_render, &mut buffer)?;
+      let buffer = decode::<u8>(image_pixel_module, data)?;
 
       ColorImage::new_u8(width, height, buffer, ColorSpace::Rgb, bits_stored)
         .map_err(PixelDataDecodeError::ImageCreationFailed)
@@ -127,87 +114,84 @@ pub fn decode_color(
       | PhotometricInterpretation::YbrRct
       | PhotometricInterpretation::Xyb,
       BitsAllocated::Sixteen,
-      BitDepth::IntegerSample {
-        bits_per_sample: 16,
-      },
     ) => {
-      let mut buffer = vec![0u16; image_pixel_module.pixel_count() * 3];
-      render_samples(&jxl_render, &mut buffer)?;
+      let buffer = decode::<u16>(image_pixel_module, data)?;
 
       ColorImage::new_u16(width, height, buffer, ColorSpace::Rgb, bits_stored)
         .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 
-    (photometric_interpretation, bits_allocated, bit_depth) => {
+    (photometric_interpretation, bits_allocated) => {
       Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
         details: format!(
-          "JPEG XL color decode not supported for photometric \
-           interpretation '{}', bits allocated '{}', input bit depth '{}'",
+          "JPEG XL color decode with libjxl not supported for photometric \
+           interpretation '{}', bits allocated '{}'",
           photometric_interpretation,
           u8::from(bits_allocated),
-          bit_depth.bits_per_sample()
         ),
       })
     }
   }
 }
 
-fn decode(
+fn decode<T: Clone + Default>(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
-) -> Result<(JxlImage, Render), PixelDataDecodeError> {
-  if image_pixel_module.pixel_representation().is_signed() {
-    return Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
-      details: "JPEG XL decode does not support signed pixel".to_string(),
-    });
-  }
+) -> Result<Vec<T>, PixelDataDecodeError> {
+  let mut error_message = [0 as core::ffi::c_char; 200];
 
-  let mut image = JxlImage::read_with_defaults(data).map_err(|e| {
-    PixelDataDecodeError::DataInvalid {
-      details: format!("JPEG XL decode failed with '{}'", e),
-    }
-  })?;
+  // Allocate output buffer
+  let mut output_buffer =
+    vec![
+      T::default();
+      image_pixel_module.pixel_count()
+        * usize::from(u8::from(image_pixel_module.samples_per_pixel()))
+    ];
 
-  if image.width() != image_pixel_module.columns().into()
-    || image.height() != image_pixel_module.rows().into()
-  {
+  // Make FFI call into libjxl to perform the decompression
+  let result = unsafe {
+    ffi::libjxl_decode(
+      data.as_ptr() as *const core::ffi::c_void,
+      data.len(),
+      image_pixel_module.columns().into(),
+      image_pixel_module.rows().into(),
+      u8::from(image_pixel_module.samples_per_pixel()).into(),
+      u8::from(image_pixel_module.bits_allocated()).into(),
+      output_buffer.as_mut_ptr() as *mut core::ffi::c_void,
+      output_buffer.len()
+        * usize::from(u8::from(image_pixel_module.bits_allocated()) / 8),
+      error_message.as_mut_ptr(),
+      error_message.len(),
+    )
+  };
+
+  // On error, read the error message string
+  if result != 0 {
+    let error_c_str =
+      unsafe { core::ffi::CStr::from_ptr(error_message.as_ptr()) };
+    let error_str = error_c_str.to_str().unwrap_or("<invalid error>");
+
     return Err(PixelDataDecodeError::DataInvalid {
-      details: "JPEG XL image has incorrect dimensions".to_string(),
+      details: format!("libjxl decode failed with '{error_str}'"),
     });
   }
 
-  // Convert colors to sRGB
-  if image_pixel_module.is_color() {
-    image.request_color_encoding(jxl_oxide::EnumColourEncoding::srgb(
-      jxl_oxide::RenderingIntent::default(),
-    ));
-  }
-
-  let render =
-    image
-      .render_frame(0)
-      .map_err(|e| PixelDataDecodeError::DataInvalid {
-        details: format!("JPEG XL decode failed with '{}'", e),
-      })?;
-
-  Ok((image, render))
+  Ok(output_buffer)
 }
 
-fn render_samples<Sample: FrameBufferSample>(
-  jxl_render: &Render,
-  buffer: &mut [Sample],
-) -> Result<(), PixelDataDecodeError> {
-  let sample_count = jxl_render.stream().write_to_buffer(buffer);
-
-  if sample_count != buffer.len() {
-    return Err(PixelDataDecodeError::DataInvalid {
-      details: format!(
-        "JPEG XL decode returned {} samples instead of {} samples",
-        sample_count,
-        buffer.len(),
-      ),
-    });
+mod ffi {
+  unsafe extern "C" {
+    pub fn libjxl_decode(
+      input_data: *const core::ffi::c_void,
+      input_data_size: usize,
+      width: usize,
+      height: usize,
+      samples_per_pixel: usize,
+      bits_allocated: usize,
+      output_buffer: *mut core::ffi::c_void,
+      output_buffer_size: usize,
+      error_buffer: *mut core::ffi::c_char,
+      error_buffer_size: usize,
+    ) -> usize;
   }
-
-  Ok(())
 }

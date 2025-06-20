@@ -36,17 +36,17 @@ pub struct PixelDataEncodeConfig {
   zlib_compression_level: u32,
 }
 
-impl PixelDataEncodeConfig {
-  /// Creates a new encode config with default values.
-  ///
-  pub fn new() -> Self {
+impl Default for PixelDataEncodeConfig {
+  fn default() -> Self {
     PixelDataEncodeConfig {
       quality: 85,
       effort: 7,
       zlib_compression_level: 6,
     }
   }
+}
 
+impl PixelDataEncodeConfig {
   /// Returns the quality to use when lossy compressing pixel data.
   ///
   /// The value ranges from 1 (lowest quality), through to 100 (highest
@@ -109,12 +109,6 @@ impl PixelDataEncodeConfig {
   ///
   pub fn set_zlib_compression_level(&mut self, compression_level: u32) {
     self.zlib_compression_level = compression_level.clamp(0, 9);
-  }
-}
-
-impl Default for PixelDataEncodeConfig {
-  fn default() -> Self {
-    Self::new()
   }
 }
 

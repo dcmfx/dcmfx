@@ -16,12 +16,53 @@ use crate::{
 #[cfg(not(target_arch = "wasm32"))]
 mod charls;
 mod jpeg_decoder;
+mod jpeg_xl;
 mod jxl_oxide;
 mod libjpeg_12bit;
+#[cfg(not(target_arch = "wasm32"))]
+mod libjxl;
 mod native;
 mod openjpeg;
 mod rle_lossless;
 mod zune_jpeg;
+
+/// Configuration used when decoding pixel data.
+///
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PixelDataDecodeConfig {
+  /// The library to use for decoding JPEG XL pixel data. Defaults to
+  /// [`JpegXlDecoder::LibJxl`] except on WASM where it defaults to
+  /// [`JpegXlDecoder::JxlOxide`].
+  ///
+  pub jpeg_xl_decoder: JpegXlDecoder,
+}
+
+impl Default for PixelDataDecodeConfig {
+  fn default() -> Self {
+    #[cfg(not(target_arch = "wasm32"))]
+    let jpeg_xl_decoder = JpegXlDecoder::LibJxl;
+
+    #[cfg(target_arch = "wasm32")]
+    let jpeg_xl_decoder = JpegXlDecoder::JxlOxide;
+
+    Self { jpeg_xl_decoder }
+  }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum JpegXlDecoder {
+  LibJxl,
+  JxlOxide,
+}
+
+impl core::fmt::Display for JpegXlDecoder {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    match self {
+      Self::LibJxl => f.write_str("libjxl"),
+      Self::JxlOxide => f.write_str("jxl-oxide"),
+    }
+  }
+}
 
 /// Errors that can occur when decoding frames of image data in a specific
 /// transfer syntax.
@@ -47,6 +88,10 @@ pub enum PixelDataDecodeError {
   /// Decode succeeded but there was an error when constructing the
   /// [`MonochromeImage`] or [`ColorImage`] to be returned.
   ImageCreationFailed(&'static str),
+
+  /// The decoder requested in the decoding config is not available because it
+  /// wasn't part of the build.
+  DecoderNotAvailable { name: String },
 }
 
 impl PixelDataDecodeError {
@@ -63,6 +108,7 @@ impl PixelDataDecodeError {
       }
       Self::DataInvalid { .. } => "Data invalid".to_string(),
       Self::ImageCreationFailed { .. } => "Image creation failed".to_string(),
+      Self::DecoderNotAvailable { .. } => "Decoder not available".to_string(),
     }
   }
 }
@@ -86,6 +132,9 @@ impl core::fmt::Display for PixelDataDecodeError {
       Self::ImageCreationFailed(details) => {
         write!(f, "Image creation failed, details: '{}'", details)
       }
+      Self::DecoderNotAvailable { name } => {
+        write!(f, "Decoder '{name}' not available")
+      }
     }
   }
 }
@@ -108,6 +157,9 @@ impl DcmfxError for PixelDataDecodeError {
       }
       Self::ImageCreationFailed(details) => {
         lines.push(format!("  Details: {}", details));
+      }
+      Self::DecoderNotAvailable { name } => {
+        lines.push(format!("  Name: {}", name));
       }
     }
 
@@ -168,7 +220,7 @@ pub fn decode_photometric_interpretation<'a>(
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-      jxl_oxide::decode_photometric_interpretation(photometric_interpretation)
+      jpeg_xl::decode_photometric_interpretation(photometric_interpretation)
     }
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => {
@@ -189,6 +241,7 @@ pub fn decode_monochrome(
   frame: &mut PixelDataFrame,
   transfer_syntax: &'static TransferSyntax,
   image_pixel_module: &ImagePixelModule,
+  decode_config: &PixelDataDecodeConfig,
 ) -> Result<MonochromeImage, PixelDataDecodeError> {
   let frame_bit_offset = frame.bit_offset();
   let data = frame.combine_chunks();
@@ -232,7 +285,18 @@ pub fn decode_monochrome(
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-      jxl_oxide::decode_monochrome(image_pixel_module, data)
+      #[cfg(not(target_arch = "wasm32"))]
+      if decode_config.jpeg_xl_decoder == JpegXlDecoder::LibJxl {
+        return libjxl::decode_monochrome(image_pixel_module, data);
+      }
+
+      if decode_config.jpeg_xl_decoder == JpegXlDecoder::JxlOxide {
+        return jxl_oxide::decode_monochrome(image_pixel_module, data);
+      }
+
+      Err(PixelDataDecodeError::DecoderNotAvailable {
+        name: decode_config.jpeg_xl_decoder.to_string(),
+      })
     }
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => native::decode_monochrome(
@@ -253,6 +317,7 @@ pub fn decode_color(
   frame: &mut PixelDataFrame,
   transfer_syntax: &'static TransferSyntax,
   image_pixel_module: &ImagePixelModule,
+  decode_config: &PixelDataDecodeConfig,
 ) -> Result<ColorImage, PixelDataDecodeError> {
   let data = frame.combine_chunks();
 
@@ -291,7 +356,18 @@ pub fn decode_color(
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-      jxl_oxide::decode_color(image_pixel_module, data)
+      #[cfg(not(target_arch = "wasm32"))]
+      if decode_config.jpeg_xl_decoder == JpegXlDecoder::LibJxl {
+        return libjxl::decode_color(image_pixel_module, data);
+      }
+
+      if decode_config.jpeg_xl_decoder == JpegXlDecoder::JxlOxide {
+        return jxl_oxide::decode_color(image_pixel_module, data);
+      }
+
+      Err(PixelDataDecodeError::DecoderNotAvailable {
+        name: decode_config.jpeg_xl_decoder.to_string(),
+      })
     }
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => native::decode_color(

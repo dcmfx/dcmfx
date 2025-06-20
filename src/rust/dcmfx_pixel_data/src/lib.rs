@@ -26,7 +26,7 @@ mod transforms;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
-pub use decode::PixelDataDecodeError;
+pub use decode::{PixelDataDecodeConfig, PixelDataDecodeError};
 pub use encode::{PixelDataEncodeConfig, PixelDataEncodeError};
 pub use grayscale_pipeline::GrayscalePipeline;
 pub use lookup_table::LookupTable;
@@ -104,6 +104,7 @@ where
   fn transcode_pixel_data(
     &self,
     target_transfer_syntax: &'static TransferSyntax,
+    decode_config: PixelDataDecodeConfig,
     encode_config: PixelDataEncodeConfig,
     image_data_functions: Option<TranscodeImageDataFunctions>,
   ) -> Result<DataSet, P10PixelDataTranscodeTransformError>;
@@ -169,11 +170,13 @@ impl DataSetPixelDataExtensions for DataSet {
   fn transcode_pixel_data(
     &self,
     output_transfer_syntax: &'static TransferSyntax,
+    decode_config: PixelDataDecodeConfig,
     encode_config: PixelDataEncodeConfig,
     image_data_functions: Option<TranscodeImageDataFunctions>,
   ) -> Result<DataSet, P10PixelDataTranscodeTransformError> {
     let mut transcode_transform = P10PixelDataTranscodeTransform::new(
       output_transfer_syntax,
+      decode_config,
       encode_config,
       image_data_functions,
     );
