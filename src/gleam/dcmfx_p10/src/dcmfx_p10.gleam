@@ -16,14 +16,13 @@ import gleam/option.{type Option}
 import gleam/result
 
 /// Returns whether a file contains DICOM P10 data by checking for the presence
-/// of the DICOM P10 header and the start of a File Meta Information Group
-/// Length data element.
+/// of the 'DICM' prefix at offset 128.
 ///
 pub fn is_valid_file(filename: String) -> Bool {
   filename
   |> file_stream.open_read
   |> result.map(fn(stream) {
-    let bytes = file_stream.read_bytes_exact(stream, 138)
+    let bytes = file_stream.read_bytes_exact(stream, 132)
     let _ = file_stream.close(stream)
 
     case bytes {
@@ -35,12 +34,11 @@ pub fn is_valid_file(filename: String) -> Bool {
 }
 
 /// Returns whether the given bytes contain DICOM P10 data by checking for the
-/// presence of the DICOM P10 header and the start of a File Meta Information
-/// Group Length data element.
+/// presence of the 'DICM' prefix at offset 128.
 ///
 pub fn is_valid_bytes(bytes: BitArray) -> Bool {
   case bytes {
-    <<_:bytes-128, "DICM", 2:16-little, 0:16-little, "UL", _:bytes>> -> True
+    <<_:bytes-128, "DICM", _:bytes>> -> True
     _ -> False
   }
 }

@@ -71,14 +71,13 @@ pub use transforms::p10_insert_transform::P10InsertTransform;
 pub use transforms::p10_print_transform::P10PrintTransform;
 
 /// Returns whether a file contains DICOM P10 data by checking for the presence
-/// of the DICOM P10 header and the start of a File Meta Information Group
-/// Length data element.
+/// of the 'DICM' prefix at offset 128.
 ///
 #[cfg(feature = "std")]
 pub fn is_valid_file<P: AsRef<Path>>(filename: P) -> bool {
   match File::open(filename) {
     Ok(mut file) => {
-      let mut buffer = vec![0u8; 138];
+      let mut buffer = [0u8; 132];
       match file.read_exact(&mut buffer) {
         Ok(_) => is_valid_bytes(&buffer),
         Err(_) => false,
@@ -89,15 +88,10 @@ pub fn is_valid_file<P: AsRef<Path>>(filename: P) -> bool {
 }
 
 /// Returns whether the given bytes contain DICOM P10 data by checking for the
-/// presence of the DICOM P10 header and the start of a File Meta Information
-/// Group Length data element.
+/// presence of the 'DICM' prefix at offset 128.
 ///
 pub fn is_valid_bytes(bytes: &[u8]) -> bool {
-  if bytes.len() < 138 {
-    return false;
-  }
-
-  bytes[128..138] == *b"DICM\x02\0\0\0UL".as_slice()
+  bytes.len() >= 132 && bytes[128..132] == *b"DICM".as_slice()
 }
 
 /// Reads DICOM P10 data from a file into an in-memory data set.
