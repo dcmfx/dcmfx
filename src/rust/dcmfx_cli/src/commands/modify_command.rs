@@ -30,7 +30,7 @@ pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
 
 #[derive(Args)]
 pub struct ModifyArgs {
-  #[clap(
+  #[arg(
     required = true,
     help = "The names of the DICOM P10 files to modify. Specify '-' to read \
       from stdin."
@@ -44,7 +44,7 @@ pub struct ModifyArgs {
   )]
   ignore_invalid: bool,
 
-  #[clap(
+  #[arg(
     long,
     short,
     help = "The name of the DICOM P10 output file. Specify '-' to write to \
@@ -54,7 +54,7 @@ pub struct ModifyArgs {
   )]
   output_filename: Option<PathBuf>,
 
-  #[clap(
+  #[arg(
     long,
     short = 'd',
     help = "The directory to write output files into. The names of the output \
@@ -75,11 +75,11 @@ pub struct ModifyArgs {
   )]
   in_place: bool,
 
-  #[clap(
+  #[arg(
     long,
-    help = "Specifies the number of threads to use to perform work. Each \
-      thread operates on one input file at a time, so using more threads may \
-      improve performance when processing many input files.\n\
+    help = "The number of threads to use to perform work. Each thread operates \
+      on one input file at a time, so using more threads may improve \
+      performance when processing many input files.\n\
       \n\
       The default thread count is the number of logical CPUs available.",
     default_value_t = rayon::current_num_threads()
@@ -138,7 +138,7 @@ pub struct ModifyArgs {
   )]
   effort: Option<u8>,
 
-  #[clap(
+  #[arg(
     long,
     help_heading = "Transcoding",
     help = "When transcoding monochrome pixel data using --transfer-syntax, \
@@ -148,7 +148,7 @@ pub struct ModifyArgs {
   photometric_interpretation_monochrome:
     Option<PhotometricInterpretationMonochromeArg>,
 
-  #[clap(
+  #[arg(
     long,
     help_heading = "Transcoding",
     help = "When transcoding color pixel data using --transfer-syntax, this \
@@ -238,14 +238,14 @@ pub struct ModifyArgs {
   )]
   delete_tag: Vec<DataElementTag>,
 
-  #[clap(
+  #[arg(
     long,
     help = "Overwrite files without prompting",
     default_value_t = false
   )]
   overwrite: bool,
 
-  #[clap(
+  #[arg(
     long,
     help = "The value of the Implementation Version Name data element in \
       output DICOM P10 files. The value must conform to the specification of \

@@ -11,7 +11,7 @@ pub const ABOUT: &str = "Prints the content of DICOM P10 files";
 
 #[derive(Args)]
 pub struct PrintArgs {
-  #[clap(
+  #[arg(
     required = true,
     help = "The names of the DICOM P10 files to print the content of. Specify \
       '-' to read from stdin."

@@ -16,14 +16,14 @@ pub const ABOUT: &str = "Converts DICOM JSON files to DICOM P10 files";
 
 #[derive(Args)]
 pub struct ToDcmArgs {
-  #[clap(
+  #[arg(
     required = true,
     help = "The names of the DICOM JSON files to convert to DICOM P10 files. \
       Specify '-' to read from stdin."
   )]
   input_filenames: Vec<PathBuf>,
 
-  #[clap(
+  #[arg(
     long,
     short,
     help = "The name of the DICOM P10 output file. By default the output \
@@ -34,7 +34,7 @@ pub struct ToDcmArgs {
   )]
   output_filename: Option<PathBuf>,
 
-  #[clap(
+  #[arg(
     long,
     short = 'd',
     help = "The directory to write output files into. The names of the output \
@@ -43,25 +43,25 @@ pub struct ToDcmArgs {
   )]
   output_directory: Option<PathBuf>,
 
-  #[clap(
+  #[arg(
     long,
-    help = "Specifies the number of threads to use to perform work. Each \
-      thread operates on one input file at a time, so using more threads may \
-      improve performance when processing many input files.\n\
+    help = "The number of threads to use to perform work. Each thread operates \
+      on one input file at a time, so using more threads may improve \
+      performance when processing many input files.\n\
       \n\
       The default thread count is the number of logical CPUs available.",
     default_value_t = rayon::current_num_threads()
   )]
   threads: usize,
 
-  #[clap(
+  #[arg(
     long,
     help = "Overwrite files without prompting",
     default_value_t = false
   )]
   overwrite: bool,
 
-  #[clap(
+  #[arg(
     long,
     help = "The value of the Implementation Version Name data element in \
       output DICOM P10 files. The value must conform to the specification of \

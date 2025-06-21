@@ -33,7 +33,7 @@ pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
 
 #[derive(Args)]
 pub struct GetPixelDataArgs {
-  #[clap(
+  #[arg(
     required = true,
     help = "The names of the DICOM P10 files to extract pixel data from. \
       Specify '-' to read from stdin."
@@ -56,11 +56,11 @@ pub struct GetPixelDataArgs {
   )]
   output_directory: Option<PathBuf>,
 
-  #[clap(
+  #[arg(
     long,
-    help = "Specifies the number of threads to use to perform work. Each \
-      thread operates on one input file at a time, so using more threads may \
-      improve performance when processing many input files.\n\
+    help = "The number of threads to use to perform work. Each thread operates \
+      on one input file at a time, so using more threads may improve \
+      performance when processing many input files.\n\
       \n\
       The default thread count is the number of logical CPUs available.",
     default_value_t = rayon::current_num_threads()
@@ -213,7 +213,7 @@ pub struct GetPixelDataArgs {
   )]
   render_overlays: bool,
 
-  #[clap(
+  #[arg(
     long,
     help = "Overwrite files without prompting.",
     default_value_t = false
