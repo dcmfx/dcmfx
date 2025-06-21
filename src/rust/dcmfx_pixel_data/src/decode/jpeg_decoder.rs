@@ -145,7 +145,7 @@ pub fn decode_color(
 
     _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "JPEG Lossless monochrome decode not supported for photometric \
+        "JPEG Lossless color decode not supported for photometric \
          interpretation '{}', decoded pixel format '{:?}'",
         image_pixel_module.photometric_interpretation(),
         pixel_format

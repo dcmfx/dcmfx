@@ -96,6 +96,9 @@ pub struct P10PixelDataTranscodeTransform {
 /// [`TranscodeImageDataFunctions::process_image_pixel_module()`] must match its
 /// behavior exactly with corresponding changes to the Image Pixel Module.
 ///
+/// Note that when transcoding from 'JPEG Baseline 8-bit' to 'JPEG XL JPEG
+/// Recompression' none of these image data functions are called.
+///
 pub struct TranscodeImageDataFunctions {
   pub process_image_pixel_module: Box<FnProcessImagePixelModule>,
   pub process_monochrome_image: Box<FnProcessImage<MonochromeImage>>,
@@ -348,6 +351,18 @@ impl P10PixelDataTranscodeTransform {
     let mut image_pixel_module =
       image_pixel_module_transform.get_output().unwrap().clone();
 
+    // Special case for recompression of JPEG Baseline 8-bit into JPEG XL, which
+    // by definition can not alter the Image Pixel Module
+    if input_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
+      && output_transfer_syntax == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
+    {
+      return Ok((
+        token_buffer.to_vec(),
+        image_pixel_module.clone(),
+        image_pixel_module,
+      ));
+    }
+
     // Determine the photometric interpretation after decoding
     let decoded_photometric_interpretation =
       decode::decode_photometric_interpretation(
@@ -415,6 +430,20 @@ impl P10PixelDataTranscodeTransform {
     &mut self,
     input_frame: &mut PixelDataFrame,
   ) -> Result<RcByteSlice, P10PixelDataTranscodeTransformError> {
+    // Special case for recompression of JPEG Baseline 8-bit into JPEG XL
+    #[cfg(not(target_arch = "wasm32"))]
+    if self.input_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
+      && self.output_transfer_syntax
+        == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
+    {
+      let jpeg_data = input_frame.combine_chunks();
+      let encoded_jpeg_xl =
+        crate::jpeg_xl_jpeg_recompression::jpeg_to_jpeg_xl(jpeg_data)
+          .map_err(P10PixelDataTranscodeTransformError::PixelDataEncodeError)?;
+
+      return Ok(encoded_jpeg_xl.into());
+    }
+
     let pixel_data_renderer =
       self.pixel_data_renderer_transform.get_output().unwrap();
 
@@ -477,7 +506,8 @@ impl P10PixelDataTranscodeTransform {
       {
         return Err(P10PixelDataTranscodeTransformError::NotSupported {
           details: "Transcoding multi-frame bitmap pixel data that isn't \
-            byte-aligned is not supported",
+            byte-aligned is not supported"
+            .to_string(),
         });
       }
 
@@ -650,7 +680,7 @@ pub enum P10PixelDataTranscodeTransformError {
   P10Error(P10Error),
   PixelDataDecodeError(PixelDataDecodeError),
   PixelDataEncodeError(PixelDataEncodeError),
-  NotSupported { details: &'static str },
+  NotSupported { details: String },
 }
 
 impl core::fmt::Display for P10PixelDataTranscodeTransformError {

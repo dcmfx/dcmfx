@@ -104,12 +104,14 @@ pub struct ModifyArgs {
       compression quality in the range 1-100. A quality of 100 does not result \
       in lossless compression.\n\
       \n\
-      The quality value applies to:\n\
+      The quality value only applies when encoding into the following transfer \
+      syntaxes:\n\
       \n\
       - JPEG Baseline 8-bit\n\
       - JPEG Extended 12-bit\n\
       - JPEG 2000 (Lossy)\n\
       - High-Throughput JPEG 2000 (Lossy)\n\
+      - JPEG XL\n\
       \n\
       Default value: 85",
     value_parser = clap::value_parser!(u8).range(1..=100),
@@ -125,7 +127,8 @@ pub struct ModifyArgs {
       values allow the compressor to take more processing time in order to try \
       and achieve a better compression ratio at the same quality.\n\
       \n\
-      The effort value applies to:\n\
+      The effort value only applies when encoding into the following transfer
+      syntaxes:\n\
       \n\
       - JPEG XL Lossless\n\
       - JPEG XL\n\
@@ -164,9 +167,9 @@ pub struct ModifyArgs {
       generally preferred in JPEG 2000, however others may be used if there is \
       a need to compress with no risk of loss from color space conversions.\n\
       \n\
-      When the output transfer syntax is JPEG XL the output photometric \
-      interpretation defaults to 'RGB' for lossless encoding, and 'XYB' for \
-      lossy encoding.\n\
+      When the output transfer syntax is 'JPEG XL' or 'JPEG XL Lossless Only' \
+      the output photometric interpretation defaults to 'RGB' for lossless \
+      encoding, and 'XYB' for lossy encoding.\n\
       \n\
       For all other output transfer syntaxes there is no default output \
       photometric interpretation, however the output photometric \
@@ -183,22 +186,17 @@ pub struct ModifyArgs {
   #[arg(
     long,
     help_heading = "Transcoding",
-    help = "When transcoding color pixel data using --transfer-syntax, this \
-      specifies the planar configuration to be used by the transcoded pixel \
-      data. This option has no effect on monochrome pixel data.\n\
-      \n\
-      The planar configuration can only be specified for the following \
-      transfer syntaxes:\n\
+    help = "When transcoding color pixel data using --transfer-syntax, the \
+      planar configuration to be used by the transcoded pixel data. The planar \
+      configuration only applies when encoding color pixel data into the \
+      following transfer syntaxes:\n\
       \n\
       - Implicit VR Little Endian\n\
       - Explicit VR Little Endian\n\
       - Encapsulated Uncompressed Explicit VR Little Endian\n\
       - Deflated Explicit VR Little Endian\n\
       - Explicit VR Big Endian\n\
-      - Deflated Image Frame Compression\n\
-      \n\
-      The planar configuration is ignored when transcoding into other transfer \
-      syntaxes."
+      - Deflated Image Frame Compression"
   )]
   planar_configuration: Option<PlanarConfigurationArg>,
 
@@ -434,6 +432,7 @@ fn modify_input_source(
       || transfer_syntax == TransferSyntaxArg::JpegLsLossyNearLossless
       || transfer_syntax == TransferSyntaxArg::Jpeg2k
       || transfer_syntax == TransferSyntaxArg::HighThroughputJpeg2k
+      || transfer_syntax == TransferSyntaxArg::JpegXl
     {
       let mut lossy_image_compression = DataSet::new();
       lossy_image_compression.insert(
@@ -678,7 +677,8 @@ fn get_transcode_image_data_functions(
       if photometric_interpretation.is_ybr_full_422() {
         image.convert_to_ybr_422_color_space().map_err(|_| {
           P10PixelDataTranscodeTransformError::NotSupported {
-            details: "Can't convert to YBR_FULL_422 because width is odd",
+            details: "Can't convert to YBR_FULL_422 because width is odd"
+              .to_string(),
           }
         })?;
       }

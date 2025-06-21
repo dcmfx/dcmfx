@@ -116,6 +116,38 @@ extern "C" size_t libjxl_decode(const void *input_data, size_t input_data_size,
   }
 }
 
+// Loops while there is output data still coming from the encoder and emits it
+// via the output data callback.
+static void emit_encoded_data(JxlEncoder *encoder,
+                              void *(*output_data_callback)(size_t new_len,
+                                                            void *ctx),
+                              void *output_data_context) {
+  size_t output_size = 0;
+
+  auto status = JXL_ENC_NEED_MORE_OUTPUT;
+
+  while (status == JXL_ENC_NEED_MORE_OUTPUT) {
+    size_t output_chunk_size = 256 * 1024;
+
+    auto initial_size = output_size;
+
+    output_size += output_chunk_size;
+    auto output_data = output_data_callback(output_size, output_data_context);
+
+    auto next_out = reinterpret_cast<uint8_t *>(output_data) + initial_size;
+    auto avail_out = output_chunk_size;
+
+    status = JxlEncoderProcessOutput(encoder, &next_out, &avail_out);
+
+    output_size -= avail_out;
+    output_data_callback(output_size, output_data_context);
+  }
+
+  if (status == JXL_ENC_ERROR) {
+    throw std::runtime_error("JxlEncoderProcessOutput() failed");
+  }
+}
+
 extern "C" size_t
 libjxl_encode(const void *input_data, size_t input_data_size, size_t width,
               size_t height, size_t samples_per_pixel, size_t bits_allocated,
@@ -130,19 +162,19 @@ libjxl_encode(const void *input_data, size_t input_data_size, size_t width,
     // Create encoder
     encoder = JxlEncoderCreate(nullptr);
     if (encoder == nullptr) {
-      throw std::runtime_error("JxlEncoderCreate()");
+      throw std::runtime_error("JxlEncoderCreate() failed");
     }
 
     // Setup parallel runner
     runner = JxlThreadParallelRunnerCreate(
         nullptr, JxlThreadParallelRunnerDefaultNumWorkerThreads());
     if (runner == nullptr) {
-      throw std::runtime_error("JxlThreadParallelRunnerCreate()");
+      throw std::runtime_error("JxlThreadParallelRunnerCreate() failed");
     }
     auto status =
         JxlEncoderSetParallelRunner(encoder, JxlThreadParallelRunner, runner);
     if (status != JXL_ENC_SUCCESS) {
-      throw std::runtime_error("JxlEncoderSetParallelRunner()");
+      throw std::runtime_error("JxlEncoderSetParallelRunner() failed");
     }
 
     // Set basic image info
@@ -159,7 +191,7 @@ libjxl_encode(const void *input_data, size_t input_data_size, size_t width,
 
     status = JxlEncoderSetBasicInfo(encoder, &basic_info);
     if (status != JXL_ENC_SUCCESS) {
-      throw std::runtime_error("JxlEncoderSetBasicInfo()");
+      throw std::runtime_error("JxlEncoderSetBasicInfo() failed");
     }
 
     // Set input color encoding
@@ -167,7 +199,7 @@ libjxl_encode(const void *input_data, size_t input_data_size, size_t width,
     JxlColorEncodingSetToSRGB(&color_encoding, !is_color);
     status = JxlEncoderSetColorEncoding(encoder, &color_encoding);
     if (status != JXL_ENC_SUCCESS) {
-      throw std::runtime_error("JxlEncoderSetColorEncoding()");
+      throw std::runtime_error("JxlEncoderSetColorEncoding() failed");
     }
 
     // Determine input data type
@@ -184,14 +216,14 @@ libjxl_encode(const void *input_data, size_t input_data_size, size_t width,
     if (lossless) {
       status = JxlEncoderSetFrameLossless(frame_settings, JXL_TRUE);
       if (status != JXL_ENC_SUCCESS) {
-        throw std::runtime_error("JxlEncoderSetFrameLossless()");
+        throw std::runtime_error("JxlEncoderSetFrameLossless() failed");
       }
     } else {
       auto distance = JxlEncoderDistanceFromQuality(quality);
 
       status = JxlEncoderSetFrameDistance(frame_settings, distance);
       if (status != JXL_ENC_SUCCESS) {
-        throw std::runtime_error("JxlEncoderSetFrameDistance()");
+        throw std::runtime_error("JxlEncoderSetFrameDistance() failed");
       }
 
       // Use XYB for lossy color images
@@ -199,7 +231,7 @@ libjxl_encode(const void *input_data, size_t input_data_size, size_t width,
         status = JxlEncoderFrameSettingsSetOption(
             frame_settings, JXL_ENC_FRAME_SETTING_MODULAR, 0);
         if (status != JXL_ENC_SUCCESS) {
-          throw std::runtime_error("JxlEncoderFrameSettingsSetOption()");
+          throw std::runtime_error("JxlEncoderFrameSettingsSetOption() failed");
         }
       }
     }
@@ -208,52 +240,78 @@ libjxl_encode(const void *input_data, size_t input_data_size, size_t width,
     status = JxlEncoderFrameSettingsSetOption(
         frame_settings, JXL_ENC_FRAME_SETTING_EFFORT, effort);
     if (status != JXL_ENC_SUCCESS) {
-      throw std::runtime_error("JxlEncoderFrameSettingsSetOption()");
+      throw std::runtime_error("JxlEncoderFrameSettingsSetOption() failed");
     }
 
     // Provide pixel data to the encoder
     status = JxlEncoderAddImageFrame(frame_settings, &pixel_format, input_data,
                                      input_data_size);
     if (status != JXL_ENC_SUCCESS) {
-      throw std::runtime_error("JxlEncoderAddImageFrame()");
+      throw std::runtime_error("JxlEncoderAddImageFrame() failed");
     }
 
     JxlEncoderCloseInput(encoder);
 
-    // Perform encoding and collect output
-    size_t output_size = 0;
-    status = JXL_ENC_NEED_MORE_OUTPUT;
-    while (status == JXL_ENC_NEED_MORE_OUTPUT) {
-      size_t output_chunk_size = 512 * 1024;
-
-      auto initial_size = output_size;
-
-      output_size += output_chunk_size;
-      auto output_data = output_data_callback(output_size, output_data_context);
-
-      auto next_out = reinterpret_cast<uint8_t *>(output_data) + initial_size;
-      auto avail_out = output_chunk_size;
-
-      status = JxlEncoderProcessOutput(encoder, &next_out, &avail_out);
-
-      output_size -= avail_out;
-      output_data_callback(output_size, output_data_context);
-    }
-
-    if (status == JXL_ENC_ERROR) {
-      throw std::runtime_error("JxlEncoderProcessOutput()");
-    }
+    emit_encoded_data(encoder, output_data_callback, output_data_context);
 
     JxlEncoderDestroy(encoder);
     JxlThreadParallelRunnerDestroy(runner);
 
     return 0;
   } catch (const std::runtime_error &e) {
-    snprintf(error_buffer, error_buffer_size, "%s failed with %i", e.what(),
+    snprintf(error_buffer, error_buffer_size, "%s (code %i)", e.what(),
              JxlEncoderGetError(encoder));
 
     JxlEncoderDestroy(encoder);
     JxlThreadParallelRunnerDestroy(runner);
+
+    return 1;
+  }
+
+  return 0;
+}
+
+extern "C" size_t libjxl_recompress_jpeg(
+    const void *jpeg_data, size_t jpeg_data_size,
+    void *(*output_data_callback)(size_t new_len, void *ctx),
+    void *output_data_context, char *error_buffer, size_t error_buffer_size) {
+  JxlEncoder *encoder = nullptr;
+
+  try {
+    // Create encoder
+    encoder = JxlEncoderCreate(nullptr);
+    if (encoder == nullptr) {
+      throw std::runtime_error("JxlEncoderCreate() failed");
+    }
+
+    // Forces the encoder to use the box-based container format (BMFF) which is
+    // required for JPEG-in-JXL
+    auto status = JxlEncoderUseContainer(encoder, JXL_TRUE);
+    if (status != JXL_ENC_SUCCESS) {
+      throw std::runtime_error("JxlEncoderUseContainer() failed");
+    }
+
+    // Add JPEG data
+    auto frame_settings = JxlEncoderFrameSettingsCreate(encoder, nullptr);
+    status = JxlEncoderAddJPEGFrame(
+        frame_settings, reinterpret_cast<const uint8_t *>(jpeg_data),
+        jpeg_data_size);
+    if (status != JXL_ENC_SUCCESS) {
+      throw std::runtime_error("JxlEncoderAddJPEGFrame() failed");
+    }
+
+    JxlEncoderCloseInput(encoder);
+
+    emit_encoded_data(encoder, output_data_callback, output_data_context);
+
+    JxlEncoderDestroy(encoder);
+
+    return 0;
+  } catch (const std::runtime_error &e) {
+    snprintf(error_buffer, error_buffer_size, "%s (code %i)", e.what(),
+             JxlEncoderGetError(encoder));
+
+    JxlEncoderDestroy(encoder);
 
     return 1;
   }

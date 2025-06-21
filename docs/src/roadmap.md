@@ -5,8 +5,6 @@ following:
 
 - Decode High-Throughput JPEG 2000 pixel data using OpenJPH as an alternative to
   the existing decoding with OpenJPEG
-  
-- Support precisions beyond 30 bits with High-Throughput JPEG 2000.
 
 - Decode JPEG-LS pixel data on WASM
 

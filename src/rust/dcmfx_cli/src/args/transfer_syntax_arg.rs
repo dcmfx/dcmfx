@@ -23,6 +23,7 @@ pub enum TransferSyntaxArg {
   HighThroughputJpeg2kLosslessOnly,
   HighThroughputJpeg2k,
   JpegXlLossless,
+  JpegXlJpegRecompression,
   JpegXl,
 }
 
@@ -66,6 +67,9 @@ impl TransferSyntaxArg {
         Some(&transfer_syntax::HIGH_THROUGHPUT_JPEG_2K)
       }
       Self::JpegXlLossless => Some(&transfer_syntax::JPEG_XL_LOSSLESS),
+      Self::JpegXlJpegRecompression => {
+        Some(&transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION)
+      }
       Self::JpegXl => Some(&transfer_syntax::JPEG_XL),
     }
   }
@@ -91,6 +95,7 @@ impl ValueEnum for TransferSyntaxArg {
       Self::HighThroughputJpeg2kLosslessOnly,
       Self::HighThroughputJpeg2k,
       Self::JpegXlLossless,
+      Self::JpegXlJpegRecompression,
       Self::JpegXl,
     ]
   }
@@ -122,7 +127,7 @@ impl ValueEnum for TransferSyntaxArg {
       Self::ExplicitVrLittleEndian => {
         PossibleValue::new("explicit-vr-little-endian").help(
           "\n\
-          Similar to Implicit VR Little Endian but with explicit value \
+          Similar to 'Implicit VR Little Endian' but with explicit value \
           representations that improve reliability and clarity of the DICOM \
           P10 data.\n\
           \n\
@@ -135,7 +140,7 @@ impl ValueEnum for TransferSyntaxArg {
       Self::ExplicitVrBigEndian => PossibleValue::new("explicit-vr-big-endian")
         .help(
           "\n\
-          Similar to Explicit VR Little Endian but with big endian byte \
+          Similar to 'Explicit VR Little Endian' but with big endian byte \
           ordering. This transfer syntax was retired in DICOM 2017c and is \
           only relevant for legacy compatibility.\n\
           \n\
@@ -149,7 +154,7 @@ impl ValueEnum for TransferSyntaxArg {
         )
         .help(
           "\n\
-          Similar to Explicit VR Little Endian but stores the pixel data as \
+          Similar to 'Explicit VR Little Endian' but stores the pixel data as \
           uncompressed encapsulated data.\n\
           \n\
           Encapsulated: Yes\n\
@@ -160,7 +165,7 @@ impl ValueEnum for TransferSyntaxArg {
       Self::DeflatedExplicitVrLittleEndian => {
         PossibleValue::new("deflated-explicit-vr-little-endian").help(
           "\n\
-          Similar to Explicit VR Little Endian but with the whole data set \
+          Similar to 'Explicit VR Little Endian' but with the whole data set \
           compressed using the DEFLATE algorithm. The compression level can be \
           set with the --zlib-compression-level argument.\n\
           \n\
@@ -173,8 +178,8 @@ impl ValueEnum for TransferSyntaxArg {
       Self::DeflatedImageFrameCompression => {
         PossibleValue::new("deflated-image-frame-compression").help(
           "\n\
-          Similar to Explicit VR Little Endian but encapsulates the pixel data \
-          and compresses each frame using the DEFLATE algorithm. The \
+          Similar to 'Explicit VR Little Endian' but encapsulates the pixel \
+          data and compresses each frame using the DEFLATE algorithm. The \
           compression level can be set with the --zlib-compression-level \
           argument.\n\
           \n\
@@ -278,6 +283,23 @@ impl ValueEnum for TransferSyntaxArg {
         Encapsulated: Yes\n\
         UID: 1.2.840.10008.1.2.4.110",
       ),
+
+      Self::JpegXlJpegRecompression => {
+        PossibleValue::new("jpeg-xl-jpeg-recompression").help(
+          "\n\
+          Lossy image compression using the JPEG XL format where the data was \
+          originally compressed as 'JPEG Baseline 8-bit'. Storing the data in \
+          JPEG XL can reduce data size by 15-35% with no change to the image.\n\
+          \n\
+          The only transfer syntax that can be transcoded into 'JPEG XL JPEG \
+          Recompression' is 'JPEG Baseline 8-bit'. No aspect of the pixel data \
+          can be altered when doing this transcode, e.g. the photometric
+          interpretation can't be changed.\n\
+          \n\
+          Encapsulated: Yes\n\
+          UID: 1.2.840.10008.1.2.4.111",
+        )
+      }
 
       Self::JpegXl => PossibleValue::new("jpeg-xl").help(
         "\n\

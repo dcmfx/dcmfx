@@ -804,7 +804,7 @@ fn jpeg_2000_ybr_to_jpeg_xl_lossless() {
     "../../../test/assets/other/jpeg_2000_ybr_color_space.dcm",
     "jpeg-xl-lossless",
     "jpeg_2000_ybr_to_jpeg_xl_lossless",
-    &["--effort", "1"],
+    &[],
   );
 }
 
@@ -814,7 +814,7 @@ fn jpeg_2000_ybr_to_jpeg_xl() {
     "../../../test/assets/other/jpeg_2000_ybr_color_space.dcm",
     "jpeg-xl",
     "jpeg_2000_ybr_to_jpeg_xl",
-    &["--effort", "1"],
+    &[],
   );
 }
 
@@ -824,7 +824,7 @@ fn palette_color_to_jpeg_xl_lossless() {
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-xl-lossless",
     "palette_color_to_jpeg_xl_lossless",
-    &["--effort", "1"],
+    &[],
   );
 }
 
@@ -834,7 +834,7 @@ fn palette_color_to_jpeg_xl() {
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-xl",
     "palette_color_to_jpeg_xl",
-    &["--effort", "1"],
+    &[],
   );
 }
 
@@ -844,7 +844,7 @@ fn explicit_vr_little_endian_rgb_to_jpeg_xl_lossless() {
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "jpeg-xl-lossless",
     "explicit_vr_little_endian_rgb_to_jpeg_xl_lossless",
-    &["--effort", "1"],
+    &[],
   );
 }
 
@@ -854,7 +854,7 @@ fn explicit_vr_little_endian_rgb_to_jpeg_xl() {
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "jpeg-xl",
     "explicit_vr_little_endian_rgb_to_jpeg_xl",
-    &["--quality", "10", "--effort", "1"],
+    &["--quality", "10"],
   );
 }
 
@@ -864,7 +864,7 @@ fn explicit_vr_little_endian_ybr_to_jpeg_xl_lossless() {
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "jpeg-xl-lossless",
     "explicit_vr_little_endian_ybr_to_jpeg_xl_lossless",
-    &["--effort", "1"],
+    &[],
   );
 }
 
@@ -874,7 +874,7 @@ fn explicit_vr_little_endian_ybr_to_jpeg_xl() {
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "jpeg-xl",
     "explicit_vr_little_endian_ybr_to_jpeg_xl",
-    &["--quality", "25", "--effort", "1"],
+    &["--quality", "25"],
   );
 }
 
@@ -884,7 +884,7 @@ fn rle_lossless_rgb_16_bit_to_jpeg_xl_lossless() {
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "jpeg-xl-lossless",
     "rle_lossless_rgb_16_bit_to_jpeg_xl_lossless",
-    &["--effort", "1"],
+    &[],
   );
 }
 
@@ -894,7 +894,7 @@ fn rle_lossless_rgb_16_bit_to_jpeg_xl() {
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "jpeg-xl",
     "rle_lossless_rgb_16_bit_to_jpeg_xl",
-    &["--quality", "40", "--effort", "1"],
+    &["--quality", "40"],
   );
 }
 
@@ -904,7 +904,7 @@ fn jpeg_baseline_to_jpeg_xl_lossless_rgb() {
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-xl-lossless",
     "jpeg_baseline_to_jpeg_xl_lossless_rgb",
-    &["--photometric-interpretation-color", "RGB", "--effort", "1"],
+    &["--photometric-interpretation-color", "RGB"],
   );
 }
 
@@ -914,7 +914,17 @@ fn jpeg_ls_monochrome_to_jpeg_xl_lossless() {
     "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm",
     "jpeg-xl-lossless",
     "jpeg_ls_monochrome_to_jpeg_xl_lossless",
-    &["--effort", "1"],
+    &[],
+  );
+}
+
+#[test]
+fn jpeg_baseline_to_jpeg_xl_jpeg_recompression() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+    "jpeg-xl-jpeg-recompression",
+    "jpeg_baseline_to_jpeg_xl_jpeg_recompression",
+    &[],
   );
 }
 
@@ -967,8 +977,10 @@ fn modify_transfer_syntax(
     .arg("--in-place")
     .arg("--implementation-version-name")
     .arg("DCMfx Test")
-    .arg(&temp_path)
+    .arg("--effort")
+    .arg("1")
     .args(extra_args)
+    .arg(&temp_path)
     .assert()
     .success()
     .stdout(format!(
