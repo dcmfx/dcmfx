@@ -142,6 +142,7 @@ impl DataElementValue {
               | ValueRepresentation::UniqueIdentifier
               | ValueRepresentation::IntegerString
               | ValueRepresentation::LongString
+              | ValueRepresentation::PersonName
               | ValueRepresentation::ShortString
               | ValueRepresentation::UnlimitedCharacters => value
                 .split("\\")

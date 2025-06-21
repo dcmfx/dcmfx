@@ -1,8 +1,9 @@
 ---
-source: dcmfx_cli/tests/cli_tests.rs
+source: dcmfx_cli/tests/modify.rs
 expression: get_stdout(assert)
 snapshot_kind: text
 ---
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0008) CS Image Type                           [    16 bytes] "ORIGINAL P …
 (0008,0012) DA Instance Creation Date               [    10 bytes] "1995.07.20"
 (0008,0013) TM Instance Creation Time               [     8 bytes] "11:22:07"

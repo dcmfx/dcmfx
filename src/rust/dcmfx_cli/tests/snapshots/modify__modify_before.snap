@@ -1,6 +1,7 @@
 ---
-source: dcmfx_cli/tests/cli_tests.rs
-expression: output
+source: dcmfx_cli/tests/modify.rs
+expression: get_stdout(assert)
+snapshot_kind: text
 ---
 (0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
 (0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
@@ -9,6 +10,7 @@ expression: output
 (0002,0012) UI Implementation Class UID             [    18 bytes] "1.2.840.11 …
 (0002,0013) SH Implementation Version Name          [     6 bytes] "1_2_5"
 (0002,0016) AE Source Application Entity Title      [    12 bytes] "CTN_STORAGE"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0008) CS Image Type                           [    20 bytes] "DERIVED",  …
 (0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
 (0008,0018) UI SOP Instance UID                     [    50 bytes] "1.2.840.11 …

@@ -137,6 +137,7 @@ pub fn to_string(
             | value_representation.UniqueIdentifier
             | value_representation.IntegerString
             | value_representation.LongString
+            | value_representation.PersonName
             | value_representation.ShortString
             | value_representation.UnlimitedCharacters ->
               value

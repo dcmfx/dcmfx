@@ -4,6 +4,7 @@
 (0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (Deflated Explicit VR Little Endian)
 (0002,0012) UI Implementation Class UID             [    20 bytes] "1.3.6.1.4.1.30071.8"
 (0002,0013) SH Implementation Version Name          [    14 bytes] "fo-dicom 4.0.6"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0016) UI SOP Class UID                        [    44 bytes] "2.25.1527525198346632638263014 …
 (0008,0018) UI SOP Instance UID                     [    44 bytes] "2.25.1369748634808239456891438 …
 (0008,0110) SQ Coding Scheme Identification Sequence

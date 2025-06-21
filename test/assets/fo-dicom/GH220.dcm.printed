@@ -4,6 +4,7 @@
 (0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
 (0002,0012) UI Implementation Class UID             [    20 bytes] "1.3.46.670589.5.2.23"
 (0002,0013) SH Implementation Version Name          [    14 bytes] "ViewForum R7.4"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0016) UI SOP Class UID                        [    22 bytes] "1.3.46.670589.5.0.1.1"
 (0008,0018) UI SOP Instance UID                     [    48 bytes] "1.3.46.670589.5.2.23.345326017 …
 (2007,0020) LO Private Creator                      [    26 bytes] "Philips EV Imaging DD 017"

@@ -158,6 +158,7 @@ pub opaque type P10ReadContext {
     transfer_syntax: TransferSyntax,
     path: DataSetPath,
     location: P10Location,
+    has_emitted_specific_character_set_data_element: Bool,
   )
 }
 
@@ -188,6 +189,7 @@ pub fn new_read_context() -> P10ReadContext {
     transfer_syntax: transfer_syntax.implicit_vr_little_endian,
     path: data_set_path.new(),
     location: p10_location.new(),
+    has_emitted_specific_character_set_data_element: False,
   )
 }
 
@@ -311,7 +313,46 @@ pub fn read_tokens(
         }
 
         // There is more data so start reading the next data element
-        False -> read_data_element_header_token(context)
+        False -> {
+          let is_at_root = data_set_path.entries(context.path) == []
+
+          use #(tokens, tag, context) <- result.map(
+            read_data_element_header_token(context),
+          )
+
+          let tag = data_element_tag.to_int(tag)
+          let specific_character_set_tag =
+            data_element_tag.to_int(dictionary.specific_character_set.tag)
+
+          // Ensure that a Specific Character Set data element is emitted even
+          // if the input P10 data doesn't specify one. In this situation, a new
+          // data element is inserted into the token stream
+          case
+            !context.has_emitted_specific_character_set_data_element
+            && is_at_root
+            && tag >= specific_character_set_tag
+          {
+            True -> {
+              let tokens = case tag > specific_character_set_tag {
+                True -> {
+                  let #(token_0, token_1) = specific_character_set_utf8_tokens()
+                  [token_0, token_1, ..tokens]
+                }
+                False -> tokens
+              }
+
+              let context =
+                P10ReadContext(
+                  ..context,
+                  has_emitted_specific_character_set_data_element: True,
+                )
+
+              #(tokens, context)
+            }
+
+            False -> #(tokens, context)
+          }
+        }
       }
     }
 
@@ -693,7 +734,7 @@ fn read_file_meta_information_data_set(
 
 fn read_data_element_header_token(
   context: P10ReadContext,
-) -> Result(#(List(P10Token), P10ReadContext), P10Error) {
+) -> Result(#(List(P10Token), DataElementTag, P10ReadContext), P10Error) {
   // Read a data element header if bytes for one are available
   use #(header, new_stream) <- result.try(read_data_element_header(context))
 
@@ -784,7 +825,7 @@ fn read_data_element_header_token(
           location: new_location,
         )
 
-      Ok(#([token], new_context))
+      Ok(#([token], tag, new_context))
     }
 
     // If this is the start of a new sequence item then add it to the location
@@ -821,7 +862,7 @@ fn read_data_element_header_token(
 
       let token = p10_token.SequenceItemStart(index:)
 
-      Ok(#([token], new_context))
+      Ok(#([token], tag, new_context))
     }
 
     // If this is an encapsulated pixel data sequence then add it to the current
@@ -860,7 +901,7 @@ fn read_data_element_header_token(
           path: new_path,
         )
 
-      Ok(#([token], new_context))
+      Ok(#([token], tag, new_context))
     }
 
     // If this is a sequence delimitation item then remove the current sequence
@@ -893,7 +934,7 @@ fn read_data_element_header_token(
           location: new_location,
         )
 
-      Ok(#(tokens, new_context))
+      Ok(#(tokens, tag, new_context))
     }
 
     // If this is an item delimitation item then remove the latest item from the
@@ -925,7 +966,7 @@ fn read_data_element_header_token(
           location: new_location,
         )
 
-      Ok(#([token], new_context))
+      Ok(#([token], tag, new_context))
     }
 
     // For all other cases this is a standard data element that needs to have
@@ -1004,7 +1045,7 @@ fn read_data_element_header_token(
           path: new_path,
         )
 
-      Ok(#(tokens, new_context))
+      Ok(#(tokens, tag, new_context))
     }
 
     _, _, _ ->
@@ -1015,6 +1056,25 @@ fn read_data_element_header_token(
         byte_stream.bytes_read(context.stream),
       ))
   }
+}
+
+/// Returns the two tokens for the '(0008,0005) Specific Character Set' data
+/// element that specifies UTF-8 (ISO_IR 192).
+///
+fn specific_character_set_utf8_tokens() -> #(P10Token, P10Token) {
+  let tag = dictionary.specific_character_set.tag
+  let vr = value_representation.CodeString
+  let data = <<"ISO_IR 192">>
+
+  #(
+    p10_token.DataElementHeader(
+      tag,
+      vr,
+      length: bit_array.byte_size(data),
+      path: data_set_path.new(),
+    ),
+    p10_token.DataElementValueBytes(tag, vr, data, bytes_remaining: 0),
+  )
 }
 
 /// Reads a data element header. Depending on the transfer syntax and the

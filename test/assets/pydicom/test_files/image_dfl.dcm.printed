@@ -5,6 +5,7 @@
 (0002,0012) UI Implementation Class UID             [    18 bytes] "1.3.6.1.4.1.5962.2"
 (0002,0013) SH Implementation Version Name          [    10 bytes] "DCTOOL100"
 (0002,0016) AE Source Application Entity Title      [     8 bytes] "CLUNIE1"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
 (0008,0018) UI SOP Instance UID                     [    44 bytes] "1.3.6.1.4.1.5962.1.1.0.0.0.977 …
 (0008,0020) DA Study Date                           [     0 bytes] ""

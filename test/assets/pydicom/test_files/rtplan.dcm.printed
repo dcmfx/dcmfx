@@ -3,6 +3,7 @@
 (0002,0003) UI Media Storage SOP Instance UID       [    42 bytes] "1.2.999.999.99.9.9999.9999.200 …
 (0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
 (0002,0012) UI Implementation Class UID             [    20 bytes] "1.2.888.888.88.8.8.8"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0012) DA Instance Creation Date               [     8 bytes] 2003-09-03
 (0008,0013) TM Instance Creation Time               [     6 bytes] 15:00:31
 (0008,0016) UI SOP Class UID                        [    30 bytes] "1.2.840.1000 … (RT Plan Storage)

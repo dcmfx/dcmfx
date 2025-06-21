@@ -5,6 +5,7 @@
 (0002,0012) UI Implementation Class UID             [    34 bytes] "1.2.826.0.1.3680043.2.135.1066 …
 (0002,0013) SH Implementation Version Name          [    12 bytes] "1.4.1/WIN32\0"
 (0002,0016) AE Source Application Entity Title      [    16 bytes] "IVIEW"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0008) CS Image Type                           [    24 bytes] "ORIGINAL", "PRIMARY", "PORTAL"
 (0008,0012) DA Instance Creation Date               [     8 bytes] 2011-11-30
 (0008,0013) TM Instance Creation Time               [    14 bytes] 12:56:01.14

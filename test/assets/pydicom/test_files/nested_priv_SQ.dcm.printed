@@ -13,4 +13,5 @@
 (0002,0003) UI Media Storage SOP Instance UID       [     0 bytes] ""
 (0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
 (0002,0012) UI Implementation Class UID             [    20 bytes] "1234567890.1998.310"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (7FE0,0010) OW Pixel Data                           [     2 bytes] [00 00]

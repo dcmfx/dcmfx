@@ -4,5 +4,6 @@
 (0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
 (0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0.7230010.3.0.3.6.3"
 (0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMTK_363"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (3F03,0010) LO Private Creator                      [    26 bytes] "aaabbbccc MEDICAL SYSTEMS"
 (3F03,1001) UN unknown_private_tag                  [   166 bytes] [FE FF 00 E0 9E 00 00 00 08 00  …

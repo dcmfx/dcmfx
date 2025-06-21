@@ -4,6 +4,7 @@
 (0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG-LS Lossy (Near-Lossless) Image Compression)
 (0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.826.0.1.3680043.8.498.1"
 (0002,0013) SH Implementation Version Name          [    14 bytes] "PYDICOM 3.0.0"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
 (0008,0018) UI SOP Instance UID                     [    64 bytes] "1.2.826.0.1.3680043.8.498.3841 …
 (0028,0002) US Samples per Pixel                    [     2 bytes] 3

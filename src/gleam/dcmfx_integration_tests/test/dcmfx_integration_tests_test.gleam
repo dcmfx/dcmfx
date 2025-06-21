@@ -57,17 +57,17 @@ pub fn main() {
             p10_error.print(e, "reading " <> dicom)
 
           Error(#(dicom, JsonOutputMissing)) ->
-            io.println("Error: No JSON file for \"" <> dicom <> "\"")
+            io.println("Error: No JSON file for " <> dicom)
 
           Error(#(dicom, JsonOutputMismatch)) ->
             io.println(
-              "Error: JSON mismatch on file \""
+              "Error: JSON mismatch on file "
               <> dicom
-              <> "\", compare the two files",
+              <> ", compare the two files",
             )
 
           Error(#(dicom, RewriteMismatch)) ->
-            io.println("Error: Rewrite of \"" <> dicom <> "\" was different")
+            io.println("Error: Rewrite of " <> dicom <> " was different")
 
           Error(#(dicom, JitteredReadError(error:))) ->
             p10_error.print(error, "reading " <> dicom <> " (jittered)")

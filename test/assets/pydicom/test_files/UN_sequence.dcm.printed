@@ -5,6 +5,7 @@
 (0002,0012) UI Implementation Class UID             [    48 bytes] "1.2.826.0.1.3680043.2.1143.107 …
 (0002,0013) SH Implementation Version Name          [    10 bytes] "GDCM 2.4.4"
 (0002,0016) AE Source Application Entity Title      [     4 bytes] "GDCM"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (4453,100C) SQ unknown_private_tag
   (FFFE,E000) Item
     (0008,1115) SQ Referenced Series Sequence

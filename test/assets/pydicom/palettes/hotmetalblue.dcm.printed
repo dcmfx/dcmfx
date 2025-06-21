@@ -5,6 +5,7 @@
 (0002,0012) UI Implementation Class UID             [    22 bytes] "1.3.6.1.4.1.5962.99.2"
 (0002,0013) SH Implementation Version Name          [    16 bytes] "PIXELMEDJAVA001"
 (0002,0016) AE Source Application Entity Title      [    10 bytes] "OURAETITLE"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0012) DA Instance Creation Date               [     8 bytes] 2012-07-02
 (0008,0013) TM Instance Creation Time               [    10 bytes] 17:26:47.311
 (0008,0016) UI SOP Class UID                        [    24 bytes] "1.2.840 … (Color Palette Storage)

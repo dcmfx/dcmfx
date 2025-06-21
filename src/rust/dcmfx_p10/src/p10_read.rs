@@ -146,6 +146,7 @@ pub struct P10ReadContext {
   transfer_syntax: &'static TransferSyntax,
   path: DataSetPath,
   location: P10Location,
+  has_emitted_specific_character_set_data_element: bool,
 }
 
 /// The next action specifies what will be attempted to be read next from a read
@@ -184,6 +185,7 @@ impl P10ReadContext {
       transfer_syntax: &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
       path: DataSetPath::new(),
       location: P10Location::new(),
+      has_emitted_specific_character_set_data_element: false,
     }
   }
 
@@ -290,8 +292,26 @@ impl P10ReadContext {
 
           Ok(tokens)
         } else {
+          let is_at_root = self.path.entries().is_empty();
+
           // There is more data so start reading the next data element
-          self.read_data_element_header_token()
+          let (mut tokens, tag) = self.read_data_element_header_token()?;
+
+          // Ensure that a Specific Character Set data element is emitted even
+          // if the input P10 data doesn't specify one. In this situation, a new
+          // data element is inserted into the token stream
+          if !self.has_emitted_specific_character_set_data_element
+            && is_at_root
+            && tag >= dictionary::SPECIFIC_CHARACTER_SET.tag
+          {
+            if tag > dictionary::SPECIFIC_CHARACTER_SET.tag {
+              tokens.splice(0..0, Self::specific_character_set_utf8_tokens());
+            }
+
+            self.has_emitted_specific_character_set_data_element = true;
+          }
+
+          Ok(tokens)
         }
       }
 
@@ -620,7 +640,7 @@ impl P10ReadContext {
 
   fn read_data_element_header_token(
     &mut self,
-  ) -> Result<Vec<P10Token>, P10Error> {
+  ) -> Result<(Vec<P10Token>, DataElementTag), P10Error> {
     // Read a data element header if bytes for one are available
     let header = self.read_data_element_header()?;
 
@@ -686,13 +706,14 @@ impl P10ReadContext {
         // Add sequence to the path
         self.path.add_data_element(tag).unwrap();
 
-        let token = P10Token::SequenceStart {
-          tag,
-          vr: ValueRepresentation::Sequence,
-          path: self.path.clone(),
-        };
-
-        Ok(vec![token])
+        Ok((
+          vec![P10Token::SequenceStart {
+            tag,
+            vr: ValueRepresentation::Sequence,
+            path: self.path.clone(),
+          }],
+          header.tag,
+        ))
       }
 
       // If this is the start of a new sequence item then add it to the location
@@ -716,9 +737,7 @@ impl P10ReadContext {
         // Add item to the path
         self.path.add_sequence_item(index).unwrap();
 
-        let token = P10Token::SequenceItemStart { index };
-
-        Ok(vec![token])
+        Ok((vec![P10Token::SequenceItemStart { index }], header.tag))
       }
 
       // If this is an encapsulated pixel data sequence then add it to the
@@ -744,13 +763,14 @@ impl P10ReadContext {
 
         self.next_action = NextAction::ReadPixelDataItem { vr };
 
-        let token = P10Token::SequenceStart {
-          tag,
-          vr,
-          path: self.path.clone(),
-        };
-
-        Ok(vec![token])
+        Ok((
+          vec![P10Token::SequenceStart {
+            tag,
+            vr,
+            path: self.path.clone(),
+          }],
+          header.tag,
+        ))
       }
 
       // If this is a sequence delimitation item then remove the current
@@ -758,22 +778,21 @@ impl P10ReadContext {
       (tag, None, ValueLength::ZERO)
         if tag == dictionary::SEQUENCE_DELIMITATION_ITEM.tag =>
       {
-        let tokens = match self.location.end_sequence() {
-          Ok(tag) => {
-            self.path.pop().unwrap();
+        let tokens = if let Ok(tag) = self.location.end_sequence() {
+          self.path.pop().unwrap();
 
-            vec![P10Token::SequenceDelimiter { tag }]
-          }
-
+          vec![P10Token::SequenceDelimiter { tag }]
+        } else {
           // If a sequence delimiter occurs outside of a sequence then no error
           // is returned and P10 parsing continues. This is done because rogue
           // sequence delimiters have been observed in some DICOM P10 data, and
           // not propagating an error right here doesn't do any harm and allows
           // such data to be read.
-          Err(_) => vec![],
+
+          vec![]
         };
 
-        Ok(tokens)
+        Ok((tokens, header.tag))
       }
 
       // If this is an item delimitation item then remove the latest item from
@@ -781,8 +800,6 @@ impl P10ReadContext {
       (tag, None, ValueLength::ZERO)
         if tag == dictionary::ITEM_DELIMITATION_ITEM.tag =>
       {
-        let token = P10Token::SequenceItemDelimiter;
-
         self
           .location
           .end_item()
@@ -795,7 +812,7 @@ impl P10ReadContext {
 
         self.path.pop().unwrap();
 
-        Ok(vec![token])
+        Ok((vec![P10Token::SequenceItemDelimiter], header.tag))
       }
 
       // For all other cases this is a standard data element that needs to have
@@ -870,7 +887,7 @@ impl P10ReadContext {
           emit_tokens,
         };
 
-        Ok(tokens)
+        Ok((tokens, header.tag))
       }
 
       (_, _, _) => Err(P10Error::DataInvalid {
@@ -880,6 +897,30 @@ impl P10ReadContext {
         offset: self.stream.bytes_read(),
       }),
     }
+  }
+
+  /// Returns the two tokens for the '(0008,0005) Specific Character Set' data
+  /// element that specifies UTF-8 (ISO_IR 192).
+  ///
+  fn specific_character_set_utf8_tokens() -> [P10Token; 2] {
+    let tag = dictionary::SPECIFIC_CHARACTER_SET.tag;
+    let vr = ValueRepresentation::CodeString;
+    let data = b"ISO_IR 192";
+
+    [
+      P10Token::DataElementHeader {
+        tag,
+        vr,
+        length: data.len() as u32,
+        path: DataSetPath::new(),
+      },
+      P10Token::DataElementValueBytes {
+        tag,
+        vr,
+        data: data.to_vec().into(),
+        bytes_remaining: 0,
+      },
+    ]
   }
 
   /// Reads a data element header. Depending on the transfer syntax and the

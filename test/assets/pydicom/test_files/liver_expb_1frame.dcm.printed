@@ -4,6 +4,7 @@
 (0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Big Endian)
 (0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0.7230010.3.0.3.6.2"
 (0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMTK_362"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0008) CS Image Type                           [    16 bytes] "DERIVED", "PRIMARY"
 (0008,0016) UI SOP Class UID                        [    28 bytes] "1.2.840 … (Segmentation Storage)
 (0008,0018) UI SOP Instance UID                     [    50 bytes] "1.2.276.0.7230010.3.1.4.0.4215 …

@@ -4,6 +4,7 @@
 (0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
 (0002,0012) UI Implementation Class UID             [    30 bytes] "1.2.826.0.1.3680043.9.7433.1.1"
 (0002,0013) SH Implementation Version Name          [    16 bytes] "highdicom v0.1.0"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0008) CS Image Type                           [    24 bytes] "DERIVED", "SECONDARY", "OTHER"
 (0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
 (0008,0018) UI SOP Instance UID                     [    64 bytes] "1.2.826.0.1.3680043.8.498.1300 …

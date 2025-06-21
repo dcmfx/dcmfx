@@ -4,6 +4,7 @@
 (0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
 (0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0.7230010.3.0.3.6.0"
 (0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMTK_360"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0008) CS Image Type                           [    34 bytes] "ORIGINAL", "PRIMARY", "NON_PAR …
 (0008,0012) DA Instance Creation Date               [     8 bytes] 2015-05-22
 (0008,0013) TM Instance Creation Time               [     6 bytes] 09:04:06
