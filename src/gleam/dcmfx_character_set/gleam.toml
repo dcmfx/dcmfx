@@ -1,5 +1,5 @@
 name = "dcmfx_character_set"
-version = "0.23.1"
+version = "0.24.0"
 description = "DCMfx character set library"
 licences = ["AGPL-3.0-only"]
 gleam = ">= 1.11.1"
