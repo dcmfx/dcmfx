@@ -89,7 +89,7 @@ impl DcmfxError for JsonSerializeError {
       JsonSerializeError::DataError(e) => e.to_lines(task_description),
       JsonSerializeError::P10Error(e) => e.to_lines(task_description),
       JsonSerializeError::IOError(e) => vec![
-        format!("DICOM JSON I/O error {}", task_description),
+        format!("DICOM JSON IO error {}", task_description),
         "".to_string(),
         format!("  Error: {}", e),
       ],

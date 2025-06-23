@@ -12,7 +12,7 @@ use clap::{Parser, Subcommand};
 
 use commands::{
   dcm_to_json_command, get_pixel_data_command, json_to_dcm_command,
-  modify_command, print_command,
+  list_command, modify_command, print_command,
 };
 use input_source::{InputSource, get_input_sources};
 
@@ -52,6 +52,9 @@ enum Commands {
 
   #[command(about = dcm_to_json_command::ABOUT)]
   DcmToJson(dcm_to_json_command::ToJsonArgs),
+
+  #[command(about = list_command::ABOUT)]
+  List(list_command::ListArgs),
 }
 
 fn main() -> Result<(), ()> {
@@ -65,6 +68,7 @@ fn main() -> Result<(), ()> {
     Commands::Print(args) => print_command::run(args),
     Commands::JsonToDcm(args) => json_to_dcm_command::run(args),
     Commands::DcmToJson(args) => dcm_to_json_command::run(args),
+    Commands::List(args) => list_command::run(args),
   };
 
   if cli.print_stats {

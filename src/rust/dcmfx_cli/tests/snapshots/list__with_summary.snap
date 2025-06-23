@@ -1,0 +1,38 @@
+---
+source: dcmfx_cli/tests/list.rs
+expression: "lines.join(\"\\n\")"
+snapshot_kind: text
+---
+../../../test/assets/fo-dicom/CR-ModalitySequenceLUT.dcm
+../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm
+../../../test/assets/fo-dicom/CT1_J2KI.dcm
+../../../test/assets/fo-dicom/DICOMDIR.dcm
+../../../test/assets/fo-dicom/D_CLUNIE_CT1_RLE_FRAGS.dcm
+../../../test/assets/fo-dicom/GH064.dcm
+../../../test/assets/fo-dicom/GH1146.dcm
+../../../test/assets/fo-dicom/GH1261.dcm
+../../../test/assets/fo-dicom/GH1308.dcm
+../../../test/assets/fo-dicom/GH177_D_CLUNIE_CT1_IVRLE_BigEndian_ELE_undefinded_length.dcm
+../../../test/assets/fo-dicom/GH178.dcm
+../../../test/assets/fo-dicom/GH184.dcm
+../../../test/assets/fo-dicom/GH220.dcm
+../../../test/assets/fo-dicom/GH223.dcm
+../../../test/assets/fo-dicom/GH342.dcm
+../../../test/assets/fo-dicom/GH355.dcm
+../../../test/assets/fo-dicom/GH487.dcm
+../../../test/assets/fo-dicom/GH538-jpeg1.dcm
+../../../test/assets/fo-dicom/GH538-jpeg14sv1.dcm
+../../../test/assets/fo-dicom/GH610.dcm
+../../../test/assets/fo-dicom/HasFragmentSequence.dcm
+../../../test/assets/fo-dicom/IM-0001-0001-0001.dcm
+../../../test/assets/fo-dicom/Issue1097_FailToOpenDeflatedFileWithSQ.dcm
+../../../test/assets/fo-dicom/JPEGwithIcon.dcm
+../../../test/assets/fo-dicom/OutOfBoundsOverlay.dcm
+../../../test/assets/fo-dicom/RI6XDosiGap.dcm
+../../../test/assets/fo-dicom/TestPattern_Palette.dcm
+../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm
+../../../test/assets/fo-dicom/TestPattern_RGB.dcm
+../../../test/assets/fo-dicom/genFile.dcm
+../../../test/assets/fo-dicom/mr_brucker.dcm
+../../../test/assets/fo-dicom/multiframe.dcm
+Found 32 DICOM files, size: 11.2 MiB

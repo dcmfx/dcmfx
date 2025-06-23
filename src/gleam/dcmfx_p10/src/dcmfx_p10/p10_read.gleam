@@ -422,13 +422,7 @@ fn read_file_preamble_and_dicm_prefix_token(
           Ok(#(preamble, new_stream.1))
         }
 
-        _, True ->
-          Error(p10_error.DataInvalid(
-            "Reading file header",
-            "The required 'DICM' prefix is missing",
-            data_set_path.new(),
-            128,
-          ))
+        _, True -> Error(p10_error.DicmPrefixNotPresent)
 
         // The 'DICM' prefix is absent but is not configured as required, so
         // return empty preamble bytes

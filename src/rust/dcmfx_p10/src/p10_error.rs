@@ -45,6 +45,10 @@ pub enum P10Error {
     offset: u64,
   },
 
+  /// This error occurs when the supplied data does not have 'DICM' at offset
+  /// 128, and the presence of that file marker is required by the read config.
+  DicmPrefixNotPresent,
+
   /// This error occurs when a DICOM P10 read context is unable to read the next
   /// DICOM P10 token because the supplied data is invalid, and also when a
   /// DICOM P10 write context is unable to serialize a token written to it.
@@ -106,6 +110,7 @@ impl P10Error {
       }
       Self::DataRequired { .. } => "Data required",
       Self::DataEndedUnexpectedly { .. } => "Unexpected end of data",
+      Self::DicmPrefixNotPresent => "'DICM' prefix is not present",
       Self::DataInvalid { .. } => "Invalid data",
       Self::MaximumExceeded { .. } => "Maximum exceeded",
       Self::TokenStreamInvalid { .. } => "P10 token stream invalid",
@@ -123,6 +128,7 @@ impl P10Error {
       Self::SpecificCharacterSetInvalid { details, .. } => details,
       Self::DataRequired { .. } => "",
       Self::DataEndedUnexpectedly { .. } => "",
+      Self::DicmPrefixNotPresent => "",
       Self::DataInvalid { details, .. } => details,
       Self::MaximumExceeded { details, .. } => details,
       Self::TokenStreamInvalid { details, .. } => details,

@@ -1,0 +1,7 @@
+---
+source: dcmfx_cli/tests/list.rs
+expression: get_stderr(assert)
+snapshot_kind: text
+---
+IO error for operation on missing-directory: The system cannot find the file specified. (os error 2)
+Error: ()

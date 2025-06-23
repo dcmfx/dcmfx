@@ -377,12 +377,7 @@ impl P10ReadContext {
 
           Ok(Box::new(preamble))
         } else if self.config.require_dicm_prefix {
-          Err(P10Error::DataInvalid {
-            when: "Reading file header".to_string(),
-            details: "The required 'DICM' prefix is missing".to_string(),
-            path: DataSetPath::new(),
-            offset: 128,
-          })
+          Err(P10Error::DicmPrefixNotPresent)
         } else {
           // The 'DICM' prefix is absent but is not configured as required, so
           // return empty preamble bytes

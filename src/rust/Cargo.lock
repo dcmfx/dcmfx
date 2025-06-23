@@ -244,6 +244,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f1fe948ff07f4bd06c30984e69f5b4899c516a3ef74f34df92a2df2ab535495"
 
 [[package]]
+name = "bytesize"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3c8f83209414aacf0eeae3cf730b18d6981697fba62f200fcfb92b9f082acba"
+
+[[package]]
 name = "cc"
 version = "1.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -420,6 +426,7 @@ version = "0.24.0"
 dependencies = [
  "assert_cmd",
  "bytemuck",
+ "bytesize",
  "clap",
  "dcmfx",
  "flate2",
@@ -432,6 +439,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
+ "walkdir",
 ]
 
 [[package]]

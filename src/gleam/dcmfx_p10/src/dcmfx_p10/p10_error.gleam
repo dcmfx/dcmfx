@@ -33,6 +33,10 @@ pub type P10Error {
   /// This means the provided data is malformed or truncated.
   DataEndedUnexpectedly(when: String, path: DataSetPath, offset: Int)
 
+  /// This error occurs when the supplied data does not have 'DICM' at offset
+  /// 128, and the presence of that file marker is required by the read config.
+  DicmPrefixNotPresent
+
   /// This error occurs when a DICOM P10 read context is unable to read the next
   /// DICOM P10 token because the supplied data is invalid, and also when a
   /// DICOM P10 write context is unable to serialize a token written to it.
@@ -81,6 +85,7 @@ pub fn name(error: P10Error) -> String {
     SpecificCharacterSetInvalid(..) -> "Specific character set invalid"
     DataRequired(..) -> "Data required"
     DataEndedUnexpectedly(..) -> "Unexpected end of data"
+    DicmPrefixNotPresent -> "'DICM' prefix is not present"
     DataInvalid(..) -> "Invalid data"
     MaximumExceeded(..) -> "Maximum exceeded"
     TokenStreamInvalid(..) -> "P10 token stream invalid"
@@ -98,6 +103,7 @@ pub fn details(error: P10Error) -> String {
     SpecificCharacterSetInvalid(details:, ..) -> details
     DataRequired(..) -> ""
     DataEndedUnexpectedly(..) -> ""
+    DicmPrefixNotPresent -> ""
     DataInvalid(details:, ..) -> details
     MaximumExceeded(details:, ..) -> details
     TokenStreamInvalid(details:, ..) -> details
