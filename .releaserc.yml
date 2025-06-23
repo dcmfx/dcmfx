@@ -38,14 +38,13 @@ plugins:
     - assets:
         - examples/*/gleam/gleam.toml
         - examples/*/gleam/manifest.toml
-        - examples/*/rust/Cargo.lock
         - examples/*/rust/Cargo.toml
+        - examples/Cargo.lock
         - src/gleam/*/gleam.toml
         - src/gleam/*/manifest.toml
         - src/gleam/dcmfx_p10/src/dcmfx_p10/uids.gleam
+        - src/rust/*/Cargo.lock
         - src/rust/*/Cargo.toml
-        - src/rust/Cargo.lock
-        - src/rust/Cargo.toml
 
       message: "chore: Release v${nextRelease.version}"
 
