@@ -416,7 +416,7 @@ fn modify_input_source(
   let anonymize = args.anonymize;
   let filter_transform = if anonymize || !tags_to_delete.is_empty() {
     Some(P10FilterTransform::new(Box::new(
-      move |tag, vr, _length, _location| {
+      move |tag, vr, _length, _path| {
         (!anonymize || dcmfx::anonymize::filter_tag(tag, vr))
           && !tags_to_delete.contains(&tag)
       },

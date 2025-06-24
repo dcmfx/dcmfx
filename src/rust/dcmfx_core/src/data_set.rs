@@ -587,7 +587,7 @@ impl DataSet {
   }
 
   /// Creates a new data set containing only those data elements for which the
-  /// given function returns `True`.
+  /// given function returns `true`.
   ///
   pub fn filter(
     &self,
@@ -602,6 +602,15 @@ impl DataSet {
     }
 
     result
+  }
+
+  /// Retains only the data elements that satisfy the predicate.
+  ///
+  pub fn retain(
+    &mut self,
+    mut predicate: impl FnMut(DataElementTag, &DataElementValue) -> bool,
+  ) {
+    self.0.retain(|tag, value| predicate(*tag, value));
   }
 
   /// Prints a data set to stdout formatted for readability.

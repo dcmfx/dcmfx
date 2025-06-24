@@ -3,60 +3,21 @@
 
 use dcmfx_core::{DataElementTag, DataSet, ValueRepresentation, dictionary};
 
-/// A list of data elements that identify the patient, or potentially contribute
-/// to identification of the patient, and that should be removed during
-/// anonymization.
-///
-/// Note that this list does not include the *'(0008,0018) SOP Instance UID'*,
-/// *'(0020,000E) Series Instance UID'*, or *'(0020,000D) Study Instance UID'*
-/// data elements.
-///
-pub const IDENTIFYING_DATA_ELEMENTS: [&dictionary::Item; 80] = [
+const IDENTIFYING_DATA_ELEMENTS: [&dictionary::Item; 42] = [
   &dictionary::ACCESSION_NUMBER,
   &dictionary::ADMITTING_DIAGNOSES_CODE_SEQUENCE,
   &dictionary::ADMITTING_DIAGNOSES_DESCRIPTION,
-  &dictionary::ALLERGIES,
-  &dictionary::BRANCH_OF_SERVICE,
-  &dictionary::CONTENT_SEQUENCE,
-  &dictionary::COUNTRY_OF_RESIDENCE,
-  &dictionary::ETHNIC_GROUP,
   &dictionary::INSTANCE_CREATOR_UID,
   &dictionary::INSTITUTION_ADDRESS,
   &dictionary::INSTITUTION_CODE_SEQUENCE,
   &dictionary::INSTITUTION_NAME,
   &dictionary::INSTITUTIONAL_DEPARTMENT_NAME,
-  &dictionary::INSTITUTIONAL_DEPARTMENT_NAME,
   &dictionary::INSTITUTIONAL_DEPARTMENT_TYPE_CODE_SEQUENCE,
   &dictionary::INVENTORY_ACCESS_END_POINTS_SEQUENCE,
-  &dictionary::MEDICAL_RECORD_LOCATOR,
-  &dictionary::MILITARY_RANK,
   &dictionary::NAME_OF_PHYSICIANS_READING_STUDY,
   &dictionary::NETWORK_ID,
-  &dictionary::OCCUPATION,
   &dictionary::OPERATOR_IDENTIFICATION_SEQUENCE,
   &dictionary::OPERATORS_NAME,
-  &dictionary::OTHER_PATIENT_IDS_SEQUENCE,
-  &dictionary::OTHER_PATIENT_IDS,
-  &dictionary::OTHER_PATIENT_NAMES,
-  &dictionary::PATIENT_AGE,
-  &dictionary::PATIENT_ALTERNATIVE_CALENDAR,
-  &dictionary::PATIENT_BIRTH_DATE_IN_ALTERNATIVE_CALENDAR,
-  &dictionary::PATIENT_BIRTH_DATE,
-  &dictionary::PATIENT_BIRTH_NAME,
-  &dictionary::PATIENT_BIRTH_TIME,
-  &dictionary::PATIENT_BREED_DESCRIPTION,
-  &dictionary::PATIENT_COMMENTS,
-  &dictionary::PATIENT_DEATH_DATE_IN_ALTERNATIVE_CALENDAR,
-  &dictionary::PATIENT_ID,
-  &dictionary::PATIENT_MOTHER_BIRTH_NAME,
-  &dictionary::PATIENT_NAME,
-  &dictionary::PATIENT_RELIGIOUS_PREFERENCE,
-  &dictionary::PATIENT_SEX,
-  &dictionary::PATIENT_SIZE,
-  &dictionary::PATIENT_SPECIES_DESCRIPTION,
-  &dictionary::PATIENT_STATE,
-  &dictionary::PATIENT_TELEPHONE_NUMBERS,
-  &dictionary::PATIENT_WEIGHT,
   &dictionary::PERFORMING_PHYSICIAN_IDENTIFICATION_SEQUENCE,
   &dictionary::PERFORMING_PHYSICIAN_NAME,
   &dictionary::PERSON_ADDRESS,
@@ -66,7 +27,6 @@ pub const IDENTIFYING_DATA_ELEMENTS: [&dictionary::Item; 80] = [
   &dictionary::PHYSICIANS_OF_RECORD,
   &dictionary::PHYSICIANS_OF_RECORD,
   &dictionary::PHYSICIANS_READING_STUDY_IDENTIFICATION_SEQUENCE,
-  &dictionary::PREGNANCY_STATUS,
   &dictionary::PROCEDURE_CODE_SEQUENCE,
   &dictionary::PROTOCOL_NAME,
   &dictionary::REFERENCED_FRAME_OF_REFERENCE_UID,
@@ -74,17 +34,11 @@ pub const IDENTIFYING_DATA_ELEMENTS: [&dictionary::Item; 80] = [
   &dictionary::REFERRING_PHYSICIAN_IDENTIFICATION_SEQUENCE,
   &dictionary::REFERRING_PHYSICIAN_NAME,
   &dictionary::REFERRING_PHYSICIAN_TELEPHONE_NUMBERS,
-  &dictionary::REGION_OF_RESIDENCE,
   &dictionary::REQUEST_ATTRIBUTES_SEQUENCE,
   &dictionary::REQUESTING_SERVICE,
-  &dictionary::RESPONSIBLE_ORGANIZATION,
-  &dictionary::RESPONSIBLE_PERSON_ROLE,
-  &dictionary::RESPONSIBLE_PERSON,
   &dictionary::SCHEDULED_PROCEDURE_STEP_ID,
   &dictionary::SERIES_DESCRIPTION_CODE_SEQUENCE,
   &dictionary::SERIES_DESCRIPTION,
-  &dictionary::STATION_AE_TITLE,
-  &dictionary::STATION_NAME,
   &dictionary::STATION_NAME,
   &dictionary::STORAGE_MEDIA_FILE_SET_UID,
   &dictionary::STUDY_ACCESS_END_POINTS_SEQUENCE,
@@ -127,9 +81,7 @@ pub trait DataSetAnonymizeExtensions {
 
 impl DataSetAnonymizeExtensions for DataSet {
   fn anonymize(&mut self) {
-    for el in IDENTIFYING_DATA_ELEMENTS {
-      self.delete(el.tag);
-    }
+    self.retain(|tag, value| filter_tag(tag, value.value_representation()));
   }
 }
 
