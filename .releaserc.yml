@@ -36,15 +36,11 @@ plugins:
 
     # The following files are committed as part of the release commit
     - assets:
-        - examples/*/gleam/gleam.toml
-        - examples/*/gleam/manifest.toml
-        - examples/*/rust/Cargo.toml
-        - examples/Cargo.lock
-        - src/gleam/*/gleam.toml
-        - src/gleam/*/manifest.toml
+        - "**/Cargo.lock"
+        - "**/Cargo.toml"
+        - "**/gleam.toml"
+        - "**/manifest.toml"
         - src/gleam/dcmfx_p10/src/dcmfx_p10/uids.gleam
-        - src/rust/*/Cargo.lock
-        - src/rust/*/Cargo.toml
 
       message: "chore: Release v${nextRelease.version}"
 
