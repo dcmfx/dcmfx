@@ -127,6 +127,10 @@ jobs:
       - name: Set crate versions
         run: sh .github/scripts/set_rust_crate_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
 
+      - name: Enable LTO for release builds
+        working-directory: src/rust
+        run: printf '\n[profile.release]\nlto = true\n' >> Cargo.toml
+
       - name: Build release binary
         working-directory: src/rust
         run: cargo build --release --offline --target ${{ matrix.rust-target }} --package dcmfx_cli

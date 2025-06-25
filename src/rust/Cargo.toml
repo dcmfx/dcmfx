@@ -19,6 +19,3 @@ authors = ["Richard Viney <richard.viney@gmail.com>"]
 repository = "https://github.com/dcmfx/dcmfx"
 homepage = "https://dcmfx.github.io"
 keywords = ["dicom"]
-
-[profile.release]
-lto = true
