@@ -114,8 +114,8 @@ jobs:
         working-directory: src/rust
         run: cargo test --frozen
 
-  test_dcmfx_rust_wasm_library_build:
-    name: Test DCMfx Rust WASM library build
+  test_dcmfx_rust_wasm_build:
+    name: Test DCMfx Rust WASM build
     timeout-minutes: 30
     runs-on: ubuntu-24.04
 
@@ -128,15 +128,28 @@ jobs:
         with:
           toolchain: 1.87
           target: wasm32-unknown-unknown
-          cache-workspaces: src/rust
+          cache-workspaces: src/rust/dcmfx_wasm_test
 
       - name: Fetch dependencies
-        working-directory: src/rust
+        working-directory: src/rust/dcmfx_wasm_test
         run: cargo fetch --locked
 
       - name: Build for WASM target
-        working-directory: src/rust
-        run: cargo build --frozen --package dcmfx --target wasm32-unknown-unknown --no-default-features
+        working-directory: src/rust/dcmfx_wasm_test
+        run: |
+          cargo build --target wasm32-unknown-unknown --no-default-features
+          cargo build --target wasm32-unknown-unknown --no-default-features --release 
+
+      - name: Install Wasmer
+        run: |
+          curl https://get.wasmer.io -sSfL | sh
+          echo "$HOME/.wasmer/bin" >> $GITHUB_PATH
+
+      - name: Run on Wasmer
+        working-directory: src/rust/dcmfx_wasm_test
+        run: |
+          wasmer target/wasm32-unknown-unknown/debug/dcmfx_wasm_test.wasm --invoke dcmfx_wasm_test
+          wasmer target/wasm32-unknown-unknown/release/dcmfx_wasm_test.wasm --invoke dcmfx_wasm_test
 
   test_dcmfx_rust_windows_gnu_library_build:
     name: Test DCMfx Rust Windows GNU library build

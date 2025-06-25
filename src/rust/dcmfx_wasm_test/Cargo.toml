@@ -1,0 +1,15 @@
+[package]
+name = "dcmfx_wasm_test"
+edition = "2024"
+
+[dependencies]
+dcmfx = { path = "../dcmfx", default-features = false }
+
+[features]
+default = ["std"]
+std = ["dcmfx/std"]
+
+# The code in dcmfx_core::registry exceeds WASM's locals limit if not optimized,
+# so always optimize that package
+[profile.dev.package.dcmfx_core]
+opt-level = "z"

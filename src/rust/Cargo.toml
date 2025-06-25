@@ -10,7 +10,7 @@ members = [
   "dcmfx_p10",
   "dcmfx_pixel_data"
 ]
-exclude = ["dcmfx_fuzz"]
+exclude = ["dcmfx_fuzz", "dcmfx_wasm_test"]
 
 [workspace.package]
 license = "AGPL-3.0-only"
