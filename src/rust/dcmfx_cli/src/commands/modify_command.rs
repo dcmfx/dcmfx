@@ -533,15 +533,24 @@ fn get_transcode_image_data_functions(
         } else {
           // If the input is palette color and the output transfer syntax
           // doesn't support palette color then expand to RGB by default
-          if image_pixel_module
-            .photometric_interpretation()
-            .is_palette_color()
-            && !transfer_syntax_arg::supports_palette_color(
-              output_transfer_syntax,
-            )
+          if let PhotometricInterpretation::PaletteColor { palette } =
+            image_pixel_module.photometric_interpretation()
           {
-            image_pixel_module
-              .set_photometric_interpretation(PhotometricInterpretation::Rgb);
+            if !transfer_syntax_arg::supports_palette_color(
+              output_transfer_syntax,
+            ) {
+              // Update the bits allocated and bits stored values to match what
+              // will come out of the lookup tables, which may be different to
+              // what's configured for the palette index values
+              let bits_stored = palette.bits_per_entry();
+              let bits_allocated = bits_stored.div_ceil(8) * 8;
+
+              image_pixel_module
+                .set_bits(bits_allocated, bits_stored)
+                .unwrap();
+              image_pixel_module
+                .set_photometric_interpretation(PhotometricInterpretation::Rgb);
+            }
           }
 
           // If the input is YBR_FULL_422 and the output transfer syntax

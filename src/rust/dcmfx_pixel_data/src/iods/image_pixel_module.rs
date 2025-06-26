@@ -348,6 +348,28 @@ impl ImagePixelModule {
     self.high_bit
   }
 
+  /// Sets new bits allocated and bits stored values for this image pixel
+  /// module.
+  ///
+  pub fn set_bits(
+    &mut self,
+    bits_allocated: u16,
+    bits_stored: u16,
+  ) -> Result<(), String> {
+    if bits_stored == 0 || bits_stored > bits_allocated {
+      return Err(format!(
+        "Bits stored '{}' is invalid for bits allocated '{}'",
+        bits_stored, bits_allocated,
+      ));
+    }
+
+    self.bits_allocated = BitsAllocated::try_from(bits_allocated)?;
+    self.bits_stored = bits_stored;
+    self.high_bit = self.bits_stored - 1;
+
+    Ok(())
+  }
+
   /// Returns this image pixel module's pixel representation, i.e. whether
   /// it stores signed or unsigned values.
   ///
@@ -963,19 +985,10 @@ impl BitsAllocated {
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let tag = dictionary::BITS_ALLOCATED.tag;
 
-    match data_set.get_int(tag)? {
-      1 => Ok(Self::One),
-      8 => Ok(Self::Eight),
-      16 => Ok(Self::Sixteen),
-      32 => Ok(Self::ThirtyTwo),
-      value => Err(
-        DataError::new_value_invalid(format!(
-          "Bits allocated value of '{}' is not supported",
-          value
-        ))
-        .with_path(&DataSetPath::new_with_data_element(tag)),
-      ),
-    }
+    Self::try_from(data_set.get_int::<u16>(tag)?).map_err(|e| {
+      DataError::new_value_invalid(e)
+        .with_path(&DataSetPath::new_with_data_element(tag))
+    })
   }
 
   /// Converts this [`BitsAllocated`] to a data element value that uses the
@@ -989,12 +1002,29 @@ impl BitsAllocated {
 }
 
 impl From<BitsAllocated> for u8 {
-  fn from(samples_per_pixel: BitsAllocated) -> u8 {
-    match samples_per_pixel {
+  fn from(bits_allocated: BitsAllocated) -> u8 {
+    match bits_allocated {
       BitsAllocated::One => 1,
       BitsAllocated::Eight => 8,
       BitsAllocated::Sixteen => 16,
       BitsAllocated::ThirtyTwo => 32,
+    }
+  }
+}
+
+impl TryFrom<u16> for BitsAllocated {
+  type Error = String;
+
+  fn try_from(bits_allocated: u16) -> Result<BitsAllocated, String> {
+    match bits_allocated {
+      1 => Ok(Self::One),
+      8 => Ok(Self::Eight),
+      16 => Ok(Self::Sixteen),
+      32 => Ok(Self::ThirtyTwo),
+      value => Err(format!(
+        "Bits allocated value of '{}' is not supported",
+        value
+      )),
     }
   }
 }

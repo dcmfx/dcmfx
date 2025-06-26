@@ -131,7 +131,8 @@ impl PaletteColorLookupTableModule {
     red_int_max.max(green_int_max).max(blue_int_max)
   }
 
-  /// Returns the maximum bits per entry of the red, green and blue LUTs.
+  /// Returns the maximum bits per entry of the red, green and blue LUTs. This
+  /// will always be in the range `8..=16`.
   ///
   pub fn bits_per_entry(&self) -> u16 {
     let red_bits_per_entry = self.red_lut.bits_per_entry();
