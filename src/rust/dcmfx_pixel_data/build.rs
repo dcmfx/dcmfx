@@ -544,6 +544,7 @@ fn compile(
     build.warnings(false);
     build.define("_CRT_SECURE_NO_WARNINGS", "1");
   } else {
+    build.flag("-Wno-implicit-fallthrough");
     build.flag("-Wno-unused-but-set-parameter");
     build.flag("-Wno-unused-but-set-variable");
     build.flag("-Wno-unused-parameter");

@@ -1043,8 +1043,8 @@ J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_CreateCompress JPP((j_compress_p
 J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_CreateDecompress JPP((j_decompress_ptr cinfo,
 					int version, size_t structsize));
 /* Destruction of JPEG compression objects */
-J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_destroy_compress JPP((j_compress_ptr cinfo));
-J_WARN_UNUSED_RESULT EXTERN(void_result_t) jpeg_destroy_decompress JPP((j_decompress_ptr cinfo));
+EXTERN(void_result_t) jpeg_destroy_compress JPP((j_compress_ptr cinfo));
+EXTERN(void_result_t) jpeg_destroy_decompress JPP((j_decompress_ptr cinfo));
 
 #ifndef __wasm__
 

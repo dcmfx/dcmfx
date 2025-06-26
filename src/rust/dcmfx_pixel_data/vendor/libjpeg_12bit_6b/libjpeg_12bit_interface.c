@@ -55,21 +55,21 @@ size_t libjpeg_12bit_decode(const void *input_data, size_t input_data_size,
   int_result_t read_result = jpeg_read_header(&dinfo, TRUE);
   if (read_result.is_err || read_result.value != JPEG_HEADER_OK) {
     strcpy(error_message, "jpeg_read_header() failed");
-    (void)jpeg_destroy_decompress(&dinfo);
+    jpeg_destroy_decompress(&dinfo);
     return 1;
   }
 
   // Check that the data uses the expected 12-bit precision
   if (dinfo.data_precision != 12) {
     strcpy(error_message, "Data precision is not 12-bit");
-    (void)jpeg_destroy_decompress(&dinfo);
+    jpeg_destroy_decompress(&dinfo);
     return 1;
   }
 
   // Start decompression
   if (jpeg_start_decompress(&dinfo).is_err) {
     strcpy(error_message, "jpeg_start_decompress() failed");
-    (void)jpeg_destroy_decompress(&dinfo);
+    jpeg_destroy_decompress(&dinfo);
     return 1;
   }
 
@@ -84,7 +84,7 @@ size_t libjpeg_12bit_decode(const void *input_data, size_t input_data_size,
     }
   } else {
     strcpy(error_message, "Output components is not 1 or 3");
-    (void)jpeg_destroy_decompress(&dinfo);
+    jpeg_destroy_decompress(&dinfo);
     return 1;
   }
 
@@ -94,14 +94,14 @@ size_t libjpeg_12bit_decode(const void *input_data, size_t input_data_size,
     strcpy(
         error_message,
         "Image does not have the expected width, height, or samples per pixel");
-    (void)jpeg_destroy_decompress(&dinfo);
+    jpeg_destroy_decompress(&dinfo);
     return 1;
   };
 
   // Check output buffer size
   if (output_buffer_size != width * height * samples_per_pixel) {
     strcpy(error_message, "Output buffer has incorrect size");
-    (void)jpeg_destroy_decompress(&dinfo);
+    jpeg_destroy_decompress(&dinfo);
     return 1;
   }
 
@@ -111,7 +111,7 @@ size_t libjpeg_12bit_decode(const void *input_data, size_t input_data_size,
       (j_common_ptr)&dinfo, JPOOL_IMAGE, row_stride, 1);
   if (buffer_alloc_result.is_err) {
     strcpy(error_message, "Scanline allocation failed");
-    (void)jpeg_destroy_decompress(&dinfo);
+    jpeg_destroy_decompress(&dinfo);
     return 1;
   }
 
@@ -121,7 +121,7 @@ size_t libjpeg_12bit_decode(const void *input_data, size_t input_data_size,
   while (dinfo.output_scanline < dinfo.output_height) {
     if (jpeg_read_scanlines(&dinfo, buffer, 1).is_err) {
       strcpy(error_message, "jpeg_read_scanlines() failed");
-      (void)jpeg_destroy_decompress(&dinfo);
+      jpeg_destroy_decompress(&dinfo);
       return 1;
     }
 
@@ -132,11 +132,11 @@ size_t libjpeg_12bit_decode(const void *input_data, size_t input_data_size,
   // Finish decompression
   if (jpeg_finish_decompress(&dinfo).is_err) {
     strcpy(error_message, "jpeg_finish_decompress() failed");
-    (void)jpeg_destroy_decompress(&dinfo);
+    jpeg_destroy_decompress(&dinfo);
     return 1;
   }
 
-  (void)jpeg_destroy_decompress(&dinfo);
+  jpeg_destroy_decompress(&dinfo);
 
   return 0;
 }
@@ -220,13 +220,13 @@ size_t libjpeg_12bit_encode(int16_t *input_data, size_t width, size_t height,
 
   if (jpeg_set_defaults(&cinfo).is_err) {
     strcpy(error_message, "jpeg_set_defaults() failed");
-    (void)jpeg_destroy_compress(&cinfo);
+    jpeg_destroy_compress(&cinfo);
     return 1;
   }
 
   if (jpeg_set_quality(&cinfo, quality, FALSE).is_err) {
     strcpy(error_message, "jpeg_set_quality() failed");
-    (void)jpeg_destroy_compress(&cinfo);
+    jpeg_destroy_compress(&cinfo);
     return 1;
   }
 
@@ -247,7 +247,7 @@ size_t libjpeg_12bit_encode(int16_t *input_data, size_t width, size_t height,
   // Bootstrap the compressor
   if (jpeg_start_compress(&cinfo, TRUE).is_err) {
     strcpy(error_message, "jpeg_start_compress() failed");
-    (void)jpeg_destroy_compress(&cinfo);
+    jpeg_destroy_compress(&cinfo);
     return 1;
   }
 
@@ -259,7 +259,7 @@ size_t libjpeg_12bit_encode(int16_t *input_data, size_t width, size_t height,
     row_pointer[0] = &input_data[cinfo.next_scanline * row_stride];
     if (jpeg_write_scanlines(&cinfo, row_pointer, 1).is_err) {
       strcpy(error_message, "jpeg_write_scanlines() failed");
-      (void)jpeg_destroy_compress(&cinfo);
+      jpeg_destroy_compress(&cinfo);
       return 1;
     }
   }
@@ -267,11 +267,11 @@ size_t libjpeg_12bit_encode(int16_t *input_data, size_t width, size_t height,
   // Finish the compression
   if (jpeg_finish_compress(&cinfo).is_err) {
     strcpy(error_message, "jpeg_finish_compress() failed");
-    (void)jpeg_destroy_compress(&cinfo);
+    jpeg_destroy_compress(&cinfo);
     return 1;
   }
 
-  (void)jpeg_destroy_compress(&cinfo);
+  jpeg_destroy_compress(&cinfo);
 
   return 0;
 }

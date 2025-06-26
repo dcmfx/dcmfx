@@ -89,7 +89,7 @@ jpeg_CreateCompress (j_compress_ptr cinfo, int version, size_t structsize)
  * Destruction of a JPEG compression object
  */
 
-J_WARN_UNUSED_RESULT GLOBAL(void_result_t)
+GLOBAL(void_result_t)
 jpeg_destroy_compress (j_compress_ptr cinfo)
 {
   return jpeg_destroy((j_common_ptr) cinfo); /* use common routine */
