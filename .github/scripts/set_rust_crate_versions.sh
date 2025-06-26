@@ -8,11 +8,11 @@ find src/rust -name "Cargo.toml" -exec sed -i'' -E "s/^version = \".*\"$/version
 echo "Updating main Cargo.lock …"
 cargo update --manifest-path src/rust/Cargo.toml -p dcmfx
 
-echo "Updating example app Cargo.lock files …"
-for dir in examples/dicom_*/rust; do
-  
-  cargo update --manifest-path $dir/Cargo.toml
-done
+echo "Updating examples Cargo.lock file …"
+cargo update --manifest-path examples/Cargo.toml
 
 echo "Updating fuzzer Cargo.lock …"
 cargo update --manifest-path src/rust/dcmfx_fuzz/Cargo.toml
+
+echo "Updating WASM test Cargo.lock …"
+cargo update --manifest-path src/rust/dcmfx_wasm_test/Cargo.toml
