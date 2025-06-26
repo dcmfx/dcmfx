@@ -18,7 +18,10 @@ pub fn decode_photometric_interpretation(
     PhotometricInterpretation::Monochrome1 { .. }
     | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
+    | PhotometricInterpretation::YbrFull
+    | PhotometricInterpretation::PaletteColor { .. } => {
+      Ok(photometric_interpretation)
+    }
 
     _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
