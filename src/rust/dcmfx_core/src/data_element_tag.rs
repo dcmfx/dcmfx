@@ -55,6 +55,13 @@ impl DataElementTag {
     element: 0,
   };
 
+  /// Returns whether the tag is File Meta Information, which is determined by
+  /// its group number equalling 2.
+  ///
+  pub fn is_file_meta_information(&self) -> bool {
+    self.group == 2
+  }
+
   /// Returns whether the tag is private, which is determined by its group
   /// number being odd.
   ///

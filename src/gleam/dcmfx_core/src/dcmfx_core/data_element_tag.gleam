@@ -28,6 +28,13 @@ pub fn to_string(tag: DataElementTag) -> String {
 ///
 pub const zero = DataElementTag(0, 0)
 
+/// Returns whether the tag is File Meta Information, which is determined by its 
+/// group number equalling 2.
+///
+pub fn is_file_meta_information(tag: DataElementTag) -> Bool {
+  tag.group == 2
+}
+
 /// Returns whether the tag is private, which is determined by its group number
 /// being odd.
 ///

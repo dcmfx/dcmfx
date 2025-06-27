@@ -1,19 +1,23 @@
 //// Reads and writes the DICOM Part 10 (P10) binary format used to store and
 //// transmit DICOM-based medical imaging information.
 
+import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_core/data_set.{type DataSet}
 import dcmfx_core/data_set_path
 import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext}
+import dcmfx_p10/p10_read_config.{type P10ReadConfig}
 import dcmfx_p10/p10_token.{type P10Token}
 import dcmfx_p10/p10_write.{type P10WriteContext}
 import dcmfx_p10/p10_write_config.{type P10WriteConfig}
+import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error
 import gleam/bit_array
 import gleam/list
 import gleam/option.{type Option, None}
+import gleam/order
 import gleam/result
 
 /// Returns whether a file contains DICOM P10 data by checking for the presence
@@ -198,6 +202,143 @@ fn do_read_bytes(
     }
 
     Error(e) -> Error(#(e, builder))
+  }
+}
+
+/// Reads DICOM P10 data from a file into an in-memory data set. Only the
+/// specified data elements at the root of the main data set are read, if
+/// present. The file will only be read up to the point required to return the
+/// requested data elements.
+///
+pub fn read_file_partial(
+  filename: String,
+  tags: List(DataElementTag),
+  config: Option(P10ReadConfig),
+) -> Result(DataSet, P10Error) {
+  case file_stream.open_read(filename) {
+    Ok(stream) -> read_stream_partial(stream, tags, config)
+    Error(e) -> Error(p10_error.FileStreamError("Opening file", e))
+  }
+}
+
+/// Reads DICOM P10 data from a stream into an in-memory data set. Only the
+/// specified data elements at the root of the main data set are read, if
+/// present. The stream will only be read up to the point required to return the
+/// requested data elements.
+///
+pub fn read_stream_partial(
+  stream: FileStream,
+  tags: List(DataElementTag),
+  config: Option(P10ReadConfig),
+) -> Result(DataSet, P10Error) {
+  let context = p10_read.new_read_context(config)
+
+  // Find the largest data element tag being read
+  let largest_tag =
+    tags
+    |> list.max(data_element_tag.compare)
+    |> result.unwrap(data_element_tag.zero)
+
+  // Create filter transform that only allows the specified root tags
+  let filter =
+    p10_filter_transform.new(fn(tag, _vr, _length, path) {
+      !data_set_path.is_root(path) || list.contains(tags, tag)
+    })
+
+  use builder <- result.try(read_stream_partial_loop(
+    stream,
+    context,
+    filter,
+    data_set_builder.new(),
+    largest_tag,
+  ))
+
+  let assert Ok(data_set) =
+    builder |> data_set_builder.force_end |> data_set_builder.final_data_set
+
+  // Exclude File Meta Information tags unless they were explicitly requested
+  let data_set =
+    data_set.filter(data_set, fn(tag, _value) { list.contains(tags, tag) })
+
+  Ok(data_set)
+}
+
+fn read_stream_partial_loop(
+  stream: FileStream,
+  context: P10ReadContext,
+  filter: P10FilterTransform,
+  builder: DataSetBuilder,
+  largest_tag: DataElementTag,
+) -> Result(DataSetBuilder, P10Error) {
+  case read_tokens_from_stream(stream, context) {
+    Ok(#(tokens, context)) -> {
+      let fold_result =
+        list.fold_until(
+          tokens,
+          Ok(#(context, filter, builder, False)),
+          fn(acc, token) {
+            let assert Ok(#(context, filter, builder, _)) = acc
+
+            case p10_filter_transform.add_token(filter, token) {
+              Ok(#(filtered, filter)) -> {
+                let builder = case filtered {
+                  True -> data_set_builder.add_token(builder, token)
+                  False -> Ok(builder)
+                }
+
+                case builder {
+                  Ok(builder) -> {
+                    case token {
+                      p10_token.DataElementHeader(tag:, path:, ..)
+                      | p10_token.SequenceStart(tag:, path:, ..) -> {
+                        case
+                          data_element_tag.compare(tag, largest_tag) == order.Gt
+                          && data_set_path.is_root(path)
+                        {
+                          True ->
+                            list.Stop(Ok(#(context, filter, builder, True)))
+                          False ->
+                            list.Continue(
+                              Ok(#(context, filter, builder, False)),
+                            )
+                        }
+                      }
+
+                      p10_token.End ->
+                        list.Stop(Ok(#(context, filter, builder, True)))
+
+                      _ -> list.Continue(Ok(#(context, filter, builder, False)))
+                    }
+                  }
+
+                  Error(e) -> list.Stop(Error(e))
+                }
+              }
+
+              Error(e) -> list.Stop(Error(e))
+            }
+          },
+        )
+
+      case fold_result {
+        Ok(#(context, filter, builder, done)) ->
+          case done {
+            True -> Ok(builder)
+            False ->
+              read_stream_partial_loop(
+                stream,
+                context,
+                filter,
+                builder,
+                largest_tag,
+              )
+          }
+
+        Error(e) -> Error(e)
+      }
+    }
+
+    Error(e) -> Error(e)
   }
 }
 

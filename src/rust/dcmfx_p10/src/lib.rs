@@ -58,7 +58,7 @@ pub type IoWrite = dyn Write;
 #[cfg(not(feature = "std"))]
 pub type IoError = String;
 
-use dcmfx_core::{DataSet, DataSetPath, RcByteSlice};
+use dcmfx_core::{DataElementTag, DataSet, DataSetPath, RcByteSlice};
 
 pub use data_set_builder::DataSetBuilder;
 pub use p10_error::P10Error;
@@ -242,6 +242,91 @@ pub fn read_bytes(
       Err(e) => return Err((e, builder)),
     }
   }
+}
+
+/// Reads DICOM P10 data from a file into an in-memory data set. Only the
+/// specified data elements at the root of the main data set are read, if
+/// present. The file will only be read up to the point required to return the
+/// requested data elements.
+///
+#[cfg(feature = "std")]
+pub fn read_file_partial<P: AsRef<Path>>(
+  filename: P,
+  tags: &[DataElementTag],
+  config: Option<P10ReadConfig>,
+) -> Result<DataSet, P10Error> {
+  match File::open(filename) {
+    Ok(mut file) => read_stream_partial(&mut file, tags, config),
+    Err(e) => Err(P10Error::FileError {
+      when: "Opening file".to_string(),
+      details: e.to_string(),
+    }),
+  }
+}
+
+/// Reads DICOM P10 data from a stream into an in-memory data set. Only the
+/// specified data elements at the root of the main data set are read, if
+/// present. The stream will only be read up to the point required to return the
+/// requested data elements.
+///
+pub fn read_stream_partial(
+  stream: &mut IoRead,
+  tags: &[DataElementTag],
+  config: Option<P10ReadConfig>,
+) -> Result<DataSet, P10Error> {
+  let mut context = P10ReadContext::new(config);
+
+  // Find the largest data element tag being read
+  let largest_tag = tags.iter().max().cloned().unwrap_or(DataElementTag::ZERO);
+
+  // Create filter transform that only allows the specified root tags
+  let mut filter = {
+    let tags = tags.to_vec();
+    P10FilterTransform::new(Box::new(move |tag, _vr, _length, path| -> bool {
+      !path.is_root() || tags.contains(&tag)
+    }))
+  };
+
+  let mut data_set_builder = DataSetBuilder::new();
+
+  let mut is_done = false;
+
+  while !is_done {
+    let tokens = read_tokens_from_stream(stream, &mut context)?;
+
+    for token in tokens {
+      if filter.add_token(&token)? {
+        data_set_builder.add_token(&token)?;
+      }
+
+      match token {
+        P10Token::DataElementHeader { tag, path, .. }
+        | P10Token::SequenceStart { tag, path, .. } => {
+          if tag > largest_tag && path.is_root() {
+            is_done = true;
+            break;
+          }
+        }
+
+        P10Token::End => {
+          is_done = true;
+          break;
+        }
+
+        _ => (),
+      }
+    }
+  }
+
+  data_set_builder.force_end();
+  let mut data_set = data_set_builder.final_data_set().unwrap();
+
+  // Exclude File Meta Information tags unless they were explicitly requested
+  data_set.retain(|tag, _value| {
+    !tag.is_file_meta_information() || tags.contains(&tag)
+  });
+
+  Ok(data_set)
 }
 
 /// Writes a data set to a DICOM P10 file. This will overwrite any existing file
@@ -432,5 +517,29 @@ impl DataSetP10Extensions for DataSet {
       bytes_callback,
       config,
     )
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  use dcmfx_core::dictionary;
+
+  #[test]
+  fn read_file_partial_test() {
+    let path = "../../../test/assets/pydicom/test_files/693_J2KI.dcm";
+
+    let ds = read_file_partial(
+      path,
+      &[dictionary::ROWS.tag, dictionary::COLUMNS.tag],
+      None,
+    )
+    .unwrap();
+
+    assert_eq!(
+      ds.tags(),
+      vec![dictionary::ROWS.tag, dictionary::COLUMNS.tag]
+    );
   }
 }

@@ -14,8 +14,8 @@ use byteorder::ByteOrder;
 
 use dcmfx_core::DataSetPath;
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataError, DataSet, RcByteSlice,
-  TransferSyntax, dictionary, transfer_syntax, transfer_syntax::Endianness,
+  DataElementValue, DataError, DataSet, RcByteSlice, TransferSyntax,
+  dictionary, transfer_syntax, transfer_syntax::Endianness,
 };
 
 use crate::internal::p10_location::P10Location;
@@ -538,9 +538,10 @@ pub fn data_set_to_tokens<E>(
 ) -> Result<(), E> {
   // Create filter transform that removes File Meta Information data elements
   // from the data set's token stream
-  let mut remove_fmi_transform = P10FilterTransform::new(Box::new(
-    |tag: DataElementTag, _vr, _length, _location| tag.group != 2,
-  ));
+  let mut remove_fmi_transform =
+    P10FilterTransform::new(Box::new(|tag, _vr, _length, path| {
+      !path.is_root() || !tag.is_file_meta_information()
+    }));
 
   // Create insert transform to add the '(0008,0005) SpecificCharacterSet' data
   // element into the data set's token stream, specifying UTF-8 (ISO_IR 192)

@@ -419,24 +419,28 @@ fn read_file_meta_information_data_set(
   >> = data
   let tag = DataElementTag(group:, element:)
 
-  // If the FMI length isn't known and the group isn't 0x0002 then assume
-  // that this is the end of the File Meta Information
+  // If the File Meta Information length isn't known and this isn't a File Meta
+  // Information data element tag then assume that this is the end of the File
+  // Meta Information
   use <- bool.guard(
-    tag.group != 0x0002 && ends_at == None,
+    !data_element_tag.is_file_meta_information(tag) && ends_at == None,
     Ok(#(fmi_data_set, context)),
   )
 
   // If a data element is encountered in the File Meta Information that doesn't
   // have a group of 0x0002 then the File Meta Information is invalid
-  use <- bool.lazy_guard(tag.group != 0x0002 && ends_at != None, fn() {
-    Error(p10_error.DataInvalid(
-      when: "Reading File Meta Information",
-      details: "Data element in File Meta Information does not have the group "
-        <> "0x0002",
-      path: data_set_path.new_with_data_element(tag),
-      offset: byte_stream.bytes_read(context.stream),
-    ))
-  })
+  use <- bool.lazy_guard(
+    !data_element_tag.is_file_meta_information(tag) && ends_at != None,
+    fn() {
+      Error(p10_error.DataInvalid(
+        when: "Reading File Meta Information",
+        details: "Data element in File Meta Information does not have the "
+          <> "group 0x0002",
+        path: data_set_path.new_with_data_element(tag),
+        offset: byte_stream.bytes_read(context.stream),
+      ))
+    },
+  )
 
   // Get the VR for the data element
   let vr =
@@ -993,12 +997,12 @@ fn read_data_element_header(
   // observed in the wild (specifically TransferSyntaxUID as the first data
   // element in an item), however this is not valid according to the spec.
   let is_invalid_data_element = case
-    tag.group,
+    data_element_tag.is_file_meta_information(tag),
     data_set_path.is_root(context.path),
     context.next_action
   {
-    0x0002, _, ReadFileMetaInformation(..) -> False
-    0x0002, True, _ -> True
+    _, _, ReadFileMetaInformation(..) -> False
+    True, True, _ -> True
     _, _, _ -> False
   }
   use <- bool.guard(

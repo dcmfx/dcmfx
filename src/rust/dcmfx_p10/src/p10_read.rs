@@ -336,16 +336,17 @@ impl P10ReadContext {
       let element = byteorder::LittleEndian::read_u16(&data[2..4]);
       let tag = DataElementTag::new(group, element);
 
-      // If the FMI length isn't known and the group isn't 0x0002 then assume
-      // that this is the end of the File Meta Information
-      if tag.group != 0x0002 && ends_at.is_none() {
+      // If the File Meta Information length isn't known and this isn't a File
+      // Meta Information data element tag then assume that this is the end of
+      // the File Meta Information
+      if !tag.is_file_meta_information() && ends_at.is_none() {
         break;
       }
 
       // If a data element is encountered in the File Meta Information that
       // doesn't have a group of 0x0002 then the File Meta Information is
       // invalid
-      if tag.group != 0x0002 && ends_at.is_some() {
+      if !tag.is_file_meta_information() && ends_at.is_some() {
         return Err(P10Error::DataInvalid {
           when: "Reading File Meta Information".to_string(),
           details: "Data element in File Meta Information does not have the \
@@ -853,7 +854,7 @@ impl P10ReadContext {
     // been observed in the wild (specifically TransferSyntaxUID as the first
     // data element in an item), however this is not valid according to the
     // spec.
-    if tag.group == 0x0002
+    if tag.is_file_meta_information()
       && self.path.is_root()
       && !matches!(self.next_action, NextAction::ReadFileMetaInformation { .. })
     {
