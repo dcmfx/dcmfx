@@ -20,60 +20,18 @@ use dcmfx_core::{
 
 use crate::internal::p10_location::P10Location;
 use crate::{
-  P10Error, P10FilterTransform, P10InsertTransform, P10Token,
+  P10Error, P10FilterTransform, P10InsertTransform, P10Token, P10WriteConfig,
   internal::{
     data_element_header::{DataElementHeader, ValueLengthSize},
     value_length::ValueLength,
   },
-  p10_token, uids,
+  p10_token,
 };
 
 /// Data is compressed into chunks of this size when writing deflated transfer
 /// syntaxes.
 ///
 const ZLIB_DEFLATE_CHUNK_SIZE: usize = 64 * 1024;
-
-/// Configuration used when writing DICOM P10 data.
-///
-#[derive(Clone, Debug, PartialEq)]
-pub struct P10WriteConfig {
-  /// The implementation class UID that will be included in the File Meta
-  /// Information header of serialized DICOM P10 data.
-  ///
-  /// Defaults to the value of [`uids::DCMFX_IMPLEMENTATION_CLASS_UID`].
-  ///
-  pub implementation_class_uid: String,
-
-  /// The implementation version name that will be included in the File Meta
-  /// Information header of serialized DICOM P10 data.
-  ///
-  /// Defaults to the value of [`uids::DCMFX_IMPLEMENTATION_VERSION_NAME`].
-  ///
-  pub implementation_version_name: String,
-
-  /// The zlib compression level to use when the transfer syntax being used is
-  /// deflated. There are only three deflated transfer syntaxes: 'Deflated
-  /// Explicit VR Little Endian', 'JPIP Referenced Deflate', and 'JPIP HTJ2K
-  /// Referenced Deflate'.
-  ///
-  /// The level ranges from 0, meaning no compression, through to 9, which gives
-  /// the best compression at the cost of speed.
-  ///
-  /// Default: 6.
-  pub zlib_compression_level: u32,
-}
-
-impl Default for P10WriteConfig {
-  fn default() -> Self {
-    Self {
-      implementation_class_uid: uids::DCMFX_IMPLEMENTATION_CLASS_UID
-        .to_string(),
-      implementation_version_name: uids::DCMFX_IMPLEMENTATION_VERSION_NAME
-        .to_string(),
-      zlib_compression_level: 6,
-    }
-  }
-}
 
 /// A write context holds the current state of an in-progress DICOM P10 write.
 /// DICOM P10 tokens are written to a write context with
@@ -94,9 +52,9 @@ pub struct P10WriteContext {
 impl P10WriteContext {
   /// Creates a new write context for writing DICOM P10 data.
   ///
-  pub fn new() -> Self {
+  pub fn new(config: Option<P10WriteConfig>) -> Self {
     Self {
-      config: P10WriteConfig::default(),
+      config: config.unwrap_or_default(),
       p10_bytes: vec![],
       p10_total_byte_count: 0,
       is_ended: false,
@@ -105,16 +63,6 @@ impl P10WriteContext {
       location: P10Location::new(),
       path: DataSetPath::new(),
     }
-  }
-
-  /// Updates the config for a write context.
-  ///
-  pub fn set_config(&mut self, config: &P10WriteConfig) {
-    self.config = config.clone();
-
-    // Clamp zlib compression level to the valid range
-    self.config.zlib_compression_level =
-      self.config.zlib_compression_level.clamp(0, 9);
   }
 
   /// Reads the current DICOM P10 bytes available out of a write context. These
@@ -576,7 +524,7 @@ impl P10WriteContext {
 
 impl Default for P10WriteContext {
   fn default() -> Self {
-    Self::new()
+    Self::new(None)
   }
 }
 
@@ -648,10 +596,9 @@ pub fn data_set_to_bytes(
   data_set: &DataSet,
   path: &DataSetPath,
   bytes_callback: &mut impl FnMut(RcByteSlice) -> Result<(), P10Error>,
-  config: &P10WriteConfig,
+  config: Option<P10WriteConfig>,
 ) -> Result<(), P10Error> {
-  let mut context = P10WriteContext::new();
-  context.set_config(config);
+  let mut context = P10WriteContext::new(config);
 
   let mut process_token = |token: &P10Token| -> Result<(), P10Error> {
     context.write_token(token)?;
@@ -703,7 +650,7 @@ mod tests {
   #[test]
   fn data_element_header_to_bytes_test() {
     assert_eq!(
-      P10WriteContext::new().data_element_header_to_bytes(
+      P10WriteContext::new(None).data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::WAVEFORM_DATA.tag,
           vr: None,
@@ -715,7 +662,7 @@ mod tests {
     );
 
     assert_eq!(
-      P10WriteContext::new().data_element_header_to_bytes(
+      P10WriteContext::new(None).data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::WAVEFORM_DATA.tag,
           vr: None,
@@ -727,7 +674,7 @@ mod tests {
     );
 
     assert_eq!(
-      P10WriteContext::new().data_element_header_to_bytes(
+      P10WriteContext::new(None).data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::PATIENT_AGE.tag,
           vr: Some(ValueRepresentation::UnlimitedText),
@@ -739,7 +686,7 @@ mod tests {
     );
 
     assert_eq!(
-      P10WriteContext::new().data_element_header_to_bytes(
+      P10WriteContext::new(None).data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::PIXEL_DATA.tag,
           vr: Some(ValueRepresentation::OtherWordString),
@@ -751,7 +698,7 @@ mod tests {
     );
 
     assert_eq!(
-      P10WriteContext::new().data_element_header_to_bytes(
+      P10WriteContext::new(None).data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::PIXEL_DATA.tag,
           vr: Some(ValueRepresentation::OtherWordString),
@@ -763,7 +710,7 @@ mod tests {
     );
 
     assert_eq!(
-      P10WriteContext::new().data_element_header_to_bytes(
+      P10WriteContext::new(None).data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::PATIENT_AGE.tag,
           vr: Some(ValueRepresentation::AgeString),
@@ -781,7 +728,7 @@ mod tests {
     );
 
     assert_eq!(
-      P10WriteContext::new().data_element_header_to_bytes(
+      P10WriteContext::new(None).data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag,
           vr: Some(ValueRepresentation::SignedShort),
@@ -793,7 +740,7 @@ mod tests {
     );
 
     assert_eq!(
-      P10WriteContext::new().data_element_header_to_bytes(
+      P10WriteContext::new(None).data_element_header_to_bytes(
         &DataElementHeader {
           tag: dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag,
           vr: Some(ValueRepresentation::SignedShort),

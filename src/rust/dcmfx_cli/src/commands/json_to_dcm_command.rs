@@ -163,10 +163,8 @@ fn input_source_to_dcm(
   let data_set =
     DataSet::from_json(json).map_err(ToDcmError::JsonDeserializeError)?;
 
-  let write_config = P10WriteConfig {
-    implementation_version_name: args.implementation_version_name.clone(),
-    ..P10WriteConfig::default()
-  };
+  let write_config = P10WriteConfig::default()
+    .implementation_version_name(args.implementation_version_name.clone());
 
   // Write P10 data to output stream
   data_set

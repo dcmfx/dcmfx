@@ -20,9 +20,9 @@ import dcmfx_p10/internal/zlib.{type ZlibStream}
 import dcmfx_p10/internal/zlib/flush_command
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_token.{type P10Token}
+import dcmfx_p10/p10_write_config.{type P10WriteConfig}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import dcmfx_p10/transforms/p10_insert_transform.{type P10InsertTransform}
-import dcmfx_p10/uids
 import gleam/bit_array
 import gleam/bool
 import gleam/int
@@ -30,53 +30,6 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/pair
 import gleam/result
-
-/// Configuration used when writing DICOM P10 data. The following config is
-/// available:
-///
-/// ### `implementation_class_uid: String`
-///
-/// The implementation class UID that will be included in the File Meta
-/// Information header of serialized DICOM P10 data.
-///
-/// Defaults to the value of `dcmfx_p10/uids.dcmfx_implementation_class_uid`.
-///
-/// ### `implementation_version_name: String`
-///
-/// The implementation version name that will be included in the File Meta
-/// Information header of serialized DICOM P10 data.
-///
-/// Defaults to the value of `dcmfx_p10/uids.dcmfx_implementation_version_name`.
-///
-/// ### `zlib_compression_level: Int`
-///
-/// The zlib compression level to use when the transfer syntax being used is
-/// deflated. There are only three deflated transfer syntaxes: 'Deflated
-/// Explicit VR Little Endian', 'JPIP Referenced Deflate', and 'JPIP HTJ2K
-/// Referenced Deflate'.
-///
-/// The level ranges from 0, meaning no compression, through to 9, which gives
-/// the best compression at the cost of speed.
-///
-/// Default: 6.
-///
-pub type P10WriteConfig {
-  P10WriteConfig(
-    implementation_class_uid: String,
-    implementation_version_name: String,
-    zlib_compression_level: Int,
-  )
-}
-
-/// Returns the default write config.
-///
-pub fn default_config() -> P10WriteConfig {
-  P10WriteConfig(
-    implementation_class_uid: uids.dcmfx_implementation_class_uid,
-    implementation_version_name: uids.dcmfx_implementation_version_name,
-    zlib_compression_level: 6,
-  )
-}
 
 /// A write context holds the current state of an in-progress DICOM P10 write.
 /// DICOM P10 tokens are written to a write context with `write_token()`, and
@@ -97,9 +50,9 @@ pub opaque type P10WriteContext {
 
 /// Creates a new write context for writing DICOM P10 data.
 ///
-pub fn new_write_context() -> P10WriteContext {
+pub fn new_write_context(config: Option(P10WriteConfig)) -> P10WriteContext {
   P10WriteContext(
-    config: default_config(),
+    config: option.unwrap(config, p10_write_config.new()),
     p10_bytes: [],
     p10_total_byte_count: 0,
     is_ended: False,
@@ -108,22 +61,6 @@ pub fn new_write_context() -> P10WriteContext {
     location: p10_location.new(),
     path: data_set_path.new(),
   )
-}
-
-/// Updates the config for a write context.
-///
-pub fn with_config(
-  context: P10WriteContext,
-  config: P10WriteConfig,
-) -> P10WriteContext {
-  // Clamp zlib compression level to the valid range
-  let config =
-    P10WriteConfig(
-      ..config,
-      zlib_compression_level: int.clamp(config.zlib_compression_level, 0, 9),
-    )
-
-  P10WriteContext(..context, config: config)
 }
 
 /// Reads the current DICOM P10 bytes available out of a write context. These
@@ -712,9 +649,9 @@ pub fn data_set_to_bytes(
   path: DataSetPath,
   context: a,
   bytes_callback: fn(a, BitArray) -> Result(a, P10Error),
-  config: P10WriteConfig,
+  config: Option(P10WriteConfig),
 ) -> Result(a, P10Error) {
-  let write_context = new_write_context() |> with_config(config)
+  let write_context = new_write_context(config)
 
   let process_token = fn(context, token) {
     let #(context, write_context) = context

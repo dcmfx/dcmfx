@@ -30,106 +30,9 @@ use crate::internal::data_element_header::{
   DataElementHeader, ValueLengthSize,
 };
 use crate::internal::p10_location::{self, P10Location};
-use crate::{P10Error, P10Token, internal::value_length::ValueLength};
-
-/// Configuration used when reading DICOM P10 data.
-///
-#[derive(Clone, Debug)]
-pub struct P10ReadConfig {
-  /// The maximum size in bytes of a DICOM P10 token emitted by a read context.
-  /// This can be used to control memory usage during a streaming read, and must
-  /// be a multiple of 8.
-  ///
-  /// The maximum token size is relevant to two specific tokens:
-  ///
-  /// 1. [`P10Token::FileMetaInformation`], where it sets the maximum size in
-  ///    bytes of the File Meta Information, as specified by the File Meta
-  ///    Information Group Length value. If this size is exceeded an error will
-  ///    occur when reading the DICOM P10 data.
-  ///
-  /// 2. [`P10Token::DataElementValueBytes`], where it sets the maximum size in
-  ///    bytes of its `data` (with the exception of non-UTF-8 string data, see
-  ///    [`P10ReadConfig::max_string_size`] for further details). Data element
-  ///    values with a length exceeding this size will be split across multiple
-  ///    [`P10Token::DataElementValueBytes`] tokens.
-  ///
-  /// By default there is no limit on the maximum token size, that is, each data
-  /// element will have its value bytes emitted in exactly one
-  /// [`P10Token::DataElementValueBytes`] token.
-  ///
-  pub max_token_size: u32,
-
-  /// The maximum size in bytes of non-UTF-8 strings that can be read by a read
-  /// context. This can be used to control memory usage during a streaming read.
-  ///
-  /// The maximum string size is relevant to data elements containing string
-  /// values that are not encoded in UTF-8. Such string data is converted to
-  /// UTF-8 by the read context, which requires that the whole string value be
-  /// read into memory.
-  ///
-  /// Specifically:
-  ///
-  /// 1. The maximum string size sets a hard upper limit on the size of a
-  ///    non-UTF-8 string value that can be read. Data element values containing
-  ///    non-UTF-8 string data larger that the maximum string size will result
-  ///    in an error. Because of this, the maximum size should not be set too
-  ///    low.
-  ///
-  /// 2. The maximum string size can be set larger than the maximum token size
-  ///    to allow more leniency in regard to the size of string data that can be
-  ///    parsed, while keeping token sizes smaller for other common cases such
-  ///    as image data.
-  ///
-  /// By default there is no limit on the maximum string size.
-  ///
-  pub max_string_size: u32,
-
-  /// The maximum sequence depth that can be read by a read context. This can be
-  /// used to control memory usage during a streaming read, as well as to reject
-  /// malformed or malicious DICOM P10 data.
-  ///
-  /// By default the maximum sequence depth is set to ten thousand, i.e. no
-  /// meaningful maximum is enforced.
-  ///
-  pub max_sequence_depth: usize,
-
-  /// Whether to require input data have 'DICM' at bytes 128-132. This is
-  /// required for well-formed DICOM P10 data, but it may be absent in some
-  /// cases. If this is set to `false` then such data will be readable.
-  ///
-  /// By default the 'DICM' prefix at bytes 128-132 is not required.
-  ///
-  pub require_dicm_prefix: bool,
-
-  /// Whether to error if data elements are not in ascending order in the DICOM
-  /// P10 data. Such data is malformed but is still able to read, however doing
-  /// so can potentially lead to incorrect results. For example:
-  ///
-  /// 1. If the *'(0008,0005) Specific Character Set'* data element appears
-  ///    after data elements that use an encoded string VR, they will be decoded
-  ///    using the wrong character set.
-  ///
-  /// 2. If a '(gggg,00xx) Private Creator' data element appears after the data
-  ///    elements it defines the private creator for, those data elements will
-  ///    all be read with a VR of UN (when the transfer syntax is 'Implicit VR
-  ///    Little Endian').
-  ///
-  /// By default this requirement is enforced.
-  ///
-  pub require_ordered_data_elements: bool,
-}
-
-impl Default for P10ReadConfig {
-  fn default() -> Self {
-    Self {
-      max_token_size: 0xFFFFFFFE,
-      max_string_size: 0xFFFFFFFE,
-      max_sequence_depth: 10_000,
-      require_dicm_prefix: false,
-      require_ordered_data_elements: true,
-    }
-  }
-}
+use crate::{
+  P10Error, P10ReadConfig, P10Token, internal::value_length::ValueLength,
+};
 
 /// A read context holds the current state of an in-progress DICOM P10 read. Raw
 /// DICOM P10 data is added to a read context with [`Self::write_bytes`], and
@@ -177,9 +80,9 @@ enum NextAction {
 impl P10ReadContext {
   /// Creates a new read context for reading DICOM P10 data.
   ///
-  pub fn new() -> P10ReadContext {
+  pub fn new(config: Option<P10ReadConfig>) -> P10ReadContext {
     P10ReadContext {
-      config: P10ReadConfig::default(),
+      config: config.unwrap_or_default(),
       stream: ByteStream::new(),
       next_action: NextAction::ReadFilePreambleAndDICMPrefix,
       transfer_syntax: &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
@@ -187,21 +90,6 @@ impl P10ReadContext {
       location: P10Location::new(),
       has_emitted_specific_character_set_data_element: false,
     }
-  }
-
-  /// Updates the config for a read context.
-  ///
-  pub fn set_config(&mut self, config: &P10ReadConfig) {
-    // Round max token size to a multiple of 8
-    let max_token_size = { config.max_token_size / 8 } * 8;
-    let max_string_size =
-      core::cmp::max(config.max_string_size, max_token_size);
-
-    self.config = P10ReadConfig {
-      max_token_size,
-      max_string_size,
-      ..*config
-    };
   }
 
   /// Sets the transfer syntax to use when reading DICOM P10 data that doesn't
@@ -1450,6 +1338,6 @@ fn map_byte_stream_error(
 
 impl Default for P10ReadContext {
   fn default() -> Self {
-    Self::new()
+    Self::new(None)
   }
 }

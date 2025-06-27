@@ -7,12 +7,13 @@ import dcmfx_p10/data_set_builder.{type DataSetBuilder}
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext}
 import dcmfx_p10/p10_token.{type P10Token}
-import dcmfx_p10/p10_write.{type P10WriteConfig, type P10WriteContext}
+import dcmfx_p10/p10_write.{type P10WriteContext}
+import dcmfx_p10/p10_write_config.{type P10WriteConfig}
 import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error
 import gleam/bit_array
 import gleam/list
-import gleam/option.{type Option}
+import gleam/option.{type Option, None}
 import gleam/result
 
 /// Returns whether a file contains DICOM P10 data by checking for the presence
@@ -75,7 +76,7 @@ pub fn read_file_returning_builder_on_error(
 pub fn read_stream(
   stream: FileStream,
 ) -> Result(DataSet, #(P10Error, DataSetBuilder)) {
-  let context = p10_read.new_read_context()
+  let context = p10_read.new_read_context(None)
   let builder = data_set_builder.new()
 
   do_read_stream(stream, context, builder)
@@ -161,7 +162,7 @@ pub fn read_bytes(
   bytes: BitArray,
 ) -> Result(DataSet, #(P10Error, DataSetBuilder)) {
   let assert Ok(context) =
-    p10_read.new_read_context()
+    p10_read.new_read_context(None)
     |> p10_read.write_bytes(bytes, True)
 
   let builder = data_set_builder.new()
@@ -238,8 +239,6 @@ pub fn write_stream(
     })
   }
 
-  let config = option.lazy_unwrap(config, p10_write.default_config)
-
   p10_write.data_set_to_bytes(
     data_set,
     data_set_path.new(),
@@ -255,8 +254,6 @@ pub fn write_bytes(
   data_set: DataSet,
   config: Option(P10WriteConfig),
 ) -> Result(BitArray, P10Error) {
-  let config = option.lazy_unwrap(config, p10_write.default_config)
-
   p10_write.data_set_to_bytes(
     data_set,
     data_set_path.new(),

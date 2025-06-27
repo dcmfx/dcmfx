@@ -30,118 +30,13 @@ import dcmfx_p10/internal/data_element_header.{
 import dcmfx_p10/internal/p10_location.{type P10Location}
 import dcmfx_p10/internal/value_length
 import dcmfx_p10/p10_error.{type P10Error}
+import dcmfx_p10/p10_read_config.{type P10ReadConfig}
 import dcmfx_p10/p10_token.{type P10Token}
 import gleam/bit_array
 import gleam/bool
 import gleam/int
 import gleam/option.{type Option, None, Some}
 import gleam/result
-
-/// Configuration used when reading DICOM P10 data. The following config is
-/// available:
-///
-/// ### `max_token_size: Int`
-///
-/// The maximum size in bytes of a DICOM P10 token emitted by a read context.
-/// This can be used to control memory usage during a streaming read, and must
-/// be a multiple of 8.
-///
-/// The maximum token size is relevant to two specific tokens:
-///
-/// 1. `FileMetaInformation`, where it sets the maximum size in bytes of the
-///    File Meta Information, as specified by the File Meta Information Group
-///    Length value. If this size is exceeded an error will occur when reading
-///    the DICOM P10 data.
-///
-/// 2. `DataElementValueBytes`, where it sets the maximum size in bytes of its
-///    `data` (with the exception of non-UTF-8 string data, see
-///    `with_max_string_size` for further details). Data element values with a
-///    length exceeding this size will be split across multiple
-///    `DataElementValueBytes` tokens.
-///
-/// By default there is no limit on the maximum token size, that is, each data
-/// element will have its value bytes emitted in exactly one
-/// `DataElementValueBytes` token.
-///
-/// ### `max_string_size: Int`
-///
-/// The maximum size in bytes of non-UTF-8 strings that can be read by a read
-/// context. This can be used to control memory usage during a streaming read.
-///
-/// The maximum string size is relevant to data elements containing string
-/// values that are not encoded in UTF-8. Such string data is converted to UTF-8
-/// by the read context, which requires that the whole string value be read into
-/// memory.
-///
-/// Specifically:
-///
-/// 1. The maximum string size sets a hard upper limit on the size of a
-///    non-UTF-8 string value that can be read. Data element values containing
-///    non-UTF-8 string data larger that the maximum string size will result in
-///    an error. Because of this, the maximum size should not be set too low.
-///
-/// 2. The maximum string size can be set larger than the maximum token size to
-///    allow more leniency in regard to the size of string data that can be
-///    parsed, while keeping token sizes smaller for other common cases such as
-///    image data.
-///
-/// By default there is no limit on the maximum string size.
-///
-/// ### `max_sequence_depth: Int`
-///
-/// The maximum sequence depth that can be read by a read context. This can be
-/// used to control memory usage during a streaming read, as well as to reject
-/// malformed or malicious DICOM P10 data.
-///
-/// By default the maximum sequence depth is set to ten thousand, i.e. no
-/// meaningful maximum is enforced.
-///
-/// ### `require_dicm_prefix: Bool`
-///
-/// Whether to require input data have 'DICM' at bytes 128-132. This is required
-/// for well-formed DICOM P10 data, but it may be absent in some cases. If this
-/// is set to `False` then such data will be readable.
-///
-/// By default the 'DICM' prefix at bytes 128-132 is not required.
-///
-/// ### `require_ordered_data_elements: Bool`
-///
-/// Whether to error if data elements are not in ascending order in the DICOM
-/// P10 data. Such data is malformed but is still able to read, however doing so
-/// can potentially lead to incorrect results. For example:
-///
-/// 1. If the *'(0008,0005) Specific Character Set'* data element appears after
-///    data elements that use an encoded string VR, they will be decoded using
-///    the wrong character set.
-///
-/// 2. If a '(gggg,00xx) Private Creator' data element appears after the data
-///    elements it defines the private creator for, those data elements will
-///    all be read with a VR of UN (when the transfer syntax is 'Implicit VR
-///    Little Endian').
-///
-/// By default this requirement is enforced.
-///
-pub type P10ReadConfig {
-  P10ReadConfig(
-    max_token_size: Int,
-    max_string_size: Int,
-    max_sequence_depth: Int,
-    require_dicm_prefix: Bool,
-    require_ordered_data_elements: Bool,
-  )
-}
-
-/// Returns the default read config.
-///
-pub fn default_config() -> P10ReadConfig {
-  P10ReadConfig(
-    max_token_size: 0xFFFFFFFE,
-    max_string_size: 0xFFFFFFFE,
-    max_sequence_depth: 10_000,
-    require_dicm_prefix: False,
-    require_ordered_data_elements: True,
-  )
-}
 
 /// A read context holds the current state of an in-progress DICOM P10 read. Raw
 /// DICOM P10 data is added to a read context with `write_bytes`, and DICOM P10
@@ -181,40 +76,20 @@ type NextAction {
 
 /// Creates a new read context for reading DICOM P10 data.
 ///
-pub fn new_read_context() -> P10ReadContext {
+pub fn new_read_context(config: Option(P10ReadConfig)) -> P10ReadContext {
+  let config = option.unwrap(config, p10_read_config.new())
+
+  let max_read_size = int.max(config.max_string_size, config.max_token_size)
+
   P10ReadContext(
-    config: default_config(),
-    stream: byte_stream.new(0xFFFFFFFE),
+    config,
+    stream: byte_stream.new(max_read_size),
     next_action: ReadFilePreambleAndDICMPrefix,
     transfer_syntax: transfer_syntax.implicit_vr_little_endian,
     path: data_set_path.new(),
     location: p10_location.new(),
     has_emitted_specific_character_set_data_element: False,
   )
-}
-
-/// Updates the config for a read context.
-///
-pub fn with_config(
-  context: P10ReadContext,
-  config: P10ReadConfig,
-) -> P10ReadContext {
-  // Round max token size to a multiple of 8
-  let max_token_size = { config.max_token_size / 8 } * 8
-  let max_string_size = int.max(config.max_string_size, max_token_size)
-  let max_sequence_depth = int.max(0, config.max_sequence_depth)
-
-  let max_read_size = int.max(config.max_string_size, config.max_token_size)
-
-  let config =
-    P10ReadConfig(
-      ..config,
-      max_token_size:,
-      max_string_size:,
-      max_sequence_depth:,
-    )
-
-  P10ReadContext(..context, config:, stream: byte_stream.new(max_read_size))
 }
 
 /// Sets the transfer syntax to use when reading DICOM P10 data that doesn't

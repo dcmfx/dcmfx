@@ -5,7 +5,9 @@ import dcmfx_core/data_element_tag.{type DataElementTag}
 import dcmfx_p10
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read
-import dcmfx_p10/p10_write.{type P10WriteConfig, P10WriteConfig}
+import dcmfx_p10/p10_read_config
+import dcmfx_p10/p10_write
+import dcmfx_p10/p10_write_config.{type P10WriteConfig}
 import dcmfx_p10/transforms/p10_filter_transform.{type P10FilterTransform}
 import dcmfx_p10/uids
 import file_streams/file_stream.{type FileStream}
@@ -272,11 +274,11 @@ fn modify_input_source(
 
   // Setup write config
   let write_config =
-    P10WriteConfig(
-      ..p10_write.default_config(),
-      implementation_version_name: args.implementation_version_name,
-      zlib_compression_level: args.zlib_compression_level,
+    p10_write_config.new()
+    |> p10_write_config.implementation_version_name(
+      args.implementation_version_name,
     )
+    |> p10_write_config.zlib_compression_level(args.zlib_compression_level)
 
   let input_stream = input_source.open_read_stream(input_source)
   use input_stream <- result.try(input_stream)
@@ -330,16 +332,13 @@ fn streaming_rewrite(
   use output_stream <- result.try(output_stream)
 
   // Create read and write contexts
-  let read_config =
-    p10_read.P10ReadConfig(
-      ..p10_read.default_config(),
-      max_token_size: 256 * 1024,
-    )
   let p10_read_context =
-    p10_read.new_read_context() |> p10_read.with_config(read_config)
-  let p10_write_context =
-    p10_write.new_write_context()
-    |> p10_write.with_config(write_config)
+    p10_read_config.new()
+    |> p10_read_config.max_token_size(256 * 1024)
+    |> Some
+    |> p10_read.new_read_context
+
+  let p10_write_context = p10_write.new_write_context(Some(write_config))
 
   // Stream P10 tokens from the input stream to the output stream
   let rewrite_result =

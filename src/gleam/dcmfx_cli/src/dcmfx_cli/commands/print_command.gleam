@@ -4,11 +4,13 @@ import dcmfx_core/data_set_print.{type DataSetPrintOptions, DataSetPrintOptions}
 import dcmfx_p10
 import dcmfx_p10/p10_error.{type P10Error}
 import dcmfx_p10/p10_read.{type P10ReadContext}
+import dcmfx_p10/p10_read_config
 import dcmfx_p10/p10_token
 import dcmfx_p10/transforms/p10_print_transform.{type P10PrintTransform}
 import file_streams/file_stream.{type FileStream}
 import gleam/io
 import gleam/list
+import gleam/option.{Some}
 import gleam/result
 import glint
 import snag
@@ -79,20 +81,14 @@ fn print_input_source(
 ) -> Result(Nil, P10Error) {
   use stream <- result.try(input_source.open_read_stream(input_source))
 
-  // Create read context
-  let context = p10_read.new_read_context()
-
-  // Set a small max token size to keep memory usage low. 256 KiB is also plenty
-  // of data to preview the content of data element values, even if the max
-  // output width is very large.
+  // Create read context with a small max token size to keep memory usage low.
+  // 256 KiB is also plenty of data to preview the content of data element
+  // values, even if the max output width is very large.
   let context =
-    context
-    |> p10_read.with_config(
-      p10_read.P10ReadConfig(
-        ..p10_read.default_config(),
-        max_token_size: 256 * 1024,
-      ),
-    )
+    p10_read_config.new()
+    |> p10_read_config.max_token_size(256 * 1024)
+    |> Some
+    |> p10_read.new_read_context
 
   let p10_print_transform = p10_print_transform.new(print_options)
 

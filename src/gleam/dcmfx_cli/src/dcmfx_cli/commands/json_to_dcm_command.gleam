@@ -3,7 +3,7 @@ import dcmfx_json
 import dcmfx_json/json_error.{type JsonDeserializeError}
 import dcmfx_p10
 import dcmfx_p10/p10_error.{type P10Error}
-import dcmfx_p10/p10_write
+import dcmfx_p10/p10_write_config
 import dcmfx_p10/uids
 import gleam/bool
 import gleam/io
@@ -145,9 +145,9 @@ fn input_source_to_dcm(
   use data_set <- result.try(data_set)
 
   let write_config =
-    p10_write.P10WriteConfig(
-      ..p10_write.default_config(),
-      implementation_version_name: args.implementation_version_name,
+    p10_write_config.new()
+    |> p10_write_config.implementation_version_name(
+      args.implementation_version_name,
     )
 
   // Write P10 data to output file

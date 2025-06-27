@@ -10,7 +10,7 @@ import gleam/option.{None, Some}
 import gleeunit/should
 
 pub fn data_element_header_to_bytes_test() {
-  let context = p10_write.new_write_context()
+  let context = p10_write.new_write_context(None)
 
   DataElementHeader(
     dictionary.waveform_data.tag,

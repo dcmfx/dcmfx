@@ -449,11 +449,9 @@ fn modify_input_source(
   };
 
   // Setup write config
-  let write_config = P10WriteConfig {
-    implementation_version_name: args.implementation_version_name.clone(),
-    zlib_compression_level: args.zlib_compression_level,
-    ..P10WriteConfig::default()
-  };
+  let write_config = P10WriteConfig::default()
+    .implementation_version_name(args.implementation_version_name.clone())
+    .zlib_compression_level(args.zlib_compression_level);
 
   let input_stream = input_source
     .open_read_stream()
@@ -719,13 +717,11 @@ fn streaming_rewrite(
       .map_err(ModifyCommandError::P10Error)?;
 
   // Create read and write contexts
-  let mut p10_read_context = P10ReadContext::new();
-  p10_read_context.set_config(&P10ReadConfig {
-    max_token_size: 256 * 1024,
-    ..P10ReadConfig::default()
-  });
-  let mut p10_write_context = P10WriteContext::new();
-  p10_write_context.set_config(&write_config);
+  let mut p10_read_context = P10ReadContext::new(Some(
+    P10ReadConfig::default().max_token_size(256 * 1024),
+  ));
+
+  let mut p10_write_context = P10WriteContext::new(Some(write_config));
 
   let mut pixel_data_transcode_transform = None;
 

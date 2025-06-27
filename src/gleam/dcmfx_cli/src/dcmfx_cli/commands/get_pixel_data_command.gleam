@@ -4,6 +4,7 @@ import dcmfx_core/data_set
 import dcmfx_p10
 import dcmfx_p10/p10_error
 import dcmfx_p10/p10_read.{type P10ReadContext}
+import dcmfx_p10/p10_read_config
 import dcmfx_p10/p10_token
 import dcmfx_pixel_data
 import dcmfx_pixel_data/pixel_data_frame.{type PixelDataFrame}
@@ -88,13 +89,10 @@ fn get_pixel_data_from_input_source(
 
   // Create read context with a small max token size to keep memory usage low
   let read_context =
-    p10_read.new_read_context()
-    |> p10_read.with_config(
-      p10_read.P10ReadConfig(
-        ..p10_read.default_config(),
-        max_token_size: 1024 * 1024,
-      ),
-    )
+    p10_read_config.new()
+    |> p10_read_config.max_token_size(1024 * 1024)
+    |> Some
+    |> p10_read.new_read_context
 
   let pixel_data_frame_transform = p10_pixel_data_frame_transform.new()
 

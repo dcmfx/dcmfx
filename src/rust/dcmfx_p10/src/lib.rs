@@ -17,8 +17,10 @@ use alloc::{
 pub mod data_set_builder;
 pub mod p10_error;
 pub mod p10_read;
+pub mod p10_read_config;
 pub mod p10_token;
 pub mod p10_write;
+pub mod p10_write_config;
 pub mod transforms;
 pub mod uids;
 
@@ -60,9 +62,11 @@ use dcmfx_core::{DataSet, DataSetPath, RcByteSlice};
 
 pub use data_set_builder::DataSetBuilder;
 pub use p10_error::P10Error;
-pub use p10_read::{P10ReadConfig, P10ReadContext};
+pub use p10_read::P10ReadContext;
+pub use p10_read_config::P10ReadConfig;
 pub use p10_token::P10Token;
-pub use p10_write::{P10WriteConfig, P10WriteContext};
+pub use p10_write::P10WriteContext;
+pub use p10_write_config::P10WriteConfig;
 pub use transforms::p10_custom_type_transform::{
   P10CustomTypeTransform, P10CustomTypeTransformError,
 };
@@ -133,7 +137,7 @@ pub fn read_file_returning_builder_on_error<P: AsRef<Path>>(
 pub fn read_stream(
   stream: &mut IoRead,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
-  let mut context = P10ReadContext::new();
+  let mut context = P10ReadContext::new(None);
   let mut builder = Box::new(DataSetBuilder::new());
 
   loop {
@@ -207,7 +211,7 @@ pub fn read_tokens_from_stream(
 pub fn read_bytes(
   bytes: RcByteSlice,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
-  let mut context = P10ReadContext::new();
+  let mut context = P10ReadContext::new(None);
   let mut builder = Box::new(DataSetBuilder::new());
 
   // Add the bytes to the P10 read context
@@ -277,9 +281,7 @@ pub fn write_stream(
     }
   };
 
-  let config = config.unwrap_or_default();
-
-  data_set.to_p10_bytes(&mut bytes_callback, &config)?;
+  data_set.to_p10_bytes(&mut bytes_callback, config)?;
 
   stream.flush().map_err(|e| P10Error::FileError {
     when: "Writing DICOM P10 data to stream".to_string(),
@@ -375,7 +377,7 @@ where
   fn to_p10_bytes(
     &self,
     bytes_callback: &mut impl FnMut(RcByteSlice) -> Result<(), P10Error>,
-    config: &P10WriteConfig,
+    config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error>;
 }
 
@@ -422,7 +424,7 @@ impl DataSetP10Extensions for DataSet {
   fn to_p10_bytes(
     &self,
     bytes_callback: &mut impl FnMut(RcByteSlice) -> Result<(), P10Error>,
-    config: &P10WriteConfig,
+    config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error> {
     p10_write::data_set_to_bytes(
       self,

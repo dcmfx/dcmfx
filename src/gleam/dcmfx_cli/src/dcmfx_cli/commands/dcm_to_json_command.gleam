@@ -4,7 +4,8 @@ import dcmfx_json/json_error
 import dcmfx_json/transforms/p10_json_transform.{type P10JsonTransform}
 import dcmfx_p10
 import dcmfx_p10/p10_error.{type P10Error}
-import dcmfx_p10/p10_read.{type P10ReadContext, P10ReadConfig}
+import dcmfx_p10/p10_read.{type P10ReadContext}
+import dcmfx_p10/p10_read_config
 import dcmfx_p10/p10_token
 import file_streams/file_stream.{type FileStream}
 import gleam/io
@@ -134,10 +135,10 @@ fn input_source_to_json(
 
   // Create P10 read context and set max token size to 256 KiB
   let context =
-    p10_read.new_read_context()
-    |> p10_read.with_config(
-      P10ReadConfig(..p10_read.default_config(), max_token_size: 256 * 1024),
-    )
+    p10_read_config.new()
+    |> p10_read_config.max_token_size(256 * 1024)
+    |> Some
+    |> p10_read.new_read_context
 
   // Create transform for converting P10 tokens into bytes of JSON
   let json_transform = p10_json_transform.new(config)

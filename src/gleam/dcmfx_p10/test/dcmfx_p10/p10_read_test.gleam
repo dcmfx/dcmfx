@@ -6,6 +6,7 @@ import dcmfx_p10/p10_read
 import dcmfx_p10/p10_token
 import gleam/bit_array
 import gleam/list
+import gleam/option.{None}
 import gleeunit/should
 
 pub fn read_file_meta_information_test() {
@@ -29,7 +30,7 @@ pub fn read_file_meta_information_test() {
   >>
 
   let assert Ok(context) =
-    p10_read.new_read_context()
+    p10_read.new_read_context(None)
     |> p10_read.write_bytes(
       bit_array.concat([
         preamble_bytes,

@@ -383,11 +383,9 @@ fn get_pixel_data_from_input_source(
     .map_err(GetPixelDataError::P10Error)?;
 
   // Create read context with a small max token size to keep memory usage low
-  let mut read_context = P10ReadContext::new();
-  read_context.set_config(&P10ReadConfig {
-    max_token_size: 1024 * 1024,
-    ..P10ReadConfig::default()
-  });
+  let mut read_context = P10ReadContext::new(Some(
+    P10ReadConfig::default().max_token_size(1024 * 1024),
+  ));
 
   let mut p10_pixel_data_frame_transform = P10PixelDataFrameTransform::new();
 

@@ -346,7 +346,7 @@ fn test_jittered_read(
 ) -> Result<(), DicomValidationError> {
   let mut file = File::open(dicom).unwrap();
 
-  let mut context = P10ReadContext::new();
+  let mut context = P10ReadContext::new(None);
   let mut data_set_builder = DataSetBuilder::new();
 
   while !data_set_builder.is_complete() {

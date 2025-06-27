@@ -272,7 +272,7 @@ fn test_jittered_read(
 
   use builder <- result.try(test_jittered_read_loop(
     stream,
-    p10_read.new_read_context(),
+    p10_read.new_read_context(None),
     data_set_builder.new(),
     next_chunk_size,
   ))

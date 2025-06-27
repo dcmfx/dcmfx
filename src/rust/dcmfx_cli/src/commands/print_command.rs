@@ -81,16 +81,12 @@ fn print_input_source(
 ) -> Result<(), P10Error> {
   let mut stream = input_source.open_read_stream()?;
 
-  // Create read context
-  let mut context = P10ReadContext::new();
-
-  // Set a small max token size to keep memory usage low. 256 KiB is also plenty
-  // of data to preview the content of data element values, even if the max
-  // output width is very large.
-  context.set_config(&P10ReadConfig {
-    max_token_size: 256 * 1024,
-    ..P10ReadConfig::default()
-  });
+  // Create read context with a small max token size to keep memory usage low.
+  // 256 KiB is also plenty of data to preview the content of data element
+  // values, even if the max output width is very large.
+  let mut context = P10ReadContext::new(Some(
+    P10ReadConfig::default().max_token_size(256 * 1024),
+  ));
 
   let mut p10_print_transform = P10PrintTransform::new(print_options);
 

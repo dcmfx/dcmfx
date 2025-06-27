@@ -158,12 +158,10 @@ fn input_source_to_json(
   )
   .map_err(ToJsonError::P10Error)?;
 
-  // Create P10 read context and set max token size to 256 KiB
-  let mut context = P10ReadContext::new();
-  context.set_config(&P10ReadConfig {
-    max_token_size: 256 * 1024,
-    ..P10ReadConfig::default()
-  });
+  // Create P10 read context with max token size to 256 KiB
+  let mut context = P10ReadContext::new(Some(
+    P10ReadConfig::default().max_token_size(256 * 1024),
+  ));
 
   // Create transform for converting P10 tokens into bytes of JSON
   let mut json_transform = P10JsonTransform::new(config);

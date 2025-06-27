@@ -8,8 +8,8 @@ pub fn main() -> Result<(), P10Error> {
     let mut input_stream = File::open(INPUT_FILE).unwrap();
     let mut output_stream = File::create(OUTPUT_FILE).unwrap();
 
-    let mut read_context = P10ReadContext::new();
-    let mut write_context = P10WriteContext::new();
+    let mut read_context = P10ReadContext::new(None);
+    let mut write_context = P10WriteContext::new(None);
 
     loop {
         let tokens = dcmfx::p10::read_tokens_from_stream(
