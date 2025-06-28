@@ -234,7 +234,7 @@ pub struct ModifyArgs {
     help = "A data element tag to delete and not include in the output DICOM \
       P10 file. This argument can be specified multiple times to delete \
       multiple tags.",
-    value_parser = validate_data_element_tag,
+    value_parser = crate::args::validate_data_element_tag,
   )]
   delete_tag: Vec<DataElementTag>,
 
@@ -253,11 +253,6 @@ pub struct ModifyArgs {
     default_value_t = uids::DCMFX_IMPLEMENTATION_VERSION_NAME.to_string(),
   )]
   implementation_version_name: String,
-}
-
-fn validate_data_element_tag(s: &str) -> Result<DataElementTag, String> {
-  DataElementTag::from_hex_string(s)
-    .map_err(|_| "Invalid data element tag".to_string())
 }
 
 enum ModifyCommandError {
