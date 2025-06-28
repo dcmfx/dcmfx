@@ -895,7 +895,9 @@ pub fn value_representation(value: DataElementValue) -> ValueRepresentation {
 pub fn bytes(value: DataElementValue) -> Result(BitArray, DataError) {
   case value {
     BinaryValue(_, bytes) | LookupTableDescriptorValue(_, bytes) -> Ok(bytes)
-    _ -> Error(data_error.new_value_not_present())
+
+    EncapsulatedPixelDataValue(..) | SequenceValue(..) ->
+      Error(data_error.new_value_not_present())
   }
 }
 
@@ -976,7 +978,8 @@ pub fn total_byte_size(value: DataElementValue) -> Int {
 ///
 pub fn get_string(value: DataElementValue) -> Result(String, DataError) {
   case value {
-    BinaryValue(value_representation.ApplicationEntity, bytes)
+    BinaryValue(value_representation.AgeString, bytes)
+    | BinaryValue(value_representation.ApplicationEntity, bytes)
     | BinaryValue(value_representation.LongText, bytes)
     | BinaryValue(value_representation.ShortText, bytes)
     | BinaryValue(value_representation.UniversalResourceIdentifier, bytes)
@@ -1012,9 +1015,13 @@ pub fn get_string(value: DataElementValue) -> Result(String, DataError) {
 pub fn get_strings(value: DataElementValue) -> Result(List(String), DataError) {
   case value {
     BinaryValue(value_representation.CodeString, bytes)
+    | BinaryValue(value_representation.Date, bytes)
+    | BinaryValue(value_representation.DateTime, bytes)
     | BinaryValue(value_representation.UniqueIdentifier, bytes)
     | BinaryValue(value_representation.LongString, bytes)
+    | BinaryValue(value_representation.PersonName, bytes)
     | BinaryValue(value_representation.ShortString, bytes)
+    | BinaryValue(value_representation.Time, bytes)
     | BinaryValue(value_representation.UnlimitedCharacters, bytes) ->
       bytes
       |> bit_array.to_string

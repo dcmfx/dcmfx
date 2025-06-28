@@ -812,7 +812,11 @@ impl DataElementValue {
       | RawDataElementValue::LookupTableDescriptorValue { bytes, .. } => {
         Ok(bytes)
       }
-      _ => Err(DataError::new_value_not_present()),
+
+      RawDataElementValue::EncapsulatedPixelDataValue { .. }
+      | RawDataElementValue::SequenceValue { .. } => {
+        Err(DataError::new_value_not_present())
+      }
     }
   }
 
@@ -898,7 +902,8 @@ impl DataElementValue {
   pub fn get_string(&self) -> Result<&str, DataError> {
     match &self.0 {
       RawDataElementValue::BinaryValue { vr, bytes }
-        if *vr == ValueRepresentation::ApplicationEntity
+        if *vr == ValueRepresentation::AgeString
+          || *vr == ValueRepresentation::ApplicationEntity
           || *vr == ValueRepresentation::LongText
           || *vr == ValueRepresentation::ShortText
           || *vr == ValueRepresentation::UniversalResourceIdentifier
@@ -939,9 +944,13 @@ impl DataElementValue {
     match &self.0 {
       RawDataElementValue::BinaryValue { vr, bytes }
         if *vr == ValueRepresentation::CodeString
+          || *vr == ValueRepresentation::Date
+          || *vr == ValueRepresentation::DateTime
           || *vr == ValueRepresentation::UniqueIdentifier
           || *vr == ValueRepresentation::LongString
+          || *vr == ValueRepresentation::PersonName
           || *vr == ValueRepresentation::ShortString
+          || *vr == ValueRepresentation::Time
           || *vr == ValueRepresentation::UnlimitedCharacters =>
       {
         let string = core::str::from_utf8(bytes).map_err(|_| {
