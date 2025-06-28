@@ -112,6 +112,12 @@ impl core::ops::Deref for RcByteSlice {
   }
 }
 
+impl AsRef<[u8]> for RcByteSlice {
+  fn as_ref(&self) -> &[u8] {
+    self.as_slice()
+  }
+}
+
 impl From<Vec<u8>> for RcByteSlice {
   fn from(vec: Vec<u8>) -> Self {
     RcByteSlice::from_vec(vec)
