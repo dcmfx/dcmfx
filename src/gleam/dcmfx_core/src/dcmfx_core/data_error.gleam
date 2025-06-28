@@ -45,10 +45,6 @@ pub type DataError {
     details: String,
     path: Option(DataSetPath),
   )
-
-  /// When creating, reading, or parsing a value, the value itself is valid but
-  /// is not supported by this library.
-  ValueUnsupported(details: String, path: Option(DataSetPath))
 }
 
 /// Converts a data error a human-readable string.
@@ -78,7 +74,6 @@ pub fn to_string(error: DataError) -> String {
       <> optional_path_to_string(path)
       <> ", details: "
       <> details
-    ValueUnsupported(details:, ..) -> "Value unsupported, details: " <> details
   }
 }
 
@@ -116,12 +111,6 @@ pub fn new_value_length_invalid(
   ValueLengthInvalid(vr, length, details, None)
 }
 
-/// Constructs a new 'Value not supported' data error.
-///
-pub fn new_value_unsupported(details: String) -> DataError {
-  ValueUnsupported(details, None)
-}
-
 /// Returns the data set path for a data error.
 ///
 pub fn path(error: DataError) -> Option(DataSetPath) {
@@ -130,8 +119,7 @@ pub fn path(error: DataError) -> Option(DataSetPath) {
     ValueNotPresent(path:)
     | MultiplicityMismatch(path:)
     | ValueInvalid(path:, ..)
-    | ValueLengthInvalid(path:, ..)
-    | ValueUnsupported(path:, ..) -> path
+    | ValueLengthInvalid(path:, ..) -> path
   }
 }
 
@@ -147,7 +135,6 @@ pub fn with_path(error: DataError, path: DataSetPath) -> DataError {
     ValueInvalid(details, ..) -> ValueInvalid(details, Some(path))
     ValueLengthInvalid(vr, length, details, ..) ->
       ValueLengthInvalid(vr, length, details, Some(path))
-    ValueUnsupported(details:, ..) -> ValueUnsupported(details, Some(path))
   }
 }
 
@@ -160,7 +147,6 @@ pub fn name(error: DataError) -> String {
     MultiplicityMismatch(..) -> "Multiplicity mismatch"
     ValueInvalid(..) -> "Invalid value"
     ValueLengthInvalid(..) -> "Invalid value length"
-    ValueUnsupported(..) -> "Unsupported value"
   }
 }
 
@@ -173,7 +159,6 @@ pub fn details(error: DataError) -> String {
     MultiplicityMismatch(..) -> ""
     ValueInvalid(details:, ..) -> details
     ValueLengthInvalid(details:, ..) -> details
-    ValueUnsupported(details:, ..) -> details
   }
 }
 
@@ -214,7 +199,6 @@ pub fn to_lines(error: DataError, task_description: String) -> List(String) {
       "  Length: " <> int.to_string(length) <> " bytes",
       "  Details: " <> details,
     ]
-    ValueUnsupported(details:, ..) -> ["  Details: " <> details]
     _ -> []
   }
 

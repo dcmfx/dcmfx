@@ -71,10 +71,6 @@ pub enum DataError {
     details: String,
     path: Option<DataSetPath>,
   },
-  ValueUnsupported {
-    details: String,
-    path: Option<DataSetPath>,
-  },
 }
 
 impl core::fmt::Display for DataError {
@@ -109,9 +105,6 @@ impl core::fmt::Display for DataError {
           optional_path_to_string(path),
           details
         )
-      }
-      Self::ValueUnsupported { details, .. } => {
-        format!("Value unsupported, details: {details}",)
       }
     };
 
@@ -164,15 +157,6 @@ impl DataError {
     }
   }
 
-  /// Constructs a new 'Value not supported' data error.
-  ///
-  pub fn new_value_unsupported(details: String) -> Self {
-    Self::ValueUnsupported {
-      details,
-      path: None,
-    }
-  }
-
   /// Returns the data set path for a data error.
   ///
   pub fn path(&self) -> Option<&DataSetPath> {
@@ -181,8 +165,7 @@ impl DataError {
       Self::ValueNotPresent { path }
       | Self::MultiplicityMismatch { path }
       | Self::ValueInvalid { path, .. }
-      | Self::ValueLengthInvalid { path, .. }
-      | Self::ValueUnsupported { path, .. } => path.as_ref(),
+      | Self::ValueLengthInvalid { path, .. } => path.as_ref(),
     }
   }
 
@@ -214,10 +197,6 @@ impl DataError {
         details,
         path: Some(path.clone()),
       },
-      Self::ValueUnsupported { details, .. } => Self::ValueUnsupported {
-        details,
-        path: Some(path.clone()),
-      },
     }
   }
 
@@ -230,7 +209,6 @@ impl DataError {
       Self::MultiplicityMismatch { .. } => "Multiplicity mismatch",
       Self::ValueInvalid { .. } => "Invalid value",
       Self::ValueLengthInvalid { .. } => "Invalid value length",
-      Self::ValueUnsupported { .. } => "Unsupported value",
     }
   }
 
@@ -243,7 +221,6 @@ impl DataError {
       Self::MultiplicityMismatch { .. } => "",
       Self::ValueInvalid { details, .. } => details,
       Self::ValueLengthInvalid { details, .. } => details,
-      Self::ValueUnsupported { details, .. } => details,
     }
   }
 }
@@ -296,9 +273,6 @@ impl DcmfxError for DataError {
         lines.push(format!("  VR: {}", vr));
         lines.push(format!("  Length: {} bytes", length));
         lines.push(format!("  Details: {}", details));
-      }
-      Self::ValueUnsupported { details, .. } => {
-        lines.push(format!("  Details: {}", details))
       }
       _ => (),
     };
