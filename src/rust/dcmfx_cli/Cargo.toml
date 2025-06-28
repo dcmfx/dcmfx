@@ -12,6 +12,7 @@ homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
+base64 = "0.22.1"
 bytemuck = "1.23.0"
 bytesize = "2.0.1"
 clap = { version = "4.5.38", features = ["derive", "wrap_help"] }
