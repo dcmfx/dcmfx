@@ -12,11 +12,18 @@ pub const ABOUT: &str = "Prints the content of DICOM P10 files";
 #[derive(Args)]
 pub struct PrintArgs {
   #[arg(
-    required = true,
     help = "The names of the DICOM P10 files to print the content of. Specify \
       '-' to read from stdin."
   )]
   input_filenames: Vec<PathBuf>,
+
+  #[arg(
+    long,
+    help = "A UTF-8 text file containing a list of DICOM P10 files to print \
+      the content of. There must be exactly one line per DICOM P10 file. This \
+      allows for larger number "
+  )]
+  file_list: Option<String>,
 
   #[arg(
     long,
@@ -45,8 +52,9 @@ pub struct PrintArgs {
   styled: Option<bool>,
 }
 
-pub fn run(args: &PrintArgs) -> Result<(), ()> {
-  let input_sources = crate::get_input_sources(&args.input_filenames);
+pub fn run(args: &mut PrintArgs) -> Result<(), ()> {
+  let input_sources =
+    crate::get_input_sources(std::mem::take(&mut args.input_filenames));
 
   let mut print_options = DataSetPrintOptions::default();
   if let Some(max_width) = args.max_width {

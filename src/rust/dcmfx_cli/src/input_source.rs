@@ -84,55 +84,45 @@ impl InputSource {
   }
 }
 
-/// Converts a list of input filenames passed to a CLI command into a list of
-/// input sources.
+/// Converts a list of input filenames passed to a CLI command into an iterator
+/// over all input sources.
 ///
-/// This handles recognizing "-" as meaning stdin, and also expands input
-/// filenames containing wildcards as glob patterns.
+/// This handles recognizing "-" as meaning stdin, expands input filenames
+/// containing wildcards as glob patterns, and also allows input files to be
+/// specified via a file containing a list of file names.
 ///
-pub fn get_input_sources(input_filenames: &[PathBuf]) -> Vec<InputSource> {
-  let mut input_sources = vec![];
+pub fn get_input_sources(
+  input_filenames: Vec<PathBuf>,
+) -> Box<dyn Iterator<Item = InputSource> + Send> {
+  let iter = input_filenames.into_iter().flat_map(|input_filename| {
+    let pattern = input_filename.to_string_lossy();
 
-  for input_filename in input_filenames {
-    match input_filename.to_string_lossy().as_ref() {
-      "-" => input_sources.push(InputSource::Stdin),
-
-      _ => match glob::glob(&input_filename.to_string_lossy()) {
+    if pattern == "-" {
+      // Handle stdin
+      Box::new(std::iter::once(InputSource::Stdin))
+        as Box<dyn Iterator<Item = InputSource> + Send>
+    } else {
+      // Attempt to expand glob pattern
+      match glob::glob(&pattern) {
         Ok(paths) => {
-          let paths: Vec<_> = paths.into_iter().collect();
-
-          if paths.is_empty() {
-            if !input_filename.is_file() {
-              eprintln!("Error: '{}' is not a file", input_filename.display(),);
-              std::process::exit(1);
-            }
-
-            input_sources.push(InputSource::LocalFile {
-              path: PathBuf::from(input_filename),
-            });
-          } else {
-            for path in paths {
-              match path {
-                Ok(path) => {
-                  if path.is_dir() {
-                    continue;
-                  }
-
-                  input_sources.push(InputSource::LocalFile { path });
-                }
-
-                Err(e) => {
-                  eprintln!(
-                    "Error: Failed globbing input '{}', details: {}",
-                    input_filename.display(),
-                    e.error()
-                  );
-
-                  std::process::exit(1);
-                }
+          let expanded = paths.filter_map(move |res| match res {
+            Ok(path) => {
+              if path.is_file() {
+                Some(InputSource::LocalFile { path })
+              } else {
+                None
               }
             }
-          }
+            Err(e) => {
+              eprintln!(
+                "Error: Failed globbing input '{}', details: {}",
+                input_filename.display(),
+                e
+              );
+              std::process::exit(1);
+            }
+          });
+          Box::new(expanded) as Box<dyn Iterator<Item = InputSource> + Send>
         }
 
         Err(e) => {
@@ -141,12 +131,11 @@ pub fn get_input_sources(input_filenames: &[PathBuf]) -> Vec<InputSource> {
             input_filename.display(),
             e
           );
-
           std::process::exit(1);
         }
-      },
+      }
     }
-  }
+  });
 
-  input_sources
+  Box::new(iter)
 }
