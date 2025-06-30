@@ -306,7 +306,12 @@ fn read_file_preamble_and_dicm_prefix_token(
 
     // If the end of the data is encountered when trying to read the first 132
     // bytes then there is no File Preamble so return empty preamble bytes
-    Error(byte_stream.DataEnd) -> Ok(#(<<0:size(8)-unit(128)>>, context.stream))
+    // unless the 'DICM' prefix is configured as required
+    Error(byte_stream.DataEnd) ->
+      case context.config.require_dicm_prefix {
+        True -> Error(p10_error.DicmPrefixNotPresent)
+        False -> Ok(#(<<0:size(8)-unit(128)>>, context.stream))
+      }
 
     Error(e) -> Error(map_byte_stream_error(context, e, "Reading file header"))
   }

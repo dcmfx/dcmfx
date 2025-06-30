@@ -276,8 +276,12 @@ impl P10ReadContext {
       // If the end of the data is encountered when trying to read the first 132
       // bytes then there is no File Preamble so return empty preamble bytes
       // unless the 'DICM' prefix is configured as required
-      Err(ByteStreamError::DataEnd) if !self.config.require_dicm_prefix => {
-        Ok(Box::new([0; 128]))
+      Err(ByteStreamError::DataEnd) => {
+        if self.config.require_dicm_prefix {
+          Err(P10Error::DicmPrefixNotPresent)
+        } else {
+          Ok(Box::new([0; 128]))
+        }
       }
 
       Err(e) => Err(self.map_byte_stream_error(e, "Reading file header")),
