@@ -37,5 +37,6 @@ cc = { version = "1.2.27", features = ["parallel"] }
 glob = "0.3.2"
 
 [features]
-default = ["std"]
+default = ["std", "native"]
 std = ["dcmfx_core/std", "dcmfx_p10/std"]
+native = []

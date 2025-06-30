@@ -13,15 +13,17 @@ use crate::{
   iods::{ImagePixelModule, image_pixel_module::PhotometricInterpretation},
 };
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
 mod charls;
 mod jpeg_decoder;
 mod jpeg_xl;
 mod jxl_oxide;
+#[cfg(feature = "native")]
 mod libjpeg_12bit;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
 mod libjxl;
 mod native;
+#[cfg(feature = "native")]
 mod openjpeg;
 mod rle_lossless;
 mod zune_jpeg;
@@ -196,6 +198,7 @@ pub fn decode_photometric_interpretation<'a>(
       zune_jpeg::decode_photometric_interpretation(photometric_interpretation)
     }
 
+    #[cfg(feature = "native")]
     &JPEG_EXTENDED_12BIT => libjpeg_12bit::decode_photometric_interpretation(
       photometric_interpretation,
     ),
@@ -206,11 +209,12 @@ pub fn decode_photometric_interpretation<'a>(
       )
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::decode_photometric_interpretation(photometric_interpretation)
     }
 
+    #[cfg(feature = "native")]
     &JPEG_2K
     | &JPEG_2K_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2K
@@ -263,6 +267,7 @@ pub fn decode_monochrome(
       zune_jpeg::decode_monochrome(image_pixel_module, data)
     }
 
+    #[cfg(feature = "native")]
     &JPEG_EXTENDED_12BIT => {
       libjpeg_12bit::decode_monochrome(image_pixel_module, data)
     }
@@ -271,11 +276,12 @@ pub fn decode_monochrome(
       jpeg_decoder::decode_monochrome(image_pixel_module, data)
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::decode_monochrome(image_pixel_module, data)
     }
 
+    #[cfg(feature = "native")]
     &JPEG_2K
     | &JPEG_2K_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2K
@@ -285,7 +291,7 @@ pub fn decode_monochrome(
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-      #[cfg(not(target_arch = "wasm32"))]
+      #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
       if decode_config.jpeg_xl_decoder == JpegXlDecoder::LibJxl {
         return libjxl::decode_monochrome(image_pixel_module, data);
       }
@@ -334,6 +340,7 @@ pub fn decode_color(
 
     &JPEG_BASELINE_8BIT => zune_jpeg::decode_color(image_pixel_module, data),
 
+    #[cfg(feature = "native")]
     &JPEG_EXTENDED_12BIT => {
       libjpeg_12bit::decode_color(image_pixel_module, data)
     }
@@ -342,11 +349,12 @@ pub fn decode_color(
       jpeg_decoder::decode_color(image_pixel_module, data)
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::decode_color(image_pixel_module, data)
     }
 
+    #[cfg(feature = "native")]
     &JPEG_2K
     | &JPEG_2K_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2K
@@ -356,7 +364,7 @@ pub fn decode_color(
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-      #[cfg(not(target_arch = "wasm32"))]
+      #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
       if decode_config.jpeg_xl_decoder == JpegXlDecoder::LibJxl {
         return libjxl::decode_color(image_pixel_module, data);
       }

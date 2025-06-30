@@ -7,7 +7,7 @@ dcmfx = { path = "../dcmfx", default-features = false }
 
 [features]
 default = ["std"]
-std = ["dcmfx/std"]
+std = ["dcmfx/std", "dcmfx/pixel_data_native"]
 
 # The code in dcmfx_core::registry exceeds WASM's locals limit if not optimized,
 # so always optimize that package

@@ -29,7 +29,7 @@ serde_json = "1.0.140"
 walkdir = "2.5.0"
 
 [features]
-default = ["std"]
+default = ["std", "pixel_data_native"]
 std = [
   "dcmfx_anonymize/std",
   "dcmfx_character_set/std",
@@ -38,3 +38,4 @@ std = [
   "dcmfx_p10/std",
   "dcmfx_pixel_data/std",
 ]
+pixel_data_native = ["dcmfx_pixel_data/native"]

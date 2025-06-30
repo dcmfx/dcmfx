@@ -1,4 +1,8 @@
 fn main() {
+  if !cfg!(feature = "native") {
+    return;
+  }
+
   build_libjpeg_12bit();
   build_openjpeg();
 

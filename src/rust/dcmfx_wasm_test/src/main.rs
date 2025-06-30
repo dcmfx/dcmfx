@@ -4,7 +4,8 @@
 //
 // To build and run:
 //
-//   cargo build --target wasm32-unknown-unknown --no-default-features 
+//   cargo build --target wasm32-unknown-unknown --no-default-features \
+//     --features dcmfx/pixel_data_native
 //   wasmer target/wasm32-unknown-unknown/debug/dcmfx_wasm_test.wasm \
 //     --invoke dcmfx_wasm_test
 //

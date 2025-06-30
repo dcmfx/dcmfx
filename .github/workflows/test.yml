@@ -137,8 +137,8 @@ jobs:
       - name: Build for WASM target
         working-directory: src/rust/dcmfx_wasm_test
         run: |
-          cargo build --target wasm32-unknown-unknown --no-default-features
-          cargo build --target wasm32-unknown-unknown --no-default-features --release 
+          cargo build --target wasm32-unknown-unknown --no-default-features --features dcmfx/pixel_data_native
+          cargo build --target wasm32-unknown-unknown --no-default-features --features dcmfx/pixel_data_native --release 
 
       - name: Install Wasmer
         run: |
