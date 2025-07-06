@@ -150,13 +150,13 @@ impl CineModule {
   ///
   pub fn is_frame_trimmed(&self, frame_index: usize) -> bool {
     if let Some(start_trim) = self.start_trim {
-      if frame_index < start_trim {
+      if frame_index + 1 < start_trim {
         return true;
       }
     }
 
     if let Some(stop_trim) = self.stop_trim {
-      if frame_index > stop_trim {
+      if frame_index + 1 > stop_trim {
         return true;
       }
     }
@@ -175,14 +175,14 @@ impl CineModule {
       return 1;
     };
 
-    let start_trim = self.start_trim.unwrap_or(0);
+    let start_trim = self.start_trim.unwrap_or(1);
 
     let last_frame = self
       .stop_trim
-      .map(|c| (c + 1).min(number_of_frames))
-      .unwrap_or(number_of_frames);
+      .unwrap_or(number_of_frames)
+      .min(number_of_frames);
 
-    last_frame.saturating_sub(start_trim)
+    last_frame.saturating_sub(start_trim) + 1
   }
 
   /// Returns the frame rate that should be used to play back pixel data
