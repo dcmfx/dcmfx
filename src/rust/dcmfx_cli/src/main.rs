@@ -14,7 +14,7 @@ use commands::{
   dcm_to_json_command, get_pixel_data_command, json_to_dcm_command,
   list_command, modify_command, print_command,
 };
-use input_source::{InputSource, get_input_sources};
+use input_source::InputSource;
 
 #[derive(Parser)]
 #[command(
@@ -62,13 +62,13 @@ fn main() -> Result<(), ()> {
 
   let started_at = std::time::Instant::now();
 
-  let r = match &cli.command {
-    Commands::GetPixelData(args) => get_pixel_data_command::run(args),
-    Commands::Modify(args) => modify_command::run(args),
-    Commands::Print(args) => print_command::run(args),
-    Commands::JsonToDcm(args) => json_to_dcm_command::run(args),
-    Commands::DcmToJson(args) => dcm_to_json_command::run(args),
-    Commands::List(args) => list_command::run(args),
+  let r = match cli.command {
+    Commands::GetPixelData(mut args) => get_pixel_data_command::run(&mut args),
+    Commands::Modify(mut args) => modify_command::run(&mut args),
+    Commands::Print(mut args) => print_command::run(&mut args),
+    Commands::JsonToDcm(mut args) => json_to_dcm_command::run(&mut args),
+    Commands::DcmToJson(mut args) => dcm_to_json_command::run(&mut args),
+    Commands::List(args) => list_command::run(&args),
   };
 
   if cli.print_stats {
@@ -108,7 +108,6 @@ fn get_peak_memory_usage() -> i64 {
 /// given input sources.
 ///
 pub fn validate_output_args(
-  input_sources: &[InputSource],
   output_filename: &Option<PathBuf>,
   output_directory: &Option<PathBuf>,
 ) {
@@ -128,16 +127,6 @@ pub fn validate_output_args(
     eprintln!(
       "Error: --output-filename and --output-directory can't be specified \
        together"
-    );
-    std::process::exit(1);
-  }
-
-  // Check that --output-filename isn't specified when there's more than one
-  // input source
-  if input_sources.len() > 1 && output_filename.is_some() {
-    eprintln!(
-      "Error: --output-filename is not valid when there are multiple input \
-       files"
     );
     std::process::exit(1);
   }

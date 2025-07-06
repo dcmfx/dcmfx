@@ -23,19 +23,18 @@ use crate::{
     planar_configuration_arg::PlanarConfigurationArg,
     transfer_syntax_arg::{self, TransferSyntaxArg},
   },
-  utils::{self, TempFileRenamer, prompt_to_overwrite_if_exists},
+  utils::{self, TempFileRenamer, error_if_exists},
 };
 
 pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
 
 #[derive(Args)]
 pub struct ModifyArgs {
-  #[arg(
-    required = true,
-    help = "The names of the DICOM P10 files to modify. Specify '-' to read \
-      from stdin."
-  )]
+  #[arg(help = "DICOM P10 files to modify. Specify '-' to read from stdin.")]
   input_filenames: Vec<PathBuf>,
+
+  #[arg(long, help = crate::args::file_list_arg::ABOUT)]
+  file_list: Option<PathBuf>,
 
   #[arg(
     long,
@@ -48,9 +47,7 @@ pub struct ModifyArgs {
     long,
     short,
     help = "The name of the DICOM P10 output file. Specify '-' to write to \
-      stdout.\n\
-      \n\
-      This argument is not permitted when multiple input files are specified."
+      stdout."
   )]
   output_filename: Option<PathBuf>,
 
@@ -81,6 +78,8 @@ pub struct ModifyArgs {
       on one input file at a time, so using more threads may improve \
       performance when processing many input files.\n\
       \n\
+      When outputting to stdout only one thread can be used.\n\
+      \n\
       The default thread count is the number of logical CPUs available.",
     default_value_t = rayon::current_num_threads()
   )]
@@ -92,7 +91,7 @@ pub struct ModifyArgs {
     help_heading = "Transcoding",
     help = "The transfer syntax for the output DICOM P10 file. Pixel data will \
       be automatically transcoded. For some transfer syntaxes additional \
-      arguments are available to control image compression."
+      arguments are available to control pixel data compression."
   )]
   transfer_syntax: Option<TransferSyntaxArg>,
 
@@ -260,7 +259,7 @@ enum ModifyCommandError {
   P10PixelDataTranscodeTransformError(P10PixelDataTranscodeTransformError),
 }
 
-pub fn run(args: &ModifyArgs) -> Result<(), ()> {
+pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
   if (args.output_filename.is_some() as u8
     + args.output_directory.is_some() as u8
     + args.in_place as u8)
@@ -307,21 +306,18 @@ pub fn run(args: &ModifyArgs) -> Result<(), ()> {
     }
   }
 
-  let input_sources = crate::get_input_sources(&args.input_filenames);
+  crate::validate_output_args(&args.output_filename, &args.output_directory);
 
-  crate::validate_output_args(
-    &input_sources,
-    &args.output_filename,
-    &args.output_directory,
+  let input_sources = crate::input_source::create_iterator(
+    &mut args.input_filenames,
+    &args.file_list,
   );
 
-  if args.in_place && input_sources.contains(&InputSource::Stdin) {
-    eprintln!("Error: --in-place is not valid when reading from stdin");
-    return Err(());
-  }
+  let output_to_stdout = args.output_filename == Some(PathBuf::from("-"));
+  let threads = if output_to_stdout { 1 } else { args.threads };
 
-  let result = utils::create_thread_pool(args.threads).install(move || {
-    input_sources.into_par_iter().try_for_each(|input_source| {
+  let result = utils::create_thread_pool(threads).install(move || {
+    input_sources.par_bridge().try_for_each(|input_source| {
       if args.ignore_invalid && !input_source.is_dicom_p10() {
         return Ok(());
       }
@@ -378,7 +374,7 @@ fn modify_input_source(
     }
 
     if !args.in_place && !args.overwrite {
-      prompt_to_overwrite_if_exists(&output_filename);
+      error_if_exists(&output_filename);
     }
   }
 

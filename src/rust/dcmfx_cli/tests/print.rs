@@ -4,6 +4,8 @@ use assert_cmd::Command;
 use insta::assert_snapshot;
 use utils::get_stdout;
 
+use crate::utils::generate_temp_filename;
+
 #[test]
 fn with_single_input() {
   let dicom_file =
@@ -48,4 +50,30 @@ fn with_multiple_inputs() {
     .success();
 
   assert_snapshot!("with_multiple_inputs", get_stdout(assert));
+}
+
+#[test]
+fn with_file_list() {
+  let file_list = generate_temp_filename();
+  std::fs::write(
+    &file_list,
+    "
+../../../test/assets/fo-dicom/CT1_J2KI.dcm
+  
+
+ ../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm  
+ 
+",
+  )
+  .unwrap();
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  let assert = cmd
+    .arg("print")
+    .arg("--file-list")
+    .arg(file_list)
+    .assert()
+    .success();
+
+  assert_snapshot!("with_file_list", get_stdout(assert));
 }

@@ -14,11 +14,13 @@ pub const ABOUT: &str = "Converts DICOM P10 files to DICOM JSON files";
 #[derive(Args)]
 pub struct ToJsonArgs {
   #[arg(
-    required = true,
-    help = "The names of the DICOM P10 files to convert to DICOM JSON files. \
-      Specify '-' to read from stdin."
+    help = "DICOM P10 files to convert to DICOM JSON files. Specify '-' to \
+      read from stdin."
   )]
   input_filenames: Vec<PathBuf>,
+
+  #[arg(long, help = crate::args::file_list_arg::ABOUT)]
+  file_list: Option<PathBuf>,
 
   #[arg(
     long,
@@ -32,9 +34,7 @@ pub struct ToJsonArgs {
     short,
     help = "The name of the DICOM JSON output file. By default the output \
       DICOM JSON file is the name of the input file with '.json' appended. \
-      Specify '-' to write to stdout.\n\
-      \n\
-      This argument is not permitted when multiple input files are specified."
+      Specify '-' to write to stdout."
   )]
   output_filename: Option<PathBuf>,
 
@@ -52,6 +52,8 @@ pub struct ToJsonArgs {
     help = "The number of threads to use to perform work. Each thread operates \
       on one input file at a time, so using more threads may improve \
       performance when processing many input files.\n\
+      \n\
+      When outputting to stdout only one thread can be used.\n\
       \n\
       The default thread count is the number of logical CPUs available.",
     default_value_t = rayon::current_num_threads()
@@ -87,13 +89,12 @@ enum ToJsonError {
   JsonSerializeError(JsonSerializeError),
 }
 
-pub fn run(args: &ToJsonArgs) -> Result<(), ()> {
-  let input_sources = crate::get_input_sources(&args.input_filenames);
+pub fn run(args: &mut ToJsonArgs) -> Result<(), ()> {
+  crate::validate_output_args(&args.output_filename, &args.output_directory);
 
-  crate::validate_output_args(
-    &input_sources,
-    &args.output_filename,
-    &args.output_directory,
+  let input_sources = crate::input_source::create_iterator(
+    &mut args.input_filenames,
+    &args.file_list,
   );
 
   let config = DicomJsonConfig {
@@ -101,8 +102,11 @@ pub fn run(args: &ToJsonArgs) -> Result<(), ()> {
     store_encapsulated_pixel_data: args.store_encapsulated_pixel_data,
   };
 
-  let result = utils::create_thread_pool(args.threads).install(move || {
-    input_sources.into_par_iter().try_for_each(|input_source| {
+  let output_to_stdout = args.output_filename == Some(PathBuf::from("-"));
+  let threads = if output_to_stdout { 1 } else { args.threads };
+
+  let result = utils::create_thread_pool(threads).install(move || {
+    input_sources.par_bridge().try_for_each(|input_source| {
       if args.ignore_invalid && !input_source.is_dicom_p10() {
         return Ok(());
       }

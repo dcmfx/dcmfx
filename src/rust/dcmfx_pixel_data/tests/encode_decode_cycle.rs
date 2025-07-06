@@ -303,7 +303,6 @@ fn test_monochrome_image_encode_decode_cycle(
   transfer_syntax: &'static TransferSyntax,
   encode_config: &PixelDataEncodeConfig,
   decode_config: &PixelDataDecodeConfig,
-
   max_reencode_delta: f64,
 ) {
   let original_image = create_monochrome_image(&image_pixel_module);

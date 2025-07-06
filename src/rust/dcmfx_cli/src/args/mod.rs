@@ -1,5 +1,6 @@
 use dcmfx::core::DataElementTag;
 
+pub mod file_list_arg;
 pub mod jpeg_xl_decoder_arg;
 pub mod photometric_interpretation_arg;
 pub mod planar_configuration_arg;

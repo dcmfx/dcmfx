@@ -2,7 +2,6 @@ use std::{
   fs::File,
   io::Write,
   path::{Path, PathBuf},
-  sync::atomic::{AtomicBool, Ordering},
 };
 
 use dcmfx::p10::P10Error;
@@ -35,7 +34,7 @@ pub fn open_output_stream(
     }
 
     if !overwrite {
-      prompt_to_overwrite_if_exists(path);
+      error_if_exists(path);
     }
 
     match File::create(path) {
@@ -49,38 +48,21 @@ pub fn open_output_stream(
   }
 }
 
-/// Stores whether the user has requested to overwrite all files instead of
-/// prompting for each one.
-static OVERWRITE_ALL_FILES: AtomicBool = AtomicBool::new(false);
-
-/// Prompts the user about overwriting the given file if it exists.
+/// Prints an error and exits the process if the specified file exists.
 ///
-pub fn prompt_to_overwrite_if_exists(path: &Path) {
+pub fn error_if_exists(path: &Path) {
   if !path.exists() {
     return;
   }
 
-  if OVERWRITE_ALL_FILES.load(Ordering::Relaxed) {
-    return;
-  }
+  let _ = std::io::stdout().flush();
 
-  print!(
-    "File \"{}\" already exists. Overwrite? ([y]es, [n]o, [a]ll): ",
+  eprintln!(
+    "Error: Output file \"{}\" already exists. Specify --overwrite to
+     automatically overwrite existing files",
     path.display()
   );
-  std::io::stdout().flush().unwrap();
-
-  let mut input = String::new();
-  std::io::stdin().read_line(&mut input).unwrap();
-  let input = input.trim().to_lowercase();
-
-  if input != "y" && input != "yes" && input != "a" && input != "all" {
-    std::process::exit(1)
-  }
-
-  if input == "a" || input == "all" {
-    OVERWRITE_ALL_FILES.store(true, Ordering::Relaxed);
-  }
+  std::process::exit(1);
 }
 
 /// Appends a suffix to a path.

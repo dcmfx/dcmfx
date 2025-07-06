@@ -34,11 +34,13 @@ pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
 #[derive(Args)]
 pub struct GetPixelDataArgs {
   #[arg(
-    required = true,
-    help = "The names of the DICOM P10 files to extract pixel data from. \
-      Specify '-' to read from stdin."
+    help = "DICOM P10 files to extract pixel data from.  Specify '-' to read \
+      from stdin."
   )]
   input_filenames: Vec<PathBuf>,
+
+  #[arg(long, help = crate::args::file_list_arg::ABOUT)]
+  file_list: Option<PathBuf>,
 
   #[arg(
     long,
@@ -314,13 +316,16 @@ enum GetPixelDataError {
   OtherError(String),
 }
 
-pub fn run(args: &GetPixelDataArgs) -> Result<(), ()> {
-  let input_sources = crate::get_input_sources(&args.input_filenames);
+pub fn run(args: &mut GetPixelDataArgs) -> Result<(), ()> {
+  crate::validate_output_args(&None, &args.output_directory);
 
-  crate::validate_output_args(&input_sources, &None, &args.output_directory);
+  let input_sources = crate::input_source::create_iterator(
+    &mut args.input_filenames,
+    &args.file_list,
+  );
 
   let result = utils::create_thread_pool(args.threads).install(move || {
-    input_sources.into_par_iter().try_for_each(|input_source| {
+    input_sources.par_bridge().try_for_each(|input_source| {
       if args.ignore_invalid && !input_source.is_dicom_p10() {
         return Ok(());
       }
@@ -513,7 +518,7 @@ fn get_pixel_data_from_input_source(
           );
 
           if !args.overwrite {
-            crate::utils::prompt_to_overwrite_if_exists(&filename);
+            crate::utils::error_if_exists(&filename);
           }
 
           write_frame_to_image_file(
@@ -528,8 +533,6 @@ fn get_pixel_data_from_input_source(
 
       if *token == P10Token::End {
         if let Some(mp4_encoder) = mp4_encoder.as_mut() {
-          println!();
-
           mp4_encoder
             .finish()
             .map_err(GetPixelDataError::FFmpegError)?;
@@ -768,7 +771,7 @@ fn create_mp4_encoder(
   let mp4_path = crate::utils::path_append(output_prefix.to_path_buf(), ".mp4");
 
   if !args.overwrite {
-    crate::utils::prompt_to_overwrite_if_exists(&mp4_path);
+    crate::utils::error_if_exists(&mp4_path);
   }
 
   // Construct MP4 encoder config
@@ -841,6 +844,8 @@ fn write_frame_to_mp4_file(
   // If this is the first frame then the MP4 encoder won't have been created,
   // so create it now
   if mp4_encoder.is_none() {
+    println!("Writing \"{}.mp4\" …", output_prefix.display());
+
     *mp4_encoder = Some(create_mp4_encoder(
       output_prefix,
       &image,
@@ -849,17 +854,6 @@ fn write_frame_to_mp4_file(
       args,
     )?);
   }
-
-  // Update progress readout
-  let start_trim = cine_module.start_trim.unwrap_or(0);
-  let progress = (frame.index().unwrap() + 1 - start_trim) as f64
-    / (cine_module.number_of_frames(multiframe_module) as f64);
-  print!(
-    "\rWriting \"{}\" … {:.1}%",
-    mp4_encoder.as_ref().unwrap().path(),
-    100.0 * progress
-  );
-  let _ = std::io::stdout().flush();
 
   // Add the frame to the MP4 encoder
   mp4_encoder

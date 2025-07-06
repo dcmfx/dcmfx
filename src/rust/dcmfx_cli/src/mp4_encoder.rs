@@ -5,7 +5,6 @@ use clap::ValueEnum;
 /// Writes a stream of RGB or Luma frames to an MP4 video file using FFmpeg.
 ///
 pub struct Mp4Encoder {
-  path: String,
   ffmpeg_child_process: std::process::Child,
 }
 
@@ -107,7 +106,6 @@ impl Mp4Encoder {
         .map_err(|e| e.to_string())?;
 
     Ok(Self {
-      path: filename.to_string(),
       ffmpeg_child_process,
     })
   }
@@ -138,12 +136,6 @@ impl Mp4Encoder {
           Self::ffmpeg_binary()
         )
       })
-  }
-
-  /// Returns the output path this MP4 encoder is writing to.
-  ///
-  pub fn path(&self) -> &str {
-    &self.path
   }
 
   /// Writes the next frame of video.

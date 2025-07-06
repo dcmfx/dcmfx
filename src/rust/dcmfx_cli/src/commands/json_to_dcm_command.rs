@@ -17,20 +17,20 @@ pub const ABOUT: &str = "Converts DICOM JSON files to DICOM P10 files";
 #[derive(Args)]
 pub struct ToDcmArgs {
   #[arg(
-    required = true,
-    help = "The names of the DICOM JSON files to convert to DICOM P10 files. \
-      Specify '-' to read from stdin."
+    help = "DICOM JSON files to convert to DICOM P10 files. Specify '-' to \
+      read from stdin."
   )]
   input_filenames: Vec<PathBuf>,
+
+  #[arg(long, help = crate::args::file_list_arg::ABOUT)]
+  file_list: Option<PathBuf>,
 
   #[arg(
     long,
     short,
     help = "The name of the DICOM P10 output file. By default the output \
       DICOM P10 file is the name of the input file with '.dcm' appended. \
-      Specify '-' to write to stdout.\n\
-      \n\
-      This argument is not permitted when multiple input files are specified."
+      Specify '-' to write to stdout."
   )]
   output_filename: Option<PathBuf>,
 
@@ -48,6 +48,8 @@ pub struct ToDcmArgs {
     help = "The number of threads to use to perform work. Each thread operates \
       on one input file at a time, so using more threads may improve \
       performance when processing many input files.\n\
+      \n\
+      When outputting to stdout only one thread can be used.\n\
       \n\
       The default thread count is the number of logical CPUs available.",
     default_value_t = rayon::current_num_threads()
@@ -76,17 +78,19 @@ enum ToDcmError {
   JsonDeserializeError(JsonDeserializeError),
 }
 
-pub fn run(args: &ToDcmArgs) -> Result<(), ()> {
-  let input_sources = crate::get_input_sources(&args.input_filenames);
+pub fn run(args: &mut ToDcmArgs) -> Result<(), ()> {
+  crate::validate_output_args(&args.output_filename, &args.output_directory);
 
-  crate::validate_output_args(
-    &input_sources,
-    &args.output_filename,
-    &args.output_directory,
+  let input_sources = crate::input_source::create_iterator(
+    &mut args.input_filenames,
+    &args.file_list,
   );
 
-  let result = utils::create_thread_pool(args.threads).install(move || {
-    input_sources.into_par_iter().try_for_each(|input_source| {
+  let output_to_stdout = args.output_filename == Some(PathBuf::from("-"));
+  let threads = if output_to_stdout { 1 } else { args.threads };
+
+  let result = utils::create_thread_pool(threads).install(move || {
+    input_sources.par_bridge().try_for_each(|input_source| {
       let output_filename = if let Some(output_filename) = &args.output_filename
       {
         output_filename.clone()

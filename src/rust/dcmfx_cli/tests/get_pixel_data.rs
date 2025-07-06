@@ -823,12 +823,7 @@ fn single_bit_unaligned_to_mp4_h264() {
     .arg("yuv420p10")
     .assert()
     .success()
-    .stdout(format!(
-      "\rWriting \"{0}\" … 33.3%\r\
-       Writing \"{0}\" … 66.7%\r\
-       Writing \"{0}\" … 100.0%\n",
-      to_native_path(&output_file),
-    ));
+    .stdout(format!("Writing \"{0}\" …\n", to_native_path(&output_file),));
 
   assert_eq!(
     get_video_stream_details(&output_file),
@@ -879,9 +874,7 @@ fn single_bit_unaligned_to_mp4_h265() {
     .assert()
     .success()
     .stdout(format!(
-      "\rWriting \"{0}\" … 33.3%\r\
-       Writing \"{0}\" … 66.7%\r\
-       Writing \"{0}\" … 100.0%\n",
+      "Writing \"{0}\" …\n",
       to_native_path(&output_filename),
     ));
 
