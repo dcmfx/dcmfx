@@ -1,0 +1,7 @@
+---
+source: dcmfx_cli/tests/dcm_to_json.rs
+expression: get_stdout(assert)
+snapshot_kind: text
+---
+{"00080008":{"vr":"CS","Value":["DERIVED","SECONDARY","OTHER"]},"00080016":{"vr":"UI","Value":["1.2.840.10008.5.1.4.1.1.7"]}}
+{"00080008":{"vr":"CS","Value":["DERIVED","SECONDARY","OTHER"]},"00080016":{"vr":"UI","Value":["1.2.840.10008.5.1.4.1.1.7"]}}

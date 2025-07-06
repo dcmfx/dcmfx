@@ -1,7 +1,4 @@
-use std::{
-  io::{Read, Write},
-  path::PathBuf,
-};
+use std::{io::Read, path::PathBuf};
 
 use clap::Args;
 use rayon::prelude::*;
@@ -86,10 +83,7 @@ pub fn run(args: &mut ToDcmArgs) -> Result<(), ()> {
     &args.file_list,
   );
 
-  let output_to_stdout = args.output_filename == Some(PathBuf::from("-"));
-  let threads = if output_to_stdout { 1 } else { args.threads };
-
-  let result = utils::create_thread_pool(threads).install(move || {
+  let result = utils::create_thread_pool(args.threads).install(move || {
     input_sources.par_bridge().try_for_each(|input_source| {
       let output_filename = if let Some(output_filename) = &args.output_filename
       {
@@ -135,7 +129,7 @@ fn input_source_to_dcm(
     .map_err(ToDcmError::P10Error)?;
 
   // Open output stream
-  let mut output_stream: Box<dyn Write> = utils::open_output_stream(
+  let output_stream = utils::open_output_stream(
     &output_filename,
     Some(&output_filename),
     args.overwrite,
@@ -170,8 +164,11 @@ fn input_source_to_dcm(
   let write_config = P10WriteConfig::default()
     .implementation_version_name(args.implementation_version_name.clone());
 
+  // Get exclusive access to the output stream
+  let mut output_stream = output_stream.lock().unwrap();
+
   // Write P10 data to output stream
   data_set
-    .write_p10_stream(&mut output_stream, Some(write_config))
+    .write_p10_stream(&mut *output_stream, Some(write_config))
     .map_err(ToDcmError::P10Error)
 }

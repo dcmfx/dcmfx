@@ -2,6 +2,7 @@ use std::{
   fs::File,
   io::Write,
   path::{Path, PathBuf},
+  sync::{Arc, LazyLock, Mutex},
 };
 
 use dcmfx::p10::P10Error;
@@ -15,6 +16,12 @@ pub fn create_thread_pool(threads: usize) -> rayon::ThreadPool {
     .unwrap()
 }
 
+/// Shared stdout write stream that ensures only one thread writes at a time and
+/// there's no unwanted interleaving of stdout output from multiple threads.
+///
+static GLOBAL_STDOUT: LazyLock<Arc<Mutex<Box<dyn Write + Send>>>> =
+  LazyLock::new(|| Arc::new(Mutex::new(Box::new(std::io::stdout()))));
+
 /// Opens an output stream for the given path, first checking whether it exists
 /// and prompting the user about overwriting it if necessary. This prompt isn't
 /// presented to the user if `overwrite` is true.
@@ -25,9 +32,9 @@ pub fn open_output_stream(
   path: &PathBuf,
   display_path: Option<&PathBuf>,
   overwrite: bool,
-) -> Result<Box<dyn std::io::Write>, P10Error> {
-  if *path == PathBuf::from("-") {
-    Ok(Box::new(std::io::stdout()))
+) -> Result<Arc<Mutex<Box<dyn Write + Send>>>, P10Error> {
+  if path.to_string_lossy() == "-" {
+    Ok(GLOBAL_STDOUT.clone())
   } else {
     if let Some(display_path) = display_path {
       println!("Writing \"{}\" …", display_path.display());
@@ -38,7 +45,7 @@ pub fn open_output_stream(
     }
 
     match File::create(path) {
-      Ok(file) => Ok(Box::new(file)),
+      Ok(file) => Ok(Arc::new(Mutex::new(Box::new(file)))),
 
       Err(e) => Err(P10Error::FileError {
         when: "Opening file".to_string(),
@@ -54,8 +61,6 @@ pub fn error_if_exists(path: &Path) {
   if !path.exists() {
     return;
   }
-
-  let _ = std::io::stdout().flush();
 
   eprintln!(
     "Error: Output file \"{}\" already exists. Specify --overwrite to

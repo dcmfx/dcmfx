@@ -1,6 +1,6 @@
 /// Config options used when converting a data set to DICOM JSON.
 ///
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct DicomJsonConfig {
   /// Whether to extend DICOM JSON to support encapsulated pixel data elements.
   /// This is done by encoding the encapsulated pixel data fragments to exactly

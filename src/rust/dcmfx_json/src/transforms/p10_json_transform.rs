@@ -62,9 +62,9 @@ pub struct P10JsonTransform {
 impl P10JsonTransform {
   /// Constructs a new P10 tokens to DICOM JSON transform.
   ///
-  pub fn new(config: &DicomJsonConfig) -> Self {
+  pub fn new(config: DicomJsonConfig) -> Self {
     P10JsonTransform {
-      config: config.clone(),
+      config,
       insert_comma: false,
       current_data_element: (DataElementTag::new(0, 0), vec![]),
       ignore_data_element_value_bytes: false,

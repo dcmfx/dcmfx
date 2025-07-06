@@ -98,7 +98,7 @@ impl DataSetJsonExtensions for DataSet {
     config: DicomJsonConfig,
     stream: &mut IoWrite,
   ) -> Result<(), JsonSerializeError> {
-    let mut json_transform = P10JsonTransform::new(&config);
+    let mut json_transform = P10JsonTransform::new(config);
     let mut token_to_stream =
       |token: &P10Token| json_transform.add_token(token, stream);
 

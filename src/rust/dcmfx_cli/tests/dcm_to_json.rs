@@ -46,6 +46,29 @@ fn with_stdout_output() {
 }
 
 #[test]
+fn with_selected_data_elements() {
+  let dicom_files = [
+    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm",
+    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd_jpeg.dcm",
+  ];
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  let assert = cmd
+    .arg("dcm-to-json")
+    .args(dicom_files)
+    .arg("--output-filename")
+    .arg("-")
+    .arg("--select")
+    .arg("00080008")
+    .arg("--select")
+    .arg("00080016")
+    .assert()
+    .success();
+
+  assert_snapshot!("with_selected_data_elements", get_stdout(assert));
+}
+
+#[test]
 fn with_output_directory() {
   let dicom_files = [
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm",

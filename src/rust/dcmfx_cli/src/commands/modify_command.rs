@@ -1,6 +1,4 @@
-use std::ffi::OsStr;
-use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::{ffi::OsStr, io::Read, path::PathBuf};
 
 use clap::Args;
 use rand::Rng;
@@ -313,10 +311,7 @@ pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
     &args.file_list,
   );
 
-  let output_to_stdout = args.output_filename == Some(PathBuf::from("-"));
-  let threads = if output_to_stdout { 1 } else { args.threads };
-
-  let result = utils::create_thread_pool(threads).install(move || {
+  let result = utils::create_thread_pool(args.threads).install(move || {
     input_sources.par_bridge().try_for_each(|input_source| {
       if args.ignore_invalid && !input_source.is_dicom_p10() {
         return Ok(());
@@ -703,9 +698,11 @@ fn streaming_rewrite(
   args: &ModifyArgs,
 ) -> Result<(), ModifyCommandError> {
   // Open output stream
-  let mut output_stream: Box<dyn Write> =
-    utils::open_output_stream(output_filename, None, false)
-      .map_err(ModifyCommandError::P10Error)?;
+  let output_stream = utils::open_output_stream(output_filename, None, false)
+    .map_err(ModifyCommandError::P10Error)?;
+
+  // Get exclusive access to the output stream
+  let mut output_stream = output_stream.lock().unwrap();
 
   // Create read and write contexts
   let mut p10_read_context = P10ReadContext::new(Some(
@@ -814,7 +811,7 @@ fn streaming_rewrite(
     // Write tokens to the output stream
     let ended = dcmfx::p10::write_tokens_to_stream(
       &tokens,
-      &mut output_stream,
+      &mut *output_stream,
       &mut p10_write_context,
     )
     .map_err(ModifyCommandError::P10Error)?;
