@@ -4,8 +4,8 @@ name = "dicom_json_read"
 dcmfx_core = { path = "../../../src/gleam/dcmfx_core" }
 dcmfx_json = { path = "../../../src/gleam/dcmfx_json" }
 dcmfx_p10 = { path = "../../../src/gleam/dcmfx_p10" }
-gleam_stdlib = ">= 0.60.0 and < 2.0.0"
-simplifile = ">= 2.2.1 and < 3.0.0"
+gleam_stdlib = ">= 0.61.0 and < 2.0.0"
+simplifile = ">= 2.3.0 and < 3.0.0"
 
 [javascript]
 deno = { allow_env = true, allow_read = true }

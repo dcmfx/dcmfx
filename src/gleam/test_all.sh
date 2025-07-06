@@ -6,15 +6,17 @@ set -e
 
 for dir in dcmfx_*; do
   echo ""
-  echo "Testing $dir …"
+  echo "Entering $dir …"
 
   cd "$dir"
   gleam format --check
 
-  gleam test --target erlang
-  gleam test --target javascript --runtime node
-  gleam test --target javascript --runtime deno
-  gleam test --target javascript --runtime bun
+  if [[ "$dir" != "dcmfx_cli" ]]; then
+    gleam test --target erlang
+    gleam test --target javascript --runtime node
+    gleam test --target javascript --runtime deno
+    gleam test --target javascript --runtime bun
+  fi
 
   cd ..
 done

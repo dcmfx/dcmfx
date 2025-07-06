@@ -213,7 +213,7 @@ fn read_dicom_json_primitive_value(
     value_representation.DecimalString ->
       value
       |> decode.run(decode.list(decode.dynamic))
-      |> result.then(fn(lst) {
+      |> result.try(fn(lst) {
         list.map(lst, fn(i) {
           case decode.run(i, decode.float) {
             Ok(i) -> Ok(i)

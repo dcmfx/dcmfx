@@ -11,15 +11,15 @@ repo = "dcmfx"
 path = "src/gleam/dcmfx_json"
 
 [dependencies]
-bigi = ">= 3.2.2 and < 4.0.0"
+bigi = ">= 4.0.0 and < 5.0.0"
 dcmfx_core = { path = "../dcmfx_core" }
 dcmfx_p10 = { path = "../dcmfx_p10" }
-gleam_json = ">= 3.0.1 and < 4.0.0"
-gleam_stdlib = ">= 0.60.0 and < 2.0.0"
+gleam_json = ">= 3.0.2 and < 4.0.0"
+gleam_stdlib = ">= 0.61.0 and < 2.0.0"
 ieee_float = ">= 1.5.0 and < 2.0.0"
 
 [dev-dependencies]
-gleeunit = ">= 1.3.1 and < 2.0.0"
+gleeunit = ">= 1.6.0 and < 2.0.0"
 
 [javascript]
 typescript_declarations = true

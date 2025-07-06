@@ -47,11 +47,11 @@ pub fn value_representation_test() {
 
 pub fn bytes_test() {
   data_element_value.new_long_string(["12"])
-  |> result.then(data_element_value.bytes)
+  |> result.try(data_element_value.bytes)
   |> should.equal(Ok(<<"12">>))
 
   data_element_value.new_floating_point_single([ieee_float.finite(1.0)])
-  |> result.then(data_element_value.bytes)
+  |> result.try(data_element_value.bytes)
   |> should.equal(Ok(<<0x00, 0x00, 0x80, 0x3F>>))
 
   value_representation.UnsignedShort
@@ -74,32 +74,32 @@ pub fn bytes_test() {
 pub fn get_string_test() {
   "A"
   |> data_element_value.new_application_entity
-  |> result.then(data_element_value.get_string)
+  |> result.try(data_element_value.get_string)
   |> should.equal(Ok("A"))
 
   ["AA \u{0}"]
   |> data_element_value.new_code_string
-  |> result.then(data_element_value.get_string)
+  |> result.try(data_element_value.get_string)
   |> should.equal(Ok("AA"))
 
   "A"
   |> data_element_value.new_long_text
-  |> result.then(data_element_value.get_string)
+  |> result.try(data_element_value.get_string)
   |> should.equal(Ok("A"))
 
   "A"
   |> data_element_value.new_short_text
-  |> result.then(data_element_value.get_string)
+  |> result.try(data_element_value.get_string)
   |> should.equal(Ok("A"))
 
   "A"
   |> data_element_value.new_universal_resource_identifier
-  |> result.then(data_element_value.get_string)
+  |> result.try(data_element_value.get_string)
   |> should.equal(Ok("A"))
 
   "A"
   |> data_element_value.new_unlimited_text
-  |> result.then(data_element_value.get_string)
+  |> result.try(data_element_value.get_string)
   |> should.equal(Ok("A"))
 
   data_element_value.new_binary_unchecked(value_representation.ShortText, <<
@@ -112,44 +112,44 @@ pub fn get_string_test() {
 
   ["A"]
   |> data_element_value.new_long_string
-  |> result.then(data_element_value.get_string)
+  |> result.try(data_element_value.get_string)
   |> should.equal(Ok("A"))
 
   ["A", "B"]
   |> data_element_value.new_long_string
-  |> result.then(data_element_value.get_string)
+  |> result.try(data_element_value.get_string)
   |> should.equal(Error(data_error.new_multiplicity_mismatch()))
 
   [1]
   |> data_element_value.new_unsigned_short
-  |> result.then(data_element_value.get_string)
+  |> result.try(data_element_value.get_string)
   |> should.equal(Error(data_error.new_value_not_present()))
 }
 
 pub fn get_strings_test() {
   ["A", "B"]
   |> data_element_value.new_code_string
-  |> result.then(data_element_value.get_strings)
+  |> result.try(data_element_value.get_strings)
   |> should.equal(Ok(["A", "B"]))
 
   ["1.2", "3.4"]
   |> data_element_value.new_unique_identifier
-  |> result.then(data_element_value.get_strings)
+  |> result.try(data_element_value.get_strings)
   |> should.equal(Ok(["1.2", "3.4"]))
 
   ["A", "B"]
   |> data_element_value.new_long_string
-  |> result.then(data_element_value.get_strings)
+  |> result.try(data_element_value.get_strings)
   |> should.equal(Ok(["A", "B"]))
 
   ["A", "B"]
   |> data_element_value.new_short_string
-  |> result.then(data_element_value.get_strings)
+  |> result.try(data_element_value.get_strings)
   |> should.equal(Ok(["A", "B"]))
 
   ["A", "B"]
   |> data_element_value.new_unlimited_characters
-  |> result.then(data_element_value.get_strings)
+  |> result.try(data_element_value.get_strings)
   |> should.equal(Ok(["A", "B"]))
 
   data_element_value.new_binary_unchecked(value_representation.ShortString, <<
@@ -162,12 +162,12 @@ pub fn get_strings_test() {
 
   "A"
   |> data_element_value.new_long_text
-  |> result.then(data_element_value.get_strings)
+  |> result.try(data_element_value.get_strings)
   |> should.equal(Error(data_error.new_value_not_present()))
 
   [1]
   |> data_element_value.new_unsigned_short
-  |> result.then(data_element_value.get_strings)
+  |> result.try(data_element_value.get_strings)
   |> should.equal(Error(data_error.new_value_not_present()))
 }
 
@@ -179,17 +179,17 @@ pub fn get_int_test() {
 
   [1234]
   |> data_element_value.new_unsigned_long
-  |> result.then(data_element_value.get_int)
+  |> result.try(data_element_value.get_int)
   |> should.equal(Ok(1234))
 
   [123, 456]
   |> data_element_value.new_unsigned_long
-  |> result.then(data_element_value.get_int)
+  |> result.try(data_element_value.get_int)
   |> should.equal(Error(data_error.new_multiplicity_mismatch()))
 
   "123"
   |> data_element_value.new_long_text
-  |> result.then(data_element_value.get_int)
+  |> result.try(data_element_value.get_int)
   |> should.equal(Error(data_error.new_value_not_present()))
 }
 
@@ -201,7 +201,7 @@ pub fn get_ints_test() {
 
   [-{ 0x80000000 }, 0x7FFFFFFF]
   |> data_element_value.new_signed_long
-  |> result.then(data_element_value.get_ints)
+  |> result.try(data_element_value.get_ints)
   |> should.equal(Ok([-{ 0x80000000 }, 0x7FFFFFFF]))
 
   value_representation.SignedLong
@@ -211,7 +211,7 @@ pub fn get_ints_test() {
 
   [-{ 0x8000 }, 0x7FFF]
   |> data_element_value.new_signed_short
-  |> result.then(data_element_value.get_ints)
+  |> result.try(data_element_value.get_ints)
   |> should.equal(Ok([-{ 0x8000 }, 0x7FFF]))
 
   value_representation.SignedShort
@@ -221,7 +221,7 @@ pub fn get_ints_test() {
 
   [0, 0xFFFFFFFF]
   |> data_element_value.new_unsigned_long
-  |> result.then(data_element_value.get_ints)
+  |> result.try(data_element_value.get_ints)
   |> should.equal(Ok([0, 0xFFFFFFFF]))
 
   value_representation.UnsignedLong
@@ -231,7 +231,7 @@ pub fn get_ints_test() {
 
   [0, 0xFFFF]
   |> data_element_value.new_unsigned_short
-  |> result.then(data_element_value.get_ints)
+  |> result.try(data_element_value.get_ints)
   |> should.equal(Ok([0, 0xFFFF]))
 
   value_representation.UnsignedShort
@@ -271,12 +271,12 @@ pub fn get_ints_test() {
 
   [ieee_float.finite(123.0)]
   |> data_element_value.new_floating_point_single
-  |> result.then(data_element_value.get_ints)
+  |> result.try(data_element_value.get_ints)
   |> should.equal(Error(data_error.new_value_not_present()))
 
   "123"
   |> data_element_value.new_long_text
-  |> result.then(data_element_value.get_ints)
+  |> result.try(data_element_value.get_ints)
   |> should.equal(Error(data_error.new_value_not_present()))
 }
 
@@ -284,25 +284,25 @@ pub fn get_big_int_test() {
   let assert Ok(i0) = bigi.from_string("-9223372036854775808")
   [i0]
   |> data_element_value.new_signed_very_long
-  |> result.then(data_element_value.get_big_int)
+  |> result.try(data_element_value.get_big_int)
   |> should.equal(Ok(i0))
 
   let assert Ok(i0) = bigi.from_string("9223372036854775807")
   [i0]
   |> data_element_value.new_unsigned_very_long
-  |> result.then(data_element_value.get_big_int)
+  |> result.try(data_element_value.get_big_int)
   |> should.equal(Ok(i0))
 
   let assert Ok(i0) = bigi.from_string("1234")
   let assert Ok(i1) = bigi.from_string("1234")
   [i0, i1]
   |> data_element_value.new_unsigned_very_long
-  |> result.then(data_element_value.get_big_int)
+  |> result.try(data_element_value.get_big_int)
   |> should.equal(Error(data_error.new_multiplicity_mismatch()))
 
   "123"
   |> data_element_value.new_long_text
-  |> result.then(data_element_value.get_big_int)
+  |> result.try(data_element_value.get_big_int)
   |> should.equal(Error(data_error.new_value_not_present()))
 }
 
@@ -311,7 +311,7 @@ pub fn get_big_ints_test() {
   let assert Ok(i1) = bigi.from_string("9223372036854775807")
   [i0, i1]
   |> data_element_value.new_signed_very_long
-  |> result.then(data_element_value.get_big_ints)
+  |> result.try(data_element_value.get_big_ints)
   |> should.equal(Ok([i0, i1]))
 
   value_representation.SignedVeryLong
@@ -322,7 +322,7 @@ pub fn get_big_ints_test() {
   let assert Ok(i) = bigi.from_string("18446744073709551615")
   [bigi.zero(), i]
   |> data_element_value.new_unsigned_very_long
-  |> result.then(data_element_value.get_big_ints)
+  |> result.try(data_element_value.get_big_ints)
   |> should.equal(Ok([bigi.zero(), i]))
 
   value_representation.UnsignedVeryLong
@@ -332,12 +332,12 @@ pub fn get_big_ints_test() {
 
   [ieee_float.finite(123.0)]
   |> data_element_value.new_floating_point_single
-  |> result.then(data_element_value.get_big_ints)
+  |> result.try(data_element_value.get_big_ints)
   |> should.equal(Error(data_error.new_value_not_present()))
 
   "123"
   |> data_element_value.new_long_text
-  |> result.then(data_element_value.get_big_ints)
+  |> result.try(data_element_value.get_big_ints)
   |> should.equal(Error(data_error.new_value_not_present()))
 }
 
@@ -349,22 +349,22 @@ pub fn get_float_test() {
 
   [ieee_float.finite(1.0)]
   |> data_element_value.new_floating_point_single
-  |> result.then(data_element_value.get_float)
+  |> result.try(data_element_value.get_float)
   |> should.equal(Ok(ieee_float.finite(1.0)))
 
   [ieee_float.positive_infinity()]
   |> data_element_value.new_floating_point_single
-  |> result.then(data_element_value.get_float)
+  |> result.try(data_element_value.get_float)
   |> should.equal(Ok(ieee_float.positive_infinity()))
 
   [ieee_float.finite(1.2), ieee_float.finite(3.4)]
   |> data_element_value.new_floating_point_double
-  |> result.then(data_element_value.get_float)
+  |> result.try(data_element_value.get_float)
   |> should.equal(Error(data_error.new_multiplicity_mismatch()))
 
   "1.2"
   |> data_element_value.new_long_text
-  |> result.then(data_element_value.get_float)
+  |> result.try(data_element_value.get_float)
   |> should.equal(Error(data_error.new_value_not_present()))
 }
 
@@ -376,17 +376,17 @@ pub fn get_floats_test() {
 
   [ieee_float.finite(1.2), ieee_float.finite(3.4)]
   |> data_element_value.new_floating_point_double
-  |> result.then(data_element_value.get_floats)
+  |> result.try(data_element_value.get_floats)
   |> should.equal(Ok([ieee_float.finite(1.2), ieee_float.finite(3.4)]))
 
   [ieee_float.finite(1.0), ieee_float.finite(2.0)]
   |> data_element_value.new_other_double_string
-  |> result.then(data_element_value.get_floats)
+  |> result.try(data_element_value.get_floats)
   |> should.equal(Ok([ieee_float.finite(1.0), ieee_float.finite(2.0)]))
 
   [ieee_float.finite(1.0), ieee_float.finite(2.0)]
   |> data_element_value.new_other_double_string
-  |> result.then(data_element_value.get_floats)
+  |> result.try(data_element_value.get_floats)
   |> should.equal(Ok([ieee_float.finite(1.0), ieee_float.finite(2.0)]))
 
   value_representation.FloatingPointDouble
@@ -396,12 +396,12 @@ pub fn get_floats_test() {
 
   [ieee_float.finite(1.0), ieee_float.finite(2.0)]
   |> data_element_value.new_floating_point_single
-  |> result.then(data_element_value.get_floats)
+  |> result.try(data_element_value.get_floats)
   |> should.equal(Ok([ieee_float.finite(1.0), ieee_float.finite(2.0)]))
 
   [ieee_float.finite(1.0), ieee_float.finite(2.0)]
   |> data_element_value.new_other_float_string
-  |> result.then(data_element_value.get_floats)
+  |> result.try(data_element_value.get_floats)
   |> should.equal(Ok([ieee_float.finite(1.0), ieee_float.finite(2.0)]))
 
   value_representation.FloatingPointSingle
@@ -411,7 +411,7 @@ pub fn get_floats_test() {
 
   "1.2"
   |> data_element_value.new_long_text
-  |> result.then(data_element_value.get_floats)
+  |> result.try(data_element_value.get_floats)
   |> should.equal(Error(data_error.new_value_not_present()))
 }
 

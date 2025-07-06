@@ -760,7 +760,7 @@ fn read_extended_offset_table(
         |> data_element_value.vr_bytes([
           value_representation.OtherVeryLongString,
         ])
-        |> result.then(fn(bytes) {
+        |> result.try(fn(bytes) {
           bit_array_utils.to_uint64_list(bytes)
           |> result.replace_error(data_error.new_value_invalid(
             "Extended Offset Table has invalid size",
@@ -775,7 +775,7 @@ fn read_extended_offset_table(
         |> data_element_value.vr_bytes([
           value_representation.OtherVeryLongString,
         ])
-        |> result.then(fn(bytes) {
+        |> result.try(fn(bytes) {
           bit_array_utils.to_uint64_list(bytes)
           |> result.replace_error(data_error.new_value_invalid(
             "Extended Offset Table Lengths has invalid size",
