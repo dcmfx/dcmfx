@@ -98,9 +98,9 @@ checksum = "8f1fe948ff07f4bd06c30984e69f5b4899c516a3ef74f34df92a2df2ab535495"
 
 [[package]]
 name = "cc"
-version = "1.2.27"
+version = "1.2.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d487aa071b5f64da6f19a3e848e3578944b726ee5a4854b82172f02aa876bfdc"
+checksum = "5c1599538de2394445747c8cf7935946e3cc27e9625f889d979bfb2aaf569362"
 dependencies = [
  "jobserver",
  "libc",
@@ -149,7 +149,7 @@ checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "dcmfx"
-version = "0.25.1"
+version = "0.26.0"
 dependencies = [
  "dcmfx_anonymize",
  "dcmfx_character_set",
@@ -161,18 +161,18 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_anonymize"
-version = "0.25.1"
+version = "0.26.0"
 dependencies = [
  "dcmfx_core",
 ]
 
 [[package]]
 name = "dcmfx_character_set"
-version = "0.25.1"
+version = "0.26.0"
 
 [[package]]
 name = "dcmfx_core"
-version = "0.25.1"
+version = "0.26.0"
 dependencies = [
  "byteorder",
  "num-traits",
@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_json"
-version = "0.25.1"
+version = "0.26.0"
 dependencies = [
  "base64",
  "byteorder",
@@ -208,7 +208,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_p10"
-version = "0.25.1"
+version = "0.26.0"
 dependencies = [
  "byteorder",
  "dcmfx_character_set",
@@ -219,7 +219,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_pixel_data"
-version = "0.25.1"
+version = "0.26.0"
 dependencies = [
  "bytemuck",
  "byteorder",
@@ -1082,9 +1082,9 @@ checksum = "3f423a2c17029964870cfaabb1f13dfab7d092a62a29a89264f4d36990ca414a"
 
 [[package]]
 name = "zune-jpeg"
-version = "0.4.18"
+version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7384255a918371b5af158218d131530f694de9ad3815ebdd0453a940485cb0fa"
+checksum = "2c9e525af0a6a658e031e95f14b7f889976b74a11ba0eca5a5fc9ac8a1c43a6a"
 dependencies = [
  "zune-core",
 ]
