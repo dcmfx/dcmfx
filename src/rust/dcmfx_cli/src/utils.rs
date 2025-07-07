@@ -16,10 +16,9 @@ pub fn create_thread_pool(threads: usize) -> rayon::ThreadPool {
     .unwrap()
 }
 
-/// Shared stdout write stream that ensures only one thread writes at a time and
-/// there's no unwanted interleaving of stdout output from multiple threads.
+/// Shared stdout write stream used for synchronization across threads.
 ///
-static GLOBAL_STDOUT: LazyLock<Arc<Mutex<Box<dyn Write + Send>>>> =
+pub static GLOBAL_STDOUT: LazyLock<Arc<Mutex<Box<dyn Write + Send>>>> =
   LazyLock::new(|| Arc::new(Mutex::new(Box::new(std::io::stdout()))));
 
 /// Opens an output stream for the given path, first checking whether it exists

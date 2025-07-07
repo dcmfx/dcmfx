@@ -1,0 +1,37 @@
+---
+source: dcmfx_cli\\tests\\list.rs
+expression: "lines.join(\"\\n\")"
+snapshot_kind: text
+---
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY","NORMALIZED",null,null,null,null,null,"100000"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\CR-ModalitySequenceLUT.dcm","size":1261500}
+{"data_set":{"00080008":{"Value":["DERIVED","SECONDARY","3D"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\CT-MONO2-16-ankle.dcm","size":525436}
+{"data_set":{"00080008":{"Value":["DERIVED","PRIMARY","AXIAL"],"vr":"CS"},"00080014":{"Value":["1.3.6.1.4.1.5962.3"],"vr":"UI"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\CT1_J2KI.dcm","size":14156}
+{"data_set":{},"path":"..\\..\\..\\test\\assets\\fo-dicom\\DICOMDIR.dcm","size":13796}
+{"data_set":{"00080008":{"Value":["DERIVED","SECONDARY","AXIAL"],"vr":"CS"},"00080014":{"Value":["1.2.276.0.7230010.3.0.3.5.2"],"vr":"UI"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\D_CLUNIE_CT1_RLE_FRAGS.dcm","size":254932}
+{"data_set":{"00080008":{"Value":["DERIVED","PRIMARY","M_FFE","M","FFE"],"vr":"CS"},"00080014":{"Value":["1.3.46.670589.11.30069.5"],"vr":"UI"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH064.dcm","size":58050}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH1146.dcm","size":2124}
+{"data_set":{"00080008":{"Value":["DERIVED","PRIMARY","MPR","NORM","DIS2D"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH1261.dcm","size":127134}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY","AXIAL"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH1308.dcm","size":528304}
+{"data_set":{"00080008":{"Value":["DERIVED","SECONDARY","AXIAL"],"vr":"CS"},"00080014":{"Value":["1.2.276.0.7230010.3.0.3.5.2"],"vr":"UI"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH177_D_CLUNIE_CT1_IVRLE_BigEndian_ELE_undefinded_length.dcm","size":530836}
+{"data_set":{"00080008":{"Value":["DERIVED","SECONDARY","SCREEN SAVE"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH178.dcm","size":2832}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY"],"vr":"CS"},"00080014":{"Value":["1.2.840.113619.1.99.9999"],"vr":"UI"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH184.dcm","size":20542}
+{"data_set":{},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH220.dcm","size":454}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY","LOCALIZER","PS"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH223.dcm","size":702}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY","LOCALIZER","PS"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH342.dcm","size":558222}
+{"data_set":{"00080008":{"Value":["DERIVED","SECONDARY","3D"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH355.dcm","size":525436}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY","LOCALIZER","PS"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH487.dcm","size":532}
+{"data_set":{},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH538-jpeg1.dcm","size":74990}
+{"data_set":{},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH538-jpeg14sv1.dcm","size":257386}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY"],"vr":"CS"},"00080014":{"Value":["2.25.75306332419134992866779625864827446101"],"vr":"UI"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\GH610.dcm","size":21418}
+{"data_set":{"00080008":{"Value":["DERIVED","PRIMARY","SINGLE PLANE","SINGLE A"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\HasFragmentSequence.dcm","size":1702398}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY","AXIAL"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\IM-0001-0001-0001.dcm","size":203304}
+{"data_set":{},"path":"..\\..\\..\\test\\assets\\fo-dicom\\Issue1097_FailToOpenDeflatedFileWithSQ.dcm","size":553}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\JPEGwithIcon.dcm","size":62560}
+{"data_set":{"00080008":{"Value":["DERIVED","PRIMARY","STEREO","LEFT"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\OutOfBoundsOverlay.dcm","size":1021034}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY","PORTAL","ACQUIRED_DOSE"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\RI6XDosiGap.dcm","size":1576330}
+{"data_set":{"00080008":{"Value":["DERIVED","SECONDARY","OTHER","MEVISLAB"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\TestPattern_Palette.dcm","size":258228}
+{"data_set":{"00080008":{"Value":["DERIVED","SECONDARY","OTHER","MEVISLAB"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\TestPattern_Palette_16.dcm","size":258972}
+{"data_set":{"00080008":{"Value":["DERIVED","SECONDARY","OTHER","MEVISLAB"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\TestPattern_RGB.dcm","size":769114}
+{"data_set":{},"path":"..\\..\\..\\test\\assets\\fo-dicom\\genFile.dcm","size":262834}
+{"data_set":{"00080008":{"Value":["ORIGINAL","PRIMARY","NON_PARALLEL","NONE"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\mr_brucker.dcm","size":266310}
+{"data_set":{"00080008":{"Value":["DERIVED","PRIMARY","VOLUME","RESAMPLED"],"vr":"CS"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\multiframe.dcm","size":563864}

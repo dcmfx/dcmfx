@@ -2,7 +2,7 @@ mod utils;
 
 use assert_cmd::Command;
 use insta::assert_snapshot;
-use utils::{get_stderr, get_stdout, to_native_path};
+use utils::{get_stderr, get_stdout, get_stdout_and_stderr, to_native_path};
 
 #[test]
 fn with_multiple_directories() {
@@ -41,7 +41,7 @@ fn with_summary() {
 
   assert_eq!(
     get_stderr(assert).trim(),
-    "Found 32 DICOM files, size: 11.2 MiB"
+    "Found 32 DICOM files, 23 studies, total size: 11.2 MiB"
   );
 }
 
@@ -55,10 +55,11 @@ fn with_json_lines_format() {
     .arg(to_native_path("../../../test/assets/pydicom"))
     .arg("--format")
     .arg("json-lines")
+    .arg("--summarize")
     .assert()
     .success();
 
-  let stdout = get_stdout(assert);
+  let (stdout, stderr) = get_stdout_and_stderr(assert);
   let mut lines: Vec<_> = stdout.split("\n").collect();
   lines.sort();
 
@@ -67,6 +68,11 @@ fn with_json_lines_format() {
 
   #[cfg(not(windows))]
   assert_snapshot!("with_json_lines_format", lines.join("\n"));
+
+  assert_eq!(
+    "Found 216 DICOM files, 65 studies, total size: 13.7 MiB",
+    stderr.trim()
+  );
 }
 
 #[test]
@@ -80,4 +86,35 @@ fn with_invalid_directory() {
 
   #[cfg(not(windows))]
   assert_snapshot!("with_invalid_directory", get_stderr(assert));
+}
+
+#[test]
+fn with_selected_data_elements() {
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+
+  let assert = cmd
+    .arg("list")
+    .arg(to_native_path("../../../test/assets/fo-dicom"))
+    .arg("--format")
+    .arg("json-lines")
+    .arg("--select")
+    .arg("00080008")
+    .arg("--select")
+    .arg("00080014")
+    .assert()
+    .success();
+
+  let stdout = get_stdout(assert);
+
+  let mut lines: Vec<_> = stdout.trim().split("\n").collect();
+  lines.sort_by_key(|line| {
+    let json: serde_json::Value = serde_json::from_str(line).unwrap();
+    json.get("path").unwrap().as_str().unwrap().to_string()
+  });
+
+  #[cfg(windows)]
+  assert_snapshot!("with_selected_data_elements_windows", lines.join("\n"));
+
+  #[cfg(not(windows))]
+  assert_snapshot!("with_selected_data_elements", lines.join("\n"));
 }

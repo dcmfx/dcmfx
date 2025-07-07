@@ -32,3 +32,11 @@ pub fn get_stdout(assert: Assert) -> String {
 pub fn get_stderr(assert: Assert) -> String {
   String::from_utf8(assert.get_output().stderr.clone()).unwrap()
 }
+
+#[allow(dead_code)]
+pub fn get_stdout_and_stderr(assert: Assert) -> (String, String) {
+  (
+    String::from_utf8(assert.get_output().stdout.clone()).unwrap(),
+    String::from_utf8(assert.get_output().stderr.clone()).unwrap(),
+  )
+}
