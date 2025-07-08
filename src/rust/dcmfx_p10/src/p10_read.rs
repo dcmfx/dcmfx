@@ -81,39 +81,22 @@ impl P10ReadContext {
   /// Creates a new read context for reading DICOM P10 data.
   ///
   pub fn new(config: Option<P10ReadConfig>) -> P10ReadContext {
+    let config = config.unwrap_or_default();
+
     P10ReadContext {
-      config: config.unwrap_or_default(),
+      config,
       stream: ByteStream::new(),
       next_action: NextAction::ReadFilePreambleAndDICMPrefix,
-      transfer_syntax: &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
+      transfer_syntax: config.default_transfer_syntax,
       path: DataSetPath::new(),
       location: P10Location::new(),
       has_emitted_specific_character_set_data_element: false,
     }
   }
 
-  /// Sets the transfer syntax to use when reading DICOM P10 data that doesn't
-  /// specify a transfer syntax in its File Meta Information, or doesn't have
-  /// any File Meta Information.
-  ///
-  /// The default is 'Implicit VR Little Endian'.
-  ///
-  /// The fallback transfer syntax should be set prior to reading any DICOM P10
-  /// tokens from the read context.
-  ///
-  pub fn set_fallback_transfer_syntax(
-    &mut self,
-    transfer_syntax: &'static TransferSyntax,
-  ) {
-    self.transfer_syntax = transfer_syntax;
-  }
-
-  /// Returns the transfer syntax for a P10 read context. This defaults to
-  /// 'Implicit VR Little Endian' and is updated when a transfer syntax is read
-  /// from the File Meta Information.
-  ///
-  /// The default transfer syntax can be set using
-  /// [`Self::set_fallback_transfer_syntax()`].
+  /// Returns the transfer syntax for a P10 read context. The default transfer
+  /// syntax is specified in the context's [`P10ReadConfig`], and is updated
+  /// when a transfer syntax is read from the File Meta Information.
   ///
   pub fn transfer_syntax(&self) -> &TransferSyntax {
     self.transfer_syntax

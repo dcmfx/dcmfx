@@ -3,7 +3,7 @@ use std::path::Path;
 
 use crate::InputSource;
 
-pub const ABOUT: &str = "A UTF-8 text file containing a list of input files. \
+pub const HELP: &str = "A UTF-8 text file containing a list of input files. \
   Each input file path should be on its own line. White space is trimmed and \
   blank lines are ignored.";
 

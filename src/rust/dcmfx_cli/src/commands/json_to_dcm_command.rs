@@ -7,7 +7,7 @@ use dcmfx::core::*;
 use dcmfx::json::*;
 use dcmfx::p10::*;
 
-use crate::{InputSource, utils};
+use crate::{InputSource, args::file_list_arg, utils};
 
 pub const ABOUT: &str = "Converts DICOM JSON files to DICOM P10 files";
 
@@ -19,7 +19,7 @@ pub struct ToDcmArgs {
   )]
   input_filenames: Vec<PathBuf>,
 
-  #[arg(long, help = crate::args::file_list_arg::ABOUT)]
+  #[arg(long, help = file_list_arg::HELP)]
   file_list: Option<PathBuf>,
 
   #[arg(

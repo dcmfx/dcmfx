@@ -7,6 +7,7 @@ use dcmfx::core::*;
 use dcmfx::json::*;
 use dcmfx::p10::*;
 
+use crate::args::{default_transfer_syntax_arg, file_list_arg};
 use crate::{InputSource, utils};
 
 pub const ABOUT: &str = "Converts DICOM P10 files to DICOM JSON files";
@@ -19,7 +20,7 @@ pub struct ToJsonArgs {
   )]
   input_filenames: Vec<PathBuf>,
 
-  #[arg(long, help = crate::args::file_list_arg::ABOUT)]
+  #[arg(long, help = file_list_arg::HELP)]
   file_list: Option<PathBuf>,
 
   #[arg(
@@ -28,6 +29,13 @@ pub struct ToJsonArgs {
     default_value_t = false
   )]
   ignore_invalid: bool,
+
+  #[arg(
+    long,
+    help = default_transfer_syntax_arg::HELP,
+    value_parser = default_transfer_syntax_arg::validate,
+  )]
+  default_transfer_syntax: Option<&'static TransferSyntax>,
 
   #[arg(
     long,
@@ -154,7 +162,7 @@ fn input_source_to_json(
   input_source: &InputSource,
   output_filename: PathBuf,
   args: &ToJsonArgs,
-  config: DicomJsonConfig,
+  json_config: DicomJsonConfig,
 ) -> Result<(), ToJsonError> {
   let mut input_stream = input_source
     .open_read_stream()
@@ -168,14 +176,16 @@ fn input_source_to_json(
   )
   .map_err(ToJsonError::P10Error)?;
 
+  let read_config =
+    default_transfer_syntax_arg::get_read_config(&args.default_transfer_syntax);
+
   if args.selected_data_elements.is_empty() {
-    // Create P10 read context with max token size to 256 KiB
-    let mut context = P10ReadContext::new(Some(
-      P10ReadConfig::default().max_token_size(256 * 1024),
-    ));
+    // Create P10 read context with a max token size of 256 KiB
+    let mut context =
+      P10ReadContext::new(Some(read_config.max_token_size(256 * 1024)));
 
     // Create transform for converting P10 tokens into bytes of JSON
-    let mut json_transform = P10JsonTransform::new(config);
+    let mut json_transform = P10JsonTransform::new(json_config);
 
     // Get exclusive access to the output stream
     let mut output_stream = output_stream.lock().unwrap();
@@ -221,13 +231,13 @@ fn input_source_to_json(
     let data_set = dcmfx::p10::read_stream_partial(
       &mut input_stream,
       &args.selected_data_elements,
-      None,
+      Some(read_config),
     )
     .map_err(ToJsonError::P10Error)?;
 
     // Convert to DICOM JSON
     let mut dicom_json = data_set
-      .to_json(config)
+      .to_json(json_config)
       .map_err(ToJsonError::JsonSerializeError)?;
 
     if !args.pretty_print {

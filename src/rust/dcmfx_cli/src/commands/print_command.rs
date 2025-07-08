@@ -6,6 +6,7 @@ use dcmfx::core::*;
 use dcmfx::p10::*;
 
 use crate::InputSource;
+use crate::args::{default_transfer_syntax_arg, file_list_arg};
 
 pub const ABOUT: &str = "Prints the content of DICOM P10 files";
 
@@ -17,7 +18,7 @@ pub struct PrintArgs {
   )]
   input_filenames: Vec<PathBuf>,
 
-  #[arg(long, help = crate::args::file_list_arg::ABOUT)]
+  #[arg(long, help = file_list_arg::HELP)]
   file_list: Option<PathBuf>,
 
   #[arg(
@@ -26,6 +27,13 @@ pub struct PrintArgs {
     default_value_t = false
   )]
   ignore_invalid: bool,
+
+  #[arg(
+    long,
+    help = default_transfer_syntax_arg::HELP,
+    value_parser = default_transfer_syntax_arg::validate,
+  )]
+  default_transfer_syntax: Option<&'static TransferSyntax>,
 
   #[arg(
     long,
@@ -61,12 +69,19 @@ pub fn run(args: &mut PrintArgs) -> Result<(), ()> {
     print_options = print_options.styled(styled);
   }
 
+  // Create read context with a small max token size to keep memory usage low.
+  // 256 KiB is also plenty of data to preview the content of data element
+  // values, even if the max output width is very large.
+  let read_config =
+    default_transfer_syntax_arg::get_read_config(&args.default_transfer_syntax)
+      .max_token_size(256 * 1024);
+
   for input_source in input_sources {
     if args.ignore_invalid && !input_source.is_dicom_p10() {
       continue;
     }
 
-    match print_input_source(&input_source, &print_options) {
+    match print_input_source(&input_source, &read_config, &print_options) {
       Ok(()) => (),
 
       Err(e) => {
@@ -82,17 +97,11 @@ pub fn run(args: &mut PrintArgs) -> Result<(), ()> {
 
 fn print_input_source(
   input_source: &InputSource,
+  read_config: &P10ReadConfig,
   print_options: &DataSetPrintOptions,
 ) -> Result<(), P10Error> {
   let mut stream = input_source.open_read_stream()?;
-
-  // Create read context with a small max token size to keep memory usage low.
-  // 256 KiB is also plenty of data to preview the content of data element
-  // values, even if the max output width is very large.
-  let mut context = P10ReadContext::new(Some(
-    P10ReadConfig::default().max_token_size(256 * 1024),
-  ));
-
+  let mut context = P10ReadContext::new(Some(*read_config));
   let mut p10_print_transform = P10PrintTransform::new(print_options);
 
   loop {

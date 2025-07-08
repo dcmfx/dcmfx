@@ -1,3 +1,5 @@
+use dcmfx_core::{TransferSyntax, transfer_syntax};
+
 /// Configuration used when reading DICOM P10 data.
 ///
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -7,6 +9,7 @@ pub struct P10ReadConfig {
   pub(crate) max_sequence_depth: usize,
   pub(crate) require_dicm_prefix: bool,
   pub(crate) require_ordered_data_elements: bool,
+  pub(crate) default_transfer_syntax: &'static TransferSyntax,
 }
 
 impl Default for P10ReadConfig {
@@ -17,6 +20,7 @@ impl Default for P10ReadConfig {
       max_sequence_depth: 10_000,
       require_dicm_prefix: false,
       require_ordered_data_elements: true,
+      default_transfer_syntax: &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
     }
   }
 }
@@ -116,6 +120,20 @@ impl P10ReadConfig {
   ///
   pub fn require_ordered_data_elements(mut self, value: bool) -> Self {
     self.require_ordered_data_elements = value;
+    self
+  }
+
+  /// The transfer syntax to use when reading DICOM P10 data that doesn't
+  /// specify a transfer syntax in its File Meta Information, or doesn't have
+  /// any File Meta Information.
+  ///
+  /// By default this is 'Implicit VR Little Endian'.
+  ///
+  pub fn default_transfer_syntax(
+    mut self,
+    value: &'static TransferSyntax,
+  ) -> Self {
+    self.default_transfer_syntax = value;
     self
   }
 }

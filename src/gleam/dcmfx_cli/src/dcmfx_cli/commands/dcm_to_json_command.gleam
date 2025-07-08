@@ -133,7 +133,7 @@ fn input_source_to_json(
     })
   use output_stream <- result.try(output_stream)
 
-  // Create P10 read context and set max token size to 256 KiB
+  // Create P10 read context with a max token size of 256 KiB
   let context =
     p10_read_config.new()
     |> p10_read_config.max_token_size(256 * 1024)

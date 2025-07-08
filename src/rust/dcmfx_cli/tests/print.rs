@@ -77,3 +77,32 @@ fn with_file_list() {
 
   assert_snapshot!("with_file_list", get_stdout(assert));
 }
+
+#[test]
+fn with_default_transfer_syntax() {
+  let dicom_p10 = std::fs::read(
+    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm",
+  )
+  .unwrap()[0x156..]
+    .to_vec();
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("print")
+    .arg("-")
+    .write_stdin(dicom_p10.clone())
+    .assert()
+    .failure();
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  let assert = cmd
+    .arg("print")
+    .arg("--default-transfer-syntax")
+    .arg("1.2.840.10008.1.2.1")
+    .arg("-")
+    .write_stdin(dicom_p10)
+    .assert()
+    .success();
+
+  assert_snapshot!("with_default_transfer_syntax", get_stdout(assert));
+}

@@ -21,6 +21,7 @@ use crate::mp4_encoder::{
 use crate::{
   InputSource,
   args::{
+    default_transfer_syntax_arg, file_list_arg,
     jpeg_xl_decoder_arg::{self, JpegXlDecoderArg},
     standard_color_palette_arg::StandardColorPaletteArg,
     transform_arg::TransformArg,
@@ -39,7 +40,7 @@ pub struct GetPixelDataArgs {
   )]
   input_filenames: Vec<PathBuf>,
 
-  #[arg(long, help = crate::args::file_list_arg::ABOUT)]
+  #[arg(long, help = file_list_arg::HELP)]
   file_list: Option<PathBuf>,
 
   #[arg(
@@ -48,6 +49,13 @@ pub struct GetPixelDataArgs {
     default_value_t = false
   )]
   ignore_invalid: bool,
+
+  #[arg(
+    long,
+    help = default_transfer_syntax_arg::HELP,
+    value_parser = default_transfer_syntax_arg::validate,
+  )]
+  default_transfer_syntax: Option<&'static TransferSyntax>,
 
   #[arg(
     long,
@@ -388,9 +396,10 @@ fn get_pixel_data_from_input_source(
     .map_err(GetPixelDataError::P10Error)?;
 
   // Create read context with a small max token size to keep memory usage low
-  let mut read_context = P10ReadContext::new(Some(
-    P10ReadConfig::default().max_token_size(1024 * 1024),
-  ));
+  let read_config =
+    default_transfer_syntax_arg::get_read_config(&args.default_transfer_syntax)
+      .max_token_size(1024 * 1024);
+  let mut read_context = P10ReadContext::new(Some(read_config));
 
   let mut p10_pixel_data_frame_transform = P10PixelDataFrameTransform::new();
 

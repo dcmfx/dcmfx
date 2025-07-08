@@ -1,3 +1,4 @@
+import dcmfx_core/transfer_syntax.{type TransferSyntax}
 import gleam/int
 
 /// Configuration used when reading DICOM P10 data.
@@ -9,6 +10,7 @@ pub type P10ReadConfig {
     max_sequence_depth: Int,
     require_dicm_prefix: Bool,
     require_ordered_data_elements: Bool,
+    default_transfer_syntax: TransferSyntax,
   )
 }
 
@@ -21,6 +23,7 @@ pub fn new() -> P10ReadConfig {
     max_sequence_depth: 10_000,
     require_dicm_prefix: False,
     require_ordered_data_elements: True,
+    default_transfer_syntax: transfer_syntax.implicit_vr_little_endian,
   )
 }
 
@@ -121,4 +124,17 @@ pub fn require_ordered_data_elements(
   value: Bool,
 ) -> P10ReadConfig {
   P10ReadConfig(..config, require_ordered_data_elements: value)
+}
+
+/// The transfer syntax to use when reading DICOM P10 data that doesn't
+/// specify a transfer syntax in its File Meta Information, or doesn't have
+/// any File Meta Information.
+///
+/// By default this is 'Implicit VR Little Endian'.
+///
+pub fn default_transfer_syntax(
+  config: P10ReadConfig,
+  value: TransferSyntax,
+) -> P10ReadConfig {
+  P10ReadConfig(..config, default_transfer_syntax: value)
 }
