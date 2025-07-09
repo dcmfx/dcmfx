@@ -1,43 +1,22 @@
-use std::{io::Write, path::PathBuf};
+use std::io::Write;
 
 use clap::Args;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
 
-use crate::InputSource;
-use crate::args::{default_transfer_syntax_arg, file_list_arg};
+use crate::args::input_args::InputSource;
 
 pub const ABOUT: &str = "Prints the content of DICOM P10 files";
 
 #[derive(Args)]
 pub struct PrintArgs {
-  #[arg(
-    help = "DICOM P10 files to print the content of. Specify '-' to read from \
-      stdin."
-  )]
-  input_filenames: Vec<PathBuf>,
-
-  #[arg(long, help = file_list_arg::HELP)]
-  file_list: Option<PathBuf>,
+  #[command(flatten)]
+  input: crate::args::input_args::P10InputArgs,
 
   #[arg(
     long,
-    help = "Whether to ignore input files that don't contain DICOM P10 data.",
-    default_value_t = false
-  )]
-  ignore_invalid: bool,
-
-  #[arg(
-    long,
-    help = default_transfer_syntax_arg::HELP,
-    value_parser = default_transfer_syntax_arg::validate,
-  )]
-  default_transfer_syntax: Option<&'static TransferSyntax>,
-
-  #[arg(
-    long,
-    short,
+    help_heading = "Output",
     help = "The maximum width in characters of the printed output. By default \
       this is set to the width of the active terminal, or 80 characters if the \
       terminal width can't be detected.",
@@ -47,7 +26,7 @@ pub struct PrintArgs {
 
   #[arg(
     long,
-    short,
+    help_heading = "Output",
     help = "Whether to print output using color and bold text. By default this \
       is set based on whether there is an active output terminal that supports \
       colored output."
@@ -56,10 +35,7 @@ pub struct PrintArgs {
 }
 
 pub fn run(args: &mut PrintArgs) -> Result<(), ()> {
-  let input_sources = crate::input_source::create_iterator(
-    &mut args.input_filenames,
-    &args.file_list,
-  );
+  let input_sources = args.input.base.create_iterator();
 
   let mut print_options = DataSetPrintOptions::default();
   if let Some(max_width) = args.max_width {
@@ -72,12 +48,10 @@ pub fn run(args: &mut PrintArgs) -> Result<(), ()> {
   // Create read context with a small max token size to keep memory usage low.
   // 256 KiB is also plenty of data to preview the content of data element
   // values, even if the max output width is very large.
-  let read_config =
-    default_transfer_syntax_arg::get_read_config(&args.default_transfer_syntax)
-      .max_token_size(256 * 1024);
+  let read_config = args.input.p10_read_config().max_token_size(256 * 1024);
 
   for input_source in input_sources {
-    if args.ignore_invalid && !input_source.is_dicom_p10() {
+    if args.input.ignore_invalid && !input_source.is_dicom_p10() {
       continue;
     }
 

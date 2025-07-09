@@ -1,14 +1,31 @@
-use clap::{ValueEnum, builder::PossibleValue};
+use clap::{Args, ValueEnum, builder::PossibleValue};
 
-use dcmfx::pixel_data::decode::JpegXlDecoder;
+use dcmfx::pixel_data::{PixelDataDecodeConfig, decode::JpegXlDecoder};
 
-pub const HELP: &str = "The library to use for decoding JPEG XL pixel data. \
-  The libjxl library is preferred because it is the reference implementation \
-  and is the fastest available decoder. However, WASM builds of DCMfx always \
-  use jxl-oxide and so testing that library via the CLI tool is sometimes \
-  useful.\n\
-  \n\
-  There should not be any difference in output between decoders.";
+#[derive(Args, Debug)]
+pub struct DecoderArgs {
+  #[arg(
+    long,
+    help_heading = "Pixel Data Decoding",
+    help = "The library to use for decoding JPEG XL pixel data. The libjxl \
+      library is preferred because it is the reference implementation and is \
+      the fastest available decoder. However, WASM builds of DCMfx always use \
+      jxl-oxide and so testing that library via the CLI tool is sometimes \
+      useful.\n\
+      \n\
+      There should not be any difference in output between decoders.",
+    default_value_t = JpegXlDecoderArg::LibJxl
+  )]
+  jpeg_xl_decoder: JpegXlDecoderArg,
+}
+
+impl DecoderArgs {
+  pub fn pixel_data_decode_config(&self) -> PixelDataDecodeConfig {
+    PixelDataDecodeConfig {
+      jpeg_xl_decoder: self.jpeg_xl_decoder.into(),
+    }
+  }
+}
 
 /// Enum for specifying the decoder to use for JPEG XL image data.
 ///

@@ -12,10 +12,8 @@ use dcmfx::pixel_data::{
 };
 
 use crate::{
-  InputSource,
   args::{
-    default_transfer_syntax_arg, file_list_arg,
-    jpeg_xl_decoder_arg::{self, JpegXlDecoderArg},
+    input_args::InputSource,
     photometric_interpretation_arg::{
       PhotometricInterpretationColorArg, PhotometricInterpretationMonochromeArg,
     },
@@ -29,44 +27,19 @@ pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
 
 #[derive(Args)]
 pub struct ModifyArgs {
-  #[arg(help = "DICOM P10 files to modify. Specify '-' to read from stdin.")]
-  input_filenames: Vec<PathBuf>,
-
-  #[arg(long, help = file_list_arg::HELP)]
-  file_list: Option<PathBuf>,
-
   #[arg(
     long,
-    help = "Whether to ignore input files that don't contain DICOM P10 data.",
-    default_value_t = false
+    help = "The number of threads to use to perform work.",
+    default_value_t = rayon::current_num_threads()
   )]
-  ignore_invalid: bool,
+  threads: usize,
+
+  #[command(flatten)]
+  input: crate::args::input_args::P10InputArgs,
 
   #[arg(
     long,
-    help = default_transfer_syntax_arg::HELP,
-    value_parser = default_transfer_syntax_arg::validate,
-  )]
-  default_transfer_syntax: Option<&'static TransferSyntax>,
-
-  #[arg(
-    long,
-    short,
-    help = "The name of the DICOM P10 output file. Specify '-' to write to \
-      stdout."
-  )]
-  output_filename: Option<PathBuf>,
-
-  #[arg(
-    long,
-    short = 'd',
-    help = "The directory to write output files into. The names of the output \
-      DICOM P10 files will be the same as the input files."
-  )]
-  output_directory: Option<PathBuf>,
-
-  #[arg(
-    long,
+    help_heading = "Input",
     help = "Whether to modify the input files in place, i.e. overwrite them \
       with the newly modified version rather than write it to a new file.\n\
       \n\
@@ -80,16 +53,73 @@ pub struct ModifyArgs {
 
   #[arg(
     long,
-    help = "The number of threads to use to perform work. Each thread operates \
-      on one input file at a time, so using more threads may improve \
-      performance when processing many input files.\n\
-      \n\
-      When outputting to stdout only one thread can be used.\n\
-      \n\
-      The default thread count is the number of logical CPUs available.",
-    default_value_t = rayon::current_num_threads()
+    short,
+    help_heading = "Output",
+    help = "The name of the DICOM P10 output file. Specify '-' to write to \
+      stdout."
   )]
-  threads: usize,
+  output_filename: Option<PathBuf>,
+
+  #[arg(
+    long,
+    short = 'd',
+    help_heading = "Output",
+    help = "The directory to write output files into. The names of the output \
+      DICOM P10 files will be the same as the input files."
+  )]
+  output_directory: Option<PathBuf>,
+
+  #[arg(
+    long,
+    help_heading = "Output",
+    help = "Overwrite files without prompting",
+    default_value_t = false
+  )]
+  overwrite: bool,
+
+  #[arg(
+    long,
+    help_heading = "Output",
+    help = "The zlib compression level to use when outputting to the 'Deflated \
+      Explicit VR Little Endian' and 'Deflated Image Frame Compression' \
+      transfer syntaxes. The level ranges from 0, meaning no compression, \
+      through to 9, which gives the best compression at the cost of speed.",
+    default_value_t = 6,
+    value_parser = clap::value_parser!(u32).range(0..=9),
+  )]
+  zlib_compression_level: u32,
+
+  #[arg(
+    long = "delete-tag",
+    value_name = "DATA_ELEMENT_TAG",
+    help_heading = "Data Set Content",
+    help = "A data element tag to delete and not include in the output DICOM \
+      P10 file. This argument can be specified multiple times to delete \
+      multiple tags.",
+    value_parser = crate::args::validate_data_element_tag,
+  )]
+  delete_tags: Vec<DataElementTag>,
+
+  #[arg(
+    long,
+    help_heading = "Data Set Content",
+    help = "Whether to anonymize the data set file by removing all patient \
+      data elements, other identifying data elements, as well as private data \
+      elements. Note that this option does not remove any identifying \
+      information that may be baked into the pixel data.",
+    default_value_t = false
+  )]
+  anonymize: bool,
+
+  #[arg(
+    long,
+    help_heading = "Data Set Content",
+    help = "The value of the Implementation Version Name data element in \
+      output DICOM P10 files. The value must conform to the specification of \
+      the SS (Short String) value representation.",
+    default_value_t = uids::DCMFX_IMPLEMENTATION_VERSION_NAME.to_string(),
+  )]
+  implementation_version_name: String,
 
   #[arg(
     long,
@@ -205,59 +235,8 @@ pub struct ModifyArgs {
   )]
   planar_configuration: Option<PlanarConfigurationArg>,
 
-  #[arg(
-    long,
-    help_heading = "Transcoding",
-    help = jpeg_xl_decoder_arg::HELP,
-    default_value_t = JpegXlDecoderArg::LibJxl
-  )]
-  jpeg_xl_decoder: JpegXlDecoderArg,
-
-  #[arg(
-    long,
-    help = "The zlib compression level to use when outputting to the 'Deflated \
-      Explicit VR Little Endian' and 'Deflated Image Frame Compression' \
-      transfer syntaxes. The level ranges from 0, meaning no compression, \
-      through to 9, which gives the best compression at the cost of speed.",
-    default_value_t = 6,
-    value_parser = clap::value_parser!(u32).range(0..=9),
-  )]
-  zlib_compression_level: u32,
-
-  #[arg(
-    long,
-    help = "Whether to anonymize the output DICOM P10 file by removing all \
-      patient data elements, other identifying data elements, as well as \
-      private data elements. Note that this option does not remove any \
-      identifying information that may be baked into the pixel data.",
-    default_value_t = false
-  )]
-  anonymize: bool,
-
-  #[arg(
-    long,
-    help = "A data element tag to delete and not include in the output DICOM \
-      P10 file. This argument can be specified multiple times to delete \
-      multiple tags.",
-    value_parser = crate::args::validate_data_element_tag,
-  )]
-  delete_tag: Vec<DataElementTag>,
-
-  #[arg(
-    long,
-    help = "Overwrite files without prompting",
-    default_value_t = false
-  )]
-  overwrite: bool,
-
-  #[arg(
-    long,
-    help = "The value of the Implementation Version Name data element in \
-      output DICOM P10 files. The value must conform to the specification of \
-      the SS (Short String) value representation.",
-    default_value_t = uids::DCMFX_IMPLEMENTATION_VERSION_NAME.to_string(),
-  )]
-  implementation_version_name: String,
+  #[command(flatten)]
+  decoder: crate::args::decoder_args::DecoderArgs,
 }
 
 enum ModifyCommandError {
@@ -314,14 +293,11 @@ pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
 
   crate::validate_output_args(&args.output_filename, &args.output_directory);
 
-  let input_sources = crate::input_source::create_iterator(
-    &mut args.input_filenames,
-    &args.file_list,
-  );
+  let input_sources = args.input.base.create_iterator();
 
   let result = utils::create_thread_pool(args.threads).install(move || {
     input_sources.par_bridge().try_for_each(|input_source| {
-      if args.ignore_invalid && !input_source.is_dicom_p10() {
+      if args.input.ignore_invalid && !input_source.is_dicom_p10() {
         return Ok(());
       }
 
@@ -406,7 +382,7 @@ fn modify_input_source(
     };
 
   // Create a filter transform for anonymization and tag deletion if needed
-  let tags_to_delete = args.delete_tag.clone();
+  let tags_to_delete = args.delete_tags.clone();
   let anonymize = args.anonymize;
   let filter_transform = if anonymize || !tags_to_delete.is_empty() {
     Some(P10FilterTransform::new(Box::new(
@@ -713,10 +689,7 @@ fn streaming_rewrite(
   let mut output_stream = output_stream.lock().unwrap();
 
   // Create read and write contexts
-  let read_config =
-    default_transfer_syntax_arg::get_read_config(&args.default_transfer_syntax)
-      .max_token_size(256 * 1024);
-
+  let read_config = args.input.p10_read_config().max_token_size(256 * 1024);
   let mut p10_read_context = P10ReadContext::new(Some(read_config));
   let mut p10_write_context = P10WriteContext::new(Some(write_config));
 
@@ -743,9 +716,8 @@ fn streaming_rewrite(
                 .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
             });
 
-          let pixel_data_decode_config = PixelDataDecodeConfig {
-            jpeg_xl_decoder: args.jpeg_xl_decoder.into(),
-          };
+          let pixel_data_decode_config =
+            args.decoder.pixel_data_decode_config();
 
           let mut pixel_data_encode_config = PixelDataEncodeConfig::default();
           pixel_data_encode_config.set_quality(args.quality.unwrap_or(85));

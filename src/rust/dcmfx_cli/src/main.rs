@@ -2,7 +2,6 @@
 
 mod args;
 mod commands;
-mod input_source;
 mod mp4_encoder;
 mod utils;
 
@@ -14,7 +13,6 @@ use commands::{
   dcm_to_json_command, get_pixel_data_command, json_to_dcm_command,
   list_command, modify_command, print_command,
 };
-use input_source::InputSource;
 
 #[derive(Parser)]
 #[command(

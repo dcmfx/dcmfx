@@ -19,10 +19,8 @@ use crate::mp4_encoder::{
   Mp4PixelFormat, ResizeFilter,
 };
 use crate::{
-  InputSource,
   args::{
-    default_transfer_syntax_arg, file_list_arg,
-    jpeg_xl_decoder_arg::{self, JpegXlDecoderArg},
+    input_args::InputSource,
     standard_color_palette_arg::StandardColorPaletteArg,
     transform_arg::TransformArg,
   },
@@ -35,31 +33,19 @@ pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
 #[derive(Args)]
 pub struct GetPixelDataArgs {
   #[arg(
-    help = "DICOM P10 files to extract pixel data from.  Specify '-' to read \
-      from stdin."
-  )]
-  input_filenames: Vec<PathBuf>,
-
-  #[arg(long, help = file_list_arg::HELP)]
-  file_list: Option<PathBuf>,
-
-  #[arg(
     long,
-    help = "Whether to ignore input files that don't contain DICOM P10 data.",
-    default_value_t = false
+    help = "The number of threads to use to perform work.",
+    default_value_t = rayon::current_num_threads()
   )]
-  ignore_invalid: bool,
+  threads: usize,
 
-  #[arg(
-    long,
-    help = default_transfer_syntax_arg::HELP,
-    value_parser = default_transfer_syntax_arg::validate,
-  )]
-  default_transfer_syntax: Option<&'static TransferSyntax>,
+  #[command(flatten)]
+  input: crate::args::input_args::P10InputArgs,
 
   #[arg(
     long,
     short = 'd',
+    help_heading = "Output",
     help = "The directory to write output files into. The names of the output \
       files will be the name of the input file suffixed with a 4-digit frame \
       number, and an appropriate file extension."
@@ -68,19 +54,16 @@ pub struct GetPixelDataArgs {
 
   #[arg(
     long,
-    help = "The number of threads to use to perform work. Each thread operates \
-      on one input file at a time, so using more threads may improve \
-      performance when processing many input files.\n\
-      \n\
-      The default thread count is the number of logical CPUs available.",
-    default_value_t = rayon::current_num_threads()
+    help = "Overwrite files without prompting.",
+    default_value_t = false
   )]
-  threads: usize,
+  overwrite: bool,
 
   #[arg(
     long,
     short,
     value_enum,
+    help_heading = "Output",
     help = "The output format for the pixel data.",
     default_value_t = OutputFormat::Raw
   )]
@@ -88,6 +71,7 @@ pub struct GetPixelDataArgs {
 
   #[arg(
     long,
+    help_heading = "Output",
     help = "When the output format is not 'raw', specifies a transform to \
       apply to the frames of image data."
   )]
@@ -98,6 +82,7 @@ pub struct GetPixelDataArgs {
     num_args=2..=2,
     value_parser = clap::value_parser!(u32),
     value_names = ["WIDTH", "HEIGHT"],
+    help_heading = "Output",
     help = "When the output format is not 'raw', specifies the resolution of \
       output images and videos. If either width or height is zero then it is \
       calculated automatically such that the input aspect ratio is preserved.\n\
@@ -109,6 +94,7 @@ pub struct GetPixelDataArgs {
 
   #[arg(
     long,
+    help_heading = "Output",
     help = "The filter to use when resizing images.",
     default_value_t = ResizeFilter::Lanczos3
   )]
@@ -116,6 +102,7 @@ pub struct GetPixelDataArgs {
 
   #[arg(
     long,
+    help_heading = "Output",
     help = "When the output format is 'jpg', specifies the quality level in \
       the range 1-100.",
     default_value_t = 85,
@@ -199,6 +186,7 @@ pub struct GetPixelDataArgs {
     num_args=2..=2,
     value_parser = clap::value_parser!(f32),
     value_names = ["WINDOW_CENTER", "WINDOW_WIDTH"],
+    help_heading = "Output",
     help = "For grayscale DICOM P10 files, when the output format is 'jpg' or \
       'png', specifies a VOI LUT's window center and width to use instead of \
       the VOI LUT specified in the input DICOM file."
@@ -208,6 +196,7 @@ pub struct GetPixelDataArgs {
   #[arg(
     long,
     value_enum,
+    help_heading = "Output",
     help = "For grayscale DICOM P10 files, when the output format is 'jpg' or \
       'png', specifies the well-known color palette to apply to visualize the \
       grayscale image in color."
@@ -216,6 +205,7 @@ pub struct GetPixelDataArgs {
 
   #[arg(
     long = "overlays",
+    help_heading = "Output",
     help = "Whether to render overlays present in the DICOM. Overlays are \
       rendered on top of the pixel data. Each overlay is rendered using a \
       different color",
@@ -223,20 +213,8 @@ pub struct GetPixelDataArgs {
   )]
   render_overlays: bool,
 
-  #[arg(
-    long,
-    help = "Overwrite files without prompting.",
-    default_value_t = false
-  )]
-  overwrite: bool,
-
-  #[arg(
-    long,
-    help_heading = "Transcoding",
-    help = jpeg_xl_decoder_arg::HELP,
-    default_value_t = JpegXlDecoderArg::LibJxl
-  )]
-  jpeg_xl_decoder: JpegXlDecoderArg,
+  #[command(flatten)]
+  decoder: crate::args::decoder_args::DecoderArgs,
 }
 
 impl GetPixelDataArgs {
@@ -324,14 +302,11 @@ enum GetPixelDataError {
 pub fn run(args: &mut GetPixelDataArgs) -> Result<(), ()> {
   crate::validate_output_args(&None, &args.output_directory);
 
-  let input_sources = crate::input_source::create_iterator(
-    &mut args.input_filenames,
-    &args.file_list,
-  );
+  let input_sources = args.input.base.create_iterator();
 
   let result = utils::create_thread_pool(args.threads).install(move || {
     input_sources.par_bridge().try_for_each(|input_source| {
-      if args.ignore_invalid && !input_source.is_dicom_p10() {
+      if args.input.ignore_invalid && !input_source.is_dicom_p10() {
         return Ok(());
       }
 
@@ -393,9 +368,7 @@ fn get_pixel_data_from_input_source(
     .map_err(GetPixelDataError::P10Error)?;
 
   // Create read context with a small max token size to keep memory usage low
-  let read_config =
-    default_transfer_syntax_arg::get_read_config(&args.default_transfer_syntax)
-      .max_token_size(1024 * 1024);
+  let read_config = args.input.p10_read_config().max_token_size(1024 * 1024);
   let mut read_context = P10ReadContext::new(Some(read_config));
 
   let mut p10_pixel_data_frame_transform = P10PixelDataFrameTransform::new();
@@ -491,8 +464,8 @@ fn get_pixel_data_from_input_source(
         if args.format == OutputFormat::Mp4 {
           let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
 
-          pixel_data_renderer.decode_config.jpeg_xl_decoder =
-            args.jpeg_xl_decoder.into();
+          pixel_data_renderer.decode_config =
+            args.decoder.pixel_data_decode_config();
 
           let cine_module = cine_module_transform
             .as_ref()

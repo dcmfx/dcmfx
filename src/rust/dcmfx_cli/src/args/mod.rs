@@ -1,8 +1,7 @@
 use dcmfx::core::DataElementTag;
 
-pub mod default_transfer_syntax_arg;
-pub mod file_list_arg;
-pub mod jpeg_xl_decoder_arg;
+pub mod decoder_args;
+pub mod input_args;
 pub mod photometric_interpretation_arg;
 pub mod planar_configuration_arg;
 pub mod standard_color_palette_arg;

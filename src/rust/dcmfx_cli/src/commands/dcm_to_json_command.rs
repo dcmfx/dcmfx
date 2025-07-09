@@ -7,39 +7,26 @@ use dcmfx::core::*;
 use dcmfx::json::*;
 use dcmfx::p10::*;
 
-use crate::args::{default_transfer_syntax_arg, file_list_arg};
-use crate::{InputSource, utils};
+use crate::{args::input_args::InputSource, utils};
 
 pub const ABOUT: &str = "Converts DICOM P10 files to DICOM JSON files";
 
 #[derive(Args)]
 pub struct ToJsonArgs {
   #[arg(
-    help = "DICOM P10 files to convert to DICOM JSON files. Specify '-' to \
-      read from stdin."
-  )]
-  input_filenames: Vec<PathBuf>,
-
-  #[arg(long, help = file_list_arg::HELP)]
-  file_list: Option<PathBuf>,
-
-  #[arg(
     long,
-    help = "Whether to ignore input files that don't contain DICOM P10 data.",
-    default_value_t = false
+    help = "The number of threads to use to perform work.",
+    default_value_t = rayon::current_num_threads()
   )]
-  ignore_invalid: bool,
+  threads: usize,
 
-  #[arg(
-    long,
-    help = default_transfer_syntax_arg::HELP,
-    value_parser = default_transfer_syntax_arg::validate,
-  )]
-  default_transfer_syntax: Option<&'static TransferSyntax>,
+  #[command(flatten)]
+  input: crate::args::input_args::P10InputArgs,
 
   #[arg(
     long,
     short,
+    help_heading = "Output",
     help = "The name of the DICOM JSON output file. By default the output \
       DICOM JSON file is the name of the input file with '.json' appended. \
       Specify '-' to write to stdout."
@@ -49,6 +36,7 @@ pub struct ToJsonArgs {
   #[arg(
     long,
     short = 'd',
+    help_heading = "Output",
     help = "The directory to write output files into. The names of the output \
       DICOM JSON files will be the name of the input file with '.json' \
       appended."
@@ -57,19 +45,15 @@ pub struct ToJsonArgs {
 
   #[arg(
     long,
-    help = "The number of threads to use to perform work. Each thread operates \
-      on one input file at a time, so using more threads may improve \
-      performance when processing many input files.\n\
-      \n\
-      When outputting to stdout only one thread can be used.\n\
-      \n\
-      The default thread count is the number of logical CPUs available.",
-    default_value_t = rayon::current_num_threads()
+    help_heading = "Output",
+    help = "Overwrite files without prompting",
+    default_value_t = false
   )]
-  threads: usize,
+  overwrite: bool,
 
   #[arg(
     long = "pretty",
+    help_heading = "Output",
     help = "Whether to format the DICOM JSON for readability with newlines and \
       indentation",
     default_value_t = false
@@ -78,6 +62,7 @@ pub struct ToJsonArgs {
 
   #[arg(
     long,
+    help_heading = "Output",
     help = "Whether to extend DICOM JSON to store encapsulated pixel data as \
       inline binaries. This is a common extension to the DICOM JSON standard.",
     default_value_t = true
@@ -85,18 +70,13 @@ pub struct ToJsonArgs {
   store_encapsulated_pixel_data: bool,
 
   #[arg(
-    long,
-    help = "Overwrite files without prompting",
-    default_value_t = false
-  )]
-  overwrite: bool,
-
-  #[arg(
     long = "select",
+    value_name = "DATA_ELEMENT_TAG",
+    help_heading = "Output",
     help = "The tags of the root data elements to include in the output DICOM \
       JSON. This allows for a subset of data elements to be emitted, rather \
-      than the whole data set. Specify this argument multiple times to include \
-      more than one data element in the output.",
+      than the whole data set. This argument can be specified multiple times \
+      to include multiple data elements in the output.",
     value_parser = crate::args::validate_data_element_tag,
   )]
   selected_data_elements: Vec<DataElementTag>,
@@ -110,10 +90,7 @@ enum ToJsonError {
 pub fn run(args: &mut ToJsonArgs) -> Result<(), ()> {
   crate::validate_output_args(&args.output_filename, &args.output_directory);
 
-  let input_sources = crate::input_source::create_iterator(
-    &mut args.input_filenames,
-    &args.file_list,
-  );
+  let input_sources = args.input.base.create_iterator();
 
   let config = DicomJsonConfig {
     pretty_print: args.pretty_print,
@@ -122,7 +99,7 @@ pub fn run(args: &mut ToJsonArgs) -> Result<(), ()> {
 
   let result = utils::create_thread_pool(args.threads).install(move || {
     input_sources.par_bridge().try_for_each(|input_source| {
-      if args.ignore_invalid && !input_source.is_dicom_p10() {
+      if args.input.ignore_invalid && !input_source.is_dicom_p10() {
         return Ok(());
       }
 
@@ -176,8 +153,7 @@ fn input_source_to_json(
   )
   .map_err(ToJsonError::P10Error)?;
 
-  let read_config =
-    default_transfer_syntax_arg::get_read_config(&args.default_transfer_syntax);
+  let read_config = args.input.p10_read_config();
 
   if args.selected_data_elements.is_empty() {
     // Create P10 read context with a max token size of 256 KiB

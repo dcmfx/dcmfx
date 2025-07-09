@@ -7,24 +7,26 @@ use dcmfx::core::*;
 use dcmfx::json::*;
 use dcmfx::p10::*;
 
-use crate::{InputSource, args::file_list_arg, utils};
+use crate::{args::input_args::InputSource, utils};
 
 pub const ABOUT: &str = "Converts DICOM JSON files to DICOM P10 files";
 
 #[derive(Args)]
 pub struct ToDcmArgs {
   #[arg(
-    help = "DICOM JSON files to convert to DICOM P10 files. Specify '-' to \
-      read from stdin."
+    long,
+    help = "The number of threads to use to perform work.",
+    default_value_t = rayon::current_num_threads()
   )]
-  input_filenames: Vec<PathBuf>,
+  threads: usize,
 
-  #[arg(long, help = file_list_arg::HELP)]
-  file_list: Option<PathBuf>,
+  #[command(flatten)]
+  input: crate::args::input_args::BaseInputArgs,
 
   #[arg(
     long,
     short,
+    help_heading = "Output",
     help = "The name of the DICOM P10 output file. By default the output \
       DICOM P10 file is the name of the input file with '.dcm' appended. \
       Specify '-' to write to stdout."
@@ -34,6 +36,7 @@ pub struct ToDcmArgs {
   #[arg(
     long,
     short = 'd',
+    help_heading = "Output",
     help = "The directory to write output files into. The names of the output \
       DICOM P10 files will be the name of the input file with '.dcm' \
       appended."
@@ -42,19 +45,7 @@ pub struct ToDcmArgs {
 
   #[arg(
     long,
-    help = "The number of threads to use to perform work. Each thread operates \
-      on one input file at a time, so using more threads may improve \
-      performance when processing many input files.\n\
-      \n\
-      When outputting to stdout only one thread can be used.\n\
-      \n\
-      The default thread count is the number of logical CPUs available.",
-    default_value_t = rayon::current_num_threads()
-  )]
-  threads: usize,
-
-  #[arg(
-    long,
+    help_heading = "Output",
     help = "Overwrite files without prompting",
     default_value_t = false
   )]
@@ -62,6 +53,7 @@ pub struct ToDcmArgs {
 
   #[arg(
     long,
+    help_heading = "Output",
     help = "The value of the Implementation Version Name data element in \
       output DICOM P10 files. The value must conform to the specification of \
       the SS (Short String) value representation.",
@@ -78,10 +70,7 @@ enum ToDcmError {
 pub fn run(args: &mut ToDcmArgs) -> Result<(), ()> {
   crate::validate_output_args(&args.output_filename, &args.output_directory);
 
-  let input_sources = crate::input_source::create_iterator(
-    &mut args.input_filenames,
-    &args.file_list,
-  );
+  let input_sources = args.input.create_iterator();
 
   let result = utils::create_thread_pool(args.threads).install(move || {
     input_sources.par_bridge().try_for_each(|input_source| {
