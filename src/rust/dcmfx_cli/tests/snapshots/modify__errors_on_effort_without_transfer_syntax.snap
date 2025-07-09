@@ -4,4 +4,3 @@ expression: get_stderr(assert)
 snapshot_kind: text
 ---
 Error: The --effort option is only valid when --transfer-syntax is specified
-Error: ()

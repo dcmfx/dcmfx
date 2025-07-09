@@ -94,6 +94,13 @@ pub fn create_iterator(
   input_filenames: &mut Vec<PathBuf>,
   file_list: &Option<PathBuf>,
 ) -> Box<dyn Iterator<Item = InputSource> + Send> {
+  if input_filenames.is_empty() && file_list.is_none() {
+    eprintln!(
+      "Error: No inputs specified. Pass --help for usage instructions."
+    );
+    std::process::exit(1);
+  }
+
   // Create iterator over the input filenames, expanding them if they are glob
   // patterns
   let iter =

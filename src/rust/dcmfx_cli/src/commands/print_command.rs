@@ -13,7 +13,7 @@ pub const ABOUT: &str = "Prints the content of DICOM P10 files";
 #[derive(Args)]
 pub struct PrintArgs {
   #[arg(
-    help = "DICOM P10 files to print the content of. Specify '-' to read from
+    help = "DICOM P10 files to print the content of. Specify '-' to read from \
       stdin."
   )]
   input_filenames: Vec<PathBuf>,

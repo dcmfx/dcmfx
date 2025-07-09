@@ -21,7 +21,10 @@ pub const ABOUT: &str = "Lists DICOM P10 files in one or more directories";
 
 #[derive(Args)]
 pub struct ListArgs {
-  #[arg(help = "Directories to recursively search for DICOM P10 files.")]
+  #[arg(
+    required = true,
+    help = "Directories to recursively search for DICOM P10 files."
+  )]
   directories: Vec<PathBuf>,
 
   #[arg(

@@ -57,7 +57,7 @@ enum Commands {
   List(list_command::ListArgs),
 }
 
-fn main() -> Result<(), ()> {
+fn main() {
   let cli = Cli::parse();
 
   let started_at = std::time::Instant::now();
@@ -86,7 +86,9 @@ fn main() -> Result<(), ()> {
     eprintln!("Peak memory usage: {:.0} MiB", peak_memory_mb);
   }
 
-  r
+  if r.is_err() {
+    std::process::exit(1);
+  }
 }
 
 #[cfg(not(windows))]
