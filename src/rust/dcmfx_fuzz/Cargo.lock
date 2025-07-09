@@ -356,8 +356,12 @@ dependencies = [
 
 [[package]]
 name = "jpeg-decoder"
-version = "0.3.1"
-source = "git+https://github.com/image-rs/jpeg-decoder.git?rev=95550d7#95550d7eec747b94b5f9beba3be2c6fcb1f4f70e"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00810f1d8b74be64b13dbf3db89ac67740615d6c891f0e7b6179326533011a07"
+dependencies = [
+ "rayon",
+]
 
 [[package]]
 name = "jpeg-encoder"

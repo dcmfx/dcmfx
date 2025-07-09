@@ -53,7 +53,11 @@ pub fn image_matches_snapshot<P: AsRef<std::path::Path>>(
   if image_1.width() != image_2.width() || image_1.height() != image_2.height()
   {
     return Err(format!(
-      "Image dimensions don't match snapshot. {}",
+      "Image dimensions ({}x{}) don't match snapshot ({}x{}). {}",
+      image_1.width(),
+      image_1.height(),
+      image_2.width(),
+      image_2.height(),
       copy_command
     ));
   }

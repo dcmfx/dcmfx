@@ -17,7 +17,7 @@ dcmfx_core = { path = "../dcmfx_core", default-features = false }
 dcmfx_p10 = { path = "../dcmfx_p10", default-features = false }
 flate2 = "1.1.1"
 image = { version = "0.25.6", default-features = false, features = ["jpeg"] }
-jpeg-decoder = { git = "https://github.com/image-rs/jpeg-decoder.git", rev = "95550d7", default-features = false }
+jpeg-decoder = "0.3.2"
 jpeg-encoder = "0.6.1"
 jxl-oxide = "0.12.2"
 miniz_oxide = "0.8.8"
