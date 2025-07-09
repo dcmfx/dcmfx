@@ -115,14 +115,12 @@ Options:
    dcmfx get-pixel-data input.dcm
    ```
 
-   Each frame of pixel data can be converted to PNG, 16-bit PNG, JPEG, or WebP
-   Lossless images:
+   Each frame of pixel data can be converted to PNG, 16-bit PNG, or JPEG images:
 
    ```sh
    dcmfx get-pixel-data input.dcm --format png
    dcmfx get-pixel-data input.dcm --format png16
    dcmfx get-pixel-data input.dcm --format jpg --jpeg-quality 90
-   dcmfx get-pixel-data input.dcm --format webp
    ```
 
    For monochrome pixel data, a VOI window center and width and/or a well-known

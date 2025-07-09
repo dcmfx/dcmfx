@@ -251,25 +251,6 @@ fn missing_voi_lut_to_png() {
 }
 
 #[test]
-fn jpg_to_webp() {
-  let dicom_file = "../../../test/assets/fo-dicom/GH538-jpeg1.dcm";
-  let output_file = format!("{}.0000.webp", dicom_file);
-
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  cmd
-    .arg("get-pixel-data")
-    .arg(dicom_file)
-    .arg("--overwrite")
-    .arg("-f")
-    .arg("webp")
-    .assert()
-    .success()
-    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
-
-  assert_image_snapshot!(output_file, "jpg_to_webp.webp");
-}
-
-#[test]
 fn palette_color_to_png() {
   let dicom_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
@@ -896,7 +877,7 @@ fn single_bit_unaligned_to_mp4_h265() {
 fn render_overlays_and_rotate90() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/examples_overlay.dcm";
-  let output_file = format!("{}.0000.webp", dicom_file);
+  let output_file = format!("{}.0000.png", dicom_file);
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
@@ -904,7 +885,7 @@ fn render_overlays_and_rotate90() {
     .arg(dicom_file)
     .arg("--overwrite")
     .arg("-f")
-    .arg("webp")
+    .arg("png16")
     .arg("--overlays")
     .arg("--transform")
     .arg("rotate90")
@@ -912,7 +893,7 @@ fn render_overlays_and_rotate90() {
     .success()
     .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
 
-  assert_image_snapshot!(output_file, "render_overlays_and_rotate90.webp");
+  assert_image_snapshot!(output_file, "render_overlays_and_rotate90.png");
 }
 
 #[test]
@@ -927,7 +908,7 @@ fn render_overlays_and_flip_horizontal() {
     .arg(dicom_file)
     .arg("--overwrite")
     .arg("-f")
-    .arg("png")
+    .arg("png16")
     .arg("--overlays")
     .arg("--transform")
     .arg("flip-horizontal")

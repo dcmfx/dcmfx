@@ -62,7 +62,7 @@ pub fn error_if_exists(path: &Path) {
   }
 
   eprintln!(
-    "Error: Output file \"{}\" already exists. Specify --overwrite to
+    "Error: Output file \"{}\" already exists.\n\nHint: Specify --overwrite to \
      automatically overwrite existing files",
     path.display()
   );

@@ -309,9 +309,6 @@ enum OutputFormat {
   /// codec, quality, preset, and other settings can be controlled with the
   /// --mp4-* arguments.
   Mp4,
-
-  /// Decodes the pixel data and writes each frame to a lossless WebP image.
-  Webp,
 }
 
 #[allow(clippy::enum_variant_names)]
@@ -430,7 +427,6 @@ fn get_pixel_data_from_input_source(
     OutputFormat::Png | OutputFormat::Png16 => ".png",
     OutputFormat::Jpg => ".jpg",
     OutputFormat::Mp4 => ".mp4",
-    OutputFormat::Webp => ".webp",
   };
 
   let mut mp4_encoder: Option<Mp4Encoder> = None;
@@ -596,19 +592,6 @@ fn write_frame_to_image_file(
       )
       .encode_image(&image)
       .map_err(GetPixelDataError::ImageError)?,
-
-      OutputFormat::Webp => {
-        let image = image.into_rgb8();
-
-        image::codecs::webp::WebPEncoder::new_lossless(&mut output_writer)
-          .encode(
-            &image,
-            image.width(),
-            image.height(),
-            image::ExtendedColorType::Rgb8,
-          )
-          .map_err(GetPixelDataError::ImageError)?
-      }
 
       OutputFormat::Raw | OutputFormat::Mp4 => unreachable!(),
     }

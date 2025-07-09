@@ -28,4 +28,3 @@ erl_crash.dump
 /test/assets/**/*.mp4
 /test/assets/**/*.png
 /test/assets/**/*.validation_failure.*
-/test/assets/**/*.webp
