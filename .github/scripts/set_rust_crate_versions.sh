@@ -1,5 +1,3 @@
-#!/bin/sh
-
 set -e
 
 echo "Updating version in Cargo.toml files …"

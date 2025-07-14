@@ -1,6 +1,4 @@
-#!/bin/sh
-
-set -e
+set -euo pipefail
 
 echo "Updating version in gleam.toml files …"
 find src/gleam -name "gleam.toml" -exec sed -i'' -E "s/^version = \".*\"$/version = \"$1\"/" {} +

@@ -1,8 +1,6 @@
-#!/bin/sh
-#
 # Runs all examples in this directory to check they work.
 
-set -e
+set -euo pipefail
 
 cargo fmt --check
 cargo clippy -- --deny warnings

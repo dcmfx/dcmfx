@@ -1,8 +1,6 @@
-#!/bin/sh
-#
 # Runs the tests for all dcmfx_* libraries in this directory,
 
-set -e
+set -euo pipefail
 
 for dir in dcmfx_*; do
   echo ""
@@ -11,7 +9,7 @@ for dir in dcmfx_*; do
   cd "$dir"
   gleam format --check
 
-  if [[ "$dir" != "dcmfx_cli" ]]; then
+  if [ "$dir" != "dcmfx_cli" ]; then
     gleam test --target erlang
     gleam test --target javascript --runtime node
     gleam test --target javascript --runtime deno
