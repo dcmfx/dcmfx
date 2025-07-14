@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 mod utils;
 
 use assert_cmd::Command;
@@ -789,12 +791,14 @@ fn render_overlays_multiframe_unaligned() {
 fn single_bit_unaligned_to_mp4_h264() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm";
-  let output_file = format!("{}.mp4", dicom_file);
+  let (output_file, output_directory) = prepare_outputs(dicom_file, ".mp4");
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--output-directory")
+    .arg(&output_directory)
     .arg("--overwrite")
     .arg("-f")
     .arg("mp4")
@@ -824,14 +828,7 @@ fn single_bit_unaligned_to_mp4_h264() {
 fn single_bit_unaligned_to_mp4_h265() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm";
-
-  let output_directory = generate_temp_filename();
-  std::fs::create_dir(&output_directory).unwrap();
-
-  let output_filename = format!(
-    "{0}/liver_nonbyte_aligned.dcm.mp4",
-    output_directory.display()
-  );
+  let (output_file, output_directory) = prepare_outputs(dicom_file, ".mp4");
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
@@ -854,13 +851,10 @@ fn single_bit_unaligned_to_mp4_h265() {
     .arg("2")
     .assert()
     .success()
-    .stdout(format!(
-      "Writing \"{0}\" …\n",
-      to_native_path(&output_filename),
-    ));
+    .stdout(format!("Writing \"{0}\" …\n", to_native_path(&output_file),));
 
   assert_eq!(
-    get_video_stream_details(&output_filename),
+    get_video_stream_details(&output_file),
     Ok(VideoStreamDetails {
       codec_name: "hevc".to_string(),
       profile: "Rext".to_string(),
@@ -877,12 +871,15 @@ fn single_bit_unaligned_to_mp4_h265() {
 fn render_overlays_and_rotate90() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/examples_overlay.dcm";
-  let output_file = format!("{}.0000.png", dicom_file);
+  let (output_file, output_directory) =
+    prepare_outputs(dicom_file, ".0000.png");
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--output-directory")
+    .arg(output_directory)
     .arg("--overwrite")
     .arg("-f")
     .arg("png16")
@@ -900,12 +897,15 @@ fn render_overlays_and_rotate90() {
 fn render_overlays_and_flip_horizontal() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/examples_overlay.dcm";
-  let output_file = format!("{}.0000.png", dicom_file);
+  let (output_file, output_directory) =
+    prepare_outputs(dicom_file, ".0000.png");
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--output-directory")
+    .arg(output_directory)
     .arg("--overwrite")
     .arg("-f")
     .arg("png16")
@@ -955,6 +955,30 @@ fn with_output_directory() {
       to_native_path(&output_files[2]),
       to_native_path(&output_files[3])
     ));
+}
+
+/// For a given input file, returns a newly created temporary output directory
+/// and the path to the output file in that directory for the input file.
+///
+/// This ensures test outputs don't conflict when run in parallel.
+///
+fn prepare_outputs(
+  input_file: &str,
+  output_file_suffix: &str,
+) -> (String, PathBuf) {
+  let input_file = std::path::PathBuf::from(input_file);
+
+  let output_directory = generate_temp_filename();
+  std::fs::create_dir(&output_directory).unwrap();
+
+  let output_file = format!(
+    "{}/{}{}",
+    output_directory.display(),
+    input_file.file_name().unwrap().display(),
+    output_file_suffix
+  );
+
+  (output_file, output_directory)
 }
 
 /// Returns details on the video stream of a video file.
