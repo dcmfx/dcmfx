@@ -299,8 +299,7 @@ impl PreferredPlaybackSequencing {
       1 => Ok(Some(Self::Sweeping)),
       value => Err(
         DataError::new_value_invalid(format!(
-          "Preferred playback sequencing value of '{}' is invalid",
-          value
+          "Preferred playback sequencing value of '{value}' is invalid"
         ))
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),

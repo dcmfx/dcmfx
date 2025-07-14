@@ -62,8 +62,7 @@ fn parse_person_name_string(
 
   if component_group_count > 3 {
     return Err(DataError::new_value_invalid(format!(
-      "PersonName has too many component groups: {}",
-      component_group_count
+      "PersonName has too many component groups: {component_group_count}"
     )));
   }
 

@@ -251,7 +251,7 @@ impl BaseInputArgs {
         }
       }
       Err(e) => {
-        eprintln!("Error: Failed reading file list, details: {}", e);
+        eprintln!("Error: Failed reading file list, details: {e}");
         std::process::exit(1);
       }
     });

@@ -26,8 +26,7 @@ pub fn from_bytes(bytes: &[u8]) -> Result<Vec<i32>, DataError> {
     .collect::<Result<Vec<i32>, _>>()
     .map_err(|_| {
       DataError::new_value_invalid(format!(
-        "IntegerString is invalid: '{}'",
-        integer_string
+        "IntegerString is invalid: '{integer_string}'"
       ))
     })
 }

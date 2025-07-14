@@ -718,8 +718,7 @@ impl P10ReadContext {
           .map_err(|_| P10Error::DataInvalid {
             when: "Reading data element header".to_string(),
             details: format!(
-              "Data element '{}' is not valid for the current path",
-              header
+              "Data element '{header}' is not valid for the current path"
             ),
             path: self.path.clone(),
             offset: self.stream.bytes_read(),
@@ -763,7 +762,7 @@ impl P10ReadContext {
 
       (_, _, _) => Err(P10Error::DataInvalid {
         when: "Reading data element header".to_string(),
-        details: format!("Invalid data element '{}'", header),
+        details: format!("Invalid data element '{header}'"),
         path: self.path.clone(),
         offset: self.stream.bytes_read(),
       }),
@@ -848,8 +847,8 @@ impl P10ReadContext {
       return Err(P10Error::DataInvalid {
         when: "Reading data element header".to_string(),
         details: format!(
-          "File Meta Information data element '{}' found in the main data set",
-          tag
+          "File Meta Information data element '{tag}' found in the main data \
+           set"
         ),
         path: DataSetPath::new_with_data_element(tag),
         offset: self.stream.bytes_read(),
@@ -882,7 +881,7 @@ impl P10ReadContext {
       .check_data_element_ordering(header.tag)
       .map_err(|_| P10Error::DataInvalid {
         when: "Reading data element header".to_string(),
-        details: format!("Data element '{}' is not in ascending order", header),
+        details: format!("Data element '{header}' is not in ascending order"),
         path: self.path.clone(),
         offset: self.stream.bytes_read(),
       })
@@ -1144,10 +1143,8 @@ impl P10ReadContext {
       }
 
       Err(e) => {
-        let when = format!(
-          "Reading {} data element value bytes, VR: {}",
-          bytes_to_read, vr
-        );
+        let when =
+          format!("Reading {bytes_to_read} data element value bytes, VR: {vr}");
 
         Err(self.map_byte_stream_error(e, &when))
       }
@@ -1271,7 +1268,7 @@ impl P10ReadContext {
 
         _ => Err(P10Error::DataInvalid {
           when: "Reading encapsulated pixel data item".to_string(),
-          details: format!("Invalid data element '{}'", header),
+          details: format!("Invalid data element '{header}'"),
           path: self.path.clone(),
           offset: self.stream.bytes_read(),
         }),

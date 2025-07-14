@@ -23,8 +23,8 @@ pub fn decode_photometric_interpretation(
 
     _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "Photometric interpretation '{}' is not supported",
-        photometric_interpretation
+        "Photometric interpretation '{photometric_interpretation}' is not \
+         supported"
       ),
     }),
   }
@@ -150,7 +150,7 @@ fn decode(
   decoder
     .decode_headers()
     .map_err(|e| PixelDataDecodeError::DataInvalid {
-      details: format!("JPEG header decode failed with '{}'", e),
+      details: format!("JPEG header decode failed with '{e}'"),
     })?;
 
   if decoder.info().unwrap().width != image_pixel_module.columns()
@@ -164,6 +164,6 @@ fn decode(
   decoder
     .decode()
     .map_err(|e| PixelDataDecodeError::DataInvalid {
-      details: format!("JPEG decode failed with '{}'", e),
+      details: format!("JPEG decode failed with '{e}'"),
     })
 }

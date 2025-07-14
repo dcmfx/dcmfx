@@ -24,8 +24,8 @@ pub fn decode_photometric_interpretation(
 
     _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "Photometric interpretation '{}' is not supported",
-        photometric_interpretation
+        "Photometric interpretation '{photometric_interpretation}' is not \
+         supported"
       ),
     }),
   }
@@ -167,7 +167,7 @@ fn decode(
   decoder
     .read_info()
     .map_err(|e| PixelDataDecodeError::DataInvalid {
-      details: format!("JPEG Lossless pixel data decode failed with '{}'", e),
+      details: format!("JPEG Lossless pixel data decode failed with '{e}'"),
     })?;
 
   let image_info = decoder.info().unwrap();
@@ -184,7 +184,7 @@ fn decode(
     decoder
       .decode()
       .map_err(|e| PixelDataDecodeError::DataInvalid {
-        details: format!("JPEG Lossless pixel data decode failed with '{}'", e),
+        details: format!("JPEG Lossless pixel data decode failed with '{e}'"),
       })?;
 
   Ok((pixels, image_info.pixel_format))

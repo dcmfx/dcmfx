@@ -81,7 +81,7 @@ fn main() {
     );
 
     #[cfg(not(windows))]
-    eprintln!("Peak memory usage: {:.0} MiB", peak_memory_mb);
+    eprintln!("Peak memory usage: {peak_memory_mb:.0} MiB");
   }
 
   if r.is_err() {

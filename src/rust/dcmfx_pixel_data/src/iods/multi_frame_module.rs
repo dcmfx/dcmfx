@@ -70,8 +70,7 @@ impl IodModule for MultiFrameModule {
         value => {
           return Err(
             DataError::new_value_invalid(format!(
-              "Invalid enum value '{}'",
-              value
+              "Invalid enum value '{value}'"
             ))
             .with_path(&DataSetPath::new_with_data_element(tag)),
           );

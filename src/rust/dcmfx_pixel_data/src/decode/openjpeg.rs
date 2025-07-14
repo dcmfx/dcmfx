@@ -28,8 +28,8 @@ pub fn decode_photometric_interpretation(
     PhotometricInterpretation::YbrFull422 | PhotometricInterpretation::Xyb => {
       Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
         details: format!(
-          "Photometric interpretation '{}' is not supported",
-          photometric_interpretation
+          "Photometric interpretation '{photometric_interpretation}' is not \
+           supported"
         ),
       })
     }

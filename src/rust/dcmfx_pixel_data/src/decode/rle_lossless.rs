@@ -26,8 +26,8 @@ pub fn decode_photometric_interpretation(
 
     _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "Photometric interpretation '{}' is not supported",
-        photometric_interpretation
+        "Photometric interpretation '{photometric_interpretation}' is not \
+         supported"
       ),
     }),
   }
@@ -522,8 +522,8 @@ fn decode_rle_segments(
     } else {
       return Err(PixelDataDecodeError::DataInvalid {
         details: format!(
-          "RLE Lossless data segment {}'s bounds {}-{} are invalid",
-          i, segment_offset, next_segment_offset,
+          "RLE Lossless data segment {i}'s bounds {segment_offset}-\
+           {next_segment_offset} are invalid",
         ),
       });
     }

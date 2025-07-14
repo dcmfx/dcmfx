@@ -8,8 +8,8 @@ pub fn main() {
     ds.print();
 
     let patient_id = ds.get_string(dictionary::PATIENT_ID.tag).unwrap();
-    println!("Patient ID: {}", patient_id);
+    println!("Patient ID: {patient_id}");
 
     let study_date = ds.get_date(dictionary::STUDY_DATE.tag).unwrap();
-    println!("Study Date: {:?}", study_date);
+    println!("Study Date: {study_date:?}");
 }

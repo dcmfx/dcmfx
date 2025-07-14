@@ -126,13 +126,13 @@ impl core::fmt::Display for PixelDataDecodeError {
         )
       }
       Self::ImagePixelModuleNotSupported { details } => {
-        write!(f, "Image pixel module not supported, details: {}", details)
+        write!(f, "Image pixel module not supported, details: {details}")
       }
       Self::DataInvalid { details } => {
-        write!(f, "Data invalid, details: '{}'", details)
+        write!(f, "Data invalid, details: '{details}'")
       }
       Self::ImageCreationFailed(details) => {
-        write!(f, "Image creation failed, details: '{}'", details)
+        write!(f, "Image creation failed, details: '{details}'")
       }
       Self::DecoderNotAvailable { name } => {
         write!(f, "Decoder '{name}' not available")
@@ -144,7 +144,7 @@ impl core::fmt::Display for PixelDataDecodeError {
 impl DcmfxError for PixelDataDecodeError {
   fn to_lines(&self, task_description: &str) -> Vec<String> {
     let mut lines = vec![
-      format!("Pixel data decode error {}", task_description),
+      format!("Pixel data decode error {task_description}"),
       "".to_string(),
       format!("  Error: {}", self.name()),
     ];
@@ -155,13 +155,13 @@ impl DcmfxError for PixelDataDecodeError {
       }
       Self::ImagePixelModuleNotSupported { details }
       | Self::DataInvalid { details } => {
-        lines.push(format!("  Details: {}", details));
+        lines.push(format!("  Details: {details}"));
       }
       Self::ImageCreationFailed(details) => {
-        lines.push(format!("  Details: {}", details));
+        lines.push(format!("  Details: {details}"));
       }
       Self::DecoderNotAvailable { name } => {
-        lines.push(format!("  Name: {}", name));
+        lines.push(format!("  Name: {name}"));
       }
     }
 
@@ -426,7 +426,7 @@ fn inflate_frame_data(
     }
 
     Err(e) => Err(PixelDataDecodeError::DataInvalid {
-      details: format!("Frame data inflate failed with '{}'", e),
+      details: format!("Frame data inflate failed with '{e}'"),
     }),
   }
 }

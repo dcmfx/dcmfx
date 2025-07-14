@@ -318,7 +318,7 @@ pub fn run(args: &mut GetPixelDataArgs) -> Result<(), ()> {
 
         Err(e) => {
           let task_description =
-            format!("extracting pixel data from \"{}\"", input_source);
+            format!("extracting pixel data from \"{input_source}\"");
 
           Err(match e {
             GetPixelDataError::DataError(e) => e.to_lines(&task_description),

@@ -123,8 +123,7 @@ impl PresentationLutShape {
       "INVERSE" => Ok(Self::Inverse),
       value => Err(
         DataError::new_value_invalid(format!(
-          "Presentation LUT shape value of '{}' is invalid",
-          value
+          "Presentation LUT shape value of '{value}' is invalid"
         ))
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),

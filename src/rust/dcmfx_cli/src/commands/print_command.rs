@@ -59,7 +59,7 @@ pub fn run(args: &mut PrintArgs) -> Result<(), ()> {
       Ok(()) => (),
 
       Err(e) => {
-        e.print(&format!("printing \"{}\"", input_source));
+        e.print(&format!("printing \"{input_source}\""));
 
         return Err(());
       }

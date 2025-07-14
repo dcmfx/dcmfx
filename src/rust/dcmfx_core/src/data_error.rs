@@ -108,7 +108,7 @@ impl core::fmt::Display for DataError {
       }
     };
 
-    write!(f, "DICOM Data Error: {}", error)
+    write!(f, "DICOM Data Error: {error}")
   }
 }
 
@@ -251,7 +251,7 @@ impl DcmfxError for DataError {
         path: Some(path), ..
       } => {
         if let Ok(tag) = path.final_data_element() {
-          lines.push(format!("  Tag: {}", tag));
+          lines.push(format!("  Tag: {tag}"));
           lines.push(format!("  Name: {}", dictionary::tag_name(tag, None)));
         }
 
@@ -262,7 +262,7 @@ impl DcmfxError for DataError {
 
     match &self {
       Self::ValueInvalid { details, .. } => {
-        lines.push(format!("  Details: {}", details))
+        lines.push(format!("  Details: {details}"))
       }
       Self::ValueLengthInvalid {
         vr,
@@ -270,9 +270,9 @@ impl DcmfxError for DataError {
         details,
         ..
       } => {
-        lines.push(format!("  VR: {}", vr));
-        lines.push(format!("  Length: {} bytes", length));
-        lines.push(format!("  Details: {}", details));
+        lines.push(format!("  VR: {vr}"));
+        lines.push(format!("  Length: {length} bytes"));
+        lines.push(format!("  Details: {details}"));
       }
       _ => (),
     };

@@ -41,7 +41,7 @@ pub fn convert_json_to_data_set(
       Ok(tag) => tag,
       Err(()) => {
         return Err(JsonDeserializeError::JsonInvalid {
-          details: format!("Invalid data set tag: {}", raw_tag),
+          details: format!("Invalid data set tag: {raw_tag}"),
           path: path.clone(),
         });
       }
@@ -152,7 +152,7 @@ fn read_dicom_json_vr(
     Ok(vr)
   } else {
     Err(JsonDeserializeError::JsonInvalid {
-      details: format!("VR is invalid: {}", vr_string),
+      details: format!("VR is invalid: {vr_string}"),
       path: path.clone(),
     })
   }
@@ -534,7 +534,7 @@ fn read_dicom_json_primitive_value(
     }
 
     _ => Err(JsonDeserializeError::JsonInvalid {
-      details: format!("Invalid 'Value' data element with VR '{}'", vr),
+      details: format!("Invalid 'Value' data element with VR '{vr}'"),
       path: path.clone(),
     }),
   }

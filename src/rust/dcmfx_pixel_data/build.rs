@@ -29,7 +29,7 @@ fn main() {
 
   // Add output directory to the linker's search path
   let out_dir = std::env::var("OUT_DIR").unwrap();
-  println!("cargo::rustc-link-search=native={}", out_dir);
+  println!("cargo::rustc-link-search=native={out_dir}");
 }
 
 fn build_libjpeg_12bit() {
@@ -589,7 +589,7 @@ fn compile(
 
   // Re-run if any source file changes
   for src_file in src_files {
-    println!("cargo:rerun-if-changed={}", src_file);
+    println!("cargo:rerun-if-changed={src_file}");
   }
 
   build.files(src_files);

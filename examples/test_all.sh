@@ -5,6 +5,7 @@
 set -e
 
 cargo fmt --check
+cargo clippy -- --deny warnings
 
 for dir in dicom_*; do
   echo ""

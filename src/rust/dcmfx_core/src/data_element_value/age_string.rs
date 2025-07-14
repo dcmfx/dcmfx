@@ -73,8 +73,7 @@ impl StructuredAge {
       }
 
       _ => Err(DataError::new_value_invalid(format!(
-        "AgeString is invalid: '{}'",
-        age_string
+        "AgeString is invalid: '{age_string}'"
       ))),
     }
   }

@@ -691,7 +691,7 @@ impl core::fmt::Display for P10PixelDataTranscodeTransformError {
       Self::PixelDataDecodeError(e) => e.fmt(f),
       Self::PixelDataEncodeError(e) => e.fmt(f),
       Self::NotSupported { details } => {
-        write!(f, "Transcode not supported, details: {}", details)
+        write!(f, "Transcode not supported, details: {details}")
       }
     }
   }

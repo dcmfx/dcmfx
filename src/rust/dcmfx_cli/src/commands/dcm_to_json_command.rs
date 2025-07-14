@@ -114,7 +114,7 @@ pub fn run(args: &mut ToJsonArgs) -> Result<(), ()> {
         Ok(()) => Ok(()),
 
         Err(e) => {
-          let task_description = format!("converting \"{}\"", input_source);
+          let task_description = format!("converting \"{input_source}\"");
 
           Err(match e {
             ToJsonError::P10Error(e) => e.to_lines(&task_description),

@@ -146,7 +146,7 @@ impl DcmfxError for P10Error {
   fn to_lines(&self, task_description: &str) -> Vec<String> {
     let mut lines = vec![];
 
-    lines.push(format!("DICOM P10 error {}", task_description));
+    lines.push(format!("DICOM P10 error {task_description}"));
     lines.push("".to_string());
 
     // Add the name of the error
@@ -159,7 +159,7 @@ impl DcmfxError for P10Error {
       | P10Error::DataInvalid { when, .. }
       | P10Error::TokenStreamInvalid { when, .. }
       | P10Error::FileError { when, .. } => {
-        lines.push(format!("  When: {}", when));
+        lines.push(format!("  When: {when}"));
       }
 
       _ => (),
@@ -170,7 +170,7 @@ impl DcmfxError for P10Error {
       P10Error::TransferSyntaxNotSupported {
         transfer_syntax_uid,
       } => {
-        lines.push(format!("  Transfer syntax UID: {}", transfer_syntax_uid));
+        lines.push(format!("  Transfer syntax UID: {transfer_syntax_uid}"));
       }
 
       P10Error::SpecificCharacterSetInvalid {
@@ -178,25 +178,24 @@ impl DcmfxError for P10Error {
         details,
       } => {
         lines.push(format!(
-          "  Specific character set: {}",
-          specific_character_set
+          "  Specific character set: {specific_character_set}"
         ));
 
         if !details.is_empty() {
-          lines.push(format!("  Details: {}", details));
+          lines.push(format!("  Details: {details}"));
         }
       }
 
       P10Error::TokenStreamInvalid { details, token, .. } => {
-        lines.push(format!("  Details: {}", details));
-        lines.push(format!("  Token: {}", token));
+        lines.push(format!("  Details: {details}"));
+        lines.push(format!("  Token: {token}"));
       }
 
       P10Error::DataInvalid { details, .. }
       | P10Error::MaximumExceeded { details, .. }
       | P10Error::FileError { details, .. }
       | P10Error::OtherError { details, .. } => {
-        lines.push(format!("  Details: {}", details));
+        lines.push(format!("  Details: {details}"));
       }
 
       _ => (),
@@ -208,7 +207,7 @@ impl DcmfxError for P10Error {
       | P10Error::DataInvalid { path, offset, .. }
       | P10Error::MaximumExceeded { offset, path, .. } => {
         lines.push(format!("  Path: {}", path.to_detailed_string()));
-        lines.push(format!("  Offset: 0x{:X}", offset));
+        lines.push(format!("  Offset: 0x{offset:X}"));
       }
 
       _ => (),

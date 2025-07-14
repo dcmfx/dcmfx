@@ -63,8 +63,7 @@ impl StructuredDateTime {
       }
 
       _ => Err(DataError::new_value_invalid(format!(
-        "DateTime is invalid: '{}'",
-        date_time_string
+        "DateTime is invalid: '{date_time_string}'"
       ))),
     }
   }
@@ -103,8 +102,7 @@ impl StructuredDateTime {
 
         if !is_offset_valid {
           return Err(DataError::new_value_invalid(format!(
-            "DateTime time zone offset is invalid: {}",
-            offset
+            "DateTime time zone offset is invalid: {offset}"
           )));
         }
 
@@ -116,8 +114,7 @@ impl StructuredDateTime {
       None => "".to_string(),
     };
 
-    let mut bytes =
-      format!("{}{}{}", date, time, time_zone_offset).into_bytes();
+    let mut bytes = format!("{date}{time}{time_zone_offset}").into_bytes();
 
     if bytes.len() % 2 == 1 {
       bytes.push(0x20);
@@ -133,10 +130,10 @@ impl StructuredDateTime {
     let mut s = format!("{:04}", self.year);
 
     if let Some(month) = self.month {
-      s.push_str(&format!("-{:02}", month));
+      s.push_str(&format!("-{month:02}"));
 
       if let Some(day) = self.day {
-        s.push_str(&format!("-{:02}", day));
+        s.push_str(&format!("-{day:02}"));
 
         if let Some(hour) = self.hour {
           let time = StructuredTime {

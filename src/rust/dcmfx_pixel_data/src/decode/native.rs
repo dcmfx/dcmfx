@@ -24,8 +24,8 @@ pub fn decode_photometric_interpretation(
 
     _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
       details: format!(
-        "Photometric interpretation '{}' is not supported",
-        photometric_interpretation
+        "Photometric interpretation '{photometric_interpretation}' is not \
+         supported"
       ),
     }),
   }
@@ -288,8 +288,7 @@ pub fn decode_monochrome(
       Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
         details: format!(
           "Native monochrome decode not supported for photometric \
-           interpretation '{}'",
-          photometric_interpretation,
+           interpretation '{photometric_interpretation}'"
         ),
       })
     }

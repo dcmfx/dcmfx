@@ -320,10 +320,9 @@ impl P10WriteContext {
             value.bytes().map_err(|_| P10Error::DataInvalid {
               when: "Serializing File Meta Information".to_string(),
               details: format!(
-            "Tag '{}' with value representation '{}' is not allowed in File \
-              Meta Information",
-            tag, vr
-          ),
+                "Tag '{tag}' with value representation '{vr}' is not allowed \
+                 in File Meta Information"
+              ),
               path: self.path.clone(),
               offset: self.p10_total_byte_count,
             })?;

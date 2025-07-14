@@ -115,7 +115,7 @@ impl DataElementValue {
               ValueRepresentation::AgeString => {
                 StructuredAge::from_bytes(bytes)
                   .map(|age| age.to_string())
-                  .unwrap_or_else(|_| format!("{:?}", value))
+                  .unwrap_or_else(|_| format!("{value:?}"))
               }
 
               ValueRepresentation::ApplicationEntity => {
@@ -124,17 +124,17 @@ impl DataElementValue {
 
               ValueRepresentation::Date => StructuredDate::from_bytes(bytes)
                 .map(|date| date.to_iso8601())
-                .unwrap_or_else(|_| format!("{:?}", value)),
+                .unwrap_or_else(|_| format!("{value:?}")),
 
               ValueRepresentation::DateTime => {
                 StructuredDateTime::from_bytes(bytes)
                   .map(|date_time| date_time.to_iso8601())
-                  .unwrap_or_else(|_| format!("{:?}", value))
+                  .unwrap_or_else(|_| format!("{value:?}"))
               }
 
               ValueRepresentation::Time => StructuredTime::from_bytes(bytes)
                 .map(|time| time.to_iso8601())
-                .unwrap_or_else(|_| format!("{:?}", value)),
+                .unwrap_or_else(|_| format!("{value:?}")),
 
               // Handle string VRs that allow multiplicity
               ValueRepresentation::CodeString
@@ -165,14 +165,14 @@ impl DataElementValue {
             let suffix = match vr {
               ValueRepresentation::UniqueIdentifier => {
                 match dictionary::uid_name(value.trim_end_matches('\0')) {
-                  Ok(uid_name) => Some(format!(" ({})", uid_name)),
+                  Ok(uid_name) => Some(format!(" ({uid_name})")),
                   Err(()) => None,
                 }
               }
 
               ValueRepresentation::CodeString => {
                 match code_strings::describe(value.trim(), tag) {
-                  Ok(description) => Some(format!(" ({})", description)),
+                  Ok(description) => Some(format!(" ({description})")),
                   Err(()) => None,
                 }
               }
@@ -216,7 +216,7 @@ impl DataElementValue {
                 } else if *f == -f64::INFINITY {
                   "-Infinity".to_string()
                 } else {
-                  format!("{:?}", f)
+                  format!("{f:?}")
                 }
               })
               .collect::<Vec<String>>()
@@ -304,12 +304,12 @@ impl DataElementValue {
             .collect::<Vec<&str>>();
 
           if graphemes.len() > output_width {
-            format!("{} …{}", graphemes[0..output_width - 2].join(""), suffix)
+            format!("{} …{suffix}", graphemes[0..output_width - 2].join(""))
           } else {
-            format!("{}{}", s, suffix)
+            format!("{s}{suffix}")
           }
         } else {
-          format!("{}{}", s, suffix)
+          format!("{s}{suffix}")
         }
       }
       Err(()) => "<error converting to string>".to_string(),
@@ -335,16 +335,14 @@ impl DataElementValue {
   ) -> Result<Self, DataError> {
     if vr == ValueRepresentation::Sequence {
       return Err(DataError::new_value_invalid(format!(
-        "Value representation '{}' is not valid for binary data",
-        vr
+        "Value representation '{vr}' is not valid for binary data"
       )));
     }
 
     if vr.is_encoded_string() {
       if core::str::from_utf8(&bytes).is_err() {
         return Err(DataError::new_value_invalid(format!(
-          "Bytes for '{}' are not valid UTF-8",
-          vr
+          "Bytes for '{vr}' are not valid UTF-8"
         )));
       }
     } else if vr.is_string() {
@@ -399,9 +397,8 @@ impl DataElementValue {
       && vr != ValueRepresentation::UnsignedShort
     {
       return Err(DataError::new_value_invalid(format!(
-        "Value representation '{}' is not valid for lookup table descriptor \
-            data",
-        vr
+        "Value representation '{vr}' is not valid for lookup table descriptor \
+            data"
       )));
     }
 
@@ -445,8 +442,7 @@ impl DataElementValue {
       && vr != ValueRepresentation::OtherWordString
     {
       return Err(DataError::new_value_invalid(format!(
-        "Value representation '{}' is not valid for encapsulated pixel data",
-        vr
+        "Value representation '{vr}' is not valid for encapsulated pixel data"
       )));
     }
 
@@ -1438,7 +1434,7 @@ impl DataElementValue {
           return Err(DataError::new_value_length_invalid(
             *vr,
             value_length as u64,
-            format!("Must not exceed {} bytes", bytes_max),
+            format!("Must not exceed {bytes_max} bytes"),
           ));
         }
 
@@ -1446,7 +1442,7 @@ impl DataElementValue {
           return Err(DataError::new_value_length_invalid(
             *vr,
             value_length as u64,
-            format!("Must be a multiple of {} bytes", bytes_multiple_of),
+            format!("Must be a multiple of {bytes_multiple_of} bytes"),
           ));
         }
       }
@@ -1497,8 +1493,8 @@ fn new_string_list(
   for s in value.iter() {
     if s.len() > string_characters_max {
       return Err(DataError::new_value_invalid(format!(
-        "String list item is longer than the max length of {}",
-        string_characters_max
+        "String list item is longer than the max length of \
+         {string_characters_max}"
       )));
     }
 

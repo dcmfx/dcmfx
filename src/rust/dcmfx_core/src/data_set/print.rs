@@ -229,14 +229,14 @@ pub fn format_data_element_prefix(
         vr.to_string()
       };
 
-      format!("{} {} {}", tag, vr, tag_name)
+      format!("{tag} {vr} {tag_name}")
     } else {
-      format!("{} {}", tag, tag_name)
+      format!("{tag} {tag_name}")
     }
   } else if let Some(vr) = vr {
-    format!("{} {} {}", tag, vr, tag_name)
+    format!("{tag} {vr} {tag_name}")
   } else {
-    format!("{} {}", tag, tag_name)
+    format!("{tag} {tag_name}")
   };
 
   let tag_and_vr_width = if vr.is_some() { 15 } else { 12 };
@@ -284,17 +284,17 @@ pub fn format_data_element_prefix(
 // functions below are also more efficient due to avoiding unnecessary resets.
 
 fn text_blue(s: &str) -> String {
-  format!("\u{001b}[34m{}", s)
+  format!("\u{001b}[34m{s}")
 }
 
 fn text_cyan_and_reset(s: &str) -> String {
-  format!("\u{001b}[36m{}\u{001b}[0m", s)
+  format!("\u{001b}[36m{s}\u{001b}[0m")
 }
 
 fn text_reset_to_bold(s: &str) -> String {
-  format!("\u{001b}[0m\u{001b}[1m{}", s)
+  format!("\u{001b}[0m\u{001b}[1m{s}")
 }
 
 fn text_green(s: &str) -> String {
-  format!("\u{001b}[32m{}", s)
+  format!("\u{001b}[32m{s}")
 }

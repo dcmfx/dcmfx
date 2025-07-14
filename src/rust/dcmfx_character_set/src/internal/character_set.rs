@@ -558,7 +558,7 @@ pub fn from_string(
     }
   }
 
-  Err(format!("Invalid character set: {:?}", defined_term))
+  Err(format!("Invalid character set: {defined_term:?}"))
 }
 
 /// Decodes bytes into a string using the specified decoder.

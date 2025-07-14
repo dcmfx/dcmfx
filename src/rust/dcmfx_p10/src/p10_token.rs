@@ -149,19 +149,19 @@ impl core::fmt::Display for P10Token {
       P10Token::SequenceDelimiter { .. } => "SequenceDelimiter".to_string(),
 
       P10Token::SequenceItemStart { index } => {
-        format!("SequenceItemStart: item {}", index)
+        format!("SequenceItemStart: item {index}")
       }
 
       P10Token::SequenceItemDelimiter => "SequenceItemDelimiter".to_string(),
 
       P10Token::PixelDataItem { index, length } => {
-        format!("PixelDataItem: item {}, {} bytes", index, length)
+        format!("PixelDataItem: item {index}, {length} bytes")
       }
 
       P10Token::End => "End".to_string(),
     };
 
-    write!(f, "{}", s)
+    write!(f, "{s}")
   }
 }
 

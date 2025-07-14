@@ -121,7 +121,7 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
         }
 
         Err(e) => {
-          eprintln!("Error: {}", e);
+          eprintln!("Error: {e}");
           std::process::exit(1);
         }
       })

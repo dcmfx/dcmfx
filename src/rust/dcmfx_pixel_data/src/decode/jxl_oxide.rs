@@ -164,7 +164,7 @@ fn decode(
 
   let mut image = JxlImage::read_with_defaults(data).map_err(|e| {
     PixelDataDecodeError::DataInvalid {
-      details: format!("JPEG XL decode failed with '{}'", e),
+      details: format!("JPEG XL decode failed with '{e}'"),
     }
   })?;
 
@@ -187,7 +187,7 @@ fn decode(
     image
       .render_frame(0)
       .map_err(|e| PixelDataDecodeError::DataInvalid {
-        details: format!("JPEG XL decode failed with '{}'", e),
+        details: format!("JPEG XL decode failed with '{e}'"),
       })?;
 
   Ok((image, render))

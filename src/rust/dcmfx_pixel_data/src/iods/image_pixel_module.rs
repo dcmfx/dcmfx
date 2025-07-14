@@ -194,8 +194,8 @@ impl ImagePixelModule {
     // Check that the high bit is one less than the bits stored
     if high_bit != bits_stored - 1 {
       return Err(DataError::new_value_invalid(format!(
-        "High bit '{}' is not one less than the bits stored '{}'",
-        high_bit, bits_stored
+        "High bit '{high_bit}' is not one less than the bits stored \
+         '{bits_stored}'"
       )));
     }
 
@@ -204,9 +204,8 @@ impl ImagePixelModule {
       && columns % 2 == 1
     {
       return Err(DataError::new_value_invalid(format!(
-        "Uneven width '{}' is not allowed with the YBR 422 photometric \
-         interpretation",
-        columns
+        "Uneven width '{columns}' is not allowed with the YBR 422 photometric \
+         interpretation"
       )));
     }
 
@@ -358,8 +357,8 @@ impl ImagePixelModule {
   ) -> Result<(), String> {
     if bits_stored == 0 || bits_stored > bits_allocated {
       return Err(format!(
-        "Bits stored '{}' is invalid for bits allocated '{}'",
-        bits_stored, bits_allocated,
+        "Bits stored '{bits_stored}' is invalid for bits allocated \
+         '{bits_allocated}'"
       ));
     }
 
@@ -646,8 +645,7 @@ impl SamplesPerPixel {
       }
       value => Err(
         DataError::new_value_invalid(format!(
-          "Samples per pixel value of '{:?}' is invalid",
-          value
+          "Samples per pixel value of '{value:?}' is invalid"
         ))
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),
@@ -792,8 +790,7 @@ impl PhotometricInterpretation {
       {
         Err(
           DataError::new_value_invalid(format!(
-            "Photometric interpretation '{}' is retired and is not supported",
-            value
+            "Photometric interpretation '{value}' is retired and is not supported"
           ))
           .with_path(&DataSetPath::new_with_data_element(tag)),
         )
@@ -803,8 +800,7 @@ impl PhotometricInterpretation {
 
       value => Err(
         DataError::new_value_invalid(format!(
-          "Photometric interpretation '{}' is invalid",
-          value
+          "Photometric interpretation '{value}' is invalid"
         ))
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),
@@ -914,7 +910,7 @@ impl core::fmt::Display for PhotometricInterpretation {
       Self::Xyb => "Xyb",
     };
 
-    write!(f, "{}", s)
+    write!(f, "{s}")
   }
 }
 
@@ -949,8 +945,7 @@ impl PlanarConfiguration {
       1 => Ok(Self::Separate),
       value => Err(
         DataError::new_value_invalid(format!(
-          "Planar configuration value of '{}' is invalid",
-          value
+          "Planar configuration value of '{value}' is invalid",
         ))
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),
@@ -1022,8 +1017,7 @@ impl TryFrom<u16> for BitsAllocated {
       16 => Ok(Self::Sixteen),
       32 => Ok(Self::ThirtyTwo),
       value => Err(format!(
-        "Bits allocated value of '{}' is not supported",
-        value
+        "Bits allocated value of '{value}' is not supported",
       )),
     }
   }
@@ -1055,8 +1049,7 @@ impl PixelRepresentation {
       1 => Ok(Self::Signed),
       value => Err(
         DataError::new_value_invalid(format!(
-          "Pixel representation value of '{}' is invalid",
-          value
+          "Pixel representation value of '{value}' is invalid",
         ))
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),

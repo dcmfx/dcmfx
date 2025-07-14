@@ -22,8 +22,8 @@ impl core::fmt::Debug for DataElementTag {
     let element = core::str::from_utf8(&hex_digits[4..8]).unwrap();
 
     f.debug_struct("DataElementTag")
-      .field("group", &format_args!("0x{}", group))
-      .field("element", &format_args!("0x{}", element))
+      .field("group", &format_args!("0x{group}"))
+      .field("element", &format_args!("0x{element}"))
       .finish()
   }
 }
@@ -37,7 +37,7 @@ impl core::fmt::Display for DataElementTag {
     let group = core::str::from_utf8(&hex_digits[0..4]).unwrap();
     let element = core::str::from_utf8(&hex_digits[4..8]).unwrap();
 
-    write!(f, "({},{})", group, element)
+    write!(f, "({group},{element})")
   }
 }
 

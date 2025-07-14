@@ -300,7 +300,7 @@ impl OverlayPlane {
         DataError::new_value_length_invalid(
           ValueRepresentation::SignedShort,
           data.len() as u64,
-          format!("Overlay Data should have length {}", expected_data_length,),
+          format!("Overlay Data should have length {expected_data_length}"),
         )
         .with_path(&DataSetPath::new_with_data_element(data_tag)),
       );
@@ -441,8 +441,7 @@ impl OverlayType {
       "R" => Ok(Self::Roi),
       value => Err(
         DataError::new_value_invalid(format!(
-          "Overlay type value of '{}' is invalid",
-          value
+          "Overlay type value of '{value}' is invalid"
         ))
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),
@@ -480,8 +479,7 @@ impl OverlaySubtype {
       "AUTOMATED" => Ok(Self::Automated),
       value => Err(
         DataError::new_value_invalid(format!(
-          "Overlay subtype value of '{}' is invalid",
-          value
+          "Overlay subtype value of '{value}' is invalid"
         ))
         .with_path(&DataSetPath::new_with_data_element(tag)),
       ),

@@ -184,7 +184,7 @@ impl core::fmt::Display for PixelDataEncodeError {
       }
 
       Self::OtherError { name, details } => {
-        write!(f, "{}, details: {}", name, details)
+        write!(f, "{name}, details: {details}")
       }
     }
   }
@@ -207,7 +207,7 @@ impl DcmfxError for PixelDataEncodeError {
         image_pixel_module,
         transfer_syntax,
       } => {
-        lines.push(format!("  Image pixel module: {}", image_pixel_module));
+        lines.push(format!("  Image pixel module: {image_pixel_module}"));
         lines.push(format!("  Transfer syntax: {}", transfer_syntax.name));
       }
 
@@ -216,19 +216,19 @@ impl DcmfxError for PixelDataEncodeError {
         input_bits_allocated,
         input_color_space,
       } => {
-        lines.push(format!("  Image pixel module: {}", image_pixel_module));
+        lines.push(format!("  Image pixel module: {image_pixel_module}"));
         lines.push(format!(
           "  Input bits allocated: {}",
           u8::from(*input_bits_allocated)
         ));
 
         if let Some(input_color_space) = input_color_space {
-          lines.push(format!("  Input color space: {:?}", input_color_space));
+          lines.push(format!("  Input color space: {input_color_space:?}"));
         }
       }
 
       Self::OtherError { details, .. } => {
-        lines.push(format!("  Details: {}", details));
+        lines.push(format!("  Details: {details}"));
       }
     }
 

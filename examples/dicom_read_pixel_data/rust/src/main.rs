@@ -33,6 +33,6 @@ pub fn main() {
             .write_to(&mut output_file, image::ImageFormat::Png)
             .unwrap();
 
-        println!("Wrote \"{}\"", output_filename);
+        println!("Wrote \"{output_filename}\"");
     }
 }

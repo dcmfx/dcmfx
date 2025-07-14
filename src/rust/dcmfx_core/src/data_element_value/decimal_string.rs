@@ -26,8 +26,7 @@ pub fn from_bytes(bytes: &[u8]) -> Result<Vec<f64>, DataError> {
     .collect::<Result<Vec<f64>, _>>()
     .map_err(|_| {
       DataError::new_value_invalid(format!(
-        "DecimalString is invalid: '{}'",
-        decimal_string
+        "DecimalString is invalid: '{decimal_string}'"
       ))
     })
 }
@@ -39,7 +38,7 @@ pub fn to_bytes(values: &[f64]) -> Vec<u8> {
     .iter()
     .map(|f| {
       let decimal_value = f.to_string();
-      let exponential_value = format!("{:e}", f);
+      let exponential_value = format!("{f:e}");
 
       if decimal_value.len() < exponential_value.len() {
         // When exponential notation isn't in use, trim unnecessary zeros

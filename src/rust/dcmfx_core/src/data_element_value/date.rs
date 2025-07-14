@@ -42,8 +42,7 @@ impl StructuredDate {
       }
 
       _ => Err(DataError::new_value_invalid(format!(
-        "Date is invalid: '{}'",
-        date_string
+        "Date is invalid: '{date_string}'"
       ))),
     }
   }
@@ -75,23 +74,21 @@ impl StructuredDate {
     // Validate and format the year value
     if year > 9999 {
       return Err(DataError::new_value_invalid(format!(
-        "Date's year is invalid: {}",
-        year
+        "Date's year is invalid: {year}"
       )));
     }
-    let year = format!("{:04}", year);
+    let year = format!("{year:04}");
 
     // Validate and format the month value if present
     let month = match month {
       Some(month) => {
         if !(1..=12).contains(&month) {
           return Err(DataError::new_value_invalid(format!(
-            "Date's month is invalid: {}",
-            month
+            "Date's month is invalid: {month}"
           )));
         }
 
-        format!("{:02}", month)
+        format!("{month:02}")
       }
 
       None => "".to_string(),
@@ -102,18 +99,17 @@ impl StructuredDate {
       Some(day) => {
         if !(1..=31).contains(&day) {
           return Err(DataError::new_value_invalid(format!(
-            "Date's day is invalid: {}",
-            day
+            "Date's day is invalid: {day}"
           )));
         }
 
-        format!("{:02}", day)
+        format!("{day:02}")
       }
 
       None => "".to_string(),
     };
 
-    Ok(format!("{}{}{}", year, month, day))
+    Ok(format!("{year}{month}{day}"))
   }
 
   /// Formats a structured date as an ISO 8601 date.

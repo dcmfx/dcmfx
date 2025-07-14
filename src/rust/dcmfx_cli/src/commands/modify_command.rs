@@ -313,7 +313,7 @@ pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
         Ok(()) => Ok(()),
 
         Err(e) => {
-          let task_description = format!("modifying \"{}\"", input_source);
+          let task_description = format!("modifying \"{input_source}\"");
 
           Err(match e {
             ModifyCommandError::P10Error(e) => e.to_lines(&task_description),
@@ -343,7 +343,7 @@ fn modify_input_source(
 ) -> Result<(), ModifyCommandError> {
   if output_filename != PathBuf::from("-") {
     if args.in_place {
-      println!("Modifying \"{}\" in place …", input_source,);
+      println!("Modifying \"{input_source}\" in place …");
     } else {
       println!(
         "Modifying \"{}\" => \"{}\" …",

@@ -302,8 +302,7 @@ impl DataSet {
       for i in value {
         let j = converter(*i).map_err(|_| {
           DataError::new_value_invalid(format!(
-            "Value {} is out of range for the {} VR",
-            i, vr,
+            "Value {i} is out of range for the {vr} VR"
           ))
         })?;
 
@@ -384,8 +383,7 @@ impl DataSet {
       for i in value {
         let j = converter(*i).map_err(|_| {
           DataError::new_value_invalid(format!(
-            "Value {} is out of range for the {} VR",
-            i, vr
+            "Value {i} is out of range for the {vr} VR"
           ))
           .with_path(&DataSetPath::new_with_data_element(tag))
         })?;
@@ -626,7 +624,7 @@ impl DataSet {
   #[cfg(feature = "std")]
   pub fn print_with_options(&self, print_options: &DataSetPrintOptions) {
     self.to_lines(print_options, &mut |line| {
-      println!("{}", line);
+      println!("{line}");
     })
   }
 
@@ -1027,8 +1025,7 @@ impl DataSet {
 
     TransferSyntax::from_uid(transfer_syntax_uid).map_err(|_| {
       DataError::new_value_invalid(format!(
-        "Unrecognized transfer syntax UID: '{}'",
-        transfer_syntax_uid
+        "Unrecognized transfer syntax UID: '{transfer_syntax_uid}'"
       ))
     })
   }
@@ -1137,7 +1134,7 @@ impl DataSet {
     }
 
     let private_creator_element = private_creator_element
-      .ok_or(format!("Private creator '{}' not found", private_creator))?;
+      .ok_or(format!("Private creator '{private_creator}' not found"))?;
 
     // Calculate the range of element values to include in the returned data set
     let element_start = private_creator_element << 8;

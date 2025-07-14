@@ -133,14 +133,14 @@ pub fn inspect_u8_slice(bytes: &[u8], max_length: usize) -> String {
 
   let s = bytes[0..byte_count]
     .iter()
-    .map(|byte| format!("{:02X}", byte))
+    .map(|byte| format!("{byte:02X}"))
     .collect::<Vec<_>>()
     .join(" ");
 
   if byte_count == bytes.len() {
-    format!("[{}]", s)
+    format!("[{s}]")
   } else {
-    format!("[{} …]", s)
+    format!("[{s} …]")
   }
 }
 

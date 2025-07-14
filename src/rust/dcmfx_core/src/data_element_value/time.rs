@@ -46,8 +46,7 @@ impl StructuredTime {
       }
 
       _ => Err(DataError::new_value_invalid(format!(
-        "Time is invalid: '{}'",
-        time_string
+        "Time is invalid: '{time_string}'"
       ))),
     }
   }
@@ -85,12 +84,11 @@ impl StructuredTime {
       Some(minute) => {
         if minute > 59 {
           return Err(DataError::new_value_invalid(format!(
-            "Time minute value is invalid: {}",
-            minute
+            "Time minute value is invalid: {minute}"
           )));
         }
 
-        format!("{:02}", minute)
+        format!("{minute:02}")
       }
 
       None => "".to_string(),
@@ -102,8 +100,7 @@ impl StructuredTime {
       Some(second) => {
         if !(0.0..=60.0).contains(&second) {
           return Err(DataError::new_value_invalid(format!(
-            "Time second value is invalid: {}",
-            second
+            "Time second value is invalid: {second}"
           )));
         }
 
@@ -114,7 +111,7 @@ impl StructuredTime {
     };
 
     // Concatenate all the pieces of the time together
-    Ok(format!("{}{}{}", hour, minute, second))
+    Ok(format!("{hour}{minute}{second}"))
   }
 
   /// Formats a structured time as an ISO 8601 time. Components that aren't
@@ -124,7 +121,7 @@ impl StructuredTime {
     let mut s = format!("{:02}", self.hour);
 
     if let Some(minute) = self.minute {
-      s.push_str(&format!(":{:02}", minute));
+      s.push_str(&format!(":{minute:02}"));
 
       if let Some(second) = self.second {
         s.push(':');

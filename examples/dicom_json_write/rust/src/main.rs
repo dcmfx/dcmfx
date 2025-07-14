@@ -13,5 +13,5 @@ pub fn main() {
     };
 
     let ds_json = ds.to_json(json_config).unwrap();
-    println!("{}", ds_json);
+    println!("{ds_json}");
 }

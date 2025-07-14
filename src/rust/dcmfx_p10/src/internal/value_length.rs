@@ -35,7 +35,7 @@ impl ValueLength {
 impl core::fmt::Display for ValueLength {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     match self {
-      Self::Defined { length } => write!(f, "{} bytes", length),
+      Self::Defined { length } => write!(f, "{length} bytes"),
       Self::Undefined => write!(f, "UNDEFINED"),
     }
   }

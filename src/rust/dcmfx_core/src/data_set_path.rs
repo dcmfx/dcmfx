@@ -143,7 +143,7 @@ impl DataSetPath {
         self.0.push(DataSetPathEntry::SequenceItem { index });
         Ok(())
       }
-      _ => Err(format!("Invalid data set path entry: [{}]", index)),
+      _ => Err(format!("Invalid data set path entry: [{index}]")),
     }
   }
 
@@ -181,7 +181,7 @@ impl DataSetPath {
         }
       }
 
-      return Err(format!("Invalid data set path entry: {}", entry));
+      return Err(format!("Invalid data set path entry: {entry}"));
     }
 
     Ok(result)
@@ -199,7 +199,7 @@ impl DataSetPath {
         DataSetPathEntry::DataElement { tag } => {
           dictionary::tag_with_name(*tag, None)
         }
-        DataSetPathEntry::SequenceItem { index } => format!("Item {}", index),
+        DataSetPathEntry::SequenceItem { index } => format!("Item {index}"),
       })
       .collect::<Vec<_>>()
       .join(" / ")
@@ -215,7 +215,7 @@ impl core::fmt::Display for DataSetPath {
       .iter()
       .map(|entry| match entry {
         DataSetPathEntry::DataElement { tag } => tag.to_hex_string(),
-        DataSetPathEntry::SequenceItem { index } => format!("[{}]", index),
+        DataSetPathEntry::SequenceItem { index } => format!("[{index}]"),
       })
       .collect::<Vec<_>>()
       .join("/");

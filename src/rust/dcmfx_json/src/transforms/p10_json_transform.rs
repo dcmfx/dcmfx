@@ -737,7 +737,7 @@ impl P10JsonTransform {
             } else if *f == f64::NEG_INFINITY {
               "\"-Infinity\"".to_string()
             } else {
-              format!("{:?}", f)
+              format!("{f:?}")
             }
           })
           .collect(),
@@ -845,7 +845,7 @@ impl P10JsonTransform {
               if safe_integer_range.contains(i) {
                 i.to_string()
               } else {
-                format!("\"{}\"", i)
+                format!("\"{i}\"")
               }
             })
             .collect(),

@@ -106,18 +106,17 @@ impl DcmfxError for JsonDeserializeError {
       JsonDeserializeError::JsonInvalid { details, path } => {
         let mut lines = vec![];
 
-        lines
-          .push(format!("DICOM JSON deserialize error {}", task_description));
+        lines.push(format!("DICOM JSON deserialize error {task_description}"));
         lines.push("".to_string());
-        lines.push(format!("  Details: {}", details));
+        lines.push(format!("  Details: {details}"));
 
         if let Ok(tag) = path.final_data_element() {
-          lines.push(format!("  Tag: {}", tag));
+          lines.push(format!("  Tag: {tag}"));
           lines.push(format!("  Name: {}", dictionary::tag_name(tag, None)));
         }
 
         if !path.is_root() {
-          lines.push(format!("  Path: {}", path));
+          lines.push(format!("  Path: {path}"));
         }
 
         lines

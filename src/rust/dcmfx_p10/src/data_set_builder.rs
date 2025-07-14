@@ -521,7 +521,7 @@ fn location_to_string(location: &[BuilderLocation]) -> String {
   for item in location {
     result.push(match item {
       BuilderLocation::RootDataSet { .. } => "RootDataSet".to_string(),
-      BuilderLocation::Sequence { tag, .. } => format!("Sequence{}", tag),
+      BuilderLocation::Sequence { tag, .. } => format!("Sequence{tag}"),
       BuilderLocation::SequenceItem { .. } => "SequenceItem".to_string(),
       BuilderLocation::EncapsulatedPixelDataSequence { .. } => {
         "EncapsulatedPixelDataSequence".to_string()
