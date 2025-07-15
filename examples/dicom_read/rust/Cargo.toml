@@ -1,6 +1,7 @@
 [package]
 name = "dicom_read"
 edition.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 dcmfx = { path = "../../../src/rust/dcmfx" }

@@ -104,10 +104,10 @@ impl DataSetPath {
 
     while let Some(entry) = iterator.next() {
       // Go up one more and return the data element
-      if let DataSetPathEntry::SequenceItem { .. } = entry {
-        if let Some(DataSetPathEntry::DataElement { tag }) = iterator.next() {
-          return Ok(*tag);
-        }
+      if let DataSetPathEntry::SequenceItem { .. } = entry
+        && let Some(DataSetPathEntry::DataElement { tag }) = iterator.next()
+      {
+        return Ok(*tag);
       }
     }
 
@@ -174,11 +174,12 @@ impl DataSetPath {
         continue;
       }
 
-      if entry.starts_with('[') && entry.ends_with(']') {
-        if let Ok(index) = entry[1..entry.len() - 1].parse::<usize>() {
-          result.add_sequence_item(index)?;
-          continue;
-        }
+      if entry.starts_with('[')
+        && entry.ends_with(']')
+        && let Ok(index) = entry[1..entry.len() - 1].parse::<usize>()
+      {
+        result.add_sequence_item(index)?;
+        continue;
       }
 
       return Err(format!("Invalid data set path entry: {entry}"));

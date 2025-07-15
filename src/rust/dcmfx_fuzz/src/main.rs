@@ -34,11 +34,11 @@ fn main() {
 
       // Render the pixel data. This should never panic.
       let frames = data_set.get_pixel_data_frames();
-      if let Ok(frames) = frames {
-        if let Ok(renderer) = PixelDataRenderer::from_data_set(&data_set) {
-          for mut frame in frames {
-            let _ = renderer.render_frame(&mut frame, None);
-          }
+      if let Ok(frames) = frames
+        && let Ok(renderer) = PixelDataRenderer::from_data_set(&data_set)
+      {
+        for mut frame in frames {
+          let _ = renderer.render_frame(&mut frame, None);
         }
       }
 
@@ -49,18 +49,17 @@ fn main() {
         if !overlay_plane_module.is_empty() {
           if let Ok(image_pixel_module) =
             ImagePixelModule::from_data_set(&data_set)
+            && image_pixel_module.pixel_count() <= 4096 * 4096
           {
-            if image_pixel_module.pixel_count() <= 4096 * 4096 {
-              // Allocate output image
-              let mut rgb_image = image::DynamicImage::new_rgb8(
-                image_pixel_module.rows().into(),
-                image_pixel_module.columns().into(),
-              );
+            // Allocate output image
+            let mut rgb_image = image::DynamicImage::new_rgb8(
+              image_pixel_module.rows().into(),
+              image_pixel_module.columns().into(),
+            );
 
-              overlay_plane_module
-                .render_to_rgb_image(&mut rgb_image, 0)
-                .unwrap();
-            }
+            overlay_plane_module
+              .render_to_rgb_image(&mut rgb_image, 0)
+              .unwrap();
           }
         }
       }

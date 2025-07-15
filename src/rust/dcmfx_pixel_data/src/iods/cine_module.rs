@@ -149,16 +149,16 @@ impl CineModule {
   /// by the start trim or stop trim values, i.e. whether it is trimmed off.
   ///
   pub fn is_frame_trimmed(&self, frame_index: usize) -> bool {
-    if let Some(start_trim) = self.start_trim {
-      if frame_index + 1 < start_trim {
-        return true;
-      }
+    if let Some(start_trim) = self.start_trim
+      && frame_index + 1 < start_trim
+    {
+      return true;
     }
 
-    if let Some(stop_trim) = self.stop_trim {
-      if frame_index + 1 > stop_trim {
-        return true;
-      }
+    if let Some(stop_trim) = self.stop_trim
+      && frame_index + 1 > stop_trim
+    {
+      return true;
     }
 
     false
@@ -195,10 +195,9 @@ impl CineModule {
   ) -> Option<f64> {
     if multiframe_module.frame_increment_pointer
       == Some(dictionary::FRAME_TIME.tag)
+      && let Some(time) = self.frame_time
     {
-      if let Some(time) = self.frame_time {
-        return Some(1000.0 / time);
-      }
+      return Some(1000.0 / time);
     }
 
     if let Some(time) = self.frame_time {
@@ -260,10 +259,10 @@ impl CineModule {
   }
 
   fn lookup_frame_time_vector(&self, frame_index: usize) -> Option<Duration> {
-    if let Some(frame_time_vector) = self.frame_time_vector.as_ref() {
-      if let Some(time) = frame_time_vector.get(frame_index + 1) {
-        return Some(Duration::from_secs_f64(*time / 1000.0));
-      }
+    if let Some(frame_time_vector) = self.frame_time_vector.as_ref()
+      && let Some(time) = frame_time_vector.get(frame_index + 1)
+    {
+      return Some(Duration::from_secs_f64(*time / 1000.0));
     }
 
     None

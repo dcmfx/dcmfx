@@ -5,6 +5,7 @@ description = "DCMfx pixel data library"
 
 repository.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 homepage.workspace = true

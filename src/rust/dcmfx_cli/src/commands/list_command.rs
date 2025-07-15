@@ -150,12 +150,11 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
           };
 
           // Check file's extension is allowed, if this check was requested
-          if let Some(extension) = &extension {
-            if let Some(dir_entry_extension) = path.extension() {
-              if dir_entry_extension.to_string_lossy() != *extension {
-                return Ok(());
-              }
-            }
+          if let Some(extension) = &extension
+            && let Some(dir_entry_extension) = path.extension()
+            && dir_entry_extension.to_string_lossy() != *extension
+          {
+            return Ok(());
           }
 
           process_file(

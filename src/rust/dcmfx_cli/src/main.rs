@@ -112,14 +112,14 @@ pub fn validate_output_args(
   output_directory: &Option<PathBuf>,
 ) {
   // Check that --output-directory is a valid directory
-  if let Some(output_directory) = output_directory {
-    if !output_directory.is_dir() {
-      eprintln!(
-        "Error: '{}' is not a valid directory",
-        output_directory.display()
-      );
-      std::process::exit(1);
-    }
+  if let Some(output_directory) = output_directory
+    && !output_directory.is_dir()
+  {
+    eprintln!(
+      "Error: '{}' is not a valid directory",
+      output_directory.display()
+    );
+    std::process::exit(1);
   }
 
   // Check that --output-filename and --output-directory aren't both specified

@@ -173,13 +173,14 @@ impl GrayscalePipeline {
   /// Caches are only available when the stored value range has <= 2^16 items.
   ///
   pub fn output_cache_u8(&self) -> Ref<Option<StoredValueOutputCache<u8>>> {
-    if let Ok(mut output_cache_u8) = self.output_cache_u8.try_borrow_mut() {
-      if output_cache_u8.is_none() && self.is_stored_value_range_cacheable() {
-        *output_cache_u8 = Some(StoredValueOutputCache::new(
-          &self.stored_value_range,
-          |pixel| self.apply_u8(pixel),
-        ));
-      }
+    if let Ok(mut output_cache_u8) = self.output_cache_u8.try_borrow_mut()
+      && output_cache_u8.is_none()
+      && self.is_stored_value_range_cacheable()
+    {
+      *output_cache_u8 = Some(StoredValueOutputCache::new(
+        &self.stored_value_range,
+        |pixel| self.apply_u8(pixel),
+      ));
     }
 
     self.output_cache_u8.borrow()
@@ -191,13 +192,14 @@ impl GrayscalePipeline {
   /// Caches are only available when the stored value range has <= 2^16 items.
   ///
   pub fn output_cache_u16(&self) -> Ref<Option<StoredValueOutputCache<u16>>> {
-    if let Ok(mut output_cache_u16) = self.output_cache_u16.try_borrow_mut() {
-      if output_cache_u16.is_none() && self.is_stored_value_range_cacheable() {
-        *output_cache_u16 = Some(StoredValueOutputCache::new(
-          &self.stored_value_range,
-          |pixel| self.apply_u16(pixel),
-        ));
-      }
+    if let Ok(mut output_cache_u16) = self.output_cache_u16.try_borrow_mut()
+      && output_cache_u16.is_none()
+      && self.is_stored_value_range_cacheable()
+    {
+      *output_cache_u16 = Some(StoredValueOutputCache::new(
+        &self.stored_value_range,
+        |pixel| self.apply_u16(pixel),
+      ));
     }
 
     self.output_cache_u16.borrow()

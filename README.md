@@ -16,7 +16,7 @@
   <br />
   [<img src="https://img.shields.io/badge/License-AGPLv3-blue.svg">](https://www.gnu.org/licenses/agpl-3.0.en.html)
   [<img src="https://img.shields.io/badge/Gleam-1.11-FFAFF3">](https://gleam.run)
-  [<img src="https://img.shields.io/badge/MSRV-1.85-CE422B">](https://www.rust-lang.org)
+  [<img src="https://img.shields.io/badge/MSRV-1.88-CE422B">](https://www.rust-lang.org)
 
   [<b>Main Website</b>](https://dcmfx.github.io/)
 </div>

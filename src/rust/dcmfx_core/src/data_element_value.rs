@@ -1378,10 +1378,10 @@ impl DataElementValue {
   ) -> Result<person_name::StructuredPersonName, DataError> {
     let mut person_names = self.get_person_names()?;
 
-    if let Some(s) = person_names.pop() {
-      if person_names.is_empty() {
-        return Ok(s);
-      }
+    if let Some(s) = person_names.pop()
+      && person_names.is_empty()
+    {
+      return Ok(s);
     }
 
     Err(DataError::new_multiplicity_mismatch())

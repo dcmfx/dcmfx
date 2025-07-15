@@ -83,20 +83,20 @@ impl DataSet {
       .map(|(tag, value)| (*tag, value.clone()))
       .collect();
 
-    if let Ok(value) = self.get_value(dictionary::SOP_CLASS_UID.tag) {
-      if self.get_string(dictionary::SOP_CLASS_UID.tag).is_ok() {
-        file_meta_information
-          .insert(dictionary::MEDIA_STORAGE_SOP_CLASS_UID.tag, value.clone());
-      }
+    if let Ok(value) = self.get_value(dictionary::SOP_CLASS_UID.tag)
+      && self.get_string(dictionary::SOP_CLASS_UID.tag).is_ok()
+    {
+      file_meta_information
+        .insert(dictionary::MEDIA_STORAGE_SOP_CLASS_UID.tag, value.clone());
     }
 
-    if let Ok(value) = self.get_value(dictionary::SOP_INSTANCE_UID.tag) {
-      if self.get_string(dictionary::SOP_INSTANCE_UID.tag).is_ok() {
-        file_meta_information.insert(
-          dictionary::MEDIA_STORAGE_SOP_INSTANCE_UID.tag,
-          value.clone(),
-        );
-      }
+    if let Ok(value) = self.get_value(dictionary::SOP_INSTANCE_UID.tag)
+      && self.get_string(dictionary::SOP_INSTANCE_UID.tag).is_ok()
+    {
+      file_meta_information.insert(
+        dictionary::MEDIA_STORAGE_SOP_INSTANCE_UID.tag,
+        value.clone(),
+      );
     }
 
     // Exclude sequences and encapsulated pixel data, as they aren't allowed in
@@ -652,22 +652,21 @@ impl DataSet {
     for entry in path.entries().iter() {
       match lookup_result {
         DataSetLookupResult::DataElementValue(value) => {
-          if let DataSetPathEntry::SequenceItem { index } = entry {
-            if let Ok(items) = value.sequence_items() {
-              if let Some(item) = items.get(*index) {
-                lookup_result = DataSetLookupResult::DataSet(item);
-                continue;
-              }
-            }
+          if let DataSetPathEntry::SequenceItem { index } = entry
+            && let Ok(items) = value.sequence_items()
+            && let Some(item) = items.get(*index)
+          {
+            lookup_result = DataSetLookupResult::DataSet(item);
+            continue;
           }
         }
 
         DataSetLookupResult::DataSet(data_set) => {
-          if let DataSetPathEntry::DataElement { tag } = entry {
-            if let Some(value) = data_set.0.get(tag) {
-              lookup_result = DataSetLookupResult::DataElementValue(value);
-              continue;
-            }
+          if let DataSetPathEntry::DataElement { tag } = entry
+            && let Some(value) = data_set.0.get(tag)
+          {
+            lookup_result = DataSetLookupResult::DataElementValue(value);
+            continue;
           }
         }
       }

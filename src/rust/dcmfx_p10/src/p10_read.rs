@@ -301,10 +301,10 @@ impl P10ReadContext {
 
     loop {
       // Check if the end of the File Meta Information has been reached
-      if let Some(ends_at) = ends_at {
-        if self.stream.bytes_read() >= *ends_at {
-          break;
-        }
+      if let Some(ends_at) = ends_at
+        && self.stream.bytes_read() >= *ends_at
+      {
+        break;
       }
 
       // Peek the next 8 bytes that contain the group, element, VR, and two

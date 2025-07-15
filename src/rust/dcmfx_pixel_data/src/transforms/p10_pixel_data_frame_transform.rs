@@ -265,10 +265,10 @@ impl P10PixelDataFrameTransform {
           }
 
           // If this frame has a length specified then apply it
-          if let Some(offset_table) = self.offset_table.as_ref() {
-            if let Some((_, Some(frame_length))) = offset_table.front() {
-              Self::apply_length_to_frame(&mut frame, *frame_length)?;
-            }
+          if let Some(offset_table) = self.offset_table.as_ref()
+            && let Some((_, Some(frame_length))) = offset_table.front()
+          {
+            Self::apply_length_to_frame(&mut frame, *frame_length)?;
           }
 
           frames.push(frame);
