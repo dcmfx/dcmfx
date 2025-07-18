@@ -151,6 +151,29 @@ jobs:
           wasmer target/wasm32-unknown-unknown/debug/dcmfx_wasm_test.wasm --invoke dcmfx_wasm_test
           wasmer target/wasm32-unknown-unknown/release/dcmfx_wasm_test.wasm --invoke dcmfx_wasm_test
 
+  test_dcmfx_rust_build_without_pixel_data_native_feature:
+    name: Test DCMfx Rust build without dcmfx/pixel_data_native
+    timeout-minutes: 30
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.88
+          cache-workspaces: src/rust
+
+      - name: Fetch dependencies
+        working-directory: src/rust
+        run: cargo fetch --locked
+
+      - name: Build without dcmfx/pixel_data_native feature
+        working-directory: src/rust
+        run: cargo build --frozen --package dcmfx_cli --no-default-features
+
   test_dcmfx_rust_windows_gnu_library_build:
     name: Test DCMfx Rust Windows GNU library build
     timeout-minutes: 30

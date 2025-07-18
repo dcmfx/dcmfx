@@ -431,7 +431,7 @@ impl P10PixelDataTranscodeTransform {
     input_frame: &mut PixelDataFrame,
   ) -> Result<RcByteSlice, P10PixelDataTranscodeTransformError> {
     // Special case for recompression of JPEG Baseline 8-bit into JPEG XL
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     if self.input_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
       && self.output_transfer_syntax
         == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
