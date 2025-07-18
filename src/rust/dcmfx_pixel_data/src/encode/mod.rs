@@ -56,8 +56,9 @@ impl PixelDataEncodeConfig {
   ///
   /// - JPEG Baseline 8-bit
   /// - JPEG Extended 12-bit
-  /// - JPEG 2000 (Lossy)
-  /// - High-Throughput JPEG 2000 (Lossy)
+  /// - JPEG 2000
+  /// - High-Throughput JPEG 2000
+  /// - JPEG XL
   ///
   /// Default: 85.
   ///
