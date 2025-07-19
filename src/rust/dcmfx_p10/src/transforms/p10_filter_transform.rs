@@ -18,12 +18,8 @@ pub struct P10FilterTransform {
 /// Defines a function called by a [`P10FilterTransform`] that determines
 /// whether a data element should pass through the filter.
 ///
-pub type PredicateFunction = dyn FnMut(
-  DataElementTag,
-  ValueRepresentation,
-  Option<u32>,
-  &DataSetPath,
-) -> bool;
+pub type PredicateFunction = dyn FnMut(DataElementTag, ValueRepresentation, Option<u32>, &DataSetPath) -> bool
+  + Send;
 
 impl P10FilterTransform {
   /// Creates a new filter transform for filtering a stream of DICOM P10 tokens.
