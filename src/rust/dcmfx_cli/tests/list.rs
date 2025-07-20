@@ -39,10 +39,11 @@ fn with_summary() {
     .assert()
     .success();
 
-  assert_eq!(
-    get_stderr(assert).trim(),
-    "Found 32 DICOM files, 23 studies, total size: 11.2 MiB"
-  );
+  #[cfg(windows)]
+  assert_snapshot!("with_summary_windows", get_stderr(assert).trim(),);
+
+  #[cfg(not(windows))]
+  assert_snapshot!("with_summary", get_stderr(assert).trim(),);
 }
 
 #[test]
@@ -64,15 +65,16 @@ fn with_json_lines_format() {
   lines.sort();
 
   #[cfg(windows)]
-  assert_snapshot!("with_json_lines_format_windows", lines.join("\n"));
+  {
+    assert_snapshot!("with_json_lines_format_windows", lines.join("\n"));
+    assert_snapshot!("with_json_lines_format_summary_windows", stderr.trim());
+  }
 
   #[cfg(not(windows))]
-  assert_snapshot!("with_json_lines_format", lines.join("\n"));
-
-  assert_eq!(
-    "Found 216 DICOM files, 65 studies, total size: 13.7 MiB",
-    stderr.trim()
-  );
+  {
+    assert_snapshot!("with_json_lines_format", lines.join("\n"));
+    assert_snapshot!("with_json_lines_format_summary", stderr.trim());
+  }
 }
 
 #[test]

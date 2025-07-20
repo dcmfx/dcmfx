@@ -1,11 +1,8 @@
 use std::{
-  collections::HashSet,
+  collections::{HashMap, HashSet},
   io::Write,
-  path::PathBuf,
-  sync::{
-    Arc, Mutex,
-    atomic::{AtomicU64, AtomicUsize, Ordering},
-  },
+  path::{Path, PathBuf},
+  sync::{Arc, Mutex},
 };
 
 use clap::{Args, ValueEnum};
@@ -58,7 +55,19 @@ pub struct ListArgs {
       files. This allows for a subset of data elements from each DICOM file to \
       be gathered as part of the listing process. Selected data elements are \
       output as DICOM JSON. Specify this argument multiple times to include \
-      more than one data element in the output.",
+      more than one data element in the output.\n\
+      \n\
+      Commonly selected data element tags are:\n\
+      \n\
+      - (0002,0010) Transfer Syntax UID\n\
+      - (0020,000D) Study Instance UID\n\
+      - (0020,000E) Series Instance UID\n\
+      - (0008,0018) SOP Instance UID\n\
+      - (0008,0016) SOP Class UID\n\
+      - (0008,0020) Study Date\n\
+      - (0008,0030) Study Time\n\
+      - (0008,0060) Modality\n\
+      ",
     value_parser = crate::args::validate_data_element_tag,
   )]
   selected_data_elements: Vec<DataElementTag>,
@@ -66,9 +75,10 @@ pub struct ListArgs {
   #[arg(
     long,
     help_heading = "Output",
-    help = "Whether to print a summary of the total number of DICOM files \
-      found, the total number of studies, and their total size. The summary is \
-      printed to stderr.",
+    help = "Whether to print a summary of the listed DICOM files. The summary \
+      details the distribution of transfer syntaxes and SOP classes, followed \
+      by the total number of DICOM files, total number of studies, and size \
+      information. The summary is printed to stderr.",
     default_value_t = false
   )]
   summarize: bool,
@@ -127,17 +137,12 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
       })
   });
 
-  // Values used to track information needed when printing a summary at the end
-  // of the list output
-  let dicom_file_count = Arc::new(AtomicUsize::new(0));
-  let dicom_file_total_size = Arc::new(AtomicU64::new(0));
-  let dicom_study_instance_uids =
-    Arc::new(Mutex::new(HashSet::<String>::new()));
+  // Track information needed when printing a summary at the end of the list
+  // output
+  let summary = Arc::new(Mutex::new(Summary::new()));
 
   let result = {
-    let dicom_file_count = dicom_file_count.clone();
-    let dicom_file_total_size = dicom_file_total_size.clone();
-    let dicom_study_instance_uids = dicom_study_instance_uids.clone();
+    let summary = summary.clone();
 
     utils::create_thread_pool(args.threads).install(move || {
       file_iterator.par_bridge().try_for_each(
@@ -157,13 +162,7 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
             return Ok(());
           }
 
-          process_file(
-            &path,
-            args,
-            dicom_file_count.clone(),
-            dicom_file_total_size.clone(),
-            dicom_study_instance_uids.clone(),
-          )
+          process_file(&path, args, summary.clone())
         },
       )
     })
@@ -188,12 +187,7 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
   if args.summarize {
     std::io::stdout().flush().unwrap();
     eprintln!();
-    eprintln!(
-      "Found {} DICOM files, {} studies, total size: {}",
-      dicom_file_count.load(Ordering::SeqCst),
-      dicom_study_instance_uids.lock().unwrap().len(),
-      bytesize::ByteSize::b(dicom_file_total_size.load(Ordering::SeqCst)),
-    );
+    summary.lock().unwrap().print_tables();
   }
 
   Ok(())
@@ -207,11 +201,9 @@ enum ProcessFileError {
 }
 
 fn process_file(
-  path: &PathBuf,
+  path: &Path,
   args: &ListArgs,
-  dicom_file_count: Arc<AtomicUsize>,
-  dicom_file_total_size: Arc<AtomicU64>,
-  dicom_study_instance_uids: Arc<Mutex<HashSet<String>>>,
+  summary: Arc<Mutex<Summary>>,
 ) -> Result<(), ProcessFileError> {
   // Memoized closure that returns the size of the file in bytes. This allows
   // the metadata() call to be avoided if not needed, and to only be performed
@@ -228,12 +220,7 @@ fn process_file(
   };
 
   // Get the line of output for this file
-  let output_line = output_line_for_file(
-    path,
-    args,
-    &dicom_study_instance_uids,
-    &mut file_size,
-  )?;
+  let output_line = output_line_for_file(path, args, &summary, &mut file_size)?;
 
   // If None was returned then it's not a DICOM P10 file
   let Some(mut output_line) = output_line else {
@@ -253,25 +240,23 @@ fn process_file(
 
   // Accumulate stats if a summary of the listing was requested
   if args.summarize {
-    dicom_file_count.fetch_add(1, Ordering::SeqCst);
-    dicom_file_total_size.fetch_add(file_size()?, Ordering::SeqCst);
+    summary.lock().unwrap().dicoms.add_dicom(file_size()?);
   }
 
   Ok(())
 }
 
 fn output_line_for_file(
-  path: &PathBuf,
+  path: &Path,
   args: &ListArgs,
-  dicom_study_instance_uids: &Arc<Mutex<HashSet<String>>>,
+  summary: &Arc<Mutex<Summary>>,
   mut file_size: impl FnMut() -> Result<u64, ProcessFileError>,
 ) -> Result<Option<String>, ProcessFileError> {
   let mut tags_to_read = args.selected_data_elements.to_vec();
 
-  // If summarizing, ensure that the Study Instance UID is read from the DICOM
-  // file so it can be counted
+  // If summarizing, read extra tags from the DICOM file
   if args.summarize {
-    tags_to_read.push(dictionary::STUDY_INSTANCE_UID.tag);
+    tags_to_read.extend_from_slice(&Summary::SUMMARY_DATA_ELEMENT_TAGS);
   }
 
   if tags_to_read.is_empty() {
@@ -304,25 +289,22 @@ fn output_line_for_file(
       return Ok(None);
     }
 
-    // Any other error reading the file is returned
+    // Propagate any other error reading the file
     let mut data_set = data_set.map_err(ProcessFileError::P10Error)?;
 
-    // If summarizing, track this DICOM file's Study Instance UID
+    // If summarizing, add details of this DICOM to the summary
     if args.summarize {
-      if let Ok(study_instance_uid) =
-        data_set.get_string(dictionary::STUDY_INSTANCE_UID.tag)
-      {
-        dicom_study_instance_uids
-          .lock()
-          .unwrap()
-          .insert(study_instance_uid.to_string());
-      }
+      summary
+        .lock()
+        .unwrap()
+        .update(path, &data_set, file_size()?);
 
-      // Don't include the Study Instance UID if it was only read in order to
-      // count studies
-      tags_to_read.pop();
-      if !tags_to_read.contains(&dictionary::STUDY_INSTANCE_UID.tag) {
-        data_set.delete(dictionary::STUDY_INSTANCE_UID.tag);
+      // Remove data elements that were only added for use in the summary
+      for tag in Summary::SUMMARY_DATA_ELEMENT_TAGS {
+        tags_to_read.pop();
+        if !tags_to_read.contains(&tag) {
+          data_set.delete(tag);
+        }
       }
     }
 
@@ -352,5 +334,210 @@ fn output_line_for_file(
         Ok(Some(serde_json::to_string(&output).unwrap()))
       }
     }
+  }
+}
+
+/// A summary of the DICOM files found during the listing process.
+///
+struct Summary {
+  dicoms: DicomCountAndSize,
+  transfer_syntaxes: HashMap<&'static TransferSyntax, DicomCountAndSize>,
+  sop_class_uids: HashMap<String, DicomCountAndSize>,
+  study_instance_uids: HashSet<String>,
+  largest_dicom: (PathBuf, u64),
+}
+
+#[derive(Clone, Copy, Default)]
+struct DicomCountAndSize {
+  count: usize,
+  size: u64,
+}
+
+impl DicomCountAndSize {
+  fn add_dicom(&mut self, dicom_size: u64) {
+    self.count += 1;
+    self.size += dicom_size;
+  }
+}
+
+impl Summary {
+  /// The tags of DICOM data elements that need to be read from DICOM files in
+  /// order to generate the summary.
+  ///
+  const SUMMARY_DATA_ELEMENT_TAGS: [DataElementTag; 3] = [
+    dictionary::TRANSFER_SYNTAX_UID.tag,
+    dictionary::SOP_CLASS_UID.tag,
+    dictionary::STUDY_INSTANCE_UID.tag,
+  ];
+
+  /// Creates a new summary with default values.
+  ///
+  fn new() -> Self {
+    Self {
+      dicoms: DicomCountAndSize::default(),
+      transfer_syntaxes: HashMap::new(),
+      sop_class_uids: HashMap::new(),
+      study_instance_uids: HashSet::new(),
+      largest_dicom: (PathBuf::new(), 0),
+    }
+  }
+
+  /// Updates the summary with information from a DICOM file.
+  ///
+  fn update(&mut self, path: &Path, data_set: &DataSet, file_size: u64) {
+    // Add transfer syntax to summary
+    let transfer_syntax = data_set
+      .get_transfer_syntax()
+      .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN);
+
+    self
+      .transfer_syntaxes
+      .entry(transfer_syntax)
+      .or_default()
+      .add_dicom(file_size);
+
+    // Add SOP Class UID to summary
+    if let Ok(sop_class_uid) =
+      data_set.get_string(dictionary::SOP_CLASS_UID.tag)
+    {
+      self
+        .sop_class_uids
+        .entry(sop_class_uid.to_string())
+        .or_default()
+        .add_dicom(file_size);
+    }
+
+    // Add Study Instance UID to summary
+    if let Ok(study_instance_uid) =
+      data_set.get_string(dictionary::STUDY_INSTANCE_UID.tag)
+    {
+      self
+        .study_instance_uids
+        .insert(study_instance_uid.to_string());
+    }
+
+    // Update largest DICOM file if this one is now the largest
+    if file_size > self.largest_dicom.1 {
+      self.largest_dicom = (path.to_path_buf(), file_size);
+    }
+  }
+
+  /// Prints the summary tables to stderr.
+  ///
+  fn print_tables(&self) {
+    self.print_transfer_syntaxes_table();
+    self.print_sop_class_uids_table();
+    self.print_summary_table();
+  }
+
+  fn print_transfer_syntaxes_table(&self) {
+    let header = ["Transfer Syntax", "Count", "Size"];
+
+    let rows: Vec<_> = self
+      .transfer_syntaxes
+      .iter()
+      .map(|(transfer_syntax, summary)| {
+        (transfer_syntax.name.to_string(), *summary)
+      })
+      .collect();
+
+    self.print_sorted_table(&header, rows);
+  }
+
+  fn print_sop_class_uids_table(&self) {
+    let header = ["SOP Class", "Count", "Size"];
+
+    let rows: Vec<_> = self
+      .sop_class_uids
+      .iter()
+      .map(|(sop_class_uid, summary)| {
+        (
+          dictionary::uid_name(sop_class_uid)
+            .unwrap_or(sop_class_uid)
+            .to_string(),
+          *summary,
+        )
+      })
+      .collect();
+
+    self.print_sorted_table(&header, rows);
+  }
+
+  fn print_summary_table(&self) {
+    let mut table = Self::create_table(&["Summary", "Value"]);
+    table.add_row(["DICOM count".to_string(), self.dicoms.count.to_string()]);
+    table.add_row([
+      "DICOM total size".to_string(),
+      bytesize::ByteSize::b(self.dicoms.size).to_string(),
+    ]);
+
+    table.add_row([
+      "DICOM mean size".to_string(),
+      bytesize::ByteSize::b(self.dicoms.size / self.dicoms.count as u64)
+        .to_string(),
+    ]);
+    table.add_row([
+      "DICOM largest size".to_string(),
+      format!(
+        "{} ({})",
+        self.largest_dicom.0.display(),
+        bytesize::ByteSize::b(self.largest_dicom.1),
+      ),
+    ]);
+    table.add_row([
+      "Study count".to_string(),
+      self.study_instance_uids.len().to_string(),
+    ]);
+    eprintln!("{table}");
+  }
+
+  fn create_table(header: &[&str]) -> comfy_table::Table {
+    use comfy_table::{
+      Attribute, Cell, CellAlignment, Table, presets::UTF8_FULL,
+    };
+
+    let mut table = Table::new();
+    table.load_preset(UTF8_FULL);
+
+    table.set_header(
+      header
+        .iter()
+        .map(|text| Cell::new(text).add_attribute(Attribute::Bold))
+        .collect::<Vec<_>>(),
+    );
+
+    if let Some(column) = table.column_mut(1) {
+      column.set_cell_alignment(CellAlignment::Right);
+    }
+    if let Some(column) = table.column_mut(2) {
+      column.set_cell_alignment(CellAlignment::Right);
+    }
+
+    table
+  }
+
+  fn print_sorted_table(
+    &self,
+    header: &[&str],
+    mut rows: Vec<(String, DicomCountAndSize)>,
+  ) {
+    let mut table = Self::create_table(header);
+
+    // Sort by count (descending) and then by name (ascending)
+    rows.sort_by(|a, b| b.1.count.cmp(&a.1.count).then(a.0.cmp(&b.0)));
+
+    for (name, stats) in rows {
+      let count_percent =
+        (stats.count as f64 / self.dicoms.count as f64) * 100.0;
+      let size_percent = (stats.size as f64 / self.dicoms.size as f64) * 100.0;
+
+      table.add_row([
+        name,
+        format!("{} ({count_percent:.1}%)", stats.count),
+        format!("{} ({size_percent:.1}%)", bytesize::ByteSize::b(stats.size)),
+      ]);
+    }
+
+    eprintln!("{table}");
   }
 }

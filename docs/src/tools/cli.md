@@ -75,6 +75,7 @@ Commands:
   print           Prints the content of DICOM P10 files
   json-to-dcm     Converts DICOM JSON files to DICOM P10 files
   dcm-to-json     Converts DICOM P10 files to DICOM JSON files
+  list            Lists DICOM P10 files in one or more directories
   help            Print this message or the help of the given subcommand(s)
 
 Options:
@@ -187,6 +188,21 @@ Options:
    ```sh
    dcmfx modify input.dcm --in-place --delete-tag 00100010 --delete-tag 00100030
    ```
+
+10. Print a list of all DICOM files under the current directory:
+
+    ```sh
+    dcmfx list .
+    ```
+
+11. Print a list of all DICOM files under the current directory as JSON Lines
+    that includes the value of each DICOM's '*(0008,0018) SOP Instance UID*'
+    data element, followed by a summary of their transfer syntaxes and SOP
+    classes:
+
+    ```sh
+    dcmfx list . --format json-lines --select 00080018 --summarize
+    ```
 
 ## Gleam CLI
 

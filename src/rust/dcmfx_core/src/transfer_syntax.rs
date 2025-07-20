@@ -3,7 +3,7 @@
 /// The value representation serialization mode of a transfer syntax. This is
 /// either implicit or explicit.
 ///
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum VrSerialization {
   VrImplicit,
   VrExplicit,
@@ -11,7 +11,7 @@ pub enum VrSerialization {
 
 /// The endianness of a transfer syntax, either little endian or big endian.
 ///
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Endianness {
   LittleEndian,
   BigEndian,
@@ -29,7 +29,7 @@ impl Endianness {
 /// serializes value representations (implicit vs explicit), whether it is zlib
 /// deflated, and whether it stores its pixel data as encapsulated.
 ///
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct TransferSyntax {
   pub name: &'static str,
   pub uid: &'static str,
@@ -37,6 +37,12 @@ pub struct TransferSyntax {
   pub endianness: Endianness,
   pub is_deflated: bool,
   pub is_encapsulated: bool,
+}
+
+impl core::hash::Hash for TransferSyntax {
+  fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+    self.uid.hash(state);
+  }
 }
 
 /// The 'Implicit VR Little Endian' transfer syntax.
