@@ -303,10 +303,10 @@ jobs:
         uses: actions/download-artifact@v4
 
       - name: Update Gleam package versions
-        run: sh .github/scripts/set_gleam_package_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
+        run: .github/scripts/set_gleam_package_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
 
       - name: Update Rust crate versions
-        run: sh .github/scripts/set_rust_crate_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
+        run: .github/scripts/set_rust_crate_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
 
       - name: Semantic release
         id: semantic-release
