@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, path::Path};
 
 use clap::ValueEnum;
 
@@ -12,7 +12,7 @@ impl Mp4Encoder {
   /// Initializes MP4 encoding to the specified output file.
   ///
   pub fn new(
-    filename: &str,
+    filename: &Path,
     first_frame: &image::DynamicImage,
     frame_rate: f64,
     mut output_width: u32,
@@ -92,7 +92,7 @@ impl Mp4Encoder {
     }
 
     // Specify output filename
-    ffmpeg_args.push(filename.to_string());
+    ffmpeg_args.push(filename.to_string_lossy().to_string());
     ffmpeg_args.push("-y".to_string());
 
     // Spawn the ffmpeg process

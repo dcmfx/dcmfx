@@ -113,8 +113,8 @@ fn with_output_directory() {
 fn with_multiple_inputs() {
   let dicom_files = [generate_temp_filename(), generate_temp_filename()];
   let output_files = [
-    format!("{}{}", dicom_files[0].to_string_lossy(), ".json"),
-    format!("{}{}", dicom_files[1].to_string_lossy(), ".json"),
+    format!("{}{}", dicom_files[0].display(), ".json"),
+    format!("{}{}", dicom_files[1].display(), ".json"),
   ];
 
   std::fs::copy(

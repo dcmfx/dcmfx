@@ -179,7 +179,16 @@ impl BaseInputArgs {
             as Box<dyn Iterator<Item = InputSource> + Send>;
         }
 
-        // Attempt to expand each input filename as a glob pattern
+        // If it's not a glob then error if it doesn't point to a valid file
+        if !is_glob(&input_filename_str) && !input_filename.is_file() {
+          eprintln!(
+            "Error: Input file '{}' does not exist",
+            input_filename.display()
+          );
+          std::process::exit(1);
+        }
+
+        // Attempt to expand as a glob pattern
         match glob::glob(&input_filename_str) {
           Ok(paths) => {
             let expanded = paths.filter_map(move |path| match path {
@@ -258,4 +267,10 @@ impl BaseInputArgs {
 
     Box::new(iter)
   }
+}
+
+/// Checks if the given string is a potential glob pattern.
+///
+fn is_glob(s: &str) -> bool {
+  s.contains('*') || s.contains('?') || s.contains('[') || s.contains('{')
 }

@@ -1,0 +1,5 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+---
+Error: Input file 'file-that-does-not-exist.dcm' does not exist

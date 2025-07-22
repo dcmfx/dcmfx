@@ -97,6 +97,19 @@ fn modify_in_place() {
 }
 
 #[test]
+fn errors_on_missing_file() {
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg("--in-place")
+    .arg("file-that-does-not-exist.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!("errors_on_missing_file", get_stderr(assert));
+}
+
+#[test]
 fn errors_on_photometric_interpretation_monochrome_without_transfer_syntax() {
   let assert = Command::cargo_bin("dcmfx_cli")
     .unwrap()

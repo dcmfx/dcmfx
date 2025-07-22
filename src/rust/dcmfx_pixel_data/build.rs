@@ -24,7 +24,7 @@ fn main() {
     .filter_map(Result::ok)
     .collect();
   for file in header_files {
-    println!("cargo:rerun-if-changed={}", file.to_string_lossy());
+    println!("cargo:rerun-if-changed={}", file.display());
   }
 
   // Add output directory to the linker's search path

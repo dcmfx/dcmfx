@@ -770,7 +770,7 @@ fn create_mp4_encoder(
   };
 
   Mp4Encoder::new(
-    &mp4_path.to_string_lossy(),
+    &mp4_path,
     first_frame,
     frame_rate,
     output_width,
