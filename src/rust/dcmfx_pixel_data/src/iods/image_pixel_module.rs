@@ -347,26 +347,21 @@ impl ImagePixelModule {
     self.high_bit
   }
 
-  /// Sets new bits allocated and bits stored values for this image pixel
-  /// module.
+  /// Updates this image pixel module to match the output of a palette color
+  /// lookup table. This updates the bits allocated, bits stored, high bit,
+  /// and photometric interpretation attributes.
   ///
-  pub fn set_bits(
+  pub fn set_as_palette_output(
     &mut self,
-    bits_allocated: u16,
-    bits_stored: u16,
-  ) -> Result<(), String> {
-    if bits_stored == 0 || bits_stored > bits_allocated {
-      return Err(format!(
-        "Bits stored '{bits_stored}' is invalid for bits allocated \
-         '{bits_allocated}'"
-      ));
-    }
+    palette: &PaletteColorLookupTableModule,
+  ) {
+    let bits_stored = palette.bits_per_entry();
+    let bits_allocated = bits_stored.div_ceil(8) * 8;
 
-    self.bits_allocated = BitsAllocated::try_from(bits_allocated)?;
+    self.bits_allocated = BitsAllocated::try_from(bits_allocated).unwrap();
     self.bits_stored = bits_stored;
     self.high_bit = self.bits_stored - 1;
-
-    Ok(())
+    self.set_photometric_interpretation(PhotometricInterpretation::Rgb);
   }
 
   /// Returns this image pixel module's pixel representation, i.e. whether

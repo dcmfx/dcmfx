@@ -487,38 +487,37 @@ fn get_transcode_image_data_functions(
           }
         }
       } else if image_pixel_module.is_color() {
-        // If a photometric interpretation has been explicitly specified
-        // then use it for the output
+        // If a photometric interpretation has been explicitly specified then
+        // use it for the output
         if let Some(photometric_interpretation_color_arg) =
           photometric_interpretation_color_arg
         {
           if let Some(photometric_interpretation) =
             photometric_interpretation_color_arg.as_photometric_interpretation()
           {
+            // If the input is palette color and the specified output
+            // photometric interpretation isn't palette color then the palette
+            // will be applied
+            if let PhotometricInterpretation::PaletteColor { palette } =
+              image_pixel_module.photometric_interpretation()
+              && !photometric_interpretation.is_palette_color()
+            {
+              image_pixel_module.set_as_palette_output(&palette.clone());
+            }
+
             image_pixel_module
               .set_photometric_interpretation(photometric_interpretation);
           }
         } else {
           // If the input is palette color and the output transfer syntax
-          // doesn't support palette color then expand to RGB by default
+          // doesn't support palette color then the palette will be applied
           if let PhotometricInterpretation::PaletteColor { palette } =
             image_pixel_module.photometric_interpretation()
-          {
-            if !transfer_syntax_arg::supports_palette_color(
+            && !transfer_syntax_arg::supports_palette_color(
               output_transfer_syntax,
-            ) {
-              // Update the bits allocated and bits stored values to match what
-              // will come out of the lookup tables, which may be different to
-              // what's configured for the palette index values
-              let bits_stored = palette.bits_per_entry();
-              let bits_allocated = bits_stored.div_ceil(8) * 8;
-
-              image_pixel_module
-                .set_bits(bits_allocated, bits_stored)
-                .unwrap();
-              image_pixel_module
-                .set_photometric_interpretation(PhotometricInterpretation::Rgb);
-            }
+            )
+          {
+            image_pixel_module.set_as_palette_output(&palette.clone());
           }
 
           // If the input is YBR_FULL_422 and the output transfer syntax

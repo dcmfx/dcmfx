@@ -852,6 +852,16 @@ fn palette_color_16_bit_to_jpeg_xl_lossless() {
 }
 
 #[test]
+fn palette_color_16_bit_to_jpeg_xl_lossless_with_explicit_rgb_argument() {
+  modify_transfer_syntax(
+    "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm",
+    "jpeg-xl-lossless",
+    "palette_color_16_bit_to_jpeg_xl_lossless_with_explicit_rgb_argument",
+    &["--photometric-interpretation-color", "RGB"],
+  );
+}
+
+#[test]
 fn palette_color_to_jpeg_xl() {
   modify_transfer_syntax(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
@@ -1025,6 +1035,7 @@ fn modify_transfer_syntax(
       "jpeg_baseline_to_jpeg_xl_lossless_rgb",
       "palette_color_to_jpeg_xl_lossless",
       "palette_color_16_bit_to_jpeg_xl_lossless",
+      "palette_color_16_bit_to_jpeg_xl_lossless_with_explicit_rgb_argument",
       "rle_lossless_rgb_16_bit_to_jpeg_xl_lossless",
     ]
     .contains(&snapshot_prefix);
