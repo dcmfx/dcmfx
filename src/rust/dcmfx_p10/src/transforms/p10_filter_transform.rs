@@ -11,14 +11,14 @@ use crate::{P10Error, P10Token};
 /// stream.
 ///
 pub struct P10FilterTransform {
-  predicate: Box<PredicateFunction>,
+  predicate: Box<PredicateFn>,
   path_filter_results: Vec<bool>,
 }
 
 /// Defines a function called by a [`P10FilterTransform`] that determines
 /// whether a data element should pass through the filter.
 ///
-pub type PredicateFunction = dyn FnMut(DataElementTag, ValueRepresentation, Option<u32>, &DataSetPath) -> bool
+pub type PredicateFn = dyn Fn(DataElementTag, ValueRepresentation, Option<u32>, &DataSetPath) -> bool
   + Send;
 
 impl P10FilterTransform {
@@ -28,7 +28,7 @@ impl P10FilterTransform {
   /// only those data elements that return `true` from the predicate function
   /// will pass through the filter.
   ///
-  pub fn new(predicate: Box<PredicateFunction>) -> Self {
+  pub fn new(predicate: Box<PredicateFn>) -> Self {
     Self {
       predicate,
       path_filter_results: vec![],

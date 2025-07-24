@@ -732,6 +732,48 @@ impl TransferSyntax {
       || self == &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
       || self == &HIGH_THROUGHPUT_JPEG_2K
   }
+
+  /// Returns whether this transfer syntax supports the `PALETTE_COLOR`
+  /// photometric interpretation.
+  ///
+  pub fn supports_palette_color(&self) -> bool {
+    self == &IMPLICIT_VR_LITTLE_ENDIAN
+      || self == &EXPLICIT_VR_LITTLE_ENDIAN
+      || self == &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+      || self == &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+      || self == &EXPLICIT_VR_BIG_ENDIAN
+      || self == &DEFLATED_IMAGE_FRAME_COMPRESSION
+      || self == &RLE_LOSSLESS
+      || self == &JPEG_LS_LOSSLESS
+      || self == &JPEG_2K_LOSSLESS_ONLY
+      || self == &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
+  }
+
+  /// Returns whether this transfer syntax supports the `YBR_FULL_422`
+  /// photometric interpretation.
+  ///
+  pub fn supports_ybr_full_422(&self) -> bool {
+    self == &IMPLICIT_VR_LITTLE_ENDIAN
+      || self == &EXPLICIT_VR_LITTLE_ENDIAN
+      || self == &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+      || self == &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+      || self == &EXPLICIT_VR_BIG_ENDIAN
+      || self == &DEFLATED_IMAGE_FRAME_COMPRESSION
+      || self == &JPEG_BASELINE_8BIT
+      || self == &JPEG_EXTENDED_12BIT
+  }
+
+  /// Returns whether this transfer syntax supports control of the planar
+  /// configuration.
+  ///
+  pub fn supports_planar_configuration(&self) -> bool {
+    self == &IMPLICIT_VR_LITTLE_ENDIAN
+      || self == &EXPLICIT_VR_LITTLE_ENDIAN
+      || self == &ENCAPSULATED_UNCOMPRESSED_EXPLICIT_VR_LITTLE_ENDIAN
+      || self == &DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN
+      || self == &EXPLICIT_VR_BIG_ENDIAN
+      || self == &DEFLATED_IMAGE_FRAME_COMPRESSION
+  }
 }
 
 #[cfg(test)]
