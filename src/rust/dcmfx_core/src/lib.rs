@@ -16,6 +16,7 @@ pub mod data_set_path;
 pub mod dictionary;
 pub mod error;
 pub mod iod_module;
+pub mod iods;
 pub mod transfer_syntax;
 pub mod utils;
 pub mod value_multiplicity;
