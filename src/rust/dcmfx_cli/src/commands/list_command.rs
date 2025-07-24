@@ -320,8 +320,13 @@ fn output_line_for_file(
         // If there are data elements included in the listing then add the read
         // data set to the output
         if !args.selected_data_elements.is_empty() {
+          let json_config = DicomJsonConfig {
+            store_encapsulated_pixel_data: true,
+            ..Default::default()
+          };
+
           let dicom_json = &data_set
-            .to_json(DicomJsonConfig::default())
+            .to_json(json_config)
             .map_err(ProcessFileError::JsonSerializeError)?;
 
           output.insert(

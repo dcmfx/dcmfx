@@ -100,9 +100,9 @@ fn with_selected_data_elements() {
     .arg("--format")
     .arg("json-lines")
     .arg("--select")
-    .arg("00080008")
+    .arg("00020010")
     .arg("--select")
-    .arg("00080014")
+    .arg("00080018")
     .assert()
     .success();
 

@@ -551,8 +551,8 @@ pub fn data_set_to_tokens<E>(
   let mut insert_specific_character_set_transform =
     P10InsertTransform::new(data_elements_to_insert);
 
-  // Create a function that passes token through the above two transforms and
-  // then to the callback
+  // Create a function that passes the token through the above two transforms
+  // and then to the callback
   let mut process_token = |token: &P10Token| -> Result<(), E> {
     // The following two unwraps are safe because the P10 transforms only error
     // on invalid token streams, which can't happen here

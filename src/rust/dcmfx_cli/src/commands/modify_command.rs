@@ -499,9 +499,9 @@ fn streaming_rewrite(
             .set_zlib_compression_level(args.zlib_compression_level);
 
           let photometric_interpretation_monochrome =
-            args.photometric_interpretation_monochrome.clone();
+            args.photometric_interpretation_monochrome;
           let photometric_interpretation_color =
-            args.photometric_interpretation_color.clone();
+            args.photometric_interpretation_color;
 
           pixel_data_transcode_transform =
             Some(P10PixelDataTranscodeTransform::new(

@@ -743,6 +743,9 @@ impl Default for TranscodeImageDataFunctions {
   }
 }
 
+pub type PhotometricInterpretationFn =
+  dyn Fn(&ImagePixelModule) -> Option<PhotometricInterpretation>;
+
 impl TranscodeImageDataFunctions {
   /// Creates image data functions for use when transcoding pixel data that do
   /// a number of standard alterations to the Image Pixel Module and pixel data
@@ -768,12 +771,8 @@ impl TranscodeImageDataFunctions {
   ///
   pub fn standard_behavior(
     output_transfer_syntax: &'static TransferSyntax,
-    photometric_interpretation_monochrome: Box<
-      dyn Fn(&ImagePixelModule) -> Option<PhotometricInterpretation>,
-    >,
-    photometric_interpretation_color: Box<
-      dyn Fn(&ImagePixelModule) -> Option<PhotometricInterpretation>,
-    >,
+    photometric_interpretation_monochrome: Box<PhotometricInterpretationFn>,
+    photometric_interpretation_color: Box<PhotometricInterpretationFn>,
     planar_configuration: Option<PlanarConfiguration>,
   ) -> Self {
     let process_image_pixel_module =
