@@ -101,7 +101,7 @@ fn with_selected_data_elements() {
     .arg("json-lines")
     .arg("--select")
     .arg("00020010")
-    .arg("--select")
+    .arg("--select-optional")
     .arg("00080018")
     .assert()
     .success();
@@ -119,4 +119,28 @@ fn with_selected_data_elements() {
 
   #[cfg(not(windows))]
   assert_snapshot!("with_selected_data_elements", lines.join("\n"));
+}
+
+#[test]
+fn with_missing_selected_data_elements() {
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+
+  let assert = cmd
+    .arg("list")
+    .arg(to_native_path("../../../test/assets/fo-dicom"))
+    .arg("--format")
+    .arg("json-lines")
+    .arg("--select")
+    .arg("00080018")
+    .assert()
+    .failure();
+
+  #[cfg(windows)]
+  assert_snapshot!(
+    "with_missing_selected_data_elements_windows",
+    get_stderr(assert)
+  );
+
+  #[cfg(not(windows))]
+  assert_snapshot!("with_missing_selected_data_elements", get_stderr(assert));
 }

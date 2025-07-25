@@ -1,0 +1,12 @@
+---
+source: dcmfx_cli/tests/list.rs
+expression: get_stderr(assert)
+snapshot_kind: text
+---
+-----
+DICOM data error listing DICOM file '..\..\..\test\assets\fo-dicom\DICOMDIR.dcm'
+
+  Error: Tag not present
+  Tag: (0008,0018)
+  Name: SOP Instance UID
+  Path: (0008,0018) SOP Instance UID

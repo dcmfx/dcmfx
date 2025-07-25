@@ -1,5 +1,5 @@
 ---
-source: dcmfx_cli\\tests\\list.rs
+source: dcmfx_cli/tests/list.rs
 expression: "lines.join(\"\\n\")"
 ---
 {"data_set":{"00020010":{"Value":["1.2.840.10008.1.2.4.70"],"vr":"UI"},"00080018":{"Value":["999.999.01.23.45.6789"],"vr":"UI"}},"path":"..\\..\\..\\test\\assets\\fo-dicom\\CR-ModalitySequenceLUT.dcm","size":1261500}

@@ -52,10 +52,14 @@ pub struct ListArgs {
     long = "select",
     help_heading = "Output",
     help = "The tags of data elements to include in the output list of DICOM \
-      files. This allows for a subset of data elements from each DICOM file to \
-      be gathered as part of the listing process. Selected data elements are \
-      output as DICOM JSON. Specify this argument multiple times to include \
-      more than one data element in the output.\n\
+      files. This allows specific data elements from each DICOM file to be \
+      gathered as part of the listing process. Selected data elements are \
+      output as a DICOM JSON data set. Specify this argument multiple times to \
+      include more than one data element in the output.\n\
+      \n\
+      An error will occur if a listed DICOM file doesn't contain a selected \
+      data element. To select a data element but not require it to be present \
+      in every listed DICOM file, use --select-optional.
       \n\
       Commonly selected data element tags are:\n\
       \n\
@@ -71,6 +75,15 @@ pub struct ListArgs {
     value_parser = crate::args::validate_data_element_tag,
   )]
   selected_data_elements: Vec<DataElementTag>,
+
+  #[arg(
+    long = "select-optional",
+    help_heading = "Output",
+    help = "The same as --select, but the data element is not required to \
+      be present in every listed DICOM file.",
+    value_parser = crate::args::validate_data_element_tag,
+  )]
+  optional_selected_data_elements: Vec<DataElementTag>,
 
   #[arg(
     long,
@@ -103,7 +116,9 @@ impl core::fmt::Display for Format {
 }
 
 pub fn run(args: &ListArgs) -> Result<(), ()> {
-  if !args.selected_data_elements.is_empty() && args.format != Format::JsonLines
+  if (!args.selected_data_elements.is_empty()
+    || !args.optional_selected_data_elements.is_empty())
+    && args.format != Format::JsonLines
   {
     eprintln!(
       "Error: `--format json-lines` must be specified when selecting data \
@@ -131,7 +146,10 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
         }
 
         Err(e) => {
-          eprintln!("Error: {e}");
+          eprintln!(
+            "Error: Failed listing directory '{}', details: {e}",
+            dir.display()
+          );
           std::process::exit(1);
         }
       })
@@ -146,7 +164,7 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
 
     utils::create_thread_pool(args.threads).install(move || {
       file_iterator.par_bridge().try_for_each(
-        |input_source| -> Result<(), ProcessFileError> {
+        |input_source| -> Result<(), (PathBuf, ProcessFileError)> {
           let InputSource::LocalFile { path } = input_source else {
             eprintln!(
               "Error: reading from stdin is not supported with the list command"
@@ -162,15 +180,15 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
             return Ok(());
           }
 
-          process_file(&path, args, summary.clone())
+          process_file(&path, args, summary.clone()).map_err(|e| (path, e))
         },
       )
     })
   };
 
   // Print the error if one occurred
-  if let Err(error) = result {
-    let task_description = "listing DICOM files".to_string();
+  if let Err((path, error)) = result {
+    let task_description = format!("listing DICOM file '{}'", path.display());
 
     match error {
       ProcessFileError::IoError(e) => {
@@ -178,6 +196,7 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
       }
       ProcessFileError::P10Error(e) => e.print(&task_description),
       ProcessFileError::JsonSerializeError(e) => e.print(&task_description),
+      ProcessFileError::DataError(e) => e.print(&task_description),
     }
 
     return Err(());
@@ -198,6 +217,7 @@ enum ProcessFileError {
   IoError(std::io::Error),
   P10Error(P10Error),
   JsonSerializeError(JsonSerializeError),
+  DataError(DataError),
 }
 
 fn process_file(
@@ -253,6 +273,7 @@ fn output_line_for_file(
   mut file_size: impl FnMut() -> Result<u64, ProcessFileError>,
 ) -> Result<Option<String>, ProcessFileError> {
   let mut tags_to_read = args.selected_data_elements.to_vec();
+  tags_to_read.extend(&args.optional_selected_data_elements);
 
   // If summarizing, read extra tags from the DICOM file
   if args.summarize {
@@ -319,7 +340,17 @@ fn output_line_for_file(
 
         // If there are data elements included in the listing then add the read
         // data set to the output
-        if !args.selected_data_elements.is_empty() {
+        if !tags_to_read.is_empty() {
+          // Check that required selected data elements are present
+          for tag in &args.selected_data_elements {
+            if !data_set.has(*tag) {
+              return Err(ProcessFileError::DataError(
+                DataError::new_tag_not_present()
+                  .with_path(&DataSetPath::new_with_data_element(*tag)),
+              ));
+            }
+          }
+
           let json_config = DicomJsonConfig {
             store_encapsulated_pixel_data: true,
             ..Default::default()
