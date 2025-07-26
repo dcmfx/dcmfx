@@ -327,6 +327,36 @@ impl ImagePixelModule {
     self.columns
   }
 
+  /// Sets this image pixel module's number of rows and columns.
+  ///
+  pub fn set_dimensions(
+    &mut self,
+    rows: u16,
+    columns: u16,
+  ) -> Result<(), String> {
+    if rows == 0 {
+      return Err("Image Pixel Module rows value cannot be zero".to_string());
+    }
+
+    if columns == 0 {
+      return Err(
+        "Image Pixel Module columns value cannot be zero".to_string(),
+      );
+    }
+
+    if self.photometric_interpretation.is_ybr_full_422() && columns % 2 == 1 {
+      return Err(format!(
+        "Image Pixel Module cannot have uneven width ({columns}) when the \
+         photometric interpretation is YBR_FULL_422"
+      ));
+    }
+
+    self.rows = rows;
+    self.columns = columns;
+
+    Ok(())
+  }
+
   /// Returns this image pixel module's number of bits allocated per pixel.
   ///
   pub fn bits_allocated(&self) -> BitsAllocated {

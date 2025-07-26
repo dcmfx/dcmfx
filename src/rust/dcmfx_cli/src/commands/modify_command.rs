@@ -6,7 +6,7 @@ use rayon::prelude::*;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
-use dcmfx::pixel_data::*;
+use dcmfx::pixel_data::{transforms::*, *};
 
 use crate::{
   args::{
@@ -231,6 +231,21 @@ pub struct ModifyArgs {
       - Deflated Image Frame Compression"
   )]
   planar_configuration: Option<PlanarConfigurationArg>,
+
+  #[arg(
+    long,
+    help_heading = "Transcoding",
+    help = "When transcoding pixel data using --transfer-syntax, apply a crop \
+      to specified as 'x,y[,(width_or_right)[,(height_or_bottom)]]'. The last \
+      two values are optional, and if positive they specify the width and \
+      height of the crop rectangle, however if they are zero or negative then \
+      they specify an offset from the right and bottom edges of the pixel data \
+      respectively.\n\
+      \n\
+      Cropping is not supported when targeting the JPEG XL JPEG Recompression
+      transfer syntax."
+  )]
+  crop: Option<CropRect>,
 
   #[command(flatten)]
   decoder: crate::args::decoder_args::DecoderArgs,
@@ -523,6 +538,7 @@ fn streaming_rewrite(
                     .and_then(|a| a.as_photometric_interpretation())
                 }),
                 args.planar_configuration.map(|a| a.into()),
+                args.crop,
               )),
             ));
         }

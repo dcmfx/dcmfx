@@ -24,7 +24,7 @@ mod pixel_data_frame;
 mod pixel_data_renderer;
 pub mod standard_color_palettes;
 mod stored_value_output_cache;
-mod transforms;
+pub mod transforms;
 mod utils;
 
 pub use color_image::{ColorImage, ColorSpace};
@@ -37,7 +37,8 @@ pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_renderer::PixelDataRenderer;
 pub use standard_color_palettes::StandardColorPalette;
 pub use stored_value_output_cache::StoredValueOutputCache;
-pub use transforms::{
+
+use transforms::{
   P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
   P10PixelDataTranscodeTransform, P10PixelDataTranscodeTransformError,
   TranscodeImageDataFunctions,

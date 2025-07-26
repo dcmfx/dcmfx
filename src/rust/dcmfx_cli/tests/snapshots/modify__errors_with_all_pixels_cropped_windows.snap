@@ -1,0 +1,9 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+snapshot_kind: text
+---
+-----
+Pixel data transcode error modifying "..\..\..\test\assets\fo-dicom\TestPattern_Palette.dcm"
+
+  Details: Image Pixel Module rows value cannot be zero

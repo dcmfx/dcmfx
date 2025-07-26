@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+use alloc::{vec, vec::Vec};
 
 use crate::{
   GrayscalePipeline,
@@ -7,6 +7,7 @@ use crate::{
     image_pixel_module::BitsAllocated,
     voi_lut_module::{VoiLutFunction, VoiWindow},
   },
+  transforms::CropRect,
 };
 
 /// A monochrome image that stores an integer value for each pixel.
@@ -411,6 +412,82 @@ impl MonochromeImage {
         }
       }
     }
+  }
+
+  /// Crops this monochrome image to the specified rectangle.
+  ///
+  pub fn crop(&mut self, crop_rect: &CropRect) {
+    let left = crop_rect.left;
+    let top = crop_rect.top;
+    let (height, width) = crop_rect.apply(self.height(), self.width());
+
+    if left == 0 && top == 0 && width == self.width && height == self.height {
+      return;
+    }
+
+    // Helper for cropping non-bitmap data
+    fn crop<T: Clone>(
+      data: &mut Vec<T>,
+      old_width: u16,
+      left: u16,
+      top: u16,
+      width: u16,
+      height: u16,
+    ) {
+      let mut new_data = Vec::with_capacity(width as usize * height as usize);
+
+      for row in top..top + height {
+        let start = row as usize * old_width as usize + left as usize;
+        let end = start + width as usize;
+        new_data.extend_from_slice(&data[start..end]);
+      }
+
+      *data = new_data;
+    }
+
+    match &mut self.data {
+      // Crop 1-bit packed bitmap data
+      MonochromeImageData::Bitmap { data, .. } => {
+        let mut new_data =
+          vec![0u8; (width as usize * height as usize).div_ceil(8)];
+        let old_width = self.width;
+
+        let mut output_bit = 0;
+        for row in top..top + height {
+          let mut input_bit = row as usize * old_width as usize + left as usize;
+          for _ in 0..width {
+            let bit = (data[input_bit / 8] >> (input_bit % 8)) & 1;
+            new_data[output_bit / 8] |= bit << (output_bit % 8);
+
+            input_bit += 1;
+            output_bit += 1;
+          }
+        }
+
+        *data = new_data;
+      }
+      MonochromeImageData::I8(data) => {
+        crop(data, self.width, left, top, width, height)
+      }
+      MonochromeImageData::U8(data) => {
+        crop(data, self.width, left, top, width, height);
+      }
+      MonochromeImageData::I16(data) => {
+        crop(data, self.width, left, top, width, height);
+      }
+      MonochromeImageData::U16(data) => {
+        crop(data, self.width, left, top, width, height);
+      }
+      MonochromeImageData::I32(data) => {
+        crop(data, self.width, left, top, width, height);
+      }
+      MonochromeImageData::U32(data) => {
+        crop(data, self.width, left, top, width, height);
+      }
+    }
+
+    self.width = width;
+    self.height = height;
   }
 
   /// Converts this monochrome image to an 8-bit grayscale image by passing

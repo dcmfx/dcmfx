@@ -17,12 +17,14 @@ use dcmfx_p10::{
 };
 
 use crate::{
-  ColorImage, MonochromeImage, P10PixelDataFrameTransform,
-  P10PixelDataFrameTransformError, PixelDataDecodeConfig, PixelDataDecodeError,
+  ColorImage, MonochromeImage, PixelDataDecodeConfig, PixelDataDecodeError,
   PixelDataEncodeConfig, PixelDataEncodeError, PixelDataFrame,
   PixelDataRenderer, decode, encode,
   iods::image_pixel_module::{
     ImagePixelModule, PhotometricInterpretation, PlanarConfiguration,
+  },
+  transforms::{
+    CropRect, P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
   },
 };
 
@@ -743,7 +745,7 @@ impl Default for TranscodeImageDataFunctions {
   }
 }
 
-pub type PhotometricInterpretationFn =
+pub type TranscodedPhotometricInterpretationFn =
   dyn Fn(&ImagePixelModule) -> Option<PhotometricInterpretation>;
 
 impl TranscodeImageDataFunctions {
@@ -763,17 +765,23 @@ impl TranscodeImageDataFunctions {
   ///   syntax doesn't support PALETTE_COLOR.
   /// - Expansion of YBR_FULL_422 to YBR_FULL when the output transfer syntax
   ///   doesn't support YBR_FULL_422.
+  /// - Optional crop rectangle to apply to the pixel data.
   ///
   /// Also provided is the ability to set a desired photometric interpretation
   /// for the output pixel data, as well as the desired planar configuration.
   /// These must be valid for the output transfer syntax, otherwise the encode
-  /// step is likely to fail during transcoding.
+  /// step is likely to fail during pixel data transcoding.
   ///
   pub fn standard_behavior(
     output_transfer_syntax: &'static TransferSyntax,
-    photometric_interpretation_monochrome: Box<PhotometricInterpretationFn>,
-    photometric_interpretation_color: Box<PhotometricInterpretationFn>,
+    photometric_interpretation_monochrome: Box<
+      TranscodedPhotometricInterpretationFn,
+    >,
+    photometric_interpretation_color: Box<
+      TranscodedPhotometricInterpretationFn,
+    >,
     planar_configuration: Option<PlanarConfiguration>,
+    crop_rect: Option<CropRect>,
   ) -> Self {
     let process_image_pixel_module =
       move |image_pixel_module: &mut ImagePixelModule| {
@@ -880,6 +888,33 @@ impl TranscodeImageDataFunctions {
           }
         }
 
+        // Apply crop to dimensions
+        if let Some(crop_rect) = crop_rect {
+          // Cropping isn't possible when transcoding to JPEG XL JPEG
+          // Recompression, as the JPEG data isn't ever decoded/encoded
+          if output_transfer_syntax
+            == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
+          {
+            return Err(P10PixelDataTranscodeTransformError::NotSupported {
+              details:
+                "Cropping of pixel data is not supported when targeting JPEG \
+                 XL JPEG Recompression"
+                  .to_string(),
+            });
+          }
+
+          let (cropped_rows, cropped_columns) = crop_rect
+            .apply(image_pixel_module.rows(), image_pixel_module.columns());
+
+          if let Err(e) =
+            image_pixel_module.set_dimensions(cropped_rows, cropped_columns)
+          {
+            return Err(P10PixelDataTranscodeTransformError::NotSupported {
+              details: e,
+            });
+          }
+        }
+
         Ok(())
       };
 
@@ -902,6 +937,11 @@ impl TranscodeImageDataFunctions {
           }
 
           _ => (),
+        }
+
+        // Crop image data
+        if let Some(crop_rect) = crop_rect {
+          image.crop(&crop_rect);
         }
 
         Ok(())
@@ -947,6 +987,11 @@ impl TranscodeImageDataFunctions {
                 .to_string(),
             }
           })?;
+        }
+
+        // Crop image data
+        if let Some(crop_rect) = crop_rect {
+          image.crop(&crop_rect);
         }
 
         Ok(())

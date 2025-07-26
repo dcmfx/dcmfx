@@ -1,0 +1,8 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+snapshot_kind: text
+---
+error: invalid value 'a,b' for '--crop <CROP>': Invalid value for crop_rect.left
+
+For more information, try '--help'.

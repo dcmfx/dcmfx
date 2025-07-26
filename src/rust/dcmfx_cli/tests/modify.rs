@@ -962,6 +962,69 @@ fn jpeg_baseline_to_jpeg_xl_jpeg_recompression() {
 }
 
 #[test]
+fn with_crop() {
+  let dicom_files = [
+    "../../../test/assets/fo-dicom/mr_brucker.dcm",
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+  ];
+
+  let crops = ["0,0,0,0", "50,50,300,200", "10,100", "100,10,-100,-100"];
+
+  for dicom_file in dicom_files {
+    for crop in crops {
+      let snapshot_prefix =
+        format!("with_crop_{}_{crop}", dicom_file.split("/").last().unwrap());
+
+      modify_transfer_syntax(
+        dicom_file,
+        "pass-through",
+        &snapshot_prefix,
+        &["--crop", crop],
+      );
+    }
+  }
+}
+
+#[test]
+fn errors_with_all_pixels_cropped() {
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg("--transfer-syntax")
+    .arg("explicit-vr-little-endian")
+    .arg("--in-place")
+    .arg("--crop")
+    .arg("9999,9999")
+    .arg("../../../test/assets/fo-dicom/TestPattern_Palette.dcm")
+    .assert()
+    .failure();
+
+  #[cfg(windows)]
+  assert_snapshot!(
+    "errors_with_all_pixels_cropped_windows",
+    get_stderr(assert)
+  );
+
+  #[cfg(not(windows))]
+  assert_snapshot!("errors_with_all_pixels_cropped", get_stderr(assert));
+}
+
+#[test]
+fn errors_with_invalid_crop() {
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg("--in-place")
+    .arg("--crop")
+    .arg("a,b")
+    .arg("../../../test/assets/fo-dicom/TestPattern_Palette.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!("errors_with_invalid_crop", get_stderr(assert));
+}
+
+#[test]
 fn errors_on_unaligned_multiframe_bitmap() {
   let assert = Command::cargo_bin("dcmfx_cli")
     .unwrap()

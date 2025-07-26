@@ -5,6 +5,7 @@ use dcmfx_core::Rc;
 
 use crate::{
   iods::{PaletteColorLookupTableModule, image_pixel_module::BitsAllocated},
+  transforms::CropRect,
   utils::udiv_round,
 };
 
@@ -580,6 +581,62 @@ impl ColorImage {
     }
 
     Ok(())
+  }
+
+  /// Crops this color image to the specified rectangle.
+  ///
+  pub fn crop(&mut self, crop_rect: &CropRect) {
+    let left = crop_rect.left;
+    let top = crop_rect.top;
+    let (height, width) = crop_rect.apply(self.height(), self.width());
+
+    if left == 0 && top == 0 && width == self.width && height == self.height {
+      return;
+    }
+
+    fn crop<T: Clone>(
+      data: &mut Vec<T>,
+      original_width: u16,
+      left: u16,
+      top: u16,
+      width: u16,
+      height: u16,
+      samples_per_pixel: usize,
+    ) {
+      let mut new_data = Vec::with_capacity(
+        width as usize * height as usize * samples_per_pixel,
+      );
+
+      for row in top..top + height {
+        let start = (row as usize * original_width as usize + left as usize)
+          * samples_per_pixel;
+        let end = start + width as usize * samples_per_pixel;
+        new_data.extend_from_slice(&data[start..end]);
+      }
+
+      *data = new_data;
+    }
+
+    match &mut self.data {
+      ColorImageData::U8 { data, .. } => {
+        crop(data, self.width, left, top, width, height, 3)
+      }
+      ColorImageData::U16 { data, .. } => {
+        crop(data, self.width, left, top, width, height, 3)
+      }
+      ColorImageData::U32 { data, .. } => {
+        crop(data, self.width, left, top, width, height, 3);
+      }
+      ColorImageData::PaletteU8 { data, .. } => {
+        crop(data, self.width, left, top, width, height, 1);
+      }
+      ColorImageData::PaletteU16 { data, .. } => {
+        crop(data, self.width, left, top, width, height, 1);
+      }
+    }
+
+    self.width = width;
+    self.height = height;
   }
 
   /// Converts this color image to an 8-bit RGB image.

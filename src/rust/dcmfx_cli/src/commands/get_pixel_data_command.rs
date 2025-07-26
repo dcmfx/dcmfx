@@ -6,12 +6,12 @@ use rayon::prelude::*;
 use dcmfx::core::*;
 use dcmfx::p10::*;
 use dcmfx::pixel_data::{
-  P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
   PixelDataDecodeError, PixelDataFrame, PixelDataRenderer,
   iods::{
     CineModule, MultiFrameModule, OverlayPlaneModule,
     voi_lut_module::{VoiLutFunction, VoiWindow},
   },
+  transforms::{P10PixelDataFrameTransform, P10PixelDataFrameTransformError},
 };
 
 use crate::mp4_encoder::{
