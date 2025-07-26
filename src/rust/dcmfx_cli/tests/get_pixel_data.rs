@@ -71,6 +71,29 @@ fn single_bit_unaligned() {
 }
 
 #[test]
+fn single_bit_unaligned_cropped_to_png() {
+  let dicom_file =
+    "../../../test/assets/other/liver_nonbyte_aligned_cropped.dcm";
+  let (output_file, output_directory) =
+    prepare_outputs(dicom_file, ".0000.png");
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--output-directory")
+    .arg(output_directory)
+    .arg("-f")
+    .arg("png")
+    .assert();
+
+  assert_image_snapshot!(
+    output_file,
+    "single_bit_unaligned_cropped_to_png.png"
+  );
+}
+
+#[test]
 fn rgb_to_png() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";

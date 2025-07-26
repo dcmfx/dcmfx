@@ -77,6 +77,13 @@ pub fn decode_monochrome(
             data.resize_with(pixel_count.div_ceil(8), || 0);
           }
 
+          // Odd-length data will have an extra padding byte that isn't needed,
+          // so remove it if present
+          let correct_length = pixel_count.div_ceil(8);
+          if correct_length & 1 == 1 && correct_length + 1 == data.len() {
+            data.pop();
+          }
+
           MonochromeImage::new_bitmap(
             width,
             height,
