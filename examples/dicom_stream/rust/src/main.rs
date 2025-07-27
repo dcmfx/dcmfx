@@ -15,6 +15,7 @@ pub fn main() -> Result<(), P10Error> {
         let tokens = dcmfx::p10::read_tokens_from_stream(
             &mut input_stream,
             &mut read_context,
+            None,
         )?;
 
         let ended = dcmfx::p10::write_tokens_to_stream(

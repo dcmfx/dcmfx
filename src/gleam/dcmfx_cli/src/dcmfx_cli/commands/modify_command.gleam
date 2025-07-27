@@ -374,7 +374,7 @@ fn do_streaming_rewrite(
 ) -> Result(Nil, P10Error) {
   // Read the next P10 tokens from the input stream
   use #(tokens, p10_read_context) <- result.try(
-    dcmfx_p10.read_tokens_from_stream(input_stream, p10_read_context),
+    dcmfx_p10.read_tokens_from_stream(input_stream, p10_read_context, None),
   )
 
   // Pass tokens through the filter if one is specified

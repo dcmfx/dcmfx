@@ -474,6 +474,7 @@ fn streaming_rewrite(
     let mut tokens = dcmfx::p10::read_tokens_from_stream(
       &mut input_stream,
       &mut p10_read_context,
+      None,
     )
     .map_err(ModifyCommandError::P10Error)?;
 

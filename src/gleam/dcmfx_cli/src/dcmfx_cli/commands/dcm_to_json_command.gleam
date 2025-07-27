@@ -158,7 +158,7 @@ fn convert_dicom_p10_file_loop(
   json_transform: P10JsonTransform,
 ) -> Result(Nil, ToJsonError) {
   // Read the next tokens from the input
-  case dcmfx_p10.read_tokens_from_stream(input_stream, context) {
+  case dcmfx_p10.read_tokens_from_stream(input_stream, context, None) {
     Ok(#(tokens, context)) -> {
       // Write the tokens to the JSON transform, directing the resulting JSON to
       // the output stream

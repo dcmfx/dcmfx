@@ -25,7 +25,7 @@ fn stream_tokens(
   read_context: P10ReadContext,
   write_context: P10WriteContext,
 ) -> Result(Nil, P10Error) {
-  case read_tokens_from_stream(input_stream, read_context) {
+  case read_tokens_from_stream(input_stream, read_context, None) {
     Ok(#(tokens, read_context)) ->
       case write_tokens_to_stream(tokens, output_stream, write_context) {
         Ok(#(ended, write_context)) ->

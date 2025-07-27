@@ -16,7 +16,7 @@ import file_streams/file_stream.{type FileStream}
 import file_streams/file_stream_error
 import gleam/bit_array
 import gleam/list
-import gleam/option.{type Option, None}
+import gleam/option.{type Option, None, Some}
 import gleam/order
 import gleam/result
 
@@ -93,7 +93,7 @@ fn do_read_stream(
 ) -> Result(DataSet, #(P10Error, DataSetBuilder)) {
   // Read the next tokens from the stream
   let tokens_and_context =
-    read_tokens_from_stream(stream, context)
+    read_tokens_from_stream(stream, context, None)
     |> result.map_error(fn(e) { #(e, builder) })
 
   case tokens_and_context {
@@ -130,25 +130,28 @@ fn do_read_stream(
 pub fn read_tokens_from_stream(
   stream: FileStream,
   context: P10ReadContext,
+  chunk_size: Option(Int),
 ) -> Result(#(List(P10Token), P10ReadContext), P10Error) {
   case p10_read.read_tokens(context) {
-    Ok(#([], context)) -> read_tokens_from_stream(stream, context)
+    Ok(#([], context)) -> read_tokens_from_stream(stream, context, chunk_size)
 
     Ok(#(tokens, context)) -> Ok(#(tokens, context))
 
     // If the read context needs more data then read bytes from the stream,
     // write them to the read context, and try again
     Error(p10_error.DataRequired(..)) ->
-      case file_stream.read_bytes(stream, 64 * 1024) {
+      case
+        file_stream.read_bytes(stream, option.unwrap(chunk_size, 256 * 1024))
+      {
         Ok(data) ->
           case p10_read.write_bytes(context, data, False) {
-            Ok(context) -> read_tokens_from_stream(stream, context)
+            Ok(context) -> read_tokens_from_stream(stream, context, chunk_size)
             Error(e) -> Error(e)
           }
 
         Error(file_stream_error.Eof) ->
           case p10_read.write_bytes(context, <<>>, True) {
-            Ok(context) -> read_tokens_from_stream(stream, context)
+            Ok(context) -> read_tokens_from_stream(stream, context, chunk_size)
             Error(e) -> Error(e)
           }
 
@@ -251,6 +254,7 @@ pub fn read_stream_partial(
     filter,
     data_set_builder.new(),
     largest_tag,
+    Some(8 * 1024),
   ))
 
   let assert Ok(data_set) =
@@ -269,8 +273,9 @@ fn read_stream_partial_loop(
   filter: P10FilterTransform,
   builder: DataSetBuilder,
   largest_tag: DataElementTag,
+  chunk_size: Option(Int),
 ) -> Result(DataSetBuilder, P10Error) {
-  case read_tokens_from_stream(stream, context) {
+  case read_tokens_from_stream(stream, context, chunk_size) {
     Ok(#(tokens, context)) -> {
       let fold_result =
         list.fold_until(
@@ -324,14 +329,16 @@ fn read_stream_partial_loop(
         Ok(#(context, filter, builder, done)) ->
           case done {
             True -> Ok(builder)
-            False ->
+            False -> {
               read_stream_partial_loop(
                 stream,
                 context,
                 filter,
                 builder,
                 largest_tag,
+                None,
               )
+            }
           }
 
         Error(e) -> Error(e)

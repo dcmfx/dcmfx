@@ -407,7 +407,7 @@ fn get_pixel_data_from_input_source(
   loop {
     // Read the next tokens from the input stream
     let tokens =
-      dcmfx::p10::read_tokens_from_stream(&mut stream, &mut read_context)
+      dcmfx::p10::read_tokens_from_stream(&mut stream, &mut read_context, None)
         .map_err(GetPixelDataError::P10Error)?;
 
     for token in tokens.iter() {

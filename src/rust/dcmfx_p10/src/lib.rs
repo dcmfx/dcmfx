@@ -142,7 +142,7 @@ pub fn read_stream(
 
   loop {
     // Read the next tokens from the stream
-    let tokens = match read_tokens_from_stream(stream, &mut context) {
+    let tokens = match read_tokens_from_stream(stream, &mut context, None) {
       Ok(tokens) => tokens,
       Err(e) => return Err((e, builder)),
     };
@@ -169,7 +169,10 @@ pub fn read_stream(
 pub fn read_tokens_from_stream(
   stream: &mut IoRead,
   context: &mut P10ReadContext,
+  chunk_size: Option<usize>,
 ) -> Result<Vec<P10Token>, P10Error> {
+  let chunk_size = chunk_size.unwrap_or(256 * 1024);
+
   loop {
     match context.read_tokens() {
       Ok(tokens) => {
@@ -183,7 +186,7 @@ pub fn read_tokens_from_stream(
       // If the read context needs more data then read bytes from the stream,
       // write them to the read context, and try again
       Err(P10Error::DataRequired { .. }) => {
-        let mut buffer = vec![0u8; 256 * 1024];
+        let mut buffer = vec![0u8; chunk_size];
         match stream.read(&mut buffer) {
           Ok(0) => context.write_bytes(RcByteSlice::empty(), true)?,
 
@@ -289,10 +292,17 @@ pub fn read_stream_partial(
 
   let mut data_set_builder = DataSetBuilder::new();
 
+  // The first read chunk is small because in a partial read it is common to
+  // only read a few data elements at the start of a P10 file, such as the
+  // Transfer Syntax UID, SOP Instance UID, SOP Class UID, etc. If this chunk
+  // size is insufficient then subsequent read chunks will be the larger default
+  // size.
+  let mut chunk_size = Some(8 * 1024);
+
   let mut is_done = false;
 
   while !is_done {
-    let tokens = read_tokens_from_stream(stream, &mut context)?;
+    let tokens = read_tokens_from_stream(stream, &mut context, chunk_size)?;
 
     for token in tokens {
       if filter.add_token(&token)? {
@@ -316,6 +326,8 @@ pub fn read_stream_partial(
         _ => (),
       }
     }
+
+    chunk_size = None;
   }
 
   data_set_builder.force_end();

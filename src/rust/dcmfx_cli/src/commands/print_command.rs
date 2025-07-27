@@ -80,7 +80,7 @@ fn print_input_source(
 
   loop {
     let tokens =
-      dcmfx::p10::read_tokens_from_stream(&mut stream, &mut context)?;
+      dcmfx::p10::read_tokens_from_stream(&mut stream, &mut context, None)?;
 
     for token in tokens.iter() {
       match token {

@@ -171,6 +171,7 @@ fn input_source_to_json(
       let tokens = match dcmfx::p10::read_tokens_from_stream(
         &mut input_stream,
         &mut context,
+        None,
       ) {
         Ok(tokens) => tokens,
         Err(e) => return Err(ToJsonError::P10Error(e)),

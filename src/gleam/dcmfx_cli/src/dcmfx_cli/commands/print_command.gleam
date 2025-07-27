@@ -10,7 +10,7 @@ import dcmfx_p10/transforms/p10_print_transform.{type P10PrintTransform}
 import file_streams/file_stream.{type FileStream}
 import gleam/io
 import gleam/list
-import gleam/option.{Some}
+import gleam/option.{None, Some}
 import gleam/result
 import glint
 import snag
@@ -109,6 +109,7 @@ fn do_perform_print(
   use #(tokens, new_context) <- result.try(dcmfx_p10.read_tokens_from_stream(
     input_stream,
     context,
+    None,
   ))
 
   let p10_print_transform =

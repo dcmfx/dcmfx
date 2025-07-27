@@ -115,7 +115,7 @@ fn perform_get_pixel_data_loop(
   frame_number: Int,
 ) -> Result(Nil, P10PixelDataFrameTransformError) {
   // Read the next tokens from the input stream
-  case dcmfx_p10.read_tokens_from_stream(input_stream, read_context) {
+  case dcmfx_p10.read_tokens_from_stream(input_stream, read_context, None) {
     Ok(#(tokens, read_context)) -> {
       let context = #(
         output_extension,
