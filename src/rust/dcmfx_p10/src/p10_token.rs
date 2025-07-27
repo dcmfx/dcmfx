@@ -11,7 +11,7 @@ use alloc::{
 
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataSet, DataSetPath, RcByteSlice,
-  ValueRepresentation, dictionary,
+  TransferSyntax, ValueRepresentation, dictionary,
 };
 
 use crate::internal::{
@@ -177,6 +177,23 @@ impl P10Token {
       P10Token::FilePreambleAndDICMPrefix { .. }
         | P10Token::FileMetaInformation { .. }
     )
+  }
+
+  /// If this token is a [`P10Token::FileMetaInformation`] then changes the
+  /// transfer syntax it specifies. Other token types are unchanged.
+  ///
+  pub fn change_transfer_syntax(
+    &mut self,
+    new_transfer_syntax: &TransferSyntax,
+  ) {
+    if let P10Token::FileMetaInformation { data_set } = self {
+      data_set
+        .insert_string_value(
+          &dictionary::TRANSFER_SYNTAX_UID,
+          &[new_transfer_syntax.uid],
+        )
+        .unwrap();
+    }
   }
 }
 

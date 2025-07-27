@@ -105,15 +105,16 @@ impl ValueEnum for TransferSyntaxArg {
       Self::PassThrough => PossibleValue::new("pass-through").help(
         "\n\
         Keep the original transfer syntax when transcoding. This option can be \
-        used to force a full decode/encode cycle that allows for modifications \
-        such as changing the photometric interpretation, but without having to \
-        explicitly specify an output transfer syntax.",
+        used to perform a full decode/encode cycle that allows for \
+        modifications such as cropping, recompressing at a different quality \
+        level, or changing the photometric interpretation, without altering \
+        the current transfer syntax.",
       ),
 
       Self::ImplicitVrLittleEndian => {
         PossibleValue::new("implicit-vr-little-endian").help(
           "\n\
-          The default lowest common denominator DICOM transfer syntax. Uses \
+          The default, lowest common denominator DICOM transfer syntax. Uses \
           little endian byte order and implicit value representations (VR). \
           Prefer the 'Explicit VR Little Endian' transfer syntax over this one \
           whenever possible.\n\
@@ -128,8 +129,7 @@ impl ValueEnum for TransferSyntaxArg {
         PossibleValue::new("explicit-vr-little-endian").help(
           "\n\
           Similar to 'Implicit VR Little Endian' but with explicit value \
-          representations that improve reliability and clarity of the DICOM \
-          P10 data.\n\
+          representations stored in the DICOM P10 data.\n\
           \n\
           Encapsulated: No\n\
           UID: 1.2.840.10008.1.2.1
@@ -141,8 +141,8 @@ impl ValueEnum for TransferSyntaxArg {
         .help(
           "\n\
           Similar to 'Explicit VR Little Endian' but with big endian byte \
-          ordering. This transfer syntax was retired in DICOM 2017c and is \
-          only relevant for legacy compatibility.\n\
+          ordering. This transfer syntax was retired in 2006 and is only \
+          relevant for legacy compatibility.\n\
           \n\
           Encapsulated: No\n\
           UID: 1.2.840.10008.1.2.2",
@@ -154,8 +154,8 @@ impl ValueEnum for TransferSyntaxArg {
         )
         .help(
           "\n\
-          Similar to 'Explicit VR Little Endian' but stores the pixel data as \
-          uncompressed encapsulated data.\n\
+          Similar to 'Explicit VR Little Endian' but stores the pixel data \
+          encapsulated and uncompressed.\n\
           \n\
           Encapsulated: Yes\n\
           UID: 1.2.840.10008.1.2.1.98",
@@ -287,14 +287,16 @@ impl ValueEnum for TransferSyntaxArg {
       Self::JpegXlJpegRecompression => {
         PossibleValue::new("jpeg-xl-jpeg-recompression").help(
           "\n\
-          Lossy image compression using the JPEG XL format where the data was \
-          originally compressed as 'JPEG Baseline 8-bit'. Storing the data in \
-          JPEG XL can reduce data size by 15-35% with no change to the image.\n\
+          Lossy image compression using the JPEG XL format where the input \
+          data was originally compressed as 'JPEG Baseline 8-bit'. Storing \
+          such data in JPEG XL can reduce its size by 15-35% with no change \
+          to the image.\n\
           \n\
           The only transfer syntax that can be transcoded into 'JPEG XL JPEG \
           Recompression' is 'JPEG Baseline 8-bit'. No aspect of the pixel data \
           can be altered when doing this transcode, e.g. the photometric \
-          interpretation can't be changed.\n\
+          interpretation can't be changed, nor can the --quality argument be \
+          applied.\n\
           \n\
           Encapsulated: Yes\n\
           UID: 1.2.840.10008.1.2.4.111",
@@ -303,8 +305,9 @@ impl ValueEnum for TransferSyntaxArg {
 
       Self::JpegXl => PossibleValue::new("jpeg-xl").help(
         "\n\
-        Lossy image compression using the JPEG XL format. The compression \
-        effort to use can be set with the --effort argument.\n\
+        Lossy image compression using the JPEG XL format. The quality level to \
+        use for the encoding can be set with the --quality argument. The \
+        compression effort to use can be set with the --effort argument.\n\
         \n\
         Encapsulated: Yes\n\
         UID: 1.2.840.10008.1.2.4.112",

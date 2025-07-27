@@ -168,7 +168,7 @@ impl BaseInputArgs {
 
     // Create iterator over the input filenames, expanding them if they are glob
     // patterns
-    let iter = std::mem::take(&mut self.input_filenames)
+    let iter = core::mem::take(&mut self.input_filenames)
       .into_iter()
       .flat_map(|input_filename| {
         let input_filename_str = input_filename.to_string_lossy();

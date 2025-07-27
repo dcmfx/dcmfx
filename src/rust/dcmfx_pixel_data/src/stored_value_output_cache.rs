@@ -16,9 +16,9 @@ impl<T: Copy> StoredValueOutputCache<T> {
   /// Creates a new [`StoredValueOutputCache`] by caching the specified range of
   /// stored values passed through the given conversion function.
   ///
-  /// As a general rule, this caches should not be used when the range of stored
+  /// As a general rule, this cache should not be used when the range of stored
   /// values is extremely large. In practice, when [`crate::MonochromeImage`]
-  /// creates and uses these caches it only does so when the range of stored
+  /// creates and uses this cache it only does so when the range of stored
   /// values has <= 2^16 items.
   ///
   pub fn new(

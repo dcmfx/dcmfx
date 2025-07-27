@@ -224,8 +224,48 @@ fn delete_private_tags() {
 }
 
 #[test]
-fn explicit_vr_little_endian_monochrome1_to_monochrome2() {
+fn dicom_sr_explicit_vr_little_endian_to_implicit_vr_little_endian() {
   modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/test-SR.dcm",
+    "implicit-vr-little-endian",
+    "dicom_sr_explicit_vr_little_endian_to_implicit_vr_little_endian",
+    &[],
+  );
+}
+
+#[test]
+fn dicom_sr_explicit_vr_little_endian_to_deflated_explicit_vr_little_endian() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/test-SR.dcm",
+    "deflated-explicit-vr-little-endian",
+    "dicom_sr_explicit_vr_little_endian_to_deflated_explicit_vr_little_endian",
+    &[],
+  );
+}
+
+#[test]
+fn dicom_sr_to_jpeg_baseline_8bit_outputs_explicit_vr_little_endian() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/test-SR.dcm",
+    "jpeg-baseline-8bit",
+    "dicom_sr_to_jpeg_baseline_8bit_outputs_explicit_vr_little_endian",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_to_explicit_vr_big_endian() {
+  modify_transfer_syntax_and_check_pixel_data(
+    "../../../test/assets/pydicom/test_files/dicomdirtests/77654033/CR1/6154.dcm",
+    "explicit-vr-big-endian",
+    "explicit_vr_little_endian_to_explicit_vr_big_endian",
+    &[],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_monochrome1_to_monochrome2() {
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/dicomdirtests/77654033/CR1/6154.dcm",
     "pass-through",
     "explicit_vr_little_endian_monochrome1_to_monochrome2",
@@ -235,7 +275,7 @@ fn explicit_vr_little_endian_monochrome1_to_monochrome2() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_ybr_full() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "pass-through",
     "explicit_vr_little_endian_rgb_to_ybr_full",
@@ -245,7 +285,7 @@ fn explicit_vr_little_endian_rgb_to_ybr_full() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_ybr_full_422() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "pass-through",
     "explicit_vr_little_endian_rgb_to_ybr_full_422",
@@ -255,7 +295,7 @@ fn explicit_vr_little_endian_rgb_to_ybr_full_422() {
 
 #[test]
 fn explicit_vr_little_endian_planar_configuration_interleaved_to_separate() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "pass-through",
     "explicit_vr_little_endian_planar_configuration_interleaved_to_separate",
@@ -265,7 +305,7 @@ fn explicit_vr_little_endian_planar_configuration_interleaved_to_separate() {
 
 #[test]
 fn explicit_vr_big_endian_rgb_planar_configuration_separate_to_interleaved() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/ExplVR_BigEnd.dcm",
     "pass-through",
     "explicit_vr_big_endian_rgb_planar_configuration_separate_to_interleaved",
@@ -276,7 +316,7 @@ fn explicit_vr_big_endian_rgb_planar_configuration_separate_to_interleaved() {
 #[test]
 fn explicit_vr_little_endian_planar_configuration_interleaved_rgb_to_separate_ybr()
  {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "pass-through",
     "explicit_vr_little_endian_planar_configuration_interleaved_rgb_to_separate_ybr",
@@ -291,7 +331,7 @@ fn explicit_vr_little_endian_planar_configuration_interleaved_rgb_to_separate_yb
 
 #[test]
 fn rle_lossless_to_explicit_vr_little_endian() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/D_CLUNIE_CT1_RLE_FRAGS.dcm",
     "explicit-vr-little-endian",
     "rle_lossless_to_explicit_vr_little_endian",
@@ -301,7 +341,7 @@ fn rle_lossless_to_explicit_vr_little_endian() {
 
 #[test]
 fn explicit_vr_little_endian_palette_color_to_rle_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "rle-lossless",
     "explicit_vr_little_endian_palette_color_to_rle_lossless",
@@ -311,7 +351,7 @@ fn explicit_vr_little_endian_palette_color_to_rle_lossless() {
 
 #[test]
 fn rle_lossless_to_deflated_explicit_vr_little_endian() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/D_CLUNIE_CT1_RLE_FRAGS.dcm",
     "deflated-explicit-vr-little-endian",
     "rle_lossless_to_deflated_explicit_vr_little_endian",
@@ -321,7 +361,7 @@ fn rle_lossless_to_deflated_explicit_vr_little_endian() {
 
 #[test]
 fn jpeg_baseline_to_implicit_vr_little_endian() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "implicit-vr-little-endian",
     "jpeg_baseline_to_implicit_vr_little_endian",
@@ -331,7 +371,7 @@ fn jpeg_baseline_to_implicit_vr_little_endian() {
 
 #[test]
 fn jpeg_baseline_to_rle_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "rle-lossless",
     "jpeg_baseline_to_rle_lossless",
@@ -341,7 +381,7 @@ fn jpeg_baseline_to_rle_lossless() {
 
 #[test]
 fn jpeg_baseline_to_rle_lossless_with_rgb_conversion() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "implicit-vr-little-endian",
     "jpeg_baseline_to_rle_lossless_with_rgb_conversion",
@@ -351,7 +391,7 @@ fn jpeg_baseline_to_rle_lossless_with_rgb_conversion() {
 
 #[test]
 fn monochrome_jpeg_xl_to_rle_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "rle-lossless",
     "monochrome_jpeg_xl_to_rle_lossless",
@@ -361,7 +401,7 @@ fn monochrome_jpeg_xl_to_rle_lossless() {
 
 #[test]
 fn monochrome_jpeg_xl_to_rle_lossless_monochrome1() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "rle-lossless",
     "monochrome_jpeg_xl_to_rle_lossless_monochrome1",
@@ -371,7 +411,7 @@ fn monochrome_jpeg_xl_to_rle_lossless_monochrome1() {
 
 #[test]
 fn monochrome_jpeg_xl_to_rle_lossless_using_jxl_oxide() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "rle-lossless",
     "monochrome_jpeg_xl_to_rle_lossless",
@@ -381,7 +421,7 @@ fn monochrome_jpeg_xl_to_rle_lossless_using_jxl_oxide() {
 
 #[test]
 fn jpeg_ls_to_encapsulated_uncompressed_explicit_vr_little_endian() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/jpeg_ls_ybr_color_space.dcm",
     "encapsulated-uncompressed-explicit-vr-little-endian",
     "jpeg_ls_to_encapsulated_uncompressed_explicit_vr_little_endian",
@@ -395,7 +435,7 @@ fn jpeg_ls_to_encapsulated_uncompressed_explicit_vr_little_endian() {
 #[cfg(not(windows))]
 #[test]
 fn jpeg_2000_to_deflated_image_frame_compression() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/jpeg_2000_ybr_color_space.dcm",
     "deflated-image-frame-compression",
     "jpeg_2000_to_deflated_image_frame_compression",
@@ -405,7 +445,7 @@ fn jpeg_2000_to_deflated_image_frame_compression() {
 
 #[test]
 fn monochrome_jpeg_xl_to_jpeg_baseline() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "jpeg-baseline-8bit",
     "monochrome_jpeg_xl_to_jpeg_baseline",
@@ -415,7 +455,7 @@ fn monochrome_jpeg_xl_to_jpeg_baseline() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_jpeg_baseline() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "jpeg-baseline-8bit",
     "explicit_vr_little_endian_rgb_to_jpeg_baseline",
@@ -425,7 +465,7 @@ fn explicit_vr_little_endian_rgb_to_jpeg_baseline() {
 
 #[test]
 fn explicit_vr_little_endian_ybr_to_jpeg_baseline() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "jpeg-baseline-8bit",
     "explicit_vr_little_endian_ybr_to_jpeg_baseline",
@@ -435,7 +475,7 @@ fn explicit_vr_little_endian_ybr_to_jpeg_baseline() {
 
 #[test]
 fn jpeg_baseline_to_jpeg_baseline_with_low_quality() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-baseline-8bit",
     "jpeg_baseline_to_jpeg_baseline_with_low_quality",
@@ -445,7 +485,7 @@ fn jpeg_baseline_to_jpeg_baseline_with_low_quality() {
 
 #[test]
 fn palette_color_to_jpeg_baseline() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-baseline-8bit",
     "palette_color_to_jpeg_baseline",
@@ -455,7 +495,7 @@ fn palette_color_to_jpeg_baseline() {
 
 #[test]
 fn jpeg_lossless_monochrome_to_jpeg_extended_12bit() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/IM-0001-0001-0001.dcm",
     "jpeg-extended-12bit",
     "jpeg_lossless_monochrome_to_jpeg_extended_12bit",
@@ -465,7 +505,7 @@ fn jpeg_lossless_monochrome_to_jpeg_extended_12bit() {
 
 #[test]
 fn monochrome_jpeg_xl_to_jpeg_ls_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "jpeg-ls-lossless",
     "monochrome_jpeg_xl_to_jpeg_ls_lossless",
@@ -475,7 +515,7 @@ fn monochrome_jpeg_xl_to_jpeg_ls_lossless() {
 
 #[test]
 fn monochrome_jpeg_xl_to_jpeg_ls_lossy_near_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "jpeg-ls-lossy-near-lossless",
     "monochrome_jpeg_xl_to_jpeg_ls_lossy_near_lossless",
@@ -485,7 +525,7 @@ fn monochrome_jpeg_xl_to_jpeg_ls_lossy_near_lossless() {
 
 #[test]
 fn palette_color_to_jpeg_ls_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-ls-lossless",
     "palette_color_to_jpeg_ls_lossless",
@@ -495,7 +535,7 @@ fn palette_color_to_jpeg_ls_lossless() {
 
 #[test]
 fn palette_color_to_jpeg_ls_lossy_near_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-ls-lossy-near-lossless",
     "palette_color_to_jpeg_ls_lossy_near_lossless",
@@ -505,7 +545,7 @@ fn palette_color_to_jpeg_ls_lossy_near_lossless() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_jpeg_ls_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "jpeg-ls-lossless",
     "explicit_vr_little_endian_rgb_to_jpeg_ls_lossless",
@@ -515,7 +555,7 @@ fn explicit_vr_little_endian_rgb_to_jpeg_ls_lossless() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_jpeg_ls_lossy_near_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "jpeg-ls-lossy-near-lossless",
     "explicit_vr_little_endian_rgb_to_jpeg_ls_lossy_near_lossless",
@@ -525,7 +565,7 @@ fn explicit_vr_little_endian_rgb_to_jpeg_ls_lossy_near_lossless() {
 
 #[test]
 fn explicit_vr_little_endian_ybr_to_jpeg_ls_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "jpeg-ls-lossless",
     "explicit_vr_little_endian_ybr_to_jpeg_ls_lossless",
@@ -535,7 +575,7 @@ fn explicit_vr_little_endian_ybr_to_jpeg_ls_lossless() {
 
 #[test]
 fn explicit_vr_little_endian_ybr_to_jpeg_ls_lossy_near_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "jpeg-ls-lossy-near-lossless",
     "explicit_vr_little_endian_ybr_to_jpeg_ls_lossy_near_lossless",
@@ -545,7 +585,7 @@ fn explicit_vr_little_endian_ybr_to_jpeg_ls_lossy_near_lossless() {
 
 #[test]
 fn rle_lossless_rgb_16_bit_to_jpeg_ls_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "jpeg-ls-lossless",
     "rle_lossless_rgb_16_bit_to_jpeg_ls_lossless",
@@ -555,7 +595,7 @@ fn rle_lossless_rgb_16_bit_to_jpeg_ls_lossless() {
 
 #[test]
 fn rle_lossless_rgb_16_bit_to_jpeg_ls_lossy_near_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "jpeg-ls-lossy-near-lossless",
     "rle_lossless_rgb_16_bit_to_jpeg_ls_lossy_near_lossless",
@@ -565,7 +605,7 @@ fn rle_lossless_rgb_16_bit_to_jpeg_ls_lossy_near_lossless() {
 
 #[test]
 fn jpeg_baseline_to_jpeg_ls_lossless_rgb() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-ls-lossless",
     "jpeg_baseline_to_jpeg_ls_lossless_rgb",
@@ -575,7 +615,7 @@ fn jpeg_baseline_to_jpeg_ls_lossless_rgb() {
 
 #[test]
 fn jpeg_baseline_to_jpeg_ls_lossless_ybr_full() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-ls-lossless",
     "jpeg_baseline_to_jpeg_ls_lossless_ybr_full",
@@ -585,7 +625,7 @@ fn jpeg_baseline_to_jpeg_ls_lossless_ybr_full() {
 
 #[test]
 fn jpeg_ls_monochrome_to_jpeg_ls_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm",
     "jpeg-ls-lossless",
     "jpeg_ls_monochrome_to_jpeg_ls_lossless",
@@ -595,7 +635,7 @@ fn jpeg_ls_monochrome_to_jpeg_ls_lossless() {
 
 #[test]
 fn monochrome_jpeg_xl_to_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "jpeg-2k-lossless-only",
     "monochrome_jpeg_xl_to_jpeg_2000_lossless_only",
@@ -605,7 +645,7 @@ fn monochrome_jpeg_xl_to_jpeg_2000_lossless_only() {
 
 #[test]
 fn monochrome_jpeg_xl_to_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "jpeg-2k",
     "monochrome_jpeg_xl_to_jpeg_2000",
@@ -615,7 +655,7 @@ fn monochrome_jpeg_xl_to_jpeg_2000() {
 
 #[test]
 fn palette_color_to_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-2k-lossless-only",
     "palette_color_to_jpeg_2000_lossless_only",
@@ -625,7 +665,7 @@ fn palette_color_to_jpeg_2000_lossless_only() {
 
 #[test]
 fn palette_color_to_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-2k",
     "palette_color_to_jpeg_2000",
@@ -635,7 +675,7 @@ fn palette_color_to_jpeg_2000() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "jpeg-2k-lossless-only",
     "explicit_vr_little_endian_rgb_to_jpeg_2000_lossless_only",
@@ -645,7 +685,7 @@ fn explicit_vr_little_endian_rgb_to_jpeg_2000_lossless_only() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "jpeg-2k",
     "explicit_vr_little_endian_rgb_to_jpeg_2000",
@@ -655,7 +695,7 @@ fn explicit_vr_little_endian_rgb_to_jpeg_2000() {
 
 #[test]
 fn explicit_vr_little_endian_ybr_to_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "jpeg-2k-lossless-only",
     "explicit_vr_little_endian_ybr_to_jpeg_2000_lossless_only",
@@ -665,7 +705,7 @@ fn explicit_vr_little_endian_ybr_to_jpeg_2000_lossless_only() {
 
 #[test]
 fn explicit_vr_little_endian_ybr_to_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "jpeg-2k",
     "explicit_vr_little_endian_ybr_to_jpeg_2000",
@@ -675,7 +715,7 @@ fn explicit_vr_little_endian_ybr_to_jpeg_2000() {
 
 #[test]
 fn rle_lossless_rgb_16_bit_to_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "jpeg-2k-lossless-only",
     "rle_lossless_rgb_16_bit_to_jpeg_2000_lossless_only",
@@ -685,7 +725,7 @@ fn rle_lossless_rgb_16_bit_to_jpeg_2000_lossless_only() {
 
 #[test]
 fn rle_lossless_rgb_16_bit_to_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "jpeg-2k",
     "rle_lossless_rgb_16_bit_to_jpeg_2000",
@@ -695,7 +735,7 @@ fn rle_lossless_rgb_16_bit_to_jpeg_2000() {
 
 #[test]
 fn jpeg_baseline_to_jpeg_2000_lossless_only_rgb() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-2k-lossless-only",
     "jpeg_baseline_to_jpeg_2000_lossless_only_rgb",
@@ -705,7 +745,7 @@ fn jpeg_baseline_to_jpeg_2000_lossless_only_rgb() {
 
 #[test]
 fn jpeg_baseline_to_jpeg_2000_lossless_only_ybr_full() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-2k-lossless-only",
     "jpeg_baseline_to_jpeg_2000_lossless_only_ybr_full",
@@ -715,7 +755,7 @@ fn jpeg_baseline_to_jpeg_2000_lossless_only_ybr_full() {
 
 #[test]
 fn jpeg_ls_monochrome_to_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm",
     "jpeg-2k-lossless-only",
     "jpeg_ls_monochrome_to_jpeg_2000_lossless_only",
@@ -725,7 +765,7 @@ fn jpeg_ls_monochrome_to_jpeg_2000_lossless_only() {
 
 #[test]
 fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "ht-jpeg-2k-lossless-only",
     "monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only",
@@ -735,7 +775,7 @@ fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only() {
 
 #[test]
 fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "ht-jpeg-2k",
     "monochrome_jpeg_xl_to_high_throughput_jpeg_2000",
@@ -745,7 +785,7 @@ fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000() {
 
 #[test]
 fn palette_color_to_high_throughput_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "ht-jpeg-2k-lossless-only",
     "palette_color_to_high_throughput_jpeg_2000_lossless_only",
@@ -755,7 +795,7 @@ fn palette_color_to_high_throughput_jpeg_2000_lossless_only() {
 
 #[test]
 fn palette_color_to_high_throughput_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "ht-jpeg-2k",
     "palette_color_to_high_throughput_jpeg_2000",
@@ -765,7 +805,7 @@ fn palette_color_to_high_throughput_jpeg_2000() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "ht-jpeg-2k-lossless-only",
     "explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000_lossless_only",
@@ -775,7 +815,7 @@ fn explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000_lossless_only() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "ht-jpeg-2k",
     "explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000",
@@ -785,7 +825,7 @@ fn explicit_vr_little_endian_rgb_to_high_throughput_jpeg_2000() {
 
 #[test]
 fn explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "ht-jpeg-2k-lossless-only",
     "explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000_lossless_only",
@@ -795,7 +835,7 @@ fn explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000_lossless_only() {
 
 #[test]
 fn explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "ht-jpeg-2k",
     "explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000",
@@ -805,7 +845,7 @@ fn explicit_vr_little_endian_ybr_to_high_throughput_jpeg_2000() {
 
 #[test]
 fn rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "ht-jpeg-2k-lossless-only",
     "rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000_lossless_only",
@@ -815,7 +855,7 @@ fn rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000_lossless_only() {
 
 #[test]
 fn rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "ht-jpeg-2k",
     "rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000",
@@ -825,7 +865,7 @@ fn rle_lossless_rgb_16_bit_to_high_throughput_jpeg_2000() {
 
 #[test]
 fn jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_rgb() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "ht-jpeg-2k-lossless-only",
     "jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_rgb",
@@ -835,7 +875,7 @@ fn jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_rgb() {
 
 #[test]
 fn jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_ybr_full() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "ht-jpeg-2k-lossless-only",
     "jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_ybr_full",
@@ -845,7 +885,7 @@ fn jpeg_baseline_to_high_throughput_jpeg_2000_lossless_only_ybr_full() {
 
 #[test]
 fn jpeg_ls_monochrome_to_high_throughput_jpeg_2000_lossless_only() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm",
     "ht-jpeg-2k-lossless-only",
     "jpeg_ls_monochrome_to_high_throughput_jpeg_2000_lossless_only",
@@ -855,7 +895,7 @@ fn jpeg_ls_monochrome_to_high_throughput_jpeg_2000_lossless_only() {
 
 #[test]
 fn jpeg_2000_ybr_to_jpeg_xl_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/jpeg_2000_ybr_color_space.dcm",
     "jpeg-xl-lossless",
     "jpeg_2000_ybr_to_jpeg_xl_lossless",
@@ -865,7 +905,7 @@ fn jpeg_2000_ybr_to_jpeg_xl_lossless() {
 
 #[test]
 fn jpeg_2000_ybr_to_jpeg_xl() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/jpeg_2000_ybr_color_space.dcm",
     "jpeg-xl",
     "jpeg_2000_ybr_to_jpeg_xl",
@@ -875,7 +915,7 @@ fn jpeg_2000_ybr_to_jpeg_xl() {
 
 #[test]
 fn palette_color_to_jpeg_xl_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-xl-lossless",
     "palette_color_to_jpeg_xl_lossless",
@@ -885,7 +925,7 @@ fn palette_color_to_jpeg_xl_lossless() {
 
 #[test]
 fn palette_color_16_bit_to_jpeg_xl_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm",
     "jpeg-xl-lossless",
     "palette_color_16_bit_to_jpeg_xl_lossless",
@@ -895,7 +935,7 @@ fn palette_color_16_bit_to_jpeg_xl_lossless() {
 
 #[test]
 fn palette_color_16_bit_to_jpeg_xl_lossless_with_explicit_rgb_argument() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm",
     "jpeg-xl-lossless",
     "palette_color_16_bit_to_jpeg_xl_lossless_with_explicit_rgb_argument",
@@ -905,7 +945,7 @@ fn palette_color_16_bit_to_jpeg_xl_lossless_with_explicit_rgb_argument() {
 
 #[test]
 fn palette_color_to_jpeg_xl() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
     "jpeg-xl",
     "palette_color_to_jpeg_xl",
@@ -915,7 +955,7 @@ fn palette_color_to_jpeg_xl() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_jpeg_xl_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "jpeg-xl-lossless",
     "explicit_vr_little_endian_rgb_to_jpeg_xl_lossless",
@@ -925,7 +965,7 @@ fn explicit_vr_little_endian_rgb_to_jpeg_xl_lossless() {
 
 #[test]
 fn explicit_vr_little_endian_rgb_to_jpeg_xl() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
     "jpeg-xl",
     "explicit_vr_little_endian_rgb_to_jpeg_xl",
@@ -935,7 +975,7 @@ fn explicit_vr_little_endian_rgb_to_jpeg_xl() {
 
 #[test]
 fn explicit_vr_little_endian_ybr_to_jpeg_xl_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "jpeg-xl-lossless",
     "explicit_vr_little_endian_ybr_to_jpeg_xl_lossless",
@@ -945,7 +985,7 @@ fn explicit_vr_little_endian_ybr_to_jpeg_xl_lossless() {
 
 #[test]
 fn explicit_vr_little_endian_ybr_to_jpeg_xl() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
     "jpeg-xl",
     "explicit_vr_little_endian_ybr_to_jpeg_xl",
@@ -955,7 +995,7 @@ fn explicit_vr_little_endian_ybr_to_jpeg_xl() {
 
 #[test]
 fn rle_lossless_rgb_16_bit_to_jpeg_xl_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "jpeg-xl-lossless",
     "rle_lossless_rgb_16_bit_to_jpeg_xl_lossless",
@@ -965,7 +1005,7 @@ fn rle_lossless_rgb_16_bit_to_jpeg_xl_lossless() {
 
 #[test]
 fn rle_lossless_rgb_16_bit_to_jpeg_xl() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/SC_rgb_rle_16bit_2frame.dcm",
     "jpeg-xl",
     "rle_lossless_rgb_16_bit_to_jpeg_xl",
@@ -975,7 +1015,7 @@ fn rle_lossless_rgb_16_bit_to_jpeg_xl() {
 
 #[test]
 fn jpeg_baseline_to_jpeg_xl_lossless_rgb() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-xl-lossless",
     "jpeg_baseline_to_jpeg_xl_lossless_rgb",
@@ -985,7 +1025,7 @@ fn jpeg_baseline_to_jpeg_xl_lossless_rgb() {
 
 #[test]
 fn jpeg_ls_monochrome_to_jpeg_xl_lossless() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/JPEGLSNearLossless_16.dcm",
     "jpeg-xl-lossless",
     "jpeg_ls_monochrome_to_jpeg_xl_lossless",
@@ -995,7 +1035,7 @@ fn jpeg_ls_monochrome_to_jpeg_xl_lossless() {
 
 #[test]
 fn jpeg_baseline_to_jpeg_xl_jpeg_recompression() {
-  modify_transfer_syntax(
+  modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-xl-jpeg-recompression",
     "jpeg_baseline_to_jpeg_xl_jpeg_recompression",
@@ -1017,7 +1057,7 @@ fn with_crop() {
       let snapshot_prefix =
         format!("with_crop_{}_{crop}", dicom_file.split("/").last().unwrap());
 
-      modify_transfer_syntax(
+      modify_transfer_syntax_and_check_pixel_data(
         dicom_file,
         "pass-through",
         &snapshot_prefix,
@@ -1093,7 +1133,7 @@ fn modify_transfer_syntax(
   transfer_syntax: &str,
   snapshot_prefix: &str,
   extra_args: &[&str],
-) {
+) -> std::path::PathBuf {
   let temp_path = generate_temp_filename();
 
   std::fs::copy(dicom_file, &temp_path).unwrap();
@@ -1158,6 +1198,22 @@ fn modify_transfer_syntax(
 
     assert_snapshot!(format!("{}_after", snapshot_prefix), get_stdout(assert));
   }
+
+  temp_path
+}
+
+fn modify_transfer_syntax_and_check_pixel_data(
+  dicom_file: &str,
+  transfer_syntax: &str,
+  snapshot_prefix: &str,
+  extra_args: &[&str],
+) {
+  let temp_path = modify_transfer_syntax(
+    dicom_file,
+    transfer_syntax,
+    snapshot_prefix,
+    extra_args,
+  );
 
   Command::cargo_bin("dcmfx_cli")
     .unwrap()

@@ -142,9 +142,9 @@ pub struct ModifyArgs {
     long,
     short,
     help_heading = "Transcoding",
-    help = "When transcoding to a lossy transfer syntax, specifies the \
-      compression quality in the range 1-100. A quality of 100 does not result \
-      in lossless compression.\n\
+    help = "When transcoding pixel data to a lossy transfer syntax, specifies \
+      the compression quality in the range 1-100. A quality of 100 does not \
+      result in true lossless compression.\n\
       \n\
       The quality value only applies when encoding into the following transfer \
       syntaxes:\n\
@@ -164,10 +164,11 @@ pub struct ModifyArgs {
     long,
     short,
     help_heading = "Transcoding",
-    help = "When transcoding to a compressed transfer syntax, specifies the \
-      effort to put into the compression process, in the range 1-10. Higher \
-      values allow the compressor to take more processing time in order to try \
-      and achieve a better compression ratio at the same quality.\n\
+    help = "When transcoding pixel data to a compressed transfer syntax, \
+      specifies the effort to put into the compression process, in the range \
+      1-10. Higher values allow the compressor to take more processing time in \
+      order to try and achieve a better compression ratio at the same \
+      quality.\n\
       \n\
       The effort value only applies when encoding into the following transfer
       syntaxes:\n\
@@ -259,6 +260,18 @@ pub struct ModifyArgs {
 
   #[command(flatten)]
   decoder: crate::args::decoder_args::DecoderArgs,
+}
+
+impl ModifyArgs {
+  fn pixel_data_encode_config(&self) -> PixelDataEncodeConfig {
+    let mut config = PixelDataEncodeConfig::default();
+
+    config.set_quality(self.quality.unwrap_or(85));
+    config.set_effort(self.effort.unwrap_or(7));
+    config.set_zlib_compression_level(self.zlib_compression_level);
+
+    config
+  }
 }
 
 enum ModifyCommandError {
@@ -516,70 +529,110 @@ fn streaming_rewrite(
     )
     .map_err(ModifyCommandError::P10Error)?;
 
-    // If transcoding is active, setup a transcode transform when the File Meta
-    // Information token is received
+    // If transcoding is active, setup a pixel data transcode transform when the
+    // File Meta Information token is received
     if let Some(transfer_syntax_arg) = args.transfer_syntax {
       for token in tokens.iter() {
-        if let P10Token::FileMetaInformation { data_set } = token {
-          let output_transfer_syntax =
-            transfer_syntax_arg.as_transfer_syntax().unwrap_or_else(|| {
-              data_set
-                .get_transfer_syntax()
-                .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
-            });
+        let P10Token::FileMetaInformation { data_set } = token else {
+          continue;
+        };
 
-          let pixel_data_decode_config =
-            args.decoder.pixel_data_decode_config();
+        let output_transfer_syntax =
+          transfer_syntax_arg.as_transfer_syntax().unwrap_or_else(|| {
+            data_set
+              .get_transfer_syntax()
+              .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
+          });
 
-          let mut pixel_data_encode_config = PixelDataEncodeConfig::default();
-          pixel_data_encode_config.set_quality(args.quality.unwrap_or(85));
-          pixel_data_encode_config.set_effort(args.effort.unwrap_or(7));
-          pixel_data_encode_config
-            .set_zlib_compression_level(args.zlib_compression_level);
+        let photometric_interpretation_monochrome_arg =
+          args.photometric_interpretation_monochrome;
+        let photometric_interpretation_color_arg =
+          args.photometric_interpretation_color;
 
-          let photometric_interpretation_monochrome =
-            args.photometric_interpretation_monochrome;
-          let photometric_interpretation_color =
-            args.photometric_interpretation_color;
-
-          pixel_data_transcode_transform =
-            Some(P10PixelDataTranscodeTransform::new(
+        pixel_data_transcode_transform =
+          Some(P10PixelDataTranscodeTransform::new(
+            output_transfer_syntax,
+            args.decoder.pixel_data_decode_config(),
+            args.pixel_data_encode_config(),
+            Some(TranscodeImageDataFunctions::standard_behavior(
               output_transfer_syntax,
-              pixel_data_decode_config,
-              pixel_data_encode_config,
-              Some(TranscodeImageDataFunctions::standard_behavior(
-                output_transfer_syntax,
-                Box::new(move |image_pixel_module| {
-                  photometric_interpretation_monochrome.and_then(|a| {
-                    a.as_photometric_interpretation(
-                      image_pixel_module.pixel_representation(),
-                    )
-                  })
-                }),
-                Box::new(move |_image_pixel_module| {
-                  photometric_interpretation_color
-                    .and_then(|a| a.as_photometric_interpretation())
-                }),
-                args.planar_configuration.map(|a| a.into()),
-                args.crop,
-              )),
-            ));
-        }
+              Box::new(move |image_pixel_module| {
+                photometric_interpretation_monochrome_arg.and_then(|arg| {
+                  arg.as_photometric_interpretation(
+                    image_pixel_module.pixel_representation(),
+                  )
+                })
+              }),
+              Box::new(move |_image_pixel_module| {
+                photometric_interpretation_color_arg
+                  .and_then(|arg| arg.as_photometric_interpretation())
+              }),
+              args.planar_configuration.map(|a| a.into()),
+              args.crop,
+            )),
+          ));
       }
     }
 
     // Pass tokens through the pixel data transcode transform if one is active
-    if let Some(pixel_data_transcode_transform) =
-      pixel_data_transcode_transform.as_mut()
-    {
+    if let Some(transcode_transform) = pixel_data_transcode_transform.as_mut() {
       let mut new_tokens = vec![];
 
       for token in tokens.iter() {
         new_tokens.extend(
-          pixel_data_transcode_transform
+          transcode_transform
             .add_token(token)
             .map_err(ModifyCommandError::P10PixelDataTranscodeTransformError)?,
         );
+      }
+
+      // If the pixel data transcode transform is inactive then there is no
+      // pixel data in this DICOM to be transcoded. However, some transcodes not
+      // involving encapsulated pixel data are still possible, specifically
+      // those between any of the four transfer syntaxes listed below. These are
+      // done by updating the transfer syntax in the File Meta Information
+      // token.
+      if !transcode_transform.is_active() {
+        let directly_transcodable_transfer_syntaxes = [
+          &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
+          &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN,
+          &transfer_syntax::EXPLICIT_VR_BIG_ENDIAN,
+          &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN,
+        ];
+
+        let mut output_transfer_syntax =
+          transcode_transform.output_transfer_syntax();
+
+        // An output transfer syntax that has encapsulated pixel data is not
+        // relevant as this DICOM does not contain pixel data, so automatically
+        // drop down to Explicit VR Little Endian
+        if output_transfer_syntax.is_encapsulated {
+          output_transfer_syntax = &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN;
+        }
+
+        if !directly_transcodable_transfer_syntaxes
+          .contains(&transcode_transform.input_transfer_syntax())
+          || !directly_transcodable_transfer_syntaxes
+            .contains(&output_transfer_syntax)
+        {
+          return Err(ModifyCommandError::P10PixelDataTranscodeTransformError(
+            P10PixelDataTranscodeTransformError::NotSupported {
+              details: format!(
+                "Transcoding from '{}' to '{}' is not supported",
+                transcode_transform.input_transfer_syntax().name,
+                output_transfer_syntax.name
+              ),
+            },
+          ));
+        }
+
+        // Set the new transfer syntax in the File Meta Information token
+        for token in &mut new_tokens {
+          token.change_transfer_syntax(output_transfer_syntax)
+        }
+
+        // Clear the pixel data transcode transform as it's now inactive
+        pixel_data_transcode_transform = None;
       }
 
       tokens = new_tokens

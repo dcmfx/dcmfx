@@ -102,7 +102,9 @@ where
   ) -> Result<Vec<ColorImage>, GetPixelDataError>;
 
   /// Transcode's the pixel data in this data set into a new data set that uses
-  /// the specified [`TransferSyntax`].
+  /// the specified [`TransferSyntax`]. If this data set does not contain a
+  /// valid Image Pixel Module then no transcoding will occur and `Ok(None)` is
+  /// returned.
   ///
   fn transcode_pixel_data(
     &self,
@@ -110,7 +112,7 @@ where
     decode_config: PixelDataDecodeConfig,
     encode_config: PixelDataEncodeConfig,
     image_data_functions: Option<TranscodeImageDataFunctions>,
-  ) -> Result<DataSet, P10PixelDataTranscodeTransformError>;
+  ) -> Result<Option<DataSet>, P10PixelDataTranscodeTransformError>;
 }
 
 impl DataSetPixelDataExtensions for DataSet {
@@ -176,7 +178,7 @@ impl DataSetPixelDataExtensions for DataSet {
     decode_config: PixelDataDecodeConfig,
     encode_config: PixelDataEncodeConfig,
     image_data_functions: Option<TranscodeImageDataFunctions>,
-  ) -> Result<DataSet, P10PixelDataTranscodeTransformError> {
+  ) -> Result<Option<DataSet>, P10PixelDataTranscodeTransformError> {
     let mut transcode_transform = P10PixelDataTranscodeTransform::new(
       output_transfer_syntax,
       decode_config,
@@ -198,7 +200,11 @@ impl DataSetPixelDataExtensions for DataSet {
       Ok(())
     })?;
 
-    Ok(data_set_builder.final_data_set().unwrap())
+    if !transcode_transform.is_active() {
+      return Ok(None);
+    }
+
+    Ok(Some(data_set_builder.final_data_set().unwrap()))
   }
 }
 

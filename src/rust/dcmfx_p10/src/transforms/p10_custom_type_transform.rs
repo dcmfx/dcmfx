@@ -108,47 +108,49 @@ impl<T> P10CustomTypeTransform<T> {
     &mut self,
     token: &P10Token,
   ) -> Result<(), P10CustomTypeTransformError> {
-    if let Some((filter, data_set_builder)) = self.filter.as_mut() {
-      let is_at_root = filter.is_at_root();
+    let Some((filter, data_set_builder)) = self.filter.as_mut() else {
+      return Ok(());
+    };
 
-      if filter
+    let is_at_root = filter.is_at_root();
+
+    if filter
+      .add_token(token)
+      .map_err(P10CustomTypeTransformError::P10Error)?
+    {
+      data_set_builder
         .add_token(token)
-        .map_err(P10CustomTypeTransformError::P10Error)?
-      {
-        data_set_builder
-          .add_token(token)
-          .map_err(P10CustomTypeTransformError::P10Error)?;
-      }
+        .map_err(P10CustomTypeTransformError::P10Error)?;
+    }
 
-      // Check whether all the relevant tags have now been read. If they have
-      // then the final type can be constructed.
-      let is_complete = is_at_root
-        && match token {
-          P10Token::DataElementHeader { tag, .. }
-          | P10Token::SequenceStart { tag, .. } => *tag > self.highest_tag,
+    // Check whether all the relevant tags have now been read. If they have
+    // then the final type can be constructed.
+    let is_complete = is_at_root
+      && match token {
+        P10Token::DataElementHeader { tag, .. }
+        | P10Token::SequenceStart { tag, .. } => *tag > self.highest_tag,
 
-          P10Token::DataElementValueBytes {
-            tag,
-            bytes_remaining: 0,
-            ..
-          }
-          | P10Token::SequenceDelimiter { tag } => *tag == self.highest_tag,
+        P10Token::DataElementValueBytes {
+          tag,
+          bytes_remaining: 0,
+          ..
+        }
+        | P10Token::SequenceDelimiter { tag } => *tag == self.highest_tag,
 
-          P10Token::End => true,
+        P10Token::End => true,
 
-          _ => false,
-        };
+        _ => false,
+      };
 
-      if is_complete {
-        data_set_builder.force_end();
-        let data_set = data_set_builder.final_data_set().unwrap();
+    if is_complete {
+      data_set_builder.force_end();
+      let data_set = data_set_builder.final_data_set().unwrap();
 
-        let target = (self.target_from_data_set)(&data_set)
-          .map_err(P10CustomTypeTransformError::DataError)?;
+      let target = (self.target_from_data_set)(&data_set)
+        .map_err(P10CustomTypeTransformError::DataError)?;
 
-        self.target = Some(target);
-        self.filter = None;
-      }
+      self.target = Some(target);
+      self.filter = None;
     }
 
     Ok(())
