@@ -87,11 +87,11 @@ fn anonymize_flag() {
 }
 
 fn delete_tags_flag() {
-  glint.strings_flag("delete-tags")
+  glint.strings_flag("delete")
   |> glint.flag_help(
     "Data element tags to delete and not include in the output DICOM P10 file. "
     <> "Separate each tag to be removed with a comma. E.g. "
-    <> "--delete-tags=00100010,00100030",
+    <> "--delete=00100010,00100030",
   )
   |> glint.flag_constraint(
     fn(tag) {

@@ -87,7 +87,7 @@ pub struct ModifyArgs {
   zlib_compression_level: u32,
 
   #[arg(
-    long = "delete-tag",
+    long = "delete",
     value_name = "DATA_ELEMENT_TAG",
     help_heading = "Data Set Content",
     help = "A data element tag to delete and not include in the output DICOM \
@@ -95,15 +95,25 @@ pub struct ModifyArgs {
       multiple tags.",
     value_parser = crate::args::validate_data_element_tag,
   )]
-  delete_tags: Vec<DataElementTag>,
+  deletions: Vec<DataElementTag>,
 
   #[arg(
     long,
     help_heading = "Data Set Content",
-    help = "Whether to anonymize the data set file by removing all patient \
-      data elements, other identifying data elements, as well as private data \
-      elements. Note that this option does not remove any identifying \
-      information that may be baked into the pixel data.",
+    help = "Remove private data elements, which are those with a tag group \
+      that's an odd number.",
+    default_value_t = false
+  )]
+  delete_private: bool,
+
+  #[arg(
+    long,
+    help_heading = "Data Set Content",
+    help = "Anonymize the data set file by removing all patient data elements, \
+      other potentially identifying data elements, as well as private data \
+      elements. Note that this option does not remove identifying information \
+      baked into the pixel data, however such data may be able to be cropped \
+      out using --crop",
     default_value_t = false
   )]
   anonymize: bool,
@@ -394,13 +404,26 @@ fn modify_input_source(
     };
 
   // Create a filter transform for anonymization and tag deletion if needed
-  let tags_to_delete = args.delete_tags.clone();
+  let deletions = args.deletions.clone();
+  let delete_private = args.delete_private;
   let anonymize = args.anonymize;
-  let filter_transform = if anonymize || !tags_to_delete.is_empty() {
+  let filter_transform = if anonymize || !deletions.is_empty() || delete_private
+  {
     Some(P10FilterTransform::new(Box::new(
       move |tag, vr, _length, _path| {
-        (!anonymize || dcmfx::anonymize::filter_tag(tag, vr))
-          && !tags_to_delete.contains(&tag)
+        if deletions.contains(&tag) {
+          return false;
+        }
+
+        if delete_private && tag.is_private() {
+          return false;
+        }
+
+        if anonymize && !dcmfx::anonymize::filter_tag(tag, vr) {
+          return false;
+        }
+
+        true
       },
     )))
   } else {

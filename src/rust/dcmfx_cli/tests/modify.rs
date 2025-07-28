@@ -30,9 +30,9 @@ fn modify() {
     .arg(dicom_file)
     .arg("--output-filename")
     .arg(&temp_path)
-    .arg("--delete-tag")
+    .arg("--delete")
     .arg("00080064")
-    .arg("--delete-tag")
+    .arg("--delete")
     .arg("00181020")
     .arg("--implementation-version-name")
     .arg("DCMfx Test")
@@ -179,6 +179,48 @@ fn errors_on_effort_without_transfer_syntax() {
     "errors_on_effort_without_transfer_syntax",
     get_stderr(assert)
   );
+}
+
+#[test]
+fn delete_private_tags() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm";
+  let temp_path = generate_temp_filename();
+
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("print")
+    .arg(dicom_file)
+    .assert()
+    .success();
+
+  assert_snapshot!("delete_private_tags_before", get_stdout(assert));
+
+  Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg(dicom_file)
+    .arg("--output-filename")
+    .arg(&temp_path)
+    .arg("--delete-private")
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
+    .assert()
+    .success()
+    .stdout(format!(
+      "Modifying \"{}\" => \"{}\" …\n",
+      to_native_path(&dicom_file),
+      temp_path.display()
+    ));
+
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("print")
+    .arg(&temp_path)
+    .assert()
+    .success();
+
+  assert_snapshot!("delete_private_tags_after", get_stdout(assert));
 }
 
 #[test]

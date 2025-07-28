@@ -84,7 +84,7 @@ Options:
   -V, --version      Print version
 ```
 
-### Examples
+## Examples
 
 1. Print a DICOM P10 file's data set to stdout:
 
@@ -164,7 +164,7 @@ Options:
    ```
 
    Pixel data will be automatically transcoded as appropriate. See the output
-   from `dcmfx modify --help` for full details of supported transfer syntaxes.
+   of `dcmfx modify --help` for details of supported transfer syntaxes.
 
 8. Anonymize a DICOM P10 file in-place by removing all identifying data
    elements and private data elements:
@@ -174,19 +174,20 @@ Options:
    ```
 
    Note that this does not remove any identifying information baked into pixel
-   data or other binary data elements.
+   data or other binary data elements, however such pixel data may be able to
+   be removed using the `--crop` argument.
 
-9. Remove the top-level *'(7FE0,0010) Pixel Data'* data element from a DICOM P10
-   file:
+9. Remove the top-level _'(7FE0,0010) Pixel Data'_ data element and all private
+   data elements from a DICOM P10 file:
 
    ```sh
-   dcmfx modify input.dcm --in-place --delete-tag 7FE00010
+   dcmfx modify input.dcm --in-place --delete 7FE00010 --delete-private
    ```
 
-   Multiple data elements can be deleted by using a comma as a separator:
+   Multiple data elements can be deleted by specifying --delete multiple times:
 
    ```sh
-   dcmfx modify input.dcm --in-place --delete-tag 00100010 --delete-tag 00100030
+   dcmfx modify input.dcm --in-place --delete 00100010 --delete 00100030
    ```
 
 10. Print a list of all DICOM files under the current directory:
@@ -196,20 +197,10 @@ Options:
     ```
 
 11. Print a list of all DICOM files under the current directory as JSON Lines
-    that includes the value of each DICOM's '*(0008,0018) SOP Instance UID*'
+    that includes the value of each DICOM's '_(0008,0018) SOP Instance UID_'
     data element, followed by a summary of their transfer syntaxes and SOP
     classes:
 
     ```sh
     dcmfx list . --format json-lines --select 00080018 --summarize
     ```
-
-## Gleam CLI
-
-The above examples assume the Rust version of the CLI tool is in use, however
-most functionality is also supported by the Gleam version of the CLI, which can be
-run with `gleam run` in `/src/gleam/dcmfx_cli`.
-
-The Gleam CLI is primarily used when working on the Gleam implementation of
-DCMfx. The Rust CLI is recommended for regular use as it is faster, has more
-features, and is a single standalone binary.
