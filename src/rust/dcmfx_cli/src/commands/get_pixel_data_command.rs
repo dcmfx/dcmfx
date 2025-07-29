@@ -275,8 +275,8 @@ enum OutputFormat {
   Png,
 
   /// Decodes the pixel data and writes each frame to a PNG image. If the pixel
-  /// data bit depth is greater than 8-bit then the PNG will use 16-bit color
-  /// depth.
+  /// data bit depth is greater than 8-bit then the PNG will be 16-bit,
+  /// otherwise it will be 8-bit.
   Png16,
 
   /// Decodes the pixel data and writes each frame to a JPG image. The JPG

@@ -293,7 +293,7 @@ impl ValueEnum for TransferSyntaxArg {
           \n\
           The only transfer syntax that can be transcoded into 'JPEG XL JPEG \
           Recompression' is 'JPEG Baseline 8-bit'. No aspect of the pixel data \
-          can be altered when doing this transcode, e.g. the photometric
+          can be altered when doing this transcode, e.g. the photometric \
           interpretation can't be changed.\n\
           \n\
           Encapsulated: Yes\n\
