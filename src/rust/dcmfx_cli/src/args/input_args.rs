@@ -181,6 +181,10 @@ impl BaseInputArgs {
 
         // If it's not a glob then error if it doesn't point to a valid file
         if !is_glob(&input_filename_str) && !input_filename.is_file() {
+          if input_filename.is_dir() {
+            return Box::new(std::iter::empty());
+          }
+
           eprintln!(
             "Error: Input file '{}' does not exist",
             input_filename.display()
