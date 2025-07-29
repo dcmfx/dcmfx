@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx"
-version = "0.30.0"
+version = "0.30.1"
 description = "Library for working with DICOM and DICOM JSON"
 categories = ["wasm"]
 
