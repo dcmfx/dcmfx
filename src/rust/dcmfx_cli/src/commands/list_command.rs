@@ -507,19 +507,22 @@ impl Summary {
       bytesize::ByteSize::b(self.dicoms.size).to_string(),
     ]);
 
-    table.add_row([
-      "DICOM mean size".to_string(),
-      bytesize::ByteSize::b(self.dicoms.size / self.dicoms.count as u64)
-        .to_string(),
-    ]);
-    table.add_row([
-      "DICOM largest size".to_string(),
-      format!(
-        "{} ({})",
-        self.largest_dicom.0.display(),
-        bytesize::ByteSize::b(self.largest_dicom.1),
-      ),
-    ]);
+    if self.dicoms.count > 0 {
+      table.add_row([
+        "DICOM mean size".to_string(),
+        bytesize::ByteSize::b(self.dicoms.size / self.dicoms.count as u64)
+          .to_string(),
+      ]);
+      table.add_row([
+        "DICOM largest size".to_string(),
+        format!(
+          "{} ({})",
+          self.largest_dicom.0.display(),
+          bytesize::ByteSize::b(self.largest_dicom.1),
+        ),
+      ]);
+    }
+
     table.add_row([
       "Study count".to_string(),
       self.study_instance_uids.len().to_string(),
