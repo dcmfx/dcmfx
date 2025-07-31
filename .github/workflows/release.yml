@@ -139,14 +139,15 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.rust-target }}" = "x86_64-pc-windows-msvc" ]; then
-            BINARY_SUFFIX=".exe"
+            ARCHIVE="dcmfx-v${{ needs.check_semantic_release.outputs.new_release_version }}-${{ matrix.rust-target }}.zip"
+            cp src/rust/target/${{ matrix.rust-target }}/release/dcmfx_cli$BINARY_SUFFIX dcmfx.exe
+            choco install zip -y --no-progress
+            zip "$ARCHIVE" dcmfx.exe
           else
-            BINARY_SUFFIX=""
+            ARCHIVE="dcmfx-v${{ needs.check_semantic_release.outputs.new_release_version }}-${{ matrix.rust-target }}.tar.gz"
+            cp src/rust/target/${{ matrix.rust-target }}/release/dcmfx_cli$BINARY_SUFFIX dcmfx
+            tar -czvf "$ARCHIVE" dcmfx
           fi
-
-          ARCHIVE="dcmfx-v${{ needs.check_semantic_release.outputs.new_release_version }}-${{ matrix.rust-target }}.tar.gz"
-          cp src/rust/target/${{ matrix.rust-target }}/release/dcmfx_cli$BINARY_SUFFIX dcmfx$BINARY_SUFFIX
-          tar -czvf "$ARCHIVE" dcmfx$BINARY_SUFFIX
 
           openssl dgst -r -sha256 -out "$ARCHIVE".sha256 "$ARCHIVE"
           echo "ARCHIVE=$ARCHIVE" >> $GITHUB_ENV
