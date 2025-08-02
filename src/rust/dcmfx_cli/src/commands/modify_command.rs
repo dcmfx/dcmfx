@@ -448,8 +448,8 @@ fn modify_input_source(
   let insert_transform = if let Some(transfer_syntax) = args.transfer_syntax {
     if transfer_syntax == TransferSyntaxArg::JpegBaseline8Bit
       || transfer_syntax == TransferSyntaxArg::JpegLsLossyNearLossless
-      || transfer_syntax == TransferSyntaxArg::Jpeg2k
-      || transfer_syntax == TransferSyntaxArg::HighThroughputJpeg2k
+      || transfer_syntax == TransferSyntaxArg::Jpeg2000
+      || transfer_syntax == TransferSyntaxArg::HighThroughputJpeg2000
       || transfer_syntax == TransferSyntaxArg::JpegXl
     {
       let mut lossy_image_compression = DataSet::new();

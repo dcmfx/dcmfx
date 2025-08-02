@@ -87,10 +87,10 @@ pub fn file_extension_for_transfer_syntax(ts: TransferSyntax) -> String {
 
     // JPEG 2000 uses the .j2k extension
     ts
-      if ts == transfer_syntax.jpeg_2k_lossless_only
-      || ts == transfer_syntax.jpeg_2k
-      || ts == transfer_syntax.jpeg_2k_multi_component_lossless_only
-      || ts == transfer_syntax.jpeg_2k_multi_component
+      if ts == transfer_syntax.jpeg_2000_lossless_only
+      || ts == transfer_syntax.jpeg_2000
+      || ts == transfer_syntax.jpeg_2000_multi_component_lossless_only
+      || ts == transfer_syntax.jpeg_2000_multi_component
     -> ".j2k"
 
     // MPEG-2 uses the .mp2 extension
@@ -133,10 +133,10 @@ pub fn file_extension_for_transfer_syntax(ts: TransferSyntax) -> String {
 
     // High-Throughput JPEG 2000 uses the .jph extension
     ts
-      if ts == transfer_syntax.high_throughput_jpeg_2k_lossless_only
+      if ts == transfer_syntax.high_throughput_jpeg_2000_lossless_only
       || ts
-      == transfer_syntax.high_throughput_jpeg_2k_with_rpcl_options_lossless_only
-      || ts == transfer_syntax.high_throughput_jpeg_2k
+      == transfer_syntax.high_throughput_jpeg_2000_with_rpcl_options_lossless_only
+      || ts == transfer_syntax.high_throughput_jpeg_2000
     -> ".jph"
 
     // Deflated Image Frame Compression uses the .zz extension

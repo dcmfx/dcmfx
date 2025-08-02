@@ -154,7 +154,7 @@ pub const jpeg_ls_lossy_near_lossless = TransferSyntax(
 
 /// The 'JPEG 2000 Image Compression (Lossless Only)' transfer syntax.
 ///
-pub const jpeg_2k_lossless_only = TransferSyntax(
+pub const jpeg_2000_lossless_only = TransferSyntax(
   name: "JPEG 2000 Image Compression (Lossless Only)",
   uid: "1.2.840.10008.1.2.4.90",
   vr_serialization: VrExplicit,
@@ -165,7 +165,7 @@ pub const jpeg_2k_lossless_only = TransferSyntax(
 
 /// The 'JPEG 2000 Image Compression' transfer syntax.
 ///
-pub const jpeg_2k = TransferSyntax(
+pub const jpeg_2000 = TransferSyntax(
   name: "JPEG 2000 Image Compression",
   uid: "1.2.840.10008.1.2.4.91",
   vr_serialization: VrExplicit,
@@ -177,7 +177,7 @@ pub const jpeg_2k = TransferSyntax(
 /// The 'JPEG 2000 Part 2 Multi-component Image Compression (Lossless Only)'
 /// transfer syntax.
 ///
-pub const jpeg_2k_multi_component_lossless_only = TransferSyntax(
+pub const jpeg_2000_multi_component_lossless_only = TransferSyntax(
   name: "JPEG 2000 Part 2 Multi-component Image Compression (Lossless Only)",
   uid: "1.2.840.10008.1.2.4.92",
   vr_serialization: VrExplicit,
@@ -188,7 +188,7 @@ pub const jpeg_2k_multi_component_lossless_only = TransferSyntax(
 
 /// The 'JPEG 2000 Part 2 Multi-component Image Compression' transfer syntax.
 ///
-pub const jpeg_2k_multi_component = TransferSyntax(
+pub const jpeg_2000_multi_component = TransferSyntax(
   name: "JPEG 2000 Part 2 Multi-component Image Compression",
   uid: "1.2.840.10008.1.2.4.93",
   vr_serialization: VrExplicit,
@@ -438,7 +438,7 @@ pub const jpeg_xl = TransferSyntax(
 
 /// The 'High-Throughput JPEG 2000 (Lossless Only)' transfer syntax.
 ///
-pub const high_throughput_jpeg_2k_lossless_only = TransferSyntax(
+pub const high_throughput_jpeg_2000_lossless_only = TransferSyntax(
   name: "High-Throughput JPEG 2000 (Lossless Only)",
   uid: "1.2.840.10008.1.2.4.201",
   vr_serialization: VrExplicit,
@@ -450,7 +450,7 @@ pub const high_throughput_jpeg_2k_lossless_only = TransferSyntax(
 /// The 'High-Throughput JPEG 2000 with RPCL Options (Lossless Only)' transfer
 /// syntax.
 ///
-pub const high_throughput_jpeg_2k_with_rpcl_options_lossless_only = TransferSyntax(
+pub const high_throughput_jpeg_2000_with_rpcl_options_lossless_only = TransferSyntax(
   name: "High-Throughput JPEG 2000 with RPCL Options (Lossless Only)",
   uid: "1.2.840.10008.1.2.4.202",
   vr_serialization: VrExplicit,
@@ -461,7 +461,7 @@ pub const high_throughput_jpeg_2k_with_rpcl_options_lossless_only = TransferSynt
 
 /// The 'High-Throughput JPEG 2000' transfer syntax.
 ///
-pub const high_throughput_jpeg_2k = TransferSyntax(
+pub const high_throughput_jpeg_2000 = TransferSyntax(
   name: "High-Throughput JPEG 2000",
   uid: "1.2.840.10008.1.2.4.203",
   vr_serialization: VrExplicit,
@@ -472,7 +472,7 @@ pub const high_throughput_jpeg_2k = TransferSyntax(
 
 /// The 'JPIP HTJ2K Referenced' transfer syntax.
 ///
-pub const jpip_high_throughput_jpeg_2k_referenced = TransferSyntax(
+pub const jpip_high_throughput_jpeg_2000_referenced = TransferSyntax(
   name: "JPIP HTJ2K Referenced",
   uid: "1.2.840.10008.1.2.4.204",
   vr_serialization: VrExplicit,
@@ -483,7 +483,7 @@ pub const jpip_high_throughput_jpeg_2k_referenced = TransferSyntax(
 
 /// The 'JPIP HTJ2K Referenced Deflate' transfer syntax.
 ///
-pub const jpip_high_throughput_jpeg_2k_referenced_deflate = TransferSyntax(
+pub const jpip_high_throughput_jpeg_2000_referenced_deflate = TransferSyntax(
   name: "JPIP HTJ2K Referenced Deflate",
   uid: "1.2.840.10008.1.2.4.205",
   vr_serialization: VrExplicit,
@@ -562,10 +562,10 @@ pub const all = [
   jpeg_lossless_non_hierarchical_sv1,
   jpeg_ls_lossless,
   jpeg_ls_lossy_near_lossless,
-  jpeg_2k_lossless_only,
-  jpeg_2k,
-  jpeg_2k_multi_component_lossless_only,
-  jpeg_2k_multi_component,
+  jpeg_2000_lossless_only,
+  jpeg_2000,
+  jpeg_2000_multi_component_lossless_only,
+  jpeg_2000_multi_component,
   jpip_referenced,
   jpip_referenced_deflate,
   mpeg2_main_profile_main_level,
@@ -587,11 +587,11 @@ pub const all = [
   jpeg_xl_lossless,
   jpeg_xl_jpeg_recompression,
   jpeg_xl,
-  high_throughput_jpeg_2k_lossless_only,
-  high_throughput_jpeg_2k_with_rpcl_options_lossless_only,
-  high_throughput_jpeg_2k,
-  jpip_high_throughput_jpeg_2k_referenced,
-  jpip_high_throughput_jpeg_2k_referenced_deflate,
+  high_throughput_jpeg_2000_lossless_only,
+  high_throughput_jpeg_2000_with_rpcl_options_lossless_only,
+  high_throughput_jpeg_2000,
+  jpip_high_throughput_jpeg_2000_referenced,
+  jpip_high_throughput_jpeg_2000_referenced_deflate,
   rle_lossless,
   smpte_st_2110_20_uncompressed_progressive_active_video,
   smpte_st_2110_20_uncompressed_interlaced_active_video,
@@ -616,10 +616,10 @@ pub fn from_uid(uid: String) -> Result(TransferSyntax, Nil) {
     "1.2.840.10008.1.2.4.70" -> Ok(jpeg_lossless_non_hierarchical_sv1)
     "1.2.840.10008.1.2.4.80" -> Ok(jpeg_ls_lossless)
     "1.2.840.10008.1.2.4.81" -> Ok(jpeg_ls_lossy_near_lossless)
-    "1.2.840.10008.1.2.4.90" -> Ok(jpeg_2k_lossless_only)
-    "1.2.840.10008.1.2.4.91" -> Ok(jpeg_2k)
-    "1.2.840.10008.1.2.4.92" -> Ok(jpeg_2k_multi_component_lossless_only)
-    "1.2.840.10008.1.2.4.93" -> Ok(jpeg_2k_multi_component)
+    "1.2.840.10008.1.2.4.90" -> Ok(jpeg_2000_lossless_only)
+    "1.2.840.10008.1.2.4.91" -> Ok(jpeg_2000)
+    "1.2.840.10008.1.2.4.92" -> Ok(jpeg_2000_multi_component_lossless_only)
+    "1.2.840.10008.1.2.4.93" -> Ok(jpeg_2000_multi_component)
     "1.2.840.10008.1.2.4.94" -> Ok(jpip_referenced)
     "1.2.840.10008.1.2.4.95" -> Ok(jpip_referenced_deflate)
     "1.2.840.10008.1.2.4.100" -> Ok(mpeg2_main_profile_main_level)
@@ -647,13 +647,13 @@ pub fn from_uid(uid: String) -> Result(TransferSyntax, Nil) {
     "1.2.840.10008.1.2.4.110" -> Ok(jpeg_xl_lossless)
     "1.2.840.10008.1.2.4.111" -> Ok(jpeg_xl_jpeg_recompression)
     "1.2.840.10008.1.2.4.112" -> Ok(jpeg_xl)
-    "1.2.840.10008.1.2.4.201" -> Ok(high_throughput_jpeg_2k_lossless_only)
+    "1.2.840.10008.1.2.4.201" -> Ok(high_throughput_jpeg_2000_lossless_only)
     "1.2.840.10008.1.2.4.202" ->
-      Ok(high_throughput_jpeg_2k_with_rpcl_options_lossless_only)
-    "1.2.840.10008.1.2.4.203" -> Ok(high_throughput_jpeg_2k)
-    "1.2.840.10008.1.2.4.204" -> Ok(jpip_high_throughput_jpeg_2k_referenced)
+      Ok(high_throughput_jpeg_2000_with_rpcl_options_lossless_only)
+    "1.2.840.10008.1.2.4.203" -> Ok(high_throughput_jpeg_2000)
+    "1.2.840.10008.1.2.4.204" -> Ok(jpip_high_throughput_jpeg_2000_referenced)
     "1.2.840.10008.1.2.4.205" ->
-      Ok(jpip_high_throughput_jpeg_2k_referenced_deflate)
+      Ok(jpip_high_throughput_jpeg_2000_referenced_deflate)
     "1.2.840.10008.1.2.5" -> Ok(rle_lossless)
     "1.2.840.10008.1.2.7.1" ->
       Ok(smpte_st_2110_20_uncompressed_progressive_active_video)
@@ -668,13 +668,13 @@ pub fn from_uid(uid: String) -> Result(TransferSyntax, Nil) {
 
 /// Returns whether this transfer syntax is one of the seven JPEG 2000 or
 /// High-Throughput JPEG 2000 transfer syntaxes.
-///
-pub fn is_jpeg_2k(transfer_syntax: TransferSyntax) -> Bool {
-  transfer_syntax == jpeg_2k_lossless_only
-  || transfer_syntax == jpeg_2k
-  || transfer_syntax == jpeg_2k_multi_component_lossless_only
-  || transfer_syntax == jpeg_2k_multi_component
-  || transfer_syntax == high_throughput_jpeg_2k_lossless_only
-  || transfer_syntax == high_throughput_jpeg_2k_with_rpcl_options_lossless_only
-  || transfer_syntax == high_throughput_jpeg_2k
+pub fn is_jpeg_2000(transfer_syntax: TransferSyntax) -> Bool {
+  transfer_syntax == jpeg_2000_lossless_only
+  || transfer_syntax == jpeg_2000
+  || transfer_syntax == jpeg_2000_multi_component_lossless_only
+  || transfer_syntax == jpeg_2000_multi_component
+  || transfer_syntax == high_throughput_jpeg_2000_lossless_only
+  || transfer_syntax
+  == high_throughput_jpeg_2000_with_rpcl_options_lossless_only
+  || transfer_syntax == high_throughput_jpeg_2000
 }

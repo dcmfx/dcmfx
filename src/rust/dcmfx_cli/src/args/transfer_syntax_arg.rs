@@ -18,10 +18,10 @@ pub enum TransferSyntaxArg {
   JpegExtended12Bit,
   JpegLsLossless,
   JpegLsLossyNearLossless,
-  Jpeg2kLosslessOnly,
-  Jpeg2k,
-  HighThroughputJpeg2kLosslessOnly,
-  HighThroughputJpeg2k,
+  Jpeg2000LosslessOnly,
+  Jpeg2000,
+  HighThroughputJpeg2000LosslessOnly,
+  HighThroughputJpeg2000,
   JpegXlLossless,
   JpegXlJpegRecompression,
   JpegXl,
@@ -58,13 +58,15 @@ impl TransferSyntaxArg {
       Self::JpegLsLossyNearLossless => {
         Some(&transfer_syntax::JPEG_LS_LOSSY_NEAR_LOSSLESS)
       }
-      Self::Jpeg2kLosslessOnly => Some(&transfer_syntax::JPEG_2K_LOSSLESS_ONLY),
-      Self::Jpeg2k => Some(&transfer_syntax::JPEG_2K),
-      Self::HighThroughputJpeg2kLosslessOnly => {
-        Some(&transfer_syntax::HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY)
+      Self::Jpeg2000LosslessOnly => {
+        Some(&transfer_syntax::JPEG_2000_LOSSLESS_ONLY)
       }
-      Self::HighThroughputJpeg2k => {
-        Some(&transfer_syntax::HIGH_THROUGHPUT_JPEG_2K)
+      Self::Jpeg2000 => Some(&transfer_syntax::JPEG_2000),
+      Self::HighThroughputJpeg2000LosslessOnly => {
+        Some(&transfer_syntax::HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY)
+      }
+      Self::HighThroughputJpeg2000 => {
+        Some(&transfer_syntax::HIGH_THROUGHPUT_JPEG_2000)
       }
       Self::JpegXlLossless => Some(&transfer_syntax::JPEG_XL_LOSSLESS),
       Self::JpegXlJpegRecompression => {
@@ -90,10 +92,10 @@ impl ValueEnum for TransferSyntaxArg {
       Self::JpegExtended12Bit,
       Self::JpegLsLossless,
       Self::JpegLsLossyNearLossless,
-      Self::Jpeg2kLosslessOnly,
-      Self::Jpeg2k,
-      Self::HighThroughputJpeg2kLosslessOnly,
-      Self::HighThroughputJpeg2k,
+      Self::Jpeg2000LosslessOnly,
+      Self::Jpeg2000,
+      Self::HighThroughputJpeg2000LosslessOnly,
+      Self::HighThroughputJpeg2000,
       Self::JpegXlLossless,
       Self::JpegXlJpegRecompression,
       Self::JpegXl,
@@ -236,16 +238,17 @@ impl ValueEnum for TransferSyntaxArg {
         )
       }
 
-      Self::Jpeg2kLosslessOnly => PossibleValue::new("jpeg-2k-lossless-only")
-        .help(
+      Self::Jpeg2000LosslessOnly => {
+        PossibleValue::new("jpeg-2000-lossless-only").help(
           "\n\
           Lossless image compression using the JPEG 2000 format.\n\
           \n\
           Encapsulated: Yes\n\
           UID: 1.2.840.10008.1.2.4.90",
-        ),
+        )
+      }
 
-      Self::Jpeg2k => PossibleValue::new("jpeg-2k").help(
+      Self::Jpeg2000 => PossibleValue::new("jpeg-2000").help(
         "\n\
         Lossy image compression using the JPEG 2000 format. The quality level \
         to use for the encoding can be set with the --quality argument.\n\
@@ -254,8 +257,8 @@ impl ValueEnum for TransferSyntaxArg {
         UID: 1.2.840.10008.1.2.4.91",
       ),
 
-      Self::HighThroughputJpeg2kLosslessOnly => {
-        PossibleValue::new("ht-jpeg-2k-lossless-only").help(
+      Self::HighThroughputJpeg2000LosslessOnly => {
+        PossibleValue::new("high-throughput-jpeg-2000-lossless-only").help(
           "\n\
           Lossless image compression using the High-Throughput JPEG 2000 \
           format.\n\
@@ -265,15 +268,17 @@ impl ValueEnum for TransferSyntaxArg {
         )
       }
 
-      &Self::HighThroughputJpeg2k => PossibleValue::new("ht-jpeg-2k").help(
-        "\n\
+      &Self::HighThroughputJpeg2000 => {
+        PossibleValue::new("high-throughput-jpeg-2000").help(
+          "\n\
         Lossy image compression using the High-Throughput JPEG 2000 format. \
         The quality level to use for the encoding can be set with the \
         --quality argument.\n\
         \n\
         Encapsulated: Yes\n\
         UID: 1.2.840.10008.1.2.4.202",
-      ),
+        )
+      }
 
       Self::JpegXlLossless => PossibleValue::new("jpeg-xl-lossless").help(
         "\n\

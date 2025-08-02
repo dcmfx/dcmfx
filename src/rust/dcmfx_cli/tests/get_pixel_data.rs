@@ -451,7 +451,7 @@ fn jpeg_2000_monochrome_with_mismatched_pixel_representation_to_jpg() {
 #[test]
 fn jpeg_2000_monochrome_2bpp_to_png() {
   let dicom_file =
-    "../../../test/assets/other/examples_jpeg2k.monochrome_2bpp.dcm";
+    "../../../test/assets/other/examples_jpeg_2000.monochrome_2bpp.dcm";
   let output_file = format!("{}.0000.png", dicom_file);
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();

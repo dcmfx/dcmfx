@@ -862,8 +862,8 @@ impl TranscodeImageDataFunctions {
 
               // When transcoding to JPEG 2000 Lossless Only default to YBR_RCT
               // unless the incoming data is PALETTE_COLOR
-              transfer_syntax::JPEG_2K_LOSSLESS_ONLY
-              | transfer_syntax::HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
+              transfer_syntax::JPEG_2000_LOSSLESS_ONLY
+              | transfer_syntax::HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
                 if !image_pixel_module
                   .photometric_interpretation()
                   .is_palette_color() =>
@@ -874,11 +874,12 @@ impl TranscodeImageDataFunctions {
               }
 
               // When transcoding to JPEG 2000 lossy default to YBR_ICT
-              transfer_syntax::JPEG_2K
-              | transfer_syntax::HIGH_THROUGHPUT_JPEG_2K => image_pixel_module
-                .set_photometric_interpretation(
+              transfer_syntax::JPEG_2000
+              | transfer_syntax::HIGH_THROUGHPUT_JPEG_2000 => {
+                image_pixel_module.set_photometric_interpretation(
                   PhotometricInterpretation::YbrIct,
-                ),
+                )
+              }
 
               // When transcoding to JPEG XL lossless default to RGB
               transfer_syntax::JPEG_XL_LOSSLESS => image_pixel_module

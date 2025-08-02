@@ -27,8 +27,8 @@ fn test_native_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules(),
     &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.0,
     0.0,
   );
@@ -42,8 +42,8 @@ fn test_rle_lossless_encode_decode_cycle() {
       .filter(|m| !m.photometric_interpretation().is_ybr_full_422())
       .collect(),
     &transfer_syntax::RLE_LOSSLESS,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.0,
     0.0,
   );
@@ -61,8 +61,8 @@ fn test_jpeg_baseline_8bit_encode_decode_cycle() {
       })
       .collect(),
     &transfer_syntax::JPEG_BASELINE_8BIT,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.01,
     0.25,
   );
@@ -81,8 +81,8 @@ fn test_jpeg_extended_12bit_encode_decode_cycle() {
       })
       .collect(),
     &transfer_syntax::JPEG_EXTENDED_12BIT,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.01,
     0.01,
   );
@@ -101,8 +101,8 @@ fn test_jpeg_ls_lossless_encode_decode_cycle() {
       })
       .collect(),
     &transfer_syntax::JPEG_LS_LOSSLESS,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.0,
     0.0,
   );
@@ -122,15 +122,15 @@ fn test_jpeg_ls_near_lossless_encode_decode_cycle() {
       })
       .collect(),
     &transfer_syntax::JPEG_LS_LOSSY_NEAR_LOSSLESS,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.01,
     0.02,
   );
 }
 
 #[test]
-fn test_jpeg_2k_lossless_only_encode_decode_cycle() {
+fn test_jpeg_2000_lossless_only_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules()
       .into_iter()
@@ -139,16 +139,16 @@ fn test_jpeg_2k_lossless_only_encode_decode_cycle() {
           && (2..=30).contains(&m.bits_stored())
       })
       .collect(),
-    &transfer_syntax::JPEG_2K_LOSSLESS_ONLY,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    &transfer_syntax::JPEG_2000_LOSSLESS_ONLY,
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.0,
     0.0,
   );
 }
 
 #[test]
-fn test_jpeg_2k_encode_decode_cycle() {
+fn test_jpeg_2000_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules()
       .into_iter()
@@ -158,16 +158,16 @@ fn test_jpeg_2k_encode_decode_cycle() {
           && (2..=30).contains(&m.bits_stored())
       })
       .collect(),
-    &transfer_syntax::JPEG_2K,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    &transfer_syntax::JPEG_2000,
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.15,
     0.1,
   );
 }
 
 #[test]
-fn test_high_throughput_jpeg_2k_lossless_only_encode_decode_cycle() {
+fn test_high_throughput_jpeg_2000_lossless_only_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules()
       .into_iter()
@@ -176,16 +176,16 @@ fn test_high_throughput_jpeg_2k_lossless_only_encode_decode_cycle() {
           && (2..=30).contains(&m.bits_stored())
       })
       .collect(),
-    &transfer_syntax::HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY,
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.0,
     0.0,
   );
 }
 
 #[test]
-fn test_high_throughput_jpeg_2k_encode_decode_cycle() {
+fn test_high_throughput_jpeg_2000_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules()
       .into_iter()
@@ -195,9 +195,9 @@ fn test_high_throughput_jpeg_2k_encode_decode_cycle() {
           && (2..=30).contains(&m.bits_stored())
       })
       .collect(),
-    &transfer_syntax::HIGH_THROUGHPUT_JPEG_2K,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000,
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.02,
     0.02,
   );
@@ -221,8 +221,8 @@ fn test_jpeg_xl_lossless_encode_decode_cycle() {
         })
         .collect(),
       &transfer_syntax::JPEG_XL_LOSSLESS,
-      &encode_config(),
-      &decode_config,
+      encode_config(),
+      decode_config,
       0.0,
       0.0,
     );
@@ -247,8 +247,8 @@ fn test_jpeg_xl_encode_decode_cycle() {
         })
         .collect(),
       &transfer_syntax::JPEG_XL,
-      &encode_config(),
-      &decode_config,
+      encode_config(),
+      decode_config,
       0.05,
       0.05,
     );
@@ -260,8 +260,8 @@ fn test_deflated_image_frame_encode_decode_cycle() {
   test_encode_decode_cycle(
     all_image_pixel_modules(),
     &transfer_syntax::DEFLATED_IMAGE_FRAME_COMPRESSION,
-    &encode_config(),
-    &PixelDataDecodeConfig::default(),
+    encode_config(),
+    PixelDataDecodeConfig::default(),
     0.0,
     0.0,
   );
@@ -270,8 +270,8 @@ fn test_deflated_image_frame_encode_decode_cycle() {
 fn test_encode_decode_cycle(
   image_pixel_modules: Vec<ImagePixelModule>,
   transfer_syntax: &'static TransferSyntax,
-  encode_config: &PixelDataEncodeConfig,
-  decode_config: &PixelDataDecodeConfig,
+  encode_config: PixelDataEncodeConfig,
+  decode_config: PixelDataDecodeConfig,
   monochrome_image_max_reencode_delta: f64,
   color_image_max_reencode_delta: f64,
 ) {
@@ -301,8 +301,8 @@ fn test_encode_decode_cycle(
 fn test_monochrome_image_encode_decode_cycle(
   image_pixel_module: &ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
-  encode_config: &PixelDataEncodeConfig,
-  decode_config: &PixelDataDecodeConfig,
+  encode_config: PixelDataEncodeConfig,
+  decode_config: PixelDataDecodeConfig,
   max_reencode_delta: f64,
 ) {
   let original_image = create_monochrome_image(&image_pixel_module);
@@ -312,7 +312,7 @@ fn test_monochrome_image_encode_decode_cycle(
     &original_image,
     &image_pixel_module,
     transfer_syntax,
-    encode_config,
+    &encode_config,
   )
   .unwrap();
 
@@ -321,7 +321,7 @@ fn test_monochrome_image_encode_decode_cycle(
     &mut encoded_frame,
     transfer_syntax,
     &image_pixel_module,
-    decode_config,
+    &decode_config,
   )
   .unwrap();
 
@@ -359,8 +359,8 @@ fn test_monochrome_image_encode_decode_cycle(
 fn test_color_image_encode_decode_cycle(
   image_pixel_module: &ImagePixelModule,
   transfer_syntax: &'static TransferSyntax,
-  encode_config: &PixelDataEncodeConfig,
-  decode_config: &PixelDataDecodeConfig,
+  encode_config: PixelDataEncodeConfig,
+  decode_config: PixelDataDecodeConfig,
   mut max_reencode_delta: f64,
 ) {
   // If the Image Pixel Module isn't supported for encoding then there's
@@ -368,7 +368,7 @@ fn test_color_image_encode_decode_cycle(
   let encoded_image_pixel_module = encode::encode_image_pixel_module(
     image_pixel_module.clone(),
     transfer_syntax,
-    encode_config,
+    &encode_config,
   )
   .unwrap();
 
@@ -380,7 +380,7 @@ fn test_color_image_encode_decode_cycle(
     &original_image,
     &encoded_image_pixel_module,
     transfer_syntax,
-    encode_config,
+    &encode_config,
   )
   .unwrap();
 
@@ -389,7 +389,7 @@ fn test_color_image_encode_decode_cycle(
     &mut encoded_frame,
     transfer_syntax,
     &encoded_image_pixel_module,
-    decode_config,
+    &decode_config,
   )
   .unwrap();
 

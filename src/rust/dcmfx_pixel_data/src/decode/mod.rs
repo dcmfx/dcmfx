@@ -215,11 +215,11 @@ pub fn decode_photometric_interpretation<'a>(
     }
 
     #[cfg(feature = "native")]
-    &JPEG_2K
-    | &JPEG_2K_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2K
-    | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
+    &JPEG_2000
+    | &JPEG_2000_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000
+    | &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
       openjpeg::decode_photometric_interpretation(photometric_interpretation)
     }
 
@@ -282,11 +282,11 @@ pub fn decode_monochrome(
     }
 
     #[cfg(feature = "native")]
-    &JPEG_2K
-    | &JPEG_2K_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2K
-    | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
+    &JPEG_2000
+    | &JPEG_2000_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000
+    | &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
       openjpeg::decode_monochrome(image_pixel_module, data)
     }
 
@@ -355,11 +355,11 @@ pub fn decode_color(
     }
 
     #[cfg(feature = "native")]
-    &JPEG_2K
-    | &JPEG_2K_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2K
-    | &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
+    &JPEG_2000
+    | &JPEG_2000_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000
+    | &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
       openjpeg::decode_color(image_pixel_module, data)
     }
 

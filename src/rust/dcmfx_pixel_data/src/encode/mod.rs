@@ -281,22 +281,22 @@ pub fn encode_image_pixel_module(
       charls::encode_image_pixel_module(image_pixel_module.clone(), true)
     }
 
-    &JPEG_2K_LOSSLESS_ONLY => {
+    &JPEG_2000_LOSSLESS_ONLY => {
       jpeg_2000::encode_image_pixel_module(image_pixel_module.clone(), None)
     }
 
-    &JPEG_2K => jpeg_2000::encode_image_pixel_module(
+    &JPEG_2000 => jpeg_2000::encode_image_pixel_module(
       image_pixel_module.clone(),
       Some(encode_config.quality),
     ),
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY => {
+    &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY => {
       jpeg_2000::encode_image_pixel_module(image_pixel_module.clone(), None)
     }
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    &HIGH_THROUGHPUT_JPEG_2K => jpeg_2000::encode_image_pixel_module(
+    &HIGH_THROUGHPUT_JPEG_2000 => jpeg_2000::encode_image_pixel_module(
       image_pixel_module.clone(),
       Some(encode_config.quality),
     ),
@@ -369,13 +369,13 @@ pub fn encode_monochrome(
     }
 
     #[cfg(feature = "native")]
-    &JPEG_2K_LOSSLESS_ONLY => {
+    &JPEG_2000_LOSSLESS_ONLY => {
       openjpeg::encode_monochrome(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
     #[cfg(feature = "native")]
-    &JPEG_2K => openjpeg::encode_monochrome(
+    &JPEG_2000 => openjpeg::encode_monochrome(
       image,
       image_pixel_module,
       Some(encode_config.quality),
@@ -383,13 +383,13 @@ pub fn encode_monochrome(
     .map(PixelDataFrame::new_from_bytes),
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY => {
+    &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY => {
       openjph::encode_monochrome(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    &HIGH_THROUGHPUT_JPEG_2K => openjph::encode_monochrome(
+    &HIGH_THROUGHPUT_JPEG_2000 => openjph::encode_monochrome(
       image,
       image_pixel_module,
       Some(encode_config.quality),
@@ -464,13 +464,13 @@ pub fn encode_color(
     }
 
     #[cfg(feature = "native")]
-    &JPEG_2K_LOSSLESS_ONLY => {
+    &JPEG_2000_LOSSLESS_ONLY => {
       openjpeg::encode_color(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
     #[cfg(feature = "native")]
-    &JPEG_2K => openjpeg::encode_color(
+    &JPEG_2000 => openjpeg::encode_color(
       image,
       image_pixel_module,
       Some(encode_config.quality),
@@ -478,13 +478,13 @@ pub fn encode_color(
     .map(PixelDataFrame::new_from_bytes),
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY => {
+    &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY => {
       openjph::encode_color(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    &HIGH_THROUGHPUT_JPEG_2K => openjph::encode_color(
+    &HIGH_THROUGHPUT_JPEG_2000 => openjph::encode_color(
       image,
       image_pixel_module,
       Some(encode_config.quality),

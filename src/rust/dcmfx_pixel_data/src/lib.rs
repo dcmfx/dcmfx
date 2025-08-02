@@ -281,10 +281,10 @@ pub fn file_extension_for_transfer_syntax(ts: &TransferSyntax) -> &'static str {
     }
 
     // JPEG 2000 uses the .j2k extension
-    ts if ts == &JPEG_2K_LOSSLESS_ONLY
-      || ts == &JPEG_2K
-      || ts == &JPEG_2K_MULTI_COMPONENT_LOSSLESS_ONLY
-      || ts == &JPEG_2K_MULTI_COMPONENT =>
+    ts if ts == &JPEG_2000_LOSSLESS_ONLY
+      || ts == &JPEG_2000
+      || ts == &JPEG_2000_MULTI_COMPONENT_LOSSLESS_ONLY
+      || ts == &JPEG_2000_MULTI_COMPONENT =>
     {
       ".j2k"
     }
@@ -327,9 +327,9 @@ pub fn file_extension_for_transfer_syntax(ts: &TransferSyntax) -> &'static str {
     }
 
     // High-Throughput JPEG 2000 uses the .jph extension
-    ts if ts == &HIGH_THROUGHPUT_JPEG_2K_LOSSLESS_ONLY
-      || ts == &HIGH_THROUGHPUT_JPEG_2K_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
-      || ts == &HIGH_THROUGHPUT_JPEG_2K =>
+    ts if ts == &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
+      || ts == &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
+      || ts == &HIGH_THROUGHPUT_JPEG_2000 =>
     {
       ".jph"
     }
