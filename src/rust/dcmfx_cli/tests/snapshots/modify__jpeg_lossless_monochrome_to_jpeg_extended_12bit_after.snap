@@ -81,7 +81,7 @@ snapshot_kind: text
 (0028,1051) DS Window Width                         [     8 bytes] "360", "360"
 (0028,1052) DS Rescale Intercept                    [     6 bytes] "-1024"
 (0028,1053) DS Rescale Slope                        [     2 bytes] "1"
-(0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
 (6000,0010) US Overlay Rows                         [     2 bytes] 512
 (6000,0011) US Overlay Columns                      [     2 bytes] 512
 (6000,0022) LO Overlay Description                  [    26 bytes] "A.L.I. Tec …

@@ -8,8 +8,9 @@ use alloc::{
 };
 
 use dcmfx_core::{
-  DataError, DataSetPath, DcmfxError, IodModule, RcByteSlice, TransferSyntax,
-  ValueRepresentation, dictionary, transfer_syntax,
+  DataElementValue, DataError, DataSet, DataSetPath, DcmfxError, IodModule,
+  RcByteSlice, TransferSyntax, ValueRepresentation, dictionary,
+  transfer_syntax,
 };
 use dcmfx_p10::{
   P10CustomTypeTransform, P10CustomTypeTransformError, P10Error,
@@ -89,6 +90,10 @@ pub struct P10PixelDataTranscodeTransform {
   /// number of bytes of pixel data still to be transcoded. This is reduced with
   /// every frame of pixel data that's emitted.
   native_pixel_data_bytes_remaining: u32,
+
+  /// If the output transfer syntax is lossy, this is an insert transform that
+  /// inserts the '(0028,2110) Lossy Image Compression' data element.
+  lossy_image_compression_insert_transform: Option<P10InsertTransform>,
 }
 
 /// Holds three user-provided functions that can alter the Image Pixel Module as
@@ -153,6 +158,8 @@ impl P10PixelDataTranscodeTransform {
       )),
       p10_pixel_data_frame_transform: P10PixelDataFrameTransform::new(),
       native_pixel_data_bytes_remaining: 0,
+      lossy_image_compression_insert_transform:
+        Self::lossy_image_compression_insert_transform(output_transfer_syntax),
     }
   }
 
@@ -227,9 +234,7 @@ impl P10PixelDataTranscodeTransform {
 
       // Otherwise, return the error as the Image Pixel Module is malformed in
       // some way
-      Err(e) => {
-        return Err(map_p10_custom_type_transform_error(e));
-      }
+      Err(e) => return Err(map_p10_custom_type_transform_error(e)),
     }
 
     // Pass the token through the pixel data frames transform, receiving any
@@ -277,6 +282,23 @@ impl P10PixelDataTranscodeTransform {
         output_tokens
           .extend(self.native_pixel_data_tokens(frame_index, encoded_frame)?);
       }
+    }
+
+    // Pass through the lossy image compression insert transform if defined
+    if let Some(lossy_image_compression_insert_transform) =
+      &mut self.lossy_image_compression_insert_transform
+    {
+      let mut new_tokens = vec![];
+
+      for token in output_tokens {
+        new_tokens.extend(
+          lossy_image_compression_insert_transform
+            .add_token(&token)
+            .map_err(P10PixelDataTranscodeTransformError::P10Error)?,
+        );
+      }
+
+      output_tokens = new_tokens;
     }
 
     Ok(output_tokens)
@@ -677,6 +699,35 @@ impl P10PixelDataTranscodeTransform {
     }
 
     Ok(tokens)
+  }
+
+  /// If the output transfer is lossy, returns an insert transform that sets
+  /// '(0028,2110) Lossy Image Compression'.
+  ///
+  fn lossy_image_compression_insert_transform(
+    output_transfer_syntax: &'static TransferSyntax,
+  ) -> Option<P10InsertTransform> {
+    let lossy_output_transfer_syntaxes = [
+      &transfer_syntax::JPEG_BASELINE_8BIT,
+      &transfer_syntax::JPEG_EXTENDED_12BIT,
+      &transfer_syntax::JPEG_LS_LOSSY_NEAR_LOSSLESS,
+      &transfer_syntax::JPEG_2000,
+      &transfer_syntax::JPEG_2000_MULTI_COMPONENT,
+      &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000,
+      &transfer_syntax::JPEG_XL,
+    ];
+
+    if lossy_output_transfer_syntaxes.contains(&output_transfer_syntax) {
+      let mut lossy_image_compression = DataSet::new();
+      lossy_image_compression.insert(
+        dictionary::LOSSY_IMAGE_COMPRESSION.tag,
+        DataElementValue::new_code_string(&["01"]).unwrap(),
+      );
+
+      Some(P10InsertTransform::new(lossy_image_compression))
+    } else {
+      None
+    }
   }
 }
 

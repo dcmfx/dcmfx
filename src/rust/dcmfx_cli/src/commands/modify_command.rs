@@ -443,29 +443,6 @@ fn modify_input_source(
     None
   };
 
-  // Create an insert transform that sets '(0028,2110) Lossy Image Compression'
-  // if a lossy transfer syntax is being transcoded into
-  let insert_transform = if let Some(transfer_syntax) = args.transfer_syntax {
-    if transfer_syntax == TransferSyntaxArg::JpegBaseline8Bit
-      || transfer_syntax == TransferSyntaxArg::JpegLsLossyNearLossless
-      || transfer_syntax == TransferSyntaxArg::Jpeg2000
-      || transfer_syntax == TransferSyntaxArg::HighThroughputJpeg2000
-      || transfer_syntax == TransferSyntaxArg::JpegXl
-    {
-      let mut lossy_image_compression = DataSet::new();
-      lossy_image_compression.insert(
-        dictionary::LOSSY_IMAGE_COMPRESSION.tag,
-        DataElementValue::new_code_string(&["01"]).unwrap(),
-      );
-
-      Some(P10InsertTransform::new(lossy_image_compression))
-    } else {
-      None
-    }
-  } else {
-    None
-  };
-
   // Setup write config
   let write_config = P10WriteConfig::default()
     .implementation_version_name(args.implementation_version_name.clone())
@@ -480,7 +457,6 @@ fn modify_input_source(
     tmp_output_filename.as_ref().unwrap_or(&output_filename),
     write_config,
     filter_transform,
-    insert_transform,
     args,
   )?;
 
@@ -502,7 +478,6 @@ fn streaming_rewrite(
   output_filename: &PathBuf,
   write_config: P10WriteConfig,
   mut filter_transform: Option<P10FilterTransform>,
-  mut insert_transform: Option<P10InsertTransform>,
   args: &ModifyArgs,
 ) -> Result<(), ModifyCommandError> {
   // Open output stream
@@ -647,21 +622,6 @@ fn streaming_rewrite(
         {
           acc.push(token);
         }
-
-        Ok(acc)
-      })
-    } else {
-      Ok(tokens)
-    }?;
-
-    // Pass tokens through the insert transform if one is specified
-    let tokens = if let Some(insert_transform) = insert_transform.as_mut() {
-      tokens.into_iter().try_fold(vec![], |mut acc, token| {
-        acc.extend(
-          insert_transform
-            .add_token(&token)
-            .map_err(ModifyCommandError::P10Error)?,
-        );
 
         Ok(acc)
       })

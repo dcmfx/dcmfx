@@ -1,6 +1,7 @@
 ---
 source: dcmfx_cli/tests/modify.rs
 expression: get_stdout(assert)
+snapshot_kind: text
 ---
 (0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
 (0002,0002) UI Media Storage SOP Class UID          [    30 bytes] "1.2.840 … (Comprehensive SR Storage)
@@ -35,7 +36,6 @@ expression: get_stdout(assert)
 (0020,0010) SH Study ID                             [     0 bytes] ""
 (0020,0011) IS Series Number                        [     2 bytes] "1"
 (0020,0013) IS Instance Number                      [     2 bytes] "1"
-(0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
 (0040,A032) DT Observation DateTime                 [    14 bytes] 2001-02-13T …
 (0040,A040) CS Value Type                           [    10 bytes] "CONTAINER"
 (0040,A043) SQ Concept Name Code Sequence
