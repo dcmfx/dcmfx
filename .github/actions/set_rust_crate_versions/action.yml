@@ -1,0 +1,26 @@
+name: Set Rust crate versions
+
+inputs:
+  version:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set Rust crate versions
+      shell: bash
+      run: |
+        echo "Updating version in Cargo.toml files …"
+        find src/rust -name "Cargo.toml" -exec sed -i'' -E "s/^version = \".*\"$/version = \"${{ inputs.version }}\"/" {} +
+
+        echo "Updating main Cargo.lock …"
+        cargo metadata --manifest-path src/rust/Cargo.toml > /dev/null
+
+        echo "Updating examples Cargo.lock file …"
+        cargo metadata --manifest-path examples/Cargo.toml > /dev/null
+
+        echo "Updating fuzzer Cargo.lock …"
+        cargo metadata --manifest-path src/rust/dcmfx_fuzz/Cargo.toml > /dev/null
+
+        echo "Updating WASM test Cargo.lock …"
+        cargo metadata --manifest-path src/rust/dcmfx_wasm_test/Cargo.toml > /dev/null

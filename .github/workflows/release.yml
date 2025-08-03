@@ -125,7 +125,9 @@ jobs:
         run: cargo fetch --locked --target ${{ matrix.rust-target }}
 
       - name: Set crate versions
-        run: sh .github/scripts/set_rust_crate_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
+        uses: ./.github/actions/set_rust_crate_versions
+        with:
+          version: ${{ needs.check_semantic_release.outputs.new_release_version }}
 
       - name: Enable LTO for release builds
         working-directory: src/rust
@@ -304,10 +306,14 @@ jobs:
         uses: actions/download-artifact@v4
 
       - name: Update Gleam package versions
-        run: .github/scripts/set_gleam_package_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
+        uses: ./.github/actions/set_gleam_package_versions
+        with:
+          version: ${{ needs.check_semantic_release.outputs.new_release_version }}
 
-      - name: Update Rust crate versions
-        run: .github/scripts/set_rust_crate_versions.sh ${{ needs.check_semantic_release.outputs.new_release_version }}
+      - name: Set Rust crate versions
+        uses: ./.github/actions/set_rust_crate_versions
+        with:
+          version: ${{ needs.check_semantic_release.outputs.new_release_version }}
 
       - name: Semantic release
         id: semantic-release
