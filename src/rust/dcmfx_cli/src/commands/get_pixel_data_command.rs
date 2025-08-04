@@ -433,7 +433,15 @@ fn get_pixel_data_from_input_source(
         if let Some(pixel_data_renderer_transform) =
           pixel_data_renderer_transform.as_mut()
         {
-          pixel_data_renderer_transform.get_output_mut()
+          let pixel_data_renderer =
+            pixel_data_renderer_transform.get_output_mut();
+
+          if let Some(pixel_data_renderer) = pixel_data_renderer {
+            pixel_data_renderer.decode_config =
+              args.decoder.pixel_data_decode_config();
+          }
+
+          pixel_data_renderer
         } else {
           &mut None
         };
@@ -463,9 +471,6 @@ fn get_pixel_data_from_input_source(
       for frame in frames.iter_mut() {
         if args.format == OutputFormat::Mp4 {
           let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
-
-          pixel_data_renderer.decode_config =
-            args.decoder.pixel_data_decode_config();
 
           let cine_module = cine_module_transform
             .as_ref()
