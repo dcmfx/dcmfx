@@ -47,12 +47,11 @@ jobs:
           $version = (Invoke-RestMethod -Uri "https://api.github.com/repos/dcmfx/dcmfx/releases/latest").tag_name
 
           # Download the release
-          $downloadUrl = "https://github.com/dcmfx/dcmfx/releases/download/$version/dcmfx-$version-x86_64-pc-windows-msvc.tar.gz"
-          Invoke-WebRequest -Uri $downloadUrl -OutFile "dcmfx.tar.gz"
+          $downloadUrl = "https://github.com/dcmfx/dcmfx/releases/download/$version/dcmfx-$version-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest -Uri $downloadUrl -OutFile "dcmfx.zip"
 
           # Extract it
-          & "C:\Program Files\7-Zip\7z.exe" x "dcmfx.tar.gz" -y
-          & "C:\Program Files\7-Zip\7z.exe" x "dcmfx.tar" -y
+          & "C:\Program Files\7-Zip\7z.exe" x "dcmfx.zip" -y
 
       - name: Run DCMfx
         run: .\dcmfx.exe --version
