@@ -170,7 +170,7 @@ pub struct ModifyArgs {
       order to try and achieve a better compression ratio at the same \
       quality.\n\
       \n\
-      The effort value only applies when encoding into the following transfer
+      The effort value only applies when encoding into the following transfer \
       syntaxes:\n\
       \n\
       - JPEG XL Lossless\n\
