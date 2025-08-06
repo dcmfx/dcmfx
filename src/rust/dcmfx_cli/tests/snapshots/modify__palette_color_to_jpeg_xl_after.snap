@@ -62,5 +62,5 @@ snapshot_kind: text
 (0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
 (7FE0,0010) OB Pixel Data
   (FFFE,E000) Item                                    [     0 bytes] []
-  (FFFE,E000) Item                                    [ 31764 bytes] [FF 0A 78 …
+  (FFFE,E000) Item                                    [ 35648 bytes] [FF 0A 78 …
 (FFFE,E0DD) Sequence Delimitation Item

@@ -155,7 +155,7 @@ pub struct ModifyArgs {
       - High-Throughput JPEG 2000 (Lossy)\n\
       - JPEG XL\n\
       \n\
-      Default value: 85",
+      Default value: 90",
     value_parser = clap::value_parser!(u8).range(1..=100),
   )]
   quality: Option<u8>,
@@ -177,7 +177,7 @@ pub struct ModifyArgs {
       - JPEG XL\n\
       \n\
       Default value: 7",
-    value_parser = clap::value_parser!(u8).range(1..=100),
+    value_parser = clap::value_parser!(u8).range(1..=10),
   )]
   effort: Option<u8>,
 
@@ -266,7 +266,7 @@ impl ModifyArgs {
   fn pixel_data_encode_config(&self) -> PixelDataEncodeConfig {
     let mut config = PixelDataEncodeConfig::default();
 
-    config.set_quality(self.quality.unwrap_or(85));
+    config.set_quality(self.quality.unwrap_or(90));
     config.set_effort(self.effort.unwrap_or(7));
     config.set_zlib_compression_level(self.zlib_compression_level);
 

@@ -78,5 +78,5 @@ snapshot_kind: text
 (0032,1060) LO Requested Procedure Description      [     0 bytes] ""
 (7FE0,0010) OB Pixel Data
   (FFFE,E000) Item                                    [     0 bytes] []
-  (FFFE,E000) Item                                    [ 48524 bytes] [FF 0A 1A …
+  (FFFE,E000) Item                                    [ 58404 bytes] [FF 0A 1A …
 (FFFE,E0DD) Sequence Delimitation Item

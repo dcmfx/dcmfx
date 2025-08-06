@@ -41,7 +41,7 @@ pub struct PixelDataEncodeConfig {
 impl Default for PixelDataEncodeConfig {
   fn default() -> Self {
     PixelDataEncodeConfig {
-      quality: 85,
+      quality: 90,
       effort: 7,
       zlib_compression_level: 6,
     }
@@ -60,7 +60,7 @@ impl PixelDataEncodeConfig {
   /// - High-Throughput JPEG 2000
   /// - JPEG XL
   ///
-  /// Default: 85.
+  /// Default: 90.
   ///
   pub fn quality(&self) -> u8 {
     self.quality

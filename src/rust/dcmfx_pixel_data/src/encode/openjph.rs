@@ -447,7 +447,7 @@ mod ffi {
       bits_stored: usize,
       pixel_representation: usize,
       color_photometric_interpretation: usize,
-      tcp_distoratio: f32,
+      quantization_step_size: f32,
       output_data_callback: extern "C" fn(
         *const core::ffi::c_void,
         usize,
