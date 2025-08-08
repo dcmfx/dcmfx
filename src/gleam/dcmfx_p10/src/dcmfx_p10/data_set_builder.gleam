@@ -338,11 +338,7 @@ fn add_token_to_pending_data_element(
   token: P10Token,
 ) -> Result(DataSetBuilder, P10Error) {
   case token, builder.pending_data_element {
-    p10_token.DataElementValueBytes(
-      data:,
-      bytes_remaining:,
-      ..,
-    ),
+    p10_token.DataElementValueBytes(data:, bytes_remaining:, ..),
       Some(pending_data_element)
     -> {
       let tag = pending_data_element.tag

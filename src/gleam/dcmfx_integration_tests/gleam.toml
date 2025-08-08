@@ -1,7 +1,7 @@
 name = "dcmfx_integration_tests"
 description = "DCMfx integration tests"
 licences = ["AGPL-3.0-only"]
-gleam = ">= 1.11.1"
+gleam = ">= 1.12.0"
 
 [dependencies]
 dcmfx_core = { path = "../dcmfx_core" }

@@ -115,11 +115,7 @@ pub fn decode_bytes(
 ) -> String {
   case specific_character_set {
     SpecificCharacterSet([
-      SingleByteWithoutExtensions(
-        defined_term: term,
-        decoder: decoder,
-        ..,
-      ),
+      SingleByteWithoutExtensions(defined_term: term, decoder: decoder, ..),
     ]) -> {
       // When using the ISO_IR 13 character set to decode bytes that support
       // multiplicity, use a variant of JIS X 0201 that allows the backslash
