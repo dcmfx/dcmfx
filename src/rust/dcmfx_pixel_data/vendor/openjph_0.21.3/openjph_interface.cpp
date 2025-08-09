@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "./src/coding/ojph_block_encoder.h"
 #include "./src/common/ojph_base.h"
 #include "./src/common/ojph_codestream.h"
 #include "./src/common/ojph_file.h"
@@ -37,6 +38,10 @@ private:
 };
 
 template <typename T> void fill_lines(ojph::codestream &cs, const T *in);
+
+extern "C" void openjph_encode_initialize() {
+  ojph::local::initialize_block_encoder_tables();
+}
 
 extern "C" size_t openjph_encode(
     const void *input_data, size_t width, size_t height,
