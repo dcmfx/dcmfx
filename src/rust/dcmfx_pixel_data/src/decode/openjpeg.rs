@@ -9,33 +9,6 @@ use crate::{
   },
 };
 
-/// Returns the photometric interpretation used by data decoded using OpenJPEG.
-///
-pub fn decode_photometric_interpretation(
-  photometric_interpretation: &PhotometricInterpretation,
-) -> Result<&PhotometricInterpretation, PixelDataDecodeError> {
-  match photometric_interpretation {
-    PhotometricInterpretation::Monochrome1 { .. }
-    | PhotometricInterpretation::Monochrome2 { .. }
-    | PhotometricInterpretation::PaletteColor { .. }
-    | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull => Ok(photometric_interpretation),
-
-    PhotometricInterpretation::YbrIct | PhotometricInterpretation::YbrRct => {
-      Ok(&PhotometricInterpretation::Rgb)
-    }
-
-    PhotometricInterpretation::YbrFull422 | PhotometricInterpretation::Xyb => {
-      Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
-        details: format!(
-          "Photometric interpretation '{photometric_interpretation}' is not \
-           supported"
-        ),
-      })
-    }
-  }
-}
-
 /// Decodes monochrome pixel data using OpenJPEG.
 ///
 pub fn decode_monochrome(
@@ -328,7 +301,7 @@ fn decode<T: Clone + Default + bytemuck::Pod>(
       .unwrap_or("<invalid error>");
 
     return Err(PixelDataDecodeError::DataInvalid {
-      details: format!("JPEG 2000 decode failed with '{error}'"),
+      details: format!("OpenJPEG decode failed with '{error}'"),
     });
   }
 

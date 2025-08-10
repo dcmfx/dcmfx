@@ -13,7 +13,7 @@ pub struct DecoderArgs {
       jxl-oxide and so testing that library via the CLI tool is sometimes \
       useful.\n\
       \n\
-      There should not be any difference in output between decoders.",
+      There should be no difference in output between decoders.",
     default_value_t = JpegXlDecoderArg::LibJxl
   )]
   jpeg_xl_decoder: JpegXlDecoderArg,
@@ -52,9 +52,9 @@ impl ValueEnum for JpegXlDecoderArg {
   fn to_possible_value(&self) -> Option<PossibleValue> {
     Some(match self {
       Self::LibJxl => PossibleValue::new("libjxl")
-        .help("Use libjxl for decoding JPEG XL image data."),
+        .help("Use libjxl for decoding JPEG XL pixel data."),
       Self::JxlOxide => PossibleValue::new("jxl-oxide")
-        .help("Use jxl-oxide for decoding JPEG XL image data."),
+        .help("Use jxl-oxide for decoding JPEG XL pixel data."),
     })
   }
 }

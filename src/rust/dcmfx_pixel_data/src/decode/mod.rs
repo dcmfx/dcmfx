@@ -15,6 +15,8 @@ use crate::{
 
 #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
 mod charls;
+#[cfg(feature = "native")]
+mod jpeg_2000;
 mod jpeg_decoder;
 mod jpeg_xl;
 mod jxl_oxide;
@@ -220,7 +222,7 @@ pub fn decode_photometric_interpretation<'a>(
     | &HIGH_THROUGHPUT_JPEG_2000
     | &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
-      openjpeg::decode_photometric_interpretation(photometric_interpretation)
+      jpeg_2000::decode_photometric_interpretation(photometric_interpretation)
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
