@@ -14,15 +14,15 @@ use dcmfx::pixel_data::{
   transforms::{P10PixelDataFrameTransform, P10PixelDataFrameTransformError},
 };
 
-use crate::mp4_encoder::{
-  LogLevel, Mp4Codec, Mp4CompressionPreset, Mp4Encoder, Mp4EncoderConfig,
-  Mp4PixelFormat, ResizeFilter,
-};
 use crate::{
   args::{
-    input_args::InputSource,
+    frame_selection_arg::FrameSelection, input_args::InputSource,
     standard_color_palette_arg::StandardColorPaletteArg,
     transform_arg::TransformArg,
+  },
+  mp4_encoder::{
+    LogLevel, Mp4Codec, Mp4CompressionPreset, Mp4Encoder, Mp4EncoderConfig,
+    Mp4PixelFormat, ResizeFilter,
   },
   utils,
 };
@@ -68,6 +68,22 @@ pub struct GetPixelDataArgs {
     default_value_t = OutputFormat::Raw
   )]
   format: OutputFormat,
+
+  #[arg(
+    long,
+    help_heading = "Output",
+    help = "Selects specific frames to extract, instead of extracting every \
+      frame from the input which is the default behavior. Frame selection can \
+      be specified as:\n\
+      \n\
+      1. Individual frame indices: '0', '1,5,7', '-2,-1'\n\
+      2. A range of frames: '2..10', '-10..-5'\n\
+      3. An open range of frames: '10..', '-5..'\n\
+      \n\
+      Negative values are interpreted as offsets from the end of the set of \
+      frames."
+  )]
+  select_frames: Option<FrameSelection>,
 
   #[arg(
     long,
@@ -467,50 +483,72 @@ fn get_pixel_data_from_input_source(
           }
         })?;
 
+      let number_of_frames =
+        p10_pixel_data_frame_transform.get_number_of_frames();
+
       // Process available frames
       for frame in frames.iter_mut() {
-        if args.format == OutputFormat::Mp4 {
-          let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
+        let frame_index = frame.index().unwrap();
 
-          let cine_module = cine_module_transform
-            .as_ref()
-            .unwrap()
-            .get_output()
-            .unwrap();
+        // If selecting a subset of frames, only export this frame if is
+        // selected
+        let mut is_frame_selected = true;
+        if let Some(frame_selection) = args.select_frames.as_ref() {
+          is_frame_selected =
+            frame_selection.contains(frame_index, number_of_frames);
+        }
 
-          let multiframe_module = multiframe_module_transform
-            .as_ref()
-            .unwrap()
-            .get_output()
-            .unwrap();
+        if is_frame_selected {
+          if args.format == OutputFormat::Mp4 {
+            let pixel_data_renderer = pixel_data_renderer.as_mut().unwrap();
 
-          write_frame_to_mp4_file(
-            frame,
-            &output_prefix,
-            &mut mp4_encoder,
-            pixel_data_renderer,
-            cine_module,
-            multiframe_module,
-            overlay_plane_module,
-            args,
-          )?;
-        } else {
-          let filename = crate::utils::path_append(
-            output_prefix.clone(),
-            &format!(".{:04}{}", frame.index().unwrap(), output_extension),
-          );
+            let cine_module = cine_module_transform
+              .as_ref()
+              .unwrap()
+              .get_output()
+              .unwrap();
 
-          if !args.overwrite {
-            crate::utils::error_if_exists(&filename);
+            let multiframe_module = multiframe_module_transform
+              .as_ref()
+              .unwrap()
+              .get_output()
+              .unwrap();
+
+            write_frame_to_mp4_file(
+              frame,
+              &output_prefix,
+              &mut mp4_encoder,
+              pixel_data_renderer,
+              cine_module,
+              multiframe_module,
+              overlay_plane_module,
+              args,
+            )?;
+          } else {
+            let filename = crate::utils::path_append(
+              output_prefix.clone(),
+              &format!(".{:04}{}", frame.index().unwrap(), output_extension),
+            );
+
+            if !args.overwrite {
+              crate::utils::error_if_exists(&filename);
+            }
+
+            write_frame_to_image_file(
+              &filename,
+              frame,
+              pixel_data_renderer,
+              overlay_plane_module,
+              args,
+            )?;
           }
+        }
 
-          write_frame_to_image_file(
-            &filename,
-            frame,
-            pixel_data_renderer,
-            overlay_plane_module,
-            args,
-          )?;
+        // If selecting a subset of frames, stop once they're all done
+        if let Some(frame_selection) = args.select_frames.as_ref() {
+          if frame_selection.is_complete(frame_index, number_of_frames) {
+            break;
+          }
         }
       }
 

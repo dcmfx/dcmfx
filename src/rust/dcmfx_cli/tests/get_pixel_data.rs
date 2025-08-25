@@ -822,7 +822,6 @@ fn single_bit_unaligned_to_mp4_h264() {
     .arg(dicom_file)
     .arg("--output-directory")
     .arg(&output_directory)
-    .arg("--overwrite")
     .arg("-f")
     .arg("mp4")
     .arg("--mp4-preset")
@@ -859,7 +858,6 @@ fn single_bit_unaligned_to_mp4_h265() {
     .arg(dicom_file)
     .arg("--output-directory")
     .arg(&output_directory)
-    .arg("--overwrite")
     .arg("-f")
     .arg("mp4")
     .arg("--mp4-codec")
@@ -903,7 +901,6 @@ fn render_overlays_and_rotate90() {
     .arg(dicom_file)
     .arg("--output-directory")
     .arg(output_directory)
-    .arg("--overwrite")
     .arg("-f")
     .arg("png16")
     .arg("--overlays")
@@ -929,7 +926,6 @@ fn render_overlays_and_flip_horizontal() {
     .arg(dicom_file)
     .arg("--output-directory")
     .arg(output_directory)
-    .arg("--overwrite")
     .arg("-f")
     .arg("png16")
     .arg("--overlays")
@@ -978,6 +974,46 @@ fn with_output_directory() {
       to_native_path(&output_files[2]),
       to_native_path(&output_files[3])
     ));
+}
+
+#[test]
+fn with_selected_frames() {
+  let dicom_file = "../../../test/assets/pydicom/test_files/rtdose.dcm";
+  let (output_file, output_directory) = prepare_outputs(dicom_file, "");
+
+  let test_cases = [
+    ("0", vec![0]),
+    ("2", vec![2]),
+    ("-1", vec![14]),
+    ("4..6", vec![4, 5, 6]),
+    ("12..", vec![12, 13, 14]),
+    ("-10..-8", vec![5, 6, 7]),
+  ];
+
+  for (select_frames, expected_frames) in test_cases {
+    let expected_output = expected_frames
+      .iter()
+      .map(|f| {
+        format!(
+          "Writing \"{}.{:04}.bin\" …\n",
+          to_native_path(&output_file),
+          f
+        )
+      })
+      .collect::<String>();
+
+    let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+    cmd
+      .arg("get-pixel-data")
+      .arg(dicom_file)
+      .arg("--output-directory")
+      .arg(&output_directory)
+      .arg("--overwrite")
+      .arg(format!("--select-frames={}", select_frames))
+      .assert()
+      .success()
+      .stdout(expected_output);
+  }
 }
 
 /// For a given input file, returns a newly created temporary output directory

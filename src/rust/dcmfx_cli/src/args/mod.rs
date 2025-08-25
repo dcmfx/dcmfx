@@ -1,6 +1,7 @@
 use dcmfx::core::DataElementTag;
 
 pub mod decoder_args;
+pub mod frame_selection_arg;
 pub mod input_args;
 pub mod photometric_interpretation_arg;
 pub mod planar_configuration_arg;

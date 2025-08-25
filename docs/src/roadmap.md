@@ -22,13 +22,13 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
     - New command to get an encapsulated document such as a PDF
   - `get-pixel-data` command:
     - `--crop` argument to crop output pixel data
-    - `--frame-range` argument to output only a specific range of frames
   - `list` command:
     - Make all File Meta Information data elements selectable, not just the
       transfer syntax
     - Filter listed DICOMs by data element value
   - `modify` command:
     - `--merge` and `--merge-json` arguments to merge DICOM data sets together
+    - `--select-frames` argument to transcode only specific frames
     - `--replace-pixel-data` to replace a DICOM's pixel data
     - `--create-basic-offset-table` to add a basic offset table and fragments to
       the pixel data if absent
