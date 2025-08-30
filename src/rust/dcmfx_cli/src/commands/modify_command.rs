@@ -100,7 +100,7 @@ pub struct ModifyArgs {
   #[arg(
     long,
     help_heading = "Data Set Content",
-    help = "Remove private data elements, which are those with a tag group \
+    help = "Delete private data elements, which are those with a tag group \
       that's an odd number.",
     default_value_t = false
   )]

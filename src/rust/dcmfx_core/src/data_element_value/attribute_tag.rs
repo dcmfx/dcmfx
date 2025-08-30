@@ -29,7 +29,7 @@ pub fn from_bytes(bytes: &[u8]) -> Result<Vec<DataElementTag>, DataError> {
 /// Converts data element tags into an `AttributeTag` value.
 ///
 pub fn to_bytes(values: &[DataElementTag]) -> Vec<u8> {
-  let mut bytes = Vec::<u8>::with_capacity(values.len() * 4);
+  let mut bytes = Vec::with_capacity(values.len() * 4);
 
   for tag in values {
     bytes.extend_from_slice(&tag.group.to_le_bytes());

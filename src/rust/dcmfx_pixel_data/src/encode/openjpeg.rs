@@ -353,7 +353,7 @@ fn encode(
   image_pixel_module: &ImagePixelModule,
   quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
-  let mut output_data = Vec::<u8>::with_capacity(512 * 1024);
+  let mut output_data = Vec::with_capacity(512 * 1024);
 
   let mut error_buffer = [0 as core::ffi::c_char; 256];
 

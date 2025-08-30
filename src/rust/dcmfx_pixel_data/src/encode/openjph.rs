@@ -359,7 +359,7 @@ fn encode(
   INITIALIZE_ONCE_LOCK
     .get_or_init(|| unsafe { ffi::openjph_encode_initialize() });
 
-  let mut output_data = Vec::<u8>::with_capacity(512 * 1024);
+  let mut output_data = Vec::with_capacity(512 * 1024);
 
   let mut error_buffer = [0 as core::ffi::c_char; 256];
 

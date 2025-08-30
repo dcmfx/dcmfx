@@ -11,7 +11,7 @@ use crate::PixelDataEncodeError;
 pub fn jpeg_to_jpeg_xl(
   jpeg_data: &[u8],
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
-  let mut output_data = Vec::<u8>::with_capacity(256 * 1024);
+  let mut output_data = Vec::with_capacity(jpeg_data.len());
   let mut error_buffer = [0 as ::core::ffi::c_char; 256];
 
   let result = unsafe {
@@ -31,7 +31,7 @@ pub fn jpeg_to_jpeg_xl(
       .unwrap_or("<invalid error>");
 
     return Err(PixelDataEncodeError::OtherError {
-      name: "libjxl JPEG transcode failed".to_string(),
+      name: "libjxl recompression failed".to_string(),
       details: error.to_string(),
     });
   }

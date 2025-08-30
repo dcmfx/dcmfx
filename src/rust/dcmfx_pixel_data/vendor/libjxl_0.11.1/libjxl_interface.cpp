@@ -65,7 +65,7 @@ extern "C" size_t libjxl_decode(const void *input_data, size_t input_data_size,
         auto info = JxlBasicInfo();
         status = JxlDecoderGetBasicInfo(decoder, &info);
         if (status != JXL_DEC_SUCCESS) {
-          throw std::runtime_error("JxlDecoderImageOutBufferSize() failed");
+          throw std::runtime_error("JxlDecoderGetBasicInfo() failed");
         }
 
         if (info.xsize != width || info.ysize != height ||
@@ -271,10 +271,11 @@ libjxl_encode(const void *input_data, size_t input_data_size, size_t width,
   return 0;
 }
 
-extern "C" size_t libjxl_recompress_jpeg(
-    const void *jpeg_data, size_t jpeg_data_size,
-    void *(*output_data_callback)(size_t new_len, void *ctx),
-    void *output_data_context, char *error_buffer, size_t error_buffer_size) {
+extern "C" size_t
+libjxl_recompress_jpeg(const void *jpeg_data, size_t jpeg_data_size,
+                       void *(*output_data_callback)(size_t new_len, void *ctx),
+                       void *output_data_context, char *error_buffer,
+                       size_t error_buffer_size) {
   JxlEncoder *encoder = nullptr;
 
   try {
@@ -289,6 +290,13 @@ extern "C" size_t libjxl_recompress_jpeg(
     auto status = JxlEncoderUseContainer(encoder, JXL_TRUE);
     if (status != JXL_ENC_SUCCESS) {
       throw std::runtime_error("JxlEncoderUseContainer() failed");
+    }
+
+    // Configure the encoder to store JPEG reconstruction metadata in the JPEG
+    // XL container so that the original JPEG can be reconstructed
+    status = JxlEncoderStoreJPEGMetadata(encoder, JXL_TRUE);
+    if (status != JXL_ENC_SUCCESS) {
+      throw std::runtime_error("JxlEncoderStoreJPEGMetadata() failed");
     }
 
     // Add JPEG data
