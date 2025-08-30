@@ -1034,11 +1034,18 @@ fn jpeg_ls_monochrome_to_jpeg_xl_lossless() {
 }
 
 #[test]
-fn jpeg_baseline_to_jpeg_xl_jpeg_recompression() {
-  modify_transfer_syntax_and_check_pixel_data(
+fn jpeg_baseline_to_jpeg_xl_jpeg_recompression_with_reconstruction() {
+  let recompressed_dicom = modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
     "jpeg-xl-jpeg-recompression",
     "jpeg_baseline_to_jpeg_xl_jpeg_recompression",
+    &[],
+  );
+
+  modify_transfer_syntax_and_check_pixel_data(
+    &recompressed_dicom.to_string_lossy().to_string(),
+    "jpeg-baseline-8bit",
+    "jpeg_xl_jpeg_recompression_to_jpeg_baseline",
     &[],
   );
 }
@@ -1207,7 +1214,7 @@ fn modify_transfer_syntax_and_check_pixel_data(
   transfer_syntax: &str,
   snapshot_prefix: &str,
   extra_args: &[&str],
-) {
+) -> std::path::PathBuf {
   let temp_path = modify_transfer_syntax(
     dicom_file,
     transfer_syntax,
@@ -1226,4 +1233,6 @@ fn modify_transfer_syntax_and_check_pixel_data(
 
   let output_file = format!("{}.0000.png", temp_path.display());
   assert_image_snapshot!(output_file, format!("{}.png", snapshot_prefix));
+
+  temp_path
 }

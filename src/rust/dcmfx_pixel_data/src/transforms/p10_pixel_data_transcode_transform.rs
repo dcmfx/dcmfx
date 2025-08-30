@@ -377,10 +377,12 @@ impl P10PixelDataTranscodeTransform {
     (Vec<P10Token>, ImagePixelModule, ImagePixelModule),
     P10PixelDataTranscodeTransformError,
   > {
-    // Special case for recompression of JPEG Baseline 8-bit into JPEG XL, which
-    // by definition never alters the Image Pixel Module
+    // Special case for recompression/reconstruction of JPEG Baseline 8-bit
+    // to/from JPEG XL, which by definition never alters the Image Pixel Module
     if input_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
       && output_transfer_syntax == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
+      || input_transfer_syntax == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
+        && output_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
     {
       return Ok((
         initial_token_buffer,
@@ -458,18 +460,37 @@ impl P10PixelDataTranscodeTransform {
     &mut self,
     input_frame: &mut PixelDataFrame,
   ) -> Result<RcByteSlice, P10PixelDataTranscodeTransformError> {
-    // Special case for recompression of JPEG Baseline 8-bit into JPEG XL
+    // Special case for recompression/reconstruction of JPEG Baseline 8-bit
+    // to/from JPEG XL
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    if self.input_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
-      && self.output_transfer_syntax
-        == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
     {
-      let jpeg_data = input_frame.combine_chunks();
-      let encoded_jpeg_xl =
-        crate::jpeg_xl_jpeg_recompression::jpeg_to_jpeg_xl(jpeg_data)
+      use transfer_syntax::{JPEG_BASELINE_8BIT, JPEG_XL_JPEG_RECOMPRESSION};
+
+      if self.input_transfer_syntax == &JPEG_BASELINE_8BIT
+        && self.output_transfer_syntax == &JPEG_XL_JPEG_RECOMPRESSION
+      {
+        let jpeg_data = input_frame.combine_chunks();
+        let jpeg_xl_data =
+          crate::jpeg_xl_jpeg_recompression::recompress_jpeg_to_jpeg_xl(
+            jpeg_data,
+          )
           .map_err(P10PixelDataTranscodeTransformError::PixelDataEncodeError)?;
 
-      return Ok(encoded_jpeg_xl.into());
+        return Ok(jpeg_xl_data.into());
+      }
+
+      if self.input_transfer_syntax == &JPEG_XL_JPEG_RECOMPRESSION
+        && self.output_transfer_syntax == &JPEG_BASELINE_8BIT
+      {
+        let jpeg_xl_data = input_frame.combine_chunks();
+        let jpeg_data =
+          crate::jpeg_xl_jpeg_recompression::reconstruct_jpeg_from_jpeg_xl(
+            jpeg_xl_data,
+          )
+          .map_err(P10PixelDataTranscodeTransformError::PixelDataEncodeError)?;
+
+        return Ok(jpeg_data.into());
+      }
     }
 
     let image_pixel_module = self
@@ -838,6 +859,7 @@ impl TranscodeImageDataFunctions {
   /// step is likely to fail during pixel data transcoding.
   ///
   pub fn standard_behavior(
+    input_transfer_syntax: &'static TransferSyntax,
     output_transfer_syntax: &'static TransferSyntax,
     photometric_interpretation_monochrome: Box<
       TranscodedPhotometricInterpretationFn,
@@ -956,15 +978,21 @@ impl TranscodeImageDataFunctions {
 
         // Apply crop to dimensions
         if let Some(crop_rect) = crop_rect {
-          // Cropping isn't possible when transcoding to JPEG XL JPEG
-          // Recompression, as the JPEG data isn't ever decoded/encoded
-          if output_transfer_syntax
-            == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
+          use transfer_syntax::{
+            JPEG_BASELINE_8BIT, JPEG_XL_JPEG_RECOMPRESSION,
+          };
+
+          // Cropping isn't possible when transcoding between JPEG XL JPEG
+          // Recompression and JPEG Baseline 8-bit because a direct conversion
+          // is done and the contained image data is never decompressed
+          if output_transfer_syntax == &JPEG_XL_JPEG_RECOMPRESSION
+            || input_transfer_syntax == &JPEG_XL_JPEG_RECOMPRESSION
+              && output_transfer_syntax == &JPEG_BASELINE_8BIT
           {
             return Err(P10PixelDataTranscodeTransformError::NotSupported {
               details:
-                "Cropping of pixel data is not supported when targeting JPEG \
-                 XL JPEG Recompression"
+                "Cropping of pixel data is not supported when transcoding \
+                 between JPEG Baseline 8-bit and JPEG XL JPEG Recompression"
                   .to_string(),
             });
           }

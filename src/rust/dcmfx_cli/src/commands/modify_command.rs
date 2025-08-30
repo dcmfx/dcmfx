@@ -144,7 +144,7 @@ pub struct ModifyArgs {
     help_heading = "Transcoding",
     help = "When transcoding pixel data to a lossy transfer syntax, specifies \
       the compression quality in the range 1-100. A quality of 100 does not \
-      result in true lossless compression.\n\
+      result in lossless compression.\n\
       \n\
       The quality value only applies when encoding into the following transfer \
       syntaxes:\n\
@@ -185,8 +185,11 @@ pub struct ModifyArgs {
     long,
     help_heading = "Transcoding",
     help = "When transcoding monochrome pixel data using --transfer-syntax, \
-      this specifies the photometric interpretation to be used by the output \
-      DICOM P10 files. This option has no effect on color pixel data."
+      specifies the photometric interpretation to be used by the output DICOM \
+      P10 files. This option has no effect on color pixel data.\n\
+      \n\
+      This option is ignored when transcoding between the 'JPEG XL JPEG \
+      Recompression' and 'JPEG Baseline 8-bit' transfer syntaxes."
   )]
   photometric_interpretation_monochrome:
     Option<PhotometricInterpretationMonochromeArg>,
@@ -194,7 +197,7 @@ pub struct ModifyArgs {
   #[arg(
     long,
     help_heading = "Transcoding",
-    help = "When transcoding color pixel data using --transfer-syntax, this \
+    help = "When transcoding color pixel data using --transfer-syntax, \
       specifies the photometric interpretation to be used by the transcoded \
       pixel data. This option has no effect on monochrome pixel data.\n\
       \n\
@@ -222,16 +225,19 @@ pub struct ModifyArgs {
          palette color image data will be automatically expanded to 'RGB'.\n\
       \n\
       2. If the output transfer syntax doesn't support 'YBR_FULL_422' then the \
-         color image's data will be automatically expanded to 'YBR_FULL'."
+         color image's data will be automatically expanded to 'YBR_FULL'.\n\
+      \n\
+      This option is ignored when transcoding between the 'JPEG XL JPEG \
+      Recompression' and 'JPEG Baseline 8-bit' transfer syntaxes."
   )]
   photometric_interpretation_color: Option<PhotometricInterpretationColorArg>,
 
   #[arg(
     long,
     help_heading = "Transcoding",
-    help = "When transcoding color pixel data using --transfer-syntax, the \
-      planar configuration to be used by the transcoded pixel data. The planar \
-      configuration only applies when encoding color pixel data into the \
+    help = "When transcoding color pixel data using --transfer-syntax, \
+      specifies the planar configuration to be used by the transcoded pixel \
+      data. This is only used when encoding color pixel data into the \
       following transfer syntaxes:\n\
       \n\
       - Implicit VR Little Endian\n\
@@ -246,15 +252,15 @@ pub struct ModifyArgs {
   #[arg(
     long,
     help_heading = "Transcoding",
-    help = "When transcoding pixel data using --transfer-syntax, apply a crop \
-      to specified as 'x,y[,(width_or_right)[,(height_or_bottom)]]'. The last \
-      two values are optional, and if positive they specify the width and \
-      height of the crop rectangle, however if they are zero or negative then \
-      they specify an offset from the right and bottom edges of the pixel data \
-      respectively.\n\
+    help = "When transcoding pixel data using --transfer-syntax, specifies a \
+      to apply to the pixel data. The crop is specified as \
+      'x,y[,(width_or_right)[,(height_or_bottom)]]'. The last two values are \
+      optional, and if positive they specify the width and height of the crop \
+      rectangle, however if they are zero or negative then they specify an \
+      offset from the right and bottom edges of the pixel data respectively.\n\
       \n\
-      Cropping is not supported when targeting the JPEG XL JPEG Recompression
-      transfer syntax."
+      This option is ignored when transcoding between the 'JPEG XL JPEG \
+      Recompression' and 'JPEG Baseline 8-bit' transfer syntaxes."
   )]
   crop: Option<CropRect>,
 
@@ -512,12 +518,12 @@ fn streaming_rewrite(
           continue;
         };
 
-        let output_transfer_syntax =
-          transfer_syntax_arg.as_transfer_syntax().unwrap_or_else(|| {
-            data_set
-              .get_transfer_syntax()
-              .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN)
-          });
+        let input_transfer_syntax = data_set
+          .get_transfer_syntax()
+          .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN);
+        let output_transfer_syntax = transfer_syntax_arg
+          .as_transfer_syntax()
+          .unwrap_or(input_transfer_syntax);
 
         let photometric_interpretation_monochrome_arg =
           args.photometric_interpretation_monochrome;
@@ -530,6 +536,7 @@ fn streaming_rewrite(
             args.decoder.pixel_data_decode_config(),
             args.pixel_data_encode_config(),
             Some(TranscodeImageDataFunctions::standard_behavior(
+              input_transfer_syntax,
               output_transfer_syntax,
               Box::new(move |image_pixel_module| {
                 photometric_interpretation_monochrome_arg.and_then(|arg| {

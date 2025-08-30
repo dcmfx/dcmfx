@@ -326,3 +326,92 @@ libjxl_recompress_jpeg(const void *jpeg_data, size_t jpeg_data_size,
 
   return 0;
 }
+
+extern "C" size_t libjxl_reconstruct_jpeg(
+    const void *input_data, size_t input_data_size,
+    void *(*output_data_callback)(size_t new_len, void *ctx),
+    void *output_data_context, char *error_buffer, size_t error_buffer_size) {
+  JxlDecoder *decoder = nullptr;
+
+  try {
+    // Create decoder
+    decoder = JxlDecoderCreate(nullptr);
+    if (decoder == nullptr) {
+      throw std::runtime_error("JxlDecoderCreate() failed");
+    }
+
+    auto status = JxlDecoderSubscribeEvents(
+        decoder, JXL_DEC_JPEG_RECONSTRUCTION | JXL_DEC_FULL_IMAGE);
+    if (status != JXL_DEC_SUCCESS) {
+      throw std::runtime_error("JxlDecoderSubscribeEvents() failed");
+    }
+
+    // Set input data
+    status = JxlDecoderSetInput(decoder,
+                                reinterpret_cast<const uint8_t *>(input_data),
+                                input_data_size);
+    if (status != JXL_DEC_SUCCESS) {
+      throw std::runtime_error("JxlDecoderSetInput() failed");
+    }
+
+    JxlDecoderCloseInput(decoder);
+
+    // Set initial output buffer
+    auto output_buffer_capacity = input_data_size + input_data_size / 4;
+    auto output_buffer = reinterpret_cast<uint8_t *>(
+        output_data_callback(output_buffer_capacity, output_data_context));
+    auto output_data_size = 0;
+    status =
+        JxlDecoderSetJPEGBuffer(decoder, output_buffer, output_buffer_capacity);
+    if (status != JXL_DEC_SUCCESS) {
+      throw std::runtime_error("JxlDecoderSetJPEGBuffer() failed");
+    }
+
+    // Process input
+    while (1) {
+      status = JxlDecoderProcessInput(decoder);
+
+      if (status == JXL_DEC_ERROR) {
+        throw std::runtime_error("JxlDecoderProcessInput() failed");
+      } else if (status == JXL_DEC_NEED_MORE_INPUT) {
+        throw std::runtime_error("JPEG XL data is incomplete");
+      } else if (status == JXL_DEC_JPEG_RECONSTRUCTION) {
+        continue;
+      } else if (status == JXL_DEC_JPEG_NEED_MORE_OUTPUT) {
+        output_data_size =
+            output_buffer_capacity - JxlDecoderReleaseJPEGBuffer(decoder);
+        output_buffer_capacity *= 2;
+
+        output_buffer = reinterpret_cast<uint8_t *>(
+            output_data_callback(output_buffer_capacity, output_data_context));
+
+        status =
+            JxlDecoderSetJPEGBuffer(decoder, output_buffer + output_data_size,
+                                    output_buffer_capacity - output_data_size);
+        if (status != JXL_DEC_SUCCESS) {
+          throw std::runtime_error("JxlDecoderSetJPEGBuffer() failed");
+        }
+      } else if (status == JXL_DEC_FULL_IMAGE) {
+        output_data_size =
+            output_buffer_capacity - JxlDecoderReleaseJPEGBuffer(decoder);
+        output_data_callback(output_data_size, output_data_context);
+
+        break;
+      } else {
+        throw std::runtime_error("Unexpected JxlDecoderProcessInput() status");
+      }
+    }
+
+    JxlDecoderDestroy(decoder);
+
+    return 0;
+  } catch (const std::runtime_error &e) {
+    snprintf(error_buffer, error_buffer_size, "%s", e.what());
+
+    JxlDecoderDestroy(decoder);
+
+    return 1;
+  }
+
+  return 0;
+}

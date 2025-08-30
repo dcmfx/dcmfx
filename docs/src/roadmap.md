@@ -9,7 +9,6 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
   - Change to `libjpeg-turbo` for JPEG Baseline 8-bit, JPEG Extended 12-bit, and
     JPEG Lossless.
   - Transcode multi-frame pixel data into H.264/H.265 transfer syntaxes
-  - Transcode 'JPEG XL JPEG Recompression' directly to 'JPEG Baseline 8-bit'
   - Resize/rotate/flip pixel data while transcoding
   - Allow fast cropping of JPEG pixel data when the crop is aligned to
     compression blocks
