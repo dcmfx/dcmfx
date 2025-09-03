@@ -1,4 +1,5 @@
-use dcmfx::core::DataElementTag;
+use dcmfx::core::{DataElementTag, DataSet};
+use dcmfx::json::DataSetJsonExtensions;
 
 pub mod decoder_args;
 pub mod frame_selection_arg;
@@ -9,7 +10,11 @@ pub mod standard_color_palette_arg;
 pub mod transfer_syntax_arg;
 pub mod transform_arg;
 
-pub fn validate_data_element_tag(s: &str) -> Result<DataElementTag, String> {
+pub fn parse_data_element_tag(s: &str) -> Result<DataElementTag, String> {
   DataElementTag::from_hex_string(s)
     .map_err(|_| "Invalid data element tag".to_string())
+}
+
+pub fn parse_dicom_json_data_set(s: &str) -> Result<DataSet, String> {
+  DataSet::from_json(s).map_err(|e| e.to_string())
 }

@@ -7,7 +7,10 @@ use dcmfx_core::{
 
 use crate::{P10Error, P10FilterTransform, P10Token, p10_token};
 
-/// Transform that inserts data elements into a stream of DICOM P10 tokens.
+/// Transform that inserts data elements into a stream of DICOM P10 tokens. If
+/// the incoming stream of DICOM P10 tokens already contains a data element
+/// specified in the `data_elements_to_insert` vector, then it is removed and
+/// replaced with the new value.
 ///
 pub struct P10InsertTransform {
   data_elements_to_insert: Vec<(DataElementTag, DataElementValue)>,

@@ -87,13 +87,24 @@ pub struct ModifyArgs {
   zlib_compression_level: u32,
 
   #[arg(
+    long,
+    help_heading = "Data Set Content",
+    help = "A DICOM JSON data set to merge into the output DICOM P10 data \
+      sets. If this specifies data elements already present in the input data \
+      set then the data elements specified by this argument will replace those \
+      existing values.",
+    value_parser = crate::args::parse_dicom_json_data_set,
+  )]
+  merge_dicom_json: Option<DataSet>,
+
+  #[arg(
     long = "delete",
     value_name = "DATA_ELEMENT_TAG",
     help_heading = "Data Set Content",
     help = "A data element tag to delete and not include in the output DICOM \
       P10 file. This argument can be specified multiple times to delete \
       multiple tags.",
-    value_parser = crate::args::validate_data_element_tag,
+    value_parser = crate::args::parse_data_element_tag,
   )]
   deletions: Vec<DataElementTag>,
 
@@ -422,7 +433,13 @@ fn modify_input_source(
       )
     };
 
-  // Create a filter transform for anonymization and tag deletion if needed
+  // Create an insert transform for merging in another data set, if needed
+  let insert_transform = args
+    .merge_dicom_json
+    .as_ref()
+    .map(|merge_dicom_json| P10InsertTransform::new(merge_dicom_json.clone()));
+
+  // Create a filter transform for anonymization and tag deletion, if needed
   let deletions = args.deletions.clone();
   let delete_private = args.delete_private;
   let anonymize = args.anonymize;
@@ -462,6 +479,7 @@ fn modify_input_source(
     input_stream,
     tmp_output_filename.as_ref().unwrap_or(&output_filename),
     write_config,
+    insert_transform,
     filter_transform,
     args,
   )?;
@@ -483,6 +501,7 @@ fn streaming_rewrite(
   mut input_stream: Box<dyn Read>,
   output_filename: &PathBuf,
   write_config: P10WriteConfig,
+  mut insert_transform: Option<P10InsertTransform>,
   mut filter_transform: Option<P10FilterTransform>,
   args: &ModifyArgs,
 ) -> Result<(), ModifyCommandError> {
@@ -619,6 +638,21 @@ fn streaming_rewrite(
 
       tokens = new_tokens
     }
+
+    // Pass tokens through the insert transform if one is specified
+    let tokens = if let Some(insert_transform) = insert_transform.as_mut() {
+      tokens.into_iter().try_fold(vec![], |mut acc, token| {
+        acc.extend(
+          insert_transform
+            .add_token(&token)
+            .map_err(ModifyCommandError::P10Error)?,
+        );
+
+        Ok(acc)
+      })
+    } else {
+      Ok(tokens)
+    }?;
 
     // Pass tokens through the filter transform if one is specified
     let tokens = if let Some(filter_transform) = filter_transform.as_mut() {

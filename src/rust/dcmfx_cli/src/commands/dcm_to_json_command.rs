@@ -77,7 +77,7 @@ pub struct ToJsonArgs {
       JSON. This allows for a subset of data elements to be emitted, rather \
       than the whole data set. This argument can be specified multiple times \
       to include multiple data elements in the output.",
-    value_parser = crate::args::validate_data_element_tag,
+    value_parser = crate::args::parse_data_element_tag,
   )]
   selected_data_elements: Vec<DataElementTag>,
 }

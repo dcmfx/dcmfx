@@ -182,6 +182,73 @@ fn errors_on_effort_without_transfer_syntax() {
 }
 
 #[test]
+fn merge_dicom_json() {
+  let dicom_file =
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm";
+  let temp_path = generate_temp_filename();
+
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("print")
+    .arg(dicom_file)
+    .assert()
+    .success();
+
+  assert_snapshot!("merge_dicom_json_before", get_stdout(assert));
+
+  let merge_dicom_json = serde_json::json!({
+    // Replaces an existing data element
+    "00100010": { "vr": "PN", "Value": [{ "Alphabetic": "Doe^John" }] },
+
+    // Replaces an empty data element
+    "00100030": { "vr": "DA", "Value": ["20011225"] },
+
+    // Inserts a new data element
+    "00101010": { "vr": "AS", "Value": ["010Y"] },
+
+    // Clears a data element
+    "00080070": { "vr": "LO" },
+
+    // Inserts a sequence
+    "0040A730": {
+      "vr": "SQ",
+      "Value": [
+        { "0040A040": { "vr": "CS", "Value": ["ONE"] } },
+        { "0040A040": { "vr": "CS", "Value": ["TWO"] } },
+      ]
+    },
+  })
+  .to_string();
+
+  Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("modify")
+    .arg(dicom_file)
+    .arg("--output-filename")
+    .arg(&temp_path)
+    .arg("--merge-dicom-json")
+    .arg(merge_dicom_json)
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
+    .assert()
+    .success()
+    .stdout(format!(
+      "Modifying \"{}\" => \"{}\" …\n",
+      to_native_path(&dicom_file),
+      temp_path.display()
+    ));
+
+  let assert = Command::cargo_bin("dcmfx_cli")
+    .unwrap()
+    .arg("print")
+    .arg(&temp_path)
+    .assert()
+    .success();
+
+  assert_snapshot!("merge_dicom_json_after", get_stdout(assert));
+}
+
+#[test]
 fn delete_private_tags() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm";

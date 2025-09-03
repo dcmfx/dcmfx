@@ -72,7 +72,7 @@ pub struct ListArgs {
       - (0008,0030) Study Time\n\
       - (0008,0060) Modality\n\
       ",
-    value_parser = crate::args::validate_data_element_tag,
+    value_parser = crate::args::parse_data_element_tag,
   )]
   selected_data_elements: Vec<DataElementTag>,
 
@@ -81,7 +81,7 @@ pub struct ListArgs {
     help_heading = "Output",
     help = "The same as --select, but the data element is not required to \
       be present in every listed DICOM file.",
-    value_parser = crate::args::validate_data_element_tag,
+    value_parser = crate::args::parse_data_element_tag,
   )]
   optional_selected_data_elements: Vec<DataElementTag>,
 
