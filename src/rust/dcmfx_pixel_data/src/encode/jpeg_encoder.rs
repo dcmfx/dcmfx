@@ -22,7 +22,6 @@ pub fn encode_image_pixel_module(
     PhotometricInterpretation::Monochrome1 { .. }
     | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull
     | PhotometricInterpretation::YbrFull422 => (),
 
     _ => return Err(()),
@@ -112,22 +111,6 @@ pub fn encode_color(
       width,
       height,
       jpeg_encoder::ColorType::Rgb,
-      Some(jpeg_encoder::SamplingFactor::R_4_4_4),
-      quality,
-    ),
-
-    (
-      ColorImageData::U8 {
-        data,
-        color_space: ColorSpace::Ybr { is_422: false },
-      },
-      PhotometricInterpretation::YbrFull,
-      BitsAllocated::Eight,
-    ) => encode(
-      data,
-      width,
-      height,
-      jpeg_encoder::ColorType::Ycbcr,
       Some(jpeg_encoder::SamplingFactor::R_4_4_4),
       quality,
     ),

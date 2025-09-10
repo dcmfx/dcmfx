@@ -165,6 +165,7 @@ pub struct ModifyArgs {
       - JPEG 2000 (Lossy)\n\
       - High-Throughput JPEG 2000 (Lossy)\n\
       - JPEG XL\n\
+      - JPEG XL JPEG Recompression\n\
       \n\
       Default value: 90",
     value_parser = clap::value_parser!(u8).range(1..=100),

@@ -56,6 +56,7 @@ fn test_jpeg_baseline_8bit_encode_decode_cycle() {
       .into_iter()
       .filter(|m| {
         !m.photometric_interpretation().is_palette_color()
+          && !m.photometric_interpretation().is_ybr_full()
           && m.bits_allocated() == BitsAllocated::Eight
           && m.pixel_representation().is_unsigned()
       })

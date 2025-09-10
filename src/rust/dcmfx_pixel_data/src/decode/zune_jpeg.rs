@@ -18,7 +18,6 @@ pub fn decode_photometric_interpretation(
     PhotometricInterpretation::Monochrome1 { .. }
     | PhotometricInterpretation::Monochrome2 { .. }
     | PhotometricInterpretation::Rgb
-    | PhotometricInterpretation::YbrFull
     | PhotometricInterpretation::YbrFull422 => Ok(photometric_interpretation),
 
     _ => Err(PixelDataDecodeError::ImagePixelModuleNotSupported {
@@ -91,9 +90,7 @@ pub fn decode_color(
     image_pixel_module.bits_allocated(),
   ) {
     (
-      PhotometricInterpretation::Rgb
-      | PhotometricInterpretation::YbrFull
-      | PhotometricInterpretation::YbrFull422,
+      PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull422,
       BitsAllocated::Eight,
     ) => {
       let (zune_color_space, output_color_space) =
@@ -101,10 +98,6 @@ pub fn decode_color(
           PhotometricInterpretation::Rgb => {
             (zune_core::colorspace::ColorSpace::RGB, ColorSpace::Rgb)
           }
-          PhotometricInterpretation::YbrFull => (
-            zune_core::colorspace::ColorSpace::YCbCr,
-            ColorSpace::Ybr { is_422: false },
-          ),
           PhotometricInterpretation::YbrFull422 => (
             zune_core::colorspace::ColorSpace::YCbCr,
             ColorSpace::Ybr { is_422: true },

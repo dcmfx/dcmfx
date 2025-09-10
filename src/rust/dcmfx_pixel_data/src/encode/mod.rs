@@ -59,6 +59,7 @@ impl PixelDataEncodeConfig {
   /// - JPEG 2000
   /// - High-Throughput JPEG 2000
   /// - JPEG XL
+  /// - JPEG XL JPEG Recompression
   ///
   /// Default: 90.
   ///
@@ -311,6 +312,11 @@ pub fn encode_image_pixel_module(
       libjxl::encode_image_pixel_module(image_pixel_module.clone(), false)
     }
 
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    &JPEG_XL_JPEG_RECOMPRESSION => {
+      jpeg_encoder::encode_image_pixel_module(image_pixel_module.clone())
+    }
+
     _ => {
       return Err(PixelDataEncodeError::TransferSyntaxNotSupported {
         transfer_syntax,
@@ -408,6 +414,18 @@ pub fn encode_monochrome(
         .map(PixelDataFrame::new_from_bytes)
     }
 
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    &JPEG_XL_JPEG_RECOMPRESSION => {
+      let jpeg_data = jpeg_encoder::encode_monochrome(
+        image,
+        image_pixel_module,
+        encode_config,
+      )?;
+
+      crate::jpeg_xl_jpeg_recompression::recompress_jpeg_to_jpeg_xl(&jpeg_data)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
     &DEFLATED_IMAGE_FRAME_COMPRESSION => deflate_frame_data(
       native::encode_monochrome(image, image_pixel_module)?,
       encode_config.zlib_compression_level,
@@ -500,6 +518,15 @@ pub fn encode_color(
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     &JPEG_XL => {
       libjxl::encode_color(image, image_pixel_module, encode_config, false)
+        .map(PixelDataFrame::new_from_bytes)
+    }
+
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    &JPEG_XL_JPEG_RECOMPRESSION => {
+      let jpeg_data =
+        jpeg_encoder::encode_color(image, image_pixel_module, encode_config)?;
+
+      crate::jpeg_xl_jpeg_recompression::recompress_jpeg_to_jpeg_xl(&jpeg_data)
         .map(PixelDataFrame::new_from_bytes)
     }
 

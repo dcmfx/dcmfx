@@ -981,6 +981,16 @@ fn jpeg_2000_ybr_to_jpeg_xl() {
 }
 
 #[test]
+fn explicit_vr_little_endian_rgb_to_jpeg_xl_jpeg_recompression() {
+  modify_transfer_syntax_and_check_pixel_data(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "jpeg-xl-jpeg-recompression",
+    "explicit_vr_little_endian_rgb_to_jpeg_xl_jpeg_recompression",
+    &[],
+  );
+}
+
+#[test]
 fn palette_color_to_jpeg_xl_lossless() {
   modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",

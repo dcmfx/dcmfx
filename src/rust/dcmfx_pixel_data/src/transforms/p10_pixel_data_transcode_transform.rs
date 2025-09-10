@@ -923,12 +923,16 @@ impl TranscodeImageDataFunctions {
 
             match *output_transfer_syntax {
               // When transcoding to JPEG Baseline 8-bit and JPEG Extended
-              // 12-bit default to YBR if the incoming data is RGB
+              // 12-bit default to YBR_FULL_422
               transfer_syntax::JPEG_BASELINE_8BIT
               | transfer_syntax::JPEG_EXTENDED_12BIT => {
-                if image_pixel_module.photometric_interpretation().is_rgb() {
+                if image_pixel_module.photometric_interpretation().is_rgb()
+                  || image_pixel_module
+                    .photometric_interpretation()
+                    .is_ybr_full()
+                {
                   image_pixel_module.set_photometric_interpretation(
-                    PhotometricInterpretation::YbrFull,
+                    PhotometricInterpretation::YbrFull422,
                   );
                 }
               }
