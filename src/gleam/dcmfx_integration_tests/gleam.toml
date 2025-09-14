@@ -9,7 +9,7 @@ dcmfx_json = { path = "../dcmfx_json" }
 dcmfx_p10 = { path = "../dcmfx_p10" }
 dcmfx_pixel_data = { path = "../dcmfx_pixel_data" }
 gleam_json = ">= 3.0.2 and < 4.0.0"
-gleam_stdlib = ">= 0.61.0 and < 2.0.0"
+gleam_stdlib = ">= 0.63.1 and < 2.0.0"
 simplifile = ">= 2.3.0 and < 3.0.0"
 file_streams = ">= 1.6.0 and < 2.0.0"
 

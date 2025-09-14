@@ -11,9 +11,9 @@ repo = "dcmfx"
 path = "src/gleam/dcmfx_core"
 
 [dependencies]
-bigi = ">= 4.0.0 and < 5.0.0"
+bigi = ">= 4.1.0 and < 5.0.0"
 envoy = ">= 1.0.2 and < 2.0.0"
-gleam_stdlib = ">= 0.61.0 and < 2.0.0"
+gleam_stdlib = ">= 0.63.1 and < 2.0.0"
 ieee_float = ">= 1.5.0 and < 2.0.0"
 term_size = ">= 1.0.1 and < 2.0.0"
 gleam_regexp = ">= 1.1.1 and < 2.0.0"

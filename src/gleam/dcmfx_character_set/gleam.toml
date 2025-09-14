@@ -11,7 +11,7 @@ repo = "dcmfx"
 path = "src/gleam/dcmfx_character_set"
 
 [dependencies]
-gleam_stdlib = ">= 0.61.0 and < 2.0.0"
+gleam_stdlib = ">= 0.63.1 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.6.0 and < 2.0.0"

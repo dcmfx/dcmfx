@@ -11,7 +11,7 @@ packages = [
   { name = "file_streams", version = "1.6.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "file_streams", source = "hex", outer_checksum = "309A2D3230E86309E298F1E8FD44AA6B9772AF279D518953F8C5604492842D0F" },
   { name = "gleam_deque", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_deque", source = "hex", outer_checksum = "64D77068931338CF0D0CB5D37522C3E3CCA7CB7D6C5BACB41648B519CC0133C7" },
   { name = "gleam_regexp", version = "1.1.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_regexp", source = "hex", outer_checksum = "9C215C6CA84A5B35BB934A9B61A9A306EC743153BE2B0425A0D032E477B062A9" },
-  { name = "gleam_stdlib", version = "0.61.0", build_tools = ["gleam"], requirements = [], otp_app = "gleam_stdlib", source = "hex", outer_checksum = "3DC407D6EDA98FCE089150C11F3AD892B6F4C3CA77C87A97BAE8D5AB5E41F331" },
+  { name = "gleam_stdlib", version = "0.63.1", build_tools = ["gleam"], requirements = [], otp_app = "gleam_stdlib", source = "hex", outer_checksum = "E1D5EC07638F606E48F0EA1556044DD805F2ACE9092A6F6AFBE4A0CC4DA21C2F" },
   { name = "ieee_float", version = "1.5.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "ieee_float", source = "hex", outer_checksum = "FA89DBE0AEC9F00412C4EDAE4258590E57B5ABCB3DCB0107EE3471EEAF1810AC" },
   { name = "term_size", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "term_size", source = "hex", outer_checksum = "D00BD2BC8FB3EBB7E6AE076F3F1FF2AC9D5ED1805F004D0896C784D06C6645F1" },
 ]
@@ -20,4 +20,4 @@ packages = [
 dcmfx_anonymize = { path = "../../../src/gleam/dcmfx_anonymize" }
 dcmfx_core = { path = "../../../src/gleam/dcmfx_core" }
 dcmfx_p10 = { path = "../../../src/gleam/dcmfx_p10" }
-gleam_stdlib = { version = ">= 0.61.0 and < 2.0.0" }
+gleam_stdlib = { version = ">= 0.63.1 and < 2.0.0" }

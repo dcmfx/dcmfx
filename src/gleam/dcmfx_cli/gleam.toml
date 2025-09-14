@@ -15,7 +15,7 @@ dcmfx_p10 = { path = "../dcmfx_p10" }
 dcmfx_pixel_data = { path = "../dcmfx_pixel_data" }
 file_streams = ">= 1.6.0 and < 2.0.0"
 filepath = ">= 1.1.2 and < 2.0.0"
-gleam_stdlib = ">= 0.61.0 and < 2.0.0"
+gleam_stdlib = ">= 0.63.1 and < 2.0.0"
 glint = ">= 1.2.1 and < 2.0.0"
 simplifile = ">= 2.3.0 and < 3.0.0"
 snag = ">= 1.1.0 and < 2.0.0"
