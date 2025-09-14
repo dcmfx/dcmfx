@@ -28,7 +28,7 @@ use crate::internal::utf8;
 /// holds metadata about the structure of the character set that can be used to
 /// decode data that uses it.
 ///
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 #[allow(clippy::enum_variant_names)]
 pub enum CharacterSet {
   SingleByteWithoutExtensions {
@@ -69,13 +69,30 @@ impl CharacterSet {
       }
     }
   }
+
+  pub fn description(&self) -> &'static str {
+    match *self {
+      CharacterSet::SingleByteWithoutExtensions { description, .. }
+      | CharacterSet::SingleByteWithExtensions { description, .. }
+      | CharacterSet::MultiByteWithoutExtensions { description, .. }
+      | CharacterSet::MultiByteWithExtensions { description, .. } => {
+        description
+      }
+    }
+  }
+}
+
+impl PartialEq for CharacterSet {
+  fn eq(&self, other: &Self) -> bool {
+    self.defined_term() == other.defined_term()
+  }
 }
 
 /// Describes the G0 or G1 code element for a character set, including its
 /// unique escape sequence bytes (either 2 or 3 bytes), and its decoder
 /// function.
 ///
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct CodeElement {
   pub escape_sequence: [u8; 3],
   pub decoder: DecodeNextCodepointFn,

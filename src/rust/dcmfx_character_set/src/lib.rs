@@ -117,6 +117,12 @@ impl SpecificCharacterSet {
     Ok(Self(charsets))
   }
 
+  /// Returns the character sets in this specific character set.
+  ///
+  pub fn character_sets(&self) -> &[&'static CharacterSet] {
+    &self.0
+  }
+
   /// Returns whether a specific character set is byte compatible with UTF-8.
   /// This is only the case for the DICOM default character set (ISO_IR 6) and
   /// the UTF-8 character set itself (ISO_IR 192).

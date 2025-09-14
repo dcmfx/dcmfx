@@ -208,12 +208,12 @@ impl P10PixelDataTranscodeTransform {
 
     // Store the input transfer syntax if one is specified in the File Meta
     // Information
-    if let P10Token::FileMetaInformation { data_set } = token {
-      if data_set.has(dictionary::TRANSFER_SYNTAX_UID.tag) {
-        self.input_transfer_syntax = data_set
-          .get_transfer_syntax()
-          .map_err(P10PixelDataTranscodeTransformError::DataError)?;
-      }
+    if let P10Token::FileMetaInformation { data_set } = token
+      && data_set.has(dictionary::TRANSFER_SYNTAX_UID.tag)
+    {
+      self.input_transfer_syntax = data_set
+        .get_transfer_syntax()
+        .map_err(P10PixelDataTranscodeTransformError::DataError)?;
     }
 
     // Pass the token through the transform that extracts the Image Pixel Module

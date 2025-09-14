@@ -428,15 +428,15 @@ fn get_pixel_data_from_input_source(
 
     for token in tokens.iter() {
       // For raw output, determine the output extension from the transfer syntax
-      if args.format == OutputFormat::Raw {
-        if let P10Token::FileMetaInformation { data_set } = token {
-          output_extension =
-            dcmfx::pixel_data::file_extension_for_transfer_syntax(
-              data_set
-                .get_transfer_syntax()
-                .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN),
-            );
-        }
+      if args.format == OutputFormat::Raw
+        && let P10Token::FileMetaInformation { data_set } = token
+      {
+        let ts = data_set
+          .get_transfer_syntax()
+          .unwrap_or(&transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN);
+
+        output_extension =
+          dcmfx::pixel_data::file_extension_for_transfer_syntax(ts);
       }
 
       // Pass token through the transforms to extract relevant data
@@ -545,10 +545,10 @@ fn get_pixel_data_from_input_source(
         }
 
         // If selecting a subset of frames, stop once they're all done
-        if let Some(frame_selection) = args.select_frames.as_ref() {
-          if frame_selection.is_complete(frame_index, number_of_frames) {
-            break;
-          }
+        if let Some(frame_selection) = args.select_frames.as_ref()
+          && frame_selection.is_complete(frame_index, number_of_frames)
+        {
+          break;
         }
       }
 
@@ -669,16 +669,15 @@ fn frame_to_final_image(
   // Apply the image resize, if specified. Note that no resize is performed here
   // when outputting to an MP4 because in that case FFmpeg is used to do the
   // resize, which is faster.
-  if args.format != OutputFormat::Mp4 {
-    if let Some((new_width, new_height)) =
+  if args.format != OutputFormat::Mp4
+    && let Some((new_width, new_height)) =
       args.new_dimensions(image.width(), image.height())
-    {
-      image = image.resize_exact(
-        new_width,
-        new_height,
-        args.resize_filter.filter_type(),
-      );
-    }
+  {
+    image = image.resize_exact(
+      new_width,
+      new_height,
+      args.resize_filter.filter_type(),
+    );
   }
 
   Ok(image)

@@ -355,12 +355,10 @@ impl DataSetBuilder {
         ] => {
           if let Some(BuilderLocation::SequenceItem { data_set }) =
             self.location.pop()
-          {
-            if let Some(BuilderLocation::Sequence { items, .. }) =
+            && let Some(BuilderLocation::Sequence { items, .. }) =
               self.location.last_mut()
-            {
-              items.push(data_set);
-            }
+          {
+            items.push(data_set);
           }
 
           Ok(())

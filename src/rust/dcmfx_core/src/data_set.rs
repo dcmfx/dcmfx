@@ -646,7 +646,7 @@ impl DataSet {
   fn lookup(
     &self,
     path: &DataSetPath,
-  ) -> Result<DataSetLookupResult, DataError> {
+  ) -> Result<DataSetLookupResult<'_>, DataError> {
     let mut lookup_result = DataSetLookupResult::DataSet(self);
 
     for entry in path.entries().iter() {

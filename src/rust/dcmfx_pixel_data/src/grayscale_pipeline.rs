@@ -172,7 +172,7 @@ impl GrayscalePipeline {
   ///
   /// Caches are only available when the stored value range has <= 2^16 items.
   ///
-  pub fn output_cache_u8(&self) -> Ref<Option<StoredValueOutputCache<u8>>> {
+  pub fn output_cache_u8(&self) -> Ref<'_, Option<StoredValueOutputCache<u8>>> {
     if let Ok(mut output_cache_u8) = self.output_cache_u8.try_borrow_mut()
       && output_cache_u8.is_none()
       && self.is_stored_value_range_cacheable()
@@ -191,7 +191,9 @@ impl GrayscalePipeline {
   ///
   /// Caches are only available when the stored value range has <= 2^16 items.
   ///
-  pub fn output_cache_u16(&self) -> Ref<Option<StoredValueOutputCache<u16>>> {
+  pub fn output_cache_u16(
+    &self,
+  ) -> Ref<'_, Option<StoredValueOutputCache<u16>>> {
     if let Ok(mut output_cache_u16) = self.output_cache_u16.try_borrow_mut()
       && output_cache_u16.is_none()
       && self.is_stored_value_range_cacheable()

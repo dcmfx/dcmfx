@@ -94,6 +94,14 @@ pub fn from_string(
   Ok(SpecificCharacterSet(charsets))
 }
 
+/// Returns the character sets in a specific character set.
+///
+pub fn character_sets(
+  specific_character_set: SpecificCharacterSet,
+) -> List(CharacterSet) {
+  specific_character_set.charsets
+}
+
 /// Returns whether a specific character set is byte compatible with UTF-8. This
 /// is only the case for the DICOM default character set (ISO_IR 6) and the
 /// UTF-8 character set itself (ISO_IR 192).

@@ -242,22 +242,23 @@ impl P10JsonTransform {
     // Exclude all File Meta Information data elements except for '(0002,0010)
     // Transfer Syntax UID' when encapsulated pixel data is being included as it
     // is needed to interpret that data
-    if self.config.store_encapsulated_pixel_data {
-      if let Ok(transfer_syntax_uid) =
+    if self.config.store_encapsulated_pixel_data
+      && let Ok(transfer_syntax_uid) =
         file_meta_information.get_string(dictionary::TRANSFER_SYNTAX_UID.tag)
-      {
-        if self.config.pretty_print {
-          stream.write_all(b"  \"00020010\": {\n    \"vr\": \"UI\",\n    \"Value\": [\n      \"")?;
-          stream.write_all(transfer_syntax_uid.as_bytes())?;
-          stream.write_all(b"\"\n    ]\n  }")?;
-        } else {
-          stream.write_all(br#""00020010":{"vr":"UI","Value":[""#)?;
-          stream.write_all(transfer_syntax_uid.as_bytes())?;
-          stream.write_all(br#""]}"#)?;
-        }
-
-        self.insert_comma = true;
+    {
+      if self.config.pretty_print {
+        stream.write_all(
+          b"  \"00020010\": {\n    \"vr\": \"UI\",\n    \"Value\": [\n      \"",
+        )?;
+        stream.write_all(transfer_syntax_uid.as_bytes())?;
+        stream.write_all(b"\"\n    ]\n  }")?;
+      } else {
+        stream.write_all(br#""00020010":{"vr":"UI","Value":[""#)?;
+        stream.write_all(transfer_syntax_uid.as_bytes())?;
+        stream.write_all(br#""]}"#)?;
       }
+
+      self.insert_comma = true;
     }
 
     Ok(())

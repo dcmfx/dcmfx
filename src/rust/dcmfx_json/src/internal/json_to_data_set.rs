@@ -57,10 +57,10 @@ pub fn convert_json_to_data_set(
     data_set.insert(tag, value);
 
     // Look up the transfer syntax if this is the relevant tag
-    if tag == dictionary::TRANSFER_SYNTAX_UID.tag {
-      if let Ok(ts) = data_set.get_transfer_syntax() {
-        transfer_syntax = Some(ts);
-      }
+    if tag == dictionary::TRANSFER_SYNTAX_UID.tag
+      && let Ok(ts) = data_set.get_transfer_syntax()
+    {
+      transfer_syntax = Some(ts);
     }
 
     path.pop().unwrap();

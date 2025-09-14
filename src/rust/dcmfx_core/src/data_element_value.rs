@@ -100,13 +100,12 @@ impl DataElementValue {
         // exactly on a UTF-8 character boundary so that data element values
         // with partial data are still displayable
         let mut utf8 = core::str::from_utf8(bytes);
-        if utf8.is_err() {
-          if let Some(index) = bytes
+        if utf8.is_err()
+          && let Some(index) = bytes
             .iter()
             .rposition(|b| (*b & 0b1100_0000) != 0b1000_0000)
-          {
-            utf8 = core::str::from_utf8(&bytes[0..index]);
-          }
+        {
+          utf8 = core::str::from_utf8(&bytes[0..index]);
         }
 
         match utf8 {
