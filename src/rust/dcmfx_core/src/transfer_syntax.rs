@@ -776,6 +776,18 @@ impl TransferSyntax {
       || self == &EXPLICIT_VR_BIG_ENDIAN
       || self == &DEFLATED_IMAGE_FRAME_COMPRESSION
   }
+
+  /// Returns whether this transfer syntax performs lossy compression of the
+  /// pixel data, the quality of which is able to be adjusted.
+  ///
+  pub fn is_lossy_compression_adjustable(&self) -> bool {
+    self == &JPEG_BASELINE_8BIT
+      || self == &JPEG_EXTENDED_12BIT
+      || self == &JPEG_2000
+      || self == &HIGH_THROUGHPUT_JPEG_2000
+      || self == &JPEG_XL
+      || self == &JPEG_XL_JPEG_RECOMPRESSION
+  }
 }
 
 #[cfg(test)]

@@ -8,7 +8,7 @@ use alloc::{
 };
 
 use dcmfx_core::{
-  DataElementValue, DataError, DataSet, DataSetPath, DcmfxError, IodModule,
+  DataElementValue, DataError, DataSet, DataSetPath, DcmfxError, IodModule, Rc,
   RcByteSlice, TransferSyntax, ValueRepresentation, dictionary,
   transfer_syntax,
 };
@@ -96,8 +96,8 @@ pub struct P10PixelDataTranscodeTransform {
   lossy_image_compression_insert_transform: Option<P10InsertTransform>,
 }
 
-/// Holds three user-provided functions that can alter the Image Pixel Module as
-/// well as the image data for decoded frames prior to them being encoded into
+/// Holds user-provided functions that can alter the Image Pixel Module and
+/// mutate Pixel Data for individual frames prior to them being encoded into
 /// the output transfer syntax.
 ///
 /// These functions allow for arbitrary modifications to frame structure and
@@ -114,10 +114,13 @@ pub struct P10PixelDataTranscodeTransform {
 /// Recompression' none of these image data functions are called.
 ///
 pub struct TranscodeImageDataFunctions {
+  pub is_encode_decode_cycle_required: Box<IsEncodeDecodeCycleRequiredFn>,
   pub process_image_pixel_module: Box<ProcessImagePixelModuleFn>,
   pub process_monochrome_image: Box<ProcessImageFn<MonochromeImage>>,
   pub process_color_image: Box<ProcessImageFn<ColorImage>>,
 }
+
+pub type IsEncodeDecodeCycleRequiredFn = dyn Fn(&ImagePixelModule) -> bool;
 
 pub type ProcessImagePixelModuleFn =
   dyn Fn(
@@ -377,12 +380,15 @@ impl P10PixelDataTranscodeTransform {
     (Vec<P10Token>, ImagePixelModule, ImagePixelModule),
     P10PixelDataTranscodeTransformError,
   > {
-    // Special case for recompression/reconstruction of JPEG Baseline 8-bit
-    // to/from JPEG XL, which by definition never alters the Image Pixel Module
-    if input_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
+    // Special case for direct recompression/reconstruction of JPEG Baseline
+    // 8-bit to/from JPEG XL. This is a fast path that can be taken when a full
+    // encode/decode cycle isn't needed.
+    if !(image_data_functions.is_encode_decode_cycle_required)(
+      image_pixel_module,
+    ) && (input_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
       && output_transfer_syntax == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
       || input_transfer_syntax == &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION
-        && output_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT
+        && output_transfer_syntax == &transfer_syntax::JPEG_BASELINE_8BIT)
     {
       return Ok((
         initial_token_buffer,
@@ -460,10 +466,16 @@ impl P10PixelDataTranscodeTransform {
     &mut self,
     input_frame: &mut PixelDataFrame,
   ) -> Result<RcByteSlice, P10PixelDataTranscodeTransformError> {
-    // Special case for recompression/reconstruction of JPEG Baseline 8-bit
-    // to/from JPEG XL
+    // Special case for direct recompression/reconstruction of JPEG Baseline
+    // 8-bit to/from JPEG XL. This is a fast path that can be taken when a full
+    // encode/decode cycle isn't needed.
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    {
+    if !(self.image_data_functions.is_encode_decode_cycle_required)(
+      self
+        .input_image_pixel_module_transform
+        .get_output()
+        .unwrap(),
+    ) {
       use transfer_syntax::{JPEG_BASELINE_8BIT, JPEG_XL_JPEG_RECOMPRESSION};
 
       if self.input_transfer_syntax == &JPEG_BASELINE_8BIT
@@ -736,6 +748,7 @@ impl P10PixelDataTranscodeTransform {
       &transfer_syntax::JPEG_2000_MULTI_COMPONENT,
       &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000,
       &transfer_syntax::JPEG_XL,
+      &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION,
     ];
 
     if lossy_output_transfer_syntaxes.contains(&output_transfer_syntax) {
@@ -824,6 +837,7 @@ fn map_p10_pixel_data_frame_transform_error(
 impl Default for TranscodeImageDataFunctions {
   fn default() -> Self {
     Self {
+      is_encode_decode_cycle_required: Box::new(|_| false),
       process_image_pixel_module: Box::new(|_| Ok(())),
       process_monochrome_image: Box::new(|_, _| Ok(())),
       process_color_image: Box::new(|_, _| Ok(())),
@@ -859,17 +873,65 @@ impl TranscodeImageDataFunctions {
   /// step is likely to fail during pixel data transcoding.
   ///
   pub fn standard_behavior(
-    input_transfer_syntax: &'static TransferSyntax,
     output_transfer_syntax: &'static TransferSyntax,
-    photometric_interpretation_monochrome: Box<
+    photometric_interpretation_monochrome: Rc<
       TranscodedPhotometricInterpretationFn,
     >,
-    photometric_interpretation_color: Box<
-      TranscodedPhotometricInterpretationFn,
-    >,
+    photometric_interpretation_color: Rc<TranscodedPhotometricInterpretationFn>,
     planar_configuration: Option<PlanarConfiguration>,
     crop_rect: Option<CropRect>,
+    is_output_quality_specified: bool,
   ) -> Self {
+    let is_encode_decode_cycle_required = {
+      let photometric_interpretation_monochrome =
+        photometric_interpretation_monochrome.clone();
+      let photometric_interpretation_color =
+        photometric_interpretation_color.clone();
+
+      move |image_pixel_module: &ImagePixelModule| {
+        // Check whether the planar configuration is being changed
+        if let Some(planar_configuration) = planar_configuration
+          && image_pixel_module.planar_configuration() != planar_configuration
+          && output_transfer_syntax.supports_planar_configuration()
+        {
+          return true;
+        }
+
+        // Check whether the photometric interpretation is being changed
+        if image_pixel_module.is_monochrome()
+          && let Some(photometric_interpretation) =
+            photometric_interpretation_monochrome(image_pixel_module)
+          && image_pixel_module.photometric_interpretation()
+            != &photometric_interpretation
+        {
+          return true;
+        }
+        if image_pixel_module.is_color()
+          && let Some(photometric_interpretation) =
+            photometric_interpretation_color(image_pixel_module)
+          && image_pixel_module.photometric_interpretation()
+            != &photometric_interpretation
+        {
+          return true;
+        }
+
+        // Check whether there is an active crop
+        if crop_rect.is_some() {
+          return true;
+        }
+
+        // Check whether there is an active quality change being applied that
+        // would require a decode/encode cycle
+        if is_output_quality_specified
+          && output_transfer_syntax.is_lossy_compression_adjustable()
+        {
+          return true;
+        }
+
+        false
+      }
+    };
+
     let process_image_pixel_module =
       move |image_pixel_module: &mut ImagePixelModule| {
         // For grayscale pixel data, the photometric interpretation, if set, can
@@ -921,11 +983,12 @@ impl TranscodeImageDataFunctions {
               );
             }
 
-            match *output_transfer_syntax {
+            match output_transfer_syntax {
               // When transcoding to JPEG Baseline 8-bit and JPEG Extended
               // 12-bit default to YBR_FULL_422
-              transfer_syntax::JPEG_BASELINE_8BIT
-              | transfer_syntax::JPEG_EXTENDED_12BIT => {
+              &transfer_syntax::JPEG_BASELINE_8BIT
+              | &transfer_syntax::JPEG_EXTENDED_12BIT
+              | &transfer_syntax::JPEG_XL_JPEG_RECOMPRESSION => {
                 if image_pixel_module.photometric_interpretation().is_rgb()
                   || image_pixel_module
                     .photometric_interpretation()
@@ -939,8 +1002,8 @@ impl TranscodeImageDataFunctions {
 
               // When transcoding to JPEG 2000 Lossless Only default to YBR_RCT
               // unless the incoming data is PALETTE_COLOR
-              transfer_syntax::JPEG_2000_LOSSLESS_ONLY
-              | transfer_syntax::HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
+              &transfer_syntax::JPEG_2000_LOSSLESS_ONLY
+              | &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
                 if !image_pixel_module
                   .photometric_interpretation()
                   .is_palette_color() =>
@@ -951,19 +1014,19 @@ impl TranscodeImageDataFunctions {
               }
 
               // When transcoding to JPEG 2000 lossy default to YBR_ICT
-              transfer_syntax::JPEG_2000
-              | transfer_syntax::HIGH_THROUGHPUT_JPEG_2000 => {
+              &transfer_syntax::JPEG_2000
+              | &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000 => {
                 image_pixel_module.set_photometric_interpretation(
                   PhotometricInterpretation::YbrIct,
                 )
               }
 
               // When transcoding to JPEG XL lossless default to RGB
-              transfer_syntax::JPEG_XL_LOSSLESS => image_pixel_module
+              &transfer_syntax::JPEG_XL_LOSSLESS => image_pixel_module
                 .set_photometric_interpretation(PhotometricInterpretation::Rgb),
 
               // When transcoding to JPEG XL lossy default to XYB
-              transfer_syntax::JPEG_XL => image_pixel_module
+              &transfer_syntax::JPEG_XL => image_pixel_module
                 .set_photometric_interpretation(PhotometricInterpretation::Xyb),
 
               _ => (),
@@ -982,25 +1045,6 @@ impl TranscodeImageDataFunctions {
 
         // Apply crop to dimensions
         if let Some(crop_rect) = crop_rect {
-          use transfer_syntax::{
-            JPEG_BASELINE_8BIT, JPEG_XL_JPEG_RECOMPRESSION,
-          };
-
-          // Cropping isn't possible when transcoding between JPEG XL JPEG
-          // Recompression and JPEG Baseline 8-bit because a direct conversion
-          // is done and the contained image data is never decompressed
-          if output_transfer_syntax == &JPEG_XL_JPEG_RECOMPRESSION
-            || input_transfer_syntax == &JPEG_XL_JPEG_RECOMPRESSION
-              && output_transfer_syntax == &JPEG_BASELINE_8BIT
-          {
-            return Err(P10PixelDataTranscodeTransformError::NotSupported {
-              details:
-                "Cropping of pixel data is not supported when transcoding \
-                 between JPEG Baseline 8-bit and JPEG XL JPEG Recompression"
-                  .to_string(),
-            });
-          }
-
           let (cropped_rows, cropped_columns) = crop_rect
             .apply(image_pixel_module.rows(), image_pixel_module.columns());
 
@@ -1096,6 +1140,9 @@ impl TranscodeImageDataFunctions {
       };
 
     Self {
+      is_encode_decode_cycle_required: Box::new(
+        is_encode_decode_cycle_required,
+      ),
       process_image_pixel_module: Box::new(process_image_pixel_module),
       process_monochrome_image: Box::new(process_monochrome_image),
       process_color_image: Box::new(process_color_image),

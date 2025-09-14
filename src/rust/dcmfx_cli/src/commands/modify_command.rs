@@ -550,28 +550,31 @@ fn streaming_rewrite(
         let photometric_interpretation_color_arg =
           args.photometric_interpretation_color;
 
+        let image_data_functions =
+          TranscodeImageDataFunctions::standard_behavior(
+            output_transfer_syntax,
+            Rc::new(move |image_pixel_module| {
+              photometric_interpretation_monochrome_arg.and_then(|arg| {
+                arg.as_photometric_interpretation(
+                  image_pixel_module.pixel_representation(),
+                )
+              })
+            }),
+            Rc::new(move |_image_pixel_module| {
+              photometric_interpretation_color_arg
+                .and_then(|arg| arg.as_photometric_interpretation())
+            }),
+            args.planar_configuration.map(|a| a.into()),
+            args.crop,
+            args.quality.is_some(),
+          );
+
         pixel_data_transcode_transform =
           Some(P10PixelDataTranscodeTransform::new(
             output_transfer_syntax,
             args.decoder.pixel_data_decode_config(),
             args.pixel_data_encode_config(),
-            Some(TranscodeImageDataFunctions::standard_behavior(
-              input_transfer_syntax,
-              output_transfer_syntax,
-              Box::new(move |image_pixel_module| {
-                photometric_interpretation_monochrome_arg.and_then(|arg| {
-                  arg.as_photometric_interpretation(
-                    image_pixel_module.pixel_representation(),
-                  )
-                })
-              }),
-              Box::new(move |_image_pixel_module| {
-                photometric_interpretation_color_arg
-                  .and_then(|arg| arg.as_photometric_interpretation())
-              }),
-              args.planar_configuration.map(|a| a.into()),
-              args.crop,
-            )),
+            Some(image_data_functions),
           ));
       }
     }

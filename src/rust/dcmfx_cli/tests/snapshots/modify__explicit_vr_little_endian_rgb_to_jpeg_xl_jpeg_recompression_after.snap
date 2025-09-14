@@ -36,7 +36,7 @@ snapshot_kind: text
 (0020,0037) DS Image Orientation (Patient)          [    12 bytes] "1", "0", " …
 (0020,4000) LT Image Comments                       [    98 bytes] "MeVisLab,  …
 (0028,0002) US Samples per Pixel                    [     2 bytes] 3
-(0028,0004) CS Photometric Interpretation           [     4 bytes] "RGB"
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "YBR_FULL_4 …
 (0028,0006) US Planar Configuration                 [     2 bytes] 0
 (0028,0010) US Rows                                 [     2 bytes] 400
 (0028,0011) US Columns                              [     2 bytes] 640
@@ -47,7 +47,8 @@ snapshot_kind: text
 (0028,0103) US Pixel Representation                 [     2 bytes] 0
 (0028,0106) US Smallest Image Pixel Value           [     2 bytes] 0
 (0028,0107) US Largest Image Pixel Value            [     2 bytes] 255
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
 (7FE0,0010) OB Pixel Data
   (FFFE,E000) Item                                    [     0 bytes] []
-  (FFFE,E000) Item                                    [ 37284 bytes] [00 00 00 …
+  (FFFE,E000) Item                                    [ 35822 bytes] [00 00 00 …
 (FFFE,E0DD) Sequence Delimitation Item

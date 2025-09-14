@@ -1111,6 +1111,16 @@ fn jpeg_ls_monochrome_to_jpeg_xl_lossless() {
 }
 
 #[test]
+fn jpeg_baseline_to_jpeg_xl_jpeg_recompression_with_compression() {
+  modify_transfer_syntax_and_check_pixel_data(
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+    "jpeg-xl-jpeg-recompression",
+    "jpeg_baseline_to_jpeg_xl_jpeg_recompression_with_compression",
+    &["--quality", "10"],
+  );
+}
+
+#[test]
 fn jpeg_baseline_to_jpeg_xl_jpeg_recompression_with_reconstruction() {
   let recompressed_dicom = modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
