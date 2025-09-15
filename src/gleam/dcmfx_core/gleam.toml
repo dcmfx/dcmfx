@@ -1,5 +1,5 @@
 name = "dcmfx_core"
-version = "0.34.0"
+version = "0.35.0"
 description = "DCMfx core library"
 licences = ["AGPL-3.0-only"]
 gleam = ">= 1.12.0"
