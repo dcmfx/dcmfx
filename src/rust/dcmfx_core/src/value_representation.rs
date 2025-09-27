@@ -243,7 +243,7 @@ impl ValueRepresentation {
   /// bytes are not of even length.
   ///
   pub fn pad_bytes_to_even_length(self, bytes: &mut Vec<u8>) {
-    if bytes.len() % 2 == 0 {
+    if bytes.len().is_multiple_of(2) {
       return;
     }
 

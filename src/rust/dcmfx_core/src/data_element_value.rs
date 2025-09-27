@@ -1437,7 +1437,7 @@ impl DataElementValue {
           ));
         }
 
-        if value_length % bytes_multiple_of != 0 {
+        if !value_length.is_multiple_of(bytes_multiple_of) {
           return Err(DataError::new_value_length_invalid(
             *vr,
             value_length as u64,

@@ -230,7 +230,7 @@ impl P10PixelDataFrameTransform {
 
             pixel_count
           } else {
-            if *length as usize % number_of_frames != 0 {
+            if !(*length as usize).is_multiple_of(number_of_frames) {
               return Err(DataError::new_value_invalid(format!(
                 "Multi-frame pixel data of length {} bytes does not divide \
                 evenly into {} frames",

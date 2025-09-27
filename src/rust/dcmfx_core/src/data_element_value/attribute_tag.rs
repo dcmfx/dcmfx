@@ -8,7 +8,7 @@ use crate::{DataElementTag, DataError};
 /// Converts an `AttributeTag` value into data element tags.
 ///
 pub fn from_bytes(bytes: &[u8]) -> Result<Vec<DataElementTag>, DataError> {
-  if bytes.len() % 4 != 0 {
+  if !bytes.len().is_multiple_of(4) {
     return Err(DataError::new_value_invalid(
       "AttributeTag data length is not a multiple of 4".to_string(),
     ));

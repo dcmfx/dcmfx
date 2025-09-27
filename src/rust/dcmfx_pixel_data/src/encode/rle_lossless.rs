@@ -64,7 +64,7 @@ pub fn encode_monochrome(
     ) => {
       let segment_0 = data.to_vec();
 
-      let row_size = if image.width() % 8 == 0 {
+      let row_size = if image.width().is_multiple_of(8) {
         usize::from(image.width() / 8)
       } else {
         data.len()
@@ -628,7 +628,7 @@ fn encode_segment(
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let mut output = Vec::with_capacity(data.len());
 
-  if row_size == 0 || data.len() % row_size != 0 {
+  if row_size == 0 || !data.len().is_multiple_of(row_size) {
     return Err(PixelDataEncodeError::OtherError {
       name: "RLE Lossless encode failed".to_string(),
       details: "Segment data length is not a multiple of the row size"

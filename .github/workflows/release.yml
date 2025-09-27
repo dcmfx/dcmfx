@@ -91,7 +91,7 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.89-${{ matrix.toolchain }}
+          toolchain: "1.90-${{ matrix.toolchain }}"
           cache-workspaces: src/rust
           target: ${{ matrix.rust-target }}
 
@@ -300,7 +300,7 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: 1.89
+          toolchain: "1.90"
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4

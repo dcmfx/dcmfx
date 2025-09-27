@@ -31,7 +31,8 @@ impl IodModule for OverlayPlaneModule {
       return false;
     }
 
-    if tag.group < 0x6000 || tag.group > 0x601E || tag.group % 2 != 0 {
+    if tag.group < 0x6000 || tag.group > 0x601E || !tag.group.is_multiple_of(2)
+    {
       return false;
     }
 
