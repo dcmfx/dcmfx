@@ -57,7 +57,6 @@ jobs:
         rust-target:
           - aarch64-apple-darwin
           - aarch64-unknown-linux-musl
-          - x86_64-apple-darwin
           - x86_64-pc-windows-msvc
           - x86_64-unknown-linux-musl
         include:
@@ -68,9 +67,6 @@ jobs:
             toolchain: x86_64-unknown-linux-gnu
             musl-target: aarch64-linux-musl
             runs-on: ubuntu-24.04
-          - rust-target: x86_64-apple-darwin
-            toolchain: x86_64-apple-darwin
-            runs-on: macos-13
           - rust-target: x86_64-pc-windows-msvc
             toolchain: x86_64-pc-windows-msvc
             runs-on: windows-2025
@@ -350,7 +346,6 @@ jobs:
           read -r AARCH64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-aarch64-unknown-linux-musl/dcmfx-v$VERSION-aarch64-unknown-linux-musl.tar.gz.sha256)
           read -r X86_64_UNKNOWN_LINUX_MUSL_SHA < <(awk '{print $1; exit}' dcmfx-x86_64-unknown-linux-musl/dcmfx-v$VERSION-x86_64-unknown-linux-musl.tar.gz.sha256)
           read -r AARCH64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-aarch64-apple-darwin/dcmfx-v$VERSION-aarch64-apple-darwin.tar.gz.sha256)
-          read -r X86_64_APPLE_DARWIN_SHA < <(awk '{print $1; exit}' dcmfx-x86_64-apple-darwin/dcmfx-v$VERSION-x86_64-apple-darwin.tar.gz.sha256)
 
           sed \
             -i \
@@ -358,7 +353,6 @@ jobs:
             -e 's/"aarch64-unknown-linux-musl" => ".*"/"aarch64-unknown-linux-musl" => "'"$AARCH64_UNKNOWN_LINUX_MUSL_SHA"'"/' \
             -e 's/"x86_64-unknown-linux-musl" => ".*"/"x86_64-unknown-linux-musl" => "'"$X86_64_UNKNOWN_LINUX_MUSL_SHA"'"/' \
             -e 's/"aarch64-apple-darwin" => ".*"/"aarch64-apple-darwin" => "'"$AARCH64_APPLE_DARWIN_SHA"'"/' \
-            -e 's/"x86_64-apple-darwin" => ".*"/"x86_64-apple-darwin" => "'"$X86_64_APPLE_DARWIN_SHA"'"/' \
             Formula/dcmfx.rb
 
           cat Formula/dcmfx.rb

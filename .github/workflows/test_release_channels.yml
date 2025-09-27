@@ -7,13 +7,7 @@ jobs:
     name: Test Homebrew tap
     timeout-minutes: 10
 
-    strategy:
-      matrix:
-        runs-on:
-          - macos-13
-          - macos-14
-
-    runs-on: ${{ matrix.runs-on }}
+    runs-on: macos-14
 
     steps:
       - name: Install DCMfx

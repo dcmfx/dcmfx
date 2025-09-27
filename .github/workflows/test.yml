@@ -56,14 +56,11 @@ jobs:
       matrix:
         rust-target:
           - aarch64-apple-darwin
-          - x86_64-apple-darwin
           - x86_64-pc-windows-msvc
           - x86_64-unknown-linux-gnu
         include:
           - rust-target: aarch64-apple-darwin
             runs-on: macos-14
-          - rust-target: x86_64-apple-darwin
-            runs-on: macos-13
           - rust-target: x86_64-pc-windows-msvc
             runs-on: windows-2025
           - rust-target: x86_64-unknown-linux-gnu
@@ -86,7 +83,7 @@ jobs:
           cache-workspaces: src/rust
 
       - name: Install platform-specific dependencies (macOS)
-        if: matrix.rust-target == 'aarch64-apple-darwin' || matrix.rust-target == 'x86_64-apple-darwin'
+        if: matrix.rust-target == 'aarch64-apple-darwin'
         run: brew install ffmpeg
 
       - name: Install platform-specific dependencies (Linux)
