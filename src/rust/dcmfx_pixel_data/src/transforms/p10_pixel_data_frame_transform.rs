@@ -45,11 +45,16 @@ pub struct P10PixelDataFrameTransform {
   // When reading native pixel data, the size of a single frame in bits
   native_pixel_data_frame_size: u64,
 
-  // Chunks of pixel data that have not yet been emitted as part of a frame. The
-  // second value is an offset into the Vec<u8> where the un-emitted frame data
-  // begins, which is only used for native pixel data and not for encapsulated
-  // pixel data.
-  pixel_data: VecDeque<(RcByteSlice, u64)>,
+  // Chunks of pixel data that have not yet been emitted as part of a frame.
+  //
+  // The second value is an offset into the Vec<u8> where the un-emitted frame
+  // data begins, which is only used for native pixel data and not for
+  // encapsulated pixel data.
+  //
+  // The third value is true if this chunk is the header of a pixel data item in
+  // encapsulated pixel data, meaning it should not be emitted as part of a
+  // frame.
+  pixel_data: VecDeque<(RcByteSlice, u64, bool)>,
 
   pixel_data_write_offset: u64,
   pixel_data_read_offset: u64,
@@ -260,8 +265,12 @@ impl P10PixelDataFrameTransform {
           let mut frame = PixelDataFrame::new();
           frame.set_index(self.next_frame_index);
 
-          for item in self.pixel_data.iter() {
-            frame.push_bytes(item.0.clone());
+          for (data, _, is_pixel_data_item_header) in self.pixel_data.iter() {
+            if *is_pixel_data_item_header {
+              continue;
+            }
+
+            frame.push_bytes(data.clone());
           }
 
           // If this frame has a length specified then apply it
@@ -280,7 +289,11 @@ impl P10PixelDataFrameTransform {
       // The start of a new encapsulated pixel data item. The size of an item
       // header is 8 bytes, and this needs to be included in the current offset.
       P10Token::PixelDataItem { .. } => {
-        self.pixel_data_write_offset += 64;
+        let data = vec![0u8; 8];
+
+        self.pixel_data_write_offset += data.len() as u64 * 8;
+        self.pixel_data.push_back((data.into(), 0, true));
+
         Ok(vec![])
       }
 
@@ -289,7 +302,7 @@ impl P10PixelDataFrameTransform {
         bytes_remaining,
         ..
       } => {
-        self.pixel_data.push_back((data.clone(), 0));
+        self.pixel_data.push_back((data.clone(), 0, false));
         self.pixel_data_write_offset += data.len() as u64 * 8;
 
         if self.is_encapsulated {
@@ -337,7 +350,7 @@ impl P10PixelDataFrameTransform {
       frame.set_bit_offset(self.pixel_data_read_offset as usize % 8);
 
       while frame.len_bits() < frame_size {
-        let (chunk, chunk_offset) = self.pixel_data.pop_front().unwrap();
+        let (chunk, chunk_offset, _) = self.pixel_data.pop_front().unwrap();
 
         // If the whole of this chunk is needed for the next frame then add it
         // to the frame
@@ -358,9 +371,11 @@ impl P10PixelDataFrameTransform {
 
           // Put the unused part of the chunk back on so it can be used by the
           // next frame
-          self
-            .pixel_data
-            .push_front((chunk, (chunk_offset + length_in_bits)));
+          self.pixel_data.push_front((
+            chunk,
+            (chunk_offset + length_in_bits),
+            false,
+          ));
           self.pixel_data_read_offset += length_in_bits;
         }
       }
@@ -410,7 +425,12 @@ impl P10PixelDataFrameTransform {
             frame.set_index(self.next_frame_index);
             self.next_frame_index += 1;
 
-            for (chunk, _) in self.pixel_data.iter() {
+            for (chunk, _, is_pixel_data_item_header) in self.pixel_data.iter()
+            {
+              if *is_pixel_data_item_header {
+                continue;
+              }
+
               frame.push_bytes(chunk.clone());
             }
 
@@ -432,9 +452,14 @@ impl P10PixelDataFrameTransform {
             self.next_frame_index += 1;
 
             while self.pixel_data_read_offset < offset * 8 {
-              if let Some((chunk, _)) = self.pixel_data.pop_front() {
-                frame.push_bytes(chunk.clone());
-                self.pixel_data_read_offset += (8 + chunk.len() as u64) * 8;
+              if let Some((chunk, _, is_pixel_data_item_header)) =
+                self.pixel_data.pop_front()
+              {
+                if !is_pixel_data_item_header {
+                  frame.push_bytes(chunk.clone());
+                }
+
+                self.pixel_data_read_offset += chunk.len() as u64 * 8;
               } else {
                 break;
               }
@@ -488,8 +513,12 @@ impl P10PixelDataFrameTransform {
   fn read_basic_offset_table(&self) -> Result<OffsetTable, DataError> {
     // Read Basic Offset Table data into a buffer
     let mut offset_table_data = vec![];
-    for item in self.pixel_data.iter() {
-      offset_table_data.extend_from_slice(&item.0);
+    for (data, _, is_pixel_data_item_header) in self.pixel_data.iter() {
+      if *is_pixel_data_item_header {
+        continue;
+      }
+
+      offset_table_data.extend_from_slice(data);
     }
 
     if offset_table_data.is_empty() {
@@ -641,5 +670,85 @@ impl P10PixelDataFrameTransform {
 impl Default for P10PixelDataFrameTransform {
   fn default() -> Self {
     Self::new()
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn reads_frames_when_split_across_multiple_pixel_data_items_and_p10_tokens() {
+    use dcmfx_p10::DataSetP10Extensions;
+
+    let mut ds = DataSet::new();
+
+    // Minimal data set with two frames of encapsulated pixel data
+    ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[2])
+      .unwrap();
+    ds.insert_int_value(&dictionary::ROWS, &[32]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[32]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
+      .unwrap();
+    ds.insert(
+      dictionary::PIXEL_DATA.tag,
+      DataElementValue::new_encapsulated_pixel_data_unchecked(
+        ValueRepresentation::OtherByteString,
+        vec![
+          vec![0, 0, 0, 0, 0x10, 0x04, 0, 0].into(),
+          vec![1; 512].into(),
+          vec![2; 512].into(),
+          vec![3; 1024].into(),
+        ],
+      ),
+    );
+
+    // Convert to tokens
+    let mut tokens = ds.to_p10_tokens();
+
+    // Split the data for the first frame's first pixel data item across two
+    // tokens
+    tokens.splice(
+      16..17,
+      [
+        P10Token::DataElementValueBytes {
+          tag: dictionary::ITEM.tag,
+          vr: ValueRepresentation::OtherByteString,
+          data: RcByteSlice::from(vec![1; 500]),
+          bytes_remaining: 12,
+        },
+        P10Token::DataElementValueBytes {
+          tag: dictionary::ITEM.tag,
+          vr: ValueRepresentation::OtherByteString,
+          data: RcByteSlice::from(vec![1; 12]),
+          bytes_remaining: 0,
+        },
+      ],
+    );
+
+    assert_eq!(
+      p10_tokens_to_frames(&tokens),
+      vec![
+        vec![vec![1; 512], vec![2; 512]]
+          .into_iter()
+          .flatten()
+          .collect::<_>(),
+        vec![3; 1024]
+      ]
+    );
+  }
+
+  fn p10_tokens_to_frames(tokens: &[P10Token]) -> Vec<Vec<u8>> {
+    let mut transform = P10PixelDataFrameTransform::new();
+
+    let mut frames = vec![];
+    for token in tokens {
+      frames.extend(transform.add_token(token).unwrap());
+    }
+
+    frames
+      .iter_mut()
+      .map(|frame| frame.combine_chunks().to_vec())
+      .collect()
   }
 }

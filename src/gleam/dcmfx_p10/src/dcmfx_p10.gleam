@@ -124,8 +124,10 @@ fn do_read_stream(
 }
 
 /// Reads the next DICOM P10 tokens from a read stream. This repeatedly reads
-/// bytes from the read stream in 256 KiB chunks until at least one DICOM P10
-/// token is made available by the read context or an error occurs.
+/// chunks of bytes from the read stream until at least one DICOM P10 token is
+/// made available by the read context or an error occurs.
+/// 
+/// The chunk size defaults to 256 KiB if not specified.
 ///
 pub fn read_tokens_from_stream(
   stream: FileStream,

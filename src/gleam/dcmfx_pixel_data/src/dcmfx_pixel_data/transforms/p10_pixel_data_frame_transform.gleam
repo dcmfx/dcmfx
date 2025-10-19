@@ -39,10 +39,15 @@ pub opaque type P10PixelDataFrameTransform {
     // When reading native pixel data, the size of a single frame in bits
     native_pixel_data_frame_size: Int,
     // Chunks of pixel data that have not yet been emitted as part of a frame.
+    //
     // The second value is an offset into the Vec<u8> where the un-emitted frame
     // data begins, which is only used for native pixel data and not for
     // encapsulated pixel data.
-    pixel_data: Deque(#(BitArray, Int)),
+    //
+    // The third value is true if this chunk is the header of a pixel data item
+    // in encapsulated pixel data, meaning it should not be emitted as part of a
+    // frame.
+    pixel_data: Deque(#(BitArray, Int, Bool)),
     pixel_data_write_offset: Int,
     pixel_data_read_offset: Int,
     // The offset table used with encapsulated pixel data. This can come from
@@ -294,18 +299,20 @@ fn process_next_pixel_data_token(
             )
 
           let frame =
+            pixel_data_frame.new()
+            |> pixel_data_frame.set_index(frame_index)
+
+          let frame =
             transform.pixel_data
             |> deque.to_list
-            |> list.fold(
-              pixel_data_frame.new()
-                |> pixel_data_frame.set_index(frame_index),
-              fn(frame, pixel_data) {
-                let offset = pixel_data.1
-                let assert <<_:size(offset), fragment:bits>> = pixel_data.0
+            |> list.fold(frame, fn(frame, pixel_data) {
+              use <- bool.guard(pixel_data.2, frame)
 
-                pixel_data_frame.push_chunk(frame, fragment)
-              },
-            )
+              let offset = pixel_data.1
+              let assert <<_:size(offset), fragment:bits>> = pixel_data.0
+
+              pixel_data_frame.push_chunk(frame, fragment)
+            })
 
           // If the frame has a length specified then apply it
           let frame = case transform.offset_table {
@@ -331,17 +338,25 @@ fn process_next_pixel_data_token(
     // The start of a new encapsulated pixel data item. The size of an item
     // header is 8 bytes, and this needs to be included in the current offset.
     p10_token.PixelDataItem(..) -> {
+      let data = <<0:64>>
+
+      let pixel_data = transform.pixel_data |> deque.push_back(#(data, 0, True))
+      let pixel_data_write_offset =
+        transform.pixel_data_write_offset + bit_array.bit_size(data)
+
       let transform =
         P10PixelDataFrameTransform(
           ..transform,
-          pixel_data_write_offset: transform.pixel_data_write_offset + 64,
+          pixel_data:,
+          pixel_data_write_offset:,
         )
 
       Ok(#([], transform))
     }
 
     p10_token.DataElementValueBytes(data:, bytes_remaining:, ..) -> {
-      let pixel_data = transform.pixel_data |> deque.push_back(#(data, 0))
+      let pixel_data =
+        transform.pixel_data |> deque.push_back(#(data, 0, False))
       let pixel_data_write_offset =
         transform.pixel_data_write_offset + bit_array.byte_size(data) * 8
 
@@ -436,7 +451,7 @@ fn get_pending_native_frame(
 
   case frame_length < frame_size {
     True -> {
-      let assert Ok(#(#(chunk, chunk_offset), pixel_data)) =
+      let assert Ok(#(#(chunk, chunk_offset, _), pixel_data)) =
         transform.pixel_data |> deque.pop_front()
       let chunk_length = bit_array.byte_size(chunk)
 
@@ -482,7 +497,7 @@ fn get_pending_native_frame(
           // next frame
           let pixel_data =
             transform.pixel_data
-            |> deque.push_front(#(chunk, chunk_offset + length_in_bits))
+            |> deque.push_front(#(chunk, chunk_offset + length_in_bits, False))
 
           let transform =
             P10PixelDataFrameTransform(
@@ -545,15 +560,17 @@ fn get_pending_encapsulated_frames(
                 )
 
               let frame =
+                pixel_data_frame.new()
+                |> pixel_data_frame.set_index(frame_index)
+
+              let frame =
                 transform.pixel_data
                 |> deque.to_list
-                |> list.fold(
-                  pixel_data_frame.new()
-                    |> pixel_data_frame.set_index(frame_index),
-                  fn(frame, chunk) {
-                    pixel_data_frame.push_chunk(frame, chunk.0)
-                  },
-                )
+                |> list.fold(frame, fn(frame, chunk) {
+                  use <- bool.guard(chunk.2, frame)
+
+                  pixel_data_frame.push_chunk(frame, chunk.0)
+                })
 
               let transform =
                 P10PixelDataFrameTransform(
@@ -596,19 +613,14 @@ fn get_pending_encapsulated_frames_using_offset_table(
       )
 
       let frame_index = transform.next_frame_index
-      let transform =
-        P10PixelDataFrameTransform(
-          ..transform,
-          next_frame_index: frame_index + 1,
-        )
+      let next_frame_index = frame_index + 1
+      let transform = P10PixelDataFrameTransform(..transform, next_frame_index:)
+
+      let frame =
+        pixel_data_frame.new() |> pixel_data_frame.set_index(frame_index)
 
       let #(frame, transform) =
-        get_pending_encapsulated_frame(
-          transform,
-          pixel_data_frame.new()
-            |> pixel_data_frame.set_index(frame_index),
-          offset * 8,
-        )
+        get_pending_encapsulated_frame(transform, frame, offset * 8)
 
       let assert Ok(offset_table) = list.rest(offset_table)
 
@@ -652,12 +664,14 @@ fn get_pending_encapsulated_frame(
   case transform.pixel_data_read_offset < next_offset {
     True ->
       case deque.pop_front(transform.pixel_data) {
-        Ok(#(#(chunk, _), pixel_data)) -> {
-          let frame = frame |> pixel_data_frame.push_chunk(chunk)
+        Ok(#(#(chunk, _, is_pixel_data_item_header), pixel_data)) -> {
+          let frame = case is_pixel_data_item_header {
+            True -> frame
+            False -> pixel_data_frame.push_chunk(frame, chunk)
+          }
+
           let pixel_data_read_offset =
-            transform.pixel_data_read_offset
-            + { 8 + bit_array.byte_size(chunk) }
-            * 8
+            transform.pixel_data_read_offset + bit_array.byte_size(chunk) * 8
 
           let transform =
             P10PixelDataFrameTransform(
@@ -708,7 +722,12 @@ fn read_basic_offset_table(
   let offset_table_data =
     transform.pixel_data
     |> deque.to_list
-    |> list.map(fn(chunk) { chunk.0 })
+    |> list.filter_map(fn(chunk) {
+      case chunk.2 {
+        True -> Error(Nil)
+        False -> Ok(chunk.0)
+      }
+    })
     |> bit_array.concat
 
   use <- bool.guard(offset_table_data == <<>>, Ok([]))
