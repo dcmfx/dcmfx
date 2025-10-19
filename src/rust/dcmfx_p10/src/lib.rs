@@ -460,12 +460,16 @@ where
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error>;
 
+  /// Converts a data set to a vector of DICOM P10 tokens.
+  ///
+  fn to_p10_tokens(&self) -> Vec<P10Token>;
+
   /// Converts a data set to DICOM P10 tokens that are returned via the passed
   /// callback.
   ///
-  fn to_p10_tokens<E>(
+  fn to_p10_token_stream<E>(
     &self,
-    token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
+    token_callback: &mut impl FnMut(P10Token) -> Result<(), E>,
   ) -> Result<(), E>;
 
   /// Converts a data set to DICOM P10 bytes that are returned via the passed
@@ -511,9 +515,21 @@ impl DataSetP10Extensions for DataSet {
     write_stream(stream, self, config)
   }
 
-  fn to_p10_tokens<E>(
+  fn to_p10_tokens(&self) -> Vec<P10Token> {
+    let mut tokens = vec![];
+    self
+      .to_p10_token_stream::<()>(&mut |token: P10Token| {
+        tokens.push(token);
+        Ok(())
+      })
+      .unwrap();
+
+    tokens
+  }
+
+  fn to_p10_token_stream<E>(
     &self,
-    token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
+    token_callback: &mut impl FnMut(P10Token) -> Result<(), E>,
   ) -> Result<(), E> {
     p10_write::data_set_to_tokens(self, &DataSetPath::new(), token_callback)
   }

@@ -533,7 +533,7 @@ impl Default for P10WriteContext {
 pub fn data_set_to_tokens<E>(
   data_set: &DataSet,
   path: &DataSetPath,
-  token_callback: &mut impl FnMut(&P10Token) -> Result<(), E>,
+  token_callback: &mut impl FnMut(P10Token) -> Result<(), E>,
 ) -> Result<(), E> {
   // Create filter transform that removes File Meta Information data elements
   // from the data set's token stream
@@ -553,20 +553,20 @@ pub fn data_set_to_tokens<E>(
 
   // Create a function that passes the token through the above two transforms
   // and then to the callback
-  let mut process_token = |token: &P10Token| -> Result<(), E> {
+  let mut process_token = |token: P10Token| -> Result<(), E> {
     // The following two unwraps are safe because the P10 transforms only error
     // on invalid token streams, which can't happen here
 
-    if !remove_fmi_transform.add_token(token).unwrap() {
+    if !remove_fmi_transform.add_token(&token).unwrap() {
       return Ok(());
     }
 
     let tokens = insert_specific_character_set_transform
-      .add_token(token)
+      .add_token(&token)
       .unwrap();
 
     for token in tokens {
-      token_callback(&token)?;
+      token_callback(token)?;
     }
 
     Ok(())
@@ -576,17 +576,17 @@ pub fn data_set_to_tokens<E>(
   let preamble_token = P10Token::FilePreambleAndDICMPrefix {
     preamble: Box::new([0; 128]),
   };
-  process_token(&preamble_token)?;
+  process_token(preamble_token)?;
   let fmi_token = P10Token::FileMetaInformation {
     data_set: data_set.file_meta_information(),
   };
-  process_token(&fmi_token)?;
+  process_token(fmi_token)?;
 
   // Write main data set
   p10_token::data_elements_to_tokens(data_set, path, &mut process_token)?;
 
   // Write end token
-  process_token(&P10Token::End)
+  process_token(P10Token::End)
 }
 
 /// Converts a data set to DICOM P10 bytes. The generated P10 bytes are returned
@@ -600,8 +600,8 @@ pub fn data_set_to_bytes(
 ) -> Result<(), P10Error> {
   let mut context = P10WriteContext::new(config);
 
-  let mut process_token = |token: &P10Token| -> Result<(), P10Error> {
-    context.write_token(token)?;
+  let mut process_token = |token: P10Token| -> Result<(), P10Error> {
+    context.write_token(&token)?;
 
     let p10_bytes = context.read_bytes();
     for bytes in p10_bytes {

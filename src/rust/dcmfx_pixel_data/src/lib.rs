@@ -141,8 +141,8 @@ impl DataSetPixelDataExtensions for DataSet {
     // emitted frames
     let mut pixel_data_frame_transform = P10PixelDataFrameTransform::new();
     let mut frames = vec![];
-    ds.to_p10_tokens(&mut |token| {
-      frames.extend_from_slice(&pixel_data_frame_transform.add_token(token)?);
+    ds.to_p10_token_stream(&mut |token| {
+      frames.extend_from_slice(&pixel_data_frame_transform.add_token(&token)?);
       Ok(())
     })?;
 
@@ -188,8 +188,8 @@ impl DataSetPixelDataExtensions for DataSet {
 
     let mut data_set_builder = DataSetBuilder::new();
 
-    self.to_p10_tokens(&mut |token| {
-      let tokens = transcode_transform.add_token(token)?;
+    self.to_p10_token_stream(&mut |token| {
+      let tokens = transcode_transform.add_token(&token)?;
 
       for token in tokens.iter() {
         data_set_builder

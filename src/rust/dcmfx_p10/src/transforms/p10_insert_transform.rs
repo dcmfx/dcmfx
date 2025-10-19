@@ -165,8 +165,8 @@ impl P10InsertTransform {
       data_element.0,
       &data_element.1,
       path,
-      &mut |token: &P10Token| {
-        output_tokens.push(token.clone());
+      &mut |token: P10Token| {
+        output_tokens.push(token);
         Ok(())
       },
     )
