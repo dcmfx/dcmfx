@@ -278,12 +278,15 @@ fn missing_voi_lut_to_png() {
 #[test]
 fn palette_color_to_png() {
   let dicom_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
-  let output_file = format!("{}.0000.png", dicom_file);
+  let (output_file, output_directory) =
+    prepare_outputs(dicom_file, ".0000.png");
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--output-directory")
+    .arg(output_directory)
     .arg("--overwrite")
     .arg("-f")
     .arg("png")
@@ -297,12 +300,15 @@ fn palette_color_to_png() {
 #[test]
 fn resize_using_lanczos3() {
   let dicom_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
-  let output_file = format!("{}.0000.png", dicom_file);
+  let (output_file, output_directory) =
+    prepare_outputs(dicom_file, ".0000.png");
 
   let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
   cmd
     .arg("get-pixel-data")
     .arg(dicom_file)
+    .arg("--output-directory")
+    .arg(output_directory)
     .arg("--overwrite")
     .arg("-f")
     .arg("png")
