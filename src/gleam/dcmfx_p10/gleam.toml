@@ -1,5 +1,5 @@
 name = "dcmfx_p10"
-version = "0.35.0"
+version = "0.35.1"
 description = "DCMfx Part 10 library"
 licences = ["AGPL-3.0-only"]
 gleam = ">= 1.12.0"
