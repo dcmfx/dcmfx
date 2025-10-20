@@ -1,10 +1,15 @@
 import { Deflate, Inflate, constants } from "./zlib/pako.esm.mjs";
 import { BitArray, Ok, Error } from "../../../prelude.mjs";
 import { List } from "../../gleam.mjs";
-import { Finish, Full, Sync, None } from "./zlib/flush_command.mjs";
 import {
-  Continue,
-  Finished,
+  FlushCommand$isFinish,
+  FlushCommand$isFull,
+  FlushCommand$isSync,
+  FlushCommand$isNone,
+} from "./zlib/flush_command.mjs";
+import {
+  InflateResult$Continue,
+  InflateResult$Finished,
 } from "./zlib/inflate_result.mjs";
 
 const Nil = undefined;
@@ -26,7 +31,7 @@ export function deflate_init(
   _method,
   window_bits,
   mem_level,
-  _strategy
+  _strategy,
 ) {
   stream.deflate = new Deflate({
     level,
@@ -51,19 +56,19 @@ export function inflate_init(stream, window_bits) {
 export function deflate(stream, data, flush) {
   let flush_mode = constants.Z_NO_FLUSH;
 
-  if (flush instanceof Finish) {
+  if (FlushCommand$isFinish(flush)) {
     flush_mode = constants.Z_FINISH;
-  } else if (flush instanceof Full) {
+  } else if (FlushCommand$isFull(flush)) {
     flush_mode = constants.Z_FULL_FLUSH;
-  } else if (flush instanceof None) {
+  } else if (FlushCommand$isNone(flush)) {
     flush_mode = constants.Z_NO_FLUSH;
-  } else if (flush instanceof Sync) {
+  } else if (FlushCommand$isSync(flush)) {
     flush_mode = constants.Z_SYNC_FLUSH;
   } else {
     throw Error(`Invalid zlib flush command: ${flush}`);
   }
 
-  let buffer = data.rawBuffer
+  let buffer = data.rawBuffer;
   if (data.bitOffset !== 0) {
     buffer = new Uint8Array(data.byteSize);
     for (let i = 0; i < data.byteSize; i++) {
@@ -74,7 +79,7 @@ export function deflate(stream, data, flush) {
   stream.deflate.push(buffer, flush_mode);
 
   const bitArrays = stream.deflate.chunks.map(
-    (u8Array) => new BitArray(u8Array)
+    (u8Array) => new BitArray(u8Array),
   );
 
   stream.deflate.chunks = [];
@@ -126,8 +131,8 @@ export function safe_inflate(stream, input_bytes) {
     stream.inflate.chunks.length === 0 &&
     stream.inflate.ended
   ) {
-    return new Ok(new Finished(bitArray));
+    return new Ok(InflateResult$Finished(bitArray));
   } else {
-    return new Ok(new Continue(bitArray));
+    return new Ok(InflateResult$Continue(bitArray));
   }
 }

@@ -12,7 +12,8 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
   - Resize/rotate/flip pixel data while transcoding
   - Allow fast cropping of JPEG pixel data when the crop is aligned to
     compression blocks
-  - Crop pixel data overlays as well, in addition to the pixel data
+  - Crop pixel data overlays when cropping pixel data
+  - Update `SequenceOfUltrasoundRegions` when cropping pixel data.
 
 - CLI:
 

@@ -130,7 +130,7 @@ fn to_list(
   case byte_count % item_size {
     0 -> {
       let item_count = byte_count / item_size
-      do_to_list(bytes, item_size, read_item, item_count - 1, item_count, [])
+      do_to_list(bytes, item_size, read_item, item_count - 1, [])
     }
 
     _ -> Error(Nil)
@@ -142,7 +142,6 @@ fn do_to_list(
   item_size: Int,
   read_item: fn(BitArray) -> Result(a, Nil),
   i: Int,
-  item_count: Int,
   acc: List(a),
 ) -> Result(List(a), Nil) {
   case i {
@@ -156,10 +155,7 @@ fn do_to_list(
 
       case item {
         Ok(item) ->
-          do_to_list(bytes, item_size, read_item, i - 1, item_count, [
-            item,
-            ..acc
-          ])
+          do_to_list(bytes, item_size, read_item, i - 1, [item, ..acc])
         Error(Nil) -> Error(Nil)
       }
     }
