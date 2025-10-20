@@ -312,7 +312,7 @@ impl P10PixelDataTranscodeTransform {
   /// tokens are then transformed as required, modifying the Image Pixel Module
   /// for the desired transcode, and the new set of initial tokens is returned.
   ///
-  /// After th above process has completed, the initial token buffer is removed
+  /// After the above process has completed, the initial token buffer is removed
   /// and this function passes through all future tokens unchanged.
   ///
   fn add_token_to_initial_token_buffer(
