@@ -1,4 +1,4 @@
-import { BitArray } from "../../../prelude.mjs";
+import { BitArray$BitArray } from "../../../prelude.mjs";
 
 export function swap_16_bit(bytes, _acc) {
   const length = Math.floor(bytes.bitSize / 16) * 2;
@@ -9,7 +9,7 @@ export function swap_16_bit(bytes, _acc) {
     buffer[i + 1] = bytes.byteAt(i);
   }
 
-  return new BitArray(buffer);
+  return BitArray$BitArray(buffer);
 }
 
 export function swap_32_bit(bytes, _acc) {
@@ -23,7 +23,7 @@ export function swap_32_bit(bytes, _acc) {
     buffer[i + 3] = bytes.byteAt(i);
   }
 
-  return new BitArray(buffer);
+  return BitArray$BitArray(buffer);
 }
 
 export function swap_64_bit(bytes, _acc) {
@@ -41,5 +41,5 @@ export function swap_64_bit(bytes, _acc) {
     buffer[i + 7] = bytes.byteAt(i);
   }
 
-  return new BitArray(buffer);
+  return BitArray$BitArray(buffer);
 }

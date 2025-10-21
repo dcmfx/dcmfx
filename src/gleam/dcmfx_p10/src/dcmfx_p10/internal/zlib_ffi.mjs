@@ -1,6 +1,10 @@
 import { Deflate, Inflate, constants } from "./zlib/pako.esm.mjs";
-import { BitArray, Ok, Error } from "../../../prelude.mjs";
-import { List } from "../../gleam.mjs";
+import {
+  BitArray$BitArray,
+  Result$Error,
+  Result$Ok,
+} from "../../../prelude.mjs";
+import { List$Empty, List$NonEmpty } from "../../gleam.mjs";
 import {
   FlushCommand$isFinish,
   FlushCommand$isFull,
@@ -78,13 +82,18 @@ export function deflate(stream, data, flush) {
 
   stream.deflate.push(buffer, flush_mode);
 
-  const bitArrays = stream.deflate.chunks.map(
-    (u8Array) => new BitArray(u8Array),
+  const bitArrays = stream.deflate.chunks.map((chunk) =>
+    BitArray$BitArray(chunk),
   );
 
   stream.deflate.chunks = [];
 
-  return List.fromArray(bitArrays);
+  let result = List$Empty();
+  for (let i = bitArrays.length - 1; i >= 0; --i) {
+    result = List$NonEmpty(bitArrays[i], result);
+  }
+
+  return result;
 }
 
 export function safe_inflate(stream, input_bytes) {
@@ -92,7 +101,7 @@ export function safe_inflate(stream, input_bytes) {
   // behavior of Erlang's zlib module.
   if (!stream.inflate.ended) {
     if (input_bytes.bitSize % 8 !== 0) {
-      return new Error(Nil);
+      return Result$Error(Nil);
     }
 
     if (input_bytes.byteSize > 0) {
@@ -104,7 +113,7 @@ export function safe_inflate(stream, input_bytes) {
 
       if (input_bytes.bitOffset === 0) {
         if (!stream.inflate.push(input_bytes.rawBuffer)) {
-          return new Error(Nil);
+          return Result$Error(Nil);
         }
       } else {
         const alignedArray = new Uint8Array();
@@ -113,26 +122,26 @@ export function safe_inflate(stream, input_bytes) {
         }
 
         if (!stream.inflate.push(alignedArray)) {
-          return new Error(Nil);
+          return Result$Error(Nil);
         }
       }
     }
 
     if (stream.inflate.err !== 0) {
-      return new Error(Nil);
+      return Result$Error(Nil);
     }
   }
 
   const chunk = stream.inflate.chunks.shift() ?? new Uint8Array();
-  const bitArray = new BitArray(chunk);
+  const bitArray = BitArray$BitArray(chunk);
 
   if (
     chunk.length === 0 &&
     stream.inflate.chunks.length === 0 &&
     stream.inflate.ended
   ) {
-    return new Ok(InflateResult$Finished(bitArray));
+    return Result$Ok(InflateResult$Finished(bitArray));
   } else {
-    return new Ok(InflateResult$Continue(bitArray));
+    return Result$Ok(InflateResult$Continue(bitArray));
   }
 }
