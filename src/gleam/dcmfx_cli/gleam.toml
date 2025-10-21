@@ -13,16 +13,16 @@ dcmfx_core = { path = "../dcmfx_core" }
 dcmfx_json = { path = "../dcmfx_json" }
 dcmfx_p10 = { path = "../dcmfx_p10" }
 dcmfx_pixel_data = { path = "../dcmfx_pixel_data" }
-file_streams = ">= 1.6.0 and < 2.0.0"
+file_streams = ">= 1.7.0 and < 2.0.0"
 filepath = ">= 1.1.2 and < 2.0.0"
-gleam_stdlib = ">= 0.63.1 and < 2.0.0"
+gleam_stdlib = ">= 0.65.0 and < 2.0.0"
 glint = ">= 1.2.1 and < 2.0.0"
 simplifile = ">= 2.3.0 and < 3.0.0"
 snag = ">= 1.1.0 and < 2.0.0"
 term_size = ">= 1.0.1 and < 2.0.0"
 
 [dev-dependencies]
-gleeunit = ">= 1.6.0 and < 2.0.0"
+gleeunit = ">= 1.6.1 and < 2.0.0"
 
 [javascript]
 deno = { allow_read = true, allow_write = true }

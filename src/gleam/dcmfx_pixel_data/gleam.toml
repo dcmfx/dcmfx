@@ -14,11 +14,11 @@ path = "src/gleam/dcmfx_pixel_data"
 bigi = ">= 4.1.0 and < 5.0.0"
 dcmfx_core = { path = "../dcmfx_core" }
 dcmfx_p10 = { path = "../dcmfx_p10" }
-gleam_stdlib = ">= 0.63.1 and < 2.0.0"
+gleam_stdlib = ">= 0.65.0 and < 2.0.0"
 gleam_deque = ">= 1.0.0 and < 2.0.0"
 
 [dev-dependencies]
-gleeunit = ">= 1.6.0 and < 2.0.0"
+gleeunit = ">= 1.6.1 and < 2.0.0"
 
 [javascript]
 typescript_declarations = true

@@ -4,7 +4,7 @@ name = "dicom_read_pixel_data"
 dcmfx_core = { path = "../../../src/gleam/dcmfx_core" }
 dcmfx_p10 = { path = "../../../src/gleam/dcmfx_p10" }
 dcmfx_pixel_data = { path = "../../../src/gleam/dcmfx_pixel_data" }
-gleam_stdlib = ">= 0.63.1 and < 2.0.0"
+gleam_stdlib = ">= 0.65.0 and < 2.0.0"
 
 [javascript]
 deno = { allow_read = true }
