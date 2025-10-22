@@ -1,5 +1,5 @@
 name = "dcmfx_anonymize"
-version = "0.35.1"
+version = "0.36.0"
 description = "DCMfx anonymize library"
 licences = ["AGPL-3.0-only"]
 gleam = ">= 1.13.0"
