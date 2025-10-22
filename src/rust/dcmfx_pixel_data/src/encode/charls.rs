@@ -15,7 +15,7 @@ use crate::{
 ///
 pub fn encode_image_pixel_module(
   mut image_pixel_module: ImagePixelModule,
-  is_near_lossless: bool,
+  lossless: bool,
 ) -> Result<ImagePixelModule, ()> {
   match image_pixel_module.photometric_interpretation() {
     PhotometricInterpretation::Monochrome1 { .. }
@@ -25,7 +25,7 @@ pub fn encode_image_pixel_module(
 
     // PALETTE_COLOR is only permitted for lossless JPEG-LS encodes
     PhotometricInterpretation::PaletteColor { .. } => {
-      if is_near_lossless {
+      if !lossless {
         return Err(());
       }
     }
@@ -43,7 +43,7 @@ pub fn encode_image_pixel_module(
 pub fn encode_monochrome(
   image: &MonochromeImage,
   image_pixel_module: &ImagePixelModule,
-  is_near_lossless: bool,
+  quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let width = image.width();
   let height = image.height();
@@ -62,7 +62,9 @@ pub fn encode_monochrome(
         pixel_representation: PixelRepresentation::Unsigned,
       },
       BitsAllocated::Eight,
-    ) => encode(data, width, height, image_pixel_module, is_near_lossless),
+    ) if image_pixel_module.bits_stored() >= 2 => {
+      encode(data, width, height, image_pixel_module, quality)
+    }
 
     (
       MonochromeImageData::U16(data),
@@ -73,12 +75,12 @@ pub fn encode_monochrome(
         pixel_representation: PixelRepresentation::Unsigned,
       },
       BitsAllocated::Sixteen,
-    ) => encode(
+    ) if image_pixel_module.bits_stored() >= 2 => encode(
       bytemuck::cast_slice(data),
       width,
       height,
       image_pixel_module,
-      is_near_lossless,
+      quality,
     ),
 
     _ => Err(PixelDataEncodeError::NotSupported {
@@ -94,7 +96,7 @@ pub fn encode_monochrome(
 pub fn encode_color(
   image: &ColorImage,
   image_pixel_module: &ImagePixelModule,
-  is_near_lossless: bool,
+  quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let width = image.width();
   let height = image.height();
@@ -102,7 +104,7 @@ pub fn encode_color(
   match (
     image.data(),
     image_pixel_module.photometric_interpretation(),
-    is_near_lossless,
+    quality,
   ) {
     (
       ColorImageData::U8 {
@@ -123,8 +125,10 @@ pub fn encode_color(
     | (
       ColorImageData::PaletteU8 { data, .. },
       PhotometricInterpretation::PaletteColor { .. },
-      false,
-    ) => encode(data, width, height, image_pixel_module, is_near_lossless),
+      None,
+    ) if image_pixel_module.bits_stored() >= 2 => {
+      encode(data, width, height, image_pixel_module, quality)
+    }
 
     (
       ColorImageData::U16 {
@@ -145,13 +149,13 @@ pub fn encode_color(
     | (
       ColorImageData::PaletteU16 { data, .. },
       PhotometricInterpretation::PaletteColor { .. },
-      false,
-    ) => encode(
+      None,
+    ) if image_pixel_module.bits_stored() >= 2 => encode(
       bytemuck::cast_slice(data),
       width,
       height,
       image_pixel_module,
-      is_near_lossless,
+      quality,
     ),
 
     _ => Err(PixelDataEncodeError::NotSupported {
@@ -167,11 +171,25 @@ fn encode(
   width: u16,
   height: u16,
   image_pixel_module: &ImagePixelModule,
-  is_near_lossless: bool,
+  quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
   let mut output_buffer = vec![];
 
   let mut error_buffer = [0 as core::ffi::c_char; 256];
+
+  let near_lossless: u8 = if let Some(quality) = quality {
+    // Determine the maximum near_lossless value
+    let max_near_lossless =
+      2u16.pow(image_pixel_module.bits_stored() as u32 - 1) - 1;
+
+    // Convert input u8 quality in range 1-100 to normalized value
+    let quality = 1.0 - (quality - 1) as f32 / 99.0;
+
+    // Map into the lossy range for CharLS compressor
+    (1.0 + (max_near_lossless - 1) as f32 * quality) as u8
+  } else {
+    0
+  };
 
   let bytes_written = unsafe {
     ffi::charls_encode(
@@ -180,7 +198,7 @@ fn encode(
       height.into(),
       u8::from(image_pixel_module.samples_per_pixel()).into(),
       u8::from(image_pixel_module.bits_allocated()).into(),
-      is_near_lossless.into(),
+      near_lossless.into(),
       output_buffer_allocate,
       &mut output_buffer as *mut Vec<u8> as *mut core::ffi::c_void,
       error_buffer.as_mut_ptr(),
@@ -227,7 +245,7 @@ mod ffi {
       height: usize,
       samples_per_pixel: usize,
       bits_allocated: usize,
-      is_near_lossless: usize,
+      near_lossless: usize,
       output_buffer_allocate: extern "C" fn(
         usize,
         *mut core::ffi::c_void,

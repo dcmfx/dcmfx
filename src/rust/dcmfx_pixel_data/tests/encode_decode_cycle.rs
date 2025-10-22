@@ -98,6 +98,7 @@ fn test_jpeg_ls_lossless_encode_decode_cycle() {
         !m.photometric_interpretation().is_ybr_full_422()
           && (m.bits_allocated() == BitsAllocated::Eight
             || m.bits_allocated() == BitsAllocated::Sixteen)
+          && m.bits_stored() >= 2
           && m.pixel_representation().is_unsigned()
       })
       .collect(),
@@ -119,6 +120,7 @@ fn test_jpeg_ls_near_lossless_encode_decode_cycle() {
           && !m.photometric_interpretation().is_ybr_full_422()
           && (m.bits_allocated() == BitsAllocated::Eight
             || m.bits_allocated() == BitsAllocated::Sixteen)
+          && m.bits_stored() >= 2
           && m.pixel_representation().is_unsigned()
       })
       .collect(),

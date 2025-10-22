@@ -1,7 +1,6 @@
 ---
 source: dcmfx_cli/tests/modify.rs
 expression: get_stdout(assert)
-snapshot_kind: text
 ---
 (0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
 (0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
@@ -181,5 +180,5 @@ snapshot_kind: text
 (0054,0400) SH Image ID                             [    12 bytes] "WHOLE BODY …
 (7FE0,0010) OB Pixel Data
   (FFFE,E000) Item                                    [     0 bytes] []
-  (FFFE,E000) Item                                    [ 26608 bytes] [FF D8 FF …
+  (FFFE,E000) Item                                    [  8312 bytes] [FF D8 FF …
 (FFFE,E0DD) Sequence Delimitation Item

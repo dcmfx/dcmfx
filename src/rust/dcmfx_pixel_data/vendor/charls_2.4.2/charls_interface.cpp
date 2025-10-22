@@ -87,7 +87,7 @@ extern "C" size_t charls_decode(const void *input_data, size_t input_data_size,
 
 extern "C" size_t charls_encode(
     const void *input_data, size_t width, size_t height,
-    size_t samples_per_pixel, size_t bits_allocated, size_t is_near_lossless,
+    size_t samples_per_pixel, size_t bits_allocated, size_t near_lossless,
     void *(*output_buffer_allocate)(size_t len, void *ctx),
     void *output_buffer_context, char *error_buffer, size_t error_buffer_size) {
   charls_jpegls_encoder *encoder = nullptr;
@@ -99,8 +99,8 @@ extern "C" size_t charls_encode(
       throw std::runtime_error("charls_jpegls_encoder_create() failed");
     }
 
-    // Enable near-lossless encoding if requested
-    if (charls_jpegls_encoder_set_near_lossless(encoder, is_near_lossless) !=
+    // Set encoding quality
+    if (charls_jpegls_encoder_set_near_lossless(encoder, near_lossless) !=
         jpegls_errc::success) {
       throw std::runtime_error(
           "charls_jpegls_encoder_set_near_lossless() failed");

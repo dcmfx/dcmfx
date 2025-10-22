@@ -162,6 +162,7 @@ pub struct ModifyArgs {
       \n\
       - JPEG Baseline 8-bit\n\
       - JPEG Extended 12-bit\n\
+      - JPEG-LS Lossy (Near-Lossless)\n\
       - JPEG 2000 (Lossy)\n\
       - High-Throughput JPEG 2000 (Lossy)\n\
       - JPEG XL\n\

@@ -56,6 +56,7 @@ impl PixelDataEncodeConfig {
   ///
   /// - JPEG Baseline 8-bit
   /// - JPEG Extended 12-bit
+  /// - JPEG-LS Lossy (Near-Lossless)
   /// - JPEG 2000
   /// - High-Throughput JPEG 2000
   /// - JPEG XL
@@ -274,12 +275,12 @@ pub fn encode_image_pixel_module(
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     &JPEG_LS_LOSSLESS => {
-      charls::encode_image_pixel_module(image_pixel_module.clone(), false)
+      charls::encode_image_pixel_module(image_pixel_module.clone(), true)
     }
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-      charls::encode_image_pixel_module(image_pixel_module.clone(), true)
+      charls::encode_image_pixel_module(image_pixel_module.clone(), false)
     }
 
     &JPEG_2000_LOSSLESS_ONLY => {
@@ -364,15 +365,17 @@ pub fn encode_monochrome(
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     &JPEG_LS_LOSSLESS => {
-      charls::encode_monochrome(image, image_pixel_module, false)
+      charls::encode_monochrome(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-      charls::encode_monochrome(image, image_pixel_module, true)
-        .map(PixelDataFrame::new_from_bytes)
-    }
+    &JPEG_LS_LOSSY_NEAR_LOSSLESS => charls::encode_monochrome(
+      image,
+      image_pixel_module,
+      Some(encode_config.quality()),
+    )
+    .map(PixelDataFrame::new_from_bytes),
 
     #[cfg(feature = "native")]
     &JPEG_2000_LOSSLESS_ONLY => {
@@ -472,14 +475,16 @@ pub fn encode_color(
     }
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    &JPEG_LS_LOSSLESS => charls::encode_color(image, image_pixel_module, false)
+    &JPEG_LS_LOSSLESS => charls::encode_color(image, image_pixel_module, None)
       .map(PixelDataFrame::new_from_bytes),
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
-      charls::encode_color(image, image_pixel_module, true)
-        .map(PixelDataFrame::new_from_bytes)
-    }
+    &JPEG_LS_LOSSY_NEAR_LOSSLESS => charls::encode_color(
+      image,
+      image_pixel_module,
+      Some(encode_config.quality()),
+    )
+    .map(PixelDataFrame::new_from_bytes),
 
     #[cfg(feature = "native")]
     &JPEG_2000_LOSSLESS_ONLY => {
