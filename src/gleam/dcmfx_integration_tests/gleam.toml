@@ -15,3 +15,5 @@ file_streams = ">= 1.7.0 and < 2.0.0"
 
 [javascript]
 deno = { allow_read = true, allow_write = true }
+
+[dev-dependencies]

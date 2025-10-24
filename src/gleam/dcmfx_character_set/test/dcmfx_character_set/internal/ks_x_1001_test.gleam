@@ -1,7 +1,6 @@
 import dcmfx_character_set/internal/ks_x_1001
 import gleam/list
 import gleam/string
-import gleeunit/should
 
 pub fn decode_next_codepoint_test() {
   [
@@ -22,10 +21,8 @@ pub fn decode_next_codepoint_test() {
       bytes
       |> ks_x_1001.decode_next_codepoint
 
-    should.equal(r.0, expected_codepoint)
+    assert r.0 == expected_codepoint
   })
 
-  <<>>
-  |> ks_x_1001.decode_next_codepoint
-  |> should.equal(Error(Nil))
+  assert ks_x_1001.decode_next_codepoint(<<>>) == Error(Nil)
 }

@@ -1,7 +1,6 @@
 import dcmfx_character_set/internal/utf8
 import gleam/list
 import gleam/string
-import gleeunit/should
 
 pub fn decode_next_codepoint_test() {
   [
@@ -19,12 +18,8 @@ pub fn decode_next_codepoint_test() {
 
     let assert Ok(expected_codepoint) = string.utf_codepoint(expected_codepoint)
 
-    bytes
-    |> utf8.decode_next_codepoint
-    |> should.equal(Ok(#(expected_codepoint, <<>>)))
+    assert utf8.decode_next_codepoint(bytes) == Ok(#(expected_codepoint, <<>>))
   })
 
-  <<>>
-  |> utf8.decode_next_codepoint
-  |> should.equal(Error(Nil))
+  assert utf8.decode_next_codepoint(<<>>) == Error(Nil)
 }

@@ -3,18 +3,19 @@ import dcmfx_core/value_representation
 import dcmfx_p10/internal/data_element_header.{DataElementHeader}
 import dcmfx_p10/internal/value_length
 import gleam/option.{None, Some}
-import gleeunit/should
 
 pub fn to_string_test() {
-  DataElementHeader(
-    dictionary.patient_age.tag,
-    Some(value_representation.AgeString),
-    value_length.zero,
-  )
-  |> data_element_header.to_string
-  |> should.equal("(0010,1010) AS Patient's Age")
+  assert data_element_header.to_string(DataElementHeader(
+      dictionary.patient_age.tag,
+      Some(value_representation.AgeString),
+      value_length.zero,
+    ))
+    == "(0010,1010) AS Patient's Age"
 
-  DataElementHeader(dictionary.item.tag, None, value_length.zero)
-  |> data_element_header.to_string
-  |> should.equal("(FFFE,E000)    Item")
+  assert data_element_header.to_string(DataElementHeader(
+      dictionary.item.tag,
+      None,
+      value_length.zero,
+    ))
+    == "(FFFE,E000)    Item"
 }

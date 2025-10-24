@@ -7,7 +7,6 @@ import dcmfx_p10/p10_token
 import gleam/bit_array
 import gleam/list
 import gleam/option.{None}
-import gleeunit/should
 
 pub fn read_file_meta_information_test() {
   let preamble_bytes = list.repeat(<<0x03>>, 128) |> bit_array.concat
@@ -43,34 +42,32 @@ pub fn read_file_meta_information_test() {
 
   let assert Ok(#(tokens, context)) = p10_read.read_tokens(context)
 
-  tokens
-  |> should.equal([p10_token.FilePreambleAndDICMPrefix(preamble_bytes)])
+  assert tokens == [p10_token.FilePreambleAndDICMPrefix(preamble_bytes)]
 
   let assert Ok(#(tokens, context)) = p10_read.read_tokens(context)
 
-  tokens
-  |> should.equal([
-    p10_token.FileMetaInformation(
-      data_set.new()
-      |> data_set.insert(
-        dictionary.file_meta_information_version.tag,
-        data_element_value.new_binary_unchecked(
-          value_representation.OtherByteString,
-          <<0, 1>>,
-        ),
-      )
-      |> data_set.insert(
-        dictionary.media_storage_sop_class_uid.tag,
-        data_element_value.new_binary_unchecked(
-          value_representation.UniqueIdentifier,
-          <<"1.23">>,
+  assert tokens
+    == [
+      p10_token.FileMetaInformation(
+        data_set.new()
+        |> data_set.insert(
+          dictionary.file_meta_information_version.tag,
+          data_element_value.new_binary_unchecked(
+            value_representation.OtherByteString,
+            <<0, 1>>,
+          ),
+        )
+        |> data_set.insert(
+          dictionary.media_storage_sop_class_uid.tag,
+          data_element_value.new_binary_unchecked(
+            value_representation.UniqueIdentifier,
+            <<"1.23">>,
+          ),
         ),
       ),
-    ),
-  ])
+    ]
 
   let assert Ok(#(tokens, _)) = p10_read.read_tokens(context)
 
-  tokens
-  |> should.equal([p10_token.End])
+  assert tokens == [p10_token.End]
 }

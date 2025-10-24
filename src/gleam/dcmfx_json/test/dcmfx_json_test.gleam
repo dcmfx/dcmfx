@@ -11,7 +11,6 @@ import dcmfx_json/json_config.{DicomJsonConfig}
 import gleam/list
 import gleam/option.{None, Some}
 import gleeunit
-import gleeunit/should
 import ieee_float
 
 pub fn main() {
@@ -166,9 +165,7 @@ pub fn data_set_to_json_test() {
     let config =
       DicomJsonConfig(store_encapsulated_pixel_data: True, pretty_print: False)
 
-    ds
-    |> dcmfx_json.data_set_to_json(config)
-    |> should.equal(Ok(expected_json))
+    assert dcmfx_json.data_set_to_json(ds, config) == Ok(expected_json)
   })
 }
 
@@ -179,8 +176,6 @@ pub fn json_to_data_set_test() {
 
     let ds = data_set.from_list(tags)
 
-    expected_json
-    |> dcmfx_json.json_to_data_set
-    |> should.equal(Ok(ds))
+    assert dcmfx_json.json_to_data_set(expected_json) == Ok(ds)
   })
 }

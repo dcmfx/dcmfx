@@ -1,7 +1,6 @@
 import dcmfx_character_set/internal/gb_18030
 import gleam/list
 import gleam/string
-import gleeunit/should
 
 pub fn decode_next_codepoint_test() {
   [
@@ -230,10 +229,8 @@ pub fn decode_next_codepoint_test() {
 
     let assert Ok(expected_codepoint) = string.utf_codepoint(expected_codepoint)
 
-    should.equal(r.0, expected_codepoint)
+    assert r.0 == expected_codepoint
   })
 
-  <<>>
-  |> gb_18030.decode_next_codepoint
-  |> should.equal(Error(Nil))
+  assert gb_18030.decode_next_codepoint(<<>>) == Error(Nil)
 }

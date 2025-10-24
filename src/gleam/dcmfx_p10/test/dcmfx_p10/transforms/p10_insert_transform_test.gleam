@@ -7,7 +7,6 @@ import dcmfx_p10/p10_token
 import dcmfx_p10/transforms/p10_insert_transform
 import gleam/bit_array
 import gleam/list
-import gleeunit/should
 
 pub fn add_tokens_test() {
   let tx =
@@ -44,9 +43,8 @@ pub fn add_tokens_test() {
       #(list.flatten([final_tokens, new_token]), tx)
     })
 
-  final_tokens
-  |> should.equal(
-    list.flatten([
+  assert final_tokens
+    == list.flatten([
       tokens_for_tag(DataElementTag(0, 0), "00"),
       tokens_for_tag(DataElementTag(1, 0), "01"),
       tokens_for_tag(DataElementTag(2, 0), "12"),
@@ -56,8 +54,7 @@ pub fn add_tokens_test() {
       tokens_for_tag(DataElementTag(6, 0), "06"),
       tokens_for_tag(DataElementTag(7, 0), "07"),
       [p10_token.End],
-    ]),
-  )
+    ])
 }
 
 fn tokens_for_tag(tag: DataElementTag, value: String) {

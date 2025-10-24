@@ -1,7 +1,6 @@
 import dcmfx_core/value_representation.{LengthRequirements}
 import gleam/list
 import gleam/option.{None, Some}
-import gleeunit/should
 
 const all_vrs = [
   #(value_representation.AgeString, "AS", "AgeString"),
@@ -49,12 +48,10 @@ pub fn from_bytes_test() {
   |> list.each(fn(x) {
     let #(vr, s, _) = x
 
-    value_representation.from_bytes(<<s:utf8>>)
-    |> should.equal(Ok(vr))
+    assert value_representation.from_bytes(<<s:utf8>>) == Ok(vr)
   })
 
-  value_representation.from_bytes(<<"XY">>)
-  |> should.equal(Error(Nil))
+  assert value_representation.from_bytes(<<"XY">>) == Error(Nil)
 }
 
 pub fn to_string_test() {
@@ -62,8 +59,7 @@ pub fn to_string_test() {
   |> list.each(fn(x) {
     let #(vr, s, _) = x
 
-    value_representation.to_string(vr)
-    |> should.equal(s)
+    assert value_representation.to_string(vr) == s
   })
 }
 
@@ -72,8 +68,7 @@ pub fn name_test() {
   |> list.each(fn(x) {
     let #(vr, _, name) = x
 
-    value_representation.name(vr)
-    |> should.equal(name)
+    assert value_representation.name(vr) == name
   })
 }
 
@@ -82,26 +77,26 @@ pub fn is_string_test() {
   |> list.each(fn(x) {
     let #(vr, _, _) = x
 
-    value_representation.is_string(vr)
-    |> should.equal(
-      vr == value_representation.AgeString
-      || vr == value_representation.ApplicationEntity
-      || vr == value_representation.CodeString
-      || vr == value_representation.Date
-      || vr == value_representation.DateTime
-      || vr == value_representation.DecimalString
-      || vr == value_representation.IntegerString
-      || vr == value_representation.LongString
-      || vr == value_representation.LongText
-      || vr == value_representation.PersonName
-      || vr == value_representation.ShortString
-      || vr == value_representation.ShortText
-      || vr == value_representation.Time
-      || vr == value_representation.UniqueIdentifier
-      || vr == value_representation.UniversalResourceIdentifier
-      || vr == value_representation.UnlimitedCharacters
-      || vr == value_representation.UnlimitedText,
-    )
+    assert value_representation.is_string(vr)
+      == {
+        vr == value_representation.AgeString
+        || vr == value_representation.ApplicationEntity
+        || vr == value_representation.CodeString
+        || vr == value_representation.Date
+        || vr == value_representation.DateTime
+        || vr == value_representation.DecimalString
+        || vr == value_representation.IntegerString
+        || vr == value_representation.LongString
+        || vr == value_representation.LongText
+        || vr == value_representation.PersonName
+        || vr == value_representation.ShortString
+        || vr == value_representation.ShortText
+        || vr == value_representation.Time
+        || vr == value_representation.UniqueIdentifier
+        || vr == value_representation.UniversalResourceIdentifier
+        || vr == value_representation.UnlimitedCharacters
+        || vr == value_representation.UnlimitedText
+      }
   })
 }
 
@@ -110,67 +105,95 @@ pub fn is_encoded_string_test() {
   |> list.each(fn(x) {
     let #(vr, _, _) = x
 
-    value_representation.is_encoded_string(vr)
-    |> should.equal(
-      vr == value_representation.LongString
-      || vr == value_representation.LongText
-      || vr == value_representation.PersonName
-      || vr == value_representation.ShortString
-      || vr == value_representation.ShortText
-      || vr == value_representation.UnlimitedCharacters
-      || vr == value_representation.UnlimitedText,
-    )
+    assert value_representation.is_encoded_string(vr)
+      == {
+        vr == value_representation.LongString
+        || vr == value_representation.LongText
+        || vr == value_representation.PersonName
+        || vr == value_representation.ShortString
+        || vr == value_representation.ShortText
+        || vr == value_representation.UnlimitedCharacters
+        || vr == value_representation.UnlimitedText
+      }
   })
 }
 
 pub fn pad_bytes_to_even_length_test() {
-  value_representation.LongText
-  |> value_representation.pad_bytes_to_even_length(<<>>)
-  |> should.equal(<<>>)
+  assert value_representation.pad_bytes_to_even_length(
+      value_representation.LongText,
+      <<>>,
+    )
+    == <<>>
 
-  value_representation.LongText
-  |> value_representation.pad_bytes_to_even_length(<<0x41>>)
-  |> should.equal(<<0x41, 0x20>>)
+  assert value_representation.pad_bytes_to_even_length(
+      value_representation.LongText,
+      <<0x41>>,
+    )
+    == <<0x41, 0x20>>
 
-  value_representation.UniqueIdentifier
-  |> value_representation.pad_bytes_to_even_length(<<0x41>>)
-  |> should.equal(<<0x41, 0x00>>)
+  assert value_representation.pad_bytes_to_even_length(
+      value_representation.UniqueIdentifier,
+      <<0x41>>,
+    )
+    == <<0x41, 0x00>>
 
-  value_representation.LongText
-  |> value_representation.pad_bytes_to_even_length(<<0x41, 0x42>>)
-  |> should.equal(<<0x41, 0x42>>)
+  assert value_representation.pad_bytes_to_even_length(
+      value_representation.LongText,
+      <<0x41, 0x42>>,
+    )
+    == <<0x41, 0x42>>
 }
 
 pub fn length_requirements_test() {
-  value_representation.length_requirements(value_representation.AgeString)
-  |> should.equal(LengthRequirements(4, None, None))
+  assert value_representation.length_requirements(
+      value_representation.AgeString,
+    )
+    == LengthRequirements(4, None, None)
 
-  value_representation.length_requirements(value_representation.AttributeTag)
-  |> should.equal(LengthRequirements(0xFFFC, Some(4), None))
+  assert value_representation.length_requirements(
+      value_representation.AttributeTag,
+    )
+    == LengthRequirements(0xFFFC, Some(4), None)
 
-  value_representation.length_requirements(value_representation.PersonName)
-  |> should.equal(LengthRequirements(0xFFFE, None, Some(324)))
+  assert value_representation.length_requirements(
+      value_representation.PersonName,
+    )
+    == LengthRequirements(0xFFFE, None, Some(324))
 
-  value_representation.length_requirements(value_representation.Sequence)
-  |> should.equal(LengthRequirements(0, None, None))
+  assert value_representation.length_requirements(value_representation.Sequence)
+    == LengthRequirements(0, None, None)
 }
 
 pub fn swap_endianness_test() {
-  value_representation.SignedShort
-  |> value_representation.swap_endianness(<<0, 1, 2, 3>>)
-  |> should.equal(<<1, 0, 3, 2>>)
+  assert value_representation.swap_endianness(value_representation.SignedShort, <<
+      0,
+      1,
+      2,
+      3,
+    >>)
+    == <<1, 0, 3, 2>>
 
-  value_representation.SignedLong
-  |> value_representation.swap_endianness(<<0, 1, 2, 3, 4, 5, 6, 7>>)
-  |> should.equal(<<3, 2, 1, 0, 7, 6, 5, 4>>)
+  assert value_representation.swap_endianness(value_representation.SignedLong, <<
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+    >>)
+    == <<3, 2, 1, 0, 7, 6, 5, 4>>
 
-  value_representation.SignedVeryLong
-  |> value_representation.swap_endianness(<<
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-  >>)
-  |> should.equal(<<7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8>>)
+  assert value_representation.swap_endianness(
+      value_representation.SignedVeryLong,
+      <<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>>,
+    )
+    == <<7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8>>
 
-  value_representation.OtherByteString
-  |> value_representation.swap_endianness(<<0, 1, 2, 3>>)
-  |> should.equal(<<0, 1, 2, 3>>)
+  assert value_representation.swap_endianness(
+      value_representation.OtherByteString,
+      <<0, 1, 2, 3>>,
+    )
+    == <<0, 1, 2, 3>>
 }

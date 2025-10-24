@@ -4,7 +4,6 @@ import dcmfx_core/data_error
 import dcmfx_core/data_set
 import dcmfx_core/data_set_path
 import dcmfx_core/value_representation
-import gleeunit/should
 
 const tag_1 = DataElementTag(1, 2)
 
@@ -38,11 +37,8 @@ pub fn has_test() {
       #(tag_3, code_string_value()),
     ])
 
-  data_set.has(ds, DataElementTag(3, 4))
-  |> should.equal(True)
-
-  data_set.has(ds, DataElementTag(3, 6))
-  |> should.equal(False)
+  assert data_set.has(ds, DataElementTag(3, 4))
+  assert !data_set.has(ds, DataElementTag(3, 6))
 }
 
 pub fn get_test() {
@@ -52,14 +48,13 @@ pub fn get_test() {
       #(tag_2, long_string_value()),
     ])
 
-  data_set.get_value(ds, tag_2)
-  |> should.equal(Ok(long_string_value()))
+  assert data_set.get_value(ds, tag_2) == Ok(long_string_value())
 
-  data_set.get_value(ds, tag_3)
-  |> should.equal(Error(
-    data_error.new_tag_not_present()
-    |> data_error.with_path(data_set_path.new_with_data_element(tag_3)),
-  ))
+  assert data_set.get_value(ds, tag_3)
+    == Error(
+      data_error.new_tag_not_present()
+      |> data_error.with_path(data_set_path.new_with_data_element(tag_3)),
+    )
 }
 
 pub fn tags_test() {
@@ -69,8 +64,7 @@ pub fn tags_test() {
       #(tag_1, person_name_value()),
     ])
 
-  data_set.tags(ds)
-  |> should.equal([tag_1, tag_2])
+  assert data_set.tags(ds) == [tag_1, tag_2]
 }
 
 pub fn fold_test() {
@@ -80,11 +74,11 @@ pub fn fold_test() {
       #(tag_2, long_string_value()),
     ])
 
-  data_set.fold(ds, "", fn(a, tag, _value) {
-    let assert Ok(s) = data_set.get_string(ds, tag)
-    a <> s
-  })
-  |> should.equal("123123")
+  assert data_set.fold(ds, "", fn(a, tag, _value) {
+      let assert Ok(s) = data_set.get_string(ds, tag)
+      a <> s
+    })
+    == "123123"
 }
 
 pub fn partition_test() {
@@ -95,14 +89,14 @@ pub fn partition_test() {
       #(tag_3, long_string_value()),
     ])
 
-  data_set.partition(ds, fn(tag) {
-    data_element_tag.to_int(tag) < data_element_tag.to_int(tag_3)
-  })
-  |> should.equal(#(
-    data_set.from_list([
-      #(tag_1, long_string_value()),
-      #(tag_2, long_string_value()),
-    ]),
-    data_set.from_list([#(tag_3, long_string_value())]),
-  ))
+  assert data_set.partition(ds, fn(tag) {
+      data_element_tag.to_int(tag) < data_element_tag.to_int(tag_3)
+    })
+    == #(
+      data_set.from_list([
+        #(tag_1, long_string_value()),
+        #(tag_2, long_string_value()),
+      ]),
+      data_set.from_list([#(tag_3, long_string_value())]),
+    )
 }

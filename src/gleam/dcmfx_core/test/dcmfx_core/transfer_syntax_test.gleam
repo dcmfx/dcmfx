@@ -1,6 +1,5 @@
 import dcmfx_core/transfer_syntax
 import gleam/list
-import gleeunit/should
 
 const transfer_syntax_uids = [
   "1.2.840.10008.1.2", "1.2.840.10008.1.2.1", "1.2.840.10008.1.2.1.98",
@@ -25,20 +24,15 @@ const transfer_syntax_uids = [
 ]
 
 pub fn all_test() {
-  transfer_syntax.all
-  |> list.map(fn(ts) { ts.uid })
-  |> should.equal(transfer_syntax_uids)
+  assert list.map(transfer_syntax.all, fn(ts) { ts.uid })
+    == transfer_syntax_uids
 }
 
 pub fn from_uid_test() {
   transfer_syntax_uids
   |> list.each(fn(uid) {
-    uid
-    |> transfer_syntax.from_uid
-    |> should.be_ok
+    let assert Ok(_) = transfer_syntax.from_uid(uid)
   })
 
-  "1.2.3.4"
-  |> transfer_syntax.from_uid
-  |> should.be_error
+  let assert Error(_) = transfer_syntax.from_uid("1.2.3.4")
 }
