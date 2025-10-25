@@ -266,7 +266,7 @@ pub struct ModifyArgs {
     long,
     help_heading = "Transcoding",
     help = "When transcoding pixel data using --transfer-syntax, specifies a \
-      to apply to the pixel data. The crop is specified as \
+      crop to apply to the pixel data. The crop is specified as \
       'x,y[,(width_or_right)[,(height_or_bottom)]]'. The last two values are \
       optional, and if positive they specify the width and height of the crop \
       rectangle, however if they are zero or negative then they specify an \

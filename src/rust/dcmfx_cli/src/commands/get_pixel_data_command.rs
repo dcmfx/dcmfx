@@ -11,7 +11,9 @@ use dcmfx::pixel_data::{
     CineModule, MultiFrameModule, OverlayPlaneModule,
     voi_lut_module::{VoiLutFunction, VoiWindow},
   },
-  transforms::{P10PixelDataFrameTransform, P10PixelDataFrameTransformError},
+  transforms::{
+    CropRect, P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
+  },
 };
 
 use crate::{
@@ -88,8 +90,24 @@ pub struct GetPixelDataArgs {
   #[arg(
     long,
     help_heading = "Output",
+    help = "When the output format is not 'raw', specifies a crop to \
+      apply to the frames of image data. The crop is specified as \
+      'x,y[,(width_or_right)[,(height_or_bottom)]]'. The last two values are \
+      optional, and if positive they specify the width and height of the crop \
+      rectangle, however if they are zero or negative then they specify an \
+      offset from the right and bottom edges of the pixel data respectively.\n\
+      \n\
+      The order of image data operations is: crop, transform, resize."
+  )]
+  crop: Option<CropRect>,
+
+  #[arg(
+    long,
+    help_heading = "Output",
     help = "When the output format is not 'raw', specifies a transform to \
-      apply to the frames of image data."
+      apply to the frames of image data.\n\
+      \n\
+      The order of image data operations is: crop, transform, resize."
   )]
   transform: Option<TransformArg>,
 
@@ -103,8 +121,7 @@ pub struct GetPixelDataArgs {
       output images and videos. If either width or height is zero then it is \
       calculated automatically such that the input aspect ratio is preserved.\n\
       \n\
-      Resizes are performed after the transform, if one is specified.
-      "
+      The order of image data operations is: crop, transform, resize."
   )]
   resize: Option<Vec<u32>>,
 
@@ -659,6 +676,19 @@ fn frame_to_final_image(
     overlay_plane_module
       .render_to_rgb_image(&mut image, frame.index().unwrap())
       .unwrap();
+  }
+
+  // Apply the image crop, if specified
+  if let Some(crop) = args.crop {
+    let (cropped_height, cropped_width) =
+      crop.apply(image.height() as u16, image.width() as u16);
+
+    image = image.crop(
+      crop.left.into(),
+      crop.top.into(),
+      cropped_width.into(),
+      cropped_height.into(),
+    );
   }
 
   // Apply the image transform, if specified

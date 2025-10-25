@@ -20,8 +20,6 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
   - Native use of S3/Azure/GCP/WebDAV URLs via `object_store` crate
   - `get-document` command:
     - New command to get an encapsulated document such as a PDF
-  - `get-pixel-data` command:
-    - `--crop` argument to crop output pixel data
   - `list` command:
     - Make all File Meta Information data elements selectable, not just the
       transfer syntax

@@ -347,6 +347,53 @@ fn resize_using_bilinear_filter() {
 }
 
 #[test]
+fn crop() {
+  let dicom_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--overwrite")
+    .arg("-f")
+    .arg("png")
+    .arg("--crop")
+    .arg("100,50,50,80")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "crop.png");
+}
+
+#[test]
+fn crop_and_transform_and_resize() {
+  let dicom_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
+  let output_file = format!("{}.0000.png", dicom_file);
+
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  cmd
+    .arg("get-pixel-data")
+    .arg(dicom_file)
+    .arg("--overwrite")
+    .arg("-f")
+    .arg("png")
+    .arg("--crop")
+    .arg("100,50")
+    .arg("--transform")
+    .arg("flip-vertical")
+    .arg("--resize")
+    .arg("500")
+    .arg("100")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "crop_and_transform_and_resize.png");
+}
+
+#[test]
 fn jpeg_2000_monochrome_to_jpg() {
   let dicom_file =
     "../../../test/assets/pydicom/test_files/MR_small_jp2klossless.dcm";
