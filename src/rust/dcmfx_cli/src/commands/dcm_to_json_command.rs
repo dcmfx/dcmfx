@@ -193,6 +193,16 @@ fn input_source_to_json(
 
         // When the end token has been written the conversion is complete
         if *token == P10Token::End {
+          match output_stream.write_all(b"\n") {
+            Ok(()) => (),
+            Err(e) => {
+              return Err(ToJsonError::P10Error(P10Error::FileError {
+                when: "Writing output file".to_string(),
+                details: e.to_string(),
+              }));
+            }
+          };
+
           return match output_stream.flush() {
             Ok(()) => Ok(()),
             Err(e) => Err(ToJsonError::P10Error(P10Error::FileError {
