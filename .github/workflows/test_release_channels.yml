@@ -41,7 +41,7 @@ jobs:
           $version = (Invoke-RestMethod -Uri "https://api.github.com/repos/dcmfx/dcmfx/releases/latest").tag_name
 
           # Download the release
-          $downloadUrl = "https://github.com/dcmfx/dcmfx/releases/download/$version/dcmfx-$version-x86_64-pc-windows-msvc.zip"
+          $downloadUrl = "https://dcmfx.s3.ap-southeast-2.amazonaws.com/releases/dcmfx-$version-x86_64-pc-windows-msvc.zip"
           Invoke-WebRequest -Uri $downloadUrl -OutFile "dcmfx.zip"
 
           # Extract it

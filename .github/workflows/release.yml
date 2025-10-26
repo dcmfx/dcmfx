@@ -95,7 +95,7 @@ jobs:
         if: matrix.rust-target == 'aarch64-unknown-linux-musl' || matrix.rust-target == 'x86_64-unknown-linux-musl'
         run: |
           # Download and install the musl toolchain into /opt/musl-cross
-          wget -q https://dcmfx.s3.ap-southeast-2.amazonaws.com/${{ matrix.musl-target }}-cross.tgz
+          wget -q https://dcmfx.s3.ap-southeast-2.amazonaws.com/build-tools/${{ matrix.musl-target }}-cross.tgz
           tar -xzf ${{ matrix.musl-target }}-cross.tgz
           mv ${{ matrix.musl-target }}-cross /opt/musl-cross
           echo "/opt/musl-cross/bin" >> $GITHUB_PATH
@@ -268,6 +268,35 @@ jobs:
             ${{ env.RPM_PACKAGE }}.sha256
           if-no-files-found: error
           retention-days: 1
+
+  upload_release_builds_to_aws_s3:
+    name: Upload release builds to AWS S3
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    environment: release
+
+    permissions:
+      id-token: write
+
+    needs:
+      - build_rust_cli_tool
+      - build_linux_packages
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/DCMfxGitHubS3UploadRole
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Upload release builds to S3
+        run: |
+          for f in dcmfx-*/*; do
+            aws s3 cp "$f" s3://${{ vars.AWS_S3_BUCKET_NAME }}/releases/
+          done
 
   github_release:
     name: Release on GitHub
