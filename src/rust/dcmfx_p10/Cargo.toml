@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx_p10"
-version = "0.36.0"
+version = "0.37.0"
 description = "DCMfx Part 10 library"
 
 repository.workspace = true

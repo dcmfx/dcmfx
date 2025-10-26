@@ -428,7 +428,7 @@ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
 name = "dcmfx"
-version = "0.36.0"
+version = "0.37.0"
 dependencies = [
  "dcmfx_anonymize",
  "dcmfx_character_set",
@@ -447,18 +447,18 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_anonymize"
-version = "0.36.0"
+version = "0.37.0"
 dependencies = [
  "dcmfx_core",
 ]
 
 [[package]]
 name = "dcmfx_character_set"
-version = "0.36.0"
+version = "0.37.0"
 
 [[package]]
 name = "dcmfx_cli"
-version = "0.36.0"
+version = "0.37.0"
 dependencies = [
  "assert_cmd",
  "bytemuck",
@@ -481,7 +481,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_core"
-version = "0.36.0"
+version = "0.37.0"
 dependencies = [
  "byteorder",
  "num-traits",
@@ -495,7 +495,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_json"
-version = "0.36.0"
+version = "0.37.0"
 dependencies = [
  "base64",
  "byteorder",
@@ -508,7 +508,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_p10"
-version = "0.36.0"
+version = "0.37.0"
 dependencies = [
  "byteorder",
  "dcmfx_character_set",
@@ -519,7 +519,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_pixel_data"
-version = "0.36.0"
+version = "0.37.0"
 dependencies = [
  "bytemuck",
  "byteorder",

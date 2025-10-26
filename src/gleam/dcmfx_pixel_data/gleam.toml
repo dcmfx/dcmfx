@@ -1,5 +1,5 @@
 name = "dcmfx_pixel_data"
-version = "0.36.0"
+version = "0.37.0"
 description = "DCMfx pixel data library"
 licences = ["AGPL-3.0-only"]
 gleam = ">= 1.13.0"
