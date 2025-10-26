@@ -41,6 +41,11 @@ template <typename T> void fill_lines(ojph::codestream &cs, const T *in);
 
 extern "C" void openjph_encode_initialize() {
   ojph::local::initialize_block_encoder_tables();
+
+#ifdef OJPH_ARCH_X86_64
+  ojph::local::initialize_block_encoder_tables_avx2();
+  ojph::local::initialize_block_encoder_tables_avx512();
+#endif
 }
 
 extern "C" size_t openjph_encode(
