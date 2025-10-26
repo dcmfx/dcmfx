@@ -1,6 +1,7 @@
 // This file contains the C entry points called from Rust to perform
 // High-Throughput JPEG 2000 encoding with OpenJPH.
 
+#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
@@ -138,5 +139,111 @@ template <typename T> void fill_lines(ojph::codestream &cs, const T *in) {
     }
 
     y++;
+  }
+}
+
+template <typename T>
+void fill_output_line(T *output_data, ojph::si32 *line_data, size_t width,
+                      size_t component_index, size_t samples_per_pixel,
+                      ojph::si32 min_value, ojph::si32 max_value) {
+  for (int x = 0; x < width; ++x) {
+    output_data[x * samples_per_pixel + component_index] =
+        static_cast<T>(std::clamp(line_data[x], min_value, max_value));
+  }
+}
+
+extern "C" size_t openjph_decode(const void *input_data, size_t input_data_size,
+                                 size_t width, size_t height,
+                                 size_t samples_per_pixel,
+                                 size_t bits_allocated,
+                                 size_t bits_stored,
+                                 size_t pixel_representation, void *output_data,
+                                 size_t output_data_size, char *error_buffer,
+                                 size_t error_buffer_size) {
+  try {
+    auto memfile = ojph::mem_infile();
+    memfile.open(reinterpret_cast<const uint8_t *>(input_data),
+                 input_data_size);
+
+    auto cs = ojph::codestream();
+    cs.read_headers(&memfile);
+
+    auto siz = cs.access_siz();
+    if (siz.get_num_components() != samples_per_pixel) {
+      throw std::runtime_error(
+          "Image does not have the expected samples per pixel");
+    }
+
+    for (int i = 0; i < samples_per_pixel; i++) {
+      if (siz.get_bit_depth(i) != bits_stored) {
+        throw std::runtime_error(
+            "Image component does not have the expected bit depth");
+      }
+    }
+
+    if (siz.get_image_extent().x != width ||
+        siz.get_image_extent().y != height) {
+      throw std::runtime_error("Image does not have the expected dimensions");
+    }
+
+    cs.set_planar(false);
+    cs.create();
+
+    ojph::line_buf line_buf;
+    line_buf.size = width * samples_per_pixel;
+    line_buf.flags = ojph::line_buf::LFT_32BIT | ojph::line_buf::LFT_INTEGER;
+
+    for (int y = 0; y < height; ++y) {
+      for (int c = 0; c < samples_per_pixel; ++c) {
+        uint32_t component_index = 0;
+        auto line_buf = cs.pull(component_index);
+        if (line_buf == nullptr) {
+          throw std::runtime_error("Failed to pull next line buffer");
+        }
+
+        auto line_data = line_buf->i32;
+        auto offset = y * width * samples_per_pixel;
+
+        if (bits_allocated == 8) {
+          if (pixel_representation == 0) {
+            fill_output_line<uint8_t>(
+                &reinterpret_cast<uint8_t *>(output_data)[offset], line_data,
+                width, component_index, samples_per_pixel, 0, 255);
+          } else {
+            fill_output_line<int8_t>(
+                &reinterpret_cast<int8_t *>(output_data)[offset], line_data,
+                width, component_index, samples_per_pixel, -128, 127);
+          }
+        } else if (bits_allocated == 16) {
+          if (pixel_representation == 0) {
+            fill_output_line<uint16_t>(
+                &reinterpret_cast<uint16_t *>(output_data)[offset], line_data,
+                width, component_index, samples_per_pixel, 0, 65535);
+          } else {
+            fill_output_line<int16_t>(
+                &reinterpret_cast<int16_t *>(output_data)[offset], line_data,
+                width, component_index, samples_per_pixel, -32768, 32767);
+          }
+        } else if (bits_allocated == 32) {
+          if (pixel_representation == 0) {
+            fill_output_line<uint32_t>(
+                &reinterpret_cast<uint32_t *>(output_data)[offset], line_data,
+                width, component_index, samples_per_pixel, 0, 2147483647);
+          } else {
+            fill_output_line<int32_t>(
+                &reinterpret_cast<int32_t *>(output_data)[offset], line_data,
+                width, component_index, samples_per_pixel, -2147483648,
+                2147483647);
+          }
+        }
+      }
+    }
+
+    cs.close();
+
+    return 0;
+  } catch (const std::runtime_error &e) {
+    strncpy(error_buffer, e.what(), error_buffer_size - 1);
+    return 1;
   }
 }

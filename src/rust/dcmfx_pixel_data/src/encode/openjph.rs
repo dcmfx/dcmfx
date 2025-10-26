@@ -11,8 +11,6 @@ use crate::{
   monochrome_image::MonochromeImageData,
 };
 
-const OPENJPH_BITS_STORED_RANGE: core::ops::RangeInclusive<u16> = 2..=30;
-
 /// Encodes a [`MonochromeImage`] into High-Throughput JPEG 2000 raw bytes using
 /// OpenJPH.
 ///
@@ -21,14 +19,6 @@ pub fn encode_monochrome(
   image_pixel_module: &ImagePixelModule,
   quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
-  if !OPENJPH_BITS_STORED_RANGE.contains(&image_pixel_module.bits_stored()) {
-    return Err(PixelDataEncodeError::NotSupported {
-      image_pixel_module: Box::new(image_pixel_module.clone()),
-      input_bits_allocated: image.bits_allocated(),
-      input_color_space: None,
-    });
-  }
-
   let width = image.width();
   let height = image.height();
 
@@ -186,14 +176,6 @@ pub fn encode_color(
   image_pixel_module: &ImagePixelModule,
   quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
-  if !OPENJPH_BITS_STORED_RANGE.contains(&image_pixel_module.bits_stored()) {
-    return Err(PixelDataEncodeError::NotSupported {
-      image_pixel_module: Box::new(image_pixel_module.clone()),
-      input_bits_allocated: image.bits_allocated(),
-      input_color_space: Some(image.color_space()),
-    });
-  }
-
   let width = image.width();
   let height = image.height();
 
@@ -346,7 +328,7 @@ pub fn encode_color(
   }
 }
 
-static INITIALIZE_ONCE_LOCK: std::sync::OnceLock<()> =
+static ENCODE_INITIALIZE_ONCE_LOCK: std::sync::OnceLock<()> =
   std::sync::OnceLock::new();
 
 fn encode(
@@ -356,7 +338,7 @@ fn encode(
   image_pixel_module: &ImagePixelModule,
   quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
-  INITIALIZE_ONCE_LOCK
+  ENCODE_INITIALIZE_ONCE_LOCK
     .get_or_init(|| unsafe { ffi::openjph_encode_initialize() });
 
   let mut output_data = Vec::with_capacity(512 * 1024);
@@ -412,7 +394,7 @@ fn encode(
 
 /// Converts a quality value in the range 1-100 to a quantization step size
 /// value for lossy compression. This equation was inspired by the publication
-/// 'Parameterization of the Quality Factor for the High Throughput JPEG 2000'
+/// 'Parameterization of the Quality Factor for the High-Throughput JPEG 2000'
 /// by Ahar et al.
 ///
 fn quality_to_quantization_step_size(quality: u8) -> f32 {

@@ -841,6 +841,25 @@ fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only() {
 }
 
 #[test]
+fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only_with_openjpeg_decoder()
+ {
+  let snapshot_prefix = "monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only_with_openjpeg_decoder";
+
+  let temp_path = modify_transfer_syntax(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "high-throughput-jpeg-2000-lossless-only",
+    snapshot_prefix,
+    &[],
+  );
+
+  check_pixel_data_against_snapshot(
+    &temp_path,
+    snapshot_prefix,
+    &["--high-throughput-jpeg-2000-decoder", "openjpeg"],
+  );
+}
+
+#[test]
 fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000() {
   modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
@@ -1302,24 +1321,33 @@ fn modify_transfer_syntax_and_check_pixel_data(
   snapshot_prefix: &str,
   extra_args: &[&str],
 ) -> std::path::PathBuf {
-  let temp_path = modify_transfer_syntax(
+  let temp_dicom_path = modify_transfer_syntax(
     dicom_file,
     transfer_syntax,
     snapshot_prefix,
     extra_args,
   );
 
+  check_pixel_data_against_snapshot(&temp_dicom_path, snapshot_prefix, &[]);
+
+  temp_dicom_path
+}
+
+fn check_pixel_data_against_snapshot(
+  dicom_path: &std::path::PathBuf,
+  snapshot_prefix: &str,
+  extra_args: &[&str],
+) {
   Command::cargo_bin("dcmfx_cli")
     .unwrap()
     .arg("get-pixel-data")
-    .arg(&temp_path)
+    .arg(&dicom_path)
     .arg("-f")
     .arg("png16")
+    .args(extra_args)
     .assert()
     .success();
 
-  let output_file = format!("{}.0000.png", temp_path.display());
+  let output_file = format!("{}.0000.png", dicom_path.display());
   assert_image_snapshot!(output_file, format!("{}.png", snapshot_prefix));
-
-  temp_path
 }

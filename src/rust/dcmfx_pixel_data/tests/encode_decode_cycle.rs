@@ -1,4 +1,4 @@
-use dcmfx_pixel_data::decode::JpegXlDecoder;
+use dcmfx_pixel_data::decode::{HighThroughputJpeg2000Decoder, JpegXlDecoder};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use rayon::prelude::*;
@@ -171,39 +171,55 @@ fn test_jpeg_2000_encode_decode_cycle() {
 
 #[test]
 fn test_high_throughput_jpeg_2000_lossless_only_encode_decode_cycle() {
-  test_encode_decode_cycle(
-    all_image_pixel_modules()
-      .into_iter()
-      .filter(|m| {
-        !m.photometric_interpretation().is_ybr_full_422()
-          && (2..=30).contains(&m.bits_stored())
-      })
-      .collect(),
-    &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY,
-    encode_config(),
-    PixelDataDecodeConfig::default(),
-    0.0,
-    0.0,
-  );
+  for decoder in [
+    HighThroughputJpeg2000Decoder::OpenJpeg,
+    HighThroughputJpeg2000Decoder::OpenJph,
+  ] {
+    let mut decode_config = PixelDataDecodeConfig::default();
+    decode_config.high_throughput_jpeg_2000_decoder = decoder;
+
+    test_encode_decode_cycle(
+      all_image_pixel_modules()
+        .into_iter()
+        .filter(|m| {
+          !m.photometric_interpretation().is_ybr_full_422()
+            && (2..=30).contains(&m.bits_stored())
+        })
+        .collect(),
+      &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY,
+      encode_config(),
+      decode_config,
+      0.0,
+      0.0,
+    );
+  }
 }
 
 #[test]
 fn test_high_throughput_jpeg_2000_encode_decode_cycle() {
-  test_encode_decode_cycle(
-    all_image_pixel_modules()
-      .into_iter()
-      .filter(|m| {
-        !m.photometric_interpretation().is_palette_color()
-          && !m.photometric_interpretation().is_ybr_full_422()
-          && (2..=30).contains(&m.bits_stored())
-      })
-      .collect(),
-    &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000,
-    encode_config(),
-    PixelDataDecodeConfig::default(),
-    0.02,
-    0.02,
-  );
+  for decoder in [
+    HighThroughputJpeg2000Decoder::OpenJpeg,
+    HighThroughputJpeg2000Decoder::OpenJph,
+  ] {
+    let mut decode_config = PixelDataDecodeConfig::default();
+    decode_config.high_throughput_jpeg_2000_decoder = decoder;
+
+    test_encode_decode_cycle(
+      all_image_pixel_modules()
+        .into_iter()
+        .filter(|m| {
+          !m.photometric_interpretation().is_palette_color()
+            && !m.photometric_interpretation().is_ybr_full_422()
+            && (2..=30).contains(&m.bits_stored())
+        })
+        .collect(),
+      &transfer_syntax::HIGH_THROUGHPUT_JPEG_2000,
+      encode_config(),
+      decode_config,
+      0.02,
+      0.02,
+    );
+  }
 }
 
 #[test]

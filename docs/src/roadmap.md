@@ -4,8 +4,6 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
 
 - Pixel data handling
 
-  - Decode High-Throughput JPEG 2000 pixel data with OpenJPH as an alternative
-    to the existing decoding with OpenJPEG
   - Change to `libjpeg-turbo` for JPEG Baseline 8-bit, JPEG Extended 12-bit, and
     JPEG Lossless.
   - Transcode multi-frame pixel data into H.264/H.265 transfer syntaxes

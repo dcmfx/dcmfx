@@ -27,6 +27,8 @@ mod libjxl;
 mod native;
 #[cfg(feature = "native")]
 mod openjpeg;
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+mod openjph;
 mod rle_lossless;
 mod zune_jpeg;
 
@@ -34,6 +36,12 @@ mod zune_jpeg;
 ///
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PixelDataDecodeConfig {
+  /// The library to use for decoding High-Throughput JPEG 2000 pixel data.
+  /// Defaults to [`HighThroughputJpeg2000Decoder::OpenJph`] except on WASM
+  /// where it defaults to [`HighThroughputJpeg2000Decoder::OpenJpeg`].
+  ///
+  pub high_throughput_jpeg_2000_decoder: HighThroughputJpeg2000Decoder,
+
   /// The library to use for decoding JPEG XL pixel data. Defaults to
   /// [`JpegXlDecoder::LibJxl`] except on WASM where it defaults to
   /// [`JpegXlDecoder::JxlOxide`].
@@ -49,7 +57,33 @@ impl Default for PixelDataDecodeConfig {
     #[cfg(target_arch = "wasm32")]
     let jpeg_xl_decoder = JpegXlDecoder::JxlOxide;
 
-    Self { jpeg_xl_decoder }
+    #[cfg(not(target_arch = "wasm32"))]
+    let high_throughput_jpeg_2000_decoder =
+      HighThroughputJpeg2000Decoder::OpenJph;
+
+    #[cfg(target_arch = "wasm32")]
+    let high_throughput_jpeg_2000_decoder =
+      HighThroughputJpeg2000Decoder::OpenJpeg;
+
+    Self {
+      jpeg_xl_decoder,
+      high_throughput_jpeg_2000_decoder,
+    }
+  }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum HighThroughputJpeg2000Decoder {
+  OpenJpeg,
+  OpenJph,
+}
+
+impl core::fmt::Display for HighThroughputJpeg2000Decoder {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    match self {
+      Self::OpenJpeg => f.write_str("openjpeg"),
+      Self::OpenJph => f.write_str("openjph"),
+    }
   }
 }
 
@@ -284,12 +318,30 @@ pub fn decode_monochrome(
     }
 
     #[cfg(feature = "native")]
-    &JPEG_2000
-    | &JPEG_2000_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2000
-    | &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
+    &JPEG_2000 | &JPEG_2000_LOSSLESS_ONLY => {
       openjpeg::decode_monochrome(image_pixel_module, data)
+    }
+
+    #[cfg(feature = "native")]
+    &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000 => {
+      #[cfg(not(target_arch = "wasm32"))]
+      if decode_config.high_throughput_jpeg_2000_decoder
+        == HighThroughputJpeg2000Decoder::OpenJph
+      {
+        return openjph::decode_monochrome(image_pixel_module, data);
+      }
+
+      if decode_config.high_throughput_jpeg_2000_decoder
+        == HighThroughputJpeg2000Decoder::OpenJpeg
+      {
+        return openjpeg::decode_monochrome(image_pixel_module, data);
+      }
+
+      Err(PixelDataDecodeError::DecoderNotAvailable {
+        name: decode_config.high_throughput_jpeg_2000_decoder.to_string(),
+      })
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
@@ -357,12 +409,30 @@ pub fn decode_color(
     }
 
     #[cfg(feature = "native")]
-    &JPEG_2000
-    | &JPEG_2000_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2000
-    | &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
-    | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY => {
+    &JPEG_2000 | &JPEG_2000_LOSSLESS_ONLY => {
       openjpeg::decode_color(image_pixel_module, data)
+    }
+
+    #[cfg(feature = "native")]
+    &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
+    | &HIGH_THROUGHPUT_JPEG_2000 => {
+      #[cfg(not(target_arch = "wasm32"))]
+      if decode_config.high_throughput_jpeg_2000_decoder
+        == HighThroughputJpeg2000Decoder::OpenJph
+      {
+        return openjph::decode_color(image_pixel_module, data);
+      }
+
+      if decode_config.high_throughput_jpeg_2000_decoder
+        == HighThroughputJpeg2000Decoder::OpenJpeg
+      {
+        return openjpeg::decode_color(image_pixel_module, data);
+      }
+
+      Err(PixelDataDecodeError::DecoderNotAvailable {
+        name: decode_config.high_throughput_jpeg_2000_decoder.to_string(),
+      })
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
