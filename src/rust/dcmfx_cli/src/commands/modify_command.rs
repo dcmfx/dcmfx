@@ -395,7 +395,7 @@ fn modify_input_source(
   output_filename: PathBuf,
   args: &ModifyArgs,
 ) -> Result<(), ModifyCommandError> {
-  if output_filename != PathBuf::from("-") {
+  if *output_filename != *"-" {
     if args.in_place {
       println!("Modifying \"{input_source}\" in place …");
     } else {
@@ -413,27 +413,26 @@ fn modify_input_source(
 
   // Append a random suffix to get a unique name for a temporary output file.
   // This isn't needed when outputting to stdout.
-  let (tmp_output_filename, mut temp_file_guard) =
-    if output_filename == PathBuf::from("-") {
-      (None, None)
-    } else {
-      let mut rng = rand::rng();
-      let random_suffix: String = (0..16)
-        .map(|_| char::from(rng.sample(rand::distr::Alphanumeric)))
-        .collect();
+  let (tmp_output_filename, mut temp_file_guard) = if *output_filename == *"-" {
+    (None, None)
+  } else {
+    let mut rng = rand::rng();
+    let random_suffix: String = (0..16)
+      .map(|_| char::from(rng.sample(rand::distr::Alphanumeric)))
+      .collect();
 
-      let file_name = output_filename.file_name().unwrap_or(OsStr::new(""));
-      let file_name =
-        format!("{}.{}.tmp", file_name.to_string_lossy(), random_suffix);
+    let file_name = output_filename.file_name().unwrap_or(OsStr::new(""));
+    let file_name =
+      format!("{}.{}.tmp", file_name.to_string_lossy(), random_suffix);
 
-      let mut new_path = output_filename.clone();
-      new_path.set_file_name(file_name);
+    let mut new_path = output_filename.clone();
+    new_path.set_file_name(file_name);
 
-      (
-        Some(new_path.clone()),
-        Some(TempFileRenamer::new(new_path, output_filename.clone())),
-      )
-    };
+    (
+      Some(new_path.clone()),
+      Some(TempFileRenamer::new(new_path, output_filename.clone())),
+    )
+  };
 
   // Create an insert transform for merging in another data set, if needed
   let insert_transform = args
