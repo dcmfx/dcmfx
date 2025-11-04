@@ -83,10 +83,6 @@ fn with_invalid_directory() {
 
   let assert = cmd.arg("list").arg("missing-directory").assert().failure();
 
-  #[cfg(windows)]
-  assert_snapshot!("with_invalid_directory_windows", get_stderr(assert));
-
-  #[cfg(not(windows))]
   assert_snapshot!("with_invalid_directory", get_stderr(assert));
 }
 

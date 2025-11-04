@@ -127,6 +127,14 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
     std::process::exit(1);
   }
 
+  // Check that all input directories are valid
+  for dir in args.directories.iter() {
+    if !dir.is_dir() {
+      eprintln!("Error: {:?} is not a directory", dir);
+      std::process::exit(1);
+    }
+  }
+
   // Convert extension to lowercase for comparison
   let extension = args.extension.clone().map(|e| e.to_lowercase());
 
