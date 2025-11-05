@@ -325,23 +325,11 @@ impl P10ReadContext {
 
       // If the File Meta Information length isn't known and this isn't a File
       // Meta Information data element tag then assume that this is the end of
-      // the File Meta Information
-      if !tag.is_file_meta_information() && ends_at.is_none() {
+      // the File Meta Information, even if we haven't reached the offset
+      // specified by the 'File Meta Information Group Length' tag (assuming one
+      // was present).
+      if !tag.is_file_meta_information() {
         break;
-      }
-
-      // If a data element is encountered in the File Meta Information that
-      // doesn't have a group of 0x0002 then the File Meta Information is
-      // invalid
-      if !tag.is_file_meta_information() && ends_at.is_some() {
-        return Err(P10Error::DataInvalid {
-          when: "Reading File Meta Information".to_string(),
-          details: "Data element in File Meta Information does not have the \
-              group 0x0002"
-            .to_string(),
-          path: DataSetPath::new_with_data_element(tag),
-          offset: self.stream.bytes_read(),
-        });
       }
 
       // Get the VR for the data element
