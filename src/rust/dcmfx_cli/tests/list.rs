@@ -33,8 +33,6 @@ fn with_summary() {
   let assert = cmd
     .arg("list")
     .arg("../../../test/assets/fo-dicom")
-    .arg("--extension")
-    .arg("dcm")
     .arg("--summarize")
     .assert()
     .success();
@@ -44,6 +42,36 @@ fn with_summary() {
 
   #[cfg(not(windows))]
   assert_snapshot!("with_summary", get_stderr(assert).trim(),);
+}
+
+#[test]
+fn with_extension_matches_uppercase_filename_extension() {
+  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+
+  let assert = cmd
+    .arg("list")
+    .arg("../../../test/assets/other")
+    .arg("--extension")
+    .arg("dcm")
+    .arg("--summarize")
+    .assert()
+    .success();
+
+  let mut lines: Vec<_> =
+    get_stdout(assert).split("\n").map(to_native_path).collect();
+  lines.sort();
+
+  #[cfg(windows)]
+  assert_snapshot!(
+    "with_extension_matches_uppercase_filename_extension_windows",
+    lines.join("\n"),
+  );
+
+  #[cfg(not(windows))]
+  assert_snapshot!(
+    "with_extension_matches_uppercase_filename_extension",
+    lines.join("\n"),
+  );
 }
 
 #[test]

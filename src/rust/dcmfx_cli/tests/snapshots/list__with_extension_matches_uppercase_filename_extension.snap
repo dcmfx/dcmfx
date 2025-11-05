@@ -1,0 +1,20 @@
+---
+source: dcmfx_cli/tests/list.rs
+expression: "lines.join(\"\\n\")"
+---
+../../../test/assets/other/SC_ybr_full_422_uncompressed.deflated_image_frame_compression.dcm
+../../../test/assets/other/TestPattern_Palette.rle_lossless.dcm
+../../../test/assets/other/TestPattern_Palette_16.jpeg_ls_lossless.dcm
+../../../test/assets/other/examples_jpeg_2000.monochrome_2bpp.dcm
+../../../test/assets/other/jpeg_2000_ybr_color_space.dcm
+../../../test/assets/other/jpeg_lossless_with_inverse_presentation_lut_shape.dcm
+../../../test/assets/other/jpeg_lossless_with_presentation_lut.dcm
+../../../test/assets/other/jpeg_ls_ybr_color_space.dcm
+../../../test/assets/other/liver_1frame.rle_lossless.dcm
+../../../test/assets/other/liver_nonbyte_aligned_cropped.dcm
+../../../test/assets/other/monochrome_jpeg_xl.dcm
+../../../test/assets/other/monochrome_jpeg_xl_12bit.dcm
+../../../test/assets/other/mr_brucker_with_unaligned_multiframe_overlay.dcm
+../../../test/assets/other/ultrasound_jpeg_xl.dcm
+../../../test/assets/other/uppercase_extension.DCM
+../../../test/assets/other/vr_2022.dcm

@@ -136,7 +136,7 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
   }
 
   // Convert extension to lowercase for comparison
-  let extension = args.extension.clone().map(|e| e.to_lowercase());
+  let extension = args.extension.as_ref().map(|e| e.to_lowercase());
 
   // Create iterator for listing all files to be processed
   let file_iterator = args.directories.iter().flat_map(|dir| {
@@ -183,7 +183,8 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
           // Check file's extension is allowed, if this check was requested
           if let Some(extension) = &extension
             && let Some(dir_entry_extension) = path.extension()
-            && dir_entry_extension.to_string_lossy() != *extension
+            && dir_entry_extension.to_string_lossy().to_lowercase()
+              != *extension
           {
             return Ok(());
           }
