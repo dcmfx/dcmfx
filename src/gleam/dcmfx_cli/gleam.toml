@@ -1,5 +1,5 @@
 name = "dcmfx_cli"
-version = "0.37.0"
+version = "0.38.0"
 description = "DCMfx CLI tool"
 licences = ["AGPL-3.0-only"]
 gleam = ">= 1.13.0"
