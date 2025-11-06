@@ -19,7 +19,7 @@ mod json_error;
 mod transforms;
 
 use dcmfx_core::{DataSet, DataSetPath};
-use dcmfx_p10::{DataSetP10Extensions, IoError, IoWrite, P10Token};
+use dcmfx_p10::{DataSetP10Extensions, P10Token};
 
 pub use json_config::DicomJsonConfig;
 pub use json_error::{JsonDeserializeError, JsonSerializeError};
@@ -40,10 +40,10 @@ where
 
   /// Converts a data set to DICOM JSON, writing the JSON data to a stream.
   ///
-  fn to_json_stream(
+  fn to_json_stream<S: dcmfx_p10::IoWrite>(
     &self,
     config: DicomJsonConfig,
-    stream: &mut IoWrite,
+    stream: &mut S,
   ) -> Result<(), JsonSerializeError>;
 
   /// Constructs a new data set from DICOM JSON data.
@@ -64,13 +64,13 @@ impl Cursor {
 }
 
 #[cfg(not(feature = "std"))]
-impl dcmfx_p10::Write for Cursor {
-  fn write_all(&mut self, buf: &[u8]) -> Result<(), IoError> {
+impl dcmfx_p10::IoWrite for Cursor {
+  fn write_all(&mut self, buf: &[u8]) -> Result<(), dcmfx_p10::IoError> {
     self.data.extend_from_slice(buf);
     Ok(())
   }
 
-  fn flush(&mut self) -> Result<(), IoError> {
+  fn flush(&mut self) -> Result<(), dcmfx_p10::IoError> {
     Ok(())
   }
 }
@@ -93,10 +93,10 @@ impl DataSetJsonExtensions for DataSet {
     Ok(String::from_utf8(cursor.into_inner()).unwrap())
   }
 
-  fn to_json_stream(
+  fn to_json_stream<S: dcmfx_p10::IoWrite>(
     &self,
     config: DicomJsonConfig,
-    stream: &mut IoWrite,
+    stream: &mut S,
   ) -> Result<(), JsonSerializeError> {
     let mut json_transform = P10JsonTransform::new(config);
     let mut token_to_stream =

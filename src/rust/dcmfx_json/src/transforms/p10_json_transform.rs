@@ -83,10 +83,10 @@ impl P10JsonTransform {
   /// some cases the resulting JSON stream could be invalid when the incoming
   /// stream of P10 tokens is malformed.
   ///
-  pub fn add_token(
+  pub fn add_token<S: dcmfx_p10::IoWrite>(
     &mut self,
     token: &P10Token,
-    stream: &mut crate::IoWrite,
+    stream: &mut S,
   ) -> Result<(), JsonSerializeError> {
     let token_stream_invalid_error = || {
       JsonSerializeError::P10Error(P10Error::TokenStreamInvalid {
@@ -220,19 +220,19 @@ impl P10JsonTransform {
     "  ".repeat(indent as usize)
   }
 
-  fn write_indent(
+  fn write_indent<S: dcmfx_p10::IoWrite>(
     &self,
-    stream: &mut crate::IoWrite,
+    stream: &mut S,
     offset: isize,
-  ) -> Result<(), crate::IoError> {
+  ) -> Result<(), dcmfx_p10::IoError> {
     stream.write_all(self.indent(offset).as_bytes())
   }
 
-  fn begin(
+  fn begin<S: dcmfx_p10::IoWrite>(
     &mut self,
     file_meta_information: &DataSet,
-    stream: &mut crate::IoWrite,
-  ) -> Result<(), crate::IoError> {
+    stream: &mut S,
+  ) -> Result<(), dcmfx_p10::IoError> {
     if self.config.pretty_print {
       stream.write_all(b"{\n")?;
     } else {
@@ -264,13 +264,13 @@ impl P10JsonTransform {
     Ok(())
   }
 
-  fn write_data_element_header(
+  fn write_data_element_header<S: dcmfx_p10::IoWrite>(
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
     length: u32,
-    stream: &mut crate::IoWrite,
-  ) -> Result<(), crate::IoError> {
+    stream: &mut S,
+  ) -> Result<(), dcmfx_p10::IoError> {
     // Exclude group length data elements as these have no use in DICOM JSON.
     // Also exclude the '(0008,0005) Specific Character Set' data element as
     // DICOM JSON always uses UTF-8
@@ -354,12 +354,12 @@ impl P10JsonTransform {
     Ok(())
   }
 
-  fn write_data_element_value_bytes(
+  fn write_data_element_value_bytes<S: dcmfx_p10::IoWrite>(
     &mut self,
     vr: ValueRepresentation,
     data: &RcByteSlice,
     bytes_remaining: u32,
-    stream: &mut crate::IoWrite,
+    stream: &mut S,
   ) -> Result<(), JsonSerializeError> {
     // If this data element value is being ignored then do nothing
     if self.ignore_data_element_value_bytes {
@@ -476,11 +476,11 @@ impl P10JsonTransform {
     .map_err(JsonSerializeError::IOError)
   }
 
-  fn write_sequence_start(
+  fn write_sequence_start<S: dcmfx_p10::IoWrite>(
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
-    stream: &mut crate::IoWrite,
+    stream: &mut S,
   ) -> Result<(), JsonSerializeError> {
     if self.insert_comma {
       if self.config.pretty_print {
@@ -555,10 +555,10 @@ impl P10JsonTransform {
     .map_err(JsonSerializeError::IOError)
   }
 
-  fn write_sequence_end(
+  fn write_sequence_end<S: dcmfx_p10::IoWrite>(
     &mut self,
-    stream: &mut crate::IoWrite,
-  ) -> Result<(), crate::IoError> {
+    stream: &mut S,
+  ) -> Result<(), dcmfx_p10::IoError> {
     if self.in_encapsulated_pixel_data {
       self.in_encapsulated_pixel_data = false;
       self.write_base64(&[], true, stream)?;
@@ -585,10 +585,10 @@ impl P10JsonTransform {
     }
   }
 
-  fn write_sequence_item_start(
+  fn write_sequence_item_start<S: dcmfx_p10::IoWrite>(
     &mut self,
-    stream: &mut crate::IoWrite,
-  ) -> Result<(), crate::IoError> {
+    stream: &mut S,
+  ) -> Result<(), dcmfx_p10::IoError> {
     if self.insert_comma {
       stream.write_all(b",")?;
     }
@@ -603,10 +603,10 @@ impl P10JsonTransform {
     }
   }
 
-  fn write_sequence_item_end(
+  fn write_sequence_item_end<S: dcmfx_p10::IoWrite>(
     &mut self,
-    stream: &mut crate::IoWrite,
-  ) -> Result<(), crate::IoError> {
+    stream: &mut S,
+  ) -> Result<(), dcmfx_p10::IoError> {
     self.insert_comma = true;
 
     if self.config.pretty_print {
@@ -618,10 +618,10 @@ impl P10JsonTransform {
     }
   }
 
-  fn write_encapsulated_pixel_data_item(
+  fn write_encapsulated_pixel_data_item<S: dcmfx_p10::IoWrite>(
     &mut self,
     length: u32,
-    stream: &mut crate::IoWrite,
+    stream: &mut S,
   ) -> Result<(), JsonSerializeError> {
     if !self.config.store_encapsulated_pixel_data {
       return Err(JsonSerializeError::DataError(
@@ -643,7 +643,10 @@ impl P10JsonTransform {
       .map_err(JsonSerializeError::IOError)
   }
 
-  fn end(&mut self, stream: &mut crate::IoWrite) -> Result<(), crate::IoError> {
+  fn end<S: dcmfx_p10::IoWrite>(
+    &mut self,
+    stream: &mut S,
+  ) -> Result<(), dcmfx_p10::IoError> {
     if self.config.pretty_print {
       stream.write_all(b"\n}\n")
     } else {
@@ -651,12 +654,12 @@ impl P10JsonTransform {
     }
   }
 
-  fn write_base64(
+  fn write_base64<S: dcmfx_p10::IoWrite>(
     &mut self,
     input: &[u8],
     finish: bool,
-    stream: &mut crate::IoWrite,
-  ) -> Result<(), crate::IoError> {
+    stream: &mut S,
+  ) -> Result<(), dcmfx_p10::IoError> {
     // If there's still insufficient data to encode with this new data then
     // accumulate the bytes and wait till next time
     if self.pending_base64_input.len() + input.len() < 3 && !finish {

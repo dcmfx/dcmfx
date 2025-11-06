@@ -113,7 +113,7 @@ impl P10ReadContext {
     done: bool,
   ) -> Result<(), P10Error> {
     match self.stream.write(bytes, done) {
-      Ok(_) => Ok(()),
+      Ok(()) => Ok(()),
 
       Err(e) => Err(
         self.map_byte_stream_error(e, "Writing data to DICOM P10 read context"),
@@ -465,7 +465,7 @@ impl P10ReadContext {
     // Meta Information needs to passed through zlib inflate before reading
     if self.transfer_syntax.is_deflated {
       match self.stream.start_zlib_inflate() {
-        Ok(_) => (),
+        Ok(()) => (),
         Err(_) => {
           return Err(P10Error::DataInvalid {
             when: "Starting zlib decompression for deflated transfer syntax"

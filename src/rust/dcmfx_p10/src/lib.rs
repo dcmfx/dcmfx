@@ -7,12 +7,7 @@
 extern crate alloc;
 
 #[cfg(not(feature = "std"))]
-use alloc::{
-  boxed::Box,
-  string::{String, ToString},
-  vec,
-  vec::Vec,
-};
+use alloc::{boxed::Box, string::ToString, vec, vec::Vec};
 
 pub mod data_set_builder;
 pub mod p10_error;
@@ -25,38 +20,12 @@ pub mod transforms;
 pub mod uids;
 
 mod internal;
+mod io;
 
 #[cfg(feature = "std")]
-use std::{fs::File, io::Read, path::Path};
+use std::path::Path;
 
-#[cfg(feature = "std")]
-pub type IoRead = dyn std::io::Read;
-
-#[cfg(feature = "std")]
-pub type IoWrite = dyn std::io::Write;
-
-#[cfg(feature = "std")]
-pub type IoError = std::io::Error;
-
-#[cfg(not(feature = "std"))]
-pub trait Read {
-  fn read(&mut self, buf: &mut [u8]) -> Result<usize, IoError>;
-}
-
-#[cfg(not(feature = "std"))]
-pub trait Write {
-  fn write_all(&mut self, buf: &[u8]) -> Result<(), IoError>;
-  fn flush(&mut self) -> Result<(), IoError>;
-}
-
-#[cfg(not(feature = "std"))]
-pub type IoRead = dyn Read;
-
-#[cfg(not(feature = "std"))]
-pub type IoWrite = dyn Write;
-
-#[cfg(not(feature = "std"))]
-pub type IoError = String;
+pub use io::{IoError, IoRead, IoWrite};
 
 use dcmfx_core::{DataElementTag, DataSet, DataSetPath, RcByteSlice};
 
@@ -79,7 +48,9 @@ pub use transforms::p10_print_transform::P10PrintTransform;
 ///
 #[cfg(feature = "std")]
 pub fn is_valid_file<P: AsRef<Path>>(filename: P) -> bool {
-  match File::open(filename) {
+  use std::io::Read;
+
+  match std::fs::File::open(filename) {
     Ok(mut file) => {
       let mut buffer = [0u8; 132];
       match file.read_exact(&mut buffer) {
@@ -119,7 +90,7 @@ pub fn read_file<P: AsRef<Path>>(filename: P) -> Result<DataSet, P10Error> {
 pub fn read_file_returning_builder_on_error<P: AsRef<Path>>(
   filename: P,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
-  match File::open(filename) {
+  match std::fs::File::open(filename) {
     Ok(mut file) => read_stream(&mut file),
     Err(e) => Err((
       P10Error::FileError {
@@ -134,8 +105,8 @@ pub fn read_file_returning_builder_on_error<P: AsRef<Path>>(
 /// Reads DICOM P10 data from a read stream into an in-memory data set. This
 /// will attempt to consume all data available in the read stream.
 ///
-pub fn read_stream(
-  stream: &mut IoRead,
+pub fn read_stream<S: IoRead>(
+  stream: &mut S,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
   let mut context = P10ReadContext::new(None);
   let mut builder = Box::new(DataSetBuilder::new());
@@ -150,7 +121,7 @@ pub fn read_stream(
     // Add the new tokens to the data set builder
     for token in tokens {
       match builder.add_token(&token) {
-        Ok(_) => (),
+        Ok(()) => (),
         Err(e) => return Err((e, builder)),
       };
     }
@@ -168,8 +139,8 @@ pub fn read_stream(
 ///
 /// The chunk size defaults to 256 KiB if not specified.
 ///
-pub fn read_tokens_from_stream(
-  stream: &mut IoRead,
+pub fn read_tokens_from_stream<S: IoRead>(
+  stream: &mut S,
   context: &mut P10ReadContext,
   chunk_size: Option<usize>,
 ) -> Result<Vec<P10Token>, P10Error> {
@@ -232,7 +203,7 @@ pub fn read_bytes(
         // Add the new tokens to the data set builder
         for token in tokens.iter() {
           match builder.add_token(token) {
-            Ok(_) => (),
+            Ok(()) => (),
             Err(e) => return Err((e, builder)),
           };
         }
@@ -260,7 +231,7 @@ pub fn read_file_partial<P: AsRef<Path>>(
   tags: &[DataElementTag],
   config: Option<P10ReadConfig>,
 ) -> Result<DataSet, P10Error> {
-  match File::open(filename) {
+  match std::fs::File::open(filename) {
     Ok(mut file) => read_stream_partial(&mut file, tags, config),
     Err(e) => Err(P10Error::FileError {
       when: "Opening file".to_string(),
@@ -274,8 +245,8 @@ pub fn read_file_partial<P: AsRef<Path>>(
 /// present. The stream will only be read up to the point required to return the
 /// requested data elements.
 ///
-pub fn read_stream_partial(
-  stream: &mut IoRead,
+pub fn read_stream_partial<S: IoRead>(
+  stream: &mut S,
   tags: &[DataElementTag],
   config: Option<P10ReadConfig>,
 ) -> Result<DataSet, P10Error> {
@@ -352,7 +323,7 @@ pub fn write_file<P: AsRef<Path>>(
   data_set: &DataSet,
   config: Option<P10WriteConfig>,
 ) -> Result<(), P10Error> {
-  let file = File::create(filename);
+  let file = std::fs::File::create(filename);
 
   match file {
     Ok(mut file) => write_stream(&mut file, data_set, config),
@@ -365,14 +336,15 @@ pub fn write_file<P: AsRef<Path>>(
 
 /// Writes a data set as DICOM P10 bytes directly to a write stream.
 ///
-pub fn write_stream(
-  stream: &mut IoWrite,
+pub fn write_stream<S: IoWrite>(
+  stream: &mut S,
   data_set: &DataSet,
   config: Option<P10WriteConfig>,
 ) -> Result<(), P10Error> {
   let mut bytes_callback = |p10_bytes: RcByteSlice| -> Result<(), P10Error> {
     match stream.write_all(&p10_bytes) {
-      Ok(_) => Ok(()),
+      Ok(()) => Ok(()),
+
       Err(e) => Err(P10Error::FileError {
         when: "Writing DICOM P10 data to stream".to_string(),
         details: e.to_string(),
@@ -392,9 +364,9 @@ pub fn write_stream(
 /// write context. Returns whether a [`P10Token::End`] token was present in the
 /// tokens.
 ///
-pub fn write_tokens_to_stream(
+pub fn write_tokens_to_stream<S: IoWrite>(
   tokens: &[P10Token],
-  stream: &mut IoWrite,
+  stream: &mut S,
   context: &mut P10WriteContext,
 ) -> Result<bool, P10Error> {
   for token in tokens.iter() {
@@ -436,7 +408,7 @@ where
   /// Reads DICOM P10 data from a read stream into an in-memory data set. This
   /// will attempt to consume all data available in the read stream.
   ///
-  fn read_p10_stream(stream: &mut IoRead) -> Result<Self, P10Error>;
+  fn read_p10_stream<S: IoRead>(stream: &mut S) -> Result<Self, P10Error>;
 
   /// Reads DICOM P10 data from a vector of bytes into a data set.
   ///
@@ -456,9 +428,9 @@ where
 
   /// Writes a data set as DICOM P10 bytes directly to a write stream.
   ///
-  fn write_p10_stream(
+  fn write_p10_stream<S: IoWrite>(
     &self,
-    stream: &mut IoWrite,
+    stream: &mut S,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error>;
 
@@ -490,7 +462,7 @@ impl DataSetP10Extensions for DataSet {
     read_file(filename)
   }
 
-  fn read_p10_stream(stream: &mut IoRead) -> Result<DataSet, P10Error> {
+  fn read_p10_stream<S: IoRead>(stream: &mut S) -> Result<DataSet, P10Error> {
     read_stream(stream).map_err(|e| e.0)
   }
 
@@ -509,9 +481,9 @@ impl DataSetP10Extensions for DataSet {
     write_file(filename, self, config)
   }
 
-  fn write_p10_stream(
+  fn write_p10_stream<S: IoWrite>(
     &self,
-    stream: &mut IoWrite,
+    stream: &mut S,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error> {
     write_stream(stream, self, config)

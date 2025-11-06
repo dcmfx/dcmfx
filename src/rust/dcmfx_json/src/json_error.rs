@@ -25,9 +25,9 @@ pub enum JsonSerializeError {
 
   /// An error occurred when trying to read or write DICOM JSON data on the
   /// provided stream. Details of the issue are contained in the enclosed
-  /// [`crate::IoError`].
+  /// [`dcmfx_p10::IoError`].
   ///
-  IOError(crate::IoError),
+  IOError(dcmfx_p10::IoError),
 }
 
 /// Occurs when an error is encountered converting from the DICOM JSON model.
