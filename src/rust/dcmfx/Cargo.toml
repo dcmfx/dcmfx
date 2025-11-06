@@ -22,12 +22,14 @@ dcmfx_pixel_data = { path = "../dcmfx_pixel_data", default-features = false }
 
 [dev-dependencies]
 either = "1.15.0"
+futures = "0.3.31"
 image = "0.25.6"
+num_cpus = "1.17.0"
 rand = { version = "0.9.2", features = ["small_rng"] }
-rayon = "1.11.0"
 serde = "1.0.219"
 serde_json = "1.0.142"
 walkdir = "2.5.0"
+tokio = { version = "1.48.0", features = ["macros"] }
 
 [features]
 default = ["std", "pixel_data_native"]
@@ -39,4 +41,5 @@ std = [
   "dcmfx_p10/std",
   "dcmfx_pixel_data/std",
 ]
+async = ["std", "dcmfx_p10/async"]
 pixel_data_native = ["dcmfx_pixel_data/native"]

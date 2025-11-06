@@ -1,7 +1,7 @@
-use std::{io::Write, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::Args;
-use rayon::prelude::*;
+use tokio::io::AsyncWriteExt;
 
 use dcmfx::core::*;
 use dcmfx::json::*;
@@ -15,10 +15,11 @@ pub const ABOUT: &str = "Converts DICOM P10 files to DICOM JSON files";
 pub struct ToJsonArgs {
   #[arg(
     long,
-    help = "The number of threads to use to perform work.",
-    default_value_t = rayon::current_num_threads()
+    help = "The number of concurrent tasks to use. Defaults to the number of CPU
+      cores.",
+    default_value_t = {num_cpus::get()}
   )]
-  threads: usize,
+  concurrency: usize,
 
   #[command(flatten)]
   input: crate::args::input_args::P10InputArgs,
@@ -87,7 +88,7 @@ enum ToJsonError {
   JsonSerializeError(JsonSerializeError),
 }
 
-pub fn run(args: &mut ToJsonArgs) -> Result<(), ()> {
+pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
   crate::validate_output_args(&args.output_filename, &args.output_directory);
 
   let input_sources = args.input.base.create_iterator();
@@ -97,9 +98,11 @@ pub fn run(args: &mut ToJsonArgs) -> Result<(), ()> {
     store_encapsulated_pixel_data: args.store_encapsulated_pixel_data,
   };
 
-  let result = utils::create_thread_pool(args.threads).install(move || {
-    input_sources.par_bridge().try_for_each(|input_source| {
-      if args.input.ignore_invalid && !input_source.is_dicom_p10() {
+  let result = utils::run_tasks(
+    args.concurrency,
+    input_sources,
+    async |input_source: InputSource| {
+      if args.input.ignore_invalid && !input_source.is_dicom_p10().await {
         return Ok(());
       }
 
@@ -110,7 +113,9 @@ pub fn run(args: &mut ToJsonArgs) -> Result<(), ()> {
         input_source.output_path(".json", &args.output_directory)
       };
 
-      match input_source_to_json(&input_source, output_filename, args, config) {
+      match input_source_to_json(&input_source, output_filename, &args, config)
+        .await
+      {
         Ok(()) => Ok(()),
 
         Err(e) => {
@@ -122,8 +127,9 @@ pub fn run(args: &mut ToJsonArgs) -> Result<(), ()> {
           })
         }
       }
-    })
-  });
+    },
+  )
+  .await;
 
   match result {
     Ok(()) => Ok(()),
@@ -135,7 +141,7 @@ pub fn run(args: &mut ToJsonArgs) -> Result<(), ()> {
   }
 }
 
-fn input_source_to_json(
+async fn input_source_to_json(
   input_source: &InputSource,
   output_filename: PathBuf,
   args: &ToJsonArgs,
@@ -143,6 +149,7 @@ fn input_source_to_json(
 ) -> Result<(), ToJsonError> {
   let mut input_stream = input_source
     .open_read_stream()
+    .await
     .map_err(ToJsonError::P10Error)?;
 
   // Open output stream
@@ -151,6 +158,7 @@ fn input_source_to_json(
     Some(&output_filename),
     args.overwrite,
   )
+  .await
   .map_err(ToJsonError::P10Error)?;
 
   let read_config = args.input.p10_read_config();
@@ -164,15 +172,17 @@ fn input_source_to_json(
     let mut json_transform = P10JsonTransform::new(json_config);
 
     // Get exclusive access to the output stream
-    let mut output_stream = output_stream.lock().unwrap();
+    let mut output_stream = output_stream.lock().await;
 
     loop {
       // Read the next tokens from the input
-      let tokens = match dcmfx::p10::read_tokens_from_stream(
+      let tokens = match dcmfx::p10::read_tokens_from_stream_async(
         &mut input_stream,
         &mut context,
         None,
-      ) {
+      )
+      .await
+      {
         Ok(tokens) => tokens,
         Err(e) => return Err(ToJsonError::P10Error(e)),
       };
@@ -180,20 +190,25 @@ fn input_source_to_json(
       // Write the tokens to the JSON transform, directing the resulting JSON to
       // the output stream
       for token in tokens.iter() {
-        match json_transform.add_token(token, &mut *output_stream) {
-          Ok(()) => (),
-          Err(JsonSerializeError::IOError(e)) => {
-            return Err(ToJsonError::P10Error(P10Error::FileError {
-              when: "Writing output file".to_string(),
-              details: e.to_string(),
-            }));
-          }
+        let mut cursor = std::io::Cursor::new(vec![]);
+
+        match json_transform.add_token(token, &mut cursor) {
+          Ok(()) => output_stream
+            .write_all(&cursor.into_inner())
+            .await
+            .map_err(|e| {
+              ToJsonError::P10Error(P10Error::FileError {
+                when: "Writing output file".to_string(),
+                details: e.to_string(),
+              })
+            })?,
+
           Err(e) => return Err(ToJsonError::JsonSerializeError(e)),
         };
 
         // When the end token has been written the conversion is complete
         if *token == P10Token::End {
-          match output_stream.write_all(b"\n") {
+          match output_stream.write_all(b"\n").await {
             Ok(()) => (),
             Err(e) => {
               return Err(ToJsonError::P10Error(P10Error::FileError {
@@ -203,7 +218,7 @@ fn input_source_to_json(
             }
           };
 
-          return match output_stream.flush() {
+          return match output_stream.flush().await {
             Ok(()) => Ok(()),
             Err(e) => Err(ToJsonError::P10Error(P10Error::FileError {
               when: "Writing output file".to_string(),
@@ -215,11 +230,12 @@ fn input_source_to_json(
     }
   } else {
     // Read just the selected tags into a data set
-    let data_set = dcmfx::p10::read_stream_partial(
+    let data_set = dcmfx::p10::read_stream_partial_async(
       &mut input_stream,
       &args.selected_data_elements,
       Some(read_config),
     )
+    .await
     .map_err(ToJsonError::P10Error)?;
 
     // Convert to DICOM JSON
@@ -234,8 +250,9 @@ fn input_source_to_json(
     // Write to output stream
     output_stream
       .lock()
-      .unwrap()
+      .await
       .write_all(dicom_json.as_bytes())
+      .await
       .map_err(|e| {
         ToJsonError::P10Error(P10Error::FileError {
           when: "Writing DICOM JSON to output stream".to_string(),

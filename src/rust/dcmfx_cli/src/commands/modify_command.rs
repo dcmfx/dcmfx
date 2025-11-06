@@ -1,8 +1,7 @@
-use std::{ffi::OsStr, io::Read, path::PathBuf};
+use std::{ffi::OsStr, path::PathBuf};
 
 use clap::Args;
 use rand::Rng;
-use rayon::prelude::*;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
@@ -26,10 +25,11 @@ pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
 pub struct ModifyArgs {
   #[arg(
     long,
-    help = "The number of threads to use to perform work.",
-    default_value_t = rayon::current_num_threads()
+    help = "The number of concurrent tasks to use. Defaults to the number of CPU
+      cores.",
+    default_value_t = {num_cpus::get()}
   )]
-  threads: usize,
+  concurrency: usize,
 
   #[command(flatten)]
   input: crate::args::input_args::P10InputArgs,
@@ -298,7 +298,7 @@ enum ModifyCommandError {
   P10PixelDataTranscodeTransformError(P10PixelDataTranscodeTransformError),
 }
 
-pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
+pub async fn run(args: ModifyArgs) -> Result<(), ()> {
   if (args.output_filename.is_some() as u8
     + args.output_directory.is_some() as u8
     + args.in_place as u8)
@@ -357,9 +357,11 @@ pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
 
   let input_sources = args.input.base.create_iterator();
 
-  let result = utils::create_thread_pool(args.threads).install(move || {
-    input_sources.par_bridge().try_for_each(|input_source| {
-      if args.input.ignore_invalid && !input_source.is_dicom_p10() {
+  let result = utils::run_tasks(
+    args.concurrency,
+    input_sources,
+    async |input_source: InputSource| {
+      if args.input.ignore_invalid && !input_source.is_dicom_p10().await {
         return Ok(());
       }
 
@@ -371,7 +373,7 @@ pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
         input_source.output_path("", &args.output_directory)
       };
 
-      match modify_input_source(&input_source, output_filename, args) {
+      match modify_input_source(&input_source, output_filename, &args).await {
         Ok(()) => Ok(()),
 
         Err(e) => {
@@ -385,8 +387,9 @@ pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
           })
         }
       }
-    })
-  });
+    },
+  )
+  .await;
 
   match result {
     Ok(()) => Ok(()),
@@ -398,7 +401,7 @@ pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
   }
 }
 
-fn modify_input_source(
+async fn modify_input_source(
   input_source: &InputSource,
   output_filename: PathBuf,
   args: &ModifyArgs,
@@ -480,18 +483,20 @@ fn modify_input_source(
     .implementation_version_name(args.implementation_version_name.clone())
     .zlib_compression_level(args.zlib_compression_level);
 
-  let input_stream = input_source
+  let mut input_stream = input_source
     .open_read_stream()
+    .await
     .map_err(ModifyCommandError::P10Error)?;
 
   streaming_rewrite(
-    input_stream,
+    &mut input_stream,
     tmp_output_filename.as_ref().unwrap_or(&output_filename),
     write_config,
     insert_transform,
     filter_transform,
     args,
-  )?;
+  )
+  .await?;
 
   // Rename the temporary file to the desired output filename
   if let Some(temp_file_guard) = &mut temp_file_guard {
@@ -506,8 +511,8 @@ fn modify_input_source(
 /// Rewrites by streaming the tokens of the DICOM P10 straight to the output
 /// file.
 ///
-fn streaming_rewrite(
-  mut input_stream: Box<dyn Read>,
+async fn streaming_rewrite<S: IoAsyncRead>(
+  mut input_stream: &mut S,
   output_filename: &PathBuf,
   write_config: P10WriteConfig,
   mut insert_transform: Option<P10InsertTransform>,
@@ -516,10 +521,11 @@ fn streaming_rewrite(
 ) -> Result<(), ModifyCommandError> {
   // Open output stream
   let output_stream = utils::open_output_stream(output_filename, None, false)
+    .await
     .map_err(ModifyCommandError::P10Error)?;
 
   // Get exclusive access to the output stream
-  let mut output_stream = output_stream.lock().unwrap();
+  let mut output_stream = output_stream.lock().await;
 
   // Create read and write contexts
   let read_config = args.input.p10_read_config().max_token_size(256 * 1024);
@@ -531,11 +537,12 @@ fn streaming_rewrite(
   // Stream P10 tokens from the input stream to the output stream
   loop {
     // Read the next P10 tokens from the input stream
-    let mut tokens = dcmfx::p10::read_tokens_from_stream(
+    let mut tokens = dcmfx::p10::read_tokens_from_stream_async(
       &mut input_stream,
       &mut p10_read_context,
       None,
     )
+    .await
     .map_err(ModifyCommandError::P10Error)?;
 
     // If transcoding is active, setup a pixel data transcode transform when the
@@ -653,15 +660,17 @@ fn streaming_rewrite(
 
     // Pass tokens through the insert transform if one is specified
     let tokens = if let Some(insert_transform) = insert_transform.as_mut() {
-      tokens.into_iter().try_fold(vec![], |mut acc, token| {
-        acc.extend(
+      let mut new_tokens = vec![];
+
+      for token in tokens.iter() {
+        new_tokens.extend(
           insert_transform
-            .add_token(&token)
+            .add_token(token)
             .map_err(ModifyCommandError::P10Error)?,
         );
+      }
 
-        Ok(acc)
-      })
+      Ok(new_tokens)
     } else {
       Ok(tokens)
     }?;
@@ -683,11 +692,12 @@ fn streaming_rewrite(
     }?;
 
     // Write tokens to the output stream
-    let ended = dcmfx::p10::write_tokens_to_stream(
+    let ended = dcmfx::p10::write_tokens_to_stream_async(
       &tokens,
       &mut *output_stream,
       &mut p10_write_context,
     )
+    .await
     .map_err(ModifyCommandError::P10Error)?;
 
     // Stop when the end token is received

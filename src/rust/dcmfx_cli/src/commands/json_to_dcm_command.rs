@@ -1,7 +1,7 @@
-use std::{io::Read, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::Args;
-use rayon::prelude::*;
+use tokio::io::AsyncReadExt;
 
 use dcmfx::core::*;
 use dcmfx::json::*;
@@ -15,10 +15,11 @@ pub const ABOUT: &str = "Converts DICOM JSON files to DICOM P10 files";
 pub struct ToDcmArgs {
   #[arg(
     long,
-    help = "The number of threads to use to perform work.",
-    default_value_t = rayon::current_num_threads()
+    help = "The number of concurrent tasks to use. Defaults to the number of CPU
+      cores.",
+    default_value_t = {num_cpus::get()}
   )]
-  threads: usize,
+  concurrency: usize,
 
   #[command(flatten)]
   input: crate::args::input_args::BaseInputArgs,
@@ -67,13 +68,15 @@ enum ToDcmError {
   JsonDeserializeError(JsonDeserializeError),
 }
 
-pub fn run(args: &mut ToDcmArgs) -> Result<(), ()> {
+pub async fn run(args: ToDcmArgs) -> Result<(), ()> {
   crate::validate_output_args(&args.output_filename, &args.output_directory);
 
   let input_sources = args.input.create_iterator();
 
-  let result = utils::create_thread_pool(args.threads).install(move || {
-    input_sources.par_bridge().try_for_each(|input_source| {
+  let result = utils::run_tasks(
+    args.concurrency,
+    input_sources,
+    async |input_source: InputSource| {
       let output_filename = if let Some(output_filename) = &args.output_filename
       {
         output_filename.clone()
@@ -81,7 +84,7 @@ pub fn run(args: &mut ToDcmArgs) -> Result<(), ()> {
         input_source.output_path(".dcm", &args.output_directory)
       };
 
-      match input_source_to_dcm(&input_source, output_filename, args) {
+      match input_source_to_dcm(&input_source, output_filename, &args).await {
         Ok(()) => Ok(()),
 
         Err(e) => {
@@ -95,8 +98,9 @@ pub fn run(args: &mut ToDcmArgs) -> Result<(), ()> {
           })
         }
       }
-    })
-  });
+    },
+  )
+  .await;
 
   match result {
     Ok(()) => Ok(()),
@@ -108,13 +112,14 @@ pub fn run(args: &mut ToDcmArgs) -> Result<(), ()> {
   }
 }
 
-fn input_source_to_dcm(
+async fn input_source_to_dcm(
   input_source: &InputSource,
   output_filename: PathBuf,
   args: &ToDcmArgs,
 ) -> Result<(), ToDcmError> {
   let mut stream = input_source
     .open_read_stream()
+    .await
     .map_err(ToDcmError::P10Error)?;
 
   // Open output stream
@@ -123,12 +128,13 @@ fn input_source_to_dcm(
     Some(&output_filename),
     args.overwrite,
   )
+  .await
   .map_err(ToDcmError::P10Error)?;
 
   let mut buffer = vec![];
 
   // Read the DICOM JSON from the input stream
-  if let Err(e) = stream.read_to_end(&mut buffer) {
+  if let Err(e) = stream.read_to_end(&mut buffer).await {
     return Err(ToDcmError::P10Error(P10Error::FileError {
       when: "Reading file".to_string(),
       details: e.to_string(),
@@ -154,10 +160,11 @@ fn input_source_to_dcm(
     .implementation_version_name(args.implementation_version_name.clone());
 
   // Get exclusive access to the output stream
-  let mut output_stream = output_stream.lock().unwrap();
+  let mut output_stream = output_stream.lock().await;
 
   // Write P10 data to output stream
   data_set
-    .write_p10_stream(&mut *output_stream, Some(write_config))
+    .write_p10_stream_async(&mut *output_stream, Some(write_config))
+    .await
     .map_err(ToDcmError::P10Error)
 }

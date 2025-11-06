@@ -1,25 +1,47 @@
 use std::{
-  fs::File,
-  io::Write,
   path::{Path, PathBuf},
-  sync::{Arc, LazyLock, Mutex},
+  sync::{Arc, LazyLock},
 };
+
+use futures::stream::StreamExt;
+use tokio::sync::Mutex;
 
 use dcmfx::p10::P10Error;
 
-/// Creates a Rayon thread pool with the specified number of threads.
+use crate::args::input_args::InputSource;
+
+/// Runs tasks concurrently up to the specified task count, passing each item
+/// from the given input source iterator to the provided async body function.
 ///
-pub fn create_thread_pool(threads: usize) -> rayon::ThreadPool {
-  rayon::ThreadPoolBuilder::new()
-    .num_threads(threads)
-    .build()
-    .unwrap()
+/// Returns an error as soon as any of the tasks returns an error.
+///
+pub async fn run_tasks<I, E>(
+  task_count: usize,
+  input_sources: I,
+  body_func: impl AsyncFn(InputSource) -> Result<(), E>,
+) -> Result<(), E>
+where
+  I: Iterator<Item = InputSource>,
+{
+  let mut task_stream = futures::stream::iter(input_sources)
+    .map(async |i| body_func(i).await)
+    .buffer_unordered(task_count.max(1));
+
+  while let Some(result) = task_stream.next().await {
+    match result {
+      Ok(()) => (),
+      Err(e) => return Err(e),
+    }
+  }
+
+  Ok(())
 }
 
 /// Shared stdout write stream used for synchronization across threads.
 ///
-pub static GLOBAL_STDOUT: LazyLock<Arc<Mutex<Box<dyn Write + Send>>>> =
-  LazyLock::new(|| Arc::new(Mutex::new(Box::new(std::io::stdout()))));
+pub static GLOBAL_STDOUT: LazyLock<
+  Arc<Mutex<Box<dyn dcmfx::p10::IoAsyncWrite + Send>>>,
+> = LazyLock::new(|| Arc::new(Mutex::new(Box::new(tokio::io::stdout()))));
 
 /// Opens an output stream for the given path, first checking whether it exists
 /// and prompting the user about overwriting it if necessary. This prompt isn't
@@ -27,11 +49,11 @@ pub static GLOBAL_STDOUT: LazyLock<Arc<Mutex<Box<dyn Write + Send>>>> =
 ///
 /// The path "-" is interpreted as writing to stdout.
 ///
-pub fn open_output_stream(
+pub async fn open_output_stream(
   path: &PathBuf,
   display_path: Option<&PathBuf>,
   overwrite: bool,
-) -> Result<Arc<Mutex<Box<dyn Write + Send>>>, P10Error> {
+) -> Result<Arc<Mutex<Box<dyn dcmfx::p10::IoAsyncWrite + Send>>>, P10Error> {
   if path.to_string_lossy() == "-" {
     Ok(GLOBAL_STDOUT.clone())
   } else {
@@ -43,7 +65,7 @@ pub fn open_output_stream(
       error_if_exists(path);
     }
 
-    match File::create(path) {
+    match tokio::fs::File::create(path).await {
       Ok(file) => Ok(Arc::new(Mutex::new(Box::new(file)))),
 
       Err(e) => Err(P10Error::FileError {

@@ -97,10 +97,12 @@ impl InputSource {
 
   /// Returns whether the input source is valid DICOM P10 data.
   ///
-  pub fn is_dicom_p10(&self) -> bool {
+  pub async fn is_dicom_p10(&self) -> bool {
     match self {
       InputSource::Stdin => true,
-      InputSource::LocalFile { path } => dcmfx::p10::is_valid_file(path),
+      InputSource::LocalFile { path } => {
+        dcmfx::p10::is_valid_file_async(path).await
+      }
     }
   }
 
@@ -133,18 +135,22 @@ impl InputSource {
 
   /// Opens the input source as a read stream.
   ///
-  pub fn open_read_stream(&self) -> Result<Box<dyn std::io::Read>, P10Error> {
+  pub async fn open_read_stream(
+    &self,
+  ) -> Result<Box<dyn dcmfx::p10::IoAsyncRead>, P10Error> {
     match self {
-      InputSource::Stdin => Ok(Box::new(std::io::stdin())),
+      InputSource::Stdin => Ok(Box::new(tokio::io::stdin())),
 
-      InputSource::LocalFile { path } => match std::fs::File::open(path) {
-        Ok(file) => Ok(Box::new(file)),
+      InputSource::LocalFile { path } => {
+        match tokio::fs::File::open(path).await {
+          Ok(file) => Ok(Box::new(file)),
 
-        Err(e) => Err(P10Error::FileError {
-          when: "Opening file".to_string(),
-          details: e.to_string(),
-        }),
-      },
+          Err(e) => Err(P10Error::FileError {
+            when: "Opening file".to_string(),
+            details: e.to_string(),
+          }),
+        }
+      }
     }
   }
 }
@@ -157,7 +163,7 @@ impl BaseInputArgs {
   /// if one was specified.
   ///
   pub fn create_iterator(
-    &mut self,
+    &self,
   ) -> Box<dyn Iterator<Item = InputSource> + Send> {
     if self.input_filenames.is_empty() && self.file_list.is_none() {
       eprintln!(
@@ -168,64 +174,67 @@ impl BaseInputArgs {
 
     // Create iterator over the input filenames, expanding them if they are glob
     // patterns
-    let iter = core::mem::take(&mut self.input_filenames)
-      .into_iter()
-      .flat_map(|input_filename| {
-        let input_filename_str = input_filename.to_string_lossy();
+    let iter =
+      self
+        .input_filenames
+        .clone()
+        .into_iter()
+        .flat_map(|input_filename| {
+          let input_filename_str = input_filename.to_string_lossy();
 
-        // Handle stdin
-        if input_filename_str == "-" {
-          return Box::new(std::iter::once(InputSource::Stdin))
-            as Box<dyn Iterator<Item = InputSource> + Send>;
-        }
-
-        // If it's not a glob then error if it doesn't point to a valid file
-        if !is_glob(&input_filename_str) && !input_filename.is_file() {
-          if input_filename.is_dir() {
-            return Box::new(std::iter::empty());
+          // Handle stdin
+          if input_filename_str == "-" {
+            return Box::new(std::iter::once(InputSource::Stdin))
+              as Box<dyn Iterator<Item = InputSource> + Send>;
           }
 
-          eprintln!(
-            "Error: Input file '{}' does not exist",
-            input_filename.display()
-          );
-          std::process::exit(1);
-        }
+          // If it's not a glob then error if it doesn't point to a valid file
+          if !is_glob(&input_filename_str) && !input_filename.is_file() {
+            if input_filename.is_dir() {
+              return Box::new(std::iter::empty());
+            }
 
-        // Attempt to expand as a glob pattern
-        match glob::glob(&input_filename_str) {
-          Ok(paths) => {
-            let expanded = paths.filter_map(move |path| match path {
-              Ok(path) => {
-                if path.is_file() {
-                  Some(InputSource::LocalFile { path })
-                } else {
-                  None
-                }
-              }
-              Err(e) => {
-                eprintln!(
-                  "Error: Failed globbing '{}', details: {}",
-                  input_filename.display(),
-                  e
-                );
-                std::process::exit(1);
-              }
-            });
-
-            Box::new(expanded)
-          }
-
-          Err(e) => {
             eprintln!(
-              "Error: Invalid glob pattern '{}', details: {}",
-              input_filename.display(),
-              e
+              "Error: Input file '{}' does not exist",
+              input_filename.display()
             );
             std::process::exit(1);
           }
-        }
-      });
+
+          // Attempt to expand as a glob pattern
+          match glob::glob(&input_filename_str) {
+            Ok(paths) => {
+              let expanded = paths.filter_map(move |path| match path {
+                Ok(path) => {
+                  if path.is_file() {
+                    Some(InputSource::LocalFile { path })
+                  } else {
+                    None
+                  }
+                }
+                Err(e) => {
+                  eprintln!(
+                    "Error: Failed globbing '{}', details: {}",
+                    input_filename.display(),
+                    e
+                  );
+                  std::process::exit(1);
+                }
+              });
+
+              Box::new(expanded)
+            }
+
+            Err(e) => {
+              eprintln!(
+                "Error: Invalid glob pattern '{}', details: {}",
+                input_filename.display(),
+                e
+              );
+              std::process::exit(1);
+            }
+          }
+        });
 
     // Iterate the contents of any file list as well
     Box::new(iter.chain(self.create_file_list_iterator()))

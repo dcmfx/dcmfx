@@ -19,6 +19,12 @@ pub trait IoRead: std::io::Read {}
 #[cfg(feature = "std")]
 impl<T: std::io::Read> IoRead for T {}
 
+#[cfg(feature = "async")]
+pub trait IoAsyncRead: tokio::io::AsyncRead + Unpin {}
+
+#[cfg(feature = "async")]
+impl<T: tokio::io::AsyncRead + Unpin> IoAsyncRead for T {}
+
 // I/O Write trait
 
 #[cfg(not(feature = "std"))]
@@ -32,3 +38,9 @@ pub trait IoWrite: std::io::Write {}
 
 #[cfg(feature = "std")]
 impl<T: std::io::Write> IoWrite for T {}
+
+#[cfg(feature = "async")]
+pub trait IoAsyncWrite: tokio::io::AsyncWrite + Unpin {}
+
+#[cfg(feature = "async")]
+impl<T: tokio::io::AsyncWrite + Unpin> IoAsyncWrite for T {}

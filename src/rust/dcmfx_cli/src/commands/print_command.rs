@@ -34,7 +34,7 @@ pub struct PrintArgs {
   styled: Option<bool>,
 }
 
-pub fn run(args: &mut PrintArgs) -> Result<(), ()> {
+pub async fn run(args: PrintArgs) -> Result<(), ()> {
   let input_sources = args.input.base.create_iterator();
 
   let mut print_options = DataSetPrintOptions::default();
@@ -51,11 +51,12 @@ pub fn run(args: &mut PrintArgs) -> Result<(), ()> {
   let read_config = args.input.p10_read_config().max_token_size(256 * 1024);
 
   for input_source in input_sources {
-    if args.input.ignore_invalid && !input_source.is_dicom_p10() {
+    if args.input.ignore_invalid && !input_source.is_dicom_p10().await {
       continue;
     }
 
-    match print_input_source(&input_source, &read_config, &print_options) {
+    match print_input_source(&input_source, &read_config, &print_options).await
+    {
       Ok(()) => (),
 
       Err(e) => {
@@ -69,18 +70,22 @@ pub fn run(args: &mut PrintArgs) -> Result<(), ()> {
   Ok(())
 }
 
-fn print_input_source(
+async fn print_input_source(
   input_source: &InputSource,
   read_config: &P10ReadConfig,
   print_options: &DataSetPrintOptions,
 ) -> Result<(), P10Error> {
-  let mut stream = input_source.open_read_stream()?;
+  let mut stream = input_source.open_read_stream().await?;
   let mut context = P10ReadContext::new(Some(*read_config));
   let mut p10_print_transform = P10PrintTransform::new(print_options);
 
   loop {
-    let tokens =
-      dcmfx::p10::read_tokens_from_stream(&mut stream, &mut context, None)?;
+    let tokens = dcmfx::p10::read_tokens_from_stream_async(
+      &mut stream,
+      &mut context,
+      None,
+    )
+    .await?;
 
     for token in tokens.iter() {
       match token {

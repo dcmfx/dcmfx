@@ -3,9 +3,9 @@ const RNG_SEED: u64 = 1023;
 use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path};
 
 use either::Either;
+use futures::stream::StreamExt;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
-use rayon::prelude::*;
 use walkdir::WalkDir;
 
 use dcmfx_core::*;
@@ -13,8 +13,8 @@ use dcmfx_json::*;
 use dcmfx_p10::*;
 use dcmfx_pixel_data::*;
 
-#[test]
-fn integration_tests() -> Result<(), ()> {
+#[tokio::test]
+async fn integration_tests() -> Result<(), ()> {
   let test_assets_dir = if Path::new("../../test/assets").is_dir() {
     "../../test/assets"
   } else {
@@ -36,10 +36,11 @@ fn integration_tests() -> Result<(), ()> {
   dicoms.sort();
 
   // Validate each file
-  let validation_results: Vec<_> = dicoms
-    .par_iter()
-    .map(|dicom| validate_dicom(dicom).map_err(|e| e.to_lines(dicom)))
-    .collect();
+  let validation_results: Vec<_> = futures::stream::iter(dicoms)
+    .map(async |dicom| validate_dicom(dicom).map_err(|e| e.to_lines(dicom)))
+    .buffer_unordered(num_cpus::get())
+    .collect()
+    .await;
 
   // Print results
   if validation_results.iter().all(|r| r.is_ok()) {

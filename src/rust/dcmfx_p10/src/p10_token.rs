@@ -215,6 +215,28 @@ pub fn data_elements_to_tokens<E>(
   Ok(())
 }
 
+/// Converts all the data elements in a data set directly to DICOM P10 tokens.
+/// Each token is returned via a callback.
+///
+#[cfg(feature = "async")]
+pub async fn data_elements_to_tokens_async<E>(
+  data_set: &DataSet,
+  path: &DataSetPath,
+  token_callback: &mut impl AsyncFnMut(P10Token) -> Result<(), E>,
+) -> Result<(), E> {
+  for (tag, value) in data_set.iter() {
+    let mut path = path.clone();
+    path.add_data_element(*tag).unwrap();
+
+    Box::pin(async {
+      data_element_to_tokens_async(*tag, value, &path, token_callback).await
+    })
+    .await?;
+  }
+
+  Ok(())
+}
+
 /// Converts a DICOM data element to DICOM P10 tokens. Each token is returned
 /// via a callback.
 ///
@@ -303,6 +325,108 @@ pub fn data_element_to_tokens<E>(
 
     // Write delimiter for the sequence
     token_callback(P10Token::SequenceDelimiter { tag })?;
+
+    return Ok(());
+  }
+
+  // It isn't logically possible to reach here as one of the above branches must
+  // have been taken
+  unreachable!();
+}
+
+/// Converts a DICOM data element to DICOM P10 tokens. Each token is returned
+/// via a callback.
+///
+#[cfg(feature = "async")]
+pub async fn data_element_to_tokens_async<E>(
+  tag: DataElementTag,
+  value: &DataElementValue,
+  path: &DataSetPath,
+  token_callback: &mut impl AsyncFnMut(P10Token) -> Result<(), E>,
+) -> Result<(), E> {
+  let vr = value.value_representation();
+
+  // For values that have their bytes directly available write them out as-is
+  if let Ok(bytes) = value.bytes() {
+    let header_token = P10Token::DataElementHeader {
+      tag,
+      vr,
+      length: bytes.len() as u32,
+      path: path.clone(),
+    };
+    token_callback(header_token).await?;
+
+    token_callback(P10Token::DataElementValueBytes {
+      tag,
+      vr,
+      data: bytes.clone(),
+      bytes_remaining: 0,
+    })
+    .await?;
+
+    return Ok(());
+  }
+
+  // For encapsulated pixel data, write all of the items individually,
+  // followed by a sequence delimiter
+  if let Ok(items) = value.encapsulated_pixel_data() {
+    let header_token = P10Token::SequenceStart {
+      tag,
+      vr,
+      path: path.clone(),
+    };
+    token_callback(header_token).await?;
+
+    for (index, item) in items.iter().enumerate() {
+      let length = item.len() as u32;
+      let item_header_token = P10Token::PixelDataItem { index, length };
+
+      token_callback(item_header_token).await?;
+
+      let value_bytes_token = P10Token::DataElementValueBytes {
+        tag: dictionary::ITEM.tag,
+        vr,
+        data: item.clone(),
+        bytes_remaining: 0,
+      };
+      token_callback(value_bytes_token).await?;
+    }
+
+    // Write delimiter for the encapsulated pixel data sequence
+    token_callback(P10Token::SequenceDelimiter { tag }).await?;
+
+    return Ok(());
+  }
+
+  // For sequences, write the item data sets recursively, followed by a
+  // sequence delimiter
+  if let Ok(items) = value.sequence_items() {
+    let header_token = P10Token::SequenceStart {
+      tag,
+      vr,
+      path: path.clone(),
+    };
+    token_callback(header_token).await?;
+
+    for (index, item) in items.iter().enumerate() {
+      let item_start_token = P10Token::SequenceItemStart { index };
+      token_callback(item_start_token).await?;
+
+      let mut path = path.clone();
+      path.add_sequence_item(index).unwrap();
+
+      Box::pin(async {
+        data_elements_to_tokens_async(item, &path, token_callback).await
+      })
+      .await?;
+
+      // Write delimiter for the item
+      let item_delimiter_token = P10Token::SequenceItemDelimiter;
+      token_callback(item_delimiter_token).await?;
+    }
+
+    // Write delimiter for the sequence
+    token_callback(P10Token::SequenceDelimiter { tag }).await?;
 
     return Ok(());
   }

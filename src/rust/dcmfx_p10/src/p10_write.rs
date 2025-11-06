@@ -589,6 +589,70 @@ pub fn data_set_to_tokens<E>(
   process_token(P10Token::End)
 }
 
+/// Converts a data set to DICOM P10 tokens. The generated P10 tokens are
+/// returned via a callback.
+///
+#[cfg(feature = "async")]
+pub async fn data_set_to_tokens_async<E>(
+  data_set: &DataSet,
+  path: &DataSetPath,
+  token_callback: &mut impl AsyncFnMut(P10Token) -> Result<(), E>,
+) -> Result<(), E> {
+  // Create filter transform that removes File Meta Information data elements
+  // from the data set's token stream
+  let mut remove_fmi_transform =
+    P10FilterTransform::new(Box::new(|tag, _vr, _length, path| {
+      !path.is_root() || !tag.is_file_meta_information()
+    }));
+
+  // Create insert transform to add the '(0008,0005) SpecificCharacterSet' data
+  // element into the data set's token stream, specifying UTF-8 (ISO_IR 192)
+  let mut data_elements_to_insert = DataSet::new();
+  data_elements_to_insert
+    .insert_string_value(&dictionary::SPECIFIC_CHARACTER_SET, &["ISO_IR 192"])
+    .unwrap();
+  let mut insert_specific_character_set_transform =
+    P10InsertTransform::new(data_elements_to_insert);
+
+  // Create a function that passes the token through the above two transforms
+  // and then to the callback
+  let mut process_token = async |token: P10Token| -> Result<(), E> {
+    // The following two unwraps are safe because the P10 transforms only error
+    // on invalid token streams, which can't happen here
+
+    if !remove_fmi_transform.add_token(&token).unwrap() {
+      return Ok(());
+    }
+
+    let tokens = insert_specific_character_set_transform
+      .add_token(&token)
+      .unwrap();
+
+    for token in tokens {
+      token_callback(token).await?;
+    }
+
+    Ok(())
+  };
+
+  // Write File Preamble and File Meta Information tokens
+  let preamble_token = P10Token::FilePreambleAndDICMPrefix {
+    preamble: Box::new([0; 128]),
+  };
+  process_token(preamble_token).await?;
+  let fmi_token = P10Token::FileMetaInformation {
+    data_set: data_set.file_meta_information(),
+  };
+  process_token(fmi_token).await?;
+
+  // Write main data set
+  p10_token::data_elements_to_tokens_async(data_set, path, &mut process_token)
+    .await?;
+
+  // Write end token
+  process_token(P10Token::End).await
+}
+
 /// Converts a data set to DICOM P10 bytes. The generated P10 bytes are returned
 /// via a callback.
 ///
@@ -612,6 +676,32 @@ pub fn data_set_to_bytes(
   };
 
   data_set_to_tokens(data_set, path, &mut process_token)
+}
+
+/// Converts a data set to DICOM P10 bytes. The generated P10 bytes are returned
+/// via a callback.
+///
+#[cfg(feature = "async")]
+pub async fn data_set_to_bytes_async(
+  data_set: &DataSet,
+  path: &DataSetPath,
+  bytes_callback: &mut impl AsyncFnMut(RcByteSlice) -> Result<(), P10Error>,
+  config: Option<P10WriteConfig>,
+) -> Result<(), P10Error> {
+  let mut context = P10WriteContext::new(config);
+
+  let mut process_token = async |token: P10Token| -> Result<(), P10Error> {
+    context.write_token(&token)?;
+
+    let p10_bytes = context.read_bytes();
+    for bytes in p10_bytes {
+      bytes_callback(bytes).await?;
+    }
+
+    Ok(())
+  };
+
+  data_set_to_tokens_async(data_set, path, &mut process_token).await
 }
 
 /// Sets the *'(0002,0001) File Meta Information Version'*, *'(0002,0012)

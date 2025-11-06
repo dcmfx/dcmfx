@@ -55,18 +55,19 @@ enum Commands {
   List(list_command::ListArgs),
 }
 
-fn main() {
+#[tokio::main(flavor = "multi_thread")]
+async fn main() {
   let cli = Cli::parse();
 
   let started_at = std::time::Instant::now();
 
   let r = match cli.command {
-    Commands::GetPixelData(mut args) => get_pixel_data_command::run(&mut args),
-    Commands::Modify(mut args) => modify_command::run(&mut args),
-    Commands::Print(mut args) => print_command::run(&mut args),
-    Commands::JsonToDcm(mut args) => json_to_dcm_command::run(&mut args),
-    Commands::DcmToJson(mut args) => dcm_to_json_command::run(&mut args),
-    Commands::List(args) => list_command::run(&args),
+    Commands::GetPixelData(args) => get_pixel_data_command::run(args).await,
+    Commands::Modify(args) => modify_command::run(args).await,
+    Commands::Print(args) => print_command::run(args).await,
+    Commands::JsonToDcm(args) => json_to_dcm_command::run(args).await,
+    Commands::DcmToJson(args) => dcm_to_json_command::run(args).await,
+    Commands::List(args) => list_command::run(args).await,
   };
 
   if cli.print_stats {

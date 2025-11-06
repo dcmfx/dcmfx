@@ -12,12 +12,20 @@ homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
+async-trait = { version = "0.1.89", optional = true }
 byteorder = "1.5.0"
 dcmfx_character_set = { path = "../dcmfx_character_set", default-features = false }
 dcmfx_core = { path = "../dcmfx_core", default-features = false }
 flate2 = "1.1.2"
+futures = { version = "0.3.31", optional = true }
 miniz_oxide = "0.8.9"
+tokio = { version = "1.48.0", features = [
+  "fs",
+  "io-util",
+  "macros",
+], optional = true }
 
 [features]
 default = ["std"]
 std = ["dcmfx_character_set/std", "dcmfx_core/std"]
+async = ["std", "async-trait", "futures", "tokio"]

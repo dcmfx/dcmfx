@@ -1,13 +1,13 @@
 use std::{
   collections::{HashMap, HashSet},
-  io::Write,
   path::{Path, PathBuf},
   sync::{Arc, Mutex},
 };
 
 use clap::{Args, ValueEnum};
+use tokio::io::AsyncWriteExt;
+
 use dcmfx::{core::*, json::*, p10::*};
-use rayon::iter::{ParallelBridge, ParallelIterator};
 
 use crate::{args::input_args::InputSource, utils};
 
@@ -17,10 +17,11 @@ pub const ABOUT: &str = "Lists DICOM P10 files in one or more directories";
 pub struct ListArgs {
   #[arg(
     long,
-    help = "The number of threads to use to perform work.",
-    default_value_t = rayon::current_num_threads()
+    help = "The number of concurrent tasks to use. Defaults to the number of CPU
+      cores.",
+    default_value_t = {num_cpus::get()}
   )]
-  threads: usize,
+  concurrency: usize,
 
   #[arg(
     required = true,
@@ -115,7 +116,7 @@ impl core::fmt::Display for Format {
   }
 }
 
-pub fn run(args: &ListArgs) -> Result<(), ()> {
+pub async fn run(args: ListArgs) -> Result<(), ()> {
   if (!args.selected_data_elements.is_empty()
     || !args.optional_selected_data_elements.is_empty())
     && args.format != Format::JsonLines
@@ -139,10 +140,10 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
   let extension = args.extension.as_ref().map(|e| e.to_lowercase());
 
   // Create iterator for listing all files to be processed
-  let file_iterator = args.directories.iter().flat_map(|dir| {
-    walkdir::WalkDir::new(dir)
+  let file_iterator = args.directories.clone().into_iter().flat_map(|dir| {
+    walkdir::WalkDir::new(&dir)
       .into_iter()
-      .filter_map(|entry| match entry {
+      .filter_map(move |entry| match entry {
         Ok(entry) => {
           if entry.file_type().is_file() {
             Some(InputSource::LocalFile {
@@ -167,33 +168,39 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
   // output
   let summary = Arc::new(Mutex::new(Summary::new()));
 
-  let result = {
-    let summary = summary.clone();
+  let result = utils::run_tasks(
+    args.concurrency,
+    file_iterator,
+    async |input_source: InputSource| {
+      let InputSource::LocalFile { path } = input_source else {
+        eprintln!(
+          "Error: reading from stdin is not supported with the list command"
+        );
+        std::process::exit(1);
+      };
 
-    utils::create_thread_pool(args.threads).install(move || {
-      file_iterator.par_bridge().try_for_each(
-        |input_source| -> Result<(), (PathBuf, ProcessFileError)> {
-          let InputSource::LocalFile { path } = input_source else {
-            eprintln!(
-              "Error: reading from stdin is not supported with the list command"
-            );
-            std::process::exit(1);
-          };
+      // Check file's extension is allowed, if this check was requested
+      if let Some(extension) = &extension
+        && let Some(dir_entry_extension) = path.extension()
+        && dir_entry_extension.to_string_lossy().to_lowercase() != *extension
+      {
+        return Ok(());
+      }
 
-          // Check file's extension is allowed, if this check was requested
-          if let Some(extension) = &extension
-            && let Some(dir_entry_extension) = path.extension()
-            && dir_entry_extension.to_string_lossy().to_lowercase()
-              != *extension
-          {
-            return Ok(());
-          }
+      // Check file's extension is allowed, if this check was requested
+      if let Some(extension) = &extension
+        && let Some(dir_entry_extension) = path.extension()
+        && dir_entry_extension.to_string_lossy().to_lowercase() != *extension
+      {
+        return Ok(());
+      }
 
-          process_file(&path, args, summary.clone()).map_err(|e| (path, e))
-        },
-      )
-    })
-  };
+      process_file(&path, &args, summary.clone())
+        .await
+        .map_err(|e| (path, e))
+    },
+  )
+  .await;
 
   // Print the error if one occurred
   if let Err((path, error)) = result {
@@ -213,7 +220,7 @@ pub fn run(args: &ListArgs) -> Result<(), ()> {
 
   // Print summary if requested
   if args.summarize {
-    std::io::stdout().flush().unwrap();
+    tokio::io::stdout().flush().await.unwrap();
     eprintln!();
     summary.lock().unwrap().print_tables();
   }
@@ -229,7 +236,7 @@ enum ProcessFileError {
   DataError(DataError),
 }
 
-fn process_file(
+async fn process_file(
   path: &Path,
   args: &ListArgs,
   summary: Arc<Mutex<Summary>>,
@@ -249,7 +256,8 @@ fn process_file(
   };
 
   // Get the line of output for this file
-  let output_line = output_line_for_file(path, args, &summary, &mut file_size)?;
+  let output_line =
+    output_line_for_file(path, args, &summary, &mut file_size).await?;
 
   // If None was returned then it's not a DICOM P10 file
   let Some(mut output_line) = output_line else {
@@ -260,11 +268,12 @@ fn process_file(
   output_line.push('\n');
 
   // Get exclusive access to the shared stdout stream
-  let mut stdout = utils::GLOBAL_STDOUT.lock().unwrap();
+  let mut stdout = utils::GLOBAL_STDOUT.lock().await;
 
   // Write line to stdout
   stdout
     .write_all(output_line.as_bytes())
+    .await
     .map_err(ProcessFileError::IoError)?;
 
   // Accumulate stats if a summary of the listing was requested
@@ -275,7 +284,7 @@ fn process_file(
   Ok(())
 }
 
-fn output_line_for_file(
+async fn output_line_for_file(
   path: &Path,
   args: &ListArgs,
   summary: &Arc<Mutex<Summary>>,
@@ -291,7 +300,7 @@ fn output_line_for_file(
 
   if tags_to_read.is_empty() {
     // If this isn't a DICOM P10 file then there's nothing to do
-    if !dcmfx::p10::is_valid_file(path) {
+    if !dcmfx::p10::is_valid_file_async(path).await {
       return Ok(None);
     }
 
@@ -308,11 +317,12 @@ fn output_line_for_file(
       }
     }
   } else {
-    let data_set = dcmfx::p10::read_file_partial(
+    let data_set = dcmfx::p10::read_file_partial_async(
       path,
       &tags_to_read,
       Some(P10ReadConfig::default().require_dicm_prefix(true)),
-    );
+    )
+    .await;
 
     // If this isn't a DICOM P10 file then there's nothing to do
     if data_set == Err(P10Error::DicmPrefixNotPresent) {

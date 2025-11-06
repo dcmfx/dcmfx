@@ -1,7 +1,6 @@
 use std::{fs::File, io::Write, path::Path, path::PathBuf};
 
 use clap::{Args, ValueEnum};
-use rayon::prelude::*;
 
 use dcmfx::core::*;
 use dcmfx::p10::*;
@@ -36,10 +35,11 @@ pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
 pub struct GetPixelDataArgs {
   #[arg(
     long,
-    help = "The number of threads to use to perform work.",
-    default_value_t = rayon::current_num_threads()
+    help = "The number of concurrent tasks to use. Defaults to the number of CPU
+      cores.",
+    default_value_t = {num_cpus::get()}
   )]
-  threads: usize,
+  concurrency: usize,
 
   #[command(flatten)]
   input: crate::args::input_args::P10InputArgs,
@@ -332,20 +332,27 @@ enum GetPixelDataError {
   OtherError(String),
 }
 
-pub fn run(args: &mut GetPixelDataArgs) -> Result<(), ()> {
+pub async fn run(args: GetPixelDataArgs) -> Result<(), ()> {
   crate::validate_output_args(&None, &args.output_directory);
 
   let input_sources = args.input.base.create_iterator();
 
-  let result = utils::create_thread_pool(args.threads).install(move || {
-    input_sources.par_bridge().try_for_each(|input_source| {
-      if args.input.ignore_invalid && !input_source.is_dicom_p10() {
+  let result = utils::run_tasks(
+    args.concurrency,
+    input_sources,
+    async |input_source: InputSource| {
+      if args.input.ignore_invalid && !input_source.is_dicom_p10().await {
         return Ok(());
       }
 
       let output_prefix = input_source.output_path("", &args.output_directory);
 
-      match get_pixel_data_from_input_source(&input_source, output_prefix, args)
+      match get_pixel_data_from_input_source(
+        &input_source,
+        output_prefix,
+        &args,
+      )
+      .await
       {
         Ok(()) => Ok(()),
 
@@ -378,8 +385,9 @@ pub fn run(args: &mut GetPixelDataArgs) -> Result<(), ()> {
           })
         }
       }
-    })
-  });
+    },
+  )
+  .await;
 
   match result {
     Ok(()) => Ok(()),
@@ -391,13 +399,14 @@ pub fn run(args: &mut GetPixelDataArgs) -> Result<(), ()> {
   }
 }
 
-fn get_pixel_data_from_input_source(
+async fn get_pixel_data_from_input_source(
   input_source: &InputSource,
   output_prefix: PathBuf,
   args: &GetPixelDataArgs,
 ) -> Result<(), GetPixelDataError> {
   let mut stream = input_source
     .open_read_stream()
+    .await
     .map_err(GetPixelDataError::P10Error)?;
 
   // Create read context with a small max token size to keep memory usage low
@@ -439,9 +448,13 @@ fn get_pixel_data_from_input_source(
 
   loop {
     // Read the next tokens from the input stream
-    let tokens =
-      dcmfx::p10::read_tokens_from_stream(&mut stream, &mut read_context, None)
-        .map_err(GetPixelDataError::P10Error)?;
+    let tokens = dcmfx::p10::read_tokens_from_stream_async(
+      &mut stream,
+      &mut read_context,
+      None,
+    )
+    .await
+    .map_err(GetPixelDataError::P10Error)?;
 
     for token in tokens.iter() {
       // For raw output, determine the output extension from the transfer syntax
