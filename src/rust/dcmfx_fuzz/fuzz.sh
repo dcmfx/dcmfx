@@ -3,7 +3,7 @@
 set -e
 
 # Install afl.rs
-cargo install cargo-afl@0.15.17
+cargo install cargo-afl@0.17.0
 
 # Remove all data from previous runs
 rm -rf inputs outputs

@@ -232,7 +232,7 @@ jobs:
       - name: Build fuzzer
         working-directory: src/rust/dcmfx_fuzz
         run: |
-          cargo install cargo-afl@0.15.17
+          cargo install cargo-afl@0.17.0
           cargo afl config --build --force
           cargo afl build
 
