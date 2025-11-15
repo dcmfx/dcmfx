@@ -1,22 +1,22 @@
-use std::{ffi::OsStr, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::Args;
-use rand::Rng;
 
-use dcmfx::core::*;
-use dcmfx::p10::*;
-use dcmfx::pixel_data::{transforms::*, *};
+use dcmfx::{
+  core::*,
+  p10::*,
+  pixel_data::{transforms::*, *},
+};
 
 use crate::{
   args::{
-    input_args::InputSource,
     photometric_interpretation_arg::{
       PhotometricInterpretationColorArg, PhotometricInterpretationMonochromeArg,
     },
     planar_configuration_arg::PlanarConfigurationArg,
     transfer_syntax_arg::TransferSyntaxArg,
   },
-  utils::{self, TempFileRenamer, error_if_exists},
+  utils::{self, InputSource, OutputTarget},
 };
 
 pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
@@ -69,7 +69,7 @@ pub struct ModifyArgs {
   #[arg(
     long,
     help_heading = "Output",
-    help = "Overwrite files without prompting",
+    help = "Overwrite any output files that already exist",
     default_value_t = false
   )]
   overwrite: bool,
@@ -353,7 +353,13 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
     }
   }
 
-  crate::validate_output_args(&args.output_filename, &args.output_directory);
+  crate::validate_output_args(
+    args.output_filename.as_ref(),
+    args.output_directory.as_ref(),
+  )
+  .await;
+
+  OutputTarget::set_overwrite(args.overwrite || args.in_place);
 
   let input_sources = args.input.base.create_iterator();
 
@@ -361,20 +367,33 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
     args.concurrency,
     input_sources,
     async |input_source: InputSource| {
-      if args.input.ignore_invalid && !input_source.is_dicom_p10().await {
-        return Ok(());
+      if args.in_place
+        && let InputSource::Stdin = input_source
+      {
+        eprintln!("Error: --in-place can't be used with stdin as an input");
+        std::process::exit(1);
       }
 
-      let output_filename: PathBuf = if args.in_place {
-        input_source.path()
+      let output_target = if args.in_place {
+        OutputTarget::new(input_source.specified_path())
       } else if let Some(output_filename) = &args.output_filename {
-        output_filename.clone()
+        OutputTarget::new(output_filename)
       } else {
-        input_source.output_path("", &args.output_directory)
+        OutputTarget::from_input_source(
+          &input_source,
+          "",
+          &args.output_directory,
+        )
       };
 
-      match modify_input_source(&input_source, output_filename, &args).await {
+      match modify_input_source(&input_source, output_target, &args).await {
         Ok(()) => Ok(()),
+
+        Err(ModifyCommandError::P10Error(P10Error::DicmPrefixNotPresent))
+          if args.input.ignore_invalid =>
+        {
+          Ok(())
+        }
 
         Err(e) => {
           let task_description = format!("modifying \"{input_source}\"");
@@ -403,47 +422,24 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
 
 async fn modify_input_source(
   input_source: &InputSource,
-  output_filename: PathBuf,
+  output_target: OutputTarget,
   args: &ModifyArgs,
 ) -> Result<(), ModifyCommandError> {
-  if *output_filename != *"-" {
-    if args.in_place {
-      println!("Modifying \"{input_source}\" in place …");
-    } else {
+  if args.in_place {
+    println!("Modifying \"{input_source}\" in place …");
+  } else if let Some(output_filename) = &args.output_filename {
+    if !output_target.is_stdout() {
       println!(
-        "Modifying \"{}\" => \"{}\" …",
-        input_source,
+        "Modifying \"{input_source}\" => \"{}\" …",
         output_filename.display()
       );
     }
-
-    if !args.in_place && !args.overwrite {
-      error_if_exists(&output_filename);
-    }
-  }
-
-  // Append a random suffix to get a unique name for a temporary output file.
-  // This isn't needed when outputting to stdout.
-  let (tmp_output_filename, mut temp_file_guard) = if *output_filename == *"-" {
-    (None, None)
   } else {
-    let mut rng = rand::rng();
-    let random_suffix: String = (0..16)
-      .map(|_| char::from(rng.sample(rand::distr::Alphanumeric)))
-      .collect();
-
-    let file_name = output_filename.file_name().unwrap_or(OsStr::new(""));
-    let file_name =
-      format!("{}.{}.tmp", file_name.to_string_lossy(), random_suffix);
-
-    let mut new_path = output_filename.clone();
-    new_path.set_file_name(file_name);
-
-    (
-      Some(new_path.clone()),
-      Some(TempFileRenamer::new(new_path, output_filename.clone())),
-    )
-  };
+    println!(
+      "Modifying \"{input_source}\" => \"{}\" …",
+      output_target.specified_path().display()
+    );
+  }
 
   // Create an insert transform for merging in another data set, if needed
   let insert_transform = args
@@ -488,9 +484,18 @@ async fn modify_input_source(
     .await
     .map_err(ModifyCommandError::P10Error)?;
 
+  // Open output write stream
+  let output_stream_handle = output_target
+    .open_write_stream(false)
+    .await
+    .map_err(ModifyCommandError::P10Error)?;
+
+  // Get exclusive access to the output stream
+  let mut output_stream = output_stream_handle.lock().await;
+
   streaming_rewrite(
     &mut input_stream,
-    tmp_output_filename.as_ref().unwrap_or(&output_filename),
+    &mut *output_stream,
     write_config,
     insert_transform,
     filter_transform,
@@ -498,37 +503,30 @@ async fn modify_input_source(
   )
   .await?;
 
-  // Rename the temporary file to the desired output filename
-  if let Some(temp_file_guard) = &mut temp_file_guard {
-    temp_file_guard.commit().map_err(|(when, details)| {
-      ModifyCommandError::P10Error(P10Error::FileError { when, details })
-    })?;
-  }
-
-  Ok(())
+  output_target
+    .commit(&mut output_stream)
+    .await
+    .map_err(ModifyCommandError::P10Error)
 }
 
 /// Rewrites by streaming the tokens of the DICOM P10 straight to the output
 /// file.
 ///
-async fn streaming_rewrite<S: IoAsyncRead>(
-  mut input_stream: &mut S,
-  output_filename: &PathBuf,
+async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
+  input_stream: &mut I,
+  output_stream: &mut O,
   write_config: P10WriteConfig,
   mut insert_transform: Option<P10InsertTransform>,
   mut filter_transform: Option<P10FilterTransform>,
   args: &ModifyArgs,
 ) -> Result<(), ModifyCommandError> {
-  // Open output stream
-  let output_stream = utils::open_output_stream(output_filename, None, false)
-    .await
-    .map_err(ModifyCommandError::P10Error)?;
-
-  // Get exclusive access to the output stream
-  let mut output_stream = output_stream.lock().await;
-
   // Create read and write contexts
-  let read_config = args.input.p10_read_config().max_token_size(256 * 1024);
+  let read_config = args
+    .input
+    .p10_read_config()
+    .max_token_size(256 * 1024)
+    .require_dicm_prefix(args.input.ignore_invalid);
+
   let mut p10_read_context = P10ReadContext::new(Some(read_config));
   let mut p10_write_context = P10WriteContext::new(Some(write_config));
 
@@ -538,7 +536,7 @@ async fn streaming_rewrite<S: IoAsyncRead>(
   loop {
     // Read the next P10 tokens from the input stream
     let mut tokens = dcmfx::p10::read_tokens_from_stream_async(
-      &mut input_stream,
+      input_stream,
       &mut p10_read_context,
       None,
     )

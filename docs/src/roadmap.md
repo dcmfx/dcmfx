@@ -15,15 +15,16 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
 
 - CLI:
 
-  - Native use of S3/Azure/GCP/WebDAV URLs via `object_store` crate
+  - Evaluate glob patterns in object URLs for input filenames
   - `get-document` command:
     - New command to get an encapsulated document such as a PDF
   - `list` command:
+    - List DICOMs at object URL prefixes (S3/Azure/GCP)
+    - Filter listed DICOMs by data element value
     - Make all File Meta Information data elements selectable, not just the
       transfer syntax
-    - Filter listed DICOMs by data element value
   - `modify` command:
-    - `--merge` and `--merge-json` arguments to merge DICOM data sets together
+    - `--merge` argument to merge in a second DICOM P10 input
     - `--select-frames` argument to transcode only specific frames
     - `--replace-pixel-data` to replace a DICOM's pixel data
     - `--create-basic-offset-table` to add a basic offset table and fragments to

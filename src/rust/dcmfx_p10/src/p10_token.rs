@@ -250,20 +250,11 @@ pub fn data_element_to_tokens<E>(
 
   // For values that have their bytes directly available write them out as-is
   if let Ok(bytes) = value.bytes() {
-    let header_token = P10Token::DataElementHeader {
-      tag,
-      vr,
-      length: bytes.len() as u32,
-      path: path.clone(),
-    };
-    token_callback(header_token)?;
+    let [header_token, value_bytes_token] =
+      data_element_value_tokens(tag, value, path, bytes);
 
-    token_callback(P10Token::DataElementValueBytes {
-      tag,
-      vr,
-      data: bytes.clone(),
-      bytes_remaining: 0,
-    })?;
+    token_callback(header_token)?;
+    token_callback(value_bytes_token)?;
 
     return Ok(());
   }
@@ -271,30 +262,19 @@ pub fn data_element_to_tokens<E>(
   // For encapsulated pixel data, write all of the items individually,
   // followed by a sequence delimiter
   if let Ok(items) = value.encapsulated_pixel_data() {
-    let header_token = P10Token::SequenceStart {
-      tag,
-      vr,
-      path: path.clone(),
-    };
+    let [header_token, delimiter_token] = sequuence_tokens(tag, vr, path);
     token_callback(header_token)?;
 
     for (index, item) in items.iter().enumerate() {
-      let length = item.len() as u32;
-      let item_header_token = P10Token::PixelDataItem { index, length };
+      let [header_token, value_bytes_token] =
+        pixel_data_item_tokens(index, vr, item);
 
-      token_callback(item_header_token)?;
-
-      let value_bytes_token = P10Token::DataElementValueBytes {
-        tag: dictionary::ITEM.tag,
-        vr,
-        data: item.clone(),
-        bytes_remaining: 0,
-      };
+      token_callback(header_token)?;
       token_callback(value_bytes_token)?;
     }
 
     // Write delimiter for the encapsulated pixel data sequence
-    token_callback(P10Token::SequenceDelimiter { tag })?;
+    token_callback(delimiter_token)?;
 
     return Ok(());
   }
@@ -302,11 +282,7 @@ pub fn data_element_to_tokens<E>(
   // For sequences, write the item data sets recursively, followed by a
   // sequence delimiter
   if let Ok(items) = value.sequence_items() {
-    let header_token = P10Token::SequenceStart {
-      tag,
-      vr,
-      path: path.clone(),
-    };
+    let [header_token, delimiter_token] = sequuence_tokens(tag, vr, path);
     token_callback(header_token)?;
 
     for (index, item) in items.iter().enumerate() {
@@ -324,7 +300,7 @@ pub fn data_element_to_tokens<E>(
     }
 
     // Write delimiter for the sequence
-    token_callback(P10Token::SequenceDelimiter { tag })?;
+    token_callback(delimiter_token)?;
 
     return Ok(());
   }
@@ -348,21 +324,11 @@ pub async fn data_element_to_tokens_async<E>(
 
   // For values that have their bytes directly available write them out as-is
   if let Ok(bytes) = value.bytes() {
-    let header_token = P10Token::DataElementHeader {
-      tag,
-      vr,
-      length: bytes.len() as u32,
-      path: path.clone(),
-    };
-    token_callback(header_token).await?;
+    let [header_token, value_bytes_token] =
+      data_element_value_tokens(tag, value, path, bytes);
 
-    token_callback(P10Token::DataElementValueBytes {
-      tag,
-      vr,
-      data: bytes.clone(),
-      bytes_remaining: 0,
-    })
-    .await?;
+    token_callback(header_token).await?;
+    token_callback(value_bytes_token).await?;
 
     return Ok(());
   }
@@ -370,30 +336,19 @@ pub async fn data_element_to_tokens_async<E>(
   // For encapsulated pixel data, write all of the items individually,
   // followed by a sequence delimiter
   if let Ok(items) = value.encapsulated_pixel_data() {
-    let header_token = P10Token::SequenceStart {
-      tag,
-      vr,
-      path: path.clone(),
-    };
+    let [header_token, delimiter_token] = sequuence_tokens(tag, vr, path);
     token_callback(header_token).await?;
 
     for (index, item) in items.iter().enumerate() {
-      let length = item.len() as u32;
-      let item_header_token = P10Token::PixelDataItem { index, length };
+      let [header_token, value_bytes_token] =
+        pixel_data_item_tokens(index, vr, item);
 
-      token_callback(item_header_token).await?;
-
-      let value_bytes_token = P10Token::DataElementValueBytes {
-        tag: dictionary::ITEM.tag,
-        vr,
-        data: item.clone(),
-        bytes_remaining: 0,
-      };
+      token_callback(header_token).await?;
       token_callback(value_bytes_token).await?;
     }
 
     // Write delimiter for the encapsulated pixel data sequence
-    token_callback(P10Token::SequenceDelimiter { tag }).await?;
+    token_callback(delimiter_token).await?;
 
     return Ok(());
   }
@@ -401,11 +356,7 @@ pub async fn data_element_to_tokens_async<E>(
   // For sequences, write the item data sets recursively, followed by a
   // sequence delimiter
   if let Ok(items) = value.sequence_items() {
-    let header_token = P10Token::SequenceStart {
-      tag,
-      vr,
-      path: path.clone(),
-    };
+    let [header_token, delimiter_token] = sequuence_tokens(tag, vr, path);
     token_callback(header_token).await?;
 
     for (index, item) in items.iter().enumerate() {
@@ -426,7 +377,7 @@ pub async fn data_element_to_tokens_async<E>(
     }
 
     // Write delimiter for the sequence
-    token_callback(P10Token::SequenceDelimiter { tag }).await?;
+    token_callback(delimiter_token).await?;
 
     return Ok(());
   }
@@ -434,4 +385,62 @@ pub async fn data_element_to_tokens_async<E>(
   // It isn't logically possible to reach here as one of the above branches must
   // have been taken
   unreachable!();
+}
+
+fn data_element_value_tokens(
+  tag: DataElementTag,
+  value: &DataElementValue,
+  path: &DataSetPath,
+  bytes: &RcByteSlice,
+) -> [P10Token; 2] {
+  let header_token = P10Token::DataElementHeader {
+    tag,
+    vr: value.value_representation(),
+    length: bytes.len() as u32,
+    path: path.clone(),
+  };
+
+  let value_bytes_token = P10Token::DataElementValueBytes {
+    tag,
+    vr: value.value_representation(),
+    data: bytes.clone(),
+    bytes_remaining: 0,
+  };
+
+  [header_token, value_bytes_token]
+}
+
+fn sequuence_tokens(
+  tag: DataElementTag,
+  vr: ValueRepresentation,
+  path: &DataSetPath,
+) -> [P10Token; 2] {
+  let header_token = P10Token::SequenceStart {
+    tag,
+    vr,
+    path: path.clone(),
+  };
+
+  let delimiter_token = P10Token::SequenceDelimiter { tag };
+
+  [header_token, delimiter_token]
+}
+
+fn pixel_data_item_tokens(
+  index: usize,
+  vr: ValueRepresentation,
+  item: &RcByteSlice,
+) -> [P10Token; 2] {
+  let length = item.len() as u32;
+
+  let header_token = P10Token::PixelDataItem { index, length };
+
+  let value_bytes_token = P10Token::DataElementValueBytes {
+    tag: dictionary::ITEM.tag,
+    vr,
+    data: item.clone(),
+    bytes_remaining: 0,
+  };
+
+  [header_token, value_bytes_token]
 }

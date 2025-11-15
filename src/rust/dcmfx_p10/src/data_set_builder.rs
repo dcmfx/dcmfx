@@ -220,6 +220,16 @@ impl DataSetBuilder {
     }
   }
 
+  /// Adds multiple DICOM P10 tokens to a data set builder.
+  ///
+  pub fn add_tokens(&mut self, tokens: &[P10Token]) -> Result<(), P10Error> {
+    for token in tokens {
+      self.add_token(token)?;
+    }
+
+    Ok(())
+  }
+
   /// Ingests the next token when the data set builder's current location
   /// specifies a sequence.
   ///

@@ -1,31 +1,36 @@
-use std::{fs::File, io::Write, path::Path, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::{Args, ValueEnum};
+use tokio::io::AsyncWriteExt;
 
-use dcmfx::core::*;
-use dcmfx::p10::*;
-use dcmfx::pixel_data::{
-  PixelDataDecodeError, PixelDataFrame, PixelDataRenderer,
-  iods::{
-    CineModule, MultiFrameModule, OverlayPlaneModule,
-    voi_lut_module::{VoiLutFunction, VoiWindow},
-  },
-  transforms::{
-    CropRect, P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
+use dcmfx::{
+  core::*,
+  p10::*,
+  pixel_data::{
+    PixelDataDecodeError, PixelDataFrame, PixelDataRenderer,
+    iods::{
+      CineModule, MultiFrameModule, OverlayPlaneModule,
+      voi_lut_module::{VoiLutFunction, VoiWindow},
+    },
+    transforms::{
+      CropRect, P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
+    },
   },
 };
 
 use crate::{
   args::{
-    frame_selection_arg::FrameSelection, input_args::InputSource,
+    frame_selection_arg::FrameSelection,
     standard_color_palette_arg::StandardColorPaletteArg,
     transform_arg::TransformArg,
   },
-  mp4_encoder::{
-    LogLevel, Mp4Codec, Mp4CompressionPreset, Mp4Encoder, Mp4EncoderConfig,
-    Mp4PixelFormat, ResizeFilter,
+  utils::{
+    self, InputSource, OutputTarget,
+    mp4_encoder::{
+      LogLevel, Mp4Codec, Mp4CompressionPreset, Mp4Encoder, Mp4EncoderConfig,
+      Mp4PixelFormat, ResizeFilter,
+    },
   },
-  utils,
 };
 
 pub const ABOUT: &str = "Extracts pixel data from DICOM P10 files, writing it \
@@ -56,7 +61,7 @@ pub struct GetPixelDataArgs {
 
   #[arg(
     long,
-    help = "Overwrite files without prompting.",
+    help = "Overwrite any output files that already exist",
     default_value_t = false
   )]
   overwrite: bool,
@@ -333,7 +338,9 @@ enum GetPixelDataError {
 }
 
 pub async fn run(args: GetPixelDataArgs) -> Result<(), ()> {
-  crate::validate_output_args(&None, &args.output_directory);
+  crate::validate_output_args(None, args.output_directory.as_ref()).await;
+
+  OutputTarget::set_overwrite(args.overwrite);
 
   let input_sources = args.input.base.create_iterator();
 
@@ -341,20 +348,26 @@ pub async fn run(args: GetPixelDataArgs) -> Result<(), ()> {
     args.concurrency,
     input_sources,
     async |input_source: InputSource| {
-      if args.input.ignore_invalid && !input_source.is_dicom_p10().await {
-        return Ok(());
-      }
-
-      let output_prefix = input_source.output_path("", &args.output_directory);
+      let output_target_base = OutputTarget::from_input_source(
+        &input_source,
+        "",
+        &args.output_directory,
+      );
 
       match get_pixel_data_from_input_source(
         &input_source,
-        output_prefix,
+        output_target_base,
         &args,
       )
       .await
       {
         Ok(()) => Ok(()),
+
+        Err(GetPixelDataError::P10Error(P10Error::DicmPrefixNotPresent))
+          if args.input.ignore_invalid =>
+        {
+          Ok(())
+        }
 
         Err(e) => {
           let task_description =
@@ -401,7 +414,7 @@ pub async fn run(args: GetPixelDataArgs) -> Result<(), ()> {
 
 async fn get_pixel_data_from_input_source(
   input_source: &InputSource,
-  output_prefix: PathBuf,
+  output_target_base: OutputTarget,
   args: &GetPixelDataArgs,
 ) -> Result<(), GetPixelDataError> {
   let mut stream = input_source
@@ -544,33 +557,34 @@ async fn get_pixel_data_from_input_source(
               .get_output()
               .unwrap();
 
+            let output_target = output_target_base.append(".mp4");
+
             write_frame_to_mp4_file(
               frame,
-              &output_prefix,
               &mut mp4_encoder,
               pixel_data_renderer,
               cine_module,
               multiframe_module,
               overlay_plane_module,
               args,
-            )?;
+              output_target,
+            )
+            .await?;
           } else {
-            let filename = crate::utils::path_append(
-              output_prefix.clone(),
-              &format!(".{:04}{}", frame.index().unwrap(), output_extension),
-            );
-
-            if !args.overwrite {
-              crate::utils::error_if_exists(&filename);
-            }
+            let output_target = output_target_base.append(&format!(
+              ".{:04}{}",
+              frame.index().unwrap(),
+              output_extension
+            ));
 
             write_frame_to_image_file(
-              &filename,
               frame,
               pixel_data_renderer,
               overlay_plane_module,
               args,
-            )?;
+              output_target,
+            )
+            .await?;
           }
         }
 
@@ -586,6 +600,7 @@ async fn get_pixel_data_from_input_source(
         if let Some(mp4_encoder) = mp4_encoder.as_mut() {
           mp4_encoder
             .finish()
+            .await
             .map_err(GetPixelDataError::FFmpegError)?;
         }
 
@@ -597,17 +612,15 @@ async fn get_pixel_data_from_input_source(
 
 /// Writes the data for a single frame of pixel data to an image file.
 ///
-fn write_frame_to_image_file(
-  filename: &PathBuf,
+async fn write_frame_to_image_file(
   frame: &mut PixelDataFrame,
   pixel_data_renderer: &mut Option<PixelDataRenderer>,
   overlay_plane_module: Option<&OverlayPlaneModule>,
   args: &GetPixelDataArgs,
+  output_target: OutputTarget,
 ) -> Result<(), GetPixelDataError> {
-  println!("Writing \"{}\" …", filename.display());
-
   if args.format == OutputFormat::Raw {
-    write_fragments(filename, frame).map_err(|e| {
+    write_fragments(output_target, frame).await.map_err(|e| {
       GetPixelDataError::P10Error(P10Error::FileError {
         when: "Writing pixel data frame".to_string(),
         details: e.to_string(),
@@ -623,17 +636,15 @@ fn write_frame_to_image_file(
       args,
     )?;
 
-    let output_file =
-      File::create(filename).expect("Failed to create output file");
-    let mut output_writer = std::io::BufWriter::new(output_file);
+    let mut image_buffer = std::io::Cursor::new(vec![]);
 
     match args.format {
       OutputFormat::Png | OutputFormat::Png16 => image
-        .write_to(&mut output_writer, image::ImageFormat::Png)
+        .write_to(&mut image_buffer, image::ImageFormat::Png)
         .map_err(GetPixelDataError::ImageError)?,
 
       OutputFormat::Jpg => image::codecs::jpeg::JpegEncoder::new_with_quality(
-        &mut output_writer,
+        &mut image_buffer,
         args.jpg_quality,
       )
       .encode_image(&image)
@@ -641,28 +652,68 @@ fn write_frame_to_image_file(
 
       OutputFormat::Raw | OutputFormat::Mp4 => unreachable!(),
     }
+
+    let output_stream_handle = output_target
+      .open_write_stream(true)
+      .await
+      .map_err(GetPixelDataError::P10Error)?;
+
+    let mut output_stream = output_stream_handle.lock().await;
+
+    output_stream
+      .write_all(&image_buffer.into_inner())
+      .await
+      .map_err(|e| {
+        GetPixelDataError::P10Error(P10Error::FileError {
+          when: "Writing image data".to_string(),
+          details: e.to_string(),
+        })
+      })?;
+
+    output_target
+      .commit(&mut output_stream)
+      .await
+      .map_err(GetPixelDataError::P10Error)?;
   }
 
   Ok(())
 }
 
-/// Writes the data for a single frame of pixel data to a file.
+/// Writes the data for a single frame of pixel data to an output target.
 ///
-fn write_fragments(
-  filename: &PathBuf,
+async fn write_fragments(
+  output_target: OutputTarget,
   frame: &PixelDataFrame,
-) -> Result<(), std::io::Error> {
-  let mut stream = File::create(filename)?;
+) -> Result<(), P10Error> {
+  let output_stream_handle = output_target.open_write_stream(true).await?;
+
+  let mut output_stream = output_stream_handle.lock().await;
 
   if frame.bit_offset() == 0 {
     for fragment in frame.chunks() {
-      stream.write_all(fragment)?;
+      output_stream.write_all(fragment).await.map_err(|e| {
+        P10Error::FileError {
+          when: "Writing pixel data fragment".to_string(),
+          details: e.to_string(),
+        }
+      })?;
     }
   } else {
-    stream.write_all(&frame.to_bytes())?;
+    output_stream
+      .write_all(&frame.to_bytes())
+      .await
+      .map_err(|e| P10Error::FileError {
+        when: "Writing pixel data frame".to_string(),
+        details: e.to_string(),
+      })?;
   }
 
-  stream.flush()
+  output_target.commit(&mut output_stream).await.map_err(|e| {
+    P10Error::FileError {
+      when: "Writing pixel data frame".to_string(),
+      details: e.to_string(),
+    }
+  })
 }
 
 /// Turns a raw frame of pixel data into an [`image::DynamicImage`] with
@@ -811,19 +862,13 @@ fn frame_to_dynamic_image(
 
 /// Creates an [`Mp4Encoder`] based on the first frame to be encoded.
 ///
-fn create_mp4_encoder(
-  output_prefix: &Path,
+async fn create_mp4_encoder(
   first_frame: &image::DynamicImage,
   cine_module: &CineModule,
   multiframe_module: &MultiFrameModule,
   args: &GetPixelDataArgs,
+  output_target: OutputTarget,
 ) -> Result<Mp4Encoder, GetPixelDataError> {
-  let mp4_path = crate::utils::path_append(output_prefix.to_path_buf(), ".mp4");
-
-  if !args.overwrite {
-    crate::utils::error_if_exists(&mp4_path);
-  }
-
   // Construct MP4 encoder config
   let encoder_config = Mp4EncoderConfig {
     codec: args.mp4_codec,
@@ -855,28 +900,29 @@ fn create_mp4_encoder(
   };
 
   Mp4Encoder::new(
-    &mp4_path,
     first_frame,
     frame_rate,
     output_width,
     output_height,
     encoder_config,
+    output_target,
   )
+  .await
   .map_err(GetPixelDataError::FFmpegError)
 }
 
 /// Writes the next frame of pixel data to an MP4 file.
 ///
 #[allow(clippy::too_many_arguments)]
-fn write_frame_to_mp4_file(
+async fn write_frame_to_mp4_file(
   frame: &mut PixelDataFrame,
-  output_prefix: &Path,
   mp4_encoder: &mut Option<Mp4Encoder>,
   pixel_data_renderer: &mut PixelDataRenderer,
   cine_module: &CineModule,
   multiframe_module: &MultiFrameModule,
   overlay_plane_module: Option<&OverlayPlaneModule>,
   args: &GetPixelDataArgs,
+  output_target: OutputTarget,
 ) -> Result<(), GetPixelDataError> {
   // Respect frame trimming
   if cine_module.is_frame_trimmed(frame.index().unwrap()) {
@@ -894,15 +940,16 @@ fn write_frame_to_mp4_file(
   // If this is the first frame then the MP4 encoder won't have been created,
   // so create it now
   if mp4_encoder.is_none() {
-    println!("Writing \"{}.mp4\" …", output_prefix.display());
-
-    *mp4_encoder = Some(create_mp4_encoder(
-      output_prefix,
-      &image,
-      cine_module,
-      multiframe_module,
-      args,
-    )?);
+    *mp4_encoder = Some(
+      create_mp4_encoder(
+        &image,
+        cine_module,
+        multiframe_module,
+        args,
+        output_target,
+      )
+      .await?,
+    );
   }
 
   // Add the frame to the MP4 encoder
@@ -910,6 +957,7 @@ fn write_frame_to_mp4_file(
     .as_mut()
     .unwrap()
     .add_frame(&image)
+    .await
     .map_err(GetPixelDataError::FFmpegError)
 }
 

@@ -40,7 +40,7 @@ pub trait IoWrite: std::io::Write {}
 impl<T: std::io::Write> IoWrite for T {}
 
 #[cfg(feature = "async")]
-pub trait IoAsyncWrite: tokio::io::AsyncWrite + Unpin {}
+pub trait IoAsyncWrite: tokio::io::AsyncWrite + Send + Unpin {}
 
 #[cfg(feature = "async")]
-impl<T: tokio::io::AsyncWrite + Unpin> IoAsyncWrite for T {}
+impl<T: tokio::io::AsyncWrite + Send + Unpin> IoAsyncWrite for T {}

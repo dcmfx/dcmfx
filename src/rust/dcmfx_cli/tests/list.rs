@@ -1,14 +1,13 @@
 mod utils;
 
-use assert_cmd::Command;
 use insta::assert_snapshot;
-use utils::{get_stderr, get_stdout, get_stdout_and_stderr, to_native_path};
+use utils::{
+  dcmfx_cli, get_stderr, get_stdout, get_stdout_and_stderr, to_native_path,
+};
 
 #[test]
 fn with_multiple_directories() {
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("list")
     .arg("../../../test/assets/fo-dicom")
     .arg("../../../test/assets/pydicom")
@@ -28,9 +27,7 @@ fn with_multiple_directories() {
 
 #[test]
 fn with_summary() {
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("list")
     .arg("../../../test/assets/fo-dicom")
     .arg("--summarize")
@@ -46,9 +43,7 @@ fn with_summary() {
 
 #[test]
 fn with_extension_matches_uppercase_filename_extension() {
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("list")
     .arg("../../../test/assets/other")
     .arg("--extension")
@@ -76,9 +71,7 @@ fn with_extension_matches_uppercase_filename_extension() {
 
 #[test]
 fn with_json_lines_format() {
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("list")
     .arg(to_native_path("../../../test/assets/fo-dicom"))
     .arg(to_native_path("../../../test/assets/pydicom"))
@@ -107,18 +100,18 @@ fn with_json_lines_format() {
 
 #[test]
 fn with_invalid_directory() {
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-
-  let assert = cmd.arg("list").arg("missing-directory").assert().failure();
+  let assert = dcmfx_cli()
+    .arg("list")
+    .arg("missing-directory")
+    .assert()
+    .failure();
 
   assert_snapshot!("with_invalid_directory", get_stderr(assert));
 }
 
 #[test]
 fn with_selected_data_elements() {
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("list")
     .arg(to_native_path("../../../test/assets/fo-dicom"))
     .arg("--format")
@@ -147,9 +140,7 @@ fn with_selected_data_elements() {
 
 #[test]
 fn with_missing_selected_data_elements() {
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("list")
     .arg(to_native_path("../../../test/assets/fo-dicom"))
     .arg("--format")

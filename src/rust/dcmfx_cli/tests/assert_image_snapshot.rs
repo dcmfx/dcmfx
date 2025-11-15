@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Macro to compare an image file to a snapshot.
 ///
@@ -15,30 +15,37 @@ macro_rules! assert_image_snapshot {
   };
 }
 
-pub fn image_matches_snapshot<P: AsRef<std::path::Path>>(
-  path1: P,
-  snapshot: &str,
+pub fn image_matches_snapshot<P: AsRef<Path>>(
+  input_file: P,
+  snapshot_name: &str,
 ) -> Result<(), String> {
-  let image_1 = image::ImageReader::open(&path1)
+  if !input_file.as_ref().exists() {
+    return Err(format!(
+      "Input file is missing: {}",
+      input_file.as_ref().display()
+    ));
+  }
+
+  let image_1 = image::ImageReader::open(&input_file)
     .unwrap()
     .decode()
     .unwrap()
     .to_rgb16();
 
   let image_snapshot_path =
-    PathBuf::from(format!("tests/snapshots/{snapshot}"));
+    PathBuf::from(format!("tests/snapshots/{snapshot_name}"));
 
   let copy_command = format!(
     "To update snapshot run `cp {} {}`.",
-    path1.as_ref().canonicalize().unwrap().display(),
+    input_file.as_ref().canonicalize().unwrap().display(),
     std::env::current_dir()
       .unwrap()
       .join(&image_snapshot_path)
       .display()
   );
 
-  if !std::path::PathBuf::from(&image_snapshot_path).exists() {
-    return Err(format!("Snapshot file is missing. {}", copy_command));
+  if !PathBuf::from(&image_snapshot_path).exists() {
+    return Err(format!("Snapshot file is missing: {}", copy_command));
   }
 
   let image_2 = image::ImageReader::open(&image_snapshot_path)

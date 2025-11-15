@@ -1,247 +1,57 @@
 ---
 source: dcmfx_cli/tests/json_to_dcm.rs
-expression: json
+expression: get_stdout(assert)
 snapshot_kind: text
 ---
-{
-  "00020010": {
-    "vr": "UI",
-    "Value": [
-      "1.2.840.10008.1.2.1"
-    ]
-  },
-  "00080008": {
-    "vr": "CS",
-    "Value": [
-      "DERIVED",
-      "SECONDARY",
-      "OTHER"
-    ]
-  },
-  "00080016": {
-    "vr": "UI",
-    "Value": [
-      "1.2.840.10008.5.1.4.1.1.7"
-    ]
-  },
-  "00080018": {
-    "vr": "UI",
-    "Value": [
-      "1.2.276.0.7230010.3.1.4.8323329.1099.1521494048.423534"
-    ]
-  },
-  "00080020": {
-    "vr": "DA",
-    "Value": [
-      "20170101"
-    ]
-  },
-  "00080023": {
-    "vr": "DA"
-  },
-  "0008002A": {
-    "vr": "DT"
-  },
-  "00080030": {
-    "vr": "TM",
-    "Value": [
-      "120000"
-    ]
-  },
-  "00080033": {
-    "vr": "TM"
-  },
-  "00080050": {
-    "vr": "SH"
-  },
-  "00080060": {
-    "vr": "CS",
-    "Value": [
-      "OT"
-    ]
-  },
-  "00080064": {
-    "vr": "CS",
-    "Value": [
-      "SYN"
-    ]
-  },
-  "00080090": {
-    "vr": "PN",
-    "Value": [
-      {
-        "Alphabetic": "Moriarty^James"
-      }
-    ]
-  },
-  "00082111": {
-    "vr": "ST",
-    "Value": [
-      "Scaled image"
-    ]
-  },
-  "00082112": {
-  "vr": "SQ",
-    "Value": [
-      {
-        "00080016": {
-          "vr": "UI",
-          "Value": [
-            "1.2.840.10008.5.1.4.1.1.7"
-          ]
-        },
-        "00080018": {
-          "vr": "UI",
-          "Value": [
-            "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116"
-          ]
-        }
-      }
-    ]
-  },
-  "00100010": {
-    "vr": "PN",
-    "Value": [
-      {
-        "Alphabetic": "Lestrade^G"
-      }
-    ]
-  },
-  "00100020": {
-    "vr": "LO",
-    "Value": [
-      "ID1"
-    ]
-  },
-  "00100030": {
-    "vr": "DA"
-  },
-  "00100040": {
-    "vr": "CS",
-    "Value": [
-      "F"
-    ]
-  },
-  "00101010": {
-    "vr": "AS",
-    "Value": [
-      "024Y"
-    ]
-  },
-  "00185100": {
-    "vr": "CS"
-  },
-  "0020000D": {
-    "vr": "UI",
-    "Value": [
-      "1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114"
-    ]
-  },
-  "0020000E": {
-    "vr": "UI",
-    "Value": [
-      "1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062"
-    ]
-  },
-  "00200010": {
-    "vr": "SH",
-    "Value": [
-      "1"
-    ]
-  },
-  "00200011": {
-    "vr": "IS",
-    "Value": [
-      1
-    ]
-  },
-  "00200013": {
-    "vr": "IS",
-    "Value": [
-      1
-    ]
-  },
-  "00200020": {
-    "vr": "CS"
-  },
-  "00200060": {
-    "vr": "CS"
-  },
-  "00204000": {
-    "vr": "LT",
-    "Value": [
-      "Test Image with 10 rows of (255,0,0), 10 rows of (255,128,128), 10 rows of (0,255,0), 10 rows of (128,255,128), 10 rows of (0,0,255), 10 rows of (128,128,255), 10 rows of (0,0,0), 10 rows of (64,64,64), 10 rows of (192,192,192), 10 rows of (255,255,255), uncompressed"
-    ]
-  },
-  "00280002": {
-    "vr": "US",
-    "Value": [
-      3
-    ]
-  },
-  "00280004": {
-    "vr": "CS",
-    "Value": [
-      "RGB"
-    ]
-  },
-  "00280006": {
-    "vr": "US",
-    "Value": [
-      0
-    ]
-  },
-  "00280008": {
-    "vr": "IS",
-    "Value": [
-      1
-    ]
-  },
-  "00280010": {
-    "vr": "US",
-    "Value": [
-      3
-    ]
-  },
-  "00280011": {
-    "vr": "US",
-    "Value": [
-      3
-    ]
-  },
-  "00280030": {
-    "vr": "DS",
-    "Value": [
-      33.333333,
-      33.333333
-    ]
-  },
-  "00280100": {
-    "vr": "US",
-    "Value": [
-      8
-    ]
-  },
-  "00280101": {
-    "vr": "US",
-    "Value": [
-      8
-    ]
-  },
-  "00280102": {
-    "vr": "US",
-    "Value": [
-      7
-    ]
-  },
-  "00280103": {
-    "vr": "US",
-    "Value": [
-      0
-    ]
-  },
-  "7FE00010": {
-    "vr": "OW",
-    "InlineBinary": "po00po00po00P1ewP1ewP1ewnp6enp6enp6eAA=="
-  }
-}
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    54 bytes] "1.2.276.0. …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
+(0002,0013) SH Implementation Version Name          [    12 bytes] "DCMfx 0.38 …
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    24 bytes] "DERIVED",  …
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+(0008,0018) UI SOP Instance UID                     [    54 bytes] "1.2.276.0. …
+(0008,0020) DA Study Date                           [     8 bytes] 2017-01-01
+(0008,0023) DA Content Date                         [     0 bytes] ""
+(0008,002A) DT Acquisition DateTime                 [     0 bytes] ""
+(0008,0030) TM Study Time                           [     6 bytes] 12:00:00
+(0008,0033) TM Content Time                         [     0 bytes] ""
+(0008,0050) SH Accession Number                     [     0 bytes] ""
+(0008,0060) CS Modality                             [     2 bytes] "OT" (Other)
+(0008,0064) CS Conversion Type                      [     4 bytes] "SYN" (Synthetic Image)
+(0008,0090) PN Referring Physician's Name           [    14 bytes] "Moriarty^J …
+(0008,2111) ST Derivation Description               [    12 bytes] "Scaled ima …
+(0008,2112) SQ Source Image Sequence
+  (FFFE,E000) Item
+    (0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+    (0008,0018) UI SOP Instance UID                     [    64 bytes] "1.2.826 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0010,0010) PN Patient's Name                       [    10 bytes] "Lestrade^G"
+(0010,0020) LO Patient ID                           [     4 bytes] "ID1"
+(0010,0030) DA Patient's Birth Date                 [     0 bytes] ""
+(0010,0040) CS Patient's Sex                        [     2 bytes] "F" (Female)
+(0010,1010) AS Patient's Age                        [     4 bytes] 24 years
+(0018,5100) CS Patient Position                     [     0 bytes] ""
+(0020,000D) UI Study Instance UID                   [    64 bytes] "1.2.826.0. …
+(0020,000E) UI Series Instance UID                  [    64 bytes] "1.2.826.0. …
+(0020,0010) SH Study ID                             [     2 bytes] "1"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0020,0020) CS Patient Orientation                  [     0 bytes] ""
+(0020,0060) CS Laterality                           [     0 bytes] ""
+(0020,4000) LT Image Comments                       [   268 bytes] "Test Image …
+(0028,0002) US Samples per Pixel                    [     2 bytes] 3
+(0028,0004) CS Photometric Interpretation           [     4 bytes] "RGB"
+(0028,0006) US Planar Configuration                 [     2 bytes] 0
+(0028,0008) IS Number of Frames                     [     2 bytes] "1"
+(0028,0010) US Rows                                 [     2 bytes] 3
+(0028,0011) US Columns                              [     2 bytes] 3
+(0028,0030) DS Pixel Spacing                        [    20 bytes] "33.333333" …
+(0028,0100) US Bits Allocated                       [     2 bytes] 8
+(0028,0101) US Bits Stored                          [     2 bytes] 8
+(0028,0102) US High Bit                             [     2 bytes] 7
+(0028,0103) US Pixel Representation                 [     2 bytes] 0
+(7FE0,0010) OW Pixel Data                           [    28 bytes] [A6 8D 34 A …

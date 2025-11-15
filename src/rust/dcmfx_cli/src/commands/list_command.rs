@@ -1,15 +1,18 @@
 use std::{
   collections::{HashMap, HashSet},
   path::{Path, PathBuf},
-  sync::{Arc, Mutex},
+  sync::Arc,
 };
 
 use clap::{Args, ValueEnum};
-use tokio::io::AsyncWriteExt;
+use tokio::{
+  io::AsyncWriteExt,
+  sync::{Mutex, mpsc::Sender},
+};
 
 use dcmfx::{core::*, json::*, p10::*};
 
-use crate::{args::input_args::InputSource, utils};
+use crate::utils;
 
 pub const ABOUT: &str = "Lists DICOM P10 files in one or more directories";
 
@@ -60,7 +63,7 @@ pub struct ListArgs {
       \n\
       An error will occur if a listed DICOM file doesn't contain a selected \
       data element. To select a data element but not require it to be present \
-      in every listed DICOM file, use --select-optional.
+      in every listed DICOM file use --select-optional.
       \n\
       Commonly selected data element tags are:\n\
       \n\
@@ -146,9 +149,7 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
       .filter_map(move |entry| match entry {
         Ok(entry) => {
           if entry.file_type().is_file() {
-            Some(InputSource::LocalFile {
-              path: entry.path().to_path_buf(),
-            })
+            Some(entry.path().to_path_buf())
           } else {
             None
           }
@@ -168,39 +169,47 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
   // output
   let summary = Arc::new(Mutex::new(Summary::new()));
 
-  let result = utils::run_tasks(
-    args.concurrency,
-    file_iterator,
-    async |input_source: InputSource| {
-      let InputSource::LocalFile { path } = input_source else {
-        eprintln!(
-          "Error: reading from stdin is not supported with the list command"
-        );
-        std::process::exit(1);
-      };
+  // Start a task to write output lines to stdout
+  let (stdout_tx, mut stdout_rx) = tokio::sync::mpsc::channel::<String>(256);
+  let stdout_write_task = tokio::spawn(async move {
+    let mut out = tokio::io::BufWriter::new(tokio::io::stdout());
 
+    while let Some(line) = stdout_rx.recv().await {
+      out
+        .write_all(line.as_bytes())
+        .await
+        .expect("Failed writing to stdout");
+      out
+        .write_all(b"\n")
+        .await
+        .expect("Failed writing to stdout");
+    }
+
+    out.flush().await.expect("Failed flushing stdout");
+  });
+
+  let result =
+    utils::run_tasks(args.concurrency, file_iterator, async |path: PathBuf| {
       // Check file's extension is allowed, if this check was requested
-      if let Some(extension) = &extension
-        && let Some(dir_entry_extension) = path.extension()
-        && dir_entry_extension.to_string_lossy().to_lowercase() != *extension
-      {
-        return Ok(());
+      if let Some(extension) = &extension {
+        let Some(path_extension) = path.extension() else {
+          return Ok(());
+        };
+
+        if path_extension.to_string_lossy().to_lowercase() != *extension {
+          return Ok(());
+        }
       }
 
-      // Check file's extension is allowed, if this check was requested
-      if let Some(extension) = &extension
-        && let Some(dir_entry_extension) = path.extension()
-        && dir_entry_extension.to_string_lossy().to_lowercase() != *extension
-      {
-        return Ok(());
-      }
-
-      process_file(&path, &args, summary.clone())
+      process_file(&path, &args, summary.clone(), stdout_tx.clone())
         .await
         .map_err(|e| (path, e))
-    },
-  )
-  .await;
+    })
+    .await;
+
+  // Wait for stdout writer task to complete
+  drop(stdout_tx);
+  stdout_write_task.await.unwrap();
 
   // Print the error if one occurred
   if let Err((path, error)) = result {
@@ -222,7 +231,7 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
   if args.summarize {
     tokio::io::stdout().flush().await.unwrap();
     eprintln!();
-    summary.lock().unwrap().print_tables();
+    summary.lock().await.print_tables();
   }
 
   Ok(())
@@ -240,6 +249,7 @@ async fn process_file(
   path: &Path,
   args: &ListArgs,
   summary: Arc<Mutex<Summary>>,
+  stdout_tx: Sender<String>,
 ) -> Result<(), ProcessFileError> {
   // Memoized closure that returns the size of the file in bytes. This allows
   // the metadata() call to be avoided if not needed, and to only be performed
@@ -260,25 +270,16 @@ async fn process_file(
     output_line_for_file(path, args, &summary, &mut file_size).await?;
 
   // If None was returned then it's not a DICOM P10 file
-  let Some(mut output_line) = output_line else {
+  let Some(output_line) = output_line else {
     return Ok(());
   };
 
-  // Add a terminating newline
-  output_line.push('\n');
-
-  // Get exclusive access to the shared stdout stream
-  let mut stdout = utils::GLOBAL_STDOUT.lock().await;
-
-  // Write line to stdout
-  stdout
-    .write_all(output_line.as_bytes())
-    .await
-    .map_err(ProcessFileError::IoError)?;
+  // Send to the stdout writer task
+  stdout_tx.send(output_line).await.unwrap();
 
   // Accumulate stats if a summary of the listing was requested
   if args.summarize {
-    summary.lock().unwrap().dicoms.add_dicom(file_size()?);
+    summary.lock().await.dicoms.add_dicom(file_size()?);
   }
 
   Ok(())
@@ -334,10 +335,7 @@ async fn output_line_for_file(
 
     // If summarizing, add details of this DICOM to the summary
     if args.summarize {
-      summary
-        .lock()
-        .unwrap()
-        .update(path, &data_set, file_size()?);
+      summary.lock().await.update(path, &data_set, file_size()?);
 
       // Remove data elements that were only added for use in the summary
       for tag in Summary::SUMMARY_DATA_ELEMENT_TAGS {

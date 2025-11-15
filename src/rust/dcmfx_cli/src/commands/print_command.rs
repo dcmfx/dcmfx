@@ -2,10 +2,9 @@ use std::io::Write;
 
 use clap::Args;
 
-use dcmfx::core::*;
-use dcmfx::p10::*;
+use dcmfx::{core::*, p10::*};
 
-use crate::args::input_args::InputSource;
+use crate::utils::InputSource;
 
 pub const ABOUT: &str = "Prints the content of DICOM P10 files";
 
@@ -48,16 +47,18 @@ pub async fn run(args: PrintArgs) -> Result<(), ()> {
   // Create read context with a small max token size to keep memory usage low.
   // 256 KiB is also plenty of data to preview the content of data element
   // values, even if the max output width is very large.
-  let read_config = args.input.p10_read_config().max_token_size(256 * 1024);
+  let read_config = args
+    .input
+    .p10_read_config()
+    .max_token_size(256 * 1024)
+    .require_dicm_prefix(args.input.ignore_invalid);
 
   for input_source in input_sources {
-    if args.input.ignore_invalid && !input_source.is_dicom_p10().await {
-      continue;
-    }
-
     match print_input_source(&input_source, &read_config, &print_options).await
     {
       Ok(()) => (),
+
+      Err(P10Error::DicmPrefixNotPresent) if args.input.ignore_invalid => (),
 
       Err(e) => {
         e.print(&format!("printing \"{input_source}\""));

@@ -1,25 +1,33 @@
-use std::{io::Write, path::Path};
+use std::process::ExitStatus;
 
+use crate::utils::output_target::OutputTarget;
 use clap::ValueEnum;
+use tokio::{io::AsyncWriteExt, task::JoinHandle};
 
-/// Writes a stream of RGB or Luma frames to an MP4 video file using FFmpeg.
+/// Converts a stream of RGB or Luma frames to a fragmented MP4 video stream.
 ///
 pub struct Mp4Encoder {
-  ffmpeg_child_process: std::process::Child,
+  ffmpeg_stdin: Option<tokio::process::ChildStdin>,
+  join_handle: Option<JoinHandle<Result<ExitStatus, String>>>,
 }
 
 impl Mp4Encoder {
-  /// Initializes MP4 encoding to the specified output file.
+  /// Initializes MP4 encoding to the specified output target.
   ///
-  pub fn new(
-    filename: &Path,
+  pub async fn new(
     first_frame: &image::DynamicImage,
     frame_rate: f64,
     mut output_width: u32,
     mut output_height: u32,
     encoder_config: Mp4EncoderConfig,
+    output_target: OutputTarget,
   ) -> Result<Self, String> {
     Self::check_ffmpeg_is_available()?;
+
+    let output_stream_handle = output_target
+      .open_write_stream(true)
+      .await
+      .map_err(|e| e.to_string())?;
 
     // Ensure output dimensions are divisible by two. This is required by
     // libx264 and libx265.
@@ -62,11 +70,9 @@ impl Mp4Encoder {
     ffmpeg_args.push("-c:v".to_string());
     ffmpeg_args.push(encoder_config.codec.ffmpeg_id().to_string());
 
-    // Configure output to put the 'moov' atom at the start of the file. This
-    // requires a second pass so is a little slower, but is recommended for any
-    // streaming usage.
+    // Configure for fragmented MP4 output which works for streaming output
     ffmpeg_args.push("-movflags".to_string());
-    ffmpeg_args.push("+faststart".to_string());
+    ffmpeg_args.push("frag_keyframe+empty_moov+default_base_moof".to_string());
 
     // Add rescale filter if the output size doesn't match the input
     let is_resizing = first_frame.width() != output_width
@@ -91,22 +97,52 @@ impl Mp4Encoder {
       ffmpeg_args.push("hvc1".to_string());
     }
 
-    // Specify output filename
-    ffmpeg_args.push(filename.to_string_lossy().to_string());
-    ffmpeg_args.push("-y".to_string());
+    // Output to stdout
+    ffmpeg_args.push("-".to_string());
 
     // Spawn the ffmpeg process
-    let ffmpeg_child_process =
-      std::process::Command::new(Self::ffmpeg_binary())
+    let mut ffmpeg_child_process =
+      tokio::process::Command::new(Self::ffmpeg_binary())
         .args(ffmpeg_args)
         .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::inherit())
         .spawn()
         .map_err(|e| e.to_string())?;
 
+    // Access the FFmpeg stdin/stdout streams
+    let ffmpeg_stdin = ffmpeg_child_process
+      .stdin
+      .take()
+      .expect("Failed to open FFmpeg stdin");
+
+    let ffmpeg_stdout = ffmpeg_child_process
+      .stdout
+      .take()
+      .expect("Failed to open FFmpeg stdout");
+
+    // Spawn an async task that streams FFmpeg stdout to the output target
+    let join_handle = tokio::spawn(async move {
+      let mut output_stream = output_stream_handle.lock().await;
+
+      tokio::io::copy(
+        &mut tokio::io::BufReader::new(ffmpeg_stdout),
+        &mut *output_stream,
+      )
+      .await
+      .map_err(|e| e.to_string())?;
+
+      output_target
+        .commit(&mut output_stream)
+        .await
+        .map_err(|e| e.to_string())?;
+
+      ffmpeg_child_process.wait().await.map_err(|e| e.to_string())
+    });
+
     Ok(Self {
-      ffmpeg_child_process,
+      ffmpeg_stdin: Some(ffmpeg_stdin),
+      join_handle: Some(join_handle),
     })
   }
 
@@ -131,8 +167,8 @@ impl Mp4Encoder {
       .map(|_| ())
       .map_err(|_| {
         format!(
-          "\"{}\" binary is not available on the path, install it using a \
-           package manager or download from https://ffmpeg.org/download.html",
+          "\"{}\" binary is not on the path, install it with a package manager \
+           or download from https://ffmpeg.org/download.html",
           Self::ffmpeg_binary()
         )
       })
@@ -140,29 +176,39 @@ impl Mp4Encoder {
 
   /// Writes the next frame of video.
   ///
-  pub fn add_frame(
+  pub async fn add_frame(
     &mut self,
     frame_image: &image::DynamicImage,
   ) -> Result<(), String> {
-    let stdin = self
-      .ffmpeg_child_process
-      .stdin
-      .as_mut()
-      .expect("Failed to open FFmpeg stdin");
+    let Some(ffmpeg_stdin) = &mut self.ffmpeg_stdin else {
+      panic!("FFmpeg stdin stream has been closed for writing");
+    };
 
-    // Write frame data to the FFmpeg child process' stdin
-    stdin
+    ffmpeg_stdin
       .write_all(frame_image.as_bytes())
-      .map_err(|e| e.to_string())
+      .await
+      .map_err(|e| e.to_string())?;
+
+    Ok(())
   }
 
-  /// Completes encoding once all frames have been written.
+  /// Completes encoding once all frames have been written by waiting for the
+  /// FFMpeg process to complete and for all data to be written to the output
+  /// target.
   ///
-  pub fn finish(&mut self) -> Result<(), String> {
-    let exit_status = self
-      .ffmpeg_child_process
-      .wait()
+  pub async fn finish(&mut self) -> Result<(), String> {
+    self
+      .ffmpeg_stdin
+      .take()
+      .expect("FFmpeg stdin stream missing")
+      .shutdown()
+      .await
       .map_err(|e| e.to_string())?;
+
+    let join_handle =
+      self.join_handle.take().expect("FFmpeg join handle missing");
+
+    let exit_status = join_handle.await.map_err(|e| e.to_string())??;
 
     if !exit_status.success() {
       return Err(format!(

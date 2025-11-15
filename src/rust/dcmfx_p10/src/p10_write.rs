@@ -535,21 +535,9 @@ pub fn data_set_to_tokens<E>(
   path: &DataSetPath,
   token_callback: &mut impl FnMut(P10Token) -> Result<(), E>,
 ) -> Result<(), E> {
-  // Create filter transform that removes File Meta Information data elements
-  // from the data set's token stream
-  let mut remove_fmi_transform =
-    P10FilterTransform::new(Box::new(|tag, _vr, _length, path| {
-      !path.is_root() || !tag.is_file_meta_information()
-    }));
-
-  // Create insert transform to add the '(0008,0005) SpecificCharacterSet' data
-  // element into the data set's token stream, specifying UTF-8 (ISO_IR 192)
-  let mut data_elements_to_insert = DataSet::new();
-  data_elements_to_insert
-    .insert_string_value(&dictionary::SPECIFIC_CHARACTER_SET, &["ISO_IR 192"])
-    .unwrap();
+  let mut remove_fmi_transform = remove_fmi_filter_transform();
   let mut insert_specific_character_set_transform =
-    P10InsertTransform::new(data_elements_to_insert);
+    add_specific_character_set_utf8_insert_transform();
 
   // Create a function that passes the token through the above two transforms
   // and then to the callback
@@ -573,13 +561,8 @@ pub fn data_set_to_tokens<E>(
   };
 
   // Write File Preamble and File Meta Information tokens
-  let preamble_token = P10Token::FilePreambleAndDICMPrefix {
-    preamble: Box::new([0; 128]),
-  };
+  let [preamble_token, fmi_token] = preamble_and_fmi_tokens(data_set);
   process_token(preamble_token)?;
-  let fmi_token = P10Token::FileMetaInformation {
-    data_set: data_set.file_meta_information(),
-  };
   process_token(fmi_token)?;
 
   // Write main data set
@@ -598,21 +581,9 @@ pub async fn data_set_to_tokens_async<E>(
   path: &DataSetPath,
   token_callback: &mut impl AsyncFnMut(P10Token) -> Result<(), E>,
 ) -> Result<(), E> {
-  // Create filter transform that removes File Meta Information data elements
-  // from the data set's token stream
-  let mut remove_fmi_transform =
-    P10FilterTransform::new(Box::new(|tag, _vr, _length, path| {
-      !path.is_root() || !tag.is_file_meta_information()
-    }));
-
-  // Create insert transform to add the '(0008,0005) SpecificCharacterSet' data
-  // element into the data set's token stream, specifying UTF-8 (ISO_IR 192)
-  let mut data_elements_to_insert = DataSet::new();
-  data_elements_to_insert
-    .insert_string_value(&dictionary::SPECIFIC_CHARACTER_SET, &["ISO_IR 192"])
-    .unwrap();
+  let mut remove_fmi_transform = remove_fmi_filter_transform();
   let mut insert_specific_character_set_transform =
-    P10InsertTransform::new(data_elements_to_insert);
+    add_specific_character_set_utf8_insert_transform();
 
   // Create a function that passes the token through the above two transforms
   // and then to the callback
@@ -636,13 +607,8 @@ pub async fn data_set_to_tokens_async<E>(
   };
 
   // Write File Preamble and File Meta Information tokens
-  let preamble_token = P10Token::FilePreambleAndDICMPrefix {
-    preamble: Box::new([0; 128]),
-  };
+  let [preamble_token, fmi_token] = preamble_and_fmi_tokens(data_set);
   process_token(preamble_token).await?;
-  let fmi_token = P10Token::FileMetaInformation {
-    data_set: data_set.file_meta_information(),
-  };
   process_token(fmi_token).await?;
 
   // Write main data set
@@ -651,6 +617,42 @@ pub async fn data_set_to_tokens_async<E>(
 
   // Write end token
   process_token(P10Token::End).await
+}
+
+/// Creates a filter transform that removes File Meta Information data elements
+/// from the token stream
+///
+fn remove_fmi_filter_transform() -> P10FilterTransform {
+  P10FilterTransform::new(Box::new(|tag, _vr, _length, path| {
+    !path.is_root() || !tag.is_file_meta_information()
+  }))
+}
+
+/// Creates an insert transform to add the '(0008,0005) SpecificCharacterSet'
+/// data element into the data set's token stream, specifying UTF-8
+/// (ISO_IR 192).
+///
+fn add_specific_character_set_utf8_insert_transform() -> P10InsertTransform {
+  let mut data_elements_to_insert = DataSet::new();
+  data_elements_to_insert
+    .insert_string_value(&dictionary::SPECIFIC_CHARACTER_SET, &["ISO_IR 192"])
+    .unwrap();
+
+  P10InsertTransform::new(data_elements_to_insert)
+}
+
+/// Returns File Preamble and File Meta Information tokens for a data set.
+///
+fn preamble_and_fmi_tokens(data_set: &DataSet) -> [P10Token; 2] {
+  let preamble_token = P10Token::FilePreambleAndDICMPrefix {
+    preamble: Box::new([0; 128]),
+  };
+
+  let fmi_token = P10Token::FileMetaInformation {
+    data_set: data_set.file_meta_information(),
+  };
+
+  [preamble_token, fmi_token]
 }
 
 /// Converts a data set to DICOM P10 bytes. The generated P10 bytes are returned

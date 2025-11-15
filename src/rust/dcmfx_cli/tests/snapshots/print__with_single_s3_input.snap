@@ -1,14 +1,14 @@
 ---
-source: dcmfx_cli/tests/json_to_dcm.rs
+source: dcmfx_cli/tests/print.rs
 expression: get_stdout(assert)
 snapshot_kind: text
 ---
 (0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
 (0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
 (0002,0003) UI Media Storage SOP Instance UID       [    54 bytes] "1.2.276.0. …
-(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG Baseline (Process 1))
-(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
-(0002,0013) SH Implementation Version Name          [    12 bytes] "DCMfx 0.38 …
+(0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    28 bytes] "1.2.276.0. …
+(0002,0013) SH Implementation Version Name          [    16 bytes] "OFFIS_DCMT …
 (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0008) CS Image Type                           [    24 bytes] "DERIVED",  …
 (0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
@@ -22,25 +22,11 @@ snapshot_kind: text
 (0008,0060) CS Modality                             [     2 bytes] "OT" (Other)
 (0008,0064) CS Conversion Type                      [     4 bytes] "SYN" (Synthetic Image)
 (0008,0090) PN Referring Physician's Name           [    14 bytes] "Moriarty^J …
-(0008,2111) ST Derivation Description               [   102 bytes] "Lossy comp …
+(0008,2111) ST Derivation Description               [    12 bytes] "Scaled ima …
 (0008,2112) SQ Source Image Sequence
   (FFFE,E000) Item
-    (0008,1150) UI Referenced SOP Class UID             [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
-    (0008,1155) UI Referenced SOP Instance UID          [    54 bytes] "1.2.276 …
-    (0040,A170) SQ Purpose of Reference Code Sequence
-      (FFFE,E000) Item
-        (0008,0100) SH Code Value                           [     6 bytes] "121320"
-        (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
-        (0008,0104) LO Code Meaning                         [    24 bytes] "Uncompr …
-      (FFFE,E00D) Item Delimitation Item
-    (FFFE,E0DD) Sequence Delimitation Item
-  (FFFE,E00D) Item Delimitation Item
-(FFFE,E0DD) Sequence Delimitation Item
-(0008,9215) SQ Derivation Code Sequence
-  (FFFE,E000) Item
-    (0008,0100) SH Code Value                           [     6 bytes] "113040"
-    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
-    (0008,0104) LO Code Meaning                         [    18 bytes] "Lossy C …
+    (0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
+    (0008,0018) UI SOP Instance UID                     [    64 bytes] "1.2.826 …
   (FFFE,E00D) Item Delimitation Item
 (FFFE,E0DD) Sequence Delimitation Item
 (0010,0010) PN Patient's Name                       [    10 bytes] "Lestrade^G"
@@ -58,7 +44,7 @@ snapshot_kind: text
 (0020,0060) CS Laterality                           [     0 bytes] ""
 (0020,4000) LT Image Comments                       [   268 bytes] "Test Image …
 (0028,0002) US Samples per Pixel                    [     2 bytes] 3
-(0028,0004) CS Photometric Interpretation           [     8 bytes] "YBR_FULL"
+(0028,0004) CS Photometric Interpretation           [     4 bytes] "RGB"
 (0028,0006) US Planar Configuration                 [     2 bytes] 0
 (0028,0008) IS Number of Frames                     [     2 bytes] "1"
 (0028,0010) US Rows                                 [     2 bytes] 3
@@ -68,10 +54,4 @@ snapshot_kind: text
 (0028,0101) US Bits Stored                          [     2 bytes] 8
 (0028,0102) US High Bit                             [     2 bytes] 7
 (0028,0103) US Pixel Representation                 [     2 bytes] 0
-(0028,2110) CS Lossy Image Compression              [     2 bytes] "01" (Image has been subjected to lossy compression)
-(0028,2112) DS Lossy Image Compression Ratio        [     8 bytes] "0.084906"
-(0028,2114) CS Lossy Image Compression Method       [    12 bytes] "ISO_109 … (JPEG Lossy Compression [ISO/IEC 10918-1])
-(7FE0,0010) OB Pixel Data
-  (FFFE,E000) Item                                    [     4 bytes] [00 00 00 …
-  (FFFE,E000) Item                                    [   318 bytes] [FF D8 FF …
-(FFFE,E0DD) Sequence Delimitation Item
+(7FE0,0010) OW Pixel Data                           [    28 bytes] [A6 8D 34 A …

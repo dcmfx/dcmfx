@@ -18,9 +18,11 @@ Install [Homebrew](https://brew.sh), then install DCMfx using the provided tap:
 brew tap dcmfx/tap
 brew install dcmfx
 ```
+
 :::
 
 ::: details Linux
+
 - For Ubuntu, Debian, Linux Mint, and other Debian-based distributions, an APT
   repository is provided:
 
@@ -54,7 +56,8 @@ brew install dcmfx
 ---
 
 - Alternatively, download the latest binary or package
-[here](https://github.com/dcmfx/dcmfx/releases/latest) and install it manually.
+  [here](https://github.com/dcmfx/dcmfx/releases/latest) and install it manually.
+
 :::
 
 ## Usage
@@ -85,6 +88,12 @@ Options:
 ```
 
 ## Examples
+
+::: info
+Input and output filenames can be paths to local files, `"-"` for stdin/stdout,
+or an object URL on Amazon S3 (`s3://`), Google Cloud Storage (`gs://`), or
+Azure Blob Storage (`az://`).
+:::
 
 1. Print a DICOM P10 file's data set to stdout:
 

@@ -1,5 +1,7 @@
-use dcmfx::core::{DataElementTag, DataSet};
-use dcmfx::json::DataSetJsonExtensions;
+use dcmfx::{
+  core::{DataElementTag, DataSet},
+  json::DataSetJsonExtensions,
+};
 
 pub mod decoder_args;
 pub mod frame_selection_arg;

@@ -11,8 +11,8 @@ hero:
       text: Learn More
       link: ./introduction
     - theme: alt
-      text: Tools
-      link: ./tools/overview
+      text: CLI Tool
+      link: ./tools/cli
     - theme: alt
       text: Libraries
       link: ./libraries/overview

@@ -1,35 +1,40 @@
 mod utils;
 
-use assert_cmd::Command;
 use insta::assert_snapshot;
-use utils::get_stdout;
-
-use crate::utils::generate_temp_filename;
+use utils::{create_temp_file, dcmfx_cli, get_stdout};
 
 #[test]
 fn with_single_input() {
-  let dicom_file =
+  let input_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  let assert = cmd.arg("print").arg(dicom_file).assert().success();
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
 
   assert_snapshot!("with_single_input", get_stdout(assert));
 }
 
 #[test]
+#[ignore]
+fn with_single_s3_input() {
+  let input_file = "s3://dcmfx-test/pydicom/test_files/SC_rgb_small_odd.dcm";
+
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
+
+  assert_snapshot!("with_single_s3_input", get_stdout(assert));
+}
+
+#[test]
 fn with_style_options() {
-  let dicom_file =
+  let input_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("print")
     .arg("--max-width")
     .arg("200")
     .arg("--styled")
     .arg("true")
-    .arg(dicom_file)
+    .arg(input_file)
     .assert()
     .success();
 
@@ -41,8 +46,7 @@ fn with_multiple_inputs() {
   let dicom_file_0 = "../../../test/assets/fo-dicom/CT1_J2KI.dcm";
   let dicom_file_1 = "../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm";
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("print")
     .arg(dicom_file_0)
     .arg(dicom_file_1)
@@ -54,9 +58,9 @@ fn with_multiple_inputs() {
 
 #[test]
 fn with_file_list() {
-  let file_list = generate_temp_filename();
+  let file_list = create_temp_file();
   std::fs::write(
-    &file_list,
+    file_list.path(),
     "
 ../../../test/assets/fo-dicom/CT1_J2KI.dcm
   
@@ -67,15 +71,27 @@ fn with_file_list() {
   )
   .unwrap();
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("print")
     .arg("--file-list")
-    .arg(file_list)
+    .arg(file_list.path())
     .assert()
     .success();
 
   assert_snapshot!("with_file_list", get_stdout(assert));
+}
+
+#[test]
+fn with_file_list_containing_nonexistent_file() {
+  let file_list = create_temp_file();
+  std::fs::write(file_list.path(), "file-that-does-not-exist.dcm").unwrap();
+
+  dcmfx_cli()
+    .arg("print")
+    .arg("--file-list")
+    .arg(file_list.path())
+    .assert()
+    .failure();
 }
 
 #[test]
@@ -86,16 +102,14 @@ fn with_default_transfer_syntax() {
   .unwrap()[0x156..]
     .to_vec();
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  cmd
+  dcmfx_cli()
     .arg("print")
     .arg("-")
     .write_stdin(dicom_p10.clone())
     .assert()
     .failure();
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("print")
     .arg("--default-transfer-syntax")
     .arg("1.2.840.10008.1.2.1")

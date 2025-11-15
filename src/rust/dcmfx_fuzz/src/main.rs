@@ -3,11 +3,13 @@
 #[macro_use]
 extern crate afl;
 
-use dcmfx::core::{IodModule, dictionary};
-use dcmfx::p10::DataSetP10Extensions;
-use dcmfx::pixel_data::{
-  DataSetPixelDataExtensions, PixelDataRenderer,
-  iods::{ImagePixelModule, OverlayPlaneModule},
+use dcmfx::{
+  core::{IodModule, dictionary},
+  p10::DataSetP10Extensions,
+  pixel_data::{
+    DataSetPixelDataExtensions, PixelDataRenderer,
+    iods::{ImagePixelModule, OverlayPlaneModule},
+  },
 };
 
 fn main() {

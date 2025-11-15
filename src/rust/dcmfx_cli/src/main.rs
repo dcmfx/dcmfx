@@ -2,7 +2,6 @@
 
 mod args;
 mod commands;
-mod mp4_encoder;
 mod utils;
 
 use std::path::PathBuf;
@@ -105,24 +104,12 @@ fn get_peak_memory_usage() -> i64 {
   max
 }
 
-/// Validates the --output-filename and --output-directory arguments for the
-/// given input sources.
+/// Validates the --output-filename and --output-directory arguments.
 ///
-pub fn validate_output_args(
-  output_filename: &Option<PathBuf>,
-  output_directory: &Option<PathBuf>,
+pub async fn validate_output_args(
+  output_filename: Option<&PathBuf>,
+  output_directory: Option<&PathBuf>,
 ) {
-  // Check that --output-directory is a valid directory
-  if let Some(output_directory) = output_directory
-    && !output_directory.is_dir()
-  {
-    eprintln!(
-      "Error: '{}' is not a valid directory",
-      output_directory.display()
-    );
-    std::process::exit(1);
-  }
-
   // Check that --output-filename and --output-directory aren't both specified
   if output_filename.is_some() && output_directory.is_some() {
     eprintln!(
@@ -130,5 +117,24 @@ pub fn validate_output_args(
        together"
     );
     std::process::exit(1);
+  }
+
+  // Check that --output-directory is valid
+  if let Some(output_directory) = output_directory {
+    if crate::utils::object_store::object_url_to_store_and_path(
+      &output_directory.to_string_lossy(),
+    )
+    .is_ok()
+    {
+      return;
+    }
+
+    if !output_directory.is_dir() {
+      eprintln!(
+        "Error: '{}' is not a valid directory",
+        output_directory.display()
+      );
+      std::process::exit(1);
+    }
   }
 }

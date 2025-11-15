@@ -71,6 +71,12 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
 
+    services:
+      localstack:
+        image: ${{ (matrix.runs-on == 'ubuntu-24.04') && 'localstack/localstack:s3-latest' || '' }}
+        ports:
+          - 4566:4566
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -107,9 +113,26 @@ jobs:
         working-directory: src/rust
         run: cargo clippy -- --deny warnings
 
+      - name: Build tests
+        working-directory: src/rust
+        run: cargo test --frozen --no-run
+
       - name: Run tests
         working-directory: src/rust
         run: cargo test --frozen
+
+      - name: Run tests that require LocalStack (Linux)
+        if: matrix.runs-on == 'ubuntu-24.04'
+        working-directory: src/rust
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: us-east-1
+          AWS_ENDPOINT_URL: http://localhost:4566
+        run: |
+          aws s3 mb s3://dcmfx-test
+          aws s3 cp --recursive ../../test/assets s3://dcmfx-test
+          cargo test --frozen -- --ignored
 
   test_dcmfx_rust_wasm_build:
     name: Test DCMfx Rust WASM build

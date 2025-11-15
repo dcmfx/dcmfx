@@ -3,11 +3,9 @@ use std::path::PathBuf;
 use clap::Args;
 use tokio::io::AsyncReadExt;
 
-use dcmfx::core::*;
-use dcmfx::json::*;
-use dcmfx::p10::*;
+use dcmfx::{core::*, json::*, p10::*};
 
-use crate::{args::input_args::InputSource, utils};
+use crate::utils::{self, InputSource, OutputTarget};
 
 pub const ABOUT: &str = "Converts DICOM JSON files to DICOM P10 files";
 
@@ -47,7 +45,7 @@ pub struct ToDcmArgs {
   #[arg(
     long,
     help_heading = "Output",
-    help = "Overwrite files without prompting",
+    help = "Overwrite any output files that already exist",
     default_value_t = false
   )]
   overwrite: bool,
@@ -69,7 +67,13 @@ enum ToDcmError {
 }
 
 pub async fn run(args: ToDcmArgs) -> Result<(), ()> {
-  crate::validate_output_args(&args.output_filename, &args.output_directory);
+  crate::validate_output_args(
+    args.output_filename.as_ref(),
+    args.output_directory.as_ref(),
+  )
+  .await;
+
+  OutputTarget::set_overwrite(args.overwrite);
 
   let input_sources = args.input.create_iterator();
 
@@ -77,14 +81,17 @@ pub async fn run(args: ToDcmArgs) -> Result<(), ()> {
     args.concurrency,
     input_sources,
     async |input_source: InputSource| {
-      let output_filename = if let Some(output_filename) = &args.output_filename
-      {
-        output_filename.clone()
+      let output_target = if let Some(output_filename) = &args.output_filename {
+        OutputTarget::new(output_filename)
       } else {
-        input_source.output_path(".dcm", &args.output_directory)
+        OutputTarget::from_input_source(
+          &input_source,
+          ".dcm",
+          &args.output_directory,
+        )
       };
 
-      match input_source_to_dcm(&input_source, output_filename, &args).await {
+      match input_source_to_dcm(&input_source, output_target, &args).await {
         Ok(()) => Ok(()),
 
         Err(e) => {
@@ -114,7 +121,7 @@ pub async fn run(args: ToDcmArgs) -> Result<(), ()> {
 
 async fn input_source_to_dcm(
   input_source: &InputSource,
-  output_filename: PathBuf,
+  output_target: OutputTarget,
   args: &ToDcmArgs,
 ) -> Result<(), ToDcmError> {
   let mut stream = input_source
@@ -123,13 +130,10 @@ async fn input_source_to_dcm(
     .map_err(ToDcmError::P10Error)?;
 
   // Open output stream
-  let output_stream = utils::open_output_stream(
-    &output_filename,
-    Some(&output_filename),
-    args.overwrite,
-  )
-  .await
-  .map_err(ToDcmError::P10Error)?;
+  let output_stream = output_target
+    .open_write_stream(true)
+    .await
+    .map_err(ToDcmError::P10Error)?;
 
   let mut buffer = vec![];
 
@@ -165,6 +169,11 @@ async fn input_source_to_dcm(
   // Write P10 data to output stream
   data_set
     .write_p10_stream_async(&mut *output_stream, Some(write_config))
+    .await
+    .map_err(ToDcmError::P10Error)?;
+
+  output_target
+    .commit(&mut output_stream)
     .await
     .map_err(ToDcmError::P10Error)
 }

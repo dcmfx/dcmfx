@@ -1,39 +1,39 @@
 mod utils;
 
-use assert_cmd::Command;
-use dcmfx::{
-  core::DataSet,
-  json::{DataSetJsonExtensions, DicomJsonConfig},
-  p10::DataSetP10Extensions,
-};
 use insta::assert_snapshot;
-use utils::{generate_temp_filename, get_stdout};
 
-const JSON_CONFIG: DicomJsonConfig = DicomJsonConfig {
-  store_encapsulated_pixel_data: true,
-  pretty_print: true,
-};
+use utils::{create_temp_dir, dcmfx_cli, get_stdout, s3_get_object};
+
+use crate::utils::create_temp_file;
 
 #[test]
 fn with_output_filename() {
-  let dicom_json_file =
-    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm.json";
-  let temp_path = generate_temp_filename();
+  let temp_dir = create_temp_dir();
+  let input_path = temp_dir.path().join("input.json");
+  let output_path = temp_dir.path().join("output.dcm");
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  cmd
+  std::fs::copy(
+    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm.json",
+    &input_path,
+  )
+  .unwrap();
+
+  dcmfx_cli()
     .arg("json-to-dcm")
-    .arg(dicom_json_file)
+    .arg(&input_path)
     .arg("--output-filename")
-    .arg(&temp_path)
+    .arg(&output_path)
     .arg("--implementation-version-name")
     .arg("DCMfx Test")
     .assert()
     .success()
-    .stdout(format!("Writing \"{}\" …\n", temp_path.display()));
+    .stdout(format!("Writing \"{}\" …\n", output_path.display()));
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  let assert = cmd.arg("print").arg(temp_path).assert();
+  let assert = dcmfx_cli()
+    .arg("print")
+    .arg(&output_path)
+    .assert()
+    .success();
 
   assert_snapshot!("with_output_filename", get_stdout(assert));
 }
@@ -43,8 +43,7 @@ fn with_stdout_output() {
   let dicom_json_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm.json";
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  let assert = cmd
+  let assert = dcmfx_cli()
     .arg("json-to-dcm")
     .arg(dicom_json_file)
     .arg("--output-filename")
@@ -54,35 +53,41 @@ fn with_stdout_output() {
 
   let p10_data = assert.get_output().stdout.clone();
 
-  // Convert stdout data back to JSON so it can be asserted
-  let json = DataSet::read_p10_bytes(p10_data.into())
-    .unwrap()
-    .to_json(JSON_CONFIG)
-    .unwrap();
+  let temp_file = create_temp_file();
+  std::fs::write(temp_file.path(), p10_data).unwrap();
 
-  assert_snapshot!("with_stdout_output", json);
+  let assert = dcmfx_cli()
+    .arg("print")
+    .arg(temp_file.path())
+    .assert()
+    .success();
+
+  assert_snapshot!("with_stdout_output", get_stdout(assert));
 }
 
 #[test]
 fn with_output_directory() {
-  let dicom_json_files = [
+  let output_directory = create_temp_dir();
+
+  let input_files = [
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm.json",
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd_jpeg.dcm.json",
   ];
 
-  let output_directory = generate_temp_filename();
-  std::fs::create_dir(&output_directory).unwrap();
   let output_files = [
-    output_directory.join("SC_rgb_small_odd.dcm.json.dcm"),
-    output_directory.join("SC_rgb_small_odd_jpeg.dcm.json.dcm"),
+    output_directory
+      .path()
+      .join("SC_rgb_small_odd.dcm.json.dcm"),
+    output_directory
+      .path()
+      .join("SC_rgb_small_odd_jpeg.dcm.json.dcm"),
   ];
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  cmd
+  dcmfx_cli()
     .arg("json-to-dcm")
-    .args(dicom_json_files)
+    .args(input_files)
     .arg("--output-directory")
-    .arg(output_directory)
+    .arg(output_directory.path())
     .arg("--concurrency")
     .arg("1")
     .assert()
@@ -93,46 +98,49 @@ fn with_output_directory() {
       output_files[1].display()
     ));
 
-  assert_snapshot!(
-    "with_output_directory_0",
-    DataSet::read_p10_file(&output_files[0])
-      .unwrap()
-      .to_json(JSON_CONFIG)
-      .unwrap()
-  );
-  assert_snapshot!(
-    "with_output_directory_1",
-    DataSet::read_p10_file(&output_files[1])
-      .unwrap()
-      .to_json(JSON_CONFIG)
-      .unwrap()
-  );
+  let assert = dcmfx_cli()
+    .arg("print")
+    .arg(&output_files[0])
+    .assert()
+    .success();
+
+  assert_snapshot!("with_output_directory_0", get_stdout(assert));
+
+  let assert = dcmfx_cli()
+    .arg("print")
+    .arg(&output_files[1])
+    .assert()
+    .success();
+
+  assert_snapshot!("with_output_directory_1", get_stdout(assert));
 }
 
 #[test]
 fn with_multiple_inputs() {
-  let dicom_files = [generate_temp_filename(), generate_temp_filename()];
+  let temp_dir = create_temp_dir();
+  let input_files = [
+    temp_dir.path().join("1.json"),
+    temp_dir.path().join("2.json"),
+  ];
   let output_files = [
-    format!("{}{}", dicom_files[0].display(), ".json"),
-    format!("{}{}", dicom_files[1].display(), ".json"),
+    format!("{}{}", input_files[0].display(), ".dcm"),
+    format!("{}{}", input_files[1].display(), ".dcm"),
   ];
 
   std::fs::copy(
-    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm",
-    &dicom_files[0],
+    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm.json",
+    &input_files[0],
   )
   .unwrap();
   std::fs::copy(
-    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd_jpeg.dcm",
-    &dicom_files[1],
+    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd_jpeg.dcm.json",
+    &input_files[1],
   )
   .unwrap();
 
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
-  cmd
-    .arg("dcm-to-json")
-    .args(dicom_files)
-    .arg("--pretty")
+  dcmfx_cli()
+    .arg("json-to-dcm")
+    .args(input_files)
     .arg("--concurrency")
     .arg("1")
     .assert()
@@ -142,12 +150,47 @@ fn with_multiple_inputs() {
       output_files[0], output_files[1]
     ));
 
-  assert_snapshot!(
-    "with_multiple_inputs_0",
-    std::fs::read_to_string(&output_files[0]).unwrap()
-  );
-  assert_snapshot!(
-    "with_multiple_inputs_1",
-    std::fs::read_to_string(&output_files[1]).unwrap()
-  );
+  let assert = dcmfx_cli()
+    .arg("print")
+    .arg(&output_files[0])
+    .assert()
+    .success();
+
+  assert_snapshot!("with_multiple_inputs_0", get_stdout(assert));
+
+  let assert = dcmfx_cli()
+    .arg("print")
+    .arg(&output_files[1])
+    .assert()
+    .success();
+
+  assert_snapshot!("with_multiple_inputs_1", get_stdout(assert));
+}
+
+#[tokio::test]
+#[ignore]
+async fn with_s3_input_and_output() {
+  let input_file =
+    "s3://dcmfx-test/pydicom/test_files/SC_rgb_small_odd.dcm.json";
+
+  let output_key = format!("{}.dcm", rand::random::<u64>());
+  let output_file = format!("s3://dcmfx-test/{output_key}");
+
+  dcmfx_cli()
+    .arg("json-to-dcm")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg(&output_file)
+    .assert()
+    .success();
+
+  let output_file = s3_get_object(&output_key).await;
+
+  let assert = dcmfx_cli()
+    .arg("print")
+    .arg(output_file.path())
+    .assert()
+    .success();
+
+  assert_snapshot!("with_s3_input_and_output", get_stdout(assert));
 }

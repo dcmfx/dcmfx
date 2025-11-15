@@ -180,12 +180,10 @@ pub fn read_stream<S: IoRead>(
     };
 
     // Add the new tokens to the data set builder
-    for token in tokens {
-      match builder.add_token(&token) {
-        Ok(()) => (),
-        Err(e) => return Err((e, builder)),
-      };
-    }
+    match builder.add_tokens(&tokens) {
+      Ok(()) => (),
+      Err(e) => return Err((e, builder)),
+    };
 
     // If the data set builder is now complete then return the final data set
     if let Ok(final_data_set) = builder.final_data_set() {
@@ -198,8 +196,8 @@ pub fn read_stream<S: IoRead>(
 /// will attempt to consume all data available in the read stream.
 ///
 #[cfg(feature = "async")]
-pub async fn read_stream_async<S: IoAsyncRead>(
-  stream: &mut S,
+pub async fn read_stream_async<I: IoAsyncRead>(
+  stream: &mut I,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
   let mut context = P10ReadContext::new(None);
   let mut builder = Box::new(DataSetBuilder::new());
@@ -213,11 +211,9 @@ pub async fn read_stream_async<S: IoAsyncRead>(
       };
 
     // Add the new tokens to the data set builder
-    for token in tokens {
-      match builder.add_token(&token) {
-        Ok(()) => (),
-        Err(e) => return Err((e, builder)),
-      };
+    match builder.add_tokens(&tokens) {
+      Ok(()) => (),
+      Err(e) => return Err((e, builder)),
     }
 
     // If the data set builder is now complete then return the final data set
@@ -254,20 +250,18 @@ pub fn read_tokens_from_stream<S: IoRead>(
       // write them to the read context, and try again
       Err(P10Error::DataRequired { .. }) => {
         let mut buffer = vec![0u8; chunk_size];
-        match stream.read(&mut buffer) {
-          Ok(0) => context.write_bytes(RcByteSlice::empty(), true)?,
 
-          Ok(bytes_count) => {
-            buffer.resize(bytes_count, 0);
-            context.write_bytes(buffer.into(), false)?;
-          }
+        let read_bytes_count =
+          stream.read(&mut buffer).map_err(|e| P10Error::FileError {
+            when: "Reading from stream".to_string(),
+            details: e.to_string(),
+          })?;
 
-          Err(e) => {
-            return Err(P10Error::FileError {
-              when: "Reading from stream".to_string(),
-              details: e.to_string(),
-            });
-          }
+        if read_bytes_count == 0 {
+          context.write_bytes(RcByteSlice::empty(), true)?;
+        } else {
+          buffer.resize(read_bytes_count, 0);
+          context.write_bytes(buffer.into(), false)?;
         }
       }
 
@@ -283,8 +277,8 @@ pub fn read_tokens_from_stream<S: IoRead>(
 /// The chunk size defaults to 256 KiB if not specified.
 ///
 #[cfg(feature = "async")]
-pub async fn read_tokens_from_stream_async<S: IoAsyncRead>(
-  stream: &mut S,
+pub async fn read_tokens_from_stream_async<I: IoAsyncRead>(
+  stream: &mut I,
   context: &mut P10ReadContext,
   chunk_size: Option<usize>,
 ) -> Result<Vec<P10Token>, P10Error> {
@@ -306,20 +300,21 @@ pub async fn read_tokens_from_stream_async<S: IoAsyncRead>(
       // write them to the read context, and try again
       Err(P10Error::DataRequired { .. }) => {
         let mut buffer = vec![0u8; chunk_size];
-        match stream.read(&mut buffer).await {
-          Ok(0) => context.write_bytes(RcByteSlice::empty(), true)?,
 
-          Ok(bytes_count) => {
-            buffer.resize(bytes_count, 0);
-            context.write_bytes(buffer.into(), false)?;
-          }
-
-          Err(e) => {
-            return Err(P10Error::FileError {
+        let read_bytes_count =
+          stream
+            .read(&mut buffer)
+            .await
+            .map_err(|e| P10Error::FileError {
               when: "Reading from stream".to_string(),
               details: e.to_string(),
-            });
-          }
+            })?;
+
+        if read_bytes_count == 0 {
+          context.write_bytes(RcByteSlice::empty(), true)?;
+        } else {
+          buffer.resize(read_bytes_count, 0);
+          context.write_bytes(buffer.into(), false)?;
         }
       }
 
@@ -418,68 +413,27 @@ pub fn read_stream_partial<S: IoRead>(
   tags: &[DataElementTag],
   config: Option<P10ReadConfig>,
 ) -> Result<DataSet, P10Error> {
+  let (largest_tag, mut filter, mut chunk_size) =
+    read_stream_partial_prepare(tags);
+
   let mut context = P10ReadContext::new(config);
-
-  // Find the largest data element tag being read
-  let largest_tag = tags.iter().max().cloned().unwrap_or(DataElementTag::ZERO);
-
-  // Create filter transform that only allows the specified root tags
-  let mut filter = {
-    let tags = tags.to_vec();
-    P10FilterTransform::new(Box::new(move |tag, _vr, _length, path| -> bool {
-      !path.is_root() || tags.contains(&tag)
-    }))
-  };
-
   let mut data_set_builder = DataSetBuilder::new();
-
-  // The first read chunk is small because in a partial read it is common to
-  // only read a few data elements at the start of a P10 file, such as the
-  // Transfer Syntax UID, SOP Instance UID, SOP Class UID, etc. If this chunk
-  // size is insufficient then subsequent read chunks will be the larger default
-  // size.
-  let mut chunk_size = Some(8 * 1024);
-
   let mut is_done = false;
 
   while !is_done {
     let tokens = read_tokens_from_stream(stream, &mut context, chunk_size)?;
 
-    for token in tokens {
-      if filter.add_token(&token)? {
-        data_set_builder.add_token(&token)?;
-      }
-
-      match token {
-        P10Token::DataElementHeader { tag, path, .. }
-        | P10Token::SequenceStart { tag, path, .. } => {
-          if tag > largest_tag && path.is_root() {
-            is_done = true;
-            break;
-          }
-        }
-
-        P10Token::End => {
-          is_done = true;
-          break;
-        }
-
-        _ => (),
-      }
-    }
-
-    chunk_size = None;
+    read_stream_partial_process_tokens(
+      &tokens,
+      largest_tag,
+      &mut filter,
+      &mut data_set_builder,
+      &mut is_done,
+      &mut chunk_size,
+    )?;
   }
 
-  data_set_builder.force_end();
-  let mut data_set = data_set_builder.final_data_set().unwrap();
-
-  // Exclude File Meta Information tags unless they were explicitly requested
-  data_set.retain(|tag, _value| {
-    !tag.is_file_meta_information() || tags.contains(&tag)
-  });
-
-  Ok(data_set)
+  Ok(read_stream_partial_complete(data_set_builder, tags))
 }
 
 /// Reads DICOM P10 data from a stream into an in-memory data set. Only the
@@ -488,65 +442,99 @@ pub fn read_stream_partial<S: IoRead>(
 /// requested data elements.
 ///
 #[cfg(feature = "async")]
-pub async fn read_stream_partial_async<S: IoAsyncRead>(
-  stream: &mut S,
+pub async fn read_stream_partial_async<I: IoAsyncRead>(
+  stream: &mut I,
   tags: &[DataElementTag],
   config: Option<P10ReadConfig>,
 ) -> Result<DataSet, P10Error> {
+  let (largest_tag, mut filter, mut chunk_size) =
+    read_stream_partial_prepare(tags);
+
   let mut context = P10ReadContext::new(config);
-
-  // Find the largest data element tag being read
-  let largest_tag = tags.iter().max().cloned().unwrap_or(DataElementTag::ZERO);
-
-  // Create filter transform that only allows the specified root tags
-  let mut filter = {
-    let tags = tags.to_vec();
-    P10FilterTransform::new(Box::new(move |tag, _vr, _length, path| -> bool {
-      !path.is_root() || tags.contains(&tag)
-    }))
-  };
-
   let mut data_set_builder = DataSetBuilder::new();
-
-  // The first read chunk is small because in a partial read it is common to
-  // only read a few data elements at the start of a P10 file, such as the
-  // Transfer Syntax UID, SOP Instance UID, SOP Class UID, etc. If this chunk
-  // size is insufficient then subsequent read chunks will be the larger default
-  // size.
-  let mut chunk_size = Some(8 * 1024);
-
   let mut is_done = false;
 
   while !is_done {
     let tokens =
       read_tokens_from_stream_async(stream, &mut context, chunk_size).await?;
 
-    for token in tokens {
-      if filter.add_token(&token)? {
-        data_set_builder.add_token(&token)?;
-      }
-
-      match token {
-        P10Token::DataElementHeader { tag, path, .. }
-        | P10Token::SequenceStart { tag, path, .. } => {
-          if tag > largest_tag && path.is_root() {
-            is_done = true;
-            break;
-          }
-        }
-
-        P10Token::End => {
-          is_done = true;
-          break;
-        }
-
-        _ => (),
-      }
-    }
-
-    chunk_size = None;
+    read_stream_partial_process_tokens(
+      &tokens,
+      largest_tag,
+      &mut filter,
+      &mut data_set_builder,
+      &mut is_done,
+      &mut chunk_size,
+    )?;
   }
 
+  Ok(read_stream_partial_complete(data_set_builder, tags))
+}
+
+fn read_stream_partial_prepare(
+  tags: &[DataElementTag],
+) -> (DataElementTag, P10FilterTransform, Option<usize>) {
+  // Find the largest data element tag being read
+  let largest_tag = tags.iter().max().cloned().unwrap_or(DataElementTag::ZERO);
+
+  // Create filter transform that only allows the specified root tags
+  let filter = {
+    let tags = tags.to_vec();
+    P10FilterTransform::new(Box::new(move |tag, _vr, _length, path| -> bool {
+      !path.is_root() || tags.contains(&tag)
+    }))
+  };
+
+  // The first read chunk is small because in a partial read it is common to
+  // only read a few data elements at the start of a P10 file, such as the
+  // Transfer Syntax UID, SOP Instance UID, SOP Class UID, etc. If this chunk
+  // size is insufficient then subsequent read chunks will be the larger default
+  // size.
+  let chunk_size = Some(8 * 1024);
+
+  (largest_tag, filter, chunk_size)
+}
+
+fn read_stream_partial_process_tokens(
+  tokens: &[P10Token],
+  largest_tag: DataElementTag,
+  filter: &mut P10FilterTransform,
+  data_set_builder: &mut DataSetBuilder,
+  is_done: &mut bool,
+  chunk_size: &mut Option<usize>,
+) -> Result<(), P10Error> {
+  for token in tokens {
+    if filter.add_token(token)? {
+      data_set_builder.add_token(token)?;
+    }
+
+    match token {
+      P10Token::DataElementHeader { tag, path, .. }
+      | P10Token::SequenceStart { tag, path, .. } => {
+        if *tag > largest_tag && path.is_root() {
+          *is_done = true;
+          break;
+        }
+      }
+
+      P10Token::End => {
+        *is_done = true;
+        break;
+      }
+
+      _ => (),
+    }
+  }
+
+  *chunk_size = None;
+
+  Ok(())
+}
+
+fn read_stream_partial_complete(
+  mut data_set_builder: DataSetBuilder,
+  tags: &[DataElementTag],
+) -> DataSet {
   data_set_builder.force_end();
   let mut data_set = data_set_builder.final_data_set().unwrap();
 
@@ -555,7 +543,7 @@ pub async fn read_stream_partial_async<S: IoAsyncRead>(
     !tag.is_file_meta_information() || tags.contains(&tag)
   });
 
-  Ok(data_set)
+  data_set
 }
 
 /// Writes a data set to a DICOM P10 file. This will overwrite any existing file
@@ -811,8 +799,8 @@ where
   /// Reads DICOM P10 data from a read stream into an in-memory data set. This
   /// will attempt to consume all data available in the read stream.
   ///
-  async fn read_p10_stream_async<S: IoAsyncRead>(
-    stream: &mut S,
+  async fn read_p10_stream_async<I: IoAsyncRead>(
+    stream: &mut I,
   ) -> Result<Self, P10Error>;
 
   /// Writes a data set to a DICOM P10 file. This will overwrite any existing
@@ -920,8 +908,8 @@ impl DataSetP10AsyncExtensions for DataSet {
     read_file_async(filename).await
   }
 
-  async fn read_p10_stream_async<S: IoAsyncRead>(
-    stream: &mut S,
+  async fn read_p10_stream_async<I: IoAsyncRead>(
+    stream: &mut I,
   ) -> Result<DataSet, P10Error> {
     read_stream_async(stream).await.map_err(|e| e.0)
   }

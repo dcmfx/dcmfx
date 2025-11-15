@@ -4,9 +4,15 @@ use std::{
 };
 
 use clap::Args;
+
 use dcmfx::{
   core::{TransferSyntax, transfer_syntax},
-  p10::{P10Error, P10ReadConfig},
+  p10::P10ReadConfig,
+};
+
+use crate::utils::{
+  input_source::InputSource,
+  object_store::{local_path_to_store_and_path, object_url_to_store_and_path},
 };
 
 #[derive(Args, Debug)]
@@ -17,7 +23,8 @@ pub struct BaseInputArgs {
   #[arg(
     long,
     help_heading = "Input",
-    help = "A UTF-8 text file containing a list of input filenames. Each input \
+    help = "A UTF-8 text file containing a list of input filenames. This is \
+      useful when the number of input filenames is very large. Each input \
       filename should be on its own line. White space is trimmed and blank \
       lines are ignored."
   )]
@@ -32,7 +39,8 @@ pub struct P10InputArgs {
   #[arg(
     long,
     help_heading = "Input",
-    help = "Whether to ignore input files that don't contain DICOM P10 data.",
+    help = "Whether to ignore input files that don't contain DICOM P10 data, \
+      defined as not having the 'DICM' prefix at byte offset 128.",
     default_value_t = false
   )]
   pub ignore_invalid: bool,
@@ -67,96 +75,8 @@ fn default_transfer_syntax_arg_validate(
     .map_err(|_| "Unrecognized transfer syntax UID".to_string())
 }
 
-/// Defines a single input into a CLI command, which can either be the `stdin`
-/// stream or a file on the local file system.
-///
-#[derive(Clone, Debug, PartialEq)]
-pub enum InputSource {
-  Stdin,
-  LocalFile { path: PathBuf },
-}
-
-impl core::fmt::Display for InputSource {
-  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-    match self {
-      InputSource::Stdin => write!(f, "<stdin>"),
-      InputSource::LocalFile { path } => write!(f, "{}", path.display()),
-    }
-  }
-}
-
-impl InputSource {
-  /// Returns the input source as a [`PathBuf`].
-  ///
-  pub fn path(&self) -> PathBuf {
-    match self {
-      InputSource::Stdin => PathBuf::from("stdin"),
-      InputSource::LocalFile { path } => path.clone(),
-    }
-  }
-
-  /// Returns whether the input source is valid DICOM P10 data.
-  ///
-  pub async fn is_dicom_p10(&self) -> bool {
-    match self {
-      InputSource::Stdin => true,
-      InputSource::LocalFile { path } => {
-        dcmfx::p10::is_valid_file_async(path).await
-      }
-    }
-  }
-
-  /// Returns path to the output file for this input source taking into account
-  /// the specified output suffix and output directory.
-  ///
-  pub fn output_path(
-    &self,
-    output_suffix: &str,
-    output_directory: &Option<PathBuf>,
-  ) -> PathBuf {
-    let mut path = self.path();
-
-    if let Some(output_directory) = output_directory {
-      output_directory.join(format!(
-        "{}{}",
-        path.file_name().unwrap().to_string_lossy(),
-        output_suffix
-      ))
-    } else {
-      if let Some(file_name) = path.file_name() {
-        let new_file_name =
-          format!("{}{output_suffix}", file_name.to_string_lossy());
-        path.set_file_name(new_file_name);
-      }
-
-      path
-    }
-  }
-
-  /// Opens the input source as a read stream.
-  ///
-  pub async fn open_read_stream(
-    &self,
-  ) -> Result<Box<dyn dcmfx::p10::IoAsyncRead>, P10Error> {
-    match self {
-      InputSource::Stdin => Ok(Box::new(tokio::io::stdin())),
-
-      InputSource::LocalFile { path } => {
-        match tokio::fs::File::open(path).await {
-          Ok(file) => Ok(Box::new(file)),
-
-          Err(e) => Err(P10Error::FileError {
-            when: "Opening file".to_string(),
-            details: e.to_string(),
-          }),
-        }
-      }
-    }
-  }
-}
-
 impl BaseInputArgs {
-  /// Returns an iterator over all input sources requested by the CLI arguments.
+  /// Returns an iterator over all input sources described by the CLI arguments.
   ///
   /// This handles recognizing "-" as meaning stdin, expands input filenames
   /// containing wildcards as glob patterns, and iterates through the file list
@@ -188,8 +108,20 @@ impl BaseInputArgs {
               as Box<dyn Iterator<Item = InputSource> + Send>;
           }
 
+          // Handle an object URL
+          if let Ok((object_store, object_path)) =
+            object_url_to_store_and_path(&input_filename_str)
+          {
+            return Box::new(std::iter::once(InputSource::Object {
+              object_store,
+              object_path,
+              specified_path: input_filename.clone(),
+            }));
+          }
+
           // If it's not a glob then error if it doesn't point to a valid file
           if !is_glob(&input_filename_str) && !input_filename.is_file() {
+            // Ignore directories
             if input_filename.is_dir() {
               return Box::new(std::iter::empty());
             }
@@ -207,7 +139,14 @@ impl BaseInputArgs {
               let expanded = paths.filter_map(move |path| match path {
                 Ok(path) => {
                   if path.is_file() {
-                    Some(InputSource::LocalFile { path })
+                    let (object_store, object_path) =
+                      local_path_to_store_and_path(&path);
+
+                    Some(InputSource::Object {
+                      object_store,
+                      object_path,
+                      specified_path: path,
+                    })
                   } else {
                     None
                   }
@@ -237,7 +176,9 @@ impl BaseInputArgs {
         });
 
     // Iterate the contents of any file list as well
-    Box::new(iter.chain(self.create_file_list_iterator()))
+    let iter = iter.chain(self.create_file_list_iterator());
+
+    Box::new(iter)
   }
 
   /// Creates an iterator over the paths in the file list. Each path in the
@@ -268,10 +209,25 @@ impl BaseInputArgs {
         let path = path.trim();
         if path.is_empty() {
           None
+        } else if let Ok((object_store, object_path)) =
+          object_url_to_store_and_path(path)
+        {
+          Some(InputSource::Object {
+            object_store,
+            object_path,
+            specified_path: PathBuf::from(path),
+          })
         } else {
-          Some(InputSource::LocalFile { path: path.into() })
+          let (object_store, object_path) = local_path_to_store_and_path(path);
+
+          Some(InputSource::Object {
+            object_store,
+            object_path,
+            specified_path: PathBuf::from(path),
+          })
         }
       }
+
       Err(e) => {
         eprintln!("Error: Failed reading file list, details: {e}");
         std::process::exit(1);

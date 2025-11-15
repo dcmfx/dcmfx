@@ -1,5 +1,7 @@
 const RNG_SEED: u64 = 1023;
 
+mod utils;
+
 use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path};
 
 use either::Either;
@@ -161,7 +163,7 @@ fn validate_dicom(dicom: &Path) -> Result<(), DicomValidationError> {
     true,
   )?;
   test_dicom_json_rewrite_cycle(dicom, &expected_json_string)?;
-  test_p10_rewrite_cycle(dicom, &data_set)?;
+  test_p10_rewrite_cycle(&data_set)?;
 
   // Test a read using a chunk size of 15 bytes (this isn't truly jittered as
   // the chunk size is constant)
@@ -302,13 +304,12 @@ fn test_dicom_json_rewrite_cycle(
 /// nothing changes.
 ///
 fn test_p10_rewrite_cycle(
-  dicom: &Path,
   data_set: &DataSet,
 ) -> Result<(), DicomValidationError> {
-  let tmp_file = format!("{}.tmp", dicom.to_string_lossy());
-  data_set.write_p10_file(&tmp_file, None).unwrap();
-  let rewritten_data_set = DataSet::read_p10_file(&tmp_file).unwrap();
-  std::fs::remove_file(tmp_file).unwrap();
+  let temp_dir = utils::create_temp_dir();
+  let input_file = temp_dir.path().join("temp.dcm");
+  data_set.write_p10_file(&input_file, None).unwrap();
+  let rewritten_data_set = DataSet::read_p10_file(&input_file).unwrap();
 
   // Filter that removes File Meta Information and specific character set data
   // elements which we don't want to be part of the rewrite comparison

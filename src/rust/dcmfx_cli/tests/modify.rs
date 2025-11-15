@@ -1,35 +1,33 @@
 mod utils;
 
-use assert_cmd::Command;
 use insta::assert_snapshot;
 
 #[macro_use]
 mod assert_image_snapshot;
-use utils::{generate_temp_filename, get_stderr, get_stdout, to_native_path};
+use tempfile::NamedTempFile;
+use utils::{
+  create_temp_dir, create_temp_file, dcmfx_cli, get_stderr, get_stdout,
+  s3_copy_object, to_native_path,
+};
 
 #[test]
 fn modify() {
-  let dicom_file = "../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm";
-  let temp_path = generate_temp_filename();
+  let temp_dir = create_temp_dir();
+  let input_file = "../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm";
+  let output_file = temp_dir.path().join("output.dcm");
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("print")
-    .arg(dicom_file)
-    .assert()
-    .success();
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
 
   assert_snapshot!("modify_before", get_stdout(assert));
 
-  Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  dcmfx_cli()
     .arg("modify")
     .arg("--transfer-syntax")
     .arg("explicit-vr-big-endian")
     .arg("--anonymize")
-    .arg(dicom_file)
+    .arg(input_file)
     .arg("--output-filename")
-    .arg(&temp_path)
+    .arg(&output_file)
     .arg("--delete")
     .arg("00080064")
     .arg("--delete")
@@ -40,14 +38,13 @@ fn modify() {
     .success()
     .stdout(format!(
       "Modifying \"{}\" => \"{}\" …\n",
-      to_native_path(&dicom_file),
-      temp_path.display()
+      to_native_path(input_file),
+      output_file.display()
     ));
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("print")
-    .arg(&temp_path)
+    .arg(&output_file)
     .assert()
     .success();
 
@@ -56,50 +53,75 @@ fn modify() {
 
 #[test]
 fn modify_in_place() {
-  let dicom_file = "../../../test/assets/fo-dicom/CR-MONO1-10-chest.dcm";
-  let temp_path = generate_temp_filename();
+  let input_file = "../../../test/assets/fo-dicom/CR-MONO1-10-chest.dcm";
+  let temp_file = create_temp_file();
 
-  std::fs::copy(dicom_file, &temp_path).unwrap();
+  std::fs::copy(input_file, temp_file.path()).unwrap();
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("print")
-    .arg(&temp_path)
+    .arg(temp_file.path())
     .assert()
     .success();
 
   assert_snapshot!("modify_in_place_before", get_stdout(assert));
 
-  Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  dcmfx_cli()
     .arg("modify")
+    .arg(temp_file.path())
+    .arg("--in-place")
     .arg("--transfer-syntax")
     .arg("deflated-explicit-vr-little-endian")
-    .arg("--in-place")
     .arg("--implementation-version-name")
     .arg("DCMfx Test")
-    .arg(&temp_path)
     .assert()
     .success()
     .stdout(format!(
       "Modifying \"{}\" in place …\n",
-      temp_path.display()
+      temp_file.path().display()
     ));
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("print")
-    .arg(&temp_path)
+    .arg(temp_file.path())
     .assert()
     .success();
 
   assert_snapshot!("modify_in_place_after", get_stdout(assert));
 }
 
+#[tokio::test]
+#[ignore]
+async fn modify_in_place_on_s3() {
+  let input_key = format!("{}.dcm", rand::random::<u64>());
+  let input_file = format!("s3://dcmfx-test/{input_key}");
+
+  s3_copy_object("fo-dicom/CR-MONO1-10-chest.dcm", &input_key).await;
+
+  let assert = dcmfx_cli().arg("print").arg(&input_file).assert().success();
+
+  assert_snapshot!("modify_in_place_before", get_stdout(assert));
+
+  dcmfx_cli()
+    .arg("modify")
+    .arg(&input_file)
+    .arg("--in-place")
+    .arg("--transfer-syntax")
+    .arg("deflated-explicit-vr-little-endian")
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
+    .assert()
+    .success()
+    .stdout(format!("Modifying \"{input_file}\" in place …\n"));
+
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
+
+  assert_snapshot!("modify_in_place_after", get_stdout(assert));
+}
+
 #[test]
 fn errors_on_missing_file() {
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("modify")
     .arg("--in-place")
     .arg("file-that-does-not-exist.dcm")
@@ -111,8 +133,7 @@ fn errors_on_missing_file() {
 
 #[test]
 fn errors_on_photometric_interpretation_monochrome_without_transfer_syntax() {
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("modify")
     .arg("--photometric-interpretation-monochrome")
     .arg("MONOCHROME1")
@@ -129,8 +150,7 @@ fn errors_on_photometric_interpretation_monochrome_without_transfer_syntax() {
 
 #[test]
 fn errors_on_photometric_interpretation_color_without_transfer_syntax() {
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("modify")
     .arg("--photometric-interpretation-color")
     .arg("RGB")
@@ -147,8 +167,7 @@ fn errors_on_photometric_interpretation_color_without_transfer_syntax() {
 
 #[test]
 fn errors_on_quality_without_transfer_syntax() {
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("modify")
     .arg("--quality")
     .arg("50")
@@ -165,8 +184,7 @@ fn errors_on_quality_without_transfer_syntax() {
 
 #[test]
 fn errors_on_effort_without_transfer_syntax() {
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("modify")
     .arg("--effort")
     .arg("5")
@@ -183,16 +201,13 @@ fn errors_on_effort_without_transfer_syntax() {
 
 #[test]
 fn merge_dicom_json() {
-  let dicom_file =
-    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm";
-  let temp_path = generate_temp_filename();
+  let temp_dir = create_temp_dir();
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("print")
-    .arg(dicom_file)
-    .assert()
-    .success();
+  let input_file =
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm";
+  let output_file = temp_dir.path().join("output.dcm");
+
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
 
   assert_snapshot!("merge_dicom_json_before", get_stdout(assert));
 
@@ -220,12 +235,11 @@ fn merge_dicom_json() {
   })
   .to_string();
 
-  Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  dcmfx_cli()
     .arg("modify")
-    .arg(dicom_file)
+    .arg(input_file)
     .arg("--output-filename")
-    .arg(&temp_path)
+    .arg(&output_file)
     .arg("--merge-dicom-json")
     .arg(merge_dicom_json)
     .arg("--implementation-version-name")
@@ -234,41 +248,32 @@ fn merge_dicom_json() {
     .success()
     .stdout(format!(
       "Modifying \"{}\" => \"{}\" …\n",
-      to_native_path(&dicom_file),
-      temp_path.display()
+      to_native_path(input_file),
+      output_file.display()
     ));
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("print")
-    .arg(&temp_path)
-    .assert()
-    .success();
+  let assert = dcmfx_cli().arg("print").arg(output_file).assert().success();
 
   assert_snapshot!("merge_dicom_json_after", get_stdout(assert));
 }
 
 #[test]
 fn delete_private_tags() {
-  let dicom_file =
-    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm";
-  let temp_path = generate_temp_filename();
+  let temp_dir = create_temp_dir();
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
-    .arg("print")
-    .arg(dicom_file)
-    .assert()
-    .success();
+  let input_file =
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm";
+  let output_file = temp_dir.path().join("output.dcm");
+
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
 
   assert_snapshot!("delete_private_tags_before", get_stdout(assert));
 
-  Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  dcmfx_cli()
     .arg("modify")
-    .arg(dicom_file)
+    .arg(input_file)
     .arg("--output-filename")
-    .arg(&temp_path)
+    .arg(&output_file)
     .arg("--delete-private")
     .arg("--implementation-version-name")
     .arg("DCMfx Test")
@@ -276,14 +281,13 @@ fn delete_private_tags() {
     .success()
     .stdout(format!(
       "Modifying \"{}\" => \"{}\" …\n",
-      to_native_path(&dicom_file),
-      temp_path.display()
+      to_native_path(&input_file),
+      output_file.display()
     ));
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("print")
-    .arg(&temp_path)
+    .arg(&output_file)
     .assert()
     .success();
 
@@ -845,7 +849,7 @@ fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only_with_openjpeg_d
  {
   let snapshot_prefix = "monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only_with_openjpeg_decoder";
 
-  let temp_path = modify_transfer_syntax(
+  let temp_file = modify_transfer_syntax(
     "../../../test/assets/other/monochrome_jpeg_xl.dcm",
     "high-throughput-jpeg-2000-lossless-only",
     snapshot_prefix,
@@ -853,7 +857,7 @@ fn monochrome_jpeg_xl_to_high_throughput_jpeg_2000_lossless_only_with_openjpeg_d
   );
 
   check_pixel_data_against_snapshot(
-    &temp_path,
+    temp_file.path(),
     snapshot_prefix,
     &["--high-throughput-jpeg-2000-decoder", "openjpeg"],
   );
@@ -1149,7 +1153,7 @@ fn jpeg_baseline_to_jpeg_xl_jpeg_recompression_with_reconstruction() {
   );
 
   modify_transfer_syntax_and_check_pixel_data(
-    &recompressed_dicom.to_string_lossy().to_string(),
+    &recompressed_dicom.path().to_string_lossy(),
     "jpeg-baseline-8bit",
     "jpeg_xl_jpeg_recompression_to_jpeg_baseline",
     &[],
@@ -1182,12 +1186,14 @@ fn with_crop() {
 
 #[test]
 fn errors_with_all_pixels_cropped() {
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let output_directory = create_temp_dir();
+
+  let assert = dcmfx_cli()
     .arg("modify")
     .arg("--transfer-syntax")
     .arg("explicit-vr-little-endian")
-    .arg("--in-place")
+    .arg("--output-directory")
+    .arg(output_directory.path())
     .arg("--crop")
     .arg("9999,9999")
     .arg("../../../test/assets/fo-dicom/TestPattern_Palette.dcm")
@@ -1206,10 +1212,12 @@ fn errors_with_all_pixels_cropped() {
 
 #[test]
 fn errors_with_invalid_crop() {
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let temp_dir = create_temp_dir();
+
+  let assert = dcmfx_cli()
     .arg("modify")
-    .arg("--in-place")
+    .arg("--output-directory")
+    .arg(temp_dir.path())
     .arg("--crop")
     .arg("a,b")
     .arg("../../../test/assets/fo-dicom/TestPattern_Palette.dcm")
@@ -1221,13 +1229,15 @@ fn errors_with_invalid_crop() {
 
 #[test]
 fn errors_on_unaligned_multiframe_bitmap() {
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let output_directory = create_temp_dir();
+
+  let assert = dcmfx_cli()
     .arg("modify")
     .arg("../../../test/assets/pydicom/test_files/liver_nonbyte_aligned.dcm")
     .arg("--transfer-syntax")
     .arg("pass-through")
-    .arg("--in-place")
+    .arg("--output-directory")
+    .arg(output_directory.path())
     .assert()
     .failure();
 
@@ -1246,22 +1256,20 @@ fn modify_transfer_syntax(
   transfer_syntax: &str,
   snapshot_prefix: &str,
   extra_args: &[&str],
-) -> std::path::PathBuf {
-  let temp_path = generate_temp_filename();
+) -> NamedTempFile {
+  let temp_file = create_temp_file();
 
-  std::fs::copy(dicom_file, &temp_path).unwrap();
+  std::fs::copy(dicom_file, &temp_file).unwrap();
 
-  let assert = Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  let assert = dcmfx_cli()
     .arg("print")
-    .arg(&temp_path)
+    .arg(temp_file.path())
     .assert()
     .success();
 
   assert_snapshot!(format!("{}_before", snapshot_prefix), get_stdout(assert));
 
-  Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  dcmfx_cli()
     .arg("modify")
     .arg("--transfer-syntax")
     .arg(transfer_syntax)
@@ -1271,12 +1279,12 @@ fn modify_transfer_syntax(
     .arg("--effort")
     .arg("1")
     .args(extra_args)
-    .arg(&temp_path)
+    .arg(temp_file.path())
     .assert()
     .success()
     .stdout(format!(
       "Modifying \"{}\" in place …\n",
-      temp_path.display()
+      temp_file.path().display()
     ));
 
   // On x86_64 the following tests have different compressed data sizes
@@ -1302,17 +1310,16 @@ fn modify_transfer_syntax(
   let assert_after_snapshot = true;
 
   if assert_after_snapshot {
-    let assert = Command::cargo_bin("dcmfx_cli")
-      .unwrap()
+    let assert = dcmfx_cli()
       .arg("print")
-      .arg(&temp_path)
+      .arg(temp_file.path())
       .assert()
       .success();
 
     assert_snapshot!(format!("{}_after", snapshot_prefix), get_stdout(assert));
   }
 
-  temp_path
+  temp_file
 }
 
 fn modify_transfer_syntax_and_check_pixel_data(
@@ -1320,7 +1327,7 @@ fn modify_transfer_syntax_and_check_pixel_data(
   transfer_syntax: &str,
   snapshot_prefix: &str,
   extra_args: &[&str],
-) -> std::path::PathBuf {
+) -> NamedTempFile {
   let temp_dicom_path = modify_transfer_syntax(
     dicom_file,
     transfer_syntax,
@@ -1328,18 +1335,21 @@ fn modify_transfer_syntax_and_check_pixel_data(
     extra_args,
   );
 
-  check_pixel_data_against_snapshot(&temp_dicom_path, snapshot_prefix, &[]);
+  check_pixel_data_against_snapshot(
+    temp_dicom_path.path(),
+    snapshot_prefix,
+    &[],
+  );
 
   temp_dicom_path
 }
 
 fn check_pixel_data_against_snapshot(
-  dicom_path: &std::path::PathBuf,
+  dicom_path: &std::path::Path,
   snapshot_prefix: &str,
   extra_args: &[&str],
 ) {
-  Command::cargo_bin("dcmfx_cli")
-    .unwrap()
+  dcmfx_cli()
     .arg("get-pixel-data")
     .arg(&dicom_path)
     .arg("-f")
