@@ -343,6 +343,14 @@ pub fn run(args: &mut ModifyArgs) -> Result<(), ()> {
       );
       return Err(());
     }
+
+    if args.crop.is_some() {
+      eprintln!(
+        "Error: The --crop option is only valid when --transfer-syntax is \
+         specified"
+      );
+      return Err(());
+    }
   }
 
   crate::validate_output_args(&args.output_filename, &args.output_directory);
