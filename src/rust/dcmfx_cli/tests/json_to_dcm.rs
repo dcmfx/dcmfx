@@ -48,6 +48,8 @@ fn with_stdout_output() {
     .arg(dicom_json_file)
     .arg("--output-filename")
     .arg("-")
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
     .assert()
     .success();
 
@@ -88,6 +90,8 @@ fn with_output_directory() {
     .args(input_files)
     .arg("--output-directory")
     .arg(output_directory.path())
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
     .arg("--concurrency")
     .arg("1")
     .assert()
@@ -141,6 +145,8 @@ fn with_multiple_inputs() {
   dcmfx_cli()
     .arg("json-to-dcm")
     .args(input_files)
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
     .arg("--concurrency")
     .arg("1")
     .assert()
@@ -181,6 +187,8 @@ async fn with_s3_input_and_output() {
     .arg(input_file)
     .arg("--output-filename")
     .arg(&output_file)
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
     .assert()
     .success();
 
