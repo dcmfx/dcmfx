@@ -1,14 +1,13 @@
-use std::{
-  io::{BufRead, BufReader},
-  path::PathBuf,
-};
+use std::{path::PathBuf, pin::Pin};
 
 use clap::Args;
+use futures::{Stream, StreamExt};
 
 use dcmfx::{
   core::{TransferSyntax, transfer_syntax},
   p10::P10ReadConfig,
 };
+use tokio::io::AsyncBufReadExt;
 
 use crate::utils::{
   input_source::InputSource,
@@ -76,15 +75,16 @@ fn default_transfer_syntax_arg_validate(
 }
 
 impl BaseInputArgs {
-  /// Returns an iterator over all input sources described by the CLI arguments.
+  /// Returns an async stream over all input sources described by the CLI
+  /// arguments.
   ///
   /// This handles recognizing "-" as meaning stdin, expands input filenames
-  /// containing wildcards as glob patterns, and iterates through the file list
-  /// if one was specified.
+  /// containing wildcards as glob patterns, and includes the contents of the
+  /// file list if one was specified.
   ///
-  pub fn create_iterator(
+  pub async fn input_sources(
     &self,
-  ) -> Box<dyn Iterator<Item = InputSource> + Send> {
+  ) -> Pin<Box<dyn Stream<Item = InputSource> + Send>> {
     if self.input_filenames.is_empty() && self.file_list.is_none() {
       eprintln!(
         "Error: No inputs specified. Pass --help for usage instructions."
@@ -92,150 +92,157 @@ impl BaseInputArgs {
       std::process::exit(1);
     }
 
-    // Create iterator over the input filenames, expanding them if they are glob
-    // patterns
-    let iter =
-      self
-        .input_filenames
-        .clone()
-        .into_iter()
-        .flat_map(|input_filename| {
-          let input_filename_str = input_filename.to_string_lossy();
-
-          // Handle stdin
-          if input_filename_str == "-" {
-            return Box::new(std::iter::once(InputSource::Stdin))
-              as Box<dyn Iterator<Item = InputSource> + Send>;
-          }
-
-          // Handle an object URL
-          if let Ok((object_store, object_path)) =
-            object_url_to_store_and_path(&input_filename_str)
-          {
-            return Box::new(std::iter::once(InputSource::Object {
-              object_store,
-              object_path,
-              specified_path: input_filename.clone(),
-            }));
-          }
-
-          // If it's not a glob then error if it doesn't point to a valid file
-          if !is_glob(&input_filename_str) && !input_filename.is_file() {
-            // Ignore directories
-            if input_filename.is_dir() {
-              return Box::new(std::iter::empty());
-            }
-
-            eprintln!(
-              "Error: Input file '{}' does not exist",
-              input_filename.display()
-            );
-            std::process::exit(1);
-          }
-
-          // Attempt to expand as a glob pattern
-          match glob::glob(&input_filename_str) {
-            Ok(paths) => {
-              let expanded = paths.filter_map(move |path| match path {
-                Ok(path) => {
-                  if path.is_file() {
-                    let (object_store, object_path) =
-                      local_path_to_store_and_path(&path);
-
-                    Some(InputSource::Object {
-                      object_store,
-                      object_path,
-                      specified_path: path,
-                    })
-                  } else {
-                    None
-                  }
-                }
-                Err(e) => {
-                  eprintln!(
-                    "Error: Failed globbing '{}', details: {}",
-                    input_filename.display(),
-                    e
-                  );
-                  std::process::exit(1);
-                }
-              });
-
-              Box::new(expanded)
-            }
-
-            Err(e) => {
-              eprintln!(
-                "Error: Invalid glob pattern '{}', details: {}",
-                input_filename.display(),
-                e
-              );
-              std::process::exit(1);
-            }
-          }
-        });
-
-    // Iterate the contents of any file list as well
-    let iter = iter.chain(self.create_file_list_iterator());
-
-    Box::new(iter)
+    futures::stream::iter(self.input_filenames.clone())
+      .map(input_sources_for_input_filename)
+      .flatten()
+      .chain(file_list_input_sources(&self.file_list).await)
+      .boxed()
   }
+}
 
-  /// Creates an iterator over the paths in the file list. Each path in the
-  /// file list file must be on its own line. White space is trimmed and blank
-  /// lines are ignored.
-  ///
-  fn create_file_list_iterator(
-    &self,
-  ) -> Box<dyn Iterator<Item = InputSource> + Send> {
-    let Some(file_list) = &self.file_list else {
-      return Box::new(std::iter::empty());
-    };
+/// Creates a stream of input sources for the given input filename.
+///
+fn input_sources_for_input_filename(
+  input_filename: PathBuf,
+) -> Pin<Box<dyn Stream<Item = InputSource> + Send>> {
+  Box::pin(async_stream::stream! {
+    let input_filename_str = input_filename.to_string_lossy();
 
-    let file = match std::fs::File::open(file_list) {
-      Ok(file) => file,
+    // Handle stdin
+    if input_filename_str == "-" {
+      yield InputSource::Stdin;
+      return;
+    }
+
+    // Handle object URLs
+    if let Ok((object_store, object_path)) =
+      object_url_to_store_and_path(&input_filename_str).await
+    {
+      yield InputSource::Object {
+        object_store,
+        object_path,
+        specified_path: input_filename.clone(),
+      };
+      return;
+    }
+
+    // If it's not a glob then error if it doesn't point to a valid file
+    if !is_glob(&input_filename_str) && !input_filename.is_file() {
+      if input_filename.is_dir() {
+        return;
+      }
+
+      eprintln!(
+        "Error: Input file '{}' does not exist",
+        input_filename.display()
+      );
+      std::process::exit(1);
+    }
+
+    // Expand glob patterns
+    let paths = match glob::glob(&input_filename_str) {
+      Ok(paths) => paths,
       Err(e) => {
         eprintln!(
-          "Error: Failed opening file list '{}', details: {}",
-          file_list.display(),
+          "Error: Invalid glob pattern '{}', details: {}",
+          input_filename.display(),
           e
         );
         std::process::exit(1);
       }
     };
 
-    let iter = BufReader::new(file).lines().filter_map(|path| match path {
-      Ok(path) => {
-        let path = path.trim();
-        if path.is_empty() {
-          None
-        } else if let Ok((object_store, object_path)) =
-          object_url_to_store_and_path(path)
-        {
-          Some(InputSource::Object {
-            object_store,
-            object_path,
-            specified_path: PathBuf::from(path),
-          })
-        } else {
-          let (object_store, object_path) = local_path_to_store_and_path(path);
+    for entry in paths {
+      match entry {
+        Ok(path) => {
+          if !path.is_file() {
+            continue;
+          }
 
-          Some(InputSource::Object {
+          let (object_store, object_path) =
+            local_path_to_store_and_path(&path).await;
+
+          yield InputSource::Object {
             object_store,
             object_path,
-            specified_path: PathBuf::from(path),
-          })
+            specified_path: path,
+          };
+        }
+
+        Err(e) => {
+          eprintln!(
+            "Error: Failed globbing '{}', details: {}",
+            input_filename.display(),
+            e
+          );
+          std::process::exit(1);
         }
       }
+    }
+  })
+}
 
-      Err(e) => {
-        eprintln!("Error: Failed reading file list, details: {e}");
-        std::process::exit(1);
+/// Creates a stream for the paths in the file list. Each path in the file list
+/// file must be on its own line. White space is trimmed and blank lines are
+/// ignored.
+///
+async fn file_list_input_sources(
+  file_list: &Option<PathBuf>,
+) -> Pin<Box<dyn Stream<Item = InputSource> + Send>> {
+  let Some(file_list) = file_list else {
+    return Box::pin(futures::stream::empty());
+  };
+
+  let file = match tokio::fs::File::open(file_list).await {
+    Ok(file) => file,
+    Err(e) => {
+      eprintln!(
+        "Error: Failed opening file list '{}', details: {}",
+        file_list.display(),
+        e
+      );
+      std::process::exit(1);
+    }
+  };
+
+  let mut lines = tokio::io::BufReader::new(file).lines();
+
+  Box::pin(async_stream::stream! {
+    while let Some(path) = lines.next_line().await.transpose() {
+      match path {
+        Ok(path) => {
+          let path = path.trim();
+          if path.is_empty() {
+            continue;
+          }
+
+          if let Ok((object_store, object_path)) =
+            object_url_to_store_and_path(path).await
+          {
+            yield InputSource::Object {
+              object_store,
+              object_path,
+              specified_path: PathBuf::from(path),
+            }
+          } else {
+            let (object_store, object_path) =
+              local_path_to_store_and_path(path).await;
+
+            yield InputSource::Object {
+              object_store,
+              object_path,
+              specified_path: PathBuf::from(path),
+            }
+          }
+        }
+
+        Err(e) => {
+          eprintln!("Error: Failed reading file list, details: {e}");
+          std::process::exit(1);
+        }
       }
-    });
-
-    Box::new(iter)
-  }
+    }
+  })
 }
 
 /// Checks if the given string is a potential glob pattern.

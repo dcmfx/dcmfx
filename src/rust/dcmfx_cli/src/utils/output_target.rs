@@ -56,7 +56,7 @@ impl OutputTarget {
 
   /// Creates a new output target for the specified path.
   ///
-  pub fn new<P: AsRef<Path>>(path: P) -> Self {
+  pub async fn new<P: AsRef<Path>>(path: P) -> Self {
     let path = path.as_ref();
 
     if path == "-" {
@@ -65,7 +65,7 @@ impl OutputTarget {
 
     // Try parsing as an object URL first
     if let Ok((object_store, object_path)) =
-      object_url_to_store_and_path(&path.to_string_lossy())
+      object_url_to_store_and_path(&path.to_string_lossy()).await
     {
       return Self::Object {
         object_store,
@@ -76,7 +76,7 @@ impl OutputTarget {
 
     // Otherwise, treat as a local path
     let (object_store, object_path) =
-      crate::utils::object_store::local_path_to_store_and_path(path);
+      crate::utils::object_store::local_path_to_store_and_path(path).await;
 
     Self::Object {
       object_store,
@@ -88,7 +88,7 @@ impl OutputTarget {
   /// Creates an output target for an input source with the specified output
   /// suffix appended, and located in the specified directory if specified.
   ///
-  pub fn from_input_source(
+  pub async fn from_input_source(
     input_source: &InputSource,
     output_suffix: &str,
     output_directory: &Option<PathBuf>,
@@ -107,7 +107,7 @@ impl OutputTarget {
       path.set_file_name(new_file_name);
     }
 
-    Self::new(&path)
+    Self::new(&path).await
   }
 
   /// Returns whether this output target writes to stdout.

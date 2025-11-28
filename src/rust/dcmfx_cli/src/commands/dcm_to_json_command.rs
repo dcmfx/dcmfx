@@ -95,7 +95,7 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
 
   OutputTarget::set_overwrite(args.overwrite);
 
-  let input_sources = args.input.base.create_iterator();
+  let input_sources = args.input.base.input_sources().await;
 
   let config = DicomJsonConfig {
     pretty_print: args.pretty_print,
@@ -107,13 +107,14 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
     input_sources,
     async |input_source: InputSource| {
       let output_target = if let Some(output_filename) = &args.output_filename {
-        OutputTarget::new(output_filename)
+        OutputTarget::new(output_filename).await
       } else {
         OutputTarget::from_input_source(
           &input_source,
           ".json",
           &args.output_directory,
         )
+        .await
       };
 
       match input_source_to_json(&input_source, output_target, &args, config)

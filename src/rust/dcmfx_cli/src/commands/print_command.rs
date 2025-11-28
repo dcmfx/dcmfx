@@ -1,6 +1,7 @@
 use std::io::Write;
 
 use clap::Args;
+use futures::StreamExt;
 
 use dcmfx::{core::*, p10::*};
 
@@ -34,7 +35,7 @@ pub struct PrintArgs {
 }
 
 pub async fn run(args: PrintArgs) -> Result<(), ()> {
-  let input_sources = args.input.base.create_iterator();
+  let mut input_sources = args.input.base.input_sources().await;
 
   let mut print_options = DataSetPrintOptions::default();
   if let Some(max_width) = args.max_width {
@@ -53,7 +54,7 @@ pub async fn run(args: PrintArgs) -> Result<(), ()> {
     .max_token_size(256 * 1024)
     .require_dicm_prefix(args.input.ignore_invalid);
 
-  for input_source in input_sources {
+  while let Some(input_source) = input_sources.next().await {
     match print_input_source(&input_source, &read_config, &print_options).await
     {
       Ok(()) => (),

@@ -361,7 +361,7 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
 
   OutputTarget::set_overwrite(args.overwrite || args.in_place);
 
-  let input_sources = args.input.base.create_iterator();
+  let input_sources = args.input.base.input_sources().await;
 
   let result = utils::run_tasks(
     args.concurrency,
@@ -375,15 +375,16 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
       }
 
       let output_target = if args.in_place {
-        OutputTarget::new(input_source.specified_path())
+        OutputTarget::new(input_source.specified_path()).await
       } else if let Some(output_filename) = &args.output_filename {
-        OutputTarget::new(output_filename)
+        OutputTarget::new(output_filename).await
       } else {
         OutputTarget::from_input_source(
           &input_source,
           "",
           &args.output_directory,
         )
+        .await
       };
 
       match modify_input_source(&input_source, output_target, &args).await {

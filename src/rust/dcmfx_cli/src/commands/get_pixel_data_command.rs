@@ -342,7 +342,7 @@ pub async fn run(args: GetPixelDataArgs) -> Result<(), ()> {
 
   OutputTarget::set_overwrite(args.overwrite);
 
-  let input_sources = args.input.base.create_iterator();
+  let input_sources = args.input.base.input_sources().await;
 
   let result = utils::run_tasks(
     args.concurrency,
@@ -352,7 +352,8 @@ pub async fn run(args: GetPixelDataArgs) -> Result<(), ()> {
         &input_source,
         "",
         &args.output_directory,
-      );
+      )
+      .await;
 
       match get_pixel_data_from_input_source(
         &input_source,

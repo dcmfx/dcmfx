@@ -75,20 +75,21 @@ pub async fn run(args: ToDcmArgs) -> Result<(), ()> {
 
   OutputTarget::set_overwrite(args.overwrite);
 
-  let input_sources = args.input.create_iterator();
+  let input_sources = args.input.input_sources().await;
 
   let result = utils::run_tasks(
     args.concurrency,
     input_sources,
     async |input_source: InputSource| {
       let output_target = if let Some(output_filename) = &args.output_filename {
-        OutputTarget::new(output_filename)
+        OutputTarget::new(output_filename).await
       } else {
         OutputTarget::from_input_source(
           &input_source,
           ".dcm",
           &args.output_directory,
         )
+        .await
       };
 
       match input_source_to_dcm(&input_source, output_target, &args).await {

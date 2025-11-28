@@ -11,19 +11,19 @@ use std::path::{Component, Path, PathBuf};
 use futures::{TryStreamExt, stream::StreamExt};
 
 /// Runs tasks concurrently up to the specified task count, passing each item
-/// from the given iterator to the provided async body function.
+/// from the given stream to the provided async body function.
 ///
 /// Returns an error as soon as any of the tasks return an error.
 ///
-pub async fn run_tasks<InputIterator, Item, E>(
+pub async fn run_tasks<InputStream, Item, E>(
   task_count: usize,
-  it: InputIterator,
+  inputs: InputStream,
   body_func: impl AsyncFn(Item) -> Result<(), E>,
 ) -> Result<(), E>
 where
-  InputIterator: Iterator<Item = Item>,
+  InputStream: futures::stream::Stream<Item = Item>,
 {
-  futures::stream::iter(it)
+  inputs
     .map(async |i| body_func(i).await)
     .buffer_unordered(task_count.max(1))
     .try_collect::<()>()

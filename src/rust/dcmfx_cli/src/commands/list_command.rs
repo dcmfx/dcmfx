@@ -188,8 +188,10 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
     out.flush().await.expect("Failed flushing stdout");
   });
 
-  let result =
-    utils::run_tasks(args.concurrency, file_iterator, async |path: PathBuf| {
+  let result = utils::run_tasks(
+    args.concurrency,
+    futures::stream::iter(file_iterator),
+    async |path: PathBuf| {
       // Check file's extension is allowed, if this check was requested
       if let Some(extension) = &extension {
         let Some(path_extension) = path.extension() else {
@@ -204,8 +206,9 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
       process_file(&path, &args, summary.clone(), stdout_tx.clone())
         .await
         .map_err(|e| (path, e))
-    })
-    .await;
+    },
+  )
+  .await;
 
   // Wait for stdout writer task to complete
   drop(stdout_tx);

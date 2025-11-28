@@ -124,6 +124,7 @@ pub async fn validate_output_args(
     if crate::utils::object_store::object_url_to_store_and_path(
       &output_directory.to_string_lossy(),
     )
+    .await
     .is_ok()
     {
       return;

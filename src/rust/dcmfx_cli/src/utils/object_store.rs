@@ -2,7 +2,8 @@ use object_store::{
   ObjectStore, aws::AmazonS3Builder, path::Path as ObjectPath,
 };
 use std::collections::HashMap;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{Arc, LazyLock};
+use tokio::sync::Mutex;
 use url::Url;
 
 /// Parses a URL that uses one of the supported output schemes: `file://``,
@@ -14,7 +15,7 @@ use url::Url;
 /// Returns an error if no recognized scheme is detected in the URL.
 ///
 #[allow(clippy::result_unit_err)]
-pub fn object_url_to_store_and_path(
+pub async fn object_url_to_store_and_path(
   url: &str,
 ) -> Result<(Arc<dyn object_store::ObjectStore>, ObjectPath), ()> {
   let Ok(url) = Url::parse(url) else {
@@ -24,7 +25,7 @@ pub fn object_url_to_store_and_path(
   let path = ObjectPath::parse(url.path()).unwrap();
 
   if url.scheme() == "file" {
-    let store = get_cached_store(ObjectStoreScheme::File, "");
+    let store = get_cached_store(ObjectStoreScheme::File, "").await;
     return Ok((store, path));
   }
 
@@ -33,17 +34,19 @@ pub fn object_url_to_store_and_path(
   };
 
   if url.scheme() == "s3" {
-    let store = get_cached_store(ObjectStoreScheme::AmazonS3, host);
+    let store = get_cached_store(ObjectStoreScheme::AmazonS3, host).await;
     return Ok((store, path));
   }
 
   if url.scheme() == "gs" {
-    let store = get_cached_store(ObjectStoreScheme::GoogleCloudStorage, host);
+    let store =
+      get_cached_store(ObjectStoreScheme::GoogleCloudStorage, host).await;
     return Ok((store, path));
   }
 
   if url.scheme() == "az" {
-    let store = get_cached_store(ObjectStoreScheme::AzureBlobStorage, host);
+    let store =
+      get_cached_store(ObjectStoreScheme::AzureBlobStorage, host).await;
     return Ok((store, path));
   }
 
@@ -53,7 +56,7 @@ pub fn object_url_to_store_and_path(
 /// Converts. a relative or absoluate path on the local filesystem to an object
 /// store and path pair. Internally this will use the file:// schema.
 ///
-pub fn local_path_to_store_and_path<P: AsRef<std::path::Path>>(
+pub async fn local_path_to_store_and_path<P: AsRef<std::path::Path>>(
   path: P,
 ) -> (Arc<dyn object_store::ObjectStore>, ObjectPath) {
   let normalized_path = format!(
@@ -61,7 +64,9 @@ pub fn local_path_to_store_and_path<P: AsRef<std::path::Path>>(
     crate::utils::normalize_path(path.as_ref()).display()
   );
 
-  object_url_to_store_and_path(&normalized_path).unwrap()
+  object_url_to_store_and_path(&normalized_path)
+    .await
+    .unwrap()
 }
 
 #[derive(Clone, Copy, Hash, Eq, PartialEq)]
@@ -78,11 +83,11 @@ type StoreCacheHash =
 static STORE_CACHE: LazyLock<Arc<Mutex<StoreCacheHash>>> =
   LazyLock::new(|| Arc::new(Mutex::new(HashMap::new())));
 
-fn get_cached_store(
+async fn get_cached_store(
   scheme: ObjectStoreScheme,
   host: &str,
 ) -> Arc<dyn ObjectStore> {
-  let mut store_cache = STORE_CACHE.lock().unwrap();
+  let mut store_cache = STORE_CACHE.lock().await;
 
   let key = (scheme, host.to_string());
 
@@ -97,15 +102,52 @@ fn get_cached_store(
     }
 
     ObjectStoreScheme::AmazonS3 => {
-      let mut builder = AmazonS3Builder::from_env().with_bucket_name(host);
+      use aws_sdk_sso::config::ProvideCredentials;
 
-      if let Ok(endpoint_url) = std::env::var("AWS_ENDPOINT_URL")
-        && endpoint_url.starts_with("http://")
-      {
-        builder = builder.with_allow_http(true);
+      // Get credentials based on what's configured in the environment
+      let sdk_config =
+        aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
+      let aws_credentials = sdk_config
+        .credentials_provider()
+        .unwrap()
+        .provide_credentials()
+        .await;
+
+      match aws_credentials {
+        Ok(aws_credentials) => {
+          let Some(region) = sdk_config.region() else {
+            eprintln!("Error: AWS region not provided by credentials chain");
+            std::process::exit(1);
+          };
+
+          let mut builder = AmazonS3Builder::new()
+            .with_bucket_name(host)
+            .with_region(region.to_string())
+            .with_access_key_id(aws_credentials.access_key_id())
+            .with_secret_access_key(aws_credentials.secret_access_key());
+
+          if let Ok(endpoint_url) = std::env::var("AWS_ENDPOINT_URL") {
+            builder = builder.with_endpoint(endpoint_url);
+          }
+
+          if let Some(token) = aws_credentials.session_token() {
+            builder = builder.with_token(token);
+          };
+
+          if let Ok(endpoint_url) = std::env::var("AWS_ENDPOINT_URL")
+            && endpoint_url.starts_with("http://")
+          {
+            builder = builder.with_allow_http(true);
+          }
+
+          Arc::new(builder.build().unwrap())
+        }
+
+        Err(e) => {
+          eprintln!("Error in AWS credentials provider: {}", e);
+          std::process::exit(1);
+        }
       }
-
-      Arc::new(builder.build().unwrap())
     }
 
     ObjectStoreScheme::GoogleCloudStorage => Arc::new(
