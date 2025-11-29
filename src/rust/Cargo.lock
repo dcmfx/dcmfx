@@ -987,9 +987,11 @@ dependencies = [
  "glob",
  "image",
  "insta",
+ "itertools 0.14.0",
  "libc",
  "num_cpus",
  "object_store",
+ "owo-colors",
  "predicates",
  "rand 0.9.2",
  "serde",
@@ -2399,9 +2401,9 @@ checksum = "1a80800c0488c3a21695ea981a54918fbb37abf04f4d0720c453632255e2ff0e"
 
 [[package]]
 name = "owo-colors"
-version = "4.2.2"
+version = "4.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48dd4f4a2c8405440fd0462561f0e5806bd0f77e86f51c761481bdd4018b545e"
+checksum = "9c6901729fa79e91a0913333229e9ca5dc725089d1c363b2f4b4760709dc4a52"
 dependencies = [
  "supports-color 2.1.0",
  "supports-color 3.0.2",

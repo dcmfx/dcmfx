@@ -70,11 +70,13 @@ const char * const jpeg_std_message_table[] = {
 METHODDEF(void)
 error_exit (j_common_ptr cinfo)
 {
+  void_result_t destroy_result;
+
   /* Always display the message */
   (*cinfo->err->output_message) (cinfo);
 
   /* Let the memory manager delete any temp files before we die */
-  (void) jpeg_destroy(cinfo);
+  destroy_result = jpeg_destroy(cinfo);
 
 #ifndef __wasm__
   exit(EXIT_FAILURE);

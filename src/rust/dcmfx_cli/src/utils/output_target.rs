@@ -172,12 +172,14 @@ impl OutputTarget {
         object_path,
       } => {
         if !Self::overwrite() && object_store.head(object_path).await.is_ok() {
-          eprintln!(
-            "Error: Output file \"{}\" already exists.\n\nHint: Specify \
-             --overwrite to automatically overwrite existing files",
-            specified_path.display()
+          crate::utils::exit_with_error(
+            &format!(
+              "Output file \"{}\" already exists.\n\nHint: Specify \
+               --overwrite to automatically overwrite existing files",
+              specified_path.display()
+            ),
+            "",
           );
-          std::process::exit(1);
         }
 
         if log_write_to_stdout {

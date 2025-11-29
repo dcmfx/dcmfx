@@ -63,3 +63,28 @@ pub fn normalize_path<P: AsRef<Path>>(input: P) -> PathBuf {
 
   normalized_path
 }
+
+/// Exits the process with an error message and non-zero exit code.
+///
+pub fn exit_with_error<E: std::fmt::Display>(message: &str, details: E) -> ! {
+  let mut lines = vec![];
+
+  lines.push(format!("Error: {}", message));
+
+  let details = format!("{}", details);
+  if !details.is_empty() {
+    lines.push("".to_string());
+    lines.push(format!("Details: {}", details));
+  }
+
+  for line in lines {
+    use owo_colors::OwoColorize;
+
+    eprintln!(
+      "{}",
+      line.if_supports_color(owo_colors::Stream::Stderr, |text| text.red())
+    );
+  }
+
+  std::process::exit(1);
+}

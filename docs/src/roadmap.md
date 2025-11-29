@@ -15,7 +15,6 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
 
 - CLI:
 
-  - Evaluate glob patterns in object URLs for input filenames
   - `get-document` command:
     - New command to get an encapsulated document such as a PDF
   - `list` command:

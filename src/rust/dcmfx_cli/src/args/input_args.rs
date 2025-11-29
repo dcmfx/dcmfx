@@ -1,4 +1,4 @@
-use std::{path::PathBuf, pin::Pin};
+use std::{path::PathBuf, pin::Pin, sync::Arc};
 
 use clap::Args;
 use futures::{Stream, StreamExt};
@@ -86,10 +86,10 @@ impl BaseInputArgs {
     &self,
   ) -> Pin<Box<dyn Stream<Item = InputSource> + Send>> {
     if self.input_filenames.is_empty() && self.file_list.is_none() {
-      eprintln!(
-        "Error: No inputs specified. Pass --help for usage instructions."
+      crate::utils::exit_with_error(
+        "No inputs specified. Pass --help for usage instructions.",
+        "",
       );
-      std::process::exit(1);
     }
 
     futures::stream::iter(self.input_filenames.clone())
@@ -111,72 +111,109 @@ fn input_sources_for_input_filename(
     // Handle stdin
     if input_filename_str == "-" {
       yield InputSource::Stdin;
-      return;
     }
-
     // Handle object URLs
-    if let Ok((object_store, object_path)) =
+    else if let Ok((object_store, object_path)) =
       object_url_to_store_and_path(&input_filename_str).await
     {
-      yield InputSource::Object {
-        object_store,
-        object_path,
-        specified_path: input_filename.clone(),
-      };
-      return;
-    }
-
-    // If it's not a glob then error if it doesn't point to a valid file
-    if !is_glob(&input_filename_str) && !input_filename.is_file() {
-      if input_filename.is_dir() {
-        return;
-      }
-
-      eprintln!(
-        "Error: Input file '{}' does not exist",
-        input_filename.display()
-      );
-      std::process::exit(1);
-    }
-
-    // Expand glob patterns
-    let paths = match glob::glob(&input_filename_str) {
-      Ok(paths) => paths,
-      Err(e) => {
-        eprintln!(
-          "Error: Invalid glob pattern '{}', details: {}",
-          input_filename.display(),
-          e
+      if is_glob(object_path.as_ref()) {
+        let mut stream = input_sources_for_object_url_glob(
+          object_store,
+          object_path,
+          input_filename_str.to_string(),
         );
-        std::process::exit(1);
+
+        while let Some(input_source) = stream.next().await {
+          yield input_source;
+        }
+      } else {
+        yield InputSource::Object {
+          object_store,
+          object_path,
+          specified_path: input_filename.clone(),
+        };
       }
-    };
+    }
+    // Local file system path
+    else {
+      let (object_store, object_path) =
+        local_path_to_store_and_path(input_filename_str.to_string()).await;
 
-    for entry in paths {
-      match entry {
-        Ok(path) => {
-          if !path.is_file() {
-            continue;
-          }
+      if is_glob(&input_filename_str) {
+        let mut stream = input_sources_for_object_url_glob(
+          object_store,
+          object_path,
+          input_filename_str.to_string(),
+        );
 
-          let (object_store, object_path) =
-            local_path_to_store_and_path(&path).await;
-
-          yield InputSource::Object {
-            object_store,
-            object_path,
-            specified_path: path,
-          };
+        while let Some(input_source) = stream.next().await {
+          yield input_source;
+        }
+      } else {
+        if input_filename.is_dir() {
+          return;
         }
 
-        Err(e) => {
-          eprintln!(
-            "Error: Failed globbing '{}', details: {}",
-            input_filename.display(),
-            e
+        if !input_filename.is_file() {
+          crate::utils::exit_with_error(
+            &format!(
+              "Input file '{}' does not exist",
+              input_filename.display()
+            ),
+            "",
           );
-          std::process::exit(1);
         }
+
+        yield InputSource::Object {
+          object_store,
+          object_path,
+          specified_path: input_filename.clone(),
+        }
+      }
+    }
+  })
+}
+
+/// Creates a stream for the input sources referenced by an object URL that
+/// contains a glob pattern.
+///
+/// The listing of objects is scoped to a prefix to the extent that's possible,
+/// with further filtering done by matching against the glob pattern.
+///
+fn input_sources_for_object_url_glob(
+  object_store: Arc<dyn object_store::ObjectStore>,
+  object_path: object_store::path::Path,
+  input_filename_str: String,
+) -> Pin<Box<dyn Stream<Item = InputSource> + Send>> {
+  let Ok(pattern) = glob::Pattern::new(object_path.as_ref()) else {
+    crate::utils::exit_with_error(
+      &format!("Invalid glob pattern '{}'", object_path),
+      "",
+    );
+  };
+
+  let prefix = object_url_list_prefix(object_path.as_ref());
+  let mut list_stream = object_store.list(prefix.as_ref());
+
+  Box::pin(async_stream::stream! {
+    loop {
+      match list_stream.next().await {
+        Some(Ok(meta)) => {
+          if pattern.matches(meta.location.as_ref()) {
+            yield InputSource::Object {
+              object_store: object_store.clone(),
+              object_path: meta.location.clone(),
+              specified_path: PathBuf::from(meta.location.to_string()),
+            };
+          }
+        }
+
+        Some(Err(e)) => crate::utils::exit_with_error(
+          &format!("Failed listing '{}'", input_filename_str),
+          e,
+        ),
+
+        None => break,
       }
     }
   })
@@ -196,12 +233,10 @@ async fn file_list_input_sources(
   let file = match tokio::fs::File::open(file_list).await {
     Ok(file) => file,
     Err(e) => {
-      eprintln!(
-        "Error: Failed opening file list '{}', details: {}",
-        file_list.display(),
-        e
+      crate::utils::exit_with_error(
+        &format!("Failed opening file list '{}'", file_list.display()),
+        e,
       );
-      std::process::exit(1);
     }
   };
 
@@ -236,10 +271,7 @@ async fn file_list_input_sources(
           }
         }
 
-        Err(e) => {
-          eprintln!("Error: Failed reading file list, details: {e}");
-          std::process::exit(1);
-        }
+        Err(e) => crate::utils::exit_with_error("Failed reading file list", e),
       }
     }
   })
@@ -249,4 +281,19 @@ async fn file_list_input_sources(
 ///
 fn is_glob(s: &str) -> bool {
   s.contains('*') || s.contains('?') || s.contains('[') || s.contains('{')
+}
+
+/// Returns the prefix to use when listing objects in an object store that are
+/// going to be filtered by the given glob pattern.
+///
+fn object_url_list_prefix(
+  glob_pattern: &str,
+) -> Option<object_store::path::Path> {
+  let star_idx = glob_pattern.find('*')?;
+  let separator_idx = &glob_pattern[..star_idx].rfind('/')?;
+
+  match separator_idx {
+    0 => None,
+    i => Some(object_store::path::Path::from(&glob_pattern[..*i])),
+  }
 }

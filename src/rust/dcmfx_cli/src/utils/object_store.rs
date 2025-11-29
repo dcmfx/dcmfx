@@ -116,8 +116,10 @@ async fn get_cached_store(
       match aws_credentials {
         Ok(aws_credentials) => {
           let Some(region) = sdk_config.region() else {
-            eprintln!("Error: AWS region not provided by credentials chain");
-            std::process::exit(1);
+            crate::utils::exit_with_error(
+              "AWS region not provided by credentials chain",
+              "",
+            );
           };
 
           let mut builder = AmazonS3Builder::new()
@@ -144,8 +146,7 @@ async fn get_cached_store(
         }
 
         Err(e) => {
-          eprintln!("Error in AWS credentials provider: {}", e);
-          std::process::exit(1);
+          crate::utils::exit_with_error("Failed getting AWS credentials", e);
         }
       }
     }

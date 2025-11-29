@@ -7,7 +7,7 @@ mod assert_image_snapshot;
 use tempfile::NamedTempFile;
 use utils::{
   create_temp_dir, create_temp_file, dcmfx_cli, get_stderr, get_stdout,
-  s3_copy_object, to_native_path,
+  s3_copy_object,
 };
 
 #[test]
@@ -38,7 +38,7 @@ fn modify() {
     .success()
     .stdout(format!(
       "Modifying \"{}\" => \"{}\" …\n",
-      to_native_path(input_file),
+      input_file,
       output_file.display()
     ));
 
@@ -248,7 +248,7 @@ fn merge_dicom_json() {
     .success()
     .stdout(format!(
       "Modifying \"{}\" => \"{}\" …\n",
-      to_native_path(input_file),
+      input_file,
       output_file.display()
     ));
 
@@ -281,7 +281,7 @@ fn delete_private_tags() {
     .success()
     .stdout(format!(
       "Modifying \"{}\" => \"{}\" …\n",
-      to_native_path(&input_file),
+      &input_file,
       output_file.display()
     ));
 
@@ -1200,13 +1200,6 @@ fn errors_with_all_pixels_cropped() {
     .assert()
     .failure();
 
-  #[cfg(windows)]
-  assert_snapshot!(
-    "errors_with_all_pixels_cropped_windows",
-    get_stderr(assert)
-  );
-
-  #[cfg(not(windows))]
   assert_snapshot!("errors_with_all_pixels_cropped", get_stderr(assert));
 }
 
@@ -1241,14 +1234,7 @@ fn errors_on_unaligned_multiframe_bitmap() {
     .assert()
     .failure();
 
-  #[cfg(not(windows))]
   assert_snapshot!("errors_on_unaligned_multiframe_bitmap", get_stderr(assert));
-
-  #[cfg(windows)]
-  assert_snapshot!(
-    "errors_on_unaligned_multiframe_bitmap_windows",
-    get_stderr(assert)
-  );
 }
 
 fn modify_transfer_syntax(

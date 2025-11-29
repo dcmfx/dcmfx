@@ -124,18 +124,19 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
     || !args.optional_selected_data_elements.is_empty())
     && args.format != Format::JsonLines
   {
-    eprintln!(
-      "Error: `--format json-lines` must be specified when selecting data \
-       elements"
+    crate::utils::exit_with_error(
+      "`--format json-lines` must be specified when selecting data elements",
+      "",
     );
-    std::process::exit(1);
   }
 
   // Check that all input directories are valid
   for dir in args.directories.iter() {
     if !dir.is_dir() {
-      eprintln!("Error: {:?} is not a directory", dir);
-      std::process::exit(1);
+      crate::utils::exit_with_error(
+        &format!("{:?} is not a directory", dir),
+        "",
+      );
     }
   }
 
@@ -156,11 +157,10 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
         }
 
         Err(e) => {
-          eprintln!(
-            "Error: Failed listing directory '{}', details: {e}",
-            dir.display()
+          crate::utils::exit_with_error(
+            &format!("Failed listing directory '{}'", dir.display()),
+            e,
           );
-          std::process::exit(1);
         }
       })
   });

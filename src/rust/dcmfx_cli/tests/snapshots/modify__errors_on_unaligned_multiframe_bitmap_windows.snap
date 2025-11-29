@@ -1,9 +1,0 @@
----
-source: dcmfx_cli/tests/modify.rs
-expression: get_stderr(assert)
-snapshot_kind: text
----
------
-Pixel data transcode error modifying "..\..\..\test\assets\pydicom\test_files\liver_nonbyte_aligned.dcm"
-
-  Details: Transcoding multi-frame bitmap pixel data that isn't byte-aligned is not supported

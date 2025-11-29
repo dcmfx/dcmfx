@@ -120,3 +120,42 @@ fn with_default_transfer_syntax() {
 
   assert_snapshot!("with_default_transfer_syntax", get_stdout(assert));
 }
+
+#[test]
+#[ignore]
+fn with_s3_glob_input() {
+  let local_glob_stdout =
+    print_command_stdout_sorted("../../../test/assets/pydicom/palettes/*.dcm");
+  assert_snapshot!("with_s3_glob_input", local_glob_stdout);
+
+  assert_eq!(
+    local_glob_stdout,
+    print_command_stdout_sorted("s3://dcmfx-test/pydicom/palettes/*.dcm")
+  );
+}
+
+#[test]
+#[ignore]
+fn with_s3_glob_input_with_partial_prefix() {
+  let local_glob_stdout = print_command_stdout_sorted(
+    "../../../test/assets/pydicom/palettes/pet*.dcm",
+  );
+  assert_snapshot!("with_s3_glob_input_with_partial_prefix", local_glob_stdout);
+
+  assert_eq!(
+    local_glob_stdout,
+    print_command_stdout_sorted("s3://dcmfx-test/pydicom/palettes/pet*.dcm")
+  );
+}
+
+fn print_command_stdout_sorted(input_file: &str) -> String {
+  use itertools::Itertools;
+
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
+
+  get_stdout(assert)
+    .lines()
+    .sorted()
+    .collect::<Vec<_>>()
+    .join("\n")
+}

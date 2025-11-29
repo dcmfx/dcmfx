@@ -370,8 +370,10 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
       if args.in_place
         && let InputSource::Stdin = input_source
       {
-        eprintln!("Error: --in-place can't be used with stdin as an input");
-        std::process::exit(1);
+        crate::utils::exit_with_error(
+          "--in-place can't be used with stdin as an input",
+          "",
+        );
       }
 
       let output_target = if args.in_place {

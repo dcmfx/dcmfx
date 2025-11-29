@@ -112,11 +112,10 @@ pub async fn validate_output_args(
 ) {
   // Check that --output-filename and --output-directory aren't both specified
   if output_filename.is_some() && output_directory.is_some() {
-    eprintln!(
-      "Error: --output-filename and --output-directory can't be specified \
-       together"
+    crate::utils::exit_with_error(
+      "--output-filename and --output-directory can't be specified together",
+      "",
     );
-    std::process::exit(1);
   }
 
   // Check that --output-directory is valid
@@ -131,11 +130,10 @@ pub async fn validate_output_args(
     }
 
     if !output_directory.is_dir() {
-      eprintln!(
-        "Error: '{}' is not a valid directory",
-        output_directory.display()
+      crate::utils::exit_with_error(
+        &format!("'{}' is not a valid directory", output_directory.display()),
+        "",
       );
-      std::process::exit(1);
     }
   }
 }
