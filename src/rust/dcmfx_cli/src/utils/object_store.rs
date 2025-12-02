@@ -146,7 +146,7 @@ async fn get_cached_store(
         }
 
         Err(e) => {
-          crate::utils::exit_with_error("Failed getting AWS credentials", e);
+          crate::utils::exit_with_error("Failed getting AWS credentials", &format!("{:?}", e));
         }
       }
     }
