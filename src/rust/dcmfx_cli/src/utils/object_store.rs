@@ -1,10 +1,7 @@
-use object_store::{
-  ObjectStore, aws::AmazonS3Builder, path::Path as ObjectPath,
-};
+use object_store::{ObjectStore, aws::AmazonS3Builder};
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 use tokio::sync::Mutex;
-use url::Url;
 
 /// Parses a URL that uses one of the supported output schemes: `file://``,
 /// `s3://`, `gs://`, or `az://`.
@@ -17,40 +14,36 @@ use url::Url;
 #[allow(clippy::result_unit_err)]
 pub async fn object_url_to_store_and_path(
   url: &str,
-) -> Result<(Arc<dyn object_store::ObjectStore>, ObjectPath), ()> {
-  let Ok(url) = Url::parse(url) else {
-    return Err(());
-  };
-
-  let path = ObjectPath::parse(url.path()).unwrap();
-
-  if url.scheme() == "file" {
+) -> Result<(Arc<dyn object_store::ObjectStore>, String), ()> {
+  if let Some(path) = url.strip_prefix("file://") {
     let store = get_cached_store(ObjectStoreScheme::File, "").await;
-    return Ok((store, path));
+    return Ok((store, path.strip_prefix("/").unwrap_or(path).into()));
   }
 
-  let Some(host) = url.host_str() else {
+  let scheme = match &url[..5] {
+    "s3://" => ObjectStoreScheme::AmazonS3,
+    "gs://" => ObjectStoreScheme::GoogleCloudStorage,
+    "az://" => ObjectStoreScheme::AzureBlobStorage,
+    _ => return Err(()),
+  };
+
+  let url = &url[5..];
+
+  let Some(idx) = url.find("/") else {
     return Err(());
   };
 
-  if url.scheme() == "s3" {
-    let store = get_cached_store(ObjectStoreScheme::AmazonS3, host).await;
-    return Ok((store, path));
+  if idx == 0 {
+    return Err(());
   }
 
-  if url.scheme() == "gs" {
-    let store =
-      get_cached_store(ObjectStoreScheme::GoogleCloudStorage, host).await;
-    return Ok((store, path));
-  }
+  let host = &url[..idx];
 
-  if url.scheme() == "az" {
-    let store =
-      get_cached_store(ObjectStoreScheme::AzureBlobStorage, host).await;
-    return Ok((store, path));
-  }
+  let store = get_cached_store(scheme, host).await;
+  let path = &url[idx..];
+  let path = path.strip_prefix("/").unwrap_or(path);
 
-  Err(())
+  Ok((store, path.into()))
 }
 
 /// Converts. a relative or absoluate path on the local filesystem to an object
@@ -58,11 +51,13 @@ pub async fn object_url_to_store_and_path(
 ///
 pub async fn local_path_to_store_and_path<P: AsRef<std::path::Path>>(
   path: P,
-) -> (Arc<dyn object_store::ObjectStore>, ObjectPath) {
+) -> (Arc<dyn object_store::ObjectStore>, String) {
   let normalized_path = format!(
     "file://{}",
     crate::utils::normalize_path(path.as_ref()).display()
   );
+
+  let normalized_path = normalized_path.replace('\\', "/");
 
   object_url_to_store_and_path(&normalized_path)
     .await
@@ -146,7 +141,10 @@ async fn get_cached_store(
         }
 
         Err(e) => {
-          crate::utils::exit_with_error("Failed getting AWS credentials", &format!("{:?}", e));
+          crate::utils::exit_with_error(
+            "Failed getting AWS credentials",
+            format!("{:?}", e),
+          );
         }
       }
     }

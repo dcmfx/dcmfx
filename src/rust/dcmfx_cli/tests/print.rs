@@ -24,6 +24,26 @@ fn with_single_s3_input() {
 }
 
 #[test]
+#[ignore]
+fn with_input_containing_space() {
+  let input_file = "../../../test/assets/other/name with space.dcm";
+
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
+
+  assert_snapshot!("with_input_containing_space", get_stdout(assert));
+}
+
+#[test]
+#[ignore]
+fn with_s3_input_containing_space() {
+  let input_file = "s3://dcmfx-test/other/name with space.dcm";
+
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
+
+  assert_snapshot!("with_s3_input_containing_space", get_stdout(assert));
+}
+
+#[test]
 fn with_style_options() {
   let input_file =
     "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";

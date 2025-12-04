@@ -69,7 +69,7 @@ impl OutputTarget {
     {
       return Self::Object {
         object_store,
-        object_path,
+        object_path: object_path.into(),
         specified_path: PathBuf::from(path),
       };
     }
@@ -80,7 +80,7 @@ impl OutputTarget {
 
     Self::Object {
       object_store,
-      object_path,
+      object_path: object_path.into(),
       specified_path: PathBuf::from(path),
     }
   }

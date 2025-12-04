@@ -15,6 +15,7 @@ expression: "lines.join(\"\\n\")"
 ../../../test/assets/other/monochrome_jpeg_xl.dcm
 ../../../test/assets/other/monochrome_jpeg_xl_12bit.dcm
 ../../../test/assets/other/mr_brucker_with_unaligned_multiframe_overlay.dcm
+../../../test/assets/other/name with space.dcm
 ../../../test/assets/other/ultrasound_jpeg_xl.dcm
 ../../../test/assets/other/uppercase_extension.DCM
 ../../../test/assets/other/vr_2022.dcm
