@@ -1,5 +1,5 @@
 name = "dcmfx_json"
-version = "0.39.1"
+version = "0.40.0"
 description = "DCMfx JSON library"
 licences = ["AGPL-3.0-only"]
 gleam = ">= 1.13.0"
