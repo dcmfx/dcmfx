@@ -5,4 +5,4 @@ rust-version.workspace = true
 
 [dependencies]
 dcmfx = { path = "../../../src/rust/dcmfx" }
-image = { version = "0.25.6", default-features = false, features = ["jpeg", "png"] }
+image = { version = "0.25.9", default-features = false, features = ["png"] }

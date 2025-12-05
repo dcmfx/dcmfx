@@ -1,11 +1,14 @@
 use std::path::PathBuf;
 
-use assert_cmd::{Command, assert::Assert};
+use assert_cmd::{
+  cargo::cargo_bin_cmd,
+  {Command, assert::Assert},
+};
 use tempfile::{NamedTempFile, TempDir};
 
 #[allow(dead_code)]
 pub fn dcmfx_cli() -> Command {
-  let mut cmd = Command::cargo_bin("dcmfx_cli").unwrap();
+  let mut cmd = cargo_bin_cmd!("dcmfx_cli");
 
   // Set AWS environment variables for LocalStack S3 emulation
   cmd

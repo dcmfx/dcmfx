@@ -23,11 +23,11 @@ dcmfx_pixel_data = { path = "../dcmfx_pixel_data", default-features = false }
 [dev-dependencies]
 either = "1.15.0"
 futures = "0.3.31"
-image = "0.25.6"
+image = { version = "0.25.9", default-features = false }
 num_cpus = "1.17.0"
 rand = { version = "0.9.2", features = ["small_rng"] }
-serde = "1.0.219"
-serde_json = "1.0.142"
+serde = "1.0.228"
+serde_json = "1.0.145"
 walkdir = "2.5.0"
 tempfile = "3.23.0"
 tokio = { version = "1.48.0", features = ["macros"] }

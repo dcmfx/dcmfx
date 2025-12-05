@@ -135,10 +135,13 @@ fn decode(
   data: &[u8],
   color_space: zune_core::colorspace::ColorSpace,
 ) -> Result<Vec<u8>, PixelDataDecodeError> {
-  let mut decoder = zune_jpeg::JpegDecoder::new(data);
+  let mut decoder =
+    zune_jpeg::JpegDecoder::new(zune_core::bytestream::ZCursor::new(data));
 
-  decoder
-    .set_options(decoder.get_options().jpeg_set_out_colorspace(color_space));
+  decoder.set_options(
+    zune_core::options::DecoderOptions::default()
+      .jpeg_set_out_colorspace(color_space),
+  );
 
   decoder
     .decode_headers()
