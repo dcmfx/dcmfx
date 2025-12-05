@@ -1,6 +1,3 @@
-#[cfg(not(feature = "std"))]
-use alloc::{boxed::Box, string::ToString, vec, vec::Vec};
-
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataEncodeError,
   color_image::ColorImageData,

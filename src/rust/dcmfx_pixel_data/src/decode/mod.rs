@@ -13,7 +13,7 @@ use crate::{
   iods::{ImagePixelModule, image_pixel_module::PhotometricInterpretation},
 };
 
-#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "native", feature = "std"))]
 mod charls;
 #[cfg(feature = "native")]
 mod jpeg_2000;
@@ -22,12 +22,12 @@ mod jpeg_xl;
 mod jxl_oxide;
 #[cfg(feature = "native")]
 mod libjpeg_12bit;
-#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "native", feature = "std"))]
 mod libjxl;
 mod native;
 #[cfg(feature = "native")]
 mod openjpeg;
-#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "native", feature = "std"))]
 mod openjph;
 mod rle_lossless;
 mod zune_jpeg;
@@ -245,7 +245,7 @@ pub fn decode_photometric_interpretation<'a>(
       )
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::decode_photometric_interpretation(photometric_interpretation)
     }
@@ -312,7 +312,7 @@ pub fn decode_monochrome(
       jpeg_decoder::decode_monochrome(image_pixel_module, data)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::decode_monochrome(image_pixel_module, data)
     }
@@ -326,7 +326,7 @@ pub fn decode_monochrome(
     &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2000 => {
-      #[cfg(not(target_arch = "wasm32"))]
+      #[cfg(feature = "std")]
       if decode_config.high_throughput_jpeg_2000_decoder
         == HighThroughputJpeg2000Decoder::OpenJph
       {
@@ -345,7 +345,7 @@ pub fn decode_monochrome(
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-      #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+      #[cfg(all(feature = "native", feature = "std"))]
       if decode_config.jpeg_xl_decoder == JpegXlDecoder::LibJxl {
         return libjxl::decode_monochrome(image_pixel_module, data);
       }
@@ -403,7 +403,7 @@ pub fn decode_color(
       jpeg_decoder::decode_color(image_pixel_module, data)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_LS_LOSSLESS | &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::decode_color(image_pixel_module, data)
     }
@@ -417,7 +417,7 @@ pub fn decode_color(
     &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2000 => {
-      #[cfg(not(target_arch = "wasm32"))]
+      #[cfg(feature = "std")]
       if decode_config.high_throughput_jpeg_2000_decoder
         == HighThroughputJpeg2000Decoder::OpenJph
       {
@@ -436,7 +436,7 @@ pub fn decode_color(
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-      #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+      #[cfg(all(feature = "native", feature = "std"))]
       if decode_config.jpeg_xl_decoder == JpegXlDecoder::LibJxl {
         return libjxl::decode_color(image_pixel_module, data);
       }

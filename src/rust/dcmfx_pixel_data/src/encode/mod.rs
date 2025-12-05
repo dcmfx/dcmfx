@@ -20,12 +20,12 @@ mod jpeg_2000;
 mod jpeg_encoder;
 #[cfg(feature = "native")]
 mod libjpeg_12bit;
-#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "native", feature = "std"))]
 mod libjxl;
 mod native;
 #[cfg(feature = "native")]
 mod openjpeg;
-#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "native", feature = "std"))]
 mod openjph;
 mod rle_lossless;
 
@@ -273,12 +273,12 @@ pub fn encode_image_pixel_module(
       libjpeg_12bit::encode_image_pixel_module(image_pixel_module.clone())
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_LS_LOSSLESS => {
       charls::encode_image_pixel_module(image_pixel_module.clone(), true)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_LS_LOSSY_NEAR_LOSSLESS => {
       charls::encode_image_pixel_module(image_pixel_module.clone(), false)
     }
@@ -292,28 +292,28 @@ pub fn encode_image_pixel_module(
       Some(encode_config.quality),
     ),
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY => {
       jpeg_2000::encode_image_pixel_module(image_pixel_module.clone(), None)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &HIGH_THROUGHPUT_JPEG_2000 => jpeg_2000::encode_image_pixel_module(
       image_pixel_module.clone(),
       Some(encode_config.quality),
     ),
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL_LOSSLESS => {
       libjxl::encode_image_pixel_module(image_pixel_module.clone(), true)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL => {
       libjxl::encode_image_pixel_module(image_pixel_module.clone(), false)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL_JPEG_RECOMPRESSION => {
       jpeg_encoder::encode_image_pixel_module(image_pixel_module.clone())
     }
@@ -363,13 +363,13 @@ pub fn encode_monochrome(
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_LS_LOSSLESS => {
       charls::encode_monochrome(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_LS_LOSSY_NEAR_LOSSLESS => charls::encode_monochrome(
       image,
       image_pixel_module,
@@ -391,13 +391,13 @@ pub fn encode_monochrome(
     )
     .map(PixelDataFrame::new_from_bytes),
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY => {
       openjph::encode_monochrome(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &HIGH_THROUGHPUT_JPEG_2000 => openjph::encode_monochrome(
       image,
       image_pixel_module,
@@ -405,19 +405,19 @@ pub fn encode_monochrome(
     )
     .map(PixelDataFrame::new_from_bytes),
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL_LOSSLESS => {
       libjxl::encode_monochrome(image, image_pixel_module, encode_config, true)
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL => {
       libjxl::encode_monochrome(image, image_pixel_module, encode_config, false)
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL_JPEG_RECOMPRESSION => {
       let jpeg_data = jpeg_encoder::encode_monochrome(
         image,
@@ -474,11 +474,11 @@ pub fn encode_color(
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_LS_LOSSLESS => charls::encode_color(image, image_pixel_module, None)
       .map(PixelDataFrame::new_from_bytes),
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_LS_LOSSY_NEAR_LOSSLESS => charls::encode_color(
       image,
       image_pixel_module,
@@ -500,13 +500,13 @@ pub fn encode_color(
     )
     .map(PixelDataFrame::new_from_bytes),
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY => {
       openjph::encode_color(image, image_pixel_module, None)
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &HIGH_THROUGHPUT_JPEG_2000 => openjph::encode_color(
       image,
       image_pixel_module,
@@ -514,19 +514,19 @@ pub fn encode_color(
     )
     .map(PixelDataFrame::new_from_bytes),
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL_LOSSLESS => {
       libjxl::encode_color(image, image_pixel_module, encode_config, true)
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL => {
       libjxl::encode_color(image, image_pixel_module, encode_config, false)
         .map(PixelDataFrame::new_from_bytes)
     }
 
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL_JPEG_RECOMPRESSION => {
       let jpeg_data =
         jpeg_encoder::encode_color(image, image_pixel_module, encode_config)?;

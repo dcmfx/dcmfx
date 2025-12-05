@@ -16,7 +16,7 @@ pub mod decode;
 pub mod encode;
 mod grayscale_pipeline;
 pub mod iods;
-#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "native", feature = "std"))]
 mod jpeg_xl_jpeg_recompression;
 mod lookup_table;
 mod monochrome_image;

@@ -1,6 +1,3 @@
-#[cfg(not(feature = "std"))]
-use alloc::{format, vec, vec::Vec};
-
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
   iods::image_pixel_module::{
