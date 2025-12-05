@@ -469,7 +469,7 @@ impl P10PixelDataTranscodeTransform {
     // Special case for direct recompression/reconstruction of JPEG Baseline
     // 8-bit to/from JPEG XL. This is a fast path that can be taken when a full
     // encode/decode cycle isn't needed.
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "native", feature = "std"))]
     if !(self.image_data_functions.is_encode_decode_cycle_required)(
       self
         .input_image_pixel_module_transform

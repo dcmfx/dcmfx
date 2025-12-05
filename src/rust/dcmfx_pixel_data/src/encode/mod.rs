@@ -14,7 +14,7 @@ use crate::{
   iods::image_pixel_module::{BitsAllocated, ImagePixelModule},
 };
 
-#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "native", feature = "std"))]
 mod charls;
 mod jpeg_2000;
 mod jpeg_encoder;

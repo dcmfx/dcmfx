@@ -171,8 +171,8 @@ jobs:
           wasmer target/wasm32-unknown-unknown/debug/dcmfx_wasm_test.wasm --invoke dcmfx_wasm_test
           wasmer target/wasm32-unknown-unknown/release/dcmfx_wasm_test.wasm --invoke dcmfx_wasm_test
 
-  test_dcmfx_rust_build_without_pixel_data_native_feature:
-    name: Test DCMfx Rust build without dcmfx/pixel_data_native
+  test_dcmfx_rust_build_variants:
+    name: Test DCMfx Rust build variants
     timeout-minutes: 30
     runs-on: macos-14
 
@@ -192,7 +192,11 @@ jobs:
 
       - name: Build without dcmfx/pixel_data_native feature
         working-directory: src/rust
-        run: cargo build --frozen --package dcmfx_cli --no-default-features
+        run: cargo build --frozen --package dcmfx --no-default-features
+
+      - name: Build with dcmfx/pixel_data_native feature and without std feature
+        working-directory: src/rust
+        run: cargo build --frozen --package dcmfx --no-default-features --features dcmfx/pixel_data_native
 
   test_dcmfx_rust_windows_gnu_library_build:
     name: Test DCMfx Rust Windows GNU library build

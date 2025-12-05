@@ -50,24 +50,20 @@ pub struct PixelDataDecodeConfig {
 }
 
 impl Default for PixelDataDecodeConfig {
+  #[cfg(all(feature = "native", feature = "std"))]
   fn default() -> Self {
-    #[cfg(not(target_arch = "wasm32"))]
-    let jpeg_xl_decoder = JpegXlDecoder::LibJxl;
-
-    #[cfg(target_arch = "wasm32")]
-    let jpeg_xl_decoder = JpegXlDecoder::JxlOxide;
-
-    #[cfg(not(target_arch = "wasm32"))]
-    let high_throughput_jpeg_2000_decoder =
-      HighThroughputJpeg2000Decoder::OpenJph;
-
-    #[cfg(target_arch = "wasm32")]
-    let high_throughput_jpeg_2000_decoder =
-      HighThroughputJpeg2000Decoder::OpenJpeg;
-
     Self {
-      jpeg_xl_decoder,
-      high_throughput_jpeg_2000_decoder,
+      high_throughput_jpeg_2000_decoder: HighThroughputJpeg2000Decoder::OpenJph,
+      jpeg_xl_decoder: JpegXlDecoder::LibJxl,
+    }
+  }
+
+  #[cfg(not(all(feature = "native", feature = "std")))]
+  fn default() -> Self {
+    Self {
+      high_throughput_jpeg_2000_decoder:
+        HighThroughputJpeg2000Decoder::OpenJpeg,
+      jpeg_xl_decoder: JpegXlDecoder::JxlOxide,
     }
   }
 }
