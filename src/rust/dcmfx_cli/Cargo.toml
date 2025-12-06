@@ -16,6 +16,7 @@ keywords.workspace = true
 async-stream = "0.3.6"
 async-trait = "0.1.89"
 aws-config = "1.8.11"
+aws-credential-types = "1.2.10"
 aws-sdk-sso = "1.90.0"
 bytemuck = "1.24.0"
 bytesize = "2.3.1"

@@ -870,6 +870,7 @@ dependencies = [
  "async-stream",
  "async-trait",
  "aws-config",
+ "aws-credential-types",
  "aws-sdk-sso",
  "bytemuck",
  "bytesize",

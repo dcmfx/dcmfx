@@ -97,56 +97,37 @@ async fn get_cached_store(
     }
 
     ObjectStoreScheme::AmazonS3 => {
-      use aws_sdk_sso::config::ProvideCredentials;
+      let mut builder = AmazonS3Builder::from_env().with_bucket_name(host);
 
-      // Get credentials based on what's configured in the environment
-      let sdk_config =
-        aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
-      let aws_credentials = sdk_config
-        .credentials_provider()
-        .unwrap()
-        .provide_credentials()
-        .await;
+      // If any of the following three environment variables are missing then
+      // do a full AWS credential evaluation to determine them
+      if std::env::var("AWS_REGION").is_err()
+        || std::env::var("AWS_ACCESS_KEY_ID").is_err()
+        || std::env::var("AWS_SECRET_ACCESS_KEY").is_err()
+      {
+        let (credentials, region) = aws::get_credentials_and_region().await;
 
-      match aws_credentials {
-        Ok(aws_credentials) => {
-          let Some(region) = sdk_config.region() else {
-            crate::utils::exit_with_error(
-              "AWS region not provided by credentials chain",
-              "",
-            );
-          };
+        builder = builder
+          .with_access_key_id(credentials.access_key_id())
+          .with_secret_access_key(credentials.secret_access_key())
+          .with_region(region.to_string());
 
-          let mut builder = AmazonS3Builder::new()
-            .with_bucket_name(host)
-            .with_region(region.to_string())
-            .with_access_key_id(aws_credentials.access_key_id())
-            .with_secret_access_key(aws_credentials.secret_access_key());
-
-          if let Ok(endpoint_url) = std::env::var("AWS_ENDPOINT_URL") {
-            builder = builder.with_endpoint(endpoint_url);
-          }
-
-          if let Some(token) = aws_credentials.session_token() {
-            builder = builder.with_token(token);
-          };
-
-          if let Ok(endpoint_url) = std::env::var("AWS_ENDPOINT_URL")
-            && endpoint_url.starts_with("http://")
-          {
-            builder = builder.with_allow_http(true);
-          }
-
-          Arc::new(builder.build().unwrap())
-        }
-
-        Err(e) => {
-          crate::utils::exit_with_error(
-            "Failed getting AWS credentials",
-            format!("{:?}", e),
-          );
+        if let Some(token) = credentials.session_token() {
+          builder = builder.with_token(token);
         }
       }
+
+      // If the endpoint is being set to an http:// URL then explicitly allow
+      // the use of HTTP. This is necessary for endpoints such as LocalStack,
+      // which don't use HTTPS.
+      if let Some(endpoint) = builder
+        .get_config_value(&object_store::aws::AmazonS3ConfigKey::Endpoint)
+        && endpoint.starts_with("http://")
+      {
+        builder = builder.with_allow_http(true);
+      }
+
+      Arc::new(builder.build().unwrap())
     }
 
     ObjectStoreScheme::GoogleCloudStorage => Arc::new(
@@ -167,4 +148,35 @@ async fn get_cached_store(
   store_cache.insert(key, store.clone());
 
   store
+}
+
+mod aws {
+  use aws_config::{BehaviorVersion, Region};
+  use aws_credential_types::Credentials;
+  use aws_sdk_sso::config::ProvideCredentials;
+
+  pub async fn get_credentials_and_region() -> (Credentials, Region) {
+    let sdk_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+
+    let Some(region) = sdk_config.region() else {
+      crate::utils::exit_with_error("AWS config does not specify a region", "");
+    };
+
+    let credentials = sdk_config
+      .credentials_provider()
+      .unwrap()
+      .provide_credentials()
+      .await;
+
+    match credentials {
+      Ok(credentials) => (credentials, region.clone()),
+
+      Err(e) => {
+        crate::utils::exit_with_error(
+          "Failed getting AWS credentials",
+          format!("{:?}", e),
+        );
+      }
+    }
+  }
 }
