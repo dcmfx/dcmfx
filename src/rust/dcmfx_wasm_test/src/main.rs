@@ -43,7 +43,8 @@ pub fn main() {
 #[unsafe(no_mangle)]
 fn dcmfx_wasm_test() -> i64 {
   for (dicom, pixel_data_sum) in TEST_DICOMS {
-    let data_set = DataSet::read_p10_bytes(dicom.to_vec().into()).unwrap();
+    let data_set =
+      DataSet::read_p10_bytes(dicom.to_vec().into(), None).unwrap();
 
     let pixel_data_renderer =
       PixelDataRenderer::from_data_set(&data_set).unwrap();

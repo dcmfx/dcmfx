@@ -327,8 +327,9 @@ pub async fn read_tokens_from_stream_async<I: IoAsyncRead>(
 ///
 pub fn read_bytes(
   bytes: RcByteSlice,
+  config: Option<P10ReadConfig>,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
-  let mut context = P10ReadContext::new(None);
+  let mut context = P10ReadContext::new(config);
   let mut builder = Box::new(DataSetBuilder::new());
 
   // Add the bytes to the P10 read context
@@ -718,6 +719,175 @@ pub async fn write_tokens_to_stream_async<S: IoAsyncWrite>(
   }
 }
 
+/// Rewrites a DICOM P10 file to a new DICOM P10 file. Rewriting may correct
+/// issues in the input DICOM P10 file.
+///
+#[cfg(feature = "std")]
+pub fn rewrite_file<P: AsRef<Path>>(
+  input_filename: P,
+  output_filename: P,
+) -> Result<(), P10Error> {
+  let mut input_stream = match std::fs::File::open(input_filename) {
+    Ok(file) => file,
+    Err(e) => {
+      return Err(P10Error::FileError {
+        when: "Opening input file".to_string(),
+        details: e.to_string(),
+      });
+    }
+  };
+
+  let mut output_stream = match std::fs::File::open(output_filename) {
+    Ok(file) => file,
+    Err(e) => {
+      return Err(P10Error::FileError {
+        when: "Opening output file".to_string(),
+        details: e.to_string(),
+      });
+    }
+  };
+
+  rewrite_stream(&mut input_stream, &mut output_stream, None, None)
+}
+
+/// Rewrites a DICOM P10 file to a new DICOM P10 file. Rewriting may correct
+/// issues in the input DICOM P10 file.
+///
+#[cfg(feature = "async")]
+pub async fn rewrite_file_async<P: AsRef<Path>>(
+  input_filename: P,
+  output_filename: P,
+) -> Result<(), P10Error> {
+  let mut input_stream = match tokio::fs::File::open(input_filename).await {
+    Ok(file) => file,
+    Err(e) => {
+      return Err(P10Error::FileError {
+        when: "Opening input file".to_string(),
+        details: e.to_string(),
+      });
+    }
+  };
+
+  let mut output_stream = match tokio::fs::File::open(output_filename).await {
+    Ok(file) => file,
+    Err(e) => {
+      return Err(P10Error::FileError {
+        when: "Opening output file".to_string(),
+        details: e.to_string(),
+      });
+    }
+  };
+
+  rewrite_stream_async(&mut input_stream, &mut output_stream, None, None).await
+}
+
+/// Rewrites DICOM P10 data from the input stream to new DICOM P10 data on the
+/// output stream. Rewriting may correct issues in the input DICOM P10 data.
+///
+pub fn rewrite_stream<I: IoRead, O: IoWrite>(
+  input_stream: &mut I,
+  output_stream: &mut O,
+  read_config: Option<P10ReadConfig>,
+  write_config: Option<P10WriteConfig>,
+) -> Result<(), P10Error> {
+  let mut read_context = P10ReadContext::new(read_config);
+  let mut write_context = P10WriteContext::new(write_config);
+
+  let mut is_done = false;
+
+  while !is_done {
+    let tokens =
+      read_tokens_from_stream(input_stream, &mut read_context, None)?;
+
+    for token in &tokens {
+      write_context.write_token(token)?;
+
+      if token == &P10Token::End {
+        is_done = true;
+      }
+    }
+
+    for bytes in write_context.read_bytes() {
+      output_stream
+        .write_all(&bytes)
+        .map_err(|e| P10Error::FileError {
+          when: "Writing rewritten DICOM P10 data to output stream".to_string(),
+          details: e.to_string(),
+        })?;
+    }
+  }
+
+  Ok(())
+}
+
+/// Rewrites DICOM P10 data from the input stream to new DICOM P10 data on the
+/// output stream. Rewriting may correct issues in the input DICOM P10 data.
+///
+#[cfg(feature = "async")]
+pub async fn rewrite_stream_async<I: IoAsyncRead, O: IoAsyncWrite>(
+  input_stream: &mut I,
+  output_stream: &mut O,
+  read_config: Option<P10ReadConfig>,
+  write_config: Option<P10WriteConfig>,
+) -> Result<(), P10Error> {
+  use tokio::io::AsyncWriteExt;
+
+  let mut read_context = P10ReadContext::new(read_config);
+  let mut write_context = P10WriteContext::new(write_config);
+
+  let mut is_done = false;
+
+  while !is_done {
+    let tokens =
+      read_tokens_from_stream_async(input_stream, &mut read_context, None)
+        .await?;
+
+    for token in &tokens {
+      write_context.write_token(token)?;
+
+      if token == &P10Token::End {
+        is_done = true;
+      }
+    }
+
+    for bytes in write_context.read_bytes() {
+      output_stream.write_all(&bytes).await.map_err(|e| {
+        P10Error::FileError {
+          when: "Writing rewritten DICOM P10 data to output stream".to_string(),
+          details: e.to_string(),
+        }
+      })?;
+    }
+  }
+
+  Ok(())
+}
+
+/// Rewrites DICOM P10 data to new DICOM P10 data. Rewriting may correct issues
+/// in the input data.
+///
+pub fn rewrite_bytes(
+  bytes: RcByteSlice,
+  read_config: Option<P10ReadConfig>,
+  write_config: Option<P10WriteConfig>,
+) -> Result<RcByteSlice, P10Error> {
+  let data_set = read_bytes(bytes, read_config).map_err(|(e, _)| e)?;
+
+  let mut new_p10_bytes = vec![];
+
+  p10_write::data_set_to_bytes(
+    &data_set,
+    &DataSetPath::new(),
+    &mut |b| {
+      new_p10_bytes.extend_from_slice(&b);
+      Ok(())
+    },
+    write_config,
+  )?;
+
+  Ok(new_p10_bytes.into())
+}
+
 /// Adds functions to [`DataSet`] for converting to and from the DICOM P10
 /// format.
 ///
@@ -739,6 +909,7 @@ where
   ///
   fn read_p10_bytes(
     bytes: RcByteSlice,
+    read_config: Option<P10ReadConfig>,
   ) -> Result<Self, (P10Error, Box<DataSetBuilder>)>;
 
   /// Writes a data set to a DICOM P10 file. This will overwrite any existing
@@ -845,8 +1016,9 @@ impl DataSetP10Extensions for DataSet {
 
   fn read_p10_bytes(
     bytes: RcByteSlice,
+    read_config: Option<P10ReadConfig>,
   ) -> Result<Self, (P10Error, Box<DataSetBuilder>)> {
-    read_bytes(bytes)
+    read_bytes(bytes, read_config)
   }
 
   #[cfg(feature = "std")]

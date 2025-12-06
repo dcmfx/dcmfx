@@ -12,6 +12,7 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
     compression blocks
   - Crop pixel data overlays when cropping pixel data
   - Update `SequenceOfUltrasoundRegions` when cropping pixel data.
+  - Decode JPEG-LS pixel data on WASM
 
 - CLI:
 
@@ -28,8 +29,6 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
     - `--replace-pixel-data` to replace a DICOM's pixel data
     - `--create-basic-offset-table` to add a basic offset table and fragments to
       the pixel data if absent
-
-- Decode JPEG-LS pixel data on WASM
 
 - DIMSE networking
 
