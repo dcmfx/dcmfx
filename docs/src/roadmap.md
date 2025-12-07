@@ -35,5 +35,3 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
 - Decoding and encoding of waveform data
 
 - Extraction of DICOM structured report data
-
-- Creation of DICOMDIR indexes
