@@ -58,7 +58,7 @@ pub fn new(prefix: &str) -> Result<String, ()> {
     char::from_u32(rng.random_range(range).into()).unwrap()
   };
 
-  new_using_rng(prefix, &mut random_character)
+  new_using_rng(prefix.trim_end_matches("."), &mut random_character)
 }
 
 /// Generates a new random UID with the given prefix. The specified function is
@@ -137,6 +137,11 @@ mod tests {
 
     assert_eq!(new(("1".repeat(61)).as_str()), Err(()));
 
-    assert_eq!(new("1."), Err(()));
+    // A trailing period on the prefix is ignored
+    let uid = new("1111.2222.").unwrap();
+    assert!(uid.starts_with("1111.2222."));
+    assert!(is_valid(&uid));
+
+    assert_eq!(new("1..2"), Err(()));
   }
 }

@@ -9,8 +9,9 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 use commands::{
-  dcm_to_json_command, get_pixel_data_command, json_to_dcm_command,
-  list_command, modify_command, print_command, rewrite_command,
+  archive_command, dcm_to_json_command, get_pixel_data_command,
+  json_to_dcm_command, list_command, modify_command, print_command,
+  rewrite_command,
 };
 
 #[derive(Parser)]
@@ -35,6 +36,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+  #[command(about = archive_command::ABOUT)]
+  Archive(archive_command::ArchiveArgs),
+
   #[command(about = get_pixel_data_command::ABOUT)]
   GetPixelData(get_pixel_data_command::GetPixelDataArgs),
 
@@ -67,6 +71,7 @@ async fn main() {
   let started_at = std::time::Instant::now();
 
   let r = match cli.command {
+    Commands::Archive(args) => archive_command::run(args).await,
     Commands::GetPixelData(args) => get_pixel_data_command::run(args).await,
     Commands::Modify(args) => modify_command::run(args).await,
     Commands::Print(args) => print_command::run(args).await,

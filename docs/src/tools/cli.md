@@ -72,6 +72,8 @@ DCMfx is a CLI tool for working with DICOM and DICOM JSON
 Usage: dcmfx [OPTIONS] <COMMAND>
 
 Commands:
+  archive         Archives one or more DICOM P10 files into a directory or ZIP
+                  file alongside a DICOMDIR file
   get-pixel-data  Extracts pixel data from DICOM P10 files, writing it to image
                   and video files
   modify          Modifies the content of DICOM P10 files
@@ -213,4 +215,14 @@ Azure Blob Storage (`az://`).
 
     ```sh
     dcmfx list . --format json-lines --select 00080018 --summarize
+    ```
+
+12. Archive all `*.dcm` files under the current directory into a compressed ZIP
+    file along with a DICOMDIR, and name the archived DICOMs using the schema
+    `PA000000/ST000000/SE000000/IM000000`.
+
+    ```sh
+    dcmfx archive **/*.dcm --output-filename archive.zip \
+      --path-structure patient-study-series --zip-compression-method deflate \
+      --deflate-compression-level fast
     ```
