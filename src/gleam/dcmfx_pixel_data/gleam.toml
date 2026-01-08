@@ -2,7 +2,7 @@ name = "dcmfx_pixel_data"
 version = "0.40.1"
 description = "DCMfx pixel data library"
 licences = ["AGPL-3.0-only"]
-gleam = ">= 1.13.0"
+gleam = ">= 1.14.0"
 
 [repository]
 type = "github"
