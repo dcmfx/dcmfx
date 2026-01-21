@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.20
+          node-version: 24.12
 
       - name: Semantic release dry run
         id: semantic-release
@@ -318,7 +318,7 @@ jobs:
       - name: Setup Gleam
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 28.1
+          otp-version: 28.3
           gleam-version: 1.14.0
           version-type: strict
 
@@ -545,7 +545,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.20
+          node-version: 24.12
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
