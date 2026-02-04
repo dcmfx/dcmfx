@@ -229,6 +229,7 @@ fn test_data_set_matches_expected_json_output(
 ) -> Result<(), DicomValidationError> {
   let json_config = DicomJsonConfig {
     store_encapsulated_pixel_data: true,
+    emit_binary_data_values: None,
     pretty_print,
   };
 
@@ -268,6 +269,7 @@ fn test_dicom_json_rewrite_cycle(
 
   let json_config = DicomJsonConfig {
     store_encapsulated_pixel_data: true,
+    emit_binary_data_values: None,
     pretty_print: false,
   };
 

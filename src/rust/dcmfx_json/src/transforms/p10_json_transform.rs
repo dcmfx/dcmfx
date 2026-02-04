@@ -268,7 +268,7 @@ impl P10JsonTransform {
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
-    length: u32,
+    mut length: u32,
     stream: &mut S,
   ) -> Result<(), dcmfx_p10::IoError> {
     // Exclude group length data elements as these have no use in DICOM JSON.
@@ -277,6 +277,22 @@ impl P10JsonTransform {
     if tag.element == 0 || tag == dictionary::SPECIFIC_CHARACTER_SET.tag {
       self.ignore_data_element_value_bytes = true;
       return Ok(());
+    }
+
+    // If requested, treat binary data elements as if they had zero length, this
+    // will prevent any 'Value' or 'InlineBinary' from being added to the output
+
+    if vr == ValueRepresentation::OtherByteString
+      || vr == ValueRepresentation::OtherDoubleString
+      || vr == ValueRepresentation::OtherFloatString
+      || vr == ValueRepresentation::OtherLongString
+      || vr == ValueRepresentation::OtherVeryLongString
+      || vr == ValueRepresentation::OtherWordString
+      || vr == ValueRepresentation::Unknown
+    {
+      if !self.emit_binary_data_values_for_tag(&tag) {
+        length = 0;
+      }
     }
 
     if self.insert_comma {
@@ -361,6 +377,12 @@ impl P10JsonTransform {
     bytes_remaining: u32,
     stream: &mut S,
   ) -> Result<(), JsonSerializeError> {
+    if self.in_encapsulated_pixel_data {
+      if !self.emit_binary_data_values_for_tag(&self.current_data_element.0) {
+        return Ok(());
+      }
+    }
+
     // If this data element value is being ignored then do nothing
     if self.ignore_data_element_value_bytes {
       if bytes_remaining == 0 {
@@ -537,19 +559,30 @@ impl P10JsonTransform {
 
           self.write_indent(stream, 1)?;
 
-          let mut json = *b"\"vr\": \"__\",\n";
+          let mut json = *b"\"vr\": \"__\"";
           json[7..9].copy_from_slice(&vr.to_bytes());
           stream.write_all(json.as_slice())?;
 
-          self.write_indent(stream, 1)?;
-          stream.write_all(b"\"InlineBinary\": \"")
+          if self.emit_binary_data_values_for_tag(&tag) {
+            stream.write_all(b",\n")?;
+            self.write_indent(stream, 1)?;
+            stream.write_all(b"\"InlineBinary\": \"")?;
+          }
+
+          Ok(())
         })()
       } else {
-        let mut json = *br#""________":{"vr":"__","InlineBinary":""#;
+        let mut json = *br#""________":{"vr":"__""#;
         json[1..9].copy_from_slice(&tag.to_hex_digits());
         json[18..20].copy_from_slice(&vr.to_bytes());
 
-        stream.write_all(json.as_slice())
+        stream.write_all(json.as_slice())?;
+
+        if self.emit_binary_data_values_for_tag(&tag) {
+          stream.write_all(br#","InlineBinary":""#)?;
+        }
+
+        Ok(())
       }
     }
     .map_err(JsonSerializeError::IOError)
@@ -561,14 +594,25 @@ impl P10JsonTransform {
   ) -> Result<(), dcmfx_p10::IoError> {
     if self.in_encapsulated_pixel_data {
       self.in_encapsulated_pixel_data = false;
-      self.write_base64(&[], true, stream)?;
 
-      if self.config.pretty_print {
-        stream.write_all(b"\"\n")?;
-        self.write_indent(stream, 0)?;
-        stream.write_all(b"}")
+      if self.emit_binary_data_values_for_tag(&self.current_data_element.0) {
+        self.write_base64(&[], true, stream)?;
+
+        if self.config.pretty_print {
+          stream.write_all(b"\"\n")?;
+          self.write_indent(stream, 0)?;
+          stream.write_all(b"}")
+        } else {
+          stream.write_all(b"\"}")
+        }
       } else {
-        stream.write_all(b"\"}")
+        if self.config.pretty_print {
+          stream.write_all(b"\n")?;
+          self.write_indent(stream, 0)?;
+          stream.write_all(b"}")
+        } else {
+          stream.write_all(b"}")
+        }
       }
     } else {
       self.insert_comma = true;
@@ -632,6 +676,10 @@ impl P10JsonTransform {
         )
         .with_path(&self.data_set_path),
       ));
+    }
+
+    if !self.emit_binary_data_values_for_tag(&self.current_data_element.0) {
+      return Ok(());
     }
 
     // Construct bytes for the item header
@@ -899,6 +947,14 @@ impl P10JsonTransform {
       ),
 
       _ => unreachable!(),
+    }
+  }
+
+  fn emit_binary_data_values_for_tag(&self, tag: &DataElementTag) -> bool {
+    if let Some(tags) = &self.config.emit_binary_data_values {
+      tags.contains(tag)
+    } else {
+      true
     }
   }
 }

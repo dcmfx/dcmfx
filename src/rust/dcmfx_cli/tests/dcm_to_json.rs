@@ -42,6 +42,47 @@ fn with_stdout_output() {
   assert_snapshot!("with_stdout_output", get_stdout(assert));
 }
 
+#[test]
+fn with_stdout_output_and_strip_binary_values() {
+  let input_file =
+    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";
+
+  let assert = dcmfx_cli()
+    .arg("dcm-to-json")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg("-")
+    .arg("--pretty")
+    .arg("--no-emit-binary-values")
+    .assert()
+    .success();
+
+  assert_snapshot!(
+    "with_stdout_output_and_strip_binary_values",
+    get_stdout(assert)
+  );
+}
+
+#[test]
+fn with_stdout_output_and_strip_binary_values_raw() {
+  let input_file =
+    "../../../test/assets/pydicom/test_files/SC_rgb_small_odd.dcm";
+
+  let assert = dcmfx_cli()
+    .arg("dcm-to-json")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg("-")
+    .arg("--no-emit-binary-values")
+    .assert()
+    .success();
+
+  assert_snapshot!(
+    "with_stdout_output_and_strip_binary_values_raw",
+    get_stdout(assert)
+  );
+}
+
 #[tokio::test]
 #[ignore]
 async fn with_s3_input_and_output() {

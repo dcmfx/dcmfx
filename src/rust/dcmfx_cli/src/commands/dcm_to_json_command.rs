@@ -60,6 +60,24 @@ pub struct ToJsonArgs {
   pretty_print: bool,
 
   #[arg(
+      long = "emit-binary-values",
+      value_name = "DATA_ELEMENT_TAG",
+      help_heading = "Output",
+      help = "xxxx",
+      conflicts_with = "no_emit_binary_values",
+      value_parser = crate::args::parse_data_element_tag,
+  )]
+  emit_binary_values: Vec<DataElementTag>,
+
+  #[arg(
+      long = "no-emit-binary-values",
+      help_heading = "Output",
+      help = "xxxx",
+      action = clap::ArgAction::SetTrue
+  )]
+  no_emit_binary_values: bool,
+
+  #[arg(
     long,
     help_heading = "Output",
     help = "Whether to extend DICOM JSON to store encapsulated pixel data as \
@@ -97,7 +115,16 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
 
   let input_sources = args.input.base.input_sources().await;
 
+  let emit_binary_data_values = if !args.emit_binary_values.is_empty() {
+    Some(args.emit_binary_values.clone())
+  } else if args.no_emit_binary_values {
+    Some(vec![])
+  } else {
+    None
+  };
+
   let config = DicomJsonConfig {
+    emit_binary_data_values,
     pretty_print: args.pretty_print,
     store_encapsulated_pixel_data: args.store_encapsulated_pixel_data,
   };
@@ -117,8 +144,13 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
         .await
       };
 
-      match input_source_to_json(&input_source, output_target, &args, config)
-        .await
+      match input_source_to_json(
+        &input_source,
+        output_target,
+        &args,
+        config.clone(),
+      )
+      .await
       {
         Ok(()) => Ok(()),
 
