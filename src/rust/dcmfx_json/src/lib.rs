@@ -135,6 +135,7 @@ mod tests {
   const JSON_CONFIG: DicomJsonConfig = DicomJsonConfig {
     store_encapsulated_pixel_data: true,
     pretty_print: false,
+    emit_binary_data_values: None,
   };
 
   #[test]

@@ -230,6 +230,7 @@ fn test_data_set_matches_expected_json_output(
   let json_config = DicomJsonConfig {
     store_encapsulated_pixel_data: true,
     pretty_print,
+    emit_binary_data_values: None,
   };
 
   // Convert the data set to JSON
@@ -269,6 +270,7 @@ fn test_dicom_json_rewrite_cycle(
   let json_config = DicomJsonConfig {
     store_encapsulated_pixel_data: true,
     pretty_print: false,
+    emit_binary_data_values: None,
   };
 
   // Check the reverse by converting the expected JSON to a data set then back

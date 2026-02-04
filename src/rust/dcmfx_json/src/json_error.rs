@@ -124,3 +124,9 @@ impl DcmfxError for JsonDeserializeError {
     }
   }
 }
+
+impl From<dcmfx_p10::IoError> for JsonSerializeError {
+  fn from(value: dcmfx_p10::IoError) -> JsonSerializeError {
+    Self::IOError(value)
+  }
+}

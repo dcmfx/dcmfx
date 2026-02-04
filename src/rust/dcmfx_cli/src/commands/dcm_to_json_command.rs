@@ -60,6 +60,29 @@ pub struct ToJsonArgs {
   pretty_print: bool,
 
   #[arg(
+      long = "no-emit-binary-values",
+      help_heading = "Output",
+      help = "Prevents conversion to DICOM JSON of data element values that \
+        use one of the binary value representation (OB, OD, OF, OL, OV, OW, \
+        UN). The data element and its VR will still be emitted, but its value \
+        will have zero length.", 
+      action = clap::ArgAction::SetTrue
+  )]
+  no_emit_binary_values: bool,
+
+  #[arg(
+      long = "emit-binary-values",
+      value_name = "DATA_ELEMENT_TAG",
+      help_heading = "Output",
+      help = "Prevents conversion to DICOM JSON of data element values that use
+        one of the binary value representation (OB, OD, OF, OL, OV, OW,UN) and
+        are not one for one of the data element tags specified.",
+      conflicts_with = "no_emit_binary_values",
+      value_parser = crate::args::parse_data_element_tag,
+  )]
+  emit_binary_values: Vec<DataElementTag>,
+
+  #[arg(
     long,
     help_heading = "Output",
     help = "Whether to extend DICOM JSON to store encapsulated pixel data as \
@@ -97,9 +120,18 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
 
   let input_sources = args.input.base.input_sources().await;
 
+  let emit_binary_data_values = if !args.emit_binary_values.is_empty() {
+    Some(args.emit_binary_values.clone())
+  } else if args.no_emit_binary_values {
+    Some(vec![])
+  } else {
+    None
+  };
+
   let config = DicomJsonConfig {
     pretty_print: args.pretty_print,
     store_encapsulated_pixel_data: args.store_encapsulated_pixel_data,
+    emit_binary_data_values,
   };
 
   let result = utils::run_tasks(
@@ -117,7 +149,7 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
         .await
       };
 
-      match input_source_to_json(&input_source, output_target, &args, config)
+      match input_source_to_json(&input_source, output_target, &args, &config)
         .await
       {
         Ok(()) => Ok(()),
@@ -155,7 +187,7 @@ async fn input_source_to_json(
   input_source: &InputSource,
   output_target: OutputTarget,
   args: &ToJsonArgs,
-  json_config: DicomJsonConfig,
+  json_config: &DicomJsonConfig,
 ) -> Result<(), ToJsonError> {
   let mut input_stream = input_source
     .open_read_stream()
@@ -179,7 +211,7 @@ async fn input_source_to_json(
       P10ReadContext::new(Some(read_config.max_token_size(256 * 1024)));
 
     // Create transform for converting P10 tokens into bytes of JSON
-    let mut json_transform = P10JsonTransform::new(json_config);
+    let mut json_transform = P10JsonTransform::new(json_config.clone());
 
     // Get exclusive access to the output stream
     let mut output_stream = output_stream_handle.lock().await;
@@ -261,7 +293,7 @@ async fn input_source_to_json(
 
     // Convert to DICOM JSON
     let mut dicom_json = data_set
-      .to_json(json_config)
+      .to_json(json_config.clone())
       .map_err(ToJsonError::JsonSerializeError)?;
 
     if !args.pretty_print {

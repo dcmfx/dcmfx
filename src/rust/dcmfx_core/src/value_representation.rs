@@ -121,7 +121,7 @@ impl ValueRepresentation {
 
   /// Converts a value representation to its two-byte character representation.
   ///
-  pub fn to_bytes(&self) -> [u8; 2] {
+  pub fn to_bytes(self) -> [u8; 2] {
     *match self {
       ValueRepresentation::AgeString => b"AS",
       ValueRepresentation::ApplicationEntity => b"AE",
@@ -163,7 +163,7 @@ impl ValueRepresentation {
   /// Returns the human-readable name of a value representation, e.g.
   /// `CodeString`, `AttributeTag`.
   ///
-  pub fn name(&self) -> &str {
+  pub fn name(self) -> &'static str {
     match self {
       ValueRepresentation::AgeString => "AgeString",
       ValueRepresentation::ApplicationEntity => "ApplicationEntity",
@@ -237,6 +237,18 @@ impl ValueRepresentation {
       || self == ValueRepresentation::ShortText
       || self == ValueRepresentation::UnlimitedCharacters
       || self == ValueRepresentation::UnlimitedText
+  }
+
+  /// Returns whether a value representation stores raw binary data.
+  ///
+  pub fn is_binary(self) -> bool {
+    self == ValueRepresentation::OtherByteString
+      || self == ValueRepresentation::OtherDoubleString
+      || self == ValueRepresentation::OtherFloatString
+      || self == ValueRepresentation::OtherLongString
+      || self == ValueRepresentation::OtherVeryLongString
+      || self == ValueRepresentation::OtherWordString
+      || self == ValueRepresentation::Unknown
   }
 
   /// Appends the correct padding byte for the given value representation if the

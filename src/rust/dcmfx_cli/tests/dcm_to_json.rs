@@ -42,6 +42,68 @@ fn with_stdout_output() {
   assert_snapshot!("with_stdout_output", get_stdout(assert));
 }
 
+#[test]
+fn with_stdout_output_and_strip_binary_values() {
+  let input_file = "../../../test/assets/fo-dicom/CT1_J2KI.dcm";
+
+  let assert = dcmfx_cli()
+    .arg("dcm-to-json")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg("-")
+    .arg("--no-emit-binary-values")
+    .assert()
+    .success();
+
+  assert_snapshot!(
+    "with_stdout_output_and_strip_binary_values",
+    get_stdout(assert)
+  );
+}
+
+#[test]
+fn with_stdout_output_and_strip_binary_values_pretty_print() {
+  let input_file = "../../../test/assets/fo-dicom/CT1_J2KI.dcm";
+
+  let assert = dcmfx_cli()
+    .arg("dcm-to-json")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg("-")
+    .arg("--no-emit-binary-values")
+    .arg("--pretty")
+    .assert()
+    .success();
+
+  assert_snapshot!(
+    "with_stdout_output_and_strip_binary_values_pretty_print",
+    get_stdout(assert)
+  );
+}
+
+#[test]
+fn with_stdout_output_and_include_specific_binary_values() {
+  let input_file = "../../../test/assets/fo-dicom/CT1_J2KI.dcm";
+
+  let assert = dcmfx_cli()
+    .arg("dcm-to-json")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg("-")
+    .arg("--pretty")
+    .arg("--emit-binary-values")
+    .arg("00431029")
+    .arg("--emit-binary-values")
+    .arg("0043102A")
+    .assert()
+    .success();
+
+  assert_snapshot!(
+    "with_stdout_output_and_include_specific_binary_values",
+    get_stdout(assert)
+  );
+}
+
 #[tokio::test]
 #[ignore]
 async fn with_s3_input_and_output() {
