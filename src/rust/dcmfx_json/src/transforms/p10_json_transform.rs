@@ -938,7 +938,7 @@ impl P10JsonTransform {
   /// binary data.
   ///
   fn should_emit_binary_value(&self, tag: DataElementTag) -> bool {
-    if let Some(tags) = &self.config.emit_binary_data_values {
+    if let Some(tags) = &self.config.selected_binary_data_values {
       tags.contains(&tag)
     } else {
       true

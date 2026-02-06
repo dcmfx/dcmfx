@@ -28,8 +28,7 @@ pub struct DicomJsonConfig {
   pub pretty_print: bool,
 
   /// The data element tags to emit binary data values for in the DICOM JSON,
-  /// or `None` if binary data values should be emitted for all tags that
-  /// contain it.
+  /// or `None` if binary data values should always be emitted.
   ///
-  pub emit_binary_data_values: Option<Vec<DataElementTag>>,
+  pub selected_binary_data_values: Option<Vec<DataElementTag>>,
 }

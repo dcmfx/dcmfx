@@ -60,27 +60,29 @@ pub struct ToJsonArgs {
   pretty_print: bool,
 
   #[arg(
-      long = "no-emit-binary-values",
+      long = "exclude-binary-values",
       help_heading = "Output",
       help = "Prevents conversion to DICOM JSON of data element values that \
-        use one of the binary value representation (OB, OD, OF, OL, OV, OW, \
+        use one of the binary value representations (OB, OD, OF, OL, OV, OW, \
         UN). The data element and its VR will still be emitted, but its value \
         will have zero length.", 
       action = clap::ArgAction::SetTrue
   )]
-  no_emit_binary_values: bool,
+  exclude_binary_values: bool,
 
   #[arg(
-      long = "emit-binary-values",
+      long = "select-binary-value",
       value_name = "DATA_ELEMENT_TAG",
       help_heading = "Output",
-      help = "Prevents conversion to DICOM JSON of data element values that use
-        one of the binary value representation (OB, OD, OF, OL, OV, OW,UN) and
-        are not one for one of the data element tags specified.",
-      conflicts_with = "no_emit_binary_values",
+      help = "Prevents conversion to DICOM JSON of data element values that \
+        use one of the binary value representations (OB, OD, OF, OL, OV, OW,UN) \
+        except for data elements with the specified tag. This argument can be \
+        specified multiple times to include multiple data elements containing \
+        binary data in the DICOM JSON output.",
+      conflicts_with = "exclude_binary_values",
       value_parser = crate::args::parse_data_element_tag,
   )]
-  emit_binary_values: Vec<DataElementTag>,
+  selected_binary_values: Vec<DataElementTag>,
 
   #[arg(
     long,
@@ -120,9 +122,9 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
 
   let input_sources = args.input.base.input_sources().await;
 
-  let emit_binary_data_values = if !args.emit_binary_values.is_empty() {
-    Some(args.emit_binary_values.clone())
-  } else if args.no_emit_binary_values {
+  let selected_binary_data_values = if !args.selected_binary_values.is_empty() {
+    Some(args.selected_binary_values.clone())
+  } else if args.exclude_binary_values {
     Some(vec![])
   } else {
     None
@@ -131,7 +133,7 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
   let config = DicomJsonConfig {
     pretty_print: args.pretty_print,
     store_encapsulated_pixel_data: args.store_encapsulated_pixel_data,
-    emit_binary_data_values,
+    selected_binary_data_values,
   };
 
   let result = utils::run_tasks(

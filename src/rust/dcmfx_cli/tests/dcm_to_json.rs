@@ -51,7 +51,7 @@ fn with_stdout_output_and_strip_binary_values() {
     .arg(input_file)
     .arg("--output-filename")
     .arg("-")
-    .arg("--no-emit-binary-values")
+    .arg("--exclude-binary-values")
     .assert()
     .success();
 
@@ -70,7 +70,7 @@ fn with_stdout_output_and_strip_binary_values_pretty_print() {
     .arg(input_file)
     .arg("--output-filename")
     .arg("-")
-    .arg("--no-emit-binary-values")
+    .arg("--exclude-binary-values")
     .arg("--pretty")
     .assert()
     .success();
@@ -91,9 +91,9 @@ fn with_stdout_output_and_include_specific_binary_values() {
     .arg("--output-filename")
     .arg("-")
     .arg("--pretty")
-    .arg("--emit-binary-values")
+    .arg("--select-binary-value")
     .arg("00431029")
-    .arg("--emit-binary-values")
+    .arg("--select-binary-value")
     .arg("0043102A")
     .assert()
     .success();
