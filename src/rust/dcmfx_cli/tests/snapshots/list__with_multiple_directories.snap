@@ -1,8 +1,8 @@
 ---
 source: dcmfx_cli/tests/list.rs
 expression: "lines.join(\"\\n\")"
-snapshot_kind: text
 ---
+
 ../../../test/assets/fo-dicom/CR-ModalitySequenceLUT.dcm
 ../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm
 ../../../test/assets/fo-dicom/CT1_J2KI.dcm

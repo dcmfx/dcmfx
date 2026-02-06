@@ -3,7 +3,7 @@ name = "dcmfx_fuzz"
 edition = "2024"
 
 [dependencies]
-afl = "0.17.0"
+afl = "0.17.1"
 dcmfx = { path = "../dcmfx" }
 image = { version = "0.25.9", default-features = false, features = [
   "jpeg",

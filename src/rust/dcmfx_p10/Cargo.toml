@@ -16,9 +16,9 @@ async-trait = { version = "0.1.89", optional = true }
 byteorder = "1.5.0"
 dcmfx_character_set = { path = "../dcmfx_character_set", default-features = false }
 dcmfx_core = { path = "../dcmfx_core", default-features = false }
-flate2 = "1.1.6"
+flate2 = "1.1.9"
 futures = { version = "0.3.31", optional = true }
-miniz_oxide = "0.8.9"
+miniz_oxide = "0.9.0"
 tokio = { version = "1.48.0", features = [
   "fs",
   "io-util",

@@ -1,7 +1,6 @@
 ---
 source: dcmfx_cli/tests/modify.rs
 expression: get_stdout(assert)
-snapshot_kind: text
 ---
 (0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
 (0002,0002) UI Media Storage SOP Class UID          [    28 bytes] "1.2.840 … (Ultrasound Multi-frame Image Storage)

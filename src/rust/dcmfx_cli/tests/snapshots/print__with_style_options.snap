@@ -1,7 +1,6 @@
 ---
 source: dcmfx_cli/tests/print.rs
 expression: get_stdout(assert)
-snapshot_kind: text
 ---
 [34m(0002,0001) [32mOB [0m[1mFile Meta Information Version        [36m[     2 bytes] [0m[00 01]
 [34m(0002,0002) [32mUI [0m[1mMedia Storage SOP Class UID          [36m[    26 bytes] [0m"1.2.840.10008.5.1.4.1.1.7" (Secondary Capture Image Storage)

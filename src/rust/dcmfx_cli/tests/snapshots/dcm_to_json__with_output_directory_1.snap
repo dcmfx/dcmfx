@@ -1,7 +1,6 @@
 ---
 source: dcmfx_cli/tests/dcm_to_json.rs
 expression: "std::fs::read_to_string(&output_files[1]).unwrap()"
-snapshot_kind: text
 ---
 {
   "00020010": {

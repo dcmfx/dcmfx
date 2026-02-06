@@ -16,15 +16,15 @@ bytemuck = "1.24.0"
 byteorder = "1.5.0"
 dcmfx_core = { path = "../dcmfx_core", default-features = false }
 dcmfx_p10 = { path = "../dcmfx_p10", default-features = false }
-flate2 = "1.1.6"
+flate2 = "1.1.9"
 image = { version = "0.25.9", default-features = false, features = ["jpeg"] }
 jpeg-decoder = "0.3.2"
-jpeg-encoder = "0.6.1"
+jpeg-encoder = "0.7.0"
 jxl-oxide = "0.12.5"
-miniz_oxide = "0.8.9"
+miniz_oxide = "0.9.0"
 num-traits = "0.2.19"
-zune-core = "0.5.0"
-zune-jpeg = "0.5.5"
+zune-core = "0.5.1"
+zune-jpeg = "0.5.12"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm32-unknown-unknown-openbsd-libc = "0.2.0"
@@ -34,7 +34,7 @@ rand = { version = "0.9.2", features = ["small_rng"] }
 rayon = "1.11.0"
 
 [build-dependencies]
-cc = { version = "1.2.48", features = ["parallel"] }
+cc = { version = "1.2.55", features = ["parallel"] }
 glob = "0.3.3"
 
 [features]

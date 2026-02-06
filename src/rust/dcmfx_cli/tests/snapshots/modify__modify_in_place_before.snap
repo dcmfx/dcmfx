@@ -1,7 +1,6 @@
 ---
 source: dcmfx_cli/tests/modify.rs
 expression: get_stdout(assert)
-snapshot_kind: text
 ---
 (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0008) CS Image Type                           [    16 bytes] "ORIGINAL P …

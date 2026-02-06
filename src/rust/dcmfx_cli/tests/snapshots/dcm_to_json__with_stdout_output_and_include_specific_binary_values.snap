@@ -1,7 +1,6 @@
 ---
 source: dcmfx_cli/tests/dcm_to_json.rs
 expression: get_stdout(assert)
-snapshot_kind: text
 ---
 {
   "00020010": {

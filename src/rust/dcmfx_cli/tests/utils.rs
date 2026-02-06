@@ -67,7 +67,7 @@ pub fn get_stdout_and_stderr(assert: Assert) -> (String, String) {
 
 #[allow(dead_code)]
 pub async fn s3_get_object(key: &str) -> NamedTempFile {
-  use object_store::{ObjectStore, path::Path as ObjectPath};
+  use object_store::{ObjectStoreExt, path::Path as ObjectPath};
 
   let store = amazon_s3_store();
 
@@ -84,7 +84,7 @@ pub async fn s3_get_object(key: &str) -> NamedTempFile {
 
 #[allow(dead_code)]
 pub async fn s3_copy_object(src: &str, dst: &str) {
-  use object_store::{ObjectStore, path::Path as ObjectPath};
+  use object_store::{ObjectStoreExt, path::Path as ObjectPath};
 
   let store = amazon_s3_store();
 

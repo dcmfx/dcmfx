@@ -1,6 +1,8 @@
 use std::{path::PathBuf, sync::Arc};
 
-use object_store::{ObjectStore, path::Path as ObjectStorePath};
+use object_store::{
+  ObjectStore, ObjectStoreExt, path::Path as ObjectStorePath,
+};
 
 use dcmfx::p10::P10Error;
 

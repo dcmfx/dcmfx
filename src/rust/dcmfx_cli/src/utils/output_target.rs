@@ -6,7 +6,8 @@ use std::{
 };
 
 use object_store::{
-  MultipartUpload, ObjectStore, PutPayload, path::Path as ObjectStorePath,
+  MultipartUpload, ObjectStore, ObjectStoreExt, PutPayload,
+  path::Path as ObjectStorePath,
 };
 use tokio::{
   io::{AsyncWriteExt, BufWriter, stdout},

@@ -2,6 +2,7 @@
 source: dcmfx_cli/tests/list.rs
 expression: "lines.join(\"\\n\")"
 ---
+
 ../../../test/assets/other/SC_ybr_full_422_uncompressed.deflated_image_frame_compression.dcm
 ../../../test/assets/other/TestPattern_Palette.rle_lossless.dcm
 ../../../test/assets/other/TestPattern_Palette_16.jpeg_ls_lossless.dcm

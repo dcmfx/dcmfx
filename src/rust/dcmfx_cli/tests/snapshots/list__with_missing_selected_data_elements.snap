@@ -1,8 +1,8 @@
 ---
 source: dcmfx_cli/tests/list.rs
 expression: get_stderr(assert)
-snapshot_kind: text
 ---
+
 -----
 DICOM data error listing DICOM file '../../../test/assets/fo-dicom/DICOMDIR.dcm'
 
