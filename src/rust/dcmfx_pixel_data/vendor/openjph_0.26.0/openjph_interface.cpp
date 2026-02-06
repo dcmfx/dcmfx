@@ -6,11 +6,11 @@
 #include <vector>
 
 #include "./src/coding/ojph_block_encoder.h"
-#include "./src/common/ojph_base.h"
-#include "./src/common/ojph_codestream.h"
-#include "./src/common/ojph_file.h"
-#include "./src/common/ojph_mem.h"
-#include "./src/common/ojph_params.h"
+#include "./src/openjph/ojph_base.h"
+#include "./src/openjph/ojph_codestream.h"
+#include "./src/openjph/ojph_file.h"
+#include "./src/openjph/ojph_mem.h"
+#include "./src/openjph/ojph_params.h"
 
 // Callback function that receives compressed output bytes
 typedef void (*output_data_callback_t)(const void *data, uint32_t len,

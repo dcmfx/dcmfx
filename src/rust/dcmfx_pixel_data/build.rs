@@ -412,37 +412,37 @@ fn build_libjxl() {
 fn build_openjph() {
   compile(
     &[
-      "vendor/openjph_0.25.3/openjph_interface.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_codeblock_fun.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_codeblock.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_codestream_gen.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_codestream_local.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_codestream.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_params.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_precinct.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_resolution.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_subband.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_tile_comp.cpp",
-      "vendor/openjph_0.25.3/src/codestream/ojph_tile.cpp",
-      "vendor/openjph_0.25.3/src/coding/ojph_block_common.cpp",
-      "vendor/openjph_0.25.3/src/coding/ojph_block_decoder32.cpp",
-      "vendor/openjph_0.25.3/src/coding/ojph_block_decoder64.cpp",
-      "vendor/openjph_0.25.3/src/coding/ojph_block_encoder.cpp",
-      "vendor/openjph_0.25.3/src/others/ojph_arch.cpp",
-      "vendor/openjph_0.25.3/src/others/ojph_file.cpp",
-      "vendor/openjph_0.25.3/src/others/ojph_mem.cpp",
-      "vendor/openjph_0.25.3/src/others/ojph_message.cpp",
-      "vendor/openjph_0.25.3/src/transform/ojph_colour.cpp",
-      "vendor/openjph_0.25.3/src/transform/ojph_transform.cpp",
+      "vendor/openjph_0.26.0/openjph_interface.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_codeblock_fun.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_codeblock.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_codestream_gen.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_codestream_local.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_codestream.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_params.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_precinct.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_resolution.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_subband.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_tile_comp.cpp",
+      "vendor/openjph_0.26.0/src/codestream/ojph_tile.cpp",
+      "vendor/openjph_0.26.0/src/coding/ojph_block_common.cpp",
+      "vendor/openjph_0.26.0/src/coding/ojph_block_decoder32.cpp",
+      "vendor/openjph_0.26.0/src/coding/ojph_block_decoder64.cpp",
+      "vendor/openjph_0.26.0/src/coding/ojph_block_encoder.cpp",
+      "vendor/openjph_0.26.0/src/others/ojph_arch.cpp",
+      "vendor/openjph_0.26.0/src/others/ojph_file.cpp",
+      "vendor/openjph_0.26.0/src/others/ojph_mem.cpp",
+      "vendor/openjph_0.26.0/src/others/ojph_message.cpp",
+      "vendor/openjph_0.26.0/src/transform/ojph_colour.cpp",
+      "vendor/openjph_0.26.0/src/transform/ojph_transform.cpp",
     ],
-    &["vendor/openjph_0.25.3/src/common"],
+    &["vendor/openjph_0.26.0/src/openjph"],
     &[],
     &[],
     "dcmfx_pixel_data_openjph",
   );
 
   compile(
-    &["vendor/openjph_0.25.3/src/others/ojph_mem.c"],
+    &["vendor/openjph_0.26.0/src/others/ojph_mem.c"],
     &[],
     &[],
     &[],
@@ -452,11 +452,11 @@ fn build_openjph() {
   if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap() == "x86_64" {
     compile(
       &[
-        "vendor/openjph_0.25.3/src/codestream/ojph_codestream_avx.cpp",
-        "vendor/openjph_0.25.3/src/transform/ojph_colour_avx.cpp",
-        "vendor/openjph_0.25.3/src/transform/ojph_transform_avx.cpp",
+        "vendor/openjph_0.26.0/src/codestream/ojph_codestream_avx.cpp",
+        "vendor/openjph_0.26.0/src/transform/ojph_colour_avx.cpp",
+        "vendor/openjph_0.26.0/src/transform/ojph_transform_avx.cpp",
       ],
-      &["vendor/openjph_0.25.3/src/common"],
+      &["vendor/openjph_0.26.0/src/openjph"],
       &[],
       &[BuildFlag::ArchitectureAVX],
       "dcmfx_pixel_data_openjph_avx",
@@ -464,13 +464,13 @@ fn build_openjph() {
 
     compile(
       &[
-        "vendor/openjph_0.25.3/src/codestream/ojph_codestream_avx2.cpp",
-        "vendor/openjph_0.25.3/src/coding/ojph_block_encoder_avx2.cpp",
-        "vendor/openjph_0.25.3/src/coding/ojph_block_decoder_avx2.cpp",
-        "vendor/openjph_0.25.3/src/transform/ojph_colour_avx2.cpp",
-        "vendor/openjph_0.25.3/src/transform/ojph_transform_avx2.cpp",
+        "vendor/openjph_0.26.0/src/codestream/ojph_codestream_avx2.cpp",
+        "vendor/openjph_0.26.0/src/coding/ojph_block_encoder_avx2.cpp",
+        "vendor/openjph_0.26.0/src/coding/ojph_block_decoder_avx2.cpp",
+        "vendor/openjph_0.26.0/src/transform/ojph_colour_avx2.cpp",
+        "vendor/openjph_0.26.0/src/transform/ojph_transform_avx2.cpp",
       ],
-      &["vendor/openjph_0.25.3/src/common"],
+      &["vendor/openjph_0.26.0/src/openjph"],
       &[],
       &[BuildFlag::ArchitectureAVX2],
       "dcmfx_pixel_data_openjph_avx2",
@@ -478,10 +478,10 @@ fn build_openjph() {
 
     compile(
       &[
-        "vendor/openjph_0.25.3/src/coding/ojph_block_encoder_avx512.cpp",
-        "vendor/openjph_0.25.3/src/transform/ojph_transform_avx512.cpp",
+        "vendor/openjph_0.26.0/src/coding/ojph_block_encoder_avx512.cpp",
+        "vendor/openjph_0.26.0/src/transform/ojph_transform_avx512.cpp",
       ],
-      &["vendor/openjph_0.25.3/src/common"],
+      &["vendor/openjph_0.26.0/src/openjph"],
       &[],
       &[BuildFlag::ArchitectureAVX512],
       "dcmfx_pixel_data_openjph_avx512",
@@ -489,11 +489,11 @@ fn build_openjph() {
 
     compile(
       &[
-        "vendor/openjph_0.25.3/src/codestream/ojph_codestream_sse.cpp",
-        "vendor/openjph_0.25.3/src/transform/ojph_colour_sse.cpp",
-        "vendor/openjph_0.25.3/src/transform/ojph_transform_sse.cpp",
+        "vendor/openjph_0.26.0/src/codestream/ojph_codestream_sse.cpp",
+        "vendor/openjph_0.26.0/src/transform/ojph_colour_sse.cpp",
+        "vendor/openjph_0.26.0/src/transform/ojph_transform_sse.cpp",
       ],
-      &["vendor/openjph_0.25.3/src/common"],
+      &["vendor/openjph_0.26.0/src/openjph"],
       &[],
       &[BuildFlag::ArchitectureSSE],
       "dcmfx_pixel_data_openjph_sse",
@@ -501,19 +501,19 @@ fn build_openjph() {
 
     compile(
       &[
-        "vendor/openjph_0.25.3/src/codestream/ojph_codestream_sse2.cpp",
-        "vendor/openjph_0.25.3/src/transform/ojph_colour_sse2.cpp",
-        "vendor/openjph_0.25.3/src/transform/ojph_transform_sse2.cpp",
+        "vendor/openjph_0.26.0/src/codestream/ojph_codestream_sse2.cpp",
+        "vendor/openjph_0.26.0/src/transform/ojph_colour_sse2.cpp",
+        "vendor/openjph_0.26.0/src/transform/ojph_transform_sse2.cpp",
       ],
-      &["vendor/openjph_0.25.3/src/common"],
+      &["vendor/openjph_0.26.0/src/openjph"],
       &[],
       &[BuildFlag::ArchitectureSSE2],
       "dcmfx_pixel_data_openjph_sse2",
     );
 
     compile(
-      &["vendor/openjph_0.25.3/src/coding/ojph_block_decoder_ssse3.cpp"],
-      &["vendor/openjph_0.25.3/src/common"],
+      &["vendor/openjph_0.26.0/src/coding/ojph_block_decoder_ssse3.cpp"],
+      &["vendor/openjph_0.26.0/src/openjph"],
       &[],
       &[BuildFlag::ArchitectureSSSE3],
       "dcmfx_pixel_data_openjph_ssse3",
