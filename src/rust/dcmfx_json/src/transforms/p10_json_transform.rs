@@ -16,7 +16,8 @@ use base64::prelude::*;
 
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataError, DataSet, DataSetPath,
-  RcByteSlice, ValueRepresentation, dictionary,
+  RcByteSlice, ValueRepresentation, data_element_value::decimal_string,
+  dictionary,
 };
 use dcmfx_p10::{P10Error, P10Token};
 
@@ -856,14 +857,37 @@ impl P10JsonTransform {
       ValueRepresentation::SignedLong
       | ValueRepresentation::SignedShort
       | ValueRepresentation::UnsignedLong
-      | ValueRepresentation::UnsignedShort
-      | ValueRepresentation::IntegerString => Ok(
+      | ValueRepresentation::UnsignedShort => Ok(
         value
           .get_ints::<i64>()?
           .iter()
           .map(|i| i.to_string())
           .collect(),
       ),
+
+      // Integer string value representations. Try to parse as ints, which is
+      // what's valid according to the the specification. However, if int
+      // parsing fails then also try DecimalString parsing to see if that gives
+      // finite values. If it does, then return them. This is done to improve
+      // compatibility.
+      ValueRepresentation::IntegerString => {
+        let ints = value.get_ints::<i64>();
+
+        match ints {
+          Ok(ints) => Ok(ints.iter().map(|i| i.to_string()).collect()),
+
+          Err(e) => {
+            if let Ok(value_bytes) = value.bytes()
+              && let Ok(floats) = decimal_string::from_bytes(value_bytes)
+              && floats.iter().all(|f| f.is_finite())
+            {
+              return Ok(floats.iter().map(|f| format!("{f:?}")).collect());
+            }
+
+            Err(e)
+          }
+        }
+      }
 
       // Binary signed/unsigned big integer value representations
       ValueRepresentation::SignedVeryLong

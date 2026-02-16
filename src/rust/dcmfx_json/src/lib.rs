@@ -297,4 +297,27 @@ mod tests {
       ),
     ]
   }
+
+  #[test]
+  fn data_set_with_integer_string_that_has_decimal_value_to_json() {
+    let mut ds = DataSet::new();
+
+    ds.insert(
+      DataElementTag::new(0x0008, 0x0008),
+      DataElementValue::new_binary_unchecked(
+        ValueRepresentation::IntegerString,
+        RcByteSlice::from(b"1.2".to_vec()),
+      ),
+    );
+
+    assert_eq!(
+      serde_json::from_str::<serde_json::Value>(
+        &ds.to_json(JSON_CONFIG).unwrap()
+      )
+      .unwrap(),
+      serde_json::json!({
+        "00080008": { "vr": "IS", "Value": [1.2] },
+      }),
+    );
+  }
 }
