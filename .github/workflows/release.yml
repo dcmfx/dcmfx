@@ -204,7 +204,7 @@ jobs:
           Version:      ${{ needs.check_semantic_release.outputs.new_release_version }}
           Architecture: ${{ matrix.deb-arch }}
           Section:      utils
-          Maintainer:   Richard Viney <richard.viney@gmail.com>
+          Maintainer:   HeartLab Ltd. <dcmfx@heartlab.com>
           Description:  CLI tool for working with DICOM and DICOM JSON
           Homepage:     https://dcmfx.github.io
           " > package/DEBIAN/control
@@ -228,7 +228,7 @@ jobs:
           Release:  1%{?dist}
           Summary:  CLI tool for working with DICOM and DICOM JSON
           License:  AGPL-3.0-only
-          Packager: Richard Viney <richard.viney@gmail.com>
+          Packager: HeartLab Ltd. <dcmfx@heartlab.com>
           URL:      https://dcmfx.github.io
 
           %description
