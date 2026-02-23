@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx_anonymize"
-version = "0.41.2"
+version = "0.41.3"
 description = "DCMfx anonymize library"
 
 repository.workspace = true
