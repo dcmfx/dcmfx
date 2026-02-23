@@ -11,8 +11,8 @@
 //!
 //! 2. The active specific character set that should be used to decode string
 //!    values that aren't in UTF-8. This is set/updated by the *'(0008,0005)
-//!    SpecificCharacterSet'* tag, most commonly in the root data set, but can be
-//!    overridden in a sequence item.
+//!    SpecificCharacterSet'* tag, most commonly in the root data set, but can
+//!    be overridden in a sequence item.
 //!
 //! 3. The value of data elements that have been read and which are needed in
 //!    order to determine the correct VR of subsequent data elements when the

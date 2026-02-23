@@ -823,26 +823,6 @@ impl P10ReadContext {
       transfer_syntax.vr_serialization
     };
 
-    // File Meta Information data elements aren't allowed in the root of the
-    // main data set. They are allowed in sequence items only because this has
-    // been observed in the wild (specifically TransferSyntaxUID as the first
-    // data element in an item), however this is not valid according to the
-    // spec.
-    if tag.is_file_meta_information()
-      && self.path.is_root()
-      && !matches!(self.next_action, NextAction::ReadFileMetaInformation { .. })
-    {
-      return Err(P10Error::DataInvalid {
-        when: "Reading data element header".to_string(),
-        details: format!(
-          "File Meta Information data element '{tag}' found in the main data \
-           set"
-        ),
-        path: DataSetPath::new_with_data_element(tag),
-        offset: self.stream.bytes_read(),
-      });
-    }
-
     match vr_serialization {
       transfer_syntax::VrSerialization::VrExplicit => {
         self.read_explicit_vr_and_length(tag)
