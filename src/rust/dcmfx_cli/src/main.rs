@@ -9,8 +9,8 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 use commands::{
-  dcm_to_json_command, get_pixel_data_command, json_to_dcm_command,
-  list_command, modify_command, print_command,
+  create_nrrd_command, dcm_to_json_command, get_pixel_data_command,
+  json_to_dcm_command, list_command, modify_command, print_command,
 };
 
 #[derive(Parser)]
@@ -52,6 +52,9 @@ enum Commands {
 
   #[command(about = list_command::ABOUT)]
   List(list_command::ListArgs),
+
+  #[command(about = create_nrrd_command::ABOUT)]
+  CreateNRRD(create_nrrd_command::CreateNRRDArgs),
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -67,6 +70,7 @@ async fn main() {
     Commands::JsonToDcm(args) => json_to_dcm_command::run(args).await,
     Commands::DcmToJson(args) => dcm_to_json_command::run(args).await,
     Commands::List(args) => list_command::run(args).await,
+    Commands::CreateNRRD(args) => create_nrrd_command::run(args).await,
   };
 
   if cli.print_stats {
