@@ -9,6 +9,7 @@ use dcmfx::p10::P10Error;
 /// Defines an input source for a CLI command that abstracts over the different
 /// locations input can come from.
 ///
+#[derive(Clone, Debug)]
 pub enum InputSource {
   /// An input source that reads from stdin.
   Stdin,
