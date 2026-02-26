@@ -66,20 +66,7 @@ impl IodModule for ImagePixelModule {
       return true;
     }
 
-    tag == dictionary::SAMPLES_PER_PIXEL.tag
-      || tag == dictionary::PHOTOMETRIC_INTERPRETATION.tag
-      || tag == dictionary::PLANAR_CONFIGURATION.tag
-      || tag == dictionary::ROWS.tag
-      || tag == dictionary::COLUMNS.tag
-      || tag == dictionary::BITS_ALLOCATED.tag
-      || tag == dictionary::BITS_STORED.tag
-      || tag == dictionary::HIGH_BIT.tag
-      || tag == dictionary::PIXEL_REPRESENTATION.tag
-      || tag == dictionary::PIXEL_ASPECT_RATIO.tag
-      || tag == dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag
-      || tag == dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag
-      || tag == dictionary::ICC_PROFILE.tag
-      || tag == dictionary::COLOR_SPACE.tag
+    Self::TAGS.contains(&tag)
   }
 
   fn iod_module_highest_tag() -> DataElementTag {
@@ -163,6 +150,25 @@ impl IodModule for ImagePixelModule {
 }
 
 impl ImagePixelModule {
+  /// The data element tags used when reading [`ImagePixelModule`].
+  ///
+  pub const TAGS: [DataElementTag; 14] = [
+    dictionary::SAMPLES_PER_PIXEL.tag,
+    dictionary::PHOTOMETRIC_INTERPRETATION.tag,
+    dictionary::PLANAR_CONFIGURATION.tag,
+    dictionary::ROWS.tag,
+    dictionary::COLUMNS.tag,
+    dictionary::BITS_ALLOCATED.tag,
+    dictionary::BITS_STORED.tag,
+    dictionary::HIGH_BIT.tag,
+    dictionary::PIXEL_REPRESENTATION.tag,
+    dictionary::PIXEL_ASPECT_RATIO.tag,
+    dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag,
+    dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag,
+    dictionary::ICC_PROFILE.tag,
+    dictionary::COLOR_SPACE.tag,
+  ];
+
   /// Creates a new [`ImagePixelModule`] with the given values. A number of
   /// validations are performed to ensure the values are internally consistent.
   ///
