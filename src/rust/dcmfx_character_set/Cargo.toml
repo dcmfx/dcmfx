@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx_character_set"
-version = "0.41.3"
+version = "0.41.4"
 description = "DCMfx character set library"
 
 repository.workspace = true

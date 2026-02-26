@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx_pixel_data"
-version = "0.41.3"
+version = "0.41.4"
 description = "DCMfx pixel data library"
 
 repository.workspace = true
