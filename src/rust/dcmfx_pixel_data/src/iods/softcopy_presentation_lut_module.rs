@@ -119,8 +119,9 @@ impl PresentationLutShape {
     }
 
     match data_set.get_string(tag)? {
-      "IDENTITY" => Ok(Self::Identity),
+      "" | "IDENTITY" => Ok(Self::Identity),
       "INVERSE" => Ok(Self::Inverse),
+
       value => Err(
         DataError::new_value_invalid(format!(
           "Presentation LUT shape value of '{value}' is invalid"
