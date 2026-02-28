@@ -3,11 +3,11 @@
 
 packages = [
   { name = "bigi", version = "4.1.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "bigi", source = "hex", outer_checksum = "44FEDF1DF5C1F426A80B67C32B976D0828D66524E11BDC2DD22B78D37C883BA7" },
-  { name = "dcmfx_character_set", version = "0.41.4", build_tools = ["gleam"], requirements = ["gleam_stdlib"], source = "local", path = "../dcmfx_character_set" },
-  { name = "dcmfx_core", version = "0.41.4", build_tools = ["gleam"], requirements = ["bigi", "envoy", "gleam_regexp", "gleam_stdlib", "ieee_float", "term_size"], source = "local", path = "../dcmfx_core" },
-  { name = "dcmfx_json", version = "0.41.4", build_tools = ["gleam"], requirements = ["bigi", "dcmfx_core", "dcmfx_p10", "gleam_json", "gleam_stdlib", "ieee_float"], source = "local", path = "../dcmfx_json" },
-  { name = "dcmfx_p10", version = "0.41.4", build_tools = ["gleam"], requirements = ["dcmfx_character_set", "dcmfx_core", "file_streams", "gleam_deque", "gleam_stdlib"], source = "local", path = "../dcmfx_p10" },
-  { name = "dcmfx_pixel_data", version = "0.41.4", build_tools = ["gleam"], requirements = ["bigi", "dcmfx_core", "dcmfx_p10", "gleam_deque", "gleam_stdlib"], source = "local", path = "../dcmfx_pixel_data" },
+  { name = "dcmfx_character_set", version = "0.42.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], source = "local", path = "../dcmfx_character_set" },
+  { name = "dcmfx_core", version = "0.42.0", build_tools = ["gleam"], requirements = ["bigi", "envoy", "gleam_regexp", "gleam_stdlib", "ieee_float", "term_size"], source = "local", path = "../dcmfx_core" },
+  { name = "dcmfx_json", version = "0.42.0", build_tools = ["gleam"], requirements = ["bigi", "dcmfx_core", "dcmfx_p10", "gleam_json", "gleam_stdlib", "ieee_float"], source = "local", path = "../dcmfx_json" },
+  { name = "dcmfx_p10", version = "0.42.0", build_tools = ["gleam"], requirements = ["dcmfx_character_set", "dcmfx_core", "file_streams", "gleam_deque", "gleam_stdlib"], source = "local", path = "../dcmfx_p10" },
+  { name = "dcmfx_pixel_data", version = "0.42.0", build_tools = ["gleam"], requirements = ["bigi", "dcmfx_core", "dcmfx_p10", "gleam_deque", "gleam_stdlib"], source = "local", path = "../dcmfx_pixel_data" },
   { name = "envoy", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "envoy", source = "hex", outer_checksum = "850DA9D29D2E5987735872A2B5C81035146D7FE19EFC486129E44440D03FD832" },
   { name = "file_streams", version = "1.7.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "file_streams", source = "hex", outer_checksum = "62757932B5FAC14FC9D0EE69BC4694DC6EA9F0FE6E198F695711C4FCAC1F7A26" },
   { name = "filepath", version = "1.1.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "filepath", source = "hex", outer_checksum = "B06A9AF0BF10E51401D64B98E4B627F1D2E48C154967DA7AF4D0914780A6D40A" },
