@@ -73,7 +73,9 @@ jobs:
 
     services:
       localstack:
-        image: ${{ (matrix.runs-on == 'ubuntu-24.04') && 'localstack/localstack:s3-latest' || '' }}
+        image: ${{ (matrix.runs-on == 'ubuntu-24.04') && 'localstack/localstack' || '' }}
+        env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
         ports:
           - 4566:4566
 
