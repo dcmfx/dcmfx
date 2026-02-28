@@ -69,6 +69,20 @@ pub fn decode_monochrome(
 
     (
       PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
+      jpeg_decoder::PixelFormat::L8,
+    ) => {
+      let data = bytemuck::cast_slice(&pixels).to_vec();
+      MonochromeImage::new_i8(width, height, data, bits_stored, is_monochrome1)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (
+      PhotometricInterpretation::Monochrome1 {
         pixel_representation: PixelRepresentation::Unsigned,
       }
       | PhotometricInterpretation::Monochrome2 {
@@ -78,6 +92,20 @@ pub fn decode_monochrome(
     ) => {
       let data = bytemuck::cast_slice(&pixels).to_vec();
       MonochromeImage::new_u16(width, height, data, bits_stored, is_monochrome1)
+        .map_err(PixelDataDecodeError::ImageCreationFailed)
+    }
+
+    (
+      PhotometricInterpretation::Monochrome1 {
+        pixel_representation: PixelRepresentation::Signed,
+      }
+      | PhotometricInterpretation::Monochrome2 {
+        pixel_representation: PixelRepresentation::Signed,
+      },
+      jpeg_decoder::PixelFormat::L16,
+    ) => {
+      let data = bytemuck::cast_slice(&pixels).to_vec();
+      MonochromeImage::new_i16(width, height, data, bits_stored, is_monochrome1)
         .map_err(PixelDataDecodeError::ImageCreationFailed)
     }
 

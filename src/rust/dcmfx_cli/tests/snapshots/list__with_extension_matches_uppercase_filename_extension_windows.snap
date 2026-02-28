@@ -18,4 +18,5 @@ expression: "lines.join(\"\\n\")"
 ..\..\..\test\assets\other\name with space.dcm
 ..\..\..\test\assets\other\ultrasound_jpeg_xl.dcm
 ..\..\..\test\assets\other\uppercase_extension.DCM
+..\..\..\test\assets\other\view0010_anon.dcm
 ..\..\..\test\assets\other\vr_2022.dcm

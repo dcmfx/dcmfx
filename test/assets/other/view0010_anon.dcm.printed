@@ -1,0 +1,111 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840.100 … (MR Image Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    54 bytes] "1.2.840.113619.2.410.2807.1588 …
+(0002,0010) UI Transfer Syntax UID                  [    22 bytes] "1.2.840 … (JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 [Selection Value 1]))
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0.1.3680043.10.1462.2.0"
+(0002,0013) SH Implementation Version Name          [    12 bytes] "DCMfx 0.41.2"
+(0002,0016) AE Source Application Entity Title      [    14 bytes] "ALI_STORE_SCP"
+(0002,0100) UI Private Information Creator UID      [    16 bytes] "1.2.840.113711.1"
+(0002,0102) OB Private Information                  [    28 bytes] [41 4C 49 20 44 49 43 4F 4D 20  …
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0008) CS Image Type                           [    22 bytes] "ORIGINAL", "PRIMARY", "OTHER"
+(0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840.100 … (MR Image Storage)
+(0008,0018) UI SOP Instance UID                     [    54 bytes] "1.2.840.113619.2.410.2807.1588 …
+(0008,0020) DA Study Date                           [     8 bytes] 2026-02-06
+(0008,0021) DA Series Date                          [     8 bytes] 2026-02-06
+(0008,0022) DA Acquisition Date                     [     8 bytes] 2026-02-06
+(0008,0023) DA Content Date                         [     8 bytes] 2026-02-06
+(0008,0030) TM Study Time                           [    14 bytes] 14:11:35
+(0008,0031) TM Series Time                          [     6 bytes] 14:11:35
+(0008,0032) TM Acquisition Time                     [     6 bytes] 14:11:35
+(0008,0033) TM Content Time                         [     6 bytes] 14:11:35
+(0008,0051) SQ Issuer of Accession Number Sequence
+  (FFFE,E000) Item
+    (0040,0031) UT Local Namespace Entity ID            [     2 bytes] "EH"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,0060) CS Modality                             [     2 bytes] "MR" (Magnetic Resonance)
+(0008,0070) LO Manufacturer                         [    18 bytes] "GE MEDICAL SYSTEMS"
+(0008,1090) LO Manufacturer's Model Name            [    14 bytes] "Optima MR450w"
+(0008,1111) SQ Referenced Performed Procedure Step Sequence
+  (FFFE,E000) Item
+    (0008,1150) UI Referenced SOP Class UID             [    24 bytes] "1.2.840 … (Modality Performed Procedure Step SOP Class)
+    (0008,1155) UI Referenced SOP Instance UID          [    60 bytes] "1.2.840.113619.6.410.25932 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0008,2111) ST Derivation Description               [    36 bytes] "2:1 JPEGLOSSLESSPROCFIRSTORDER …
+(0008,2218) SQ Anatomic Region Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     8 bytes] "T-D1100"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "SRT"
+    (0008,0104) LO Code Meaning                         [     4 bytes] "Head"
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0018,0015) CS Body Part Examined                   [     4 bytes] "HEAD"
+(0018,0020) CS Scanning Sequence                    [     2 bytes] "GR" (Gradient Recalled)
+(0018,0021) CS Sequence Variant                     [     6 bytes] "SS", "SK"
+(0018,0022) CS Scan Options                         [    22 bytes] "FAST_GEMS", "SEQ_GEMS", "PFF"
+(0018,0023) CS MR Acquisition Type                  [     2 bytes] "2D"
+(0018,0025) CS Angio Flag                           [     2 bytes] "N"
+(0018,0050) DS Slice Thickness                      [     2 bytes] "10"
+(0018,0080) DS Repetition Time                      [     6 bytes] "5.108"
+(0018,0081) DS Echo Time                            [     6 bytes] "1.428"
+(0018,0083) DS Number of Averages                   [     2 bytes] "1"
+(0018,0084) DS Imaging Frequency                    [    10 bytes] "63.906357"
+(0018,0085) SH Imaged Nucleus                       [     2 bytes] "1H"
+(0018,0086) IS Echo Number(s)                       [     2 bytes] "1"
+(0018,0087) DS Magnetic Field Strength              [     4 bytes] "1.5"
+(0018,0088) DS Spacing Between Slices               [     2 bytes] "10"
+(0018,0091) IS Echo Train Length                    [     2 bytes] "1"
+(0018,0093) DS Percent Sampling                     [     4 bytes] "100"
+(0018,0094) DS Percent Phase Field of View          [     4 bytes] "100"
+(0018,0095) DS Pixel Bandwidth                      [     8 bytes] "244.141"
+(0018,1000) LO Device Serial Number                 [    16 bytes] "00000000978287MR"
+(0018,1020) LO Software Versions                    [    44 bytes] "27", "LX", "MR Software releas …
+(0018,1088) IS Heart Rate                           [     2 bytes] "0"
+(0018,1090) IS Cardiac Number of Images             [     2 bytes] "0"
+(0018,1094) IS Trigger Window                       [     2 bytes] "0"
+(0018,1100) DS Reconstruction Diameter              [     4 bytes] "240"
+(0018,1250) SH Receive Coil Name                    [     8 bytes] "Head 24"
+(0018,1310) US Acquisition Matrix                   [     8 bytes] 0, 256, 128, 0
+(0018,1312) CS In-plane Phase Encoding Direction    [     4 bytes] "ROW"
+(0018,1314) DS Flip Angle                           [     2 bytes] "30"
+(0018,1315) CS Variable Flip Angle Flag             [     2 bytes] "N"
+(0018,1316) DS SAR                                  [     8 bytes] "0.181652"
+(0018,5100) CS Patient Position                     [     4 bytes] "HFS" (Head First-Supine)
+(0020,000D) UI Study Instance UID                   [    60 bytes] "1.2.840.113711.1817.1.11604.78 …
+(0020,000E) UI Series Instance UID                  [    54 bytes] "1.2.840.113619.2.410.2807.1588 …
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0012) IS Acquisition Number                   [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "10"
+(0020,0032) DS Image Position (Patient)             [    20 bytes] "-119.531", "-159.531", "20"
+(0020,0037) DS Image Orientation (Patient)          [    14 bytes] "1", "-0", "0", "-0", "1", "0"
+(0020,0052) UI Frame of Reference UID               [    54 bytes] "1.2.840.113619.2.410.2807.1588 …
+(0020,0060) CS Laterality                           [     0 bytes] ""
+(0020,1002) IS Images in Acquisition                [     2 bytes] "45"
+(0020,1040) LO Position Reference Indicator         [     0 bytes] ""
+(0020,1041) DS Slice Location                       [     2 bytes] "20"
+(0028,0002) US Samples per Pixel                    [     2 bytes] 1
+(0028,0004) CS Photometric Interpretation           [    12 bytes] "MONOCHROME2"
+(0028,0010) US Rows                                 [     2 bytes] 256
+(0028,0011) US Columns                              [     2 bytes] 256
+(0028,0030) DS Pixel Spacing                        [    14 bytes] "0.9375", "0.9375"
+(0028,0100) US Bits Allocated                       [     2 bytes] 16
+(0028,0101) US Bits Stored                          [     2 bytes] 16
+(0028,0102) US High Bit                             [     2 bytes] 15
+(0028,0103) US Pixel Representation                 [     2 bytes] 1
+(0028,0106) SS Smallest Image Pixel Value           [     2 bytes] 0
+(0028,0107) SS Largest Image Pixel Value            [     2 bytes] 900
+(0028,1050) DS Window Center                        [     4 bytes] "450"
+(0028,1051) DS Window Width                         [     4 bytes] "900"
+(0028,2110) CS Lossy Image Compression              [     2 bytes] "00" (Image has not been subjected to lossy compression)
+(0040,0242) SH Performed Station Name               [     4 bytes] "MRS1"
+(0040,0243) SH Performed Location                   [     2 bytes] "MR"
+(0040,0244) DA Performed Procedure Step Start Date  [     8 bytes] 2026-02-06
+(0040,0245) TM Performed Procedure Step Start Time  [     6 bytes] 14:09:28
+(0040,0253) SH Performed Procedure Step ID          [    14 bytes] "645.1770404968"
+(0040,0254) LO Performed Procedure Step Description  [    20 bytes] "MRI Brain w/o&w Gad"
+(7FE0,0010) OB Pixel Data
+  (FFFE,E000) Item                                    [     4 bytes] [00 00 00 00]
+  (FFFE,E000) Item                                    [ 57848 bytes] [FF D8 FF E0 00 0F 4C 4A 49 …]
+(FFFE,E0DD) Sequence Delimitation Item
