@@ -1,5 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::ToString, vec::Vec};
+use zune_jpeg::SampleRatios;
 
 use crate::{
   ColorImage, ColorSpace, MonochromeImage, PixelDataDecodeError,
@@ -48,7 +49,7 @@ pub fn decode_monochrome(
       },
       BitsAllocated::Eight,
     ) => {
-      let pixels = decode(
+      let (pixels, _) = decode(
         image_pixel_module,
         data,
         zune_core::colorspace::ColorSpace::Luma,
@@ -93,19 +94,31 @@ pub fn decode_color(
       PhotometricInterpretation::Rgb | PhotometricInterpretation::YbrFull422,
       BitsAllocated::Eight,
     ) => {
-      let (zune_color_space, output_color_space) =
+      let zune_color_space =
         match image_pixel_module.photometric_interpretation() {
           PhotometricInterpretation::Rgb => {
-            (zune_core::colorspace::ColorSpace::RGB, ColorSpace::Rgb)
+            zune_core::colorspace::ColorSpace::RGB
           }
-          PhotometricInterpretation::YbrFull422 => (
-            zune_core::colorspace::ColorSpace::YCbCr,
-            ColorSpace::Ybr { is_422: true },
-          ),
+          PhotometricInterpretation::YbrFull422 => {
+            zune_core::colorspace::ColorSpace::YCbCr
+          }
           _ => unreachable!(),
         };
 
-      let pixels = decode(image_pixel_module, data, zune_color_space)?;
+      let (pixels, sample_ratios) =
+        decode(image_pixel_module, data, zune_color_space)?;
+
+      let output_color_space =
+        if image_pixel_module.photometric_interpretation().is_rgb() {
+          ColorSpace::Rgb
+        } else {
+          // For YBR, look at the JPEG's sample ratios to determine whether YBR
+          // 422 is in use. The photometric intepretation isn't always reliable.
+          match sample_ratios {
+            SampleRatios::H => ColorSpace::Ybr { is_422: true },
+            _ => ColorSpace::Ybr { is_422: false },
+          }
+        };
 
       ColorImage::new_u8(
         image_pixel_module.columns(),
@@ -134,7 +147,7 @@ fn decode(
   image_pixel_module: &ImagePixelModule,
   data: &[u8],
   color_space: zune_core::colorspace::ColorSpace,
-) -> Result<Vec<u8>, PixelDataDecodeError> {
+) -> Result<(Vec<u8>, SampleRatios), PixelDataDecodeError> {
   let mut decoder =
     zune_jpeg::JpegDecoder::new(zune_core::bytestream::ZCursor::new(data));
 
@@ -157,9 +170,12 @@ fn decode(
     });
   }
 
-  decoder
-    .decode()
-    .map_err(|e| PixelDataDecodeError::DataInvalid {
-      details: format!("JPEG decode failed with '{e}'"),
-    })
+  let pixels =
+    decoder
+      .decode()
+      .map_err(|e| PixelDataDecodeError::DataInvalid {
+        details: format!("JPEG decode failed with '{e}'"),
+      })?;
+
+  Ok((pixels, decoder.info().unwrap().sample_ratio))
 }

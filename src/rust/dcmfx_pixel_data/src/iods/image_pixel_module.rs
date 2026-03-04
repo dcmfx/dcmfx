@@ -205,16 +205,6 @@ impl ImagePixelModule {
       )));
     }
 
-    // Check that the image width is even when using YBR 422
-    if photometric_interpretation == PhotometricInterpretation::YbrFull422
-      && columns % 2 == 1
-    {
-      return Err(DataError::new_value_invalid(format!(
-        "Uneven width '{columns}' is not allowed with the YBR 422 photometric \
-         interpretation"
-      )));
-    }
-
     let image_pixel_module = Self {
       samples_per_pixel,
       photometric_interpretation,
