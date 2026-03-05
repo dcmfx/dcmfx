@@ -102,12 +102,6 @@ impl ColorImage {
       return Err("Color image u8 bits stored must be <= 8");
     }
 
-    if (color_space == ColorSpace::Ybr { is_422: true }) && width % 2 == 1 {
-      return Err(
-        "Color image in the YBR 422 color space must have even width",
-      );
-    }
-
     Ok(Self {
       width,
       height,
@@ -134,12 +128,6 @@ impl ColorImage {
       return Err("Color image u8 bits stored must be <= 16");
     }
 
-    if (color_space == ColorSpace::Ybr { is_422: true }) && width % 2 == 1 {
-      return Err(
-        "Color image in the YBR 422 color space must have even width",
-      );
-    }
-
     Ok(Self {
       width,
       height,
@@ -164,12 +152,6 @@ impl ColorImage {
 
     if bits_stored == 0 || bits_stored > 32 {
       return Err("Color image u8 bits stored must be <= 32");
-    }
-
-    if (color_space == ColorSpace::Ybr { is_422: true }) && width % 2 == 1 {
-      return Err(
-        "Color image in the YBR 422 color space must have even width",
-      );
     }
 
     Ok(Self {
@@ -525,12 +507,7 @@ impl ColorImage {
   /// An error is returned if the width of this color image is odd, as YBR 422
   /// requires even width.
   ///
-  #[allow(clippy::result_unit_err)]
-  pub fn convert_to_ybr_422_color_space(&mut self) -> Result<(), ()> {
-    if self.width() % 2 == 1 {
-      return Err(());
-    }
-
+  pub fn convert_to_ybr_422_color_space(&mut self) {
     self.convert_to_ybr_color_space();
 
     // Ensure YBR 422 data has identical Cb and Cr values
@@ -579,8 +556,6 @@ impl ColorImage {
 
       _ => (),
     }
-
-    Ok(())
   }
 
   /// Crops this color image to the specified rectangle.

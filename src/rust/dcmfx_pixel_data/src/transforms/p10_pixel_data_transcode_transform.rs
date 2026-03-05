@@ -1123,12 +1123,7 @@ impl TranscodeImageDataFunctions {
         // If the output image pixel module is using YBR_FULL_422 then convert
         // the color image
         if photometric_interpretation.is_ybr_full_422() {
-          image.convert_to_ybr_422_color_space().map_err(|_| {
-            P10PixelDataTranscodeTransformError::NotSupported {
-              details: "Can't convert to YBR_FULL_422 because width is odd"
-                .to_string(),
-            }
-          })?;
+          image.convert_to_ybr_422_color_space();
         }
 
         // Crop image data
