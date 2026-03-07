@@ -20,11 +20,14 @@ pub async fn object_url_to_store_and_path(
     return Ok((store, path.strip_prefix("/").unwrap_or(path).into()));
   }
 
-  let scheme = match &url[..5] {
-    "s3://" => ObjectStoreScheme::AmazonS3,
-    "gs://" => ObjectStoreScheme::GoogleCloudStorage,
-    "az://" => ObjectStoreScheme::AzureBlobStorage,
-    _ => return Err(()),
+  let scheme = if url.starts_with("s3://") {
+    ObjectStoreScheme::AmazonS3
+  } else if url.starts_with("gs://") {
+    ObjectStoreScheme::GoogleCloudStorage
+  } else if url.starts_with("az://") {
+    ObjectStoreScheme::AzureBlobStorage
+  } else {
+    return Err(());
   };
 
   let url = &url[5..];
