@@ -7,7 +7,7 @@ use alloc::{
 };
 
 use dcmfx_core::{
-  DataElementTag, DataError, DataSet, DataSetPath, IodModule,
+  DataElementTag, DataElementValue, DataError, DataSet, DataSetPath, IodModule,
   ValueRepresentation, dictionary,
 };
 
@@ -157,10 +157,24 @@ impl VoiWindow {
         vec![""; centers.len()]
       };
 
-    let functions = if data_set.has(dictionary::VOILUT_FUNCTION.tag) {
-      data_set.get_strings(dictionary::VOILUT_FUNCTION.tag)?
+    // Read VOI LUT Function without regard for the specified VR. This makes it
+    // readable evevn if the VR is 'OB', which is out of spec but has been
+    // observed in the wild from Siemens AXIOM-Artis modalities.
+    let functions = if let Ok(bytes) =
+      data_set.get_value_bytes(dictionary::VOILUT_FUNCTION.tag)
+    {
+      let value = DataElementValue::new_binary_unchecked(
+        ValueRepresentation::CodeString,
+        bytes.clone(),
+      );
+
+      value
+        .get_strings()?
+        .into_iter()
+        .map(|s| s.to_string())
+        .collect()
     } else {
-      vec!["LINEAR"; centers.len()]
+      vec!["LINEAR".to_string(); centers.len()]
     };
 
     if centers.len() != widths.len()
@@ -180,7 +194,7 @@ impl VoiWindow {
       let center = centers[i] as f32;
       let width = widths[i] as f32;
       let explanation = explanations[i].to_string();
-      let function = VoiLutFunction::from_string(functions[i])?;
+      let function = VoiLutFunction::from_string(&functions[i])?;
 
       windows.push(VoiWindow::new(center, width, explanation, function));
     }
