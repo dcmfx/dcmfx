@@ -32,7 +32,7 @@ pub use decode::{PixelDataDecodeConfig, PixelDataDecodeError};
 pub use encode::{PixelDataEncodeConfig, PixelDataEncodeError};
 pub use grayscale_pipeline::GrayscalePipeline;
 pub use lookup_table::LookupTable;
-pub use monochrome_image::MonochromeImage;
+pub use monochrome_image::{MonochromeImage, MonochromeImageData};
 pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_renderer::PixelDataRenderer;
 pub use standard_color_palettes::StandardColorPalette;
