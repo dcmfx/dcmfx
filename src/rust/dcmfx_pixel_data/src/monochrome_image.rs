@@ -626,63 +626,62 @@ impl MonochromeImage {
   /// Returns this monochrome image's stored values.
   ///
   pub fn to_stored_values(&self) -> Vec<i64> {
-    let mut stored_values = Vec::with_capacity(self.pixel_count());
+    self.stored_values().collect()
+  }
 
-    match &self.data {
-      MonochromeImageData::Bitmap { data, is_signed } => {
-        for pixel in data.iter() {
-          for b in 0..8 {
-            if stored_values.len() == stored_values.capacity() {
-              break;
-            }
-
-            let mut value = i64::from((*pixel >> b) & 1);
-            if *is_signed {
-              value = -value;
-            }
-
-            stored_values.push(value);
-          }
-        }
-      }
-
-      MonochromeImageData::I8(data) => {
-        for stored_value in data {
-          stored_values.push(i64::from(*stored_value));
-        }
-      }
-
-      MonochromeImageData::U8(data) => {
-        for stored_value in data {
-          stored_values.push(i64::from(*stored_value));
-        }
-      }
-
-      MonochromeImageData::I16(data) => {
-        for stored_value in data {
-          stored_values.push(i64::from(*stored_value));
-        }
-      }
-
-      MonochromeImageData::U16(data) => {
-        for stored_value in data {
-          stored_values.push(i64::from(*stored_value));
-        }
-      }
-
-      MonochromeImageData::I32(data) => {
-        for stored_value in data {
-          stored_values.push(i64::from(*stored_value));
-        }
-      }
-
-      MonochromeImageData::U32(data) => {
-        for stored_value in data {
-          stored_values.push(i64::from(*stored_value));
-        }
-      }
-    };
-
-    stored_values
+  /// Returns an iterator to this monochrome image's stored values.
+  ///
+  pub fn stored_values(&self) -> StoredValues<'_> {
+    StoredValues {
+      image: self,
+      index: 0,
+    }
   }
 }
+
+/// Iterator to the stored values of a monochrome image.
+///
+#[derive(Debug)]
+pub struct StoredValues<'a> {
+  image: &'a MonochromeImage,
+  index: usize,
+}
+
+impl Iterator for StoredValues<'_> {
+  type Item = i64;
+
+  fn next(&mut self) -> Option<Self::Item> {
+    if self.index < self.image.pixel_count() {
+      let value = match &self.image.data {
+        MonochromeImageData::Bitmap { data, is_signed } => {
+          let pos = self.index / 8;
+          let bit = self.index % 8;
+
+          let value = i64::from((data[pos] >> bit) & 1);
+
+          if *is_signed { -value } else { value }
+        }
+
+        MonochromeImageData::I8(data) => i64::from(data[self.index]),
+        MonochromeImageData::U8(data) => i64::from(data[self.index]),
+        MonochromeImageData::I16(data) => i64::from(data[self.index]),
+        MonochromeImageData::U16(data) => i64::from(data[self.index]),
+        MonochromeImageData::I32(data) => i64::from(data[self.index]),
+        MonochromeImageData::U32(data) => i64::from(data[self.index]),
+      };
+
+      self.index += 1;
+
+      Some(value)
+    } else {
+      None
+    }
+  }
+
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    let remaining = self.image.pixel_count() - self.index;
+    (remaining, Some(remaining)) // see ExactSizeIterator
+  }
+}
+
+impl ExactSizeIterator for StoredValues<'_> {}
