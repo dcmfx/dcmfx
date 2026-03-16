@@ -15,6 +15,7 @@ macro_rules! assert_image_snapshot {
   };
 }
 
+#[allow(dead_code)]
 pub fn image_matches_snapshot<P: AsRef<Path>>(
   input_file: P,
   snapshot_name: &str,

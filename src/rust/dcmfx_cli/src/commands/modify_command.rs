@@ -124,7 +124,7 @@ pub struct ModifyArgs {
       other potentially identifying data elements, as well as private data \
       elements. Note that this option does not remove identifying information \
       baked into the pixel data, however such data may be able to be cropped \
-      out using --crop",
+      out using --crop.",
     default_value_t = false
   )]
   anonymize: bool,

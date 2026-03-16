@@ -122,7 +122,7 @@ impl DicomValidationError {
 ///
 fn validate_dicom(dicom: &Path) -> Result<(), DicomValidationError> {
   // Load the DICOM
-  let data_set = DataSet::read_p10_file(dicom.to_str().unwrap())
+  let data_set = DataSet::read_p10_file(dicom.to_str().unwrap(), None)
     .map_err(|error| DicomValidationError::LoadError { error })?;
 
   // Read the expected JSON output from the associated .json file
@@ -311,7 +311,7 @@ fn test_p10_rewrite_cycle(
   let temp_dir = utils::create_temp_dir();
   let input_file = temp_dir.path().join("temp.dcm");
   data_set.write_p10_file(&input_file, None).unwrap();
-  let rewritten_data_set = DataSet::read_p10_file(&input_file).unwrap();
+  let rewritten_data_set = DataSet::read_p10_file(&input_file, None).unwrap();
 
   // Filter that removes File Meta Information and specific character set data
   // elements which we don't want to be part of the rewrite comparison

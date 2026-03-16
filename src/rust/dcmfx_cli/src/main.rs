@@ -10,7 +10,7 @@ use clap::{Parser, Subcommand};
 
 use commands::{
   dcm_to_json_command, get_pixel_data_command, json_to_dcm_command,
-  list_command, modify_command, print_command,
+  list_command, modify_command, print_command, rewrite_command,
 };
 
 #[derive(Parser)]
@@ -52,6 +52,12 @@ enum Commands {
 
   #[command(about = list_command::ABOUT)]
   List(list_command::ListArgs),
+
+  #[command(
+    about = rewrite_command::ABOUT,
+    long_about = rewrite_command::LONG_ABOUT
+  )]
+  Rewrite(rewrite_command::RewriteArgs),
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -67,6 +73,7 @@ async fn main() {
     Commands::JsonToDcm(args) => json_to_dcm_command::run(args).await,
     Commands::DcmToJson(args) => dcm_to_json_command::run(args).await,
     Commands::List(args) => list_command::run(args).await,
+    Commands::Rewrite(args) => rewrite_command::run(args).await,
   };
 
   if cli.print_stats {

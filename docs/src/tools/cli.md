@@ -79,6 +79,7 @@ Commands:
   json-to-dcm     Converts DICOM JSON files to DICOM P10 files
   dcm-to-json     Converts DICOM P10 files to DICOM JSON files
   list            Lists DICOM P10 files in one or more directories
+  rewrite         Rewrites DICOM P10 files to correct and recover their data
   help            Print this message or the help of the given subcommand(s)
 
 Options:
@@ -162,7 +163,7 @@ Azure Blob Storage (`az://`).
    files where possible:
 
    ```sh
-   dcmfx modify input.dcm --output-filename output.dcm
+   dcmfx rewrite input.dcm --output-filename output.dcm
    ```
 
 7. Modify a DICOM P10 file's transfer syntax:

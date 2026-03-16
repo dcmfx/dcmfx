@@ -101,7 +101,7 @@ type DicomValidationError {
 fn validate_dicom(dicom: String) -> Result(Nil, DicomValidationError) {
   // Load the DICOM
   let data_set =
-    dcmfx_p10.read_file(dicom)
+    dcmfx_p10.read_file(dicom, None)
     |> result.map_error(LoadError)
   use data_set <- result.try(data_set)
 
@@ -241,7 +241,7 @@ fn test_dcmfx_p10_rewrite_cycle(
   data_set: DataSet,
 ) -> Result(Nil, DicomValidationError) {
   let assert Ok(_) = dcmfx_p10.write_file(dicom <> ".tmp", data_set, None)
-  let assert Ok(rewritten_data_set) = dcmfx_p10.read_file(dicom <> ".tmp")
+  let assert Ok(rewritten_data_set) = dcmfx_p10.read_file(dicom <> ".tmp", None)
   let assert Ok(_) = simplifile.delete(dicom <> ".tmp")
 
   // Filter that removes File Meta Information and specific character set data

@@ -4,3 +4,4 @@ pub mod json_to_dcm_command;
 pub mod list_command;
 pub mod modify_command;
 pub mod print_command;
+pub mod rewrite_command;
