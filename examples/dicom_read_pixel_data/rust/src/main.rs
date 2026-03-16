@@ -5,7 +5,7 @@ use dcmfx::pixel_data::*;
 const INPUT_FILE: &str = "./example.dcm";
 
 pub fn main() {
-    let ds = DataSet::read_p10_file(INPUT_FILE).unwrap();
+    let ds = DataSet::read_p10_file(INPUT_FILE, None).unwrap();
     let frames = ds.get_pixel_data_frames().unwrap();
 
     let pixel_data_renderer =

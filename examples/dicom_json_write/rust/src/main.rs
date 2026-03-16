@@ -5,7 +5,7 @@ use dcmfx::p10::*;
 const INPUT_FILE: &str = "./example.dcm";
 
 pub fn main() {
-    let ds = DataSet::read_p10_file(INPUT_FILE).unwrap();
+    let ds = DataSet::read_p10_file(INPUT_FILE, None).unwrap();
 
     let json_config = DicomJsonConfig {
         store_encapsulated_pixel_data: true,

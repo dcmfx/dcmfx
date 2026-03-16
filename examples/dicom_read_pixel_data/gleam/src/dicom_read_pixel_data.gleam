@@ -4,12 +4,12 @@ import dcmfx_pixel_data/pixel_data_frame
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/option.{Some}
+import gleam/option.{None, Some}
 
 const input_file = "../../example.dcm"
 
 pub fn main() {
-  let assert Ok(ds) = dcmfx_p10.read_file(input_file)
+  let assert Ok(ds) = dcmfx_p10.read_file(input_file, None)
   let assert Ok(frames) = dcmfx_pixel_data.get_pixel_data_frames(ds)
 
   frames

@@ -24,7 +24,7 @@ pub struct BaseInputArgs {
     help_heading = "Input",
     help = "A UTF-8 text file containing a list of input filenames. This is \
       useful when the number of input filenames is very large. Each input \
-      filename should be on its own line. White space is trimmed and blank \
+      filename should be on its own line. Whitespace is trimmed and blank \
       lines are ignored."
   )]
   pub file_list: Option<PathBuf>,
@@ -220,7 +220,7 @@ fn input_sources_for_object_url_glob(
 }
 
 /// Creates a stream for the paths in the file list. Each path in the file list
-/// file must be on its own line. White space is trimmed and blank lines are
+/// file must be on its own line. Whitespace is trimmed and blank lines are
 /// ignored.
 ///
 async fn file_list_input_sources(

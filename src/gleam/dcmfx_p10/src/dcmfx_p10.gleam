@@ -50,9 +50,12 @@ pub fn is_valid_bytes(bytes: BitArray) -> Bool {
 
 /// Reads DICOM P10 data from a file into an in-memory data set.
 ///
-pub fn read_file(filename: String) -> Result(DataSet, P10Error) {
+pub fn read_file(
+  filename: String,
+  config: Option(P10ReadConfig),
+) -> Result(DataSet, P10Error) {
   filename
-  |> read_file_returning_builder_on_error
+  |> read_file_returning_builder_on_error(config)
   |> result.map_error(fn(e) { e.0 })
 }
 
@@ -65,13 +68,14 @@ pub fn read_file(filename: String) -> Result(DataSet, P10Error) {
 ///
 pub fn read_file_returning_builder_on_error(
   filename: String,
+  config: Option(P10ReadConfig),
 ) -> Result(DataSet, #(P10Error, DataSetBuilder)) {
   filename
   |> file_stream.open_read
   |> result.map_error(fn(e) {
     #(p10_error.FileStreamError("Opening file", e), data_set_builder.new())
   })
-  |> result.try(read_stream)
+  |> result.try(read_stream(_, config))
 }
 
 /// Reads DICOM P10 data from a file read stream into an in-memory data set.
@@ -79,8 +83,9 @@ pub fn read_file_returning_builder_on_error(
 ///
 pub fn read_stream(
   stream: FileStream,
+  config: Option(P10ReadConfig),
 ) -> Result(DataSet, #(P10Error, DataSetBuilder)) {
-  let context = p10_read.new_read_context(None)
+  let context = p10_read.new_read_context(config)
   let builder = data_set_builder.new()
 
   do_read_stream(stream, context, builder)
@@ -169,9 +174,10 @@ pub fn read_tokens_from_stream(
 ///
 pub fn read_bytes(
   bytes: BitArray,
+  config: Option(P10ReadConfig),
 ) -> Result(DataSet, #(P10Error, DataSetBuilder)) {
   let assert Ok(context) =
-    p10_read.new_read_context(None)
+    p10_read.new_read_context(config)
     |> p10_read.write_bytes(bytes, True)
 
   let builder = data_set_builder.new()

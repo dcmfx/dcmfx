@@ -96,8 +96,11 @@ pub fn is_valid_bytes(bytes: &[u8]) -> bool {
 /// Reads DICOM P10 data from a file into an in-memory data set.
 ///
 #[cfg(feature = "std")]
-pub fn read_file<P: AsRef<Path>>(filename: P) -> Result<DataSet, P10Error> {
-  match read_file_returning_builder_on_error(filename) {
+pub fn read_file<P: AsRef<Path>>(
+  filename: P,
+  config: Option<P10ReadConfig>,
+) -> Result<DataSet, P10Error> {
+  match read_file_returning_builder_on_error(filename, config) {
     Ok(data_set) => Ok(data_set),
     Err((e, _)) => Err(e),
   }
@@ -108,8 +111,9 @@ pub fn read_file<P: AsRef<Path>>(filename: P) -> Result<DataSet, P10Error> {
 #[cfg(feature = "async")]
 pub async fn read_file_async<P: AsRef<Path>>(
   filename: P,
+  config: Option<P10ReadConfig>,
 ) -> Result<DataSet, P10Error> {
-  match read_file_returning_builder_on_error_async(filename).await {
+  match read_file_returning_builder_on_error_async(filename, config).await {
     Ok(data_set) => Ok(data_set),
     Err((e, _)) => Err(e),
   }
@@ -125,9 +129,10 @@ pub async fn read_file_async<P: AsRef<Path>>(
 #[cfg(feature = "std")]
 pub fn read_file_returning_builder_on_error<P: AsRef<Path>>(
   filename: P,
+  config: Option<P10ReadConfig>,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
   match std::fs::File::open(filename) {
-    Ok(mut file) => read_stream(&mut file),
+    Ok(mut file) => read_stream(&mut file, config),
 
     Err(e) => Err((
       P10Error::FileError {
@@ -149,9 +154,10 @@ pub fn read_file_returning_builder_on_error<P: AsRef<Path>>(
 #[cfg(feature = "async")]
 pub async fn read_file_returning_builder_on_error_async<P: AsRef<Path>>(
   filename: P,
+  config: Option<P10ReadConfig>,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
   match tokio::fs::File::open(filename).await {
-    Ok(mut file) => read_stream_async(&mut file).await,
+    Ok(mut file) => read_stream_async(&mut file, config).await,
 
     Err(e) => Err((
       P10Error::FileError {
@@ -168,8 +174,9 @@ pub async fn read_file_returning_builder_on_error_async<P: AsRef<Path>>(
 ///
 pub fn read_stream<S: IoRead>(
   stream: &mut S,
+  config: Option<P10ReadConfig>,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
-  let mut context = P10ReadContext::new(None);
+  let mut context = P10ReadContext::new(config);
   let mut builder = Box::new(DataSetBuilder::new());
 
   loop {
@@ -198,8 +205,9 @@ pub fn read_stream<S: IoRead>(
 #[cfg(feature = "async")]
 pub async fn read_stream_async<I: IoAsyncRead>(
   stream: &mut I,
+  config: Option<P10ReadConfig>,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
-  let mut context = P10ReadContext::new(None);
+  let mut context = P10ReadContext::new(config);
   let mut builder = Box::new(DataSetBuilder::new());
 
   loop {
@@ -898,18 +906,24 @@ where
   /// Reads DICOM P10 data from a file into an in-memory data set.
   ///
   #[cfg(feature = "std")]
-  fn read_p10_file<P: AsRef<Path>>(filename: P) -> Result<Self, P10Error>;
+  fn read_p10_file<P: AsRef<Path>>(
+    filename: P,
+    config: Option<P10ReadConfig>,
+  ) -> Result<Self, P10Error>;
 
   /// Reads DICOM P10 data from a read stream into an in-memory data set. This
   /// will attempt to consume all data available in the read stream.
   ///
-  fn read_p10_stream<S: IoRead>(stream: &mut S) -> Result<Self, P10Error>;
+  fn read_p10_stream<S: IoRead>(
+    stream: &mut S,
+    config: Option<P10ReadConfig>,
+  ) -> Result<Self, P10Error>;
 
   /// Reads DICOM P10 data from a vector of bytes into a data set.
   ///
   fn read_p10_bytes(
     bytes: RcByteSlice,
-    read_config: Option<P10ReadConfig>,
+    config: Option<P10ReadConfig>,
   ) -> Result<Self, (P10Error, Box<DataSetBuilder>)>;
 
   /// Writes a data set to a DICOM P10 file. This will overwrite any existing
@@ -965,6 +979,7 @@ where
   ///
   async fn read_p10_file_async<P: AsRef<Path>>(
     filename: P,
+    config: Option<P10ReadConfig>,
   ) -> Result<Self, P10Error>;
 
   /// Reads DICOM P10 data from a read stream into an in-memory data set. This
@@ -972,6 +987,7 @@ where
   ///
   async fn read_p10_stream_async<I: IoAsyncRead>(
     stream: &mut I,
+    config: Option<P10ReadConfig>,
   ) -> Result<Self, P10Error>;
 
   /// Writes a data set to a DICOM P10 file. This will overwrite any existing
@@ -1006,12 +1022,18 @@ where
 
 impl DataSetP10Extensions for DataSet {
   #[cfg(feature = "std")]
-  fn read_p10_file<P: AsRef<Path>>(filename: P) -> Result<Self, P10Error> {
-    read_file(filename)
+  fn read_p10_file<P: AsRef<Path>>(
+    filename: P,
+    config: Option<P10ReadConfig>,
+  ) -> Result<Self, P10Error> {
+    read_file(filename, config)
   }
 
-  fn read_p10_stream<S: IoRead>(stream: &mut S) -> Result<DataSet, P10Error> {
-    read_stream(stream).map_err(|e| e.0)
+  fn read_p10_stream<S: IoRead>(
+    stream: &mut S,
+    config: Option<P10ReadConfig>,
+  ) -> Result<DataSet, P10Error> {
+    read_stream(stream, config).map_err(|e| e.0)
   }
 
   fn read_p10_bytes(
@@ -1076,14 +1098,16 @@ impl DataSetP10Extensions for DataSet {
 impl DataSetP10AsyncExtensions for DataSet {
   async fn read_p10_file_async<P: AsRef<Path>>(
     filename: P,
+    config: Option<P10ReadConfig>,
   ) -> Result<Self, P10Error> {
-    read_file_async(filename).await
+    read_file_async(filename, config).await
   }
 
   async fn read_p10_stream_async<I: IoAsyncRead>(
     stream: &mut I,
+    config: Option<P10ReadConfig>,
   ) -> Result<DataSet, P10Error> {
-    read_stream_async(stream).await.map_err(|e| e.0)
+    read_stream_async(stream, config).await.map_err(|e| e.0)
   }
 
   async fn write_p10_file_async<P: AsRef<Path>>(
