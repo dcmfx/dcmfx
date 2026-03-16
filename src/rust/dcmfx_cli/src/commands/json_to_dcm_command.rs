@@ -13,8 +13,8 @@ pub const ABOUT: &str = "Converts DICOM JSON files to DICOM P10 files";
 pub struct ToDcmArgs {
   #[arg(
     long,
-    help = "The number of concurrent tasks to use. Defaults to the number of CPU
-      cores.",
+    help = "The number of concurrent tasks to use. Defaults to the number of \
+      CPU cores.",
     default_value_t = {num_cpus::get()}
   )]
   concurrency: usize,

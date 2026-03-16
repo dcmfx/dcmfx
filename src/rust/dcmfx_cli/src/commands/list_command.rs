@@ -20,8 +20,8 @@ pub const ABOUT: &str = "Lists DICOM P10 files in one or more directories";
 pub struct ListArgs {
   #[arg(
     long,
-    help = "The number of concurrent tasks to use. Defaults to the number of CPU
-      cores.",
+    help = "The number of concurrent tasks to use. Defaults to the number of \
+      CPU cores.",
     default_value_t = {num_cpus::get()}
   )]
   concurrency: usize,

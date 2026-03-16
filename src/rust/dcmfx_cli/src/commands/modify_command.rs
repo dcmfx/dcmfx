@@ -25,8 +25,8 @@ pub const ABOUT: &str = "Modifies the content of DICOM P10 files";
 pub struct ModifyArgs {
   #[arg(
     long,
-    help = "The number of concurrent tasks to use. Defaults to the number of CPU
-      cores.",
+    help = "The number of concurrent tasks to use. Defaults to the number of \
+      CPU cores.",
     default_value_t = {num_cpus::get()}
   )]
   concurrency: usize,
