@@ -77,5 +77,5 @@ expression: get_stdout(assert)
 (0032,1060) LO Requested Procedure Description      [     0 bytes] ""
 (7FE0,0010) OB Pixel Data
   (FFFE,E000) Item                                    [     0 bytes] []
-  (FFFE,E000) Item                                    [381222 bytes] [EC BD 67 …
+  (FFFE,E000) Item                                    [385784 bytes] [EC BD 67 …
 (FFFE,E0DD) Sequence Delimitation Item
