@@ -10,6 +10,7 @@ use dcmfx_core::{
 
 use crate::{
   StoredValueOutputCache,
+  dictionary::SOP_CLASS_UID,
   iods::{
     ModalityLutModule, SoftcopyPresentationLutModule, VoiLutModule,
     voi_lut_module::VoiWindow,
@@ -40,6 +41,7 @@ pub struct GrayscalePipeline {
   modality_lut_output_range: core::ops::RangeInclusive<f32>,
   voi_lut_module: VoiLutModule,
   softcopy_presentation_lut_module: SoftcopyPresentationLutModule,
+  apply_modality_lut: bool,
 
   // Internal caches used when the stored value range has <= 2^16 items
   output_cache_u8: RefCell<Option<StoredValueOutputCache<u8>>>,
@@ -61,6 +63,7 @@ impl GrayscalePipeline {
       || SoftcopyPresentationLutModule::is_iod_module_data_element(
         tag, vr, length, path,
       )
+      || tag == SOP_CLASS_UID.tag
   }
 
   /// Returns the highest data element tag that can return true from
@@ -70,6 +73,7 @@ impl GrayscalePipeline {
     ModalityLutModule::iod_module_highest_tag()
       .max(VoiLutModule::iod_module_highest_tag())
       .max(SoftcopyPresentationLutModule::iod_module_highest_tag())
+      .max(SOP_CLASS_UID.tag)
   }
 
   /// Creates a [`GrayscalePipeline`] from a data set and a range of possible
@@ -87,12 +91,28 @@ impl GrayscalePipeline {
     let modality_lut_output_range =
       modality_lut_module.output_range(&stored_value_range);
 
+    let sop_class_uid = data_set.get_string(SOP_CLASS_UID.tag)?;
+
+    // For XA/XRF objects, the modality LUT should not be used to convert pixel
+    // samples for display and instead is used to recover X-Ray beam intensity.
+    //
+    // See https://groups.google.com/g/comp.protocols.dicom/c/UBxhOZ2anJ0/m/b37Hccl7lDkJ
+
+    const XA_XRF_SOP_CLASS_UIDS: &[&str] = &[
+      "1.2.840.10008.5.1.4.1.1.12.1",
+      "1.2.840.10008.5.1.4.1.1.12.2",
+      "1.2.840.10008.5.1.4.1.1.12.3",
+    ];
+
+    let apply_modality_lut = !XA_XRF_SOP_CLASS_UIDS.contains(&sop_class_uid);
+
     Ok(GrayscalePipeline {
       stored_value_range,
       modality_lut_module,
       modality_lut_output_range,
       voi_lut_module,
       softcopy_presentation_lut_module,
+      apply_modality_lut,
 
       output_cache_u8: RefCell::new(None),
       output_cache_u16: RefCell::new(None),
@@ -136,7 +156,11 @@ impl GrayscalePipeline {
   /// final Presentation Value (P-Value).
   ///
   pub fn apply(&self, stored_value: i64) -> f32 {
-    let mut x = self.modality_lut_module.apply_to_stored_value(stored_value);
+    let mut x = if self.apply_modality_lut {
+      self.modality_lut_module.apply_to_stored_value(stored_value)
+    } else {
+      stored_value as f32
+    };
 
     x = if self.voi_lut_module.is_empty() {
       let start = self.modality_lut_output_range.start();
