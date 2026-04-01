@@ -1122,6 +1122,25 @@ async fn with_s3_input_and_output() {
   assert_image_snapshot!(output_file.path(), "jpeg_xl_monochrome_to_png.png");
 }
 
+#[test]
+fn read_xa_modality() {
+  let input_file = "../../../test/assets/other/xa_modality_anon.dcm";
+  let (output_file, output_directory) =
+    prepare_outputs(input_file, ".0000.jpg");
+
+  dcmfx_cli()
+    .arg("get-pixel-data")
+    .arg(input_file)
+    .arg("--output-directory")
+    .arg(output_directory.path())
+    .arg("-f")
+    .arg("jpg")
+    .assert()
+    .success();
+
+  assert_image_snapshot!(output_file, "xa_modality.jpg");
+}
+
 /// For a given input file, returns a newly created temporary output directory
 /// and the path to the output file in that directory for the input file.
 ///

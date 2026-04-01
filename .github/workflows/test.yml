@@ -52,6 +52,8 @@ jobs:
     name: Test DCMfx (Rust)
     timeout-minutes: 30
 
+    environment: test
+
     strategy:
       matrix:
         rust-target:

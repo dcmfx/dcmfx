@@ -21,3 +21,4 @@ expression: "lines.join(\"\\n\")"
 ../../../test/assets/other/uppercase_extension.DCM
 ../../../test/assets/other/view0010_anon.dcm
 ../../../test/assets/other/vr_2022.dcm
+../../../test/assets/other/xa_modality_anon.dcm
