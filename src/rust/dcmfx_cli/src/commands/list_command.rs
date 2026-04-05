@@ -44,6 +44,15 @@ pub struct ListArgs {
   extension: Option<String>,
 
   #[arg(
+    long = "ignore",
+    help_heading = "Input",
+    help = "Filenames matching this glob pattern will not be read. Multiple \
+      glob patterns can be specified.",
+    value_parser = crate::args::parse_glob_pattern,
+  )]
+  ignore_patterns: Vec<globset::Glob>,
+
+  #[arg(
     long,
     short,
     help_heading = "Output",
@@ -188,6 +197,13 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
     out.flush().await.expect("Failed flushing stdout");
   });
 
+  // Build globset matcher for all specified ignore globs
+  let mut glob_set_builder = globset::GlobSetBuilder::new();
+  for glob in args.ignore_patterns.iter() {
+    glob_set_builder.add(glob.clone());
+  }
+  let ignore_patterns_glob_set = glob_set_builder.build().unwrap();
+
   let result = utils::run_tasks(
     args.concurrency,
     futures::stream::iter(file_iterator),
@@ -201,6 +217,12 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
         if path_extension.to_string_lossy().to_lowercase() != *extension {
           return Ok(());
         }
+      }
+
+      if ignore_patterns_glob_set
+        .is_match(path.to_string_lossy().to_lowercase())
+      {
+        return Ok(());
       }
 
       process_file(&path, &args, summary.clone(), stdout_tx.clone())

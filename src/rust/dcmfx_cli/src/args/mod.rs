@@ -20,3 +20,10 @@ pub fn parse_data_element_tag(s: &str) -> Result<DataElementTag, String> {
 pub fn parse_dicom_json_data_set(s: &str) -> Result<DataSet, String> {
   DataSet::from_json(s).map_err(|e| e.to_string())
 }
+
+pub fn parse_glob_pattern(s: &str) -> Result<globset::Glob, String> {
+  globset::GlobBuilder::new(s)
+    .case_insensitive(true)
+    .build()
+    .map_err(|e| e.to_string())
+}

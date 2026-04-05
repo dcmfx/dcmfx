@@ -26,6 +26,27 @@ fn with_multiple_directories() {
 }
 
 #[test]
+fn with_ignore_pattern() {
+  let assert = dcmfx_cli()
+    .arg("list")
+    .arg("../../../test/assets/other")
+    .arg("--ignore")
+    .arg("*ANON*")
+    .assert()
+    .success();
+
+  let mut lines: Vec<_> =
+    get_stdout(assert).split("\n").map(to_native_path).collect();
+  lines.sort();
+
+  #[cfg(windows)]
+  assert_snapshot!("with_ignore_pattern_windows", lines.join("\n"));
+
+  #[cfg(not(windows))]
+  assert_snapshot!("with_ignore_pattern", lines.join("\n"));
+}
+
+#[test]
 fn with_summary() {
   let assert = dcmfx_cli()
     .arg("list")
