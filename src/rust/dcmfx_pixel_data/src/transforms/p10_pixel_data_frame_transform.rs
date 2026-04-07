@@ -75,6 +75,8 @@ struct PixelDataFrameTransformDetails {
   rows: u16,
   columns: u16,
   bits_allocated: u16,
+  samples_per_pixel: u16,
+  photometric_interpretation: String,
   extended_offset_table: Option<DataElementValue>,
   extended_offset_table_lengths: Option<DataElementValue>,
 }
@@ -90,6 +92,11 @@ impl PixelDataFrameTransformDetails {
       columns: data_set.get_int::<u16>(dictionary::COLUMNS.tag)?,
       bits_allocated: data_set
         .get_int::<u16>(dictionary::BITS_ALLOCATED.tag)?,
+      samples_per_pixel: data_set
+        .get_int::<u16>(dictionary::SAMPLES_PER_PIXEL.tag)?,
+      photometric_interpretation: data_set
+        .get_string(dictionary::PHOTOMETRIC_INTERPRETATION.tag)?
+        .to_string(),
       extended_offset_table: data_set
         .get_value(dictionary::EXTENDED_OFFSET_TABLE.tag)
         .ok()
@@ -142,6 +149,8 @@ impl P10PixelDataFrameTransform {
     let details_transform =
       P10CustomTypeTransform::<PixelDataFrameTransformDetails>::new(
         &[
+          dictionary::SAMPLES_PER_PIXEL.tag,
+          dictionary::PHOTOMETRIC_INTERPRETATION.tag,
           dictionary::NUMBER_OF_FRAMES.tag,
           dictionary::ROWS.tag,
           dictionary::COLUMNS.tag,
@@ -208,43 +217,25 @@ impl P10PixelDataFrameTransform {
   ) -> Result<Vec<PixelDataFrame>, DataError> {
     match token {
       // The start of native pixel data
-      P10Token::DataElementHeader { length, .. } => {
+      P10Token::DataElementHeader { .. } => {
         self.is_encapsulated = false;
 
-        // Check that the pixel data length divides evenly into the number of
-        // frames
-        let number_of_frames = self.get_number_of_frames();
+        // We cannot validate the pixel data length in any way because
+        // of the presence of trailing padding after the pixel data.
 
-        if number_of_frames > 0 {
+        if self.get_number_of_frames() > 0 {
           let details = self.details.get_output().unwrap();
 
-          // Validate the pixel data length and store the size in bits of native
-          // pixel data frames
-          self.native_pixel_data_frame_size = if details.bits_allocated == 1 {
-            let pixel_count = details.rows as u64 * details.columns as u64;
-            let expected_length =
-              (pixel_count * number_of_frames as u64).div_ceil(8);
+          let bits_per_pixel =
+            if details.photometric_interpretation == "YBR_FULL_422" {
+              details.bits_allocated * 2
+            } else {
+              details.bits_allocated * details.samples_per_pixel
+            };
 
-            if u64::from(*length) != expected_length {
-              return Err(DataError::new_value_invalid(format!(
-                "Bitmap pixel data has length {} bytes but {} bytes were \
-                 expected",
-                *length, expected_length
-              )));
-            }
-
-            pixel_count
-          } else {
-            if !(*length as usize).is_multiple_of(number_of_frames) {
-              return Err(DataError::new_value_invalid(format!(
-                "Multi-frame pixel data of length {} bytes does not divide \
-                evenly into {} frames",
-                *length, number_of_frames
-              )));
-            }
-
-            (u64::from(*length) * 8) / (number_of_frames as u64)
-          };
+          self.native_pixel_data_frame_size = details.rows as u64
+            * details.columns as u64
+            * bits_per_pixel as u64;
         }
 
         Ok(vec![])
@@ -686,6 +677,13 @@ mod tests {
     // Minimal data set with two frames of encapsulated pixel data
     ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[2])
       .unwrap();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
     ds.insert_int_value(&dictionary::ROWS, &[32]).unwrap();
     ds.insert_int_value(&dictionary::COLUMNS, &[32]).unwrap();
     ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
@@ -709,7 +707,7 @@ mod tests {
     // Split the data for the first frame's first pixel data item across two
     // tokens
     tokens.splice(
-      16..17,
+      20..21,
       [
         P10Token::DataElementValueBytes {
           tag: dictionary::ITEM.tag,

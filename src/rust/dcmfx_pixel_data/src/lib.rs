@@ -125,6 +125,8 @@ impl DataSetPixelDataExtensions for DataSet {
     let mut ds = DataSet::new();
     for tag in [
       dictionary::NUMBER_OF_FRAMES.tag,
+      dictionary::SAMPLES_PER_PIXEL.tag,
+      dictionary::PHOTOMETRIC_INTERPRETATION.tag,
       dictionary::ROWS.tag,
       dictionary::COLUMNS.tag,
       dictionary::BITS_ALLOCATED.tag,
@@ -356,6 +358,13 @@ mod tests {
   #[test]
   fn read_native_empty_frame() {
     let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
     ds.insert_int_value(&dictionary::ROWS, &[0]).unwrap();
     ds.insert_int_value(&dictionary::COLUMNS, &[0]).unwrap();
     ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
@@ -375,6 +384,13 @@ mod tests {
   #[test]
   fn read_native_single_frame() {
     let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
     ds.insert_int_value(&dictionary::ROWS, &[2]).unwrap();
     ds.insert_int_value(&dictionary::COLUMNS, &[2]).unwrap();
     ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
@@ -399,6 +415,13 @@ mod tests {
     let mut ds = DataSet::new();
     ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[2])
       .unwrap();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
     ds.insert_int_value(&dictionary::ROWS, &[1]).unwrap();
     ds.insert_int_value(&dictionary::COLUMNS, &[2]).unwrap();
     ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
@@ -426,6 +449,13 @@ mod tests {
     let mut ds = DataSet::new();
     ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[3])
       .unwrap();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
     ds.insert_int_value(&dictionary::ROWS, &[3]).unwrap();
     ds.insert_int_value(&dictionary::COLUMNS, &[5]).unwrap();
     ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[1])
@@ -458,6 +488,13 @@ mod tests {
     let mut ds = DataSet::new();
     ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[4])
       .unwrap();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
     ds.insert_int_value(&dictionary::ROWS, &[1]).unwrap();
     ds.insert_int_value(&dictionary::COLUMNS, &[3]).unwrap();
     ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[1])
@@ -481,32 +518,6 @@ mod tests {
     assert_eq!(frames[1].bit_offset(), 3);
     assert_eq!(frames[2].bit_offset(), 6);
     assert_eq!(frames[3].bit_offset(), 1);
-  }
-
-  #[test]
-  fn read_native_multi_frame_malformed() {
-    let mut ds = DataSet::new();
-    ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[3])
-      .unwrap();
-    ds.insert_int_value(&dictionary::ROWS, &[1]).unwrap();
-    ds.insert_int_value(&dictionary::COLUMNS, &[1]).unwrap();
-    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
-      .unwrap();
-
-    ds.insert(
-      dictionary::PIXEL_DATA.tag,
-      DataElementValue::new_binary(
-        ValueRepresentation::OtherByteString,
-        vec![1, 2, 3, 4].into(),
-      )
-      .unwrap(),
-    );
-
-    assert_eq!(
-      ds.get_pixel_data_frames().unwrap_err().to_string(),
-      "DICOM Data Error: Invalid value at <unknown>, details: Multi-frame \
-       pixel data of length 4 bytes does not divide evenly into 3 frames",
-    );
   }
 
   // This test is taken from the DICOM standard. Ref: PS3.5 Table A.4-1.
@@ -556,6 +567,13 @@ mod tests {
   #[test]
   fn read_encapsulated_using_basic_offset_table() {
     let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
     ds.insert_int_value(&dictionary::ROWS, &[0]).unwrap();
     ds.insert_int_value(&dictionary::COLUMNS, &[0]).unwrap();
     ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
@@ -652,6 +670,13 @@ mod tests {
 
   fn data_set_with_three_fragments() -> DataSet {
     let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
     ds.insert_int_value(&dictionary::ROWS, &[0]).unwrap();
     ds.insert_int_value(&dictionary::COLUMNS, &[0]).unwrap();
     ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
