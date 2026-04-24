@@ -51,7 +51,7 @@ pub fn is_valid(uid: &str) -> bool {
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(clippy::result_unit_err)]
 pub fn new(prefix: &str) -> Result<String, ()> {
-  use rand::Rng;
+  use rand::RngExt;
 
   let mut rng = rand::rng();
   let mut random_character = |range: core::ops::Range<u8>| -> char {

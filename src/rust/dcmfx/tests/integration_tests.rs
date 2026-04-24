@@ -7,7 +7,7 @@ use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path};
 use either::Either;
 use futures::stream::StreamExt;
 use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 use walkdir::WalkDir;
 
 use dcmfx_core::*;

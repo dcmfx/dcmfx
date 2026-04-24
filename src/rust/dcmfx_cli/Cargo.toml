@@ -64,7 +64,7 @@ assert_cmd = "2.2.1"
 insta = "1.47.2"
 itertools = "0.14.0"
 predicates = "3.1.4"
-rand = "0.9.4"
+rand = "0.10.1"
 tempfile = "3.27.0"
 
 [features]

@@ -1,6 +1,6 @@
 use dcmfx_pixel_data::decode::{HighThroughputJpeg2000Decoder, JpegXlDecoder};
 use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 use rayon::prelude::*;
 
 use dcmfx_core::{
