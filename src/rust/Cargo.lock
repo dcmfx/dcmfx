@@ -829,7 +829,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx"
-version = "0.45.1"
+version = "0.45.2"
 dependencies = [
  "dcmfx_anonymize",
  "dcmfx_character_set",
@@ -851,18 +851,18 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_anonymize"
-version = "0.45.1"
+version = "0.45.2"
 dependencies = [
  "dcmfx_core",
 ]
 
 [[package]]
 name = "dcmfx_character_set"
-version = "0.45.1"
+version = "0.45.2"
 
 [[package]]
 name = "dcmfx_cli"
-version = "0.45.1"
+version = "0.45.2"
 dependencies = [
  "assert_cmd",
  "async-stream",
@@ -898,7 +898,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_core"
-version = "0.45.1"
+version = "0.45.2"
 dependencies = [
  "byteorder",
  "num-traits",
@@ -912,7 +912,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_json"
-version = "0.45.1"
+version = "0.45.2"
 dependencies = [
  "base64",
  "byteorder",
@@ -925,7 +925,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_p10"
-version = "0.45.1"
+version = "0.45.2"
 dependencies = [
  "async-trait",
  "byteorder",
@@ -939,7 +939,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_pixel_data"
-version = "0.45.1"
+version = "0.45.2"
 dependencies = [
  "bytemuck",
  "byteorder",
