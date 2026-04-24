@@ -539,12 +539,10 @@ fn decode_rle_segment(
   let mut result = Vec::with_capacity(expected_length);
 
   loop {
-    if rle_data.len() < 2 {
-      if result.len() == expected_length {
-        return Ok(result);
-      } else {
-        return Err(());
-      }
+    if result.len() == expected_length {
+      return Ok(result);
+    } else if rle_data.len() < 2 {
+      return Err(());
     }
 
     let n = rle_data[0];
