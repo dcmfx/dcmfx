@@ -542,7 +542,12 @@ fn decode_rle_segment(
     if result.len() == expected_length {
       return Ok(result);
     } else if rle_data.len() < 2 {
-      return Err(());
+      // Fill with zeros if there was insufficient data. In well-formed data
+      // this will never happen, but this fallback behavior improves
+      // compatibility with bad/corrupted pixel data.
+      result.resize(expected_length, 0);
+
+      return Ok(result);
     }
 
     let n = rle_data[0];
