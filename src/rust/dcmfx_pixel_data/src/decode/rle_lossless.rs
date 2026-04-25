@@ -569,12 +569,13 @@ fn decode_rle_segment(
     else if n > 128 {
       let repeated_byte = rle_data[1];
 
-      let length = 257 - usize::from(n);
+      let mut length = 257 - usize::from(n);
 
-      // Check expected length won't be exceeded
-      if result.len() + length > expected_length {
-        return Err(());
-      }
+      // Check expected length won't be exceeded. In well-formed data the
+      // expected length should never be exceeded, but it's detected and
+      // corrected in order to improve compatibility with bad/corrupted pixel
+      // data.
+      length = length.min(expected_length - result.len());
 
       for _ in 0..length {
         result.push(repeated_byte);
