@@ -421,10 +421,10 @@ fn update_specific_character_set_clarifying_data_element(
   let charset =
     specific_character_set
     |> dcmfx_character_set.from_string
-    |> result.map_error(fn(_) {
+    |> result.map_error(fn(details) {
       p10_error.SpecificCharacterSetInvalid(
         string.slice(specific_character_set, 0, 64),
-        "",
+        details,
       )
     })
   use charset <- result.try(charset)

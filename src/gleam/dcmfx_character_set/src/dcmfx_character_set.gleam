@@ -55,6 +55,38 @@ pub fn from_string(
     |> result.all
   use charsets <- result.try(charsets)
 
+  // If the first character set is the non-ISO 2022 default character set, and
+  // all other character sets are ISO 2022, then convert the first one to the
+  // ISO 2022 default character set so that the list of character sets is
+  // standards-conformant
+  let charsets = case charsets {
+    [first, _, ..] ->
+      case first.defined_term == character_set.iso_ir_6.defined_term {
+        True -> {
+          let other_charsets = charsets |> list.drop(1)
+
+          let are_other_charsets_iso_2022 =
+            other_charsets
+            |> list.all(fn(charset) {
+              case charset {
+                SingleByteWithExtensions(..) | MultiByteWithExtensions(..) ->
+                  True
+                _ -> False
+              }
+            })
+
+          case are_other_charsets_iso_2022 {
+            True -> [character_set.iso_2022_ir_6, ..other_charsets]
+            False -> charsets
+          }
+        }
+
+        False -> charsets
+      }
+
+    _ -> charsets
+  }
+
   // If the first character set does not use extensions then it must be the only
   // one. Conversely, if extensions are in use then all character sets must
   // support them.

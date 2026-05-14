@@ -24,8 +24,7 @@ pub fn specific_character_set_test() {
   let assert Ok(_) =
     dcmfx_character_set.from_string("ISO 2022 IR 6\\ISO 2022 IR 87")
 
-  let assert Error(_) =
-    dcmfx_character_set.from_string("ISO_IR 6\\ISO 2022 IR 87")
+  let assert Ok(_) = dcmfx_character_set.from_string("ISO_IR 6\\ISO 2022 IR 87")
 
   let assert Ok(_) = dcmfx_character_set.from_string("ISO_IR 192")
 

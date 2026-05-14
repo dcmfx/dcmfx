@@ -482,9 +482,9 @@ impl P10Location {
       .specific_character_set = SpecificCharacterSet::from_string(
       specific_character_set,
     )
-    .map_err(|_| P10Error::SpecificCharacterSetInvalid {
+    .map_err(|details| P10Error::SpecificCharacterSetInvalid {
       specific_character_set: specific_character_set.chars().take(64).collect(),
-      details: "".to_string(),
+      details,
     })?;
 
     *value_bytes = b"ISO_IR 192".to_vec().into();

@@ -81,6 +81,23 @@ impl SpecificCharacterSet {
       .collect::<Result<Vec<&'static CharacterSet>, String>>(
     )?;
 
+    // If the first character set is the non-ISO 2022 default character set, and
+    // all other character sets are ISO 2022, then convert the first one to the
+    // ISO 2022 default character set so that the list of character sets is
+    // standards-conformant
+    if charsets[0] == &character_set::ISO_IR_6
+      && charsets.len() > 1
+      && charsets.iter().skip(1).all(|charset| {
+        matches!(
+          charset,
+          CharacterSet::SingleByteWithExtensions { .. }
+            | CharacterSet::MultiByteWithExtensions { .. }
+        )
+      })
+    {
+      charsets[0] = &character_set::ISO_2022_IR_6;
+    }
+
     // If the first character set does not use extensions then it must be the
     // only one. Conversely, if extensions are in use then all character sets
     // must support them.
@@ -355,7 +372,7 @@ mod tests {
         .is_ok()
     );
     assert!(
-      SpecificCharacterSet::from_string("ISO_IR 6\\ISO 2022 IR 87").is_err()
+      SpecificCharacterSet::from_string("ISO_IR 6\\ISO 2022 IR 87").is_ok()
     );
     assert!(SpecificCharacterSet::from_string("ISO_IR 192").is_ok());
     assert!(
