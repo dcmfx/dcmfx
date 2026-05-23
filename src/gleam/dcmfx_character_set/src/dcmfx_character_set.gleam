@@ -94,6 +94,12 @@ pub fn from_string(
     // A single value is always fine
     [_] -> Ok(charsets)
 
+    // If the first value is UTF-8 then ignore other values. Other values are
+    // invalid and should never be present, but if they are then they're
+    // ignored and UTF-8 is assumed.
+    [MultiByteWithoutExtensions(defined_term: "ISO_IR 192", ..), ..] ->
+      Ok([character_set.iso_ir_192])
+
     // If there are multiple values they must all support Code Extensions
     _ -> {
       let has_non_iso_2022_charset =

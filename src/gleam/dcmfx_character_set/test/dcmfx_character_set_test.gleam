@@ -1,4 +1,5 @@
 import dcmfx_character_set
+import dcmfx_character_set/internal/character_set
 import dcmfx_character_set/string_type.{type StringType}
 import gleam/list
 import gleam/string
@@ -28,8 +29,10 @@ pub fn specific_character_set_test() {
 
   let assert Ok(_) = dcmfx_character_set.from_string("ISO_IR 192")
 
-  let assert Error(_) =
+  let assert Ok(charsets) =
     dcmfx_character_set.from_string("ISO_IR 192\\ISO 2022 IR 149")
+  assert dcmfx_character_set.character_sets(charsets)
+    == [character_set.iso_ir_192]
 
   let assert Ok(_) = dcmfx_character_set.from_string("GB18030")
 

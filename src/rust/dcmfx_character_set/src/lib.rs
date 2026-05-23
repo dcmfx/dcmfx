@@ -105,6 +105,11 @@ impl SpecificCharacterSet {
       // A single value is always fine
       [_] => Ok(charsets),
 
+      // If the first value is UTF-8 then ignore other values. Other values are
+      // invalid and should never be present, but if they are then they're
+      // ignored and UTF-8 is assumed.
+      [a, ..] if *a == &character_set::ISO_IR_192 => Ok([*a].to_vec()),
+
       // If there are multiple values they must all support Code Extensions
       _ => {
         let has_non_iso_2022_charset =
@@ -375,8 +380,9 @@ mod tests {
       SpecificCharacterSet::from_string("ISO_IR 6\\ISO 2022 IR 87").is_ok()
     );
     assert!(SpecificCharacterSet::from_string("ISO_IR 192").is_ok());
-    assert!(
-      SpecificCharacterSet::from_string("ISO_IR 192\\ISO 2022 IR 149").is_err()
+    assert_eq!(
+      SpecificCharacterSet::from_string("ISO_IR 192\\ISO 2022 IR 149"),
+      Ok(SpecificCharacterSet(vec![&character_set::ISO_IR_192]))
     );
     assert!(SpecificCharacterSet::from_string("GB18030").is_ok());
     assert!(SpecificCharacterSet::from_string("GB18030\\ISO_IR 192").is_err());
