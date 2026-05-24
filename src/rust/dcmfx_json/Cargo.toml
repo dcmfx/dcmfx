@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx_json"
-version = "0.45.5"
+version = "0.45.6"
 description = "DCMfx JSON library"
 
 repository.workspace = true
