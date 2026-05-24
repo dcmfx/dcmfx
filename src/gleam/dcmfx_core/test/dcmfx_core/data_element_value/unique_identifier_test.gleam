@@ -23,7 +23,7 @@ pub fn to_bytes_test() {
 }
 
 pub fn new_test() {
-  list.range(0, 1000)
+  list.repeat(0, 1000)
   |> list.each(fn(_) {
     assert result.map(unique_identifier.new(""), unique_identifier.is_valid)
       == Ok(True)

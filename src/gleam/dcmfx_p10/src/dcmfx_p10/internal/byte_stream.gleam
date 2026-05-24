@@ -330,7 +330,8 @@ fn inflate_up_to_max_read_size(
           Ok(ByteStream(..stream, zlib_inflate_complete: True))
 
         // Put inflated bytes onto the bytes queue
-        Ok(inflate_result.Continue(bytes)) | Ok(inflate_result.Finished(bytes)) ->
+        Ok(inflate_result.Continue(bytes))
+        | Ok(inflate_result.Finished(bytes)) ->
           case bytes {
             <<>> -> Ok(stream)
             bytes ->

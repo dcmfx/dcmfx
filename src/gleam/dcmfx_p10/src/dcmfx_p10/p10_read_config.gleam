@@ -100,7 +100,10 @@ pub fn max_sequence_depth(config: P10ReadConfig, value: Int) -> P10ReadConfig {
 ///
 /// By default the 'DICM' prefix at bytes 128-132 is not required.
 ///
-pub fn require_dicm_prefix(config: P10ReadConfig, value: Bool) -> P10ReadConfig {
+pub fn require_dicm_prefix(
+  config: P10ReadConfig,
+  value: Bool,
+) -> P10ReadConfig {
   P10ReadConfig(..config, require_dicm_prefix: value)
 }
 

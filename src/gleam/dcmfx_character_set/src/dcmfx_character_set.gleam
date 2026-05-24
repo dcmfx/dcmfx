@@ -144,7 +144,9 @@ pub fn character_sets(
 /// is only the case for the DICOM default character set (ISO_IR 6) and the
 /// UTF-8 character set itself (ISO_IR 192).
 ///
-pub fn is_utf8_compatible(specific_character_set: SpecificCharacterSet) -> Bool {
+pub fn is_utf8_compatible(
+  specific_character_set: SpecificCharacterSet,
+) -> Bool {
   specific_character_set.charsets == [character_set.iso_ir_6]
   || specific_character_set.charsets == [character_set.iso_ir_192]
 }

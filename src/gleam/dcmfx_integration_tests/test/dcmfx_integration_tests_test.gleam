@@ -325,7 +325,9 @@ fn test_jittered_read_loop(
 
 /// Tests reading the frames of pixel data from a data set.
 ///
-fn test_read_pixel_data(data_set: DataSet) -> Result(Nil, DicomValidationError) {
+fn test_read_pixel_data(
+  data_set: DataSet,
+) -> Result(Nil, DicomValidationError) {
   // If there is no pixel data then there's nothing to test
   use <- bool.guard(
     !data_set.has(data_set, dictionary.rows.tag)

@@ -38,7 +38,10 @@ pub type Item {
 /// If the tag isn't in the dictionary then `unknown_tag` is returned, or
 /// `unknown_private_tag` if it is a private tag.
 ///
-pub fn tag_name(tag: DataElementTag, private_creator: Option(String)) -> String {
+pub fn tag_name(
+  tag: DataElementTag,
+  private_creator: Option(String),
+) -> String {
   case find(tag, private_creator) {
     Ok(item) -> item.name
     _ ->

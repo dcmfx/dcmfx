@@ -468,8 +468,8 @@ pub fn new_encapsulated_pixel_data(
   items: List(BitArray),
 ) -> Result(DataElementValue, DataError) {
   let vr_validation = case vr {
-    value_representation.OtherByteString | value_representation.OtherWordString ->
-      Ok(Nil)
+    value_representation.OtherByteString
+    | value_representation.OtherWordString -> Ok(Nil)
     _ ->
       Error(data_error.new_value_invalid(
         "Value representation '"
@@ -716,7 +716,9 @@ pub fn new_short_text(value: String) -> Result(DataElementValue, DataError) {
 
 /// Creates a new `SignedLong` data element value.
 ///
-pub fn new_signed_long(value: List(Int)) -> Result(DataElementValue, DataError) {
+pub fn new_signed_long(
+  value: List(Int),
+) -> Result(DataElementValue, DataError) {
   let is_valid =
     list.all(value, fn(i) { i >= { -1 * 0x80000000 } && i <= 0x7FFFFFFF })
 
@@ -733,7 +735,9 @@ pub fn new_signed_long(value: List(Int)) -> Result(DataElementValue, DataError) 
 
 /// Creates a new `SignedShort` data element value.
 ///
-pub fn new_signed_short(value: List(Int)) -> Result(DataElementValue, DataError) {
+pub fn new_signed_short(
+  value: List(Int),
+) -> Result(DataElementValue, DataError) {
   let is_valid = list.all(value, fn(i) { i >= { -1 * 0x8000 } && i <= 0x7FFF })
 
   use <- bool.guard(
@@ -815,7 +819,9 @@ pub fn new_unlimited_characters(
 
 /// Creates a new `UnlimitedText` data element value.
 ///
-pub fn new_unlimited_text(value: String) -> Result(DataElementValue, DataError) {
+pub fn new_unlimited_text(
+  value: String,
+) -> Result(DataElementValue, DataError) {
   value
   |> utils.trim_ascii_end(0x20)
   |> bit_array.from_string
@@ -1154,7 +1160,9 @@ pub fn get_big_int(value: DataElementValue) -> Result(BigInt, DataError) {
 /// Returns the big integers contained in a data element value. This is only
 /// supported for value representations that contain big integer data.
 ///
-pub fn get_big_ints(value: DataElementValue) -> Result(List(BigInt), DataError) {
+pub fn get_big_ints(
+  value: DataElementValue,
+) -> Result(List(BigInt), DataError) {
   case value {
     BinaryValue(value_representation.SignedVeryLong, bytes) ->
       bit_array_utils.to_int64_list(bytes)
@@ -1187,7 +1195,9 @@ pub fn get_float(value: DataElementValue) -> Result(IEEEFloat, DataError) {
 /// Returns the floats contained in a data element value. This is only supported
 /// for value representations containing floating point data.
 ///
-pub fn get_floats(value: DataElementValue) -> Result(List(IEEEFloat), DataError) {
+pub fn get_floats(
+  value: DataElementValue,
+) -> Result(List(IEEEFloat), DataError) {
   case value {
     BinaryValue(value_representation.DecimalString, bytes) ->
       bytes

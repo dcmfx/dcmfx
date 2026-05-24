@@ -396,7 +396,7 @@ fn generate_find_function(dictionary_items: List(DictionaryItem)) -> Nil {
           Rust -> "(0x0028, element) if "
         }
         <> {
-          list.range(0, 15)
+          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
           |> list.map(fn(i) {
             "element == "
             <> string.slice(element, 0, 4)
@@ -442,7 +442,7 @@ fn generate_find_function(dictionary_items: List(DictionaryItem)) -> Nil {
     Rust -> "(0x1000, element) => match element % 16 {"
   })
 
-  list.range(0, 5)
+  [0, 1, 2, 3, 4, 5]
   |> list.map(fn(i) {
     let assert Ok(item) =
       list.find(dictionary_items, fn(e) {

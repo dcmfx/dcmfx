@@ -841,7 +841,8 @@ fn convert_binary_value_to_json(
       |> result.map(list.map(_, int.to_string))
 
     // Binary signed/unsigned big integer value representations
-    value_representation.SignedVeryLong | value_representation.UnsignedVeryLong -> {
+    value_representation.SignedVeryLong
+    | value_representation.UnsignedVeryLong -> {
       use value <- result.try(data_element_value.get_big_ints(value))
 
       // Integers outside of the range representable by a JavaScript number are

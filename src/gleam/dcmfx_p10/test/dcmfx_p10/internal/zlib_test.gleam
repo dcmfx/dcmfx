@@ -43,7 +43,7 @@ pub fn inflate_test() {
   assert zlib.safe_inflate(stream, zeros_256_kib_deflated)
     == Ok(inflate_result.Continue(zeros_16_kib()))
 
-  list.range(0, 14)
+  list.repeat(0, 15)
   |> list.each(fn(_) {
     assert zlib.safe_inflate(stream, <<>>)
       == Ok(inflate_result.Continue(zeros_16_kib()))

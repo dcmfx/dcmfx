@@ -537,7 +537,9 @@ fn map_clarifying_data_elements(
 /// Returns whether the current specific character set is byte compatible with
 /// UTF-8.
 ///
-pub fn is_specific_character_set_utf8_compatible(location: P10Location) -> Bool {
+pub fn is_specific_character_set_utf8_compatible(
+  location: P10Location,
+) -> Bool {
   dcmfx_character_set.is_utf8_compatible(
     active_clarifying_data_elements(location).specific_character_set,
   )

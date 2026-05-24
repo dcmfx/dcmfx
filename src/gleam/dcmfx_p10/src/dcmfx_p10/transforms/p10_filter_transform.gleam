@@ -76,8 +76,8 @@ pub fn add_token(
   }
 
   case token {
-    p10_token.FilePreambleAndDICMPrefix(..) | p10_token.FileMetaInformation(..) ->
-      Ok(#(True, transform))
+    p10_token.FilePreambleAndDICMPrefix(..)
+    | p10_token.FileMetaInformation(..) -> Ok(#(True, transform))
 
     p10_token.SequenceStart(tag, vr, path) -> run_predicate(tag, vr, None, path)
 

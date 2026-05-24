@@ -25,14 +25,14 @@ jobs:
       - name: Setup Gleam
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 28.3
-          gleam-version: 1.14.0
+          otp-version: 28.5
+          gleam-version: 1.17.0
           version-type: strict
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24.12
+          node-version: 24
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -251,8 +251,8 @@ jobs:
       - name: Setup Gleam
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 28.3
-          gleam-version: 1.14.0
+          otp-version: 28.5
+          gleam-version: 1.17.0
           version-type: strict
 
       - name: Setup Rust
@@ -265,7 +265,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24.12
+          node-version: 24
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -295,7 +295,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24.12
+          node-version: 24
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1

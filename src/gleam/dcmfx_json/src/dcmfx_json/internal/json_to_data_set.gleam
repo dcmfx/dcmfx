@@ -323,7 +323,8 @@ fn read_dicom_json_primitive_value(
       }
     }
 
-    value_representation.SignedVeryLong | value_representation.UnsignedVeryLong -> {
+    value_representation.SignedVeryLong
+    | value_representation.UnsignedVeryLong -> {
       let values =
         value
         |> decode.run(decode.list(decode.dynamic))

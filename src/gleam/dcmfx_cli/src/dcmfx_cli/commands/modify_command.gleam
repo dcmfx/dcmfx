@@ -249,7 +249,7 @@ fn modify_input_source(
   // Append a random suffix to get a unique name for a temporary output file
   let tmp_output_filename = {
     let random_suffix =
-      list.range(0, 15)
+      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
       |> list.map(fn(_) {
         let assert Ok(cp) = string.utf_codepoint(97 + int.random(26))
         cp

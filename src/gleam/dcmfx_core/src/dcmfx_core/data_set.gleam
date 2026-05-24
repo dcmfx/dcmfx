@@ -981,7 +981,10 @@ pub fn get_strings(
 /// data element with the specified tag does not hold exactly one integer value
 /// then an error is returned.
 ///
-pub fn get_int(data_set: DataSet, tag: DataElementTag) -> Result(Int, DataError) {
+pub fn get_int(
+  data_set: DataSet,
+  tag: DataElementTag,
+) -> Result(Int, DataError) {
   data_set
   |> get_value(tag)
   |> result.try(data_element_value.get_int)
@@ -1382,10 +1385,14 @@ pub fn private_block(
   // Search for a matching `(gggg,00XX) Private Creator' data element.
   // Ref: PS3.5 7.8.1.
   let private_creator_element =
-    list.range(0x10, 0xFF)
-    |> list.find(fn(element) {
-      dict.get(data_set, DataElementTag(group, element))
-      == Ok(private_creator_value)
+    int.range(0x10, 0xFF, Error(Nil), fn(acc, element) {
+      acc
+      |> result.try_recover(fn(_) {
+        case dict.get(data_set, DataElementTag(group, element)) {
+          Ok(e) if e == private_creator_value -> Ok(element)
+          _ -> Error(Nil)
+        }
+      })
     })
     |> result.replace_error(
       "Private creator '" <> private_creator <> "' not found",
