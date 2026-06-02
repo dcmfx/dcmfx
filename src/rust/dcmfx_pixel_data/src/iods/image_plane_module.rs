@@ -80,21 +80,30 @@ impl IodModule for ImagePlaneModule {
 
     let tag = dictionary::SLICE_THICKNESS.tag;
     let slice_thickness = if data_set.has(tag) {
-      Some(data_set.get_float(tag)? as f32)
+      match data_set.get_floats(tag)?.as_slice() {
+        [f, ..] => Some(*f as f32),
+        _ => None,
+      }
     } else {
       None
     };
 
     let tag = dictionary::SPACING_BETWEEN_SLICES.tag;
     let spacing_between_slices = if data_set.has(tag) {
-      Some(data_set.get_float(tag)? as f32)
+      match data_set.get_floats(tag)?.as_slice() {
+        [f, ..] => Some(*f as f32),
+        _ => None,
+      }
     } else {
       None
     };
 
     let tag = dictionary::SLICE_LOCATION.tag;
     let slice_location = if data_set.has(tag) {
-      Some(data_set.get_float(tag)? as f32)
+      match data_set.get_floats(tag)?.as_slice() {
+        [f, ..] => Some(*f as f32),
+        _ => None,
+      }
     } else {
       None
     };
