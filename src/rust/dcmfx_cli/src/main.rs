@@ -97,7 +97,7 @@ async fn main() {
 }
 
 #[cfg(not(windows))]
-fn get_peak_memory_usage() -> i64 {
+fn get_peak_memory_usage() -> libc::c_long {
   let mut usage: libc::rusage = unsafe { std::mem::zeroed() };
   unsafe { libc::getrusage(libc::RUSAGE_SELF, &mut usage) };
 
