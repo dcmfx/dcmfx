@@ -119,7 +119,7 @@ fn input_sources_for_input_filename(
       if is_glob(object_path.as_ref()) {
         let mut stream = input_sources_for_object_url_glob(
           object_store,
-          &object_path,
+          object_path.as_ref(),
           input_filename_str.to_string(),
         );
 
@@ -129,7 +129,7 @@ fn input_sources_for_input_filename(
       } else {
         yield InputSource::Object {
           object_store,
-          object_path: object_path.into(),
+          object_path,
           specified_path: input_filename.clone(),
         };
       }
@@ -139,10 +139,10 @@ fn input_sources_for_input_filename(
       let (object_store, object_path) =
         local_path_to_store_and_path(input_filename_str.to_string()).await;
 
-      if is_glob(&object_path) {
+      if is_glob(object_path.as_ref()) {
         let mut stream = input_sources_for_object_url_glob(
           object_store,
-          &object_path,
+          object_path.as_ref(),
           input_filename_str.to_string(),
         );
 
@@ -166,7 +166,7 @@ fn input_sources_for_input_filename(
 
         yield InputSource::Object {
           object_store,
-          object_path: object_path.into(),
+          object_path,
           specified_path: input_filename.clone(),
         }
       }
@@ -262,7 +262,7 @@ async fn file_list_input_sources(
 
           yield InputSource::Object {
             object_store,
-            object_path: object_path.into(),
+            object_path,
             specified_path: PathBuf::from(path),
           };
         }

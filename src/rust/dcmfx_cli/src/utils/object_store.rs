@@ -1,4 +1,6 @@
-use object_store::{ObjectStore, aws::AmazonS3Builder};
+use object_store::{
+  ObjectStore, aws::AmazonS3Builder, path::Path as ObjectStorePath,
+};
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 use tokio::sync::Mutex;
@@ -14,10 +16,14 @@ use tokio::sync::Mutex;
 #[allow(clippy::result_unit_err)]
 pub async fn object_url_to_store_and_path(
   url: &str,
-) -> Result<(Arc<dyn object_store::ObjectStore>, String), ()> {
+) -> Result<(Arc<dyn object_store::ObjectStore>, ObjectStorePath), ()> {
   if let Some(path) = url.strip_prefix("file://") {
     let store = get_cached_store(ObjectStoreScheme::File, "").await;
-    return Ok((store, path.strip_prefix("/").unwrap_or(path).into()));
+
+    let path = path.strip_prefix("/").unwrap_or(path);
+    let path = ObjectStorePath::parse(path).expect("object path is valid");
+
+    return Ok((store, path));
   }
 
   let scheme = if url.starts_with("s3://") {
@@ -43,18 +49,20 @@ pub async fn object_url_to_store_and_path(
   let host = &url[..idx];
 
   let store = get_cached_store(scheme, host).await;
+
   let path = &url[idx..];
   let path = path.strip_prefix("/").unwrap_or(path);
+  let path = ObjectStorePath::parse(path).expect("object path is valid");
 
-  Ok((store, path.into()))
+  Ok((store, path))
 }
 
-/// Converts. a relative or absoluate path on the local filesystem to an object
+/// Converts. a relative or absolute path on the local filesystem to an object
 /// store and path pair. Internally this will use the file:// schema.
 ///
 pub async fn local_path_to_store_and_path<P: AsRef<std::path::Path>>(
   path: P,
-) -> (Arc<dyn object_store::ObjectStore>, String) {
+) -> (Arc<dyn object_store::ObjectStore>, object_store::path::Path) {
   let normalized_path = format!(
     "file://{}",
     crate::utils::normalize_path(path.as_ref()).display()

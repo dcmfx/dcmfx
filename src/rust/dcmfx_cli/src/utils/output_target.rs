@@ -70,7 +70,7 @@ impl OutputTarget {
     {
       return Self::Object {
         object_store,
-        object_path: object_path.into(),
+        object_path,
         specified_path: PathBuf::from(path),
       };
     }
@@ -81,7 +81,7 @@ impl OutputTarget {
 
     Self::Object {
       object_store,
-      object_path: object_path.into(),
+      object_path,
       specified_path: PathBuf::from(path),
     }
   }
@@ -139,7 +139,8 @@ impl OutputTarget {
         specified_path,
       } => {
         let object_path =
-          ObjectStorePath::from(format!("{object_path}{suffix}"));
+          ObjectStorePath::parse(format!("{object_path}{suffix}"))
+            .expect("object path is valid after appending suffix");
 
         let mut specified_path = specified_path.clone();
         if let Some(file_name) = specified_path.file_name() {
