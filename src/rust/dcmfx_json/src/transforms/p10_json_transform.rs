@@ -446,13 +446,30 @@ impl P10JsonTransform {
 
     let value = DataElementValue::new_binary_unchecked(vr, bytes.clone());
 
-    let json_values = self
-      .convert_binary_value_to_json(&value, bytes.into_vec())
-      .map_err(|e| {
-        JsonSerializeError::DataError(e.with_path(&self.data_set_path))
-      })?;
+    let json_values =
+      match self.convert_binary_value_to_json(&value, bytes.into_vec()) {
+        Ok(json_values) => json_values,
 
-    if self.config.pretty_print {
+        // If conversion of this data element to DICOM JSON failed, but its tag is
+        // in the list of those to ignore errors for, then emit an empty value
+        // rather than propagating the error.
+        Err(_)
+          if self
+            .config
+            .ignore_invalid_data
+            .contains(&self.current_data_element.0) =>
+        {
+          vec![]
+        }
+
+        Err(e) => {
+          return Err(JsonSerializeError::DataError(
+            e.with_path(&self.data_set_path),
+          ));
+        }
+      };
+
+    if self.config.pretty_print && !json_values.is_empty() {
       self
         .write_indent(stream, 2)
         .map_err(JsonSerializeError::IOError)?;

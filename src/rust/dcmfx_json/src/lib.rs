@@ -136,6 +136,7 @@ mod tests {
     store_encapsulated_pixel_data: true,
     pretty_print: false,
     selected_binary_data_values: None,
+    ignore_invalid_data: Vec::new(),
   };
 
   #[test]
@@ -160,6 +161,35 @@ mod tests {
 
       assert_eq!(DataSet::from_json(&expected_json.to_string()).unwrap(), ds);
     }
+  }
+
+  #[test]
+  fn ignore_invalid_data_test() {
+    // A data element containing an IntegerString value with invalid content
+    let ds: DataSet = [(
+      dictionary::SERIES_NUMBER.tag,
+      DataElementValue::new_binary_unchecked(
+        ValueRepresentation::IntegerString,
+        RcByteSlice::from(b"invalid ".to_vec()),
+      ),
+    )]
+    .into_iter()
+    .collect();
+
+    // Without ignoring errors the conversion fails
+    assert!(ds.to_json(JSON_CONFIG).is_err());
+
+    // When the tag's errors are ignored the data element is emitted without a
+    // value
+    let config = DicomJsonConfig {
+      ignore_invalid_data: vec![dictionary::SERIES_NUMBER.tag],
+      ..JSON_CONFIG
+    };
+    assert_eq!(
+      serde_json::from_str::<serde_json::Value>(&ds.to_json(config).unwrap())
+        .unwrap(),
+      serde_json::json!({ "00200011": { "vr": "IS", "Value": [] } }),
+    );
   }
 
   /// Returns pairs of data sets and their corresponding DICOM JSON string.

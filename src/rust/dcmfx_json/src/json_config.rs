@@ -31,4 +31,10 @@ pub struct DicomJsonConfig {
   /// or `None` if binary data values should always be emitted.
   ///
   pub selected_binary_data_values: Option<Vec<DataElementTag>>,
+
+  /// The data element tags for which invalid data should be ignored rather than
+  /// causing the JSON conversion to error. Such data elements are emitted
+  /// without a value instead of causing an error to be returned.
+  ///
+  pub ignore_invalid_data: Vec<DataElementTag>,
 }

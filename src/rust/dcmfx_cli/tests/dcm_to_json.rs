@@ -3,6 +3,8 @@ mod utils;
 use insta::assert_snapshot;
 use utils::{create_temp_dir, dcmfx_cli, get_stdout, s3_get_object};
 
+use dcmfx::{core::*, p10::*};
+
 #[test]
 fn with_output_filename() {
   let (input_path, output_path, _temp_dir) = prepare_temp_files(
@@ -222,6 +224,51 @@ fn with_multiple_inputs() {
   assert_snapshot!(
     "with_multiple_inputs_1",
     std::fs::read_to_string(&output_path_1).unwrap()
+  );
+}
+
+#[test]
+fn with_ignore_invalid_data() {
+  // Create a DICOM P10 file with an invalid '(0020,0011) Series Number' data
+  // element
+  let data_set: DataSet = [(
+    dictionary::SERIES_NUMBER.tag,
+    DataElementValue::new_binary_unchecked(
+      ValueRepresentation::IntegerString,
+      RcByteSlice::from(b"invalid ".to_vec()),
+    ),
+  )]
+  .into_iter()
+  .collect();
+
+  let temp_dir = create_temp_dir();
+  let input_path = temp_dir.path().join("input.dcm");
+  data_set.write_p10_file(&input_path, None).unwrap();
+
+  // Without the flag the invalid data causes the command to fail
+  dcmfx_cli()
+    .arg("dcm-to-json")
+    .arg(&input_path)
+    .arg("--output-filename")
+    .arg("-")
+    .assert()
+    .failure();
+
+  // With the flag the invalid data element is emitted without a value and the
+  // command succeeds
+  let assert = dcmfx_cli()
+    .arg("dcm-to-json")
+    .arg(&input_path)
+    .arg("--output-filename")
+    .arg("-")
+    .arg("--ignore-invalid-data")
+    .arg("00200011")
+    .assert()
+    .success();
+
+  assert_eq!(
+    get_stdout(assert).trim_end(),
+    r#"{"00200011":{"vr":"IS","Value":[]}}"#
   );
 }
 

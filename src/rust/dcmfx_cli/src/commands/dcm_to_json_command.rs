@@ -104,6 +104,19 @@ pub struct ToJsonArgs {
     value_parser = crate::args::parse_data_element_tag,
   )]
   selected_data_elements: Vec<DataElementTag>,
+
+  #[arg(
+    long = "ignore-invalid-data",
+    value_name = "DATA_ELEMENT_TAG",
+    help_heading = "Output",
+    help = "The tags of data elements for which invalid data that can't be \
+      converted to DICOM JSON should be ignored rather than causing the whole \
+      command to fail. Such data elements will be emitted without a value. \
+      This argument can be specified multiple times to ignore invalid data in \
+      multiple data elements.",
+    value_parser = crate::args::parse_data_element_tag,
+  )]
+  ignore_invalid_data: Vec<DataElementTag>,
 }
 
 enum ToJsonError {
@@ -134,6 +147,7 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
     pretty_print: args.pretty_print,
     store_encapsulated_pixel_data: args.store_encapsulated_pixel_data,
     selected_binary_data_values,
+    ignore_invalid_data: args.ignore_invalid_data.clone(),
   };
 
   let result = utils::run_tasks(

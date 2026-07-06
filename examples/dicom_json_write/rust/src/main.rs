@@ -11,6 +11,7 @@ pub fn main() {
         store_encapsulated_pixel_data: true,
         pretty_print: true,
         selected_binary_data_values: None,
+        ignore_invalid_data: vec![],
     };
 
     let ds_json = ds.to_json(json_config).unwrap();
