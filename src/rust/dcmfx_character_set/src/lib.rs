@@ -145,14 +145,10 @@ impl SpecificCharacterSet {
     &self.0
   }
 
-  /// Returns whether a specific character set is byte compatible with UTF-8.
-  /// This is only the case for the DICOM default character set (ISO_IR 6) and
-  /// the UTF-8 character set itself (ISO_IR 192).
+  /// Returns whether this specific character set is UTF-8.
   ///
-  pub fn is_utf8_compatible(&self) -> bool {
-    self.0.len() == 1
-      && (self.0[0] == &character_set::ISO_IR_6
-        || self.0[0] == &character_set::ISO_IR_192)
+  pub fn is_utf8(&self) -> bool {
+    self.0.len() == 1 && self.0[0] == &character_set::ISO_IR_192
   }
 
   /// Decodes bytes using a specific character set to a native string.

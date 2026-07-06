@@ -1303,12 +1303,12 @@ fn is_materialized_value_required(
   // If this is a clarifying data element then its data needs to be materialized
   use <- bool.guard(p10_location.is_clarifying_data_element(tag), True)
 
-  // If the value is an encoded string, and it isn't UTF-8 compatible data
-  // that can be passed straight through, then materialize it so that it can
-  // be converted to UTF-8.
+  // If the value is an encoded string, and it isn't UTF-8 data that can be
+  // passed straight through, then materialize it so that it can be converted to
+  // UTF-8.
   use <- bool.guard(
     value_representation.is_encoded_string(vr),
-    !p10_location.is_specific_character_set_utf8_compatible(context.location),
+    !p10_location.is_specific_character_set_utf8(context.location),
   )
 
   // Convert strings that are defined to use ISO-646/US-ASCII. In theory this

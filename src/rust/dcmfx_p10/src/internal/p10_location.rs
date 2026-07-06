@@ -527,14 +527,13 @@ impl P10Location {
       .insert(tag, private_creator);
   }
 
-  /// Returns whether the current specific character set is byte compatible with
-  /// UTF-8.
+  /// Returns whether the current specific character set is UTF-8.
   ///
-  pub fn is_specific_character_set_utf8_compatible(&self) -> bool {
+  pub fn is_specific_character_set_utf8(&self) -> bool {
     self
       .active_clarifying_data_elements()
       .specific_character_set
-      .is_utf8_compatible()
+      .is_utf8()
   }
 
   /// Decodes encoded string bytes using the currently active specific character

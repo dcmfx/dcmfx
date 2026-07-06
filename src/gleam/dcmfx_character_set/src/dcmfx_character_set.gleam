@@ -140,15 +140,10 @@ pub fn character_sets(
   specific_character_set.charsets
 }
 
-/// Returns whether a specific character set is byte compatible with UTF-8. This
-/// is only the case for the DICOM default character set (ISO_IR 6) and the
-/// UTF-8 character set itself (ISO_IR 192).
+/// Returns whether a specific character set is UTF-8.
 ///
-pub fn is_utf8_compatible(
-  specific_character_set: SpecificCharacterSet,
-) -> Bool {
-  specific_character_set.charsets == [character_set.iso_ir_6]
-  || specific_character_set.charsets == [character_set.iso_ir_192]
+pub fn is_utf8(specific_character_set: SpecificCharacterSet) -> Bool {
+  specific_character_set.charsets == [character_set.iso_ir_192]
 }
 
 /// Decodes bytes using a specific character set to a native string.
