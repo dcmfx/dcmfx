@@ -16,7 +16,11 @@ runs:
         echo "Updating main manifest.toml files …"
         for dir in src/gleam/dcmfx_*/; do
           cd $dir
-          gleam deps update dcmfx_anonymize dcmfx_character_set dcmfx_core dcmfx_json dcmfx_p10 dcmfx_pixel_data
+          for pkg in dcmfx_anonymize dcmfx_character_set dcmfx_core dcmfx_json dcmfx_p10 dcmfx_pixel_data; do
+            if grep -q "^name = \"$pkg\"" manifest.toml; then
+              gleam deps update "$pkg"
+            fi
+          done
           cd ../../..
         done
 
@@ -29,6 +33,10 @@ runs:
         echo "Updating example app manifest.toml files …"
         for dir in examples/dicom_*/gleam; do
           cd $dir
-          gleam deps update dcmfx_anonymize dcmfx_character_set dcmfx_core dcmfx_json dcmfx_p10 dcmfx_pixel_data
+          for pkg in dcmfx_anonymize dcmfx_character_set dcmfx_core dcmfx_json dcmfx_p10 dcmfx_pixel_data; do
+            if grep -q "^name = \"$pkg\"" manifest.toml; then
+              gleam deps update "$pkg"
+            fi
+          done
           cd ../../..
         done
