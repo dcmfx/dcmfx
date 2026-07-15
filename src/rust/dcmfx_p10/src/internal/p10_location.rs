@@ -81,7 +81,6 @@ struct ClarifyingDataElements {
   specific_character_set: SpecificCharacterSet,
   bits_allocated: Option<u16>,
   pixel_representation: Option<u16>,
-  waveform_bits_stored: Option<u16>,
   waveform_bits_allocated: Option<u16>,
   private_creators: BTreeMap<DataElementTag, String>,
 }
@@ -93,7 +92,6 @@ pub fn is_clarifying_data_element(tag: DataElementTag) -> bool {
   tag == dictionary::SPECIFIC_CHARACTER_SET.tag
     || tag == dictionary::BITS_ALLOCATED.tag
     || tag == dictionary::PIXEL_REPRESENTATION.tag
-    || tag == dictionary::WAVEFORM_BITS_STORED.tag
     || tag == dictionary::WAVEFORM_BITS_ALLOCATED.tag
     || tag.is_private_creator()
 }
@@ -119,7 +117,6 @@ impl Default for ClarifyingDataElements {
         .unwrap(),
       bits_allocated: None,
       pixel_representation: None,
-      waveform_bits_stored: None,
       waveform_bits_allocated: None,
       private_creators: BTreeMap::new(),
     }
@@ -193,10 +190,11 @@ impl P10Location {
 
   /// Swaps endianness of the value bytes for a given data element tag and VR.
   ///
-  /// This function handles the unusual behavior of pixel data and waveform data
-  /// that has a VR of OW but a bits allocated value of 32 or 64. This is a
-  /// special case for endian swapping because it is actually storing 32/64-bit
-  /// words, not the 16-bit ones indicated by the VR.
+  /// This function handles the unusual behavior of pixel data, waveform data,
+  /// and the data elements storing single values in the waveform data's
+  /// sample encoding, that have a VR of OW but a word size of 32 or 64 bits.
+  /// This is a special case for endian swapping because they are actually
+  /// storing 32/64-bit words, not the 16-bit ones indicated by the VR.
   ///
   pub fn swap_endianness(
     &self,
@@ -211,6 +209,18 @@ impl P10Location {
         self
           .active_clarifying_data_elements()
           .waveform_bits_allocated
+      } else if tag == dictionary::CHANNEL_MINIMUM_VALUE.tag
+        || tag == dictionary::CHANNEL_MAXIMUM_VALUE.tag
+        || tag == dictionary::WAVEFORM_PADDING_VALUE.tag
+      {
+        // These data elements hold a single value in the waveform data's
+        // sample encoding, so their length gives the word size. Ref: PS3.5
+        // 8.3.
+        match data.len() {
+          4 => Some(32),
+          8 => Some(64),
+          _ => None,
+        }
       } else {
         None
       };
@@ -503,8 +513,6 @@ impl P10Location {
       clarifying_data_elements.bits_allocated = Some(value);
     } else if tag == dictionary::PIXEL_REPRESENTATION.tag {
       clarifying_data_elements.pixel_representation = Some(value);
-    } else if tag == dictionary::WAVEFORM_BITS_STORED.tag {
-      clarifying_data_elements.waveform_bits_stored = Some(value);
     } else if tag == dictionary::WAVEFORM_BITS_ALLOCATED.tag {
       clarifying_data_elements.waveform_bits_allocated = Some(value);
     }
@@ -639,34 +647,18 @@ impl P10Location {
         }
       }
 
-      // Use '(003A,021A) WaveformBitsStored' to determine an OB/OW VR on
-      // relevant values
+      // For '(5400,1010) Waveform Data' and the other waveform data elements
+      // that store values in its sample encoding, OB is not usable when in an
+      // implicit VR transfer syntax. Ref: PS3.5 8.3.
       [
         ValueRepresentation::OtherByteString,
         ValueRepresentation::OtherWordString,
       ] if tag == dictionary::CHANNEL_MINIMUM_VALUE.tag
-        || tag == dictionary::CHANNEL_MAXIMUM_VALUE.tag =>
-      {
-        match clarifying_data_elements.waveform_bits_stored {
-          Some(8) => Ok(ValueRepresentation::OtherByteString),
-          Some(16) => Ok(ValueRepresentation::OtherWordString),
-          _ => Err(dictionary::WAVEFORM_BITS_STORED.tag),
-        }
-      }
-
-      // Use '(5400,1004) WaveformBitsAllocated' to determine an OB/OW VR on
-      // relevant values
-      [
-        ValueRepresentation::OtherByteString,
-        ValueRepresentation::OtherWordString,
-      ] if tag == dictionary::WAVEFORM_PADDING_VALUE.tag
+        || tag == dictionary::CHANNEL_MAXIMUM_VALUE.tag
+        || tag == dictionary::WAVEFORM_PADDING_VALUE.tag
         || tag == dictionary::WAVEFORM_DATA.tag =>
       {
-        match clarifying_data_elements.waveform_bits_allocated {
-          Some(8) => Ok(ValueRepresentation::OtherByteString),
-          Some(16) => Ok(ValueRepresentation::OtherWordString),
-          _ => Err(dictionary::WAVEFORM_BITS_ALLOCATED.tag),
-        }
+        Ok(ValueRepresentation::OtherWordString)
       }
 
       // The VR for '(0028,3006) LUTData' doesn't need to be determined because
@@ -698,5 +690,56 @@ impl P10Location {
       // The VR couldn't be determined
       _ => Ok(ValueRepresentation::Unknown),
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn swap_endianness_of_waveform_single_value_data_elements() {
+    let location = P10Location::new();
+
+    // Data elements that hold a single value in the waveform data's sample
+    // encoding are swapped using the word size given by their length
+    for tag in [
+      dictionary::CHANNEL_MINIMUM_VALUE.tag,
+      dictionary::CHANNEL_MAXIMUM_VALUE.tag,
+      dictionary::WAVEFORM_PADDING_VALUE.tag,
+    ] {
+      let mut data = [0, 1];
+      location.swap_endianness(
+        tag,
+        ValueRepresentation::OtherWordString,
+        &mut data,
+      );
+      assert_eq!(data, [1, 0]);
+
+      let mut data = [0, 1, 2, 3];
+      location.swap_endianness(
+        tag,
+        ValueRepresentation::OtherWordString,
+        &mut data,
+      );
+      assert_eq!(data, [3, 2, 1, 0]);
+
+      let mut data = [0, 1, 2, 3, 4, 5, 6, 7];
+      location.swap_endianness(
+        tag,
+        ValueRepresentation::OtherWordString,
+        &mut data,
+      );
+      assert_eq!(data, [7, 6, 5, 4, 3, 2, 1, 0]);
+    }
+
+    // Other OW data elements are swapped as 16-bit words regardless of length
+    let mut data = [0, 1, 2, 3];
+    location.swap_endianness(
+      DataElementTag::new(0x0008, 0x0000),
+      ValueRepresentation::OtherWordString,
+      &mut data,
+    );
+    assert_eq!(data, [1, 0, 3, 2]);
   }
 }

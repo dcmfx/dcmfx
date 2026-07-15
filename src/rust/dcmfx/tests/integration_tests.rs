@@ -14,6 +14,7 @@ use dcmfx_core::*;
 use dcmfx_json::*;
 use dcmfx_p10::*;
 use dcmfx_pixel_data::*;
+use dcmfx_waveform::*;
 
 #[tokio::test]
 async fn integration_tests() -> Result<(), ()> {
@@ -69,6 +70,10 @@ enum DicomValidationError {
   JitteredReadError { error: P10Error },
   JitteredReadMismatch,
   PixelDataRenderError(Either<PixelDataDecodeError, String>),
+  WaveformReadError(P10WaveformChunkTransformError),
+  WaveformDecodeError(WaveformDecodeError),
+  WaveformWriteError(P10WaveformChunkWriterError),
+  WaveformRoundTripMismatch(String),
 }
 
 impl DicomValidationError {
@@ -113,6 +118,25 @@ impl DicomValidationError {
           dicom, details
         )],
       },
+
+      DicomValidationError::WaveformReadError(error) => {
+        error.to_lines(&format!("reading waveforms from {:?}", dicom))
+      }
+
+      DicomValidationError::WaveformDecodeError(error) => {
+        error.to_lines(&format!("decoding waveform samples from {:?}", dicom))
+      }
+
+      DicomValidationError::WaveformWriteError(error) => {
+        error.to_lines(&format!("writing waveforms from {:?}", dicom))
+      }
+
+      DicomValidationError::WaveformRoundTripMismatch(details) => {
+        vec![format!(
+          "Error: Waveform round-trip of {:?} was different, details: {}",
+          dicom, details
+        )]
+      }
     }
   }
 }
@@ -175,6 +199,9 @@ fn validate_dicom(dicom: &Path) -> Result<(), DicomValidationError> {
 
   // Test reading pixel data
   test_pixel_data_read(dicom, &data_set)?;
+
+  // Test reading and writing waveform data
+  test_waveform_data(&data_set)?;
 
   Ok(())
 }
@@ -512,4 +539,116 @@ fn test_pixel_data_read(
   }
 
   Ok(())
+}
+
+/// Tests reading the waveform data from a data set and writing it back out
+/// through the waveform chunk writer, checking that the waveform multiplex
+/// groups and their decoded samples are unchanged by the round-trip.
+///
+fn test_waveform_data(data_set: &DataSet) -> Result<(), DicomValidationError> {
+  // If there is no waveform data then there's nothing to test
+  if !data_set.has(dictionary::WAVEFORM_SEQUENCE.tag) {
+    return Ok(());
+  }
+
+  // Read the waveform chunks and decode all of their channel samples
+  let chunks = data_set
+    .get_waveform_chunks()
+    .map_err(DicomValidationError::WaveformReadError)?;
+
+  let decoded_channels = chunks
+    .iter()
+    .map(decode_waveform_channels)
+    .collect::<Result<Vec<_>, _>>()?;
+
+  // Write the waveforms back out through the chunk writer, gathering the
+  // resulting tokens into a new data set. Adding the writer's tokens to a data
+  // set builder is infallible as they are always a valid token stream.
+  let mut writer = P10WaveformChunkWriter::new();
+  let mut data_set_builder = DataSetBuilder::new();
+
+  let mut add_tokens = |tokens: Vec<P10Token>| {
+    for token in tokens.iter() {
+      data_set_builder.add_token(token).unwrap();
+    }
+  };
+
+  for (chunk, channel_samples) in chunks.iter().zip(decoded_channels.iter()) {
+    add_tokens(
+      writer
+        .begin_multiplex_group(chunk.multiplex_group().as_ref().clone())
+        .map_err(DicomValidationError::WaveformWriteError)?,
+    );
+
+    // Re-interleave the channel samples into sample set order
+    let mut interleaved = vec![];
+    for sample_index in 0..chunk.number_of_samples() as usize {
+      for samples in channel_samples.iter() {
+        interleaved.push(samples[sample_index]);
+      }
+    }
+
+    add_tokens(
+      writer
+        .write_interleaved_samples(&interleaved)
+        .map_err(DicomValidationError::WaveformWriteError)?,
+    );
+
+    add_tokens(
+      writer
+        .end_multiplex_group()
+        .map_err(DicomValidationError::WaveformWriteError)?,
+    );
+  }
+
+  add_tokens(
+    writer
+      .finish()
+      .map_err(DicomValidationError::WaveformWriteError)?,
+  );
+
+  data_set_builder.force_end();
+  let rebuilt_data_set = data_set_builder.final_data_set().unwrap();
+
+  // Read the re-encoded waveforms back and check they match the original
+  let rebuilt_chunks = rebuilt_data_set
+    .get_waveform_chunks()
+    .map_err(DicomValidationError::WaveformReadError)?;
+
+  if rebuilt_chunks.len() != chunks.len() {
+    return Err(DicomValidationError::WaveformRoundTripMismatch(format!(
+      "Expected {} waveform chunks but found {}",
+      chunks.len(),
+      rebuilt_chunks.len()
+    )));
+  }
+
+  for (index, (rebuilt_chunk, original_chunk)) in
+    rebuilt_chunks.iter().zip(chunks.iter()).enumerate()
+  {
+    if rebuilt_chunk.multiplex_group() != original_chunk.multiplex_group() {
+      return Err(DicomValidationError::WaveformRoundTripMismatch(format!(
+        "Multiplex group {index} changed"
+      )));
+    }
+
+    if decode_waveform_channels(rebuilt_chunk)? != decoded_channels[index] {
+      return Err(DicomValidationError::WaveformRoundTripMismatch(format!(
+        "Samples of multiplex group {index} changed"
+      )));
+    }
+  }
+
+  Ok(())
+}
+
+/// Decodes the samples of every channel of a waveform chunk, indexed by
+/// channel.
+///
+fn decode_waveform_channels(
+  chunk: &WaveformChunk,
+) -> Result<Vec<Vec<i64>>, DicomValidationError> {
+  chunk
+    .channel_samples()
+    .map_err(DicomValidationError::WaveformDecodeError)
 }

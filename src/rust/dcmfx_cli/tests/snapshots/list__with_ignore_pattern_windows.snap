@@ -2,6 +2,7 @@
 source: dcmfx_cli/tests/list.rs
 expression: "lines.join(\"\\n\")"
 ---
+
 ..\..\..\test\assets\other\SC_ybr_full_422_uncompressed.deflated_image_frame_compression.dcm
 ..\..\..\test\assets\other\TestPattern_Palette.rle_lossless.dcm
 ..\..\..\test\assets\other\TestPattern_Palette_16.jpeg_ls_lossless.dcm
@@ -19,3 +20,5 @@ expression: "lines.join(\"\\n\")"
 ..\..\..\test\assets\other\ultrasound_jpeg_xl.dcm
 ..\..\..\test\assets\other\uppercase_extension.DCM
 ..\..\..\test\assets\other\vr_2022.dcm
+..\..\..\test\assets\other\waveform_ecg_synthetic_12_lead.dcm
+..\..\..\test\assets\other\waveform_ecg_synthetic_multi_group.dcm

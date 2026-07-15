@@ -166,6 +166,7 @@ dependencies = [
  "dcmfx_json",
  "dcmfx_p10",
  "dcmfx_pixel_data",
+ "dcmfx_waveform",
 ]
 
 [[package]]
@@ -244,6 +245,14 @@ name = "dcmfx_wasm_test"
 version = "0.0.0"
 dependencies = [
  "dcmfx",
+]
+
+[[package]]
+name = "dcmfx_waveform"
+version = "0.46.0"
+dependencies = [
+ "dcmfx_core",
+ "dcmfx_p10",
 ]
 
 [[package]]

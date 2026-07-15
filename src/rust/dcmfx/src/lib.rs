@@ -48,3 +48,11 @@ pub mod p10 {
 pub mod pixel_data {
   pub use dcmfx_pixel_data::*;
 }
+
+/// Encodes and decodes DICOM Waveform Interchange acquisitions.
+///
+/// This module is a re-export of the `dcmfx_waveform` crate.
+///
+pub mod waveform {
+  pub use dcmfx_waveform::*;
+}
