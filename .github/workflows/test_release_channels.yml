@@ -13,6 +13,7 @@ jobs:
       - name: Install DCMfx
         run: |
           brew tap dcmfx/tap
+          brew trust dcmfx/tap
           brew install dcmfx
 
       - name: Run DCMfx
