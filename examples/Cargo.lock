@@ -158,7 +158,7 @@ checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "dcmfx"
-version = "0.46.0"
+version = "0.47.0"
 dependencies = [
  "dcmfx_anonymize",
  "dcmfx_character_set",
@@ -171,18 +171,18 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_anonymize"
-version = "0.46.0"
+version = "0.47.0"
 dependencies = [
  "dcmfx_core",
 ]
 
 [[package]]
 name = "dcmfx_character_set"
-version = "0.46.0"
+version = "0.47.0"
 
 [[package]]
 name = "dcmfx_core"
-version = "0.46.0"
+version = "0.47.0"
 dependencies = [
  "byteorder",
  "num-traits",
@@ -196,7 +196,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_json"
-version = "0.46.0"
+version = "0.47.0"
 dependencies = [
  "base64",
  "byteorder",
@@ -209,7 +209,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_p10"
-version = "0.46.0"
+version = "0.47.0"
 dependencies = [
  "byteorder",
  "dcmfx_character_set",
@@ -220,7 +220,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_pixel_data"
-version = "0.46.0"
+version = "0.47.0"
 dependencies = [
  "bytemuck",
  "byteorder",
@@ -242,7 +242,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_waveform"
-version = "0.46.0"
+version = "0.47.0"
 dependencies = [
  "dcmfx_core",
  "dcmfx_p10",
