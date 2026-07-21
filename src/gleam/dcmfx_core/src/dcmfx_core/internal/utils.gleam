@@ -40,6 +40,25 @@ pub fn smart_parse_float(input: String) -> Result(Float, Nil) {
   input
   |> float.parse
   |> result.lazy_or(fn() { float.parse(input <> ".0") })
+  |> result.lazy_or(fn() { parse_float_with_exponent(input) })
+}
+
+/// Parses a float that uses exponential notation but where the mantissa has no
+/// decimal point, e.g. `"5e-2"`, which isn't accepted by `float.parse`.
+///
+fn parse_float_with_exponent(input: String) -> Result(Float, Nil) {
+  case string.split_once(string.lowercase(input), "e") {
+    Ok(#(mantissa, exponent)) -> {
+      let mantissa = case string.contains(mantissa, ".") {
+        True -> mantissa
+        False -> mantissa <> ".0"
+      }
+
+      float.parse(mantissa <> "e" <> exponent)
+    }
+
+    Error(Nil) -> Error(Nil)
+  }
 }
 
 /// Removes all occurrences of the specified ASCII codepoint from the start and

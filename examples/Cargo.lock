@@ -166,6 +166,7 @@ dependencies = [
  "dcmfx_json",
  "dcmfx_p10",
  "dcmfx_pixel_data",
+ "dcmfx_waveform",
 ]
 
 [[package]]
@@ -237,6 +238,14 @@ dependencies = [
  "wasm32-unknown-unknown-openbsd-libc",
  "zune-core",
  "zune-jpeg",
+]
+
+[[package]]
+name = "dcmfx_waveform"
+version = "0.46.0"
+dependencies = [
+ "dcmfx_core",
+ "dcmfx_p10",
 ]
 
 [[package]]

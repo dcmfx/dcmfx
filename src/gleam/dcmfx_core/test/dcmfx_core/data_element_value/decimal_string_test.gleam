@@ -15,6 +15,8 @@ pub fn from_bytes_test() {
   assert decimal_string.from_bytes(<<"1.868344208e-10">>)
     == Ok([1.868344208e-10])
 
+  assert decimal_string.from_bytes(<<"5e-2">>) == Ok([0.05])
+
   assert decimal_string.from_bytes(<<"-0">>) == Ok([-0.0])
 
   assert decimal_string.from_bytes(<<0xD0>>)

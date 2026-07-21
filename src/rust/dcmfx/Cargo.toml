@@ -19,6 +19,7 @@ dcmfx_core = { path = "../dcmfx_core", default-features = false }
 dcmfx_json = { path = "../dcmfx_json", default-features = false }
 dcmfx_p10 = { path = "../dcmfx_p10", default-features = false }
 dcmfx_pixel_data = { path = "../dcmfx_pixel_data", default-features = false }
+dcmfx_waveform = { path = "../dcmfx_waveform", default-features = false }
 
 [dev-dependencies]
 either = "1.15.0"
@@ -41,6 +42,7 @@ std = [
   "dcmfx_json/std",
   "dcmfx_p10/std",
   "dcmfx_pixel_data/std",
+  "dcmfx_waveform/std",
 ]
 async = ["std", "dcmfx_p10/async"]
 pixel_data_native = ["dcmfx_pixel_data/native"]

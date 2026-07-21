@@ -29,10 +29,9 @@ DCMfx has no formal roadmap, but future work is likely to include the following:
     - `--replace-pixel-data` to replace a DICOM's pixel data
     - `--create-basic-offset-table` to add a basic offset table and fragments to
       the pixel data if absent
+  - Commands for working with waveform data
 
 - DIMSE networking
-
-- Decoding and encoding of waveform data
 
 - Extraction of DICOM structured report data
 

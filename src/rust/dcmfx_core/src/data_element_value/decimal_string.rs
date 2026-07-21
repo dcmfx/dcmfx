@@ -86,6 +86,8 @@ mod tests {
 
     assert_eq!(from_bytes(b"1.868344208e-10"), Ok(vec![1.868344208e-10]));
 
+    assert_eq!(from_bytes(b"5e-2"), Ok(vec![0.05]));
+
     assert_eq!(from_bytes(b"-0"), Ok(vec![-0.0]));
 
     assert_eq!(

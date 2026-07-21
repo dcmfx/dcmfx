@@ -1,0 +1,206 @@
+(0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
+(0002,0002) UI Media Storage SOP Class UID          [    30 bytes] "1.2.840 … (General ECG Waveform Storage)
+(0002,0003) UI Media Storage SOP Instance UID       [    26 bytes] "1.2.840.10008.999.201.2.3"
+(0002,0010) UI Transfer Syntax UID                  [    18 bytes] "1.2.840 … (Implicit VR Little Endian)
+(0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0.1.3680043.10.1462.2.0"
+(0002,0013) SH Implementation Version Name          [    12 bytes] "DCMfx 0.46.0"
+(0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
+(0008,0016) UI SOP Class UID                        [    30 bytes] "1.2.840 … (General ECG Waveform Storage)
+(0008,0018) UI SOP Instance UID                     [    26 bytes] "1.2.840.10008.999.201.2.3"
+(0008,0020) DA Study Date                           [     8 bytes] 2026-07-16
+(0008,0023) DA Content Date                         [     8 bytes] 2026-07-16
+(0008,002A) DT Acquisition DateTime                 [    14 bytes] 2026-07-16T09:30:12
+(0008,0030) TM Study Time                           [     6 bytes] 09:30:00
+(0008,0033) TM Content Time                         [     6 bytes] 09:30:12
+(0008,0050) SH Accession Number                     [     6 bytes] "A0001"
+(0008,0060) CS Modality                             [     4 bytes] "ECG" (Electrocardiography)
+(0008,0070) LO Manufacturer                         [     6 bytes] "DCMfx"
+(0008,1030) LO Study Description                    [    30 bytes] "Synthetic multi-group waveform"
+(0010,0010) PN Patient's Name                       [    14 bytes] "ECG^Synthetic"
+(0010,0020) LO Patient ID                           [    14 bytes] "DCMFX-ECG-001"
+(0010,0030) DA Patient's Birth Date                 [     8 bytes] 1970-01-01
+(0010,0040) CS Patient's Sex                        [     2 bytes] "O" (Other)
+(0020,000D) UI Study Instance UID                   [    26 bytes] "1.2.840.10008.999.201.0.1"
+(0020,000E) UI Series Instance UID                  [    26 bytes] "1.2.840.10008.999.201.0.2"
+(0020,0010) SH Study ID                             [     2 bytes] "1"
+(0020,0011) IS Series Number                        [     2 bytes] "1"
+(0020,0013) IS Instance Number                      [     2 bytes] "1"
+(0040,0555) SQ Acquisition Context Sequence
+(FFFE,E0DD) Sequence Delimitation Item
+(5400,0100) SQ Waveform Sequence
+  (FFFE,E000) Item
+    (003A,0004) CS Waveform Originality                 [     8 bytes] "ORIGINAL"
+    (003A,0005) US Number of Waveform Channels          [     2 bytes] 1
+    (003A,0010) UL Number of Waveform Samples           [     4 bytes] 251
+    (003A,001A) DS Sampling Frequency                   [     4 bytes] "1e3"
+    (003A,0020) SH Multiplex Group Label                [    12 bytes] "SB-TRIANGLE"
+    (003A,0200) SQ Channel Definition Sequence
+      (FFFE,E000) Item
+        (003A,0203) SH Channel Label                        [     8 bytes] "Triangle"
+        (003A,0208) SQ Channel Source Sequence
+          (FFFE,E000) Item
+            (0008,0100) SH Code Value                           [     6 bytes] "109006"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+            (0008,0104) LO Code Meaning                         [    20 bytes] "Differential signal"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (003A,021A) US Waveform Bits Stored                 [     2 bytes] 8
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (5400,1004) US Waveform Bits Allocated              [     2 bytes] 8
+    (5400,1006) CS Waveform Sample Interpretation       [     2 bytes] "SB"
+    (5400,1010) OW Waveform Data                        [   252 bytes] [9C A0 A4 A8 AC B0 B4 B8 BC …
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0018,1068) DS Multiplex Group Time Offset          [     2 bytes] "0"
+    (003A,0004) CS Waveform Originality                 [     8 bytes] "ORIGINAL"
+    (003A,0005) US Number of Waveform Channels          [     2 bytes] 2
+    (003A,0010) UL Number of Waveform Samples           [     4 bytes] 40
+    (003A,001A) DS Sampling Frequency                   [     4 bytes] "1e2"
+    (003A,0020) SH Multiplex Group Label                [    10 bytes] "UB-PADDED"
+    (003A,0200) SQ Channel Definition Sequence
+      (FFFE,E000) Item
+        (003A,0203) SH Channel Label                        [     4 bytes] "Ramp"
+        (003A,0208) SQ Channel Source Sequence
+          (FFFE,E000) Item
+            (0008,0100) SH Code Value                           [     6 bytes] "109006"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+            (0008,0104) LO Code Meaning                         [    20 bytes] "Differential signal"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (003A,021A) US Waveform Bits Stored                 [     2 bytes] 8
+        (5400,0110) OW Channel Minimum Value                [     2 bytes] [00 00]
+        (5400,0112) OW Channel Maximum Value                [     2 bytes] [C3 00]
+      (FFFE,E00D) Item Delimitation Item
+      (FFFE,E000) Item
+        (003A,0203) SH Channel Label                        [    12 bytes] "Padded tail"
+        (003A,0205) CS Channel Status                       [    22 bytes] "TEST DATA", "UNCALIBRA …
+        (003A,0208) SQ Channel Source Sequence
+          (FFFE,E000) Item
+            (0008,0100) SH Code Value                           [     6 bytes] "109006"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+            (0008,0104) LO Code Meaning                         [    20 bytes] "Differential signal"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (003A,020C) LO Channel Derivation Description       [    30 bytes] "Final ten samples are  …
+        (003A,021A) US Waveform Bits Stored                 [     2 bytes] 8
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (003A,0310) UI Multiplex Group UID                  [    26 bytes] "1.2.840.10008.999.201.2.4"
+    (5400,1004) US Waveform Bits Allocated              [     2 bytes] 8
+    (5400,1006) CS Waveform Sample Interpretation       [     2 bytes] "UB"
+    (5400,100A) OW Waveform Padding Value               [     2 bytes] [FF 00]
+    (5400,1010) OW Waveform Data                        [    80 bytes] [00 64 05 65 0A 66 0F 67 14 …
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (003A,0004) CS Waveform Originality                 [     8 bytes] "ORIGINAL"
+    (003A,0005) US Number of Waveform Channels          [     2 bytes] 1
+    (003A,0010) UL Number of Waveform Samples           [     4 bytes] 64
+    (003A,001A) DS Sampling Frequency                   [     4 bytes] "8e3"
+    (003A,0020) SH Multiplex Group Label                [     6 bytes] "MU-LAW"
+    (003A,0200) SQ Channel Definition Sequence
+      (FFFE,E000) Item
+        (003A,0203) SH Channel Label                        [     6 bytes] "Audio"
+        (003A,0208) SQ Channel Source Sequence
+          (FFFE,E000) Item
+            (0008,0100) SH Code Value                           [     6 bytes] "109006"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+            (0008,0104) LO Code Meaning                         [    20 bytes] "Differential signal"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (003A,021A) US Waveform Bits Stored                 [     2 bytes] 8
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (5400,1004) US Waveform Bits Allocated              [     2 bytes] 8
+    (5400,1006) CS Waveform Sample Interpretation       [     2 bytes] "MB"
+    (5400,100A) OW Waveform Padding Value               [     2 bytes] [FF 00]
+    (5400,1010) OW Waveform Data                        [    64 bytes] [0D 32 57 7C A1 C6 EB 10 35 …
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (0018,1069) DS Trigger Time Offset                  [     4 bytes] "12.5"
+    (0018,106E) UL Trigger Sample Position              [     4 bytes] 12
+    (003A,0004) CS Waveform Originality                 [     8 bytes] "DERIVED"
+    (003A,0005) US Number of Waveform Channels          [     2 bytes] 2
+    (003A,0010) UL Number of Waveform Samples           [     4 bytes] 25
+    (003A,001A) DS Sampling Frequency                   [     2 bytes] "50"
+    (003A,0020) SH Multiplex Group Label                [    12 bytes] "SL-EXTREMES"
+    (003A,0200) SQ Channel Definition Sequence
+      (FFFE,E000) Item
+        (003A,0203) SH Channel Label                        [    14 bytes] "High amplitude"
+        (003A,0208) SQ Channel Source Sequence
+          (FFFE,E000) Item
+            (0008,0100) SH Code Value                           [     6 bytes] "109006"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+            (0008,0104) LO Code Meaning                         [    20 bytes] "Differential signal"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (003A,0210) DS Channel Sensitivity                  [     4 bytes] "1e-3"
+        (003A,0215) DS Channel Sample Skew                  [     4 bytes] "0.25"
+        (003A,021A) US Waveform Bits Stored                 [     2 bytes] 32
+      (FFFE,E00D) Item Delimitation Item
+      (FFFE,E000) Item
+        (003A,0203) SH Channel Label                        [    14 bytes] "Low amplitude"
+        (003A,0208) SQ Channel Source Sequence
+          (FFFE,E000) Item
+            (0008,0100) SH Code Value                           [     6 bytes] "109006"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+            (0008,0104) LO Code Meaning                         [    20 bytes] "Differential signal"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (003A,0218) DS Channel Offset                       [     4 bytes] "1.5"
+        (003A,021A) US Waveform Bits Stored                 [     2 bytes] 32
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (5400,1004) US Waveform Bits Allocated              [     2 bytes] 32
+    (5400,1006) CS Waveform Sample Interpretation       [     2 bytes] "SL"
+    (5400,1010) OW Waveform Data                        [   200 bytes] [04 00 00 C0 FE FF FF FF 59 …
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (003A,0004) CS Waveform Originality                 [     8 bytes] "ORIGINAL"
+    (003A,0005) US Number of Waveform Channels          [     2 bytes] 1
+    (003A,0010) UL Number of Waveform Samples           [     4 bytes] 8
+    (003A,001A) DS Sampling Frequency                   [     2 bytes] "1"
+    (003A,0020) SH Multiplex Group Label                [    12 bytes] "SV-EXTREMES"
+    (003A,0200) SQ Channel Definition Sequence
+      (FFFE,E000) Item
+        (003A,0203) SH Channel Label                        [    14 bytes] "Signed 64-bit"
+        (003A,0208) SQ Channel Source Sequence
+          (FFFE,E000) Item
+            (0008,0100) SH Code Value                           [     6 bytes] "109006"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+            (0008,0104) LO Code Meaning                         [    20 bytes] "Differential signal"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (003A,021A) US Waveform Bits Stored                 [     2 bytes] 64
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (5400,1004) US Waveform Bits Allocated              [     2 bytes] 64
+    (5400,1006) CS Waveform Sample Interpretation       [     2 bytes] "SV"
+    (5400,1010) OW Waveform Data                        [    64 bytes] [00 00 00 00 00 00 00 80 FF …
+  (FFFE,E00D) Item Delimitation Item
+  (FFFE,E000) Item
+    (003A,0004) CS Waveform Originality                 [     8 bytes] "ORIGINAL"
+    (003A,0005) US Number of Waveform Channels          [     2 bytes] 1
+    (003A,0010) UL Number of Waveform Samples           [     4 bytes] 5
+    (003A,001A) DS Sampling Frequency                   [     2 bytes] "1"
+    (003A,0020) SH Multiplex Group Label                [    12 bytes] "UV-EXTREMES"
+    (003A,0200) SQ Channel Definition Sequence
+      (FFFE,E000) Item
+        (003A,0203) SH Channel Label                        [    16 bytes] "Unsigned 64-bit"
+        (003A,0208) SQ Channel Source Sequence
+          (FFFE,E000) Item
+            (0008,0100) SH Code Value                           [     6 bytes] "109006"
+            (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+            (0008,0104) LO Code Meaning                         [    20 bytes] "Differential signal"
+          (FFFE,E00D) Item Delimitation Item
+        (FFFE,E0DD) Sequence Delimitation Item
+        (003A,021A) US Waveform Bits Stored                 [     2 bytes] 64
+        (5400,0110) OW Channel Minimum Value                [     8 bytes] [00 00 00 00 00 00 00 00]
+        (5400,0112) OW Channel Maximum Value                [     8 bytes] [FF FF FF FF FF FF FF 7F]
+      (FFFE,E00D) Item Delimitation Item
+    (FFFE,E0DD) Sequence Delimitation Item
+    (5400,1004) US Waveform Bits Allocated              [     2 bytes] 64
+    (5400,1006) CS Waveform Sample Interpretation       [     2 bytes] "UV"
+    (5400,1010) OW Waveform Data                        [    40 bytes] [00 00 00 00 00 00 00 00 01 …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item

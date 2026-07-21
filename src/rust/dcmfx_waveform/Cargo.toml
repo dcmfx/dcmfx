@@ -1,0 +1,20 @@
+[package]
+name = "dcmfx_waveform"
+version = "0.46.0"
+description = "DCMfx waveform library"
+
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+
+[dependencies]
+dcmfx_core = { path = "../dcmfx_core", default-features = false }
+dcmfx_p10 = { path = "../dcmfx_p10", default-features = false }
+
+[features]
+default = ["std"]
+std = ["dcmfx_core/std", "dcmfx_p10/std"]

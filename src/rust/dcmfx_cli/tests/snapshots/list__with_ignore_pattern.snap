@@ -20,3 +20,5 @@ expression: "lines.join(\"\\n\")"
 ../../../test/assets/other/ultrasound_jpeg_xl.dcm
 ../../../test/assets/other/uppercase_extension.DCM
 ../../../test/assets/other/vr_2022.dcm
+../../../test/assets/other/waveform_ecg_synthetic_12_lead.dcm
+../../../test/assets/other/waveform_ecg_synthetic_multi_group.dcm

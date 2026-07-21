@@ -76,7 +76,6 @@ type ClarifyingDataElements {
     specific_character_set: SpecificCharacterSet,
     bits_allocated: Option(Int),
     pixel_representation: Option(Int),
-    waveform_bits_stored: Option(Int),
     waveform_bits_allocated: Option(Int),
     private_creators: Dict(DataElementTag, String),
   )
@@ -89,7 +88,6 @@ pub fn is_clarifying_data_element(tag: DataElementTag) -> Bool {
   tag == dictionary.specific_character_set.tag
   || tag == dictionary.bits_allocated.tag
   || tag == dictionary.pixel_representation.tag
-  || tag == dictionary.waveform_bits_stored.tag
   || tag == dictionary.waveform_bits_allocated.tag
   || data_element_tag.is_private_creator(tag)
 }
@@ -114,7 +112,7 @@ fn private_creator_for_tag(
 fn default_clarifying_data_elements() -> ClarifyingDataElements {
   let assert Ok(charset) = dcmfx_character_set.from_string("ISO_IR 6")
 
-  ClarifyingDataElements(charset, None, None, None, None, dict.new())
+  ClarifyingDataElements(charset, None, None, None, dict.new())
 }
 
 /// Creates a new P10 location with an initial entry for the root data set.
@@ -181,10 +179,11 @@ pub fn bits_allocated(location: P10Location) -> Option(Int) {
 
 /// Swaps endianness of the value bytes for a given data element tag and VR.
 ///
-/// This function handles the unusual behavior of pixel data and waveform data
-/// that has a VR of OW but a bits allocated value of 32 or 64. This is a
-/// special case for endian swapping because it is actually storing 32/64-bit
-/// words, not the 16-bit ones indicated by the VR.
+/// This function handles the unusual behavior of pixel data, waveform data,
+/// and the data elements storing single values in the waveform data's
+/// sample encoding, that have a VR of OW but a word size of 32 or 64 bits.
+/// This is a special case for endian swapping because they are actually
+/// storing 32/64-bit words, not the 16-bit ones indicated by the VR.
 ///
 pub fn swap_endianness(
   location: P10Location,
@@ -199,6 +198,21 @@ pub fn swap_endianness(
           active_clarifying_data_elements(location).bits_allocated
         tag if tag == dictionary.waveform_data.tag ->
           active_clarifying_data_elements(location).waveform_bits_allocated
+
+        // These data elements hold a single value in the waveform data's
+        // sample encoding, so their length gives the word size. Ref: PS3.5
+        // 8.3.
+        tag
+          if tag == dictionary.channel_minimum_value.tag
+          || tag == dictionary.channel_maximum_value.tag
+          || tag == dictionary.waveform_padding_value.tag
+        ->
+          case bit_array.byte_size(data) {
+            4 -> Some(32)
+            8 -> Some(64)
+            _ -> None
+          }
+
         _ -> None
       }
 
@@ -465,15 +479,6 @@ fn update_unsigned_short_clarifying_data_element(
         )
       })
 
-    tag if tag == dictionary.waveform_bits_stored.tag ->
-      location
-      |> map_clarifying_data_elements(fn(clarifying_data_elements) {
-        ClarifyingDataElements(
-          ..clarifying_data_elements,
-          waveform_bits_stored: Some(value),
-        )
-      })
-
     tag if tag == dictionary.waveform_bits_allocated.tag ->
       location
       |> map_clarifying_data_elements(fn(clarifying_data_elements) {
@@ -633,29 +638,15 @@ pub fn infer_vr_for_tag(
         _ -> Error(dictionary.pixel_representation.tag)
       }
 
-    // Use '(003A,021A) WaveformBitsStored' to determine an OB/OW VR on relevant
-    // values
+    // For '(5400,1010) Waveform Data' and the other waveform data elements
+    // that store values in its sample encoding, OB is not usable when in an
+    // implicit VR transfer syntax. Ref: PS3.5 8.3.
     [value_representation.OtherByteString, value_representation.OtherWordString]
       if tag == dictionary.channel_minimum_value.tag
       || tag == dictionary.channel_maximum_value.tag
-    ->
-      case clarifying_data_elements.waveform_bits_stored {
-        Some(8) -> Ok(value_representation.OtherByteString)
-        Some(16) -> Ok(value_representation.OtherWordString)
-        _ -> Error(dictionary.waveform_bits_stored.tag)
-      }
-
-    // Use '(5400,1004) WaveformBitsAllocated' to determine an OB/OW VR on
-    // relevant values
-    [value_representation.OtherByteString, value_representation.OtherWordString]
-      if tag == dictionary.waveform_padding_value.tag
+      || tag == dictionary.waveform_padding_value.tag
       || tag == dictionary.waveform_data.tag
-    ->
-      case clarifying_data_elements.waveform_bits_allocated {
-        Some(8) -> Ok(value_representation.OtherByteString)
-        Some(16) -> Ok(value_representation.OtherWordString)
-        _ -> Error(dictionary.waveform_bits_allocated.tag)
-      }
+    -> Ok(value_representation.OtherWordString)
 
     // The VR for '(0028,3006) LUTData' doesn't need to be determined because
     // the raw binary representation of both VRs is the same. `OtherWordString`

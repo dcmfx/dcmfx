@@ -1,0 +1,848 @@
+{
+  "00020010": {
+    "Value": [
+      "1.2.840.10008.1.2"
+    ],
+    "vr": "UI"
+  },
+  "00080016": {
+    "Value": [
+      "1.2.840.10008.5.1.4.1.1.9.1.2"
+    ],
+    "vr": "UI"
+  },
+  "00080018": {
+    "Value": [
+      "1.2.840.10008.999.201.2.3"
+    ],
+    "vr": "UI"
+  },
+  "00080020": {
+    "Value": [
+      "20260716"
+    ],
+    "vr": "DA"
+  },
+  "00080023": {
+    "Value": [
+      "20260716"
+    ],
+    "vr": "DA"
+  },
+  "0008002A": {
+    "Value": [
+      "20260716093012"
+    ],
+    "vr": "DT"
+  },
+  "00080030": {
+    "Value": [
+      "093000"
+    ],
+    "vr": "TM"
+  },
+  "00080033": {
+    "Value": [
+      "093012"
+    ],
+    "vr": "TM"
+  },
+  "00080050": {
+    "Value": [
+      "A0001"
+    ],
+    "vr": "SH"
+  },
+  "00080060": {
+    "Value": [
+      "ECG"
+    ],
+    "vr": "CS"
+  },
+  "00080070": {
+    "Value": [
+      "DCMfx"
+    ],
+    "vr": "LO"
+  },
+  "00081030": {
+    "Value": [
+      "Synthetic multi-group waveform"
+    ],
+    "vr": "LO"
+  },
+  "00100010": {
+    "Value": [
+      {
+        "Alphabetic": "ECG^Synthetic"
+      }
+    ],
+    "vr": "PN"
+  },
+  "00100020": {
+    "Value": [
+      "DCMFX-ECG-001"
+    ],
+    "vr": "LO"
+  },
+  "00100030": {
+    "Value": [
+      "19700101"
+    ],
+    "vr": "DA"
+  },
+  "00100040": {
+    "Value": [
+      "O"
+    ],
+    "vr": "CS"
+  },
+  "0020000D": {
+    "Value": [
+      "1.2.840.10008.999.201.0.1"
+    ],
+    "vr": "UI"
+  },
+  "0020000E": {
+    "Value": [
+      "1.2.840.10008.999.201.0.2"
+    ],
+    "vr": "UI"
+  },
+  "00200010": {
+    "Value": [
+      "1"
+    ],
+    "vr": "SH"
+  },
+  "00200011": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00200013": {
+    "Value": [
+      1
+    ],
+    "vr": "IS"
+  },
+  "00400555": {
+    "Value": [],
+    "vr": "SQ"
+  },
+  "54000100": {
+    "Value": [
+      {
+        "003A0004": {
+          "Value": [
+            "ORIGINAL"
+          ],
+          "vr": "CS"
+        },
+        "003A0005": {
+          "Value": [
+            1
+          ],
+          "vr": "US"
+        },
+        "003A0010": {
+          "Value": [
+            251
+          ],
+          "vr": "UL"
+        },
+        "003A001A": {
+          "Value": [
+            1000.0
+          ],
+          "vr": "DS"
+        },
+        "003A0020": {
+          "Value": [
+            "SB-TRIANGLE"
+          ],
+          "vr": "SH"
+        },
+        "003A0200": {
+          "Value": [
+            {
+              "003A0203": {
+                "Value": [
+                  "Triangle"
+                ],
+                "vr": "SH"
+              },
+              "003A0208": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "109006"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Differential signal"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "003A021A": {
+                "Value": [
+                  8
+                ],
+                "vr": "US"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "54001004": {
+          "Value": [
+            8
+          ],
+          "vr": "US"
+        },
+        "54001006": {
+          "Value": [
+            "SB"
+          ],
+          "vr": "CS"
+        },
+        "54001010": {
+          "InlineBinary": "nKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGCcoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8AAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+PwABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGCcoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8AAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYJwA",
+          "vr": "OW"
+        }
+      },
+      {
+        "00181068": {
+          "Value": [
+            0.0
+          ],
+          "vr": "DS"
+        },
+        "003A0004": {
+          "Value": [
+            "ORIGINAL"
+          ],
+          "vr": "CS"
+        },
+        "003A0005": {
+          "Value": [
+            2
+          ],
+          "vr": "US"
+        },
+        "003A0010": {
+          "Value": [
+            40
+          ],
+          "vr": "UL"
+        },
+        "003A001A": {
+          "Value": [
+            100.0
+          ],
+          "vr": "DS"
+        },
+        "003A0020": {
+          "Value": [
+            "UB-PADDED"
+          ],
+          "vr": "SH"
+        },
+        "003A0200": {
+          "Value": [
+            {
+              "003A0203": {
+                "Value": [
+                  "Ramp"
+                ],
+                "vr": "SH"
+              },
+              "003A0208": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "109006"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Differential signal"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "003A021A": {
+                "Value": [
+                  8
+                ],
+                "vr": "US"
+              },
+              "54000110": {
+                "InlineBinary": "AAA=",
+                "vr": "OW"
+              },
+              "54000112": {
+                "InlineBinary": "wwA=",
+                "vr": "OW"
+              }
+            },
+            {
+              "003A0203": {
+                "Value": [
+                  "Padded tail"
+                ],
+                "vr": "SH"
+              },
+              "003A0205": {
+                "Value": [
+                  "TEST DATA",
+                  "UNCALIBRATED"
+                ],
+                "vr": "CS"
+              },
+              "003A0208": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "109006"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Differential signal"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "003A020C": {
+                "Value": [
+                  "Final ten samples are padding"
+                ],
+                "vr": "LO"
+              },
+              "003A021A": {
+                "Value": [
+                  8
+                ],
+                "vr": "US"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "003A0310": {
+          "Value": [
+            "1.2.840.10008.999.201.2.4"
+          ],
+          "vr": "UI"
+        },
+        "54001004": {
+          "Value": [
+            8
+          ],
+          "vr": "US"
+        },
+        "54001006": {
+          "Value": [
+            "UB"
+          ],
+          "vr": "CS"
+        },
+        "5400100A": {
+          "InlineBinary": "/wA=",
+          "vr": "OW"
+        },
+        "54001010": {
+          "InlineBinary": "AGQFZQpmD2cUaBlpHmojayhsLW0ybjdvPHBBcUZyS3NQdFV1WnZfd2RkaWVuZnNneGh9aYJqh2uMbJFtlv+b/6D/pf+q/6//tP+5/77/w/8=",
+          "vr": "OW"
+        }
+      },
+      {
+        "003A0004": {
+          "Value": [
+            "ORIGINAL"
+          ],
+          "vr": "CS"
+        },
+        "003A0005": {
+          "Value": [
+            1
+          ],
+          "vr": "US"
+        },
+        "003A0010": {
+          "Value": [
+            64
+          ],
+          "vr": "UL"
+        },
+        "003A001A": {
+          "Value": [
+            8000.0
+          ],
+          "vr": "DS"
+        },
+        "003A0020": {
+          "Value": [
+            "MU-LAW"
+          ],
+          "vr": "SH"
+        },
+        "003A0200": {
+          "Value": [
+            {
+              "003A0203": {
+                "Value": [
+                  "Audio"
+                ],
+                "vr": "SH"
+              },
+              "003A0208": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "109006"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Differential signal"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "003A021A": {
+                "Value": [
+                  8
+                ],
+                "vr": "US"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "54001004": {
+          "Value": [
+            8
+          ],
+          "vr": "US"
+        },
+        "54001006": {
+          "Value": [
+            "MB"
+          ],
+          "vr": "CS"
+        },
+        "5400100A": {
+          "InlineBinary": "/wA=",
+          "vr": "OW"
+        },
+        "54001010": {
+          "InlineBinary": "DTJXfKHG6xA1Wn+kye4TOF2Cp8zxFjtgharP9Bk+Y4it0vccQWaLsNX6H0RpjrPY/SJHbJG22wAlSm+Uud4DKA==",
+          "vr": "OW"
+        }
+      },
+      {
+        "00181069": {
+          "Value": [
+            12.5
+          ],
+          "vr": "DS"
+        },
+        "0018106E": {
+          "Value": [
+            12
+          ],
+          "vr": "UL"
+        },
+        "003A0004": {
+          "Value": [
+            "DERIVED"
+          ],
+          "vr": "CS"
+        },
+        "003A0005": {
+          "Value": [
+            2
+          ],
+          "vr": "US"
+        },
+        "003A0010": {
+          "Value": [
+            25
+          ],
+          "vr": "UL"
+        },
+        "003A001A": {
+          "Value": [
+            50.0
+          ],
+          "vr": "DS"
+        },
+        "003A0020": {
+          "Value": [
+            "SL-EXTREMES"
+          ],
+          "vr": "SH"
+        },
+        "003A0200": {
+          "Value": [
+            {
+              "003A0203": {
+                "Value": [
+                  "High amplitude"
+                ],
+                "vr": "SH"
+              },
+              "003A0208": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "109006"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Differential signal"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "003A0210": {
+                "Value": [
+                  0.001
+                ],
+                "vr": "DS"
+              },
+              "003A0215": {
+                "Value": [
+                  0.25
+                ],
+                "vr": "DS"
+              },
+              "003A021A": {
+                "Value": [
+                  32
+                ],
+                "vr": "US"
+              }
+            },
+            {
+              "003A0203": {
+                "Value": [
+                  "Low amplitude"
+                ],
+                "vr": "SH"
+              },
+              "003A0208": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "109006"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Differential signal"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "003A0218": {
+                "Value": [
+                  1.5
+                ],
+                "vr": "DS"
+              },
+              "003A021A": {
+                "Value": [
+                  32
+                ],
+                "vr": "US"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "54001004": {
+          "Value": [
+            32
+          ],
+          "vr": "US"
+        },
+        "54001006": {
+          "Value": [
+            "SL"
+          ],
+          "vr": "CS"
+        },
+        "54001010": {
+          "InlineBinary": "BAAAwP7///9ZVVXF/////66qqsoAAAAAAwAA0AEAAABYVVXVAgAAAK2qqtr+////AgAA4P////9XVVXlAAAAAKyqquoBAAAAAQAA8AIAAABWVVX1/v///6uqqvr/////AAAAAAAAAABVVVUFAQAAAKqqqgoCAAAA////D/7///9UVVUV/////6mqqhoAAAAA/v//HwEAAABTVVUlAgAAAKiqqir+/////f//L/////9SVVU1AAAAAKeqqjoBAAAA/P//PwIAAAA=",
+          "vr": "OW"
+        }
+      },
+      {
+        "003A0004": {
+          "Value": [
+            "ORIGINAL"
+          ],
+          "vr": "CS"
+        },
+        "003A0005": {
+          "Value": [
+            1
+          ],
+          "vr": "US"
+        },
+        "003A0010": {
+          "Value": [
+            8
+          ],
+          "vr": "UL"
+        },
+        "003A001A": {
+          "Value": [
+            1.0
+          ],
+          "vr": "DS"
+        },
+        "003A0020": {
+          "Value": [
+            "SV-EXTREMES"
+          ],
+          "vr": "SH"
+        },
+        "003A0200": {
+          "Value": [
+            {
+              "003A0203": {
+                "Value": [
+                  "Signed 64-bit"
+                ],
+                "vr": "SH"
+              },
+              "003A0208": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "109006"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Differential signal"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "003A021A": {
+                "Value": [
+                  64
+                ],
+                "vr": "US"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "54001004": {
+          "Value": [
+            64
+          ],
+          "vr": "US"
+        },
+        "54001006": {
+          "Value": [
+            "SV"
+          ],
+          "vr": "CS"
+        },
+        "54001010": {
+          "InlineBinary": "AAAAAAAAAID//////////wAAAAAAAAAAAQAAAAAAAAD/////////f+t+FoIL793uKgAAAAAAAAABAAAAAAAAgA==",
+          "vr": "OW"
+        }
+      },
+      {
+        "003A0004": {
+          "Value": [
+            "ORIGINAL"
+          ],
+          "vr": "CS"
+        },
+        "003A0005": {
+          "Value": [
+            1
+          ],
+          "vr": "US"
+        },
+        "003A0010": {
+          "Value": [
+            5
+          ],
+          "vr": "UL"
+        },
+        "003A001A": {
+          "Value": [
+            1.0
+          ],
+          "vr": "DS"
+        },
+        "003A0020": {
+          "Value": [
+            "UV-EXTREMES"
+          ],
+          "vr": "SH"
+        },
+        "003A0200": {
+          "Value": [
+            {
+              "003A0203": {
+                "Value": [
+                  "Unsigned 64-bit"
+                ],
+                "vr": "SH"
+              },
+              "003A0208": {
+                "Value": [
+                  {
+                    "00080100": {
+                      "Value": [
+                        "109006"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080102": {
+                      "Value": [
+                        "DCM"
+                      ],
+                      "vr": "SH"
+                    },
+                    "00080104": {
+                      "Value": [
+                        "Differential signal"
+                      ],
+                      "vr": "LO"
+                    }
+                  }
+                ],
+                "vr": "SQ"
+              },
+              "003A021A": {
+                "Value": [
+                  64
+                ],
+                "vr": "US"
+              },
+              "54000110": {
+                "InlineBinary": "AAAAAAAAAAA=",
+                "vr": "OW"
+              },
+              "54000112": {
+                "InlineBinary": "/////////38=",
+                "vr": "OW"
+              }
+            }
+          ],
+          "vr": "SQ"
+        },
+        "54001004": {
+          "Value": [
+            64
+          ],
+          "vr": "US"
+        },
+        "54001006": {
+          "Value": [
+            "UV"
+          ],
+          "vr": "CS"
+        },
+        "54001010": {
+          "InlineBinary": "AAAAAAAAAAABAAAAAAAAAP////////9/AAAAAAAAAEB4tPhJX9q0DQ==",
+          "vr": "OW"
+        }
+      }
+    ],
+    "vr": "SQ"
+  }
+}
