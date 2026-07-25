@@ -62310,7 +62310,7 @@ fn find_private(
       (0x00, 0x19, _, 0x21) => Ok(Item {
         tag,
         name: "B-Mode Dynamic Range",
-        vrs: &[ValueRepresentation::FloatingPointDouble],
+        vrs: &[ValueRepresentation::UnsignedShort],
         multiplicity: VM_1,
       }),
       (0x00, 0x19, _, 0x81) => Ok(Item {
