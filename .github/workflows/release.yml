@@ -33,7 +33,7 @@ jobs:
         uses: cycjimmy/semantic-release-action@v4
         with:
           dry_run: true
-          extra_plugins: conventional-changelog-conventionalcommits
+          extra_plugins: conventional-changelog-conventionalcommits@9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -344,7 +344,7 @@ jobs:
         id: semantic-release
         uses: cycjimmy/semantic-release-action@v4
         with:
-          extra_plugins: conventional-changelog-conventionalcommits
+          extra_plugins: conventional-changelog-conventionalcommits@9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
