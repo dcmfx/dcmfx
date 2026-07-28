@@ -15,13 +15,19 @@ runs:
 
         echo "Updating main manifest.toml files …"
         for dir in src/gleam/dcmfx_*/; do
-          cd $dir
-          for pkg in dcmfx_anonymize dcmfx_character_set dcmfx_core dcmfx_json dcmfx_p10 dcmfx_pixel_data; do
-            if grep -q "^name = \"$pkg\"" manifest.toml; then
-              gleam deps update "$pkg"
+          (
+            cd "$dir" || exit
+            pkgs=()
+            for pkg in dcmfx_anonymize dcmfx_character_set dcmfx_core dcmfx_json dcmfx_p10 dcmfx_pixel_data; do
+              if grep -q "^name = \"$pkg\"" manifest.toml; then
+                pkgs+=("$pkg")
+              fi
+            done
+
+            if [ ${#pkgs[@]} -gt 0 ]; then
+              gleam deps update "${pkgs[@]}"
             fi
-          done
-          cd ../../..
+          )
         done
 
         # Update the hardcoded version in uids.toml. In future perhaps Gleam
