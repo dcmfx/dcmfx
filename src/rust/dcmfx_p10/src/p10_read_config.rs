@@ -8,7 +8,6 @@ pub struct P10ReadConfig {
   pub(crate) max_string_size: u32,
   pub(crate) max_sequence_depth: usize,
   pub(crate) require_dicm_prefix: bool,
-  pub(crate) require_ordered_data_elements: bool,
   pub(crate) default_transfer_syntax: &'static TransferSyntax,
 }
 
@@ -19,7 +18,6 @@ impl Default for P10ReadConfig {
       max_string_size: 0xFFFFFFFE,
       max_sequence_depth: 10_000,
       require_dicm_prefix: false,
-      require_ordered_data_elements: true,
       default_transfer_syntax: &transfer_syntax::IMPLICIT_VR_LITTLE_ENDIAN,
     }
   }
@@ -100,26 +98,6 @@ impl P10ReadConfig {
   ///
   pub fn require_dicm_prefix(mut self, value: bool) -> Self {
     self.require_dicm_prefix = value;
-    self
-  }
-
-  /// Whether to error if data elements are not in ascending order in the DICOM
-  /// P10 data. Such data is malformed but is still able to read, however doing
-  /// so can potentially lead to incorrect results. For example:
-  ///
-  /// 1. If the *'(0008,0005) Specific Character Set'* data element appears
-  ///    after data elements that use an encoded string VR, they will be decoded
-  ///    using the wrong character set.
-  ///
-  /// 2. If a '(gggg,00xx) Private Creator' data element appears after the data
-  ///    elements it defines the private creator for, those data elements will
-  ///    all be read with a VR of UN (when the transfer syntax is 'Implicit VR
-  ///    Little Endian').
-  ///
-  /// By default this requirement is enforced.
-  ///
-  pub fn require_ordered_data_elements(mut self, value: bool) -> Self {
-    self.require_ordered_data_elements = value;
     self
   }
 

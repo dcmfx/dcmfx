@@ -9,7 +9,6 @@ pub type P10ReadConfig {
     max_string_size: Int,
     max_sequence_depth: Int,
     require_dicm_prefix: Bool,
-    require_ordered_data_elements: Bool,
     default_transfer_syntax: TransferSyntax,
   )
 }
@@ -22,7 +21,6 @@ pub fn new() -> P10ReadConfig {
     max_string_size: 0xFFFFFFFE,
     max_sequence_depth: 10_000,
     require_dicm_prefix: False,
-    require_ordered_data_elements: True,
     default_transfer_syntax: transfer_syntax.implicit_vr_little_endian,
   )
 }
@@ -105,28 +103,6 @@ pub fn require_dicm_prefix(
   value: Bool,
 ) -> P10ReadConfig {
   P10ReadConfig(..config, require_dicm_prefix: value)
-}
-
-/// Whether to error if data elements are not in ascending order in the DICOM
-/// P10 data. Such data is malformed but is still able to read, however doing so
-/// can potentially lead to incorrect results. For example:
-///
-/// 1. If the *'(0008,0005) Specific Character Set'* data element appears after
-///    data elements that use an encoded string VR, they will be decoded using
-///    the wrong character set.
-///
-/// 2. If a '(gggg,00xx) Private Creator' data element appears after the data
-///    elements it defines the private creator for, those data elements will
-///    all be read with a VR of UN (when the transfer syntax is 'Implicit VR
-///    Little Endian').
-///
-/// By default this requirement is enforced.
-///
-pub fn require_ordered_data_elements(
-  config: P10ReadConfig,
-  value: Bool,
-) -> P10ReadConfig {
-  P10ReadConfig(..config, require_ordered_data_elements: value)
 }
 
 /// The transfer syntax to use when reading DICOM P10 data that doesn't

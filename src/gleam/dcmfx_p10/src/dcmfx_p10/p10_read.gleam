@@ -623,7 +623,11 @@ fn read_data_element_header_token(
     tag, Some(value_representation.Sequence), _
     | tag, Some(value_representation.Unknown), value_length.Undefined
     -> {
-      use context <- result.try(check_data_element_ordering(context, header))
+      use context <- result.try(check_data_element_ordering(
+        context,
+        header,
+        value_representation.Sequence,
+      ))
 
       let ends_at = case header.length {
         value_length.Defined(length) ->
@@ -730,9 +734,9 @@ fn read_data_element_header_token(
     | tag, Some(value_representation.OtherWordString), value_length.Undefined
       if tag == dictionary.pixel_data.tag
     -> {
-      use context <- result.try(check_data_element_ordering(context, header))
-
       let Some(vr) = vr
+
+      use context <- result.try(check_data_element_ordering(context, header, vr))
 
       let new_location =
         p10_location.add_sequence(context.location, tag, False, None)
@@ -831,7 +835,7 @@ fn read_data_element_header_token(
     // For all other cases this is a standard data element that needs to have
     // its value bytes read
     tag, Some(vr), value_length.Defined(length) -> {
-      use context <- result.try(check_data_element_ordering(context, header))
+      use context <- result.try(check_data_element_ordering(context, header, vr))
 
       let materialized_value_required =
         is_materialized_value_required(context, header.tag, vr)
@@ -984,28 +988,41 @@ fn read_data_element_header(
   }
 }
 
-/// Checks that the specified data element tag is greater than the previous one
-/// at the current P10 location.
+/// Checks that the specified data element isn't out of order in a way that
+/// affects the interpretation of the data elements that precede it at the
+/// current P10 location.
 ///
 fn check_data_element_ordering(
   context: P10ReadContext,
   header: DataElementHeader,
+  vr: ValueRepresentation,
 ) -> Result(P10ReadContext, P10Error) {
-  let new_location = case context.config.require_ordered_data_elements {
-    True ->
-      p10_location.check_data_element_ordering(context.location, header.tag)
-      |> result.map_error(fn(_) {
-        p10_error.DataInvalid(
-          "Reading data element header",
-          "Data element '"
-            <> data_element_header.to_string(header)
-            <> "' is not in ascending order",
-          context.path,
-          byte_stream.bytes_read(context.stream),
-        )
-      })
-    False -> Ok(context.location)
-  }
+  // Whether this data element's VR was inferred, which is the case when the
+  // incoming VR was UN, either because the transfer syntax is implicit VR or
+  // because UN was explicitly specified
+  let is_vr_inferred = header.vr == Some(value_representation.Unknown)
+
+  let is_big_endian = active_transfer_syntax(context).endianness == BigEndian
+
+  let new_location =
+    p10_location.check_data_element_ordering(
+      context.location,
+      header.tag,
+      vr,
+      is_vr_inferred,
+      is_big_endian,
+    )
+    |> result.map_error(fn(_) {
+      p10_error.DataInvalid(
+        "Reading data element header",
+        "Data element '"
+          <> data_element_header.to_string(header)
+          <> "' is not in ascending order and affects the interpretation of "
+          <> "preceding data elements",
+        context.path,
+        byte_stream.bytes_read(context.stream),
+      )
+    })
   use new_location <- result.map(new_location)
 
   P10ReadContext(..context, location: new_location)

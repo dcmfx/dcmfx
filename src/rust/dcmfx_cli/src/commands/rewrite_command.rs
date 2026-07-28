@@ -197,8 +197,7 @@ async fn rewrite_input_source(
   let read_config = args
     .input
     .p10_read_config()
-    .require_dicm_prefix(args.input.ignore_invalid)
-    .require_ordered_data_elements(false);
+    .require_dicm_prefix(args.input.ignore_invalid);
 
   // Open input stream
   let mut input_stream = input_source.open_read_stream().await?;

@@ -528,7 +528,10 @@ impl P10ReadContext {
       // If this is the start of a new sequence then add it to the location
       (tag, Some(ValueRepresentation::Sequence), _)
       | (tag, Some(ValueRepresentation::Unknown), ValueLength::Undefined) => {
-        self.check_data_element_ordering(&header)?;
+        self.check_data_element_ordering(
+          &header,
+          ValueRepresentation::Sequence,
+        )?;
 
         let ends_at = match header.length {
           ValueLength::Defined { length } => {
@@ -606,7 +609,7 @@ impl P10ReadContext {
           && (vr == ValueRepresentation::OtherByteString
             || vr == ValueRepresentation::OtherWordString) =>
       {
-        self.check_data_element_ordering(&header)?;
+        self.check_data_element_ordering(&header, vr)?;
 
         self
           .location
@@ -677,7 +680,7 @@ impl P10ReadContext {
       // For all other cases this is a standard data element that needs to have
       // its value bytes read
       (tag, Some(vr), ValueLength::Defined { length }) => {
-        self.check_data_element_ordering(&header)?;
+        self.check_data_element_ordering(&header, vr)?;
 
         let materialized_value_required =
           self.is_materialized_value_required(header.tag, vr);
@@ -833,23 +836,36 @@ impl P10ReadContext {
     }
   }
 
-  /// Checks that the specified data element tag is greater than the previous
-  /// one at the current P10 location.
+  /// Checks that the specified data element isn't out of order in a way that
+  /// affects the interpretation of the data elements that precede it at the
+  /// current P10 location.
   ///
   fn check_data_element_ordering(
     &mut self,
     header: &DataElementHeader,
+    vr: ValueRepresentation,
   ) -> Result<(), P10Error> {
-    if !self.config.require_ordered_data_elements {
-      return Ok(());
-    }
+    // Whether this data element's VR was inferred, which is the case when the
+    // incoming VR was UN, either because the transfer syntax is implicit VR or
+    // because UN was explicitly specified
+    let is_vr_inferred = header.vr == Some(ValueRepresentation::Unknown);
+
+    let is_big_endian = self.active_transfer_syntax().endianness.is_big();
 
     self
       .location
-      .check_data_element_ordering(header.tag)
+      .check_data_element_ordering(
+        header.tag,
+        vr,
+        is_vr_inferred,
+        is_big_endian,
+      )
       .map_err(|_| P10Error::DataInvalid {
         when: "Reading data element header".to_string(),
-        details: format!("Data element '{header}' is not in ascending order"),
+        details: format!(
+          "Data element '{header}' is not in ascending order and affects the \
+            interpretation of preceding data elements"
+        ),
         path: self.path.clone(),
         offset: self.stream.bytes_read(),
       })
