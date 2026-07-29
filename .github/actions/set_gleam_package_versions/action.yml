@@ -19,7 +19,7 @@ runs:
             cd "$dir" || exit
             pkgs=()
             for pkg in dcmfx_anonymize dcmfx_character_set dcmfx_core dcmfx_json dcmfx_p10 dcmfx_pixel_data; do
-              if grep -q "^name = \"$pkg\"" manifest.toml; then
+              if grep -Fq "  { name = \"$pkg\"" manifest.toml; then
                 pkgs+=("$pkg")
               fi
             done
