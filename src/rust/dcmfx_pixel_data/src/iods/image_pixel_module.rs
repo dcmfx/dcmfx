@@ -24,7 +24,6 @@ pub struct ImagePixelModule {
   columns: u16,
   bits_allocated: BitsAllocated,
   bits_stored: u16,
-  high_bit: u16,
   pixel_aspect_ratio: Option<DataElementValue>,
   smallest_image_pixel_value: Option<i64>,
   largest_image_pixel_value: Option<i64>,
@@ -84,7 +83,6 @@ impl IodModule for ImagePixelModule {
     let columns = data_set.get_int::<u16>(dictionary::COLUMNS.tag)?;
     let bits_allocated = BitsAllocated::from_data_set(data_set)?;
     let bits_stored = data_set.get_int::<u16>(dictionary::BITS_STORED.tag)?;
-    let high_bit = data_set.get_int::<u16>(dictionary::HIGH_BIT.tag)?;
 
     let pixel_aspect_ratio = if data_set.has(dictionary::PIXEL_ASPECT_RATIO.tag)
     {
@@ -139,7 +137,6 @@ impl IodModule for ImagePixelModule {
       columns,
       bits_allocated,
       bits_stored,
-      high_bit,
       pixel_aspect_ratio,
       smallest_image_pixel_value,
       largest_image_pixel_value,
@@ -152,7 +149,7 @@ impl IodModule for ImagePixelModule {
 impl ImagePixelModule {
   /// The data element tags used when reading [`ImagePixelModule`].
   ///
-  pub const TAGS: [DataElementTag; 14] = [
+  pub const TAGS: [DataElementTag; 13] = [
     dictionary::SAMPLES_PER_PIXEL.tag,
     dictionary::PHOTOMETRIC_INTERPRETATION.tag,
     dictionary::PLANAR_CONFIGURATION.tag,
@@ -160,7 +157,6 @@ impl ImagePixelModule {
     dictionary::COLUMNS.tag,
     dictionary::BITS_ALLOCATED.tag,
     dictionary::BITS_STORED.tag,
-    dictionary::HIGH_BIT.tag,
     dictionary::PIXEL_REPRESENTATION.tag,
     dictionary::PIXEL_ASPECT_RATIO.tag,
     dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag,
@@ -180,7 +176,6 @@ impl ImagePixelModule {
     columns: u16,
     bits_allocated: BitsAllocated,
     bits_stored: u16,
-    high_bit: u16,
     pixel_aspect_ratio: Option<DataElementValue>,
     smallest_image_pixel_value: Option<i64>,
     largest_image_pixel_value: Option<i64>,
@@ -197,14 +192,6 @@ impl ImagePixelModule {
       )));
     }
 
-    // Check that the high bit is one less than the bits stored
-    if high_bit != bits_stored - 1 {
-      return Err(DataError::new_value_invalid(format!(
-        "High bit '{high_bit}' is not one less than the bits stored \
-         '{bits_stored}'"
-      )));
-    }
-
     let image_pixel_module = Self {
       samples_per_pixel,
       photometric_interpretation,
@@ -212,7 +199,6 @@ impl ImagePixelModule {
       columns,
       bits_allocated,
       bits_stored,
-      high_bit,
       pixel_aspect_ratio,
       smallest_image_pixel_value,
       largest_image_pixel_value,
@@ -251,7 +237,6 @@ impl ImagePixelModule {
       columns,
       bits_allocated,
       bits_stored,
-      bits_stored.saturating_sub(1),
       None,
       None,
       None,
@@ -366,13 +351,6 @@ impl ImagePixelModule {
     self.bits_stored
   }
 
-  /// Returns this image pixel module's high bit. This is always equal to
-  /// the number of bits stored per pixel minus one.
-  ///
-  pub fn high_bit(&self) -> u16 {
-    self.high_bit
-  }
-
   /// Updates this image pixel module to match the output of a palette color
   /// lookup table. This updates the bits allocated, bits stored, high bit,
   /// and photometric interpretation attributes.
@@ -386,7 +364,6 @@ impl ImagePixelModule {
 
     self.bits_allocated = BitsAllocated::try_from(bits_allocated).unwrap();
     self.bits_stored = bits_stored;
-    self.high_bit = self.bits_stored - 1;
     self.set_photometric_interpretation(PhotometricInterpretation::Rgb);
   }
 
@@ -562,7 +539,9 @@ impl ImagePixelModule {
 
     data_set.insert(
       dictionary::HIGH_BIT.tag,
-      DataElementValue::new_unsigned_short(&[self.high_bit])?,
+      DataElementValue::new_unsigned_short(&[self
+        .bits_stored
+        .saturating_sub(1)])?,
     );
 
     if let Some(pixel_aspect_ratio) = &self.pixel_aspect_ratio {
