@@ -299,12 +299,7 @@ pub fn decode_next_codepoint(
     // are reserved for various future or user-defined uses. These all map to
     // the replacement character.
     <<byte_0, byte_1, byte_2, byte_3, rest:bytes>>
-      if {
-        byte_0 >= 0x85
-        && byte_0 <= 0x8F
-        || byte_0 >= 0xE4
-        && byte_0 <= 0xFE
-      }
+      if { byte_0 >= 0x85 && byte_0 <= 0x8F || byte_0 >= 0xE4 && byte_0 <= 0xFE }
       && byte_1 >= 0x30
       && byte_1 <= 0x39
       && byte_2 >= 0x81

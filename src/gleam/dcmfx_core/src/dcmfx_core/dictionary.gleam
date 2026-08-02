@@ -22969,12 +22969,7 @@ pub const underlined = Item(
   vm_1,
 )
 
-pub const bold = Item(
-  DataElementTag(0x0070, 0x0249),
-  "Bold",
-  [CodeString],
-  vm_1,
-)
+pub const bold = Item(DataElementTag(0x0070, 0x0249), "Bold", [CodeString], vm_1)
 
 pub const italic = Item(
   DataElementTag(0x0070, 0x0250),
@@ -23354,12 +23349,7 @@ pub const input_sequence_position_index = Item(
   vm_1,
 )
 
-pub const crop = Item(
-  DataElementTag(0x0070, 0x1204),
-  "Crop",
-  [CodeString],
-  vm_1,
-)
+pub const crop = Item(DataElementTag(0x0070, 0x1204), "Crop", [CodeString], vm_1)
 
 pub const cropping_specification_index = Item(
   DataElementTag(0x0070, 0x1205),
@@ -26357,12 +26347,7 @@ pub const max_density = Item(
   vm_1,
 )
 
-pub const trim = Item(
-  DataElementTag(0x2010, 0x0140),
-  "Trim",
-  [CodeString],
-  vm_1,
-)
+pub const trim = Item(DataElementTag(0x2010, 0x0140), "Trim", [CodeString], vm_1)
 
 pub const configuration_information = Item(
   DataElementTag(0x2010, 0x0150),

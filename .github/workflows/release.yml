@@ -319,7 +319,7 @@ jobs:
         uses: erlef/setup-beam@v1
         with:
           otp-version: 28.5
-          gleam-version: 1.17.0
+          gleam-version: 1.18.1
           version-type: strict
 
       - name: Setup Rust
