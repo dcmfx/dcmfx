@@ -134,7 +134,7 @@ pub async fn run(args: RewriteArgs) -> Result<(), ()> {
       }
 
       let output_target = if args.in_place {
-        OutputTarget::new(input_source.specified_path()).await
+        OutputTarget::in_place(&input_source)
       } else if let Some(output_filename) = &args.output_filename {
         OutputTarget::new(output_filename).await
       } else {
@@ -189,7 +189,7 @@ async fn rewrite_input_source(
   } else {
     println!(
       "Rewriting \"{input_source}\" => \"{}\" …",
-      output_target.specified_path().display()
+      output_target.display_path().display()
     );
   }
 

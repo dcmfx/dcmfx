@@ -3,6 +3,7 @@ use std::{
   pin::Pin,
   sync::{Arc, LazyLock, atomic::AtomicBool},
   task::{Context, Poll},
+  unreachable,
 };
 
 use object_store::{
@@ -34,7 +35,11 @@ pub enum OutputTarget {
   Object {
     object_store: Arc<dyn ObjectStore>,
     object_path: ObjectStorePath,
-    specified_path: PathBuf,
+
+    /// The path to display for this output target in output and error messages.
+    /// This is the path as specified on the CLI where possible, and is only
+    /// for display purposes.
+    display_path: PathBuf,
   },
 }
 
@@ -71,7 +76,7 @@ impl OutputTarget {
       return Self::Object {
         object_store,
         object_path,
-        specified_path: PathBuf::from(path),
+        display_path: PathBuf::from(path),
       };
     }
 
@@ -82,7 +87,27 @@ impl OutputTarget {
     Self::Object {
       object_store,
       object_path,
-      specified_path: PathBuf::from(path),
+      display_path: PathBuf::from(path),
+    }
+  }
+
+  /// Creates an output target that writes to the same object as the given
+  /// input source, i.e. for in-place modification of that input.
+  ///
+  pub fn in_place(input_source: &InputSource) -> Self {
+    match input_source {
+      // Commands that support in-place output reject stdin as an input
+      InputSource::Stdin => unreachable!(),
+
+      InputSource::Object {
+        object_store,
+        object_path,
+        display_path,
+      } => Self::Object {
+        object_store: object_store.clone(),
+        object_path: object_path.clone(),
+        display_path: display_path.clone(),
+      },
     }
   }
 
@@ -94,21 +119,27 @@ impl OutputTarget {
     output_suffix: &str,
     output_directory: &Option<PathBuf>,
   ) -> Self {
-    let mut path = input_source.specified_path();
-
+    // An output directory is a location in its own right, so an output target
+    // for it is created from scratch
     if let Some(output_directory) = output_directory {
-      path = output_directory.join(format!(
-        "{}{}",
-        path.file_name().unwrap().to_string_lossy(),
-        output_suffix
-      ));
-    } else if let Some(file_name) = path.file_name() {
-      let new_file_name =
-        format!("{}{output_suffix}", file_name.to_string_lossy());
-      path.set_file_name(new_file_name);
+      let file_name = format!("{}{output_suffix}", input_source.file_name());
+
+      return Self::new(output_directory.join(file_name)).await;
     }
 
-    Self::new(&path).await
+    match input_source {
+      // Stdin has no location for its output to sit alongside, so the output
+      // filename is derived from the '-' that specifies it
+      InputSource::Stdin => {
+        Self::new(PathBuf::from(format!("-{output_suffix}"))).await
+      }
+
+      // The output sits alongside the input, so reuse the input's object store
+      // and path rather than re-parsing its display path
+      InputSource::Object { .. } => {
+        Self::in_place(input_source).append(output_suffix)
+      }
+    }
   }
 
   /// Returns whether this output target writes to stdout.
@@ -117,12 +148,13 @@ impl OutputTarget {
     matches!(self, Self::StdOut)
   }
 
-  /// Returns the path specified on the CLI that resulted in this output target.
+  /// Returns the path to display for this output target in output and error
+  /// messages.
   ///
-  pub fn specified_path(&self) -> PathBuf {
+  pub fn display_path(&self) -> PathBuf {
     match self {
       Self::StdOut => PathBuf::from("-"),
-      Self::Object { specified_path, .. } => specified_path.clone(),
+      Self::Object { display_path, .. } => display_path.clone(),
     }
   }
 
@@ -136,22 +168,22 @@ impl OutputTarget {
       Self::Object {
         object_store,
         object_path,
-        specified_path,
+        display_path,
       } => {
         let object_path =
           ObjectStorePath::parse(format!("{object_path}{suffix}"))
             .expect("object path is valid after appending suffix");
 
-        let mut specified_path = specified_path.clone();
-        if let Some(file_name) = specified_path.file_name() {
-          specified_path
+        let mut display_path = display_path.clone();
+        if let Some(file_name) = display_path.file_name() {
+          display_path
             .set_file_name(format!("{}{suffix}", file_name.to_string_lossy()));
         }
 
         Self::Object {
-          specified_path,
           object_store: object_store.clone(),
           object_path,
+          display_path,
         }
       }
     }
@@ -169,23 +201,23 @@ impl OutputTarget {
       Self::StdOut => Ok(GLOBAL_STDOUT.clone()),
 
       Self::Object {
-        specified_path,
         object_store,
         object_path,
+        display_path,
       } => {
         if !Self::overwrite() && object_store.head(object_path).await.is_ok() {
           crate::utils::exit_with_error(
             &format!(
               "Output file \"{}\" already exists.\n\nHint: Specify \
                --overwrite to automatically overwrite existing files",
-              specified_path.display()
+              display_path.display()
             ),
             "",
           );
         }
 
         if log_write_to_stdout {
-          println!("Writing \"{}\" …", specified_path.display());
+          println!("Writing \"{}\" …", display_path.display());
         }
 
         // Start a multipart upload to the object store

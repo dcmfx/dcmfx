@@ -18,7 +18,11 @@ pub enum InputSource {
   Object {
     object_store: Arc<dyn ObjectStore>,
     object_path: ObjectStorePath,
-    specified_path: PathBuf,
+
+    /// The path to display for this input source in output and error messages.
+    /// This is the path as specified on the CLI where possible, and is only
+    /// for sisplay purposes.
+    display_path: PathBuf,
   },
 }
 
@@ -26,21 +30,23 @@ impl core::fmt::Display for InputSource {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     match self {
       InputSource::Stdin => write!(f, "-"),
-      InputSource::Object { specified_path, .. } => {
-        write!(f, "{}", specified_path.display())
+      InputSource::Object { display_path, .. } => {
+        write!(f, "{}", display_path.display())
       }
     }
   }
 }
 
 impl InputSource {
-  /// Returns the path that was specified on the CLI that resulted in this input
-  /// source.
+  /// Returns the file name of this input source, i.e. the final part of the
+  /// path to its object. This is used when deriving output filenames.
   ///
-  pub fn specified_path(&self) -> PathBuf {
+  pub fn file_name(&self) -> &str {
     match self {
-      InputSource::Stdin => PathBuf::from("-"),
-      InputSource::Object { specified_path, .. } => specified_path.clone(),
+      InputSource::Stdin => "-",
+      InputSource::Object { object_path, .. } => {
+        object_path.filename().unwrap_or_default()
+      }
     }
   }
 

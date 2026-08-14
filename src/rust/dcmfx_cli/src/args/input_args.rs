@@ -117,9 +117,16 @@ fn input_sources_for_input_filename(
       object_url_to_store_and_path(&input_filename_str).await
     {
       if is_glob(object_path.as_ref()) {
+        // The object path is the tail of the input filename, so what precedes
+        // it is the scheme and host, e.g. "s3://bucket/"
+        let root = input_filename_str
+          .strip_suffix(object_path.as_ref())
+          .unwrap_or_default();
+
         let mut stream = input_sources_for_object_url_glob(
           object_store,
           object_path.as_ref(),
+          root,
           input_filename_str.to_string(),
         );
 
@@ -130,7 +137,7 @@ fn input_sources_for_input_filename(
         yield InputSource::Object {
           object_store,
           object_path,
-          specified_path: input_filename.clone(),
+          display_path: input_filename.clone(),
         };
       }
     }
@@ -140,9 +147,19 @@ fn input_sources_for_input_filename(
         local_path_to_store_and_path(input_filename_str.to_string()).await;
 
       if is_glob(object_path.as_ref()) {
+        // Local paths are made absolute when converted to an object path, and
+        // on POSIX this strips the leading separator. Windows paths start with
+        // a drive letter and so are left absolute.
+        let root = if std::path::Path::new(object_path.as_ref()).is_absolute() {
+          ""
+        } else {
+          "/"
+        };
+
         let mut stream = input_sources_for_object_url_glob(
           object_store,
           object_path.as_ref(),
+          root,
           input_filename_str.to_string(),
         );
 
@@ -167,7 +184,7 @@ fn input_sources_for_input_filename(
         yield InputSource::Object {
           object_store,
           object_path,
-          specified_path: input_filename.clone(),
+          display_path: input_filename.clone(),
         }
       }
     }
@@ -183,7 +200,8 @@ fn input_sources_for_input_filename(
 fn input_sources_for_object_url_glob(
   object_store: Arc<dyn object_store::ObjectStore>,
   object_path: &str,
-  input_filename_str: String,
+  root: &str,
+  input_filename: String,
 ) -> Pin<Box<dyn Stream<Item = InputSource> + Send>> {
   let Ok(pattern) = glob::Pattern::new(object_path) else {
     crate::utils::exit_with_error(
@@ -195,6 +213,8 @@ fn input_sources_for_object_url_glob(
   let prefix = object_url_list_prefix(object_path);
   let mut list_stream = object_store.list(prefix.as_ref());
 
+  let root = root.to_string();
+
   Box::pin(async_stream::stream! {
     loop {
       match list_stream.next().await {
@@ -203,13 +223,13 @@ fn input_sources_for_object_url_glob(
             yield InputSource::Object {
               object_store: object_store.clone(),
               object_path: meta.location.clone(),
-              specified_path: PathBuf::from(meta.location.to_string()),
+              display_path: PathBuf::from(format!("{root}{}", meta.location)),
             };
           }
         }
 
         Some(Err(e)) => crate::utils::exit_with_error(
-          &format!("Failed listing '{}'", input_filename_str),
+          &format!("Failed listing '{}'", input_filename),
           e,
         ),
 
@@ -263,7 +283,7 @@ async fn file_list_input_sources(
           yield InputSource::Object {
             object_store,
             object_path,
-            specified_path: PathBuf::from(path),
+            display_path: PathBuf::from(path),
           };
         }
 

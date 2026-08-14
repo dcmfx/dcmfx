@@ -7,7 +7,7 @@ mod assert_image_snapshot;
 use tempfile::NamedTempFile;
 use utils::{
   create_temp_dir, create_temp_file, dcmfx_cli, get_stderr, get_stdout,
-  s3_copy_object,
+  s3_copy_object, to_native_path,
 };
 
 #[test]
@@ -105,6 +105,110 @@ async fn modify_in_place_on_s3() {
   dcmfx_cli()
     .arg("modify")
     .arg(&input_file)
+    .arg("--in-place")
+    .arg("--transfer-syntax")
+    .arg("deflated-explicit-vr-little-endian")
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
+    .assert()
+    .success()
+    .stdout(format!("Modifying \"{input_file}\" in place …\n"));
+
+  let assert = dcmfx_cli().arg("print").arg(input_file).assert().success();
+
+  assert_snapshot!("modify_in_place_after", get_stdout(assert));
+}
+
+#[test]
+fn modify_in_place_with_glob_input() {
+  let input_dir = create_temp_dir();
+
+  let input_file = input_dir.path().join("CR-MONO1-10-chest.dcm");
+  std::fs::copy(
+    "../../../test/assets/fo-dicom/CR-MONO1-10-chest.dcm",
+    &input_file,
+  )
+  .unwrap();
+
+  dcmfx_cli()
+    .arg("modify")
+    .arg(input_dir.path().join("*.dcm"))
+    .arg("--in-place")
+    .arg("--transfer-syntax")
+    .arg("deflated-explicit-vr-little-endian")
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
+    .assert()
+    .success()
+    .stdout(format!(
+      "Modifying \"{}\" in place …\n",
+      // Expanding a glob puts paths into the form used by the object store,
+      // which always uses forward slashes
+      input_file.display().to_string().replace('\\', "/")
+    ));
+
+  let assert = dcmfx_cli().arg("print").arg(&input_file).assert().success();
+
+  assert_snapshot!("modify_in_place_after", get_stdout(assert));
+}
+
+#[test]
+fn modify_in_place_with_relative_glob_input() {
+  let working_dir = create_temp_dir();
+
+  let input_dir = working_dir.path().join("input");
+  std::fs::create_dir(&input_dir).unwrap();
+
+  let input_file = input_dir.join("CR-MONO1-10-chest.dcm");
+  std::fs::copy(
+    "../../../test/assets/fo-dicom/CR-MONO1-10-chest.dcm",
+    &input_file,
+  )
+  .unwrap();
+
+  let assert = dcmfx_cli()
+    .current_dir(working_dir.path())
+    .arg("modify")
+    .arg(to_native_path("input/*.dcm"))
+    .arg("--in-place")
+    .arg("--transfer-syntax")
+    .arg("deflated-explicit-vr-little-endian")
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
+    .assert()
+    .success();
+
+  // A relative input path is made absolute when its glob is expanded. Its exact
+  // value isn't asserted because the working directory can contain symlinked
+  // components that are resolved by the CLI.
+  assert!(
+    get_stdout(assert).ends_with("input/CR-MONO1-10-chest.dcm\" in place …\n")
+  );
+
+  // Check that the only thing in the working directory is the input directory
+  let working_dir_entries: Vec<_> = std::fs::read_dir(working_dir.path())
+    .unwrap()
+    .map(|entry| entry.unwrap().file_name())
+    .collect();
+  assert_eq!(working_dir_entries, vec!["input"]);
+
+  let assert = dcmfx_cli().arg("print").arg(&input_file).assert().success();
+
+  assert_snapshot!("modify_in_place_after", get_stdout(assert));
+}
+
+#[tokio::test]
+#[ignore]
+async fn modify_in_place_on_s3_with_glob_input() {
+  let prefix = rand::random::<u64>().to_string();
+  let input_key = format!("{prefix}/CR-MONO1-10-chest.dcm");
+  let input_file = format!("s3://dcmfx-test/{input_key}");
+
+  s3_copy_object("fo-dicom/CR-MONO1-10-chest.dcm", &input_key).await;
+
+  dcmfx_cli()
+    .arg("modify")
+    .arg(format!("s3://dcmfx-test/{prefix}/*.dcm"))
     .arg("--in-place")
     .arg("--transfer-syntax")
     .arg("deflated-explicit-vr-little-endian")
