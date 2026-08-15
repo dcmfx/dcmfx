@@ -40,10 +40,10 @@ use alloc::{
   vec::Vec,
 };
 
+use bytes::Bytes;
+
 use dcmfx_character_set::{self, SpecificCharacterSet, StringType};
-use dcmfx_core::{
-  DataElementTag, RcByteSlice, ValueRepresentation, dictionary, utils,
-};
+use dcmfx_core::{DataElementTag, ValueRepresentation, dictionary, utils};
 
 use crate::{P10Error, P10Token, internal::value_length::ValueLength};
 
@@ -696,7 +696,7 @@ impl P10Location {
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
-    value_bytes: &mut RcByteSlice,
+    value_bytes: &mut Bytes,
   ) -> Result<(), P10Error> {
     if tag == dictionary::SPECIFIC_CHARACTER_SET.tag {
       self
@@ -719,7 +719,7 @@ impl P10Location {
 
   fn update_specific_character_set_clarifying_data_element(
     &mut self,
-    value_bytes: &mut RcByteSlice,
+    value_bytes: &mut Bytes,
   ) -> Result<(), P10Error> {
     let specific_character_set =
       core::str::from_utf8(value_bytes).map_err(|_| {
@@ -948,7 +948,7 @@ mod tests {
   ) -> Result<(), ()> {
     read_data_element(location, item)?;
 
-    let mut value_bytes: RcByteSlice = value_bytes.to_vec().into();
+    let mut value_bytes: Bytes = value_bytes.to_vec().into();
     location
       .add_clarifying_data_element(item.tag, item.vrs[0], &mut value_bytes)
       .unwrap();

@@ -12,6 +12,7 @@ homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
+bytes = "1.12.1"
 dcmfx_core = { path = "../dcmfx_core", default-features = false }
 dcmfx_p10 = { path = "../dcmfx_p10", default-features = false }
 

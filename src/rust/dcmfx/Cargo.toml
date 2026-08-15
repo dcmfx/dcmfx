@@ -13,6 +13,7 @@ homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
+bytes = "1.12.1"
 dcmfx_anonymize = { path = "../dcmfx_anonymize", default-features = false }
 dcmfx_character_set = { path = "../dcmfx_character_set", default-features = false }
 dcmfx_core = { path = "../dcmfx_core", default-features = false }

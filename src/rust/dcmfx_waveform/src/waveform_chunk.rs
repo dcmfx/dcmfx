@@ -3,7 +3,9 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use dcmfx_core::{Rc, RcByteSlice};
+use bytes::Bytes;
+
+use dcmfx_core::Rc;
 
 use crate::{WaveformDecodeError, WaveformMultiplexGroup, decode};
 
@@ -19,7 +21,7 @@ pub struct WaveformChunk {
   multiplex_group_index: usize,
   sample_offset: u64,
   number_of_samples: u32,
-  data: RcByteSlice,
+  data: Bytes,
 }
 
 impl WaveformChunk {
@@ -31,7 +33,7 @@ impl WaveformChunk {
     multiplex_group_index: usize,
     sample_offset: u64,
     number_of_samples: u32,
-    data: RcByteSlice,
+    data: Bytes,
   ) -> Self {
     Self {
       multiplex_group,
@@ -84,7 +86,7 @@ impl WaveformChunk {
   /// [`WaveformSampleInterpretation::bytes_per_sample()`]:
   ///   crate::WaveformSampleInterpretation::bytes_per_sample
   ///
-  pub fn data(&self) -> &RcByteSlice {
+  pub fn data(&self) -> &Bytes {
     &self.data
   }
 

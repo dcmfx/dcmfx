@@ -160,6 +160,7 @@ checksum = "61803da095bee82a81bb1a452ecc25d3b2f1416d1897eb86430c6159ef717c17"
 name = "dcmfx"
 version = "0.49.0"
 dependencies = [
+ "bytes",
  "dcmfx_anonymize",
  "dcmfx_character_set",
  "dcmfx_core",
@@ -201,6 +202,7 @@ version = "0.49.0"
 dependencies = [
  "base64",
  "byteorder",
+ "bytes",
  "dcmfx_core",
  "dcmfx_p10",
  "num-traits",
@@ -226,6 +228,7 @@ version = "0.49.0"
 dependencies = [
  "bytemuck",
  "byteorder",
+ "bytes",
  "cc",
  "dcmfx_core",
  "dcmfx_p10",
@@ -253,6 +256,7 @@ dependencies = [
 name = "dcmfx_waveform"
 version = "0.49.0"
 dependencies = [
+ "bytes",
  "dcmfx_core",
  "dcmfx_p10",
 ]

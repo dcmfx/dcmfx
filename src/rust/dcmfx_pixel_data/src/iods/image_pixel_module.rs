@@ -6,9 +6,11 @@ use alloc::{
   string::{String, ToString},
 };
 
+use bytes::Bytes;
+
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataError, DataSet, DataSetPath, IodModule,
-  Rc, RcByteSlice, ValueRepresentation, dictionary,
+  Rc, ValueRepresentation, dictionary,
 };
 
 use crate::iods::PaletteColorLookupTableModule;
@@ -27,7 +29,7 @@ pub struct ImagePixelModule {
   pixel_aspect_ratio: Option<DataElementValue>,
   smallest_image_pixel_value: Option<i64>,
   largest_image_pixel_value: Option<i64>,
-  icc_profile: Option<RcByteSlice>,
+  icc_profile: Option<Bytes>,
   color_space: Option<String>,
 }
 
@@ -179,7 +181,7 @@ impl ImagePixelModule {
     pixel_aspect_ratio: Option<DataElementValue>,
     smallest_image_pixel_value: Option<i64>,
     largest_image_pixel_value: Option<i64>,
-    icc_profile: Option<RcByteSlice>,
+    icc_profile: Option<Bytes>,
     color_space: Option<String>,
   ) -> Result<Self, DataError> {
     // Check that the number of bits stored does not exceed the number of bits

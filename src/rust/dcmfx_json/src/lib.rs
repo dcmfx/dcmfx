@@ -124,8 +124,10 @@ impl DataSetJsonExtensions for DataSet {
 
 #[cfg(test)]
 mod tests {
+  use bytes::Bytes;
+
   use dcmfx_core::{
-    DataElementTag, DataElementValue, PersonNameComponents, RcByteSlice,
+    DataElementTag, DataElementValue, PersonNameComponents,
     StructuredPersonName, ValueRepresentation, dictionary, transfer_syntax,
   };
 
@@ -170,7 +172,7 @@ mod tests {
       dictionary::SERIES_NUMBER.tag,
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::IntegerString,
-        RcByteSlice::from(b"invalid ".to_vec()),
+        Bytes::from(b"invalid ".to_vec()),
       ),
     )]
     .into_iter()
@@ -285,7 +287,7 @@ mod tests {
             dictionary::PIXEL_DATA.tag,
             DataElementValue::new_encapsulated_pixel_data(
               ValueRepresentation::OtherByteString,
-              vec![RcByteSlice::default(), vec![1, 2].into()],
+              vec![Bytes::default(), vec![1, 2].into()],
             )
             .unwrap(),
           ),
@@ -336,7 +338,7 @@ mod tests {
       DataElementTag::new(0x0008, 0x0008),
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::IntegerString,
-        RcByteSlice::from(b"1.2".to_vec()),
+        Bytes::from(b"1.2".to_vec()),
       ),
     );
 

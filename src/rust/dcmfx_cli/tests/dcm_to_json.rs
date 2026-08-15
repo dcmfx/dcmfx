@@ -1,5 +1,6 @@
 mod utils;
 
+use bytes::Bytes;
 use insta::assert_snapshot;
 use utils::{create_temp_dir, dcmfx_cli, get_stdout, s3_get_object};
 
@@ -235,7 +236,7 @@ fn with_ignore_invalid_data() {
     dictionary::SERIES_NUMBER.tag,
     DataElementValue::new_binary_unchecked(
       ValueRepresentation::IntegerString,
-      RcByteSlice::from(b"invalid ".to_vec()),
+      Bytes::from(b"invalid ".to_vec()),
     ),
   )]
   .into_iter()

@@ -14,10 +14,11 @@ use alloc::{
 };
 
 use byteorder::ByteOrder;
+use bytes::Bytes;
 
 use dcmfx_core::{
-  DataElementValue, DataError, DataSet, DcmfxError, RcByteSlice,
-  ValueRepresentation, dictionary,
+  DataElementValue, DataError, DataSet, DcmfxError, ValueRepresentation,
+  dictionary,
 };
 use dcmfx_p10::{
   P10CustomTypeTransform, P10CustomTypeTransformError, P10Error,
@@ -47,14 +48,14 @@ pub struct P10PixelDataFrameTransform {
 
   // Chunks of pixel data that have not yet been emitted as part of a frame.
   //
-  // The second value is an offset into the Vec<u8> where the un-emitted frame
+  // The second value is an offset into the chunk where the un-emitted frame
   // data begins, which is only used for native pixel data and not for
   // encapsulated pixel data.
   //
   // The third value is true if this chunk is the header of a pixel data item in
   // encapsulated pixel data, meaning it should not be emitted as part of a
   // frame.
-  pixel_data: VecDeque<(RcByteSlice, u64, bool)>,
+  pixel_data: VecDeque<(Bytes, u64, bool)>,
 
   pixel_data_write_offset: u64,
   pixel_data_read_offset: u64,
@@ -712,13 +713,13 @@ mod tests {
         P10Token::DataElementValueBytes {
           tag: dictionary::ITEM.tag,
           vr: ValueRepresentation::OtherByteString,
-          data: RcByteSlice::from(vec![1; 500]),
+          data: Bytes::from(vec![1; 500]),
           bytes_remaining: 12,
         },
         P10Token::DataElementValueBytes {
           tag: dictionary::ITEM.tag,
           vr: ValueRepresentation::OtherByteString,
-          data: RcByteSlice::from(vec![1; 12]),
+          data: Bytes::from(vec![1; 12]),
           bytes_remaining: 0,
         },
       ],

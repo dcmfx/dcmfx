@@ -14,14 +14,15 @@ use alloc::{
   vec::Vec,
 };
 
+use bytes::Bytes;
+
 use crate::data_element_value::{
   age_string, date, date_time, person_name, time,
 };
 use crate::data_set_path::DataSetPathEntry;
 use crate::{
   DataElementTag, DataElementValue, DataError, DataSetPath,
-  DataSetPrintOptions, RcByteSlice, TransferSyntax, ValueRepresentation,
-  dictionary,
+  DataSetPrintOptions, TransferSyntax, ValueRepresentation, dictionary,
 };
 
 /// A DICOM data set that is a mapping of data element tags to data element
@@ -122,7 +123,7 @@ impl DataSet {
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
-    bytes: RcByteSlice,
+    bytes: Bytes,
   ) -> Result<(), DataError> {
     let value = DataElementValue::new_binary(vr, bytes)
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))?;
@@ -725,7 +726,7 @@ impl DataSet {
   pub fn get_value_bytes(
     &self,
     tag: DataElementTag,
-  ) -> Result<&RcByteSlice, DataError> {
+  ) -> Result<&Bytes, DataError> {
     self
       .get_value(tag)?
       .bytes()
@@ -741,7 +742,7 @@ impl DataSet {
     &self,
     tag: DataElementTag,
     allowed_vrs: &[ValueRepresentation],
-  ) -> Result<&RcByteSlice, DataError> {
+  ) -> Result<&Bytes, DataError> {
     self
       .get_value(tag)?
       .vr_bytes(allowed_vrs)

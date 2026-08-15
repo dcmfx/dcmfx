@@ -9,9 +9,9 @@ use alloc::{
   vec::Vec,
 };
 
-use dcmfx_core::{
-  DataError, DataSetPath, DcmfxError, Rc, RcByteSlice, dictionary,
-};
+use bytes::Bytes;
+
+use dcmfx_core::{DataError, DataSetPath, DcmfxError, Rc, dictionary};
 use dcmfx_p10::{DataSetBuilder, P10Error, P10FilterTransform, P10Token};
 
 use crate::{WaveformChunk, WaveformMultiplexGroup};
@@ -296,7 +296,7 @@ impl P10WaveformChunkTransform {
   ///
   fn add_waveform_data_bytes(
     &mut self,
-    data: &RcByteSlice,
+    data: &Bytes,
     bytes_remaining: u32,
   ) -> Result<Vec<WaveformChunk>, P10WaveformChunkTransformError> {
     let Some(multiplex_group) = self.multiplex_group.as_ref() else {

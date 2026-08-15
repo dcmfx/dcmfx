@@ -350,10 +350,10 @@ mod tests {
   #[cfg(not(feature = "std"))]
   use alloc::string::ToString;
 
+  use bytes::Bytes;
+
   use super::*;
-  use dcmfx_core::{
-    DataElementValue, RcByteSlice, ValueRepresentation, dictionary,
-  };
+  use dcmfx_core::{DataElementValue, ValueRepresentation, dictionary};
 
   #[test]
   fn read_native_empty_frame() {
@@ -373,7 +373,7 @@ mod tests {
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
-        RcByteSlice::default(),
+        Bytes::default(),
       )
       .unwrap(),
     );
@@ -686,7 +686,7 @@ mod tests {
       DataElementValue::new_encapsulated_pixel_data(
         ValueRepresentation::OtherByteString,
         vec![
-          RcByteSlice::default(),
+          Bytes::default(),
           "1".repeat(0x4C6).as_bytes().to_vec().into(),
           "2".repeat(0x24A).as_bytes().to_vec().into(),
           "3".repeat(0x628).as_bytes().to_vec().into(),

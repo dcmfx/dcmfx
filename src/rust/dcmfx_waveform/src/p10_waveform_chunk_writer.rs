@@ -8,9 +8,10 @@ use alloc::{
   vec::Vec,
 };
 
+use bytes::Bytes;
+
 use dcmfx_core::{
-  DataError, DataSetPath, DcmfxError, RcByteSlice, ValueRepresentation,
-  dictionary,
+  DataError, DataSetPath, DcmfxError, ValueRepresentation, dictionary,
 };
 use dcmfx_p10::{P10Token, p10_token};
 
@@ -385,7 +386,7 @@ impl P10WaveformChunkWriter {
           .multiplex_group
           .sample_interpretation()
           .binary_value_representation(),
-        data: RcByteSlice::default(),
+        data: Bytes::default(),
         bytes_remaining: 0,
       });
     }

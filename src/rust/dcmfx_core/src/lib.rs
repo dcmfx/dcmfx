@@ -38,6 +38,6 @@ pub use data_set_path::DataSetPath;
 pub use error::DcmfxError;
 pub use iod_module::IodModule;
 pub use transfer_syntax::TransferSyntax;
-pub use utils::{Rc, RcByteSlice};
+pub use utils::Rc;
 pub use value_multiplicity::ValueMultiplicity;
 pub use value_representation::ValueRepresentation;

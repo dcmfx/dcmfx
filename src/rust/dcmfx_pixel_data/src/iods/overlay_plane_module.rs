@@ -1,8 +1,10 @@
 #[cfg(not(feature = "std"))]
 use alloc::{format, string::String, string::ToString, vec, vec::Vec};
 
+use bytes::Bytes;
+
 use dcmfx_core::{
-  DataElementTag, DataError, DataSet, DataSetPath, IodModule, RcByteSlice,
+  DataElementTag, DataError, DataSet, DataSetPath, IodModule,
   ValueRepresentation, dictionary,
 };
 
@@ -181,7 +183,7 @@ pub struct OverlayPlane {
   overlay_columns: u16,
   overlay_type: OverlayType,
   overlay_origin: [i32; 2],
-  overlay_data: RcByteSlice,
+  overlay_data: Bytes,
   overlay_description: Option<String>,
   overlay_subtype: Option<OverlaySubtype>,
   overlay_label: Option<String>,

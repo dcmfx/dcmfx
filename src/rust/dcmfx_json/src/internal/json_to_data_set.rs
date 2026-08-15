@@ -8,10 +8,11 @@ use alloc::{
 
 use base64::prelude::*;
 use byteorder::ByteOrder;
+use bytes::Bytes;
 
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataSet, DataSetPath, RcByteSlice,
-  TransferSyntax, ValueRepresentation, dictionary,
+  DataElementTag, DataElementValue, DataSet, DataSetPath, TransferSyntax,
+  ValueRepresentation, dictionary,
 };
 
 use crate::json_error::JsonDeserializeError;
@@ -113,10 +114,7 @@ fn convert_json_to_data_element(
     if vr == ValueRepresentation::Sequence {
       Ok(DataElementValue::new_sequence(vec![]))
     } else {
-      Ok(DataElementValue::new_binary_unchecked(
-        vr,
-        RcByteSlice::default(),
-      ))
+      Ok(DataElementValue::new_binary_unchecked(vr, Bytes::default()))
     }
   }
 }

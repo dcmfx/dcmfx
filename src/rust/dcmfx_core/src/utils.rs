@@ -7,8 +7,6 @@ pub type Rc<T> = std::sync::Arc<T>;
 #[cfg(not(feature = "std"))]
 pub type Rc<T> = alloc::rc::Rc<T>;
 
-pub type RcByteSlice = bytes::Bytes;
-
 /// Inspects a byte slice in hexadecimal, e.g. `[1A 2B 3C 4D]`. If the number of
 /// bytes in the slice exceeds `max_length` then not all bytes will be
 /// shown and a trailing ellipsis will be appended, e.g. `[1A 2B 3C 4D …]`.

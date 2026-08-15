@@ -9,9 +9,11 @@ use alloc::{
   vec::Vec,
 };
 
+use bytes::Bytes;
+
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataSet, DataSetPath, RcByteSlice,
-  TransferSyntax, ValueRepresentation, dictionary,
+  DataElementTag, DataElementValue, DataSet, DataSetPath, TransferSyntax,
+  ValueRepresentation, dictionary,
 };
 
 use crate::internal::{
@@ -55,7 +57,7 @@ pub enum P10Token {
   DataElementValueBytes {
     tag: DataElementTag,
     vr: ValueRepresentation,
-    data: RcByteSlice,
+    data: Bytes,
     bytes_remaining: u32,
   },
 
@@ -391,7 +393,7 @@ fn data_element_value_tokens(
   tag: DataElementTag,
   value: &DataElementValue,
   path: &DataSetPath,
-  bytes: &RcByteSlice,
+  bytes: &Bytes,
 ) -> [P10Token; 2] {
   let header_token = P10Token::DataElementHeader {
     tag,
@@ -429,7 +431,7 @@ fn sequuence_tokens(
 fn pixel_data_item_tokens(
   index: usize,
   vr: ValueRepresentation,
-  item: &RcByteSlice,
+  item: &Bytes,
 ) -> [P10Token; 2] {
   let length = item.len() as u32;
 

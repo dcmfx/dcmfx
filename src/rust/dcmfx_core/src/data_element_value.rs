@@ -11,12 +11,13 @@ use alloc::{
 };
 
 use byteorder::ByteOrder;
+use bytes::Bytes;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
-  DataElementTag, DataError, DataSet, RcByteSlice, StructuredAge,
-  StructuredDate, StructuredDateTime, StructuredTime, ValueRepresentation,
-  code_strings, dictionary, utils, value_representation,
+  DataElementTag, DataError, DataSet, StructuredAge, StructuredDate,
+  StructuredDateTime, StructuredTime, ValueRepresentation, code_strings,
+  dictionary, utils, value_representation,
 };
 
 pub mod age_string;
@@ -54,10 +55,10 @@ pub mod unique_identifier;
 ///    DICOM data set.
 ///
 /// Data element values that hold binary data always store it in a
-/// [`RcByteSlice`] which is parsed and converted to a more usable type on
-/// request. This improves efficiency as parsing only occurs when the value of a
-/// data element is requested, and allows any data to be passed through even if
-/// it is non-conformant with the DICOM standard, which is a common occurrence.
+/// [`Bytes`] which is parsed and converted to a more usable type on request.
+/// This improves efficiency as parsing only occurs when the value of a data
+/// element is requested, and allows any data to be passed through even if it is
+/// non-conformant with the DICOM standard, which is a common occurrence.
 ///
 /// Ref: PS3.5 6.2.
 ///
@@ -69,15 +70,15 @@ pub struct DataElementValue(RawDataElementValue);
 enum RawDataElementValue {
   BinaryValue {
     vr: ValueRepresentation,
-    bytes: RcByteSlice,
+    bytes: Bytes,
   },
   LookupTableDescriptorValue {
     vr: ValueRepresentation,
-    bytes: RcByteSlice,
+    bytes: Bytes,
   },
   EncapsulatedPixelDataValue {
     vr: ValueRepresentation,
-    items: Vec<RcByteSlice>,
+    items: Vec<Bytes>,
   },
   SequenceValue {
     items: Vec<DataSet>,
@@ -330,7 +331,7 @@ impl DataElementValue {
   ///
   pub fn new_binary(
     vr: ValueRepresentation,
-    bytes: RcByteSlice,
+    bytes: Bytes,
   ) -> Result<Self, DataError> {
     if vr == ValueRepresentation::Sequence {
       return Err(DataError::new_value_invalid(format!(
@@ -373,10 +374,7 @@ impl DataElementValue {
   /// Constructs a new data element binary value similar to
   /// [`Self::new_binary`], but does not validate `vr` or `bytes`.
   ///
-  pub fn new_binary_unchecked(
-    vr: ValueRepresentation,
-    bytes: RcByteSlice,
-  ) -> Self {
+  pub fn new_binary_unchecked(vr: ValueRepresentation, bytes: Bytes) -> Self {
     Self(RawDataElementValue::BinaryValue { vr, bytes })
   }
 
@@ -390,7 +388,7 @@ impl DataElementValue {
   ///
   pub fn new_lookup_table_descriptor(
     vr: ValueRepresentation,
-    bytes: RcByteSlice,
+    bytes: Bytes,
   ) -> Result<Self, DataError> {
     if vr != ValueRepresentation::SignedShort
       && vr != ValueRepresentation::UnsignedShort
@@ -414,7 +412,7 @@ impl DataElementValue {
   ///
   pub fn new_lookup_table_descriptor_unchecked(
     vr: ValueRepresentation,
-    bytes: RcByteSlice,
+    bytes: Bytes,
   ) -> Self {
     Self(RawDataElementValue::LookupTableDescriptorValue { vr, bytes })
   }
@@ -435,7 +433,7 @@ impl DataElementValue {
   ///
   pub fn new_encapsulated_pixel_data(
     vr: ValueRepresentation,
-    items: Vec<RcByteSlice>,
+    items: Vec<Bytes>,
   ) -> Result<Self, DataError> {
     if vr != ValueRepresentation::OtherByteString
       && vr != ValueRepresentation::OtherWordString
@@ -458,7 +456,7 @@ impl DataElementValue {
   ///
   pub fn new_encapsulated_pixel_data_unchecked(
     vr: ValueRepresentation,
-    items: Vec<RcByteSlice>,
+    items: Vec<Bytes>,
   ) -> Self {
     Self(RawDataElementValue::EncapsulatedPixelDataValue { vr, items })
   }
@@ -801,7 +799,7 @@ impl DataElementValue {
 
   /// For data element values that hold binary data, returns that data.
   ///
-  pub fn bytes(&self) -> Result<&RcByteSlice, DataError> {
+  pub fn bytes(&self) -> Result<&Bytes, DataError> {
     match &self.0 {
       RawDataElementValue::BinaryValue { bytes, .. }
       | RawDataElementValue::LookupTableDescriptorValue { bytes, .. } => {
@@ -821,7 +819,7 @@ impl DataElementValue {
   pub fn vr_bytes(
     &self,
     allowed_vrs: &[ValueRepresentation],
-  ) -> Result<&RcByteSlice, DataError> {
+  ) -> Result<&Bytes, DataError> {
     if allowed_vrs.contains(&self.value_representation()) {
       self.bytes()
     } else {
@@ -832,9 +830,7 @@ impl DataElementValue {
   /// For data element values that hold encapsulated pixel data, returns a
   /// reference to the encapsulated items.
   ///
-  pub fn encapsulated_pixel_data(
-    &self,
-  ) -> Result<&Vec<RcByteSlice>, DataError> {
+  pub fn encapsulated_pixel_data(&self) -> Result<&Vec<Bytes>, DataError> {
     match &self.0 {
       RawDataElementValue::EncapsulatedPixelDataValue { items, .. } => {
         Ok(items)
@@ -2103,7 +2099,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        RcByteSlice::default()
+        Bytes::default()
       )
       .get_age(),
       Err(DataError::new_value_not_present())
@@ -2128,7 +2124,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Time,
-        RcByteSlice::default()
+        Bytes::default()
       )
       .get_date(),
       Err(DataError::new_value_not_present())
@@ -2157,7 +2153,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        RcByteSlice::default()
+        Bytes::default()
       )
       .get_date_time(),
       Err(DataError::new_value_not_present())
@@ -2182,7 +2178,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        RcByteSlice::default()
+        Bytes::default()
       )
       .get_time(),
       Err(DataError::new_value_not_present())
@@ -2194,7 +2190,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::PersonName,
-        RcByteSlice::default()
+        Bytes::default()
       )
       .get_person_name(),
       Ok(person_name::StructuredPersonName {
@@ -2239,7 +2235,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        RcByteSlice::default()
+        Bytes::default()
       )
       .get_person_names(),
       Err(DataError::new_value_not_present())

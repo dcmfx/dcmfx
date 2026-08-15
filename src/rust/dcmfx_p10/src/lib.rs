@@ -30,7 +30,9 @@ pub use io::{IoError, IoRead, IoWrite};
 #[cfg(feature = "async")]
 pub use io::{IoAsyncRead, IoAsyncWrite};
 
-use dcmfx_core::{DataElementTag, DataSet, DataSetPath, RcByteSlice};
+use bytes::Bytes;
+
+use dcmfx_core::{DataElementTag, DataSet, DataSetPath};
 
 pub use data_set_builder::DataSetBuilder;
 pub use p10_error::P10Error;
@@ -266,7 +268,7 @@ pub fn read_tokens_from_stream<S: IoRead>(
           })?;
 
         if read_bytes_count == 0 {
-          context.write_bytes(RcByteSlice::default(), true)?;
+          context.write_bytes(Bytes::default(), true)?;
         } else {
           buffer.resize(read_bytes_count, 0);
           context.write_bytes(buffer.into(), false)?;
@@ -319,7 +321,7 @@ pub async fn read_tokens_from_stream_async<I: IoAsyncRead>(
             })?;
 
         if read_bytes_count == 0 {
-          context.write_bytes(RcByteSlice::default(), true)?;
+          context.write_bytes(Bytes::default(), true)?;
         } else {
           buffer.resize(read_bytes_count, 0);
           context.write_bytes(buffer.into(), false)?;
@@ -331,10 +333,10 @@ pub async fn read_tokens_from_stream_async<I: IoAsyncRead>(
   }
 }
 
-/// Reads DICOM P10 data from a vector of bytes into a data set.
+/// Reads DICOM P10 data from a buffer of bytes into a data set.
 ///
 pub fn read_bytes(
-  bytes: RcByteSlice,
+  bytes: Bytes,
   config: Option<P10ReadConfig>,
 ) -> Result<DataSet, (P10Error, Box<DataSetBuilder>)> {
   let mut context = P10ReadContext::new(config);
@@ -604,7 +606,7 @@ pub fn write_stream<S: IoWrite>(
   data_set: &DataSet,
   config: Option<P10WriteConfig>,
 ) -> Result<(), P10Error> {
-  let mut bytes_callback = |p10_bytes: RcByteSlice| -> Result<(), P10Error> {
+  let mut bytes_callback = |p10_bytes: Bytes| -> Result<(), P10Error> {
     match stream.write_all(&p10_bytes) {
       Ok(()) => Ok(()),
 
@@ -633,17 +635,16 @@ pub async fn write_stream_async<S: IoAsyncWrite>(
 ) -> Result<(), P10Error> {
   use tokio::io::AsyncWriteExt;
 
-  let mut bytes_callback =
-    async |p10_bytes: RcByteSlice| -> Result<(), P10Error> {
-      match stream.write_all(&p10_bytes).await {
-        Ok(()) => Ok(()),
+  let mut bytes_callback = async |p10_bytes: Bytes| -> Result<(), P10Error> {
+    match stream.write_all(&p10_bytes).await {
+      Ok(()) => Ok(()),
 
-        Err(e) => Err(P10Error::FileError {
-          when: "Writing DICOM P10 data to stream".to_string(),
-          details: e.to_string(),
-        }),
-      }
-    };
+      Err(e) => Err(P10Error::FileError {
+        when: "Writing DICOM P10 data to stream".to_string(),
+        details: e.to_string(),
+      }),
+    }
+  };
 
   data_set
     .to_p10_bytes_async(&mut bytes_callback, config)
@@ -875,10 +876,10 @@ pub async fn rewrite_stream_async<I: IoAsyncRead, O: IoAsyncWrite>(
 /// in the input data.
 ///
 pub fn rewrite_bytes(
-  bytes: RcByteSlice,
+  bytes: Bytes,
   read_config: Option<P10ReadConfig>,
   write_config: Option<P10WriteConfig>,
-) -> Result<RcByteSlice, P10Error> {
+) -> Result<Bytes, P10Error> {
   let data_set = read_bytes(bytes, read_config).map_err(|(e, _)| e)?;
 
   let mut new_p10_bytes = vec![];
@@ -919,10 +920,10 @@ where
     config: Option<P10ReadConfig>,
   ) -> Result<Self, P10Error>;
 
-  /// Reads DICOM P10 data from a vector of bytes into a data set.
+  /// Reads DICOM P10 data from a buffer of bytes into a data set.
   ///
   fn read_p10_bytes(
-    bytes: RcByteSlice,
+    bytes: Bytes,
     config: Option<P10ReadConfig>,
   ) -> Result<Self, (P10Error, Box<DataSetBuilder>)>;
 
@@ -961,7 +962,7 @@ where
   ///
   fn to_p10_bytes(
     &self,
-    bytes_callback: &mut impl FnMut(RcByteSlice) -> Result<(), P10Error>,
+    bytes_callback: &mut impl FnMut(Bytes) -> Result<(), P10Error>,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error>;
 }
@@ -1015,7 +1016,7 @@ where
 
   async fn to_p10_bytes_async(
     &self,
-    bytes_callback: &mut impl AsyncFnMut(RcByteSlice) -> Result<(), P10Error>,
+    bytes_callback: &mut impl AsyncFnMut(Bytes) -> Result<(), P10Error>,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error>;
 }
@@ -1037,7 +1038,7 @@ impl DataSetP10Extensions for DataSet {
   }
 
   fn read_p10_bytes(
-    bytes: RcByteSlice,
+    bytes: Bytes,
     read_config: Option<P10ReadConfig>,
   ) -> Result<Self, (P10Error, Box<DataSetBuilder>)> {
     read_bytes(bytes, read_config)
@@ -1081,7 +1082,7 @@ impl DataSetP10Extensions for DataSet {
 
   fn to_p10_bytes(
     &self,
-    bytes_callback: &mut impl FnMut(RcByteSlice) -> Result<(), P10Error>,
+    bytes_callback: &mut impl FnMut(Bytes) -> Result<(), P10Error>,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error> {
     p10_write::data_set_to_bytes(
@@ -1140,7 +1141,7 @@ impl DataSetP10AsyncExtensions for DataSet {
 
   async fn to_p10_bytes_async(
     &self,
-    bytes_callback: &mut impl AsyncFnMut(RcByteSlice) -> Result<(), P10Error>,
+    bytes_callback: &mut impl AsyncFnMut(Bytes) -> Result<(), P10Error>,
     config: Option<P10WriteConfig>,
   ) -> Result<(), P10Error> {
     p10_write::data_set_to_bytes_async(

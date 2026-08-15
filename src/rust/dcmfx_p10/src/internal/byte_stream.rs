@@ -4,9 +4,7 @@ use std::collections::VecDeque;
 #[cfg(not(feature = "std"))]
 use alloc::{collections::VecDeque, vec, vec::Vec};
 
-use bytes::Buf;
-
-use dcmfx_core::RcByteSlice;
+use bytes::{Buf, Bytes};
 
 /// A byte stream that takes incoming chunks of binary data of any size and
 /// allows the resulting data to to read and peeked as if it were one large
@@ -17,12 +15,12 @@ use dcmfx_core::RcByteSlice;
 ///
 #[derive(Debug)]
 pub struct ByteStream {
-  bytes_queue: VecDeque<RcByteSlice>,
+  bytes_queue: VecDeque<Bytes>,
   bytes_queue_size: u64,
   bytes_read: u64,
   is_writing_finished: bool,
   zlib_stream: Option<flate2::Decompress>,
-  zlib_input_queue: VecDeque<RcByteSlice>,
+  zlib_input_queue: VecDeque<Bytes>,
   zlib_inflate_complete: bool,
 }
 
@@ -90,7 +88,7 @@ impl ByteStream {
   ///
   pub fn write(
     &mut self,
-    data: RcByteSlice,
+    data: Bytes,
     done: bool,
   ) -> Result<(), ByteStreamError> {
     if self.is_writing_finished {
@@ -117,12 +115,9 @@ impl ByteStream {
 
   /// Reads bytes out of a byte stream.
   ///
-  pub fn read(
-    &mut self,
-    byte_count: usize,
-  ) -> Result<RcByteSlice, ByteStreamError> {
+  pub fn read(&mut self, byte_count: usize) -> Result<Bytes, ByteStreamError> {
     if byte_count == 0 {
-      return Ok(RcByteSlice::default());
+      return Ok(Bytes::default());
     }
 
     self.inflate_up_to_read_size(byte_count)?;

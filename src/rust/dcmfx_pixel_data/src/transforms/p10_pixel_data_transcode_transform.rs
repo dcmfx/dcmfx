@@ -7,10 +7,11 @@ use alloc::{
   vec::Vec,
 };
 
+use bytes::Bytes;
+
 use dcmfx_core::{
   DataElementValue, DataError, DataSet, DataSetPath, DcmfxError, IodModule, Rc,
-  RcByteSlice, TransferSyntax, ValueRepresentation, dictionary,
-  transfer_syntax,
+  TransferSyntax, ValueRepresentation, dictionary, transfer_syntax,
 };
 use dcmfx_p10::{
   P10CustomTypeTransform, P10CustomTypeTransformError, P10Error,
@@ -465,7 +466,7 @@ impl P10PixelDataTranscodeTransform {
   fn transcode_frame(
     &mut self,
     input_frame: &mut PixelDataFrame,
-  ) -> Result<RcByteSlice, P10PixelDataTranscodeTransformError> {
+  ) -> Result<Bytes, P10PixelDataTranscodeTransformError> {
     // Special case for direct recompression/reconstruction of JPEG Baseline
     // 8-bit to/from JPEG XL. This is a fast path that can be taken when a full
     // encode/decode cycle isn't needed.
@@ -586,7 +587,7 @@ impl P10PixelDataTranscodeTransform {
   fn native_pixel_data_tokens(
     &mut self,
     frame_index: usize,
-    encoded_frame: RcByteSlice,
+    encoded_frame: Bytes,
   ) -> Result<Vec<P10Token>, P10PixelDataTranscodeTransformError> {
     // Get the Image Pixel Module. This is safe to unwrap because it must have
     // been fully received by the time pixel data is encountered.
@@ -667,7 +668,7 @@ impl P10PixelDataTranscodeTransform {
   fn encapsulated_pixel_data_tokens(
     &self,
     frame_index: usize,
-    encoded_frame: RcByteSlice,
+    encoded_frame: Bytes,
   ) -> Result<Vec<P10Token>, P10PixelDataTranscodeTransformError> {
     let mut tokens = vec![];
 
@@ -686,7 +687,7 @@ impl P10PixelDataTranscodeTransform {
       tokens.push(P10Token::DataElementValueBytes {
         tag: dictionary::ITEM.tag,
         vr: ValueRepresentation::OtherByteString,
-        data: RcByteSlice::default(),
+        data: Bytes::default(),
         bytes_remaining: 0,
       });
     }

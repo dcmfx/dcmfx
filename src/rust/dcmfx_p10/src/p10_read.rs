@@ -18,11 +18,11 @@
 use alloc::{boxed::Box, format, string::ToString, vec, vec::Vec};
 
 use byteorder::ByteOrder;
+use bytes::Bytes;
 
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataError, DataSet, DataSetPath,
-  RcByteSlice, TransferSyntax, ValueRepresentation, dictionary,
-  transfer_syntax,
+  TransferSyntax, ValueRepresentation, dictionary, transfer_syntax,
 };
 
 use crate::internal::byte_stream::{ByteStream, ByteStreamError};
@@ -109,7 +109,7 @@ impl P10ReadContext {
   ///
   pub fn write_bytes(
     &mut self,
-    bytes: RcByteSlice,
+    bytes: Bytes,
     done: bool,
   ) -> Result<(), P10Error> {
     match self.stream.write(bytes, done) {
@@ -1169,8 +1169,8 @@ impl P10ReadContext {
     &mut self,
     tag: DataElementTag,
     vr: ValueRepresentation,
-    mut value_bytes: RcByteSlice,
-  ) -> Result<RcByteSlice, P10Error> {
+    mut value_bytes: Bytes,
+  ) -> Result<Bytes, P10Error> {
     // Decode string values using the relevant character set
     if vr.is_string() {
       // Private Creator values must only contain characters from the Default

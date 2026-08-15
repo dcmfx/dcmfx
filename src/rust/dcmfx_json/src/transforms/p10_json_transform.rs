@@ -13,11 +13,11 @@ use alloc::{
 };
 
 use base64::prelude::*;
+use bytes::Bytes;
 
 use dcmfx_core::{
   DataElementTag, DataElementValue, DataError, DataSet, DataSetPath,
-  RcByteSlice, ValueRepresentation, data_element_value::decimal_string,
-  dictionary,
+  ValueRepresentation, data_element_value::decimal_string, dictionary,
 };
 use dcmfx_p10::{P10Error, P10Token};
 
@@ -35,7 +35,7 @@ pub struct P10JsonTransform {
   insert_comma: bool,
 
   /// The data element that value bytes are currently being gathered for.
-  current_data_element: (DataElementTag, Vec<RcByteSlice>),
+  current_data_element: (DataElementTag, Vec<Bytes>),
 
   /// Whether to ignore DataElementValueBytes tokens when they're received. This
   /// is used to stop certain data elements being included in the JSON.
@@ -364,7 +364,7 @@ impl P10JsonTransform {
   fn write_data_element_value_bytes<S: dcmfx_p10::IoWrite>(
     &mut self,
     vr: ValueRepresentation,
-    data: &RcByteSlice,
+    data: &Bytes,
     bytes_remaining: u32,
     stream: &mut S,
   ) -> Result<(), JsonSerializeError> {

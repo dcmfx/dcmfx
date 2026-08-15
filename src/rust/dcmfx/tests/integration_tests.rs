@@ -4,6 +4,7 @@ mod utils;
 
 use std::{ffi::OsStr, fs::File, io::Read, io::Write, path::Path};
 
+use bytes::Bytes;
 use either::Either;
 use futures::stream::StreamExt;
 use rand::rngs::SmallRng;
@@ -167,7 +168,7 @@ fn validate_dicom(dicom: &Path) -> Result<(), DicomValidationError> {
         .insert_binary_value(
           tag,
           value.value_representation(),
-          RcByteSlice::default(),
+          Bytes::default(),
         )
         .unwrap();
     }
@@ -394,7 +395,7 @@ fn test_jittered_read(
         let mut buffer = vec![0u8; next_chunk_size()];
 
         match file.read(&mut buffer).unwrap() {
-          0 => context.write_bytes(RcByteSlice::default(), true).unwrap(),
+          0 => context.write_bytes(Bytes::default(), true).unwrap(),
 
           bytes_count => {
             buffer.resize(bytes_count, 0);

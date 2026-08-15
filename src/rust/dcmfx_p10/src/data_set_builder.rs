@@ -13,9 +13,10 @@ use alloc::{
   vec::Vec,
 };
 
+use bytes::Bytes;
+
 use dcmfx_core::{
-  DataElementTag, DataElementValue, DataSet, RcByteSlice, ValueRepresentation,
-  dictionary,
+  DataElementTag, DataElementValue, DataSet, ValueRepresentation, dictionary,
 };
 
 use crate::{P10Error, P10Token};
@@ -49,7 +50,7 @@ enum BuilderLocation {
   },
   EncapsulatedPixelDataSequence {
     vr: ValueRepresentation,
-    items: Vec<RcByteSlice>,
+    items: Vec<Bytes>,
   },
 }
 
@@ -61,7 +62,7 @@ enum BuilderLocation {
 struct PendingDataElement {
   tag: DataElementTag,
   vr: ValueRepresentation,
-  data: Vec<RcByteSlice>,
+  data: Vec<Bytes>,
 }
 
 impl Default for DataSetBuilder {
@@ -493,7 +494,7 @@ impl DataSetBuilder {
 fn build_final_data_element_value(
   tag: DataElementTag,
   vr: ValueRepresentation,
-  value_bytes: &[RcByteSlice],
+  value_bytes: &[Bytes],
 ) -> DataElementValue {
   let bytes = match value_bytes {
     [data] => data.clone(),
