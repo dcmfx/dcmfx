@@ -406,7 +406,7 @@ impl P10ReadContext {
 
       // Construct new data element value
       let value =
-        DataElementValue::new_binary_unchecked(vr, data.drop(value_offset));
+        DataElementValue::new_binary_unchecked(vr, data.slice(value_offset..));
 
       // If this data element specifies the File Meta Information group's
       // length then use it to calculate its end offset
@@ -1044,7 +1044,7 @@ impl P10ReadContext {
         // Data element values are always returned in little endian, so if this
         // is a big endian transfer syntax then convert to little endian
         if self.active_transfer_syntax().endianness.is_big() {
-          let mut raw_data = data.into_vec();
+          let mut raw_data = Vec::from(data);
           self.location.swap_endianness(tag, vr, &mut raw_data);
           data = raw_data.into();
         }
@@ -1180,7 +1180,7 @@ impl P10ReadContext {
         value_bytes =
           self.location.decode_string_bytes(vr, &value_bytes).into();
       } else {
-        let mut data = value_bytes.into_vec();
+        let mut data = Vec::from(value_bytes);
         dcmfx_character_set::sanitize_default_charset_bytes(&mut data);
         value_bytes = data.into();
       }

@@ -14,6 +14,7 @@ keywords.workspace = true
 [dependencies]
 async-trait = { version = "0.1.89", optional = true }
 byteorder = "1.5.0"
+bytes = { version = "1.12.1", default-features = false }
 dcmfx_character_set = { path = "../dcmfx_character_set", default-features = false }
 dcmfx_core = { path = "../dcmfx_core", default-features = false }
 flate2 = "1.1.9"
@@ -27,5 +28,5 @@ tokio = { version = "1.52.1", features = [
 
 [features]
 default = ["std"]
-std = ["dcmfx_character_set/std", "dcmfx_core/std"]
+std = ["bytes/std", "dcmfx_character_set/std", "dcmfx_core/std"]
 async = ["std", "async-trait", "futures", "tokio"]

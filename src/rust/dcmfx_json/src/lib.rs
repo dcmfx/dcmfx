@@ -285,7 +285,7 @@ mod tests {
             dictionary::PIXEL_DATA.tag,
             DataElementValue::new_encapsulated_pixel_data(
               ValueRepresentation::OtherByteString,
-              vec![RcByteSlice::empty(), vec![1, 2].into()],
+              vec![RcByteSlice::default(), vec![1, 2].into()],
             )
             .unwrap(),
           ),

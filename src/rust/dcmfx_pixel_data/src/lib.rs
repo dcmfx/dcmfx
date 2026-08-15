@@ -373,7 +373,7 @@ mod tests {
       dictionary::PIXEL_DATA.tag,
       DataElementValue::new_binary(
         ValueRepresentation::OtherByteString,
-        RcByteSlice::empty(),
+        RcByteSlice::default(),
       )
       .unwrap(),
     );
@@ -686,7 +686,7 @@ mod tests {
       DataElementValue::new_encapsulated_pixel_data(
         ValueRepresentation::OtherByteString,
         vec![
-          RcByteSlice::empty(),
+          RcByteSlice::default(),
           "1".repeat(0x4C6).as_bytes().to_vec().into(),
           "2".repeat(0x24A).as_bytes().to_vec().into(),
           "3".repeat(0x628).as_bytes().to_vec().into(),

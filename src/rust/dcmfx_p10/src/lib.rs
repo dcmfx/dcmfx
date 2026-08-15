@@ -266,7 +266,7 @@ pub fn read_tokens_from_stream<S: IoRead>(
           })?;
 
         if read_bytes_count == 0 {
-          context.write_bytes(RcByteSlice::empty(), true)?;
+          context.write_bytes(RcByteSlice::default(), true)?;
         } else {
           buffer.resize(read_bytes_count, 0);
           context.write_bytes(buffer.into(), false)?;
@@ -319,7 +319,7 @@ pub async fn read_tokens_from_stream_async<I: IoAsyncRead>(
             })?;
 
         if read_bytes_count == 0 {
-          context.write_bytes(RcByteSlice::empty(), true)?;
+          context.write_bytes(RcByteSlice::default(), true)?;
         } else {
           buffer.resize(read_bytes_count, 0);
           context.write_bytes(buffer.into(), false)?;

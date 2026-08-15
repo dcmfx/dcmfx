@@ -447,7 +447,7 @@ impl P10JsonTransform {
     let value = DataElementValue::new_binary_unchecked(vr, bytes.clone());
 
     let json_values =
-      match self.convert_binary_value_to_json(&value, bytes.into_vec()) {
+      match self.convert_binary_value_to_json(&value, Vec::from(bytes)) {
         Ok(json_values) => json_values,
 
         // If conversion of this data element to DICOM JSON failed, but its tag is

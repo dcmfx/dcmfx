@@ -167,7 +167,7 @@ fn validate_dicom(dicom: &Path) -> Result<(), DicomValidationError> {
         .insert_binary_value(
           tag,
           value.value_representation(),
-          RcByteSlice::empty(),
+          RcByteSlice::default(),
         )
         .unwrap();
     }
@@ -394,7 +394,7 @@ fn test_jittered_read(
         let mut buffer = vec![0u8; next_chunk_size()];
 
         match file.read(&mut buffer).unwrap() {
-          0 => context.write_bytes(RcByteSlice::empty(), true).unwrap(),
+          0 => context.write_bytes(RcByteSlice::default(), true).unwrap(),
 
           bytes_count => {
             buffer.resize(bytes_count, 0);

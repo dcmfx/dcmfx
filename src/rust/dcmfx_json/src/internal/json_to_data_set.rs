@@ -115,7 +115,7 @@ fn convert_json_to_data_element(
     } else {
       Ok(DataElementValue::new_binary_unchecked(
         vr,
-        RcByteSlice::empty(),
+        RcByteSlice::default(),
       ))
     }
   }

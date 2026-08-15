@@ -121,7 +121,7 @@ impl PixelDataFrame {
           // range that exactly meets the target length
           if self.len() < target_length {
             let fragment_length = target_length - self.len();
-            let new_fragment = fragment.take(fragment_length as usize);
+            let new_fragment = fragment.slice(..fragment_length as usize);
 
             self.chunks.push(new_fragment);
             self.length_in_bits = target_length * 8;
@@ -163,7 +163,7 @@ impl PixelDataFrame {
       }
     }
 
-    RcByteSlice::from_vec(buffer)
+    RcByteSlice::from(buffer)
   }
 
   /// If this frame of pixel data contains more than one chunk, combines them
@@ -172,7 +172,7 @@ impl PixelDataFrame {
   ///
   pub fn combine_chunks(&mut self) -> &[u8] {
     if self.chunks.is_empty() {
-      self.chunks = vec![RcByteSlice::empty()];
+      self.chunks = vec![RcByteSlice::default()];
     }
 
     if self.chunks.len() > 1 {
@@ -197,27 +197,34 @@ mod tests {
   fn single_chunk_test() {
     let mut frame = PixelDataFrame::new();
 
-    frame.push_bytes(RcByteSlice::from_vec(vec![0, 1, 2, 3]).take(3));
+    frame.push_bytes(RcByteSlice::from(vec![0, 1, 2, 3]).slice(..3));
 
     assert_eq!(frame.len(), 3);
-    assert_eq!(frame.chunks(), vec![vec![0, 1, 2].into()]);
-    assert_eq!(frame.to_bytes(), vec![0, 1, 2].into());
+    assert_eq!(frame.chunks(), vec![RcByteSlice::from(vec![0u8, 1, 2])]);
+    assert_eq!(frame.to_bytes(), RcByteSlice::from(vec![0u8, 1, 2]));
   }
 
   #[test]
   fn multiple_chunks_test() {
     let mut frame = PixelDataFrame::new();
 
-    frame.push_bytes(RcByteSlice::from_vec(vec![0, 1, 2, 3]).take(2));
-    frame.push_bytes(RcByteSlice::from_vec(vec![4, 5, 6, 7]).slice(1, 3));
-    frame.push_bytes(RcByteSlice::from_vec(vec![8, 9, 10, 11]).drop(2));
+    frame.push_bytes(RcByteSlice::from(vec![0, 1, 2, 3]).slice(..2));
+    frame.push_bytes(RcByteSlice::from(vec![4, 5, 6, 7]).slice(1..3));
+    frame.push_bytes(RcByteSlice::from(vec![8, 9, 10, 11]).slice(2..));
 
     assert_eq!(frame.len(), 6);
     assert_eq!(
       frame.chunks(),
-      vec![vec![0, 1].into(), vec![5, 6].into(), vec![10, 11].into()]
+      vec![
+        RcByteSlice::from(vec![0u8, 1]),
+        RcByteSlice::from(vec![5u8, 6]),
+        RcByteSlice::from(vec![10u8, 11])
+      ]
     );
-    assert_eq!(frame.to_bytes(), vec![0, 1, 5, 6, 10, 11].into());
+    assert_eq!(
+      frame.to_bytes(),
+      RcByteSlice::from(vec![0u8, 1, 5, 6, 10, 11])
+    );
   }
 
   #[test]
@@ -226,14 +233,14 @@ mod tests {
     frame.push_bytes(vec![0, 1, 2, 3, 4].into());
 
     frame.drop_end_bytes(2);
-    assert_eq!(frame.to_bytes(), vec![0, 1, 2].into());
+    assert_eq!(frame.to_bytes(), RcByteSlice::from(vec![0u8, 1, 2]));
 
     let mut frame = PixelDataFrame::new();
-    frame.push_bytes(RcByteSlice::from_vec(vec![0, 0, 1, 1]).slice(1, 3));
+    frame.push_bytes(RcByteSlice::from(vec![0, 0, 1, 1]).slice(1..3));
     frame.push_bytes(vec![2, 3].into());
 
     frame.drop_end_bytes(1);
-    assert_eq!(frame.to_bytes(), vec![0, 1, 2].into());
+    assert_eq!(frame.to_bytes(), RcByteSlice::from(vec![0u8, 1, 2]));
 
     let mut frame = PixelDataFrame::new();
     frame.push_bytes(vec![0, 1].into());
@@ -241,6 +248,6 @@ mod tests {
     frame.push_bytes(vec![4, 5].into());
 
     frame.drop_end_bytes(2);
-    assert_eq!(frame.to_bytes(), vec![0, 1, 2, 3].into());
+    assert_eq!(frame.to_bytes(), RcByteSlice::from(vec![0u8, 1, 2, 3]));
   }
 }

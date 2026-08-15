@@ -85,6 +85,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f1fe948ff07f4bd06c30984e69f5b4899c516a3ef74f34df92a2df2ab535495"
 
 [[package]]
+name = "bytes"
+version = "1.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
+
+[[package]]
 name = "cc"
 version = "1.2.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -185,6 +191,7 @@ name = "dcmfx_core"
 version = "0.48.1"
 dependencies = [
  "byteorder",
+ "bytes",
  "num-traits",
  "owo-colors",
  "rand",
@@ -212,6 +219,7 @@ name = "dcmfx_p10"
 version = "0.48.1"
 dependencies = [
  "byteorder",
+ "bytes",
  "dcmfx_character_set",
  "dcmfx_core",
  "flate2",

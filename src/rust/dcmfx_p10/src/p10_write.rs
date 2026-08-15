@@ -434,7 +434,7 @@ impl P10WriteContext {
           self.transfer_syntax.endianness,
         ),
 
-      P10Token::End => Ok(RcByteSlice::empty()),
+      P10Token::End => Ok(RcByteSlice::default()),
     }
   }
 

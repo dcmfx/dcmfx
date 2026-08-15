@@ -385,7 +385,7 @@ impl P10WaveformChunkWriter {
           .multiplex_group
           .sample_interpretation()
           .binary_value_representation(),
-        data: RcByteSlice::empty(),
+        data: RcByteSlice::default(),
         bytes_remaining: 0,
       });
     }

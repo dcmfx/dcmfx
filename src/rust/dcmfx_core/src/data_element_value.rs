@@ -2103,7 +2103,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        RcByteSlice::empty()
+        RcByteSlice::default()
       )
       .get_age(),
       Err(DataError::new_value_not_present())
@@ -2128,7 +2128,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Time,
-        RcByteSlice::empty()
+        RcByteSlice::default()
       )
       .get_date(),
       Err(DataError::new_value_not_present())
@@ -2157,7 +2157,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        RcByteSlice::empty()
+        RcByteSlice::default()
       )
       .get_date_time(),
       Err(DataError::new_value_not_present())
@@ -2182,7 +2182,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        RcByteSlice::empty()
+        RcByteSlice::default()
       )
       .get_time(),
       Err(DataError::new_value_not_present())
@@ -2194,7 +2194,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::PersonName,
-        RcByteSlice::empty()
+        RcByteSlice::default()
       )
       .get_person_name(),
       Ok(person_name::StructuredPersonName {
@@ -2239,7 +2239,7 @@ mod tests {
     assert_eq!(
       DataElementValue::new_binary_unchecked(
         ValueRepresentation::Date,
-        RcByteSlice::empty()
+        RcByteSlice::default()
       )
       .get_person_names(),
       Err(DataError::new_value_not_present())

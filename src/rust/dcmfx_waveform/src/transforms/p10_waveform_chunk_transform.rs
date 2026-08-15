@@ -323,7 +323,7 @@ impl P10WaveformChunkTransform {
         self.pending_bytes.extend_from_slice(&data[length..]);
 
         if length > 0 {
-          Some(data.take(length))
+          Some(data.slice(..length))
         } else {
           None
         }
@@ -596,7 +596,7 @@ mod tests {
               let token = P10Token::DataElementValueBytes {
                 tag: *tag,
                 vr: *vr,
-                data: data.slice(offset, end),
+                data: data.slice(offset..end),
                 bytes_remaining: bytes_remaining + (data.len() - end) as u32,
               };
 

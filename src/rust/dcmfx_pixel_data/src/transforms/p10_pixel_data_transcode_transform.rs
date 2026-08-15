@@ -686,7 +686,7 @@ impl P10PixelDataTranscodeTransform {
       tokens.push(P10Token::DataElementValueBytes {
         tag: dictionary::ITEM.tag,
         vr: ValueRepresentation::OtherByteString,
-        data: RcByteSlice::empty(),
+        data: RcByteSlice::default(),
         bytes_remaining: 0,
       });
     }
@@ -705,7 +705,7 @@ impl P10PixelDataTranscodeTransform {
       ));
     }
 
-    let mut encoded_frame = encoded_frame.into_vec();
+    let mut encoded_frame = Vec::from(encoded_frame);
     if encoded_frame.len() & 1 == 1 {
       encoded_frame.push(0);
     }

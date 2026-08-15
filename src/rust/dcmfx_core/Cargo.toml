@@ -13,6 +13,7 @@ keywords.workspace = true
 
 [dependencies]
 byteorder = "1.5.0"
+bytes = { version = "1.12.1", default-features = false }
 num-traits = "0.2.19"
 owo-colors = { version = "4.3.0", features = ["supports-colors"] }
 regex = "1.12.3"
@@ -25,4 +26,4 @@ rand = "0.10.1"
 
 [features]
 default = ["std"]
-std = []
+std = ["bytes/std"]

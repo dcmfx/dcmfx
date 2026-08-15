@@ -348,7 +348,7 @@ impl P10PixelDataFrameTransform {
         if chunk.len() as u64 * 8 - chunk_offset
           <= frame_size - frame.len_bits()
         {
-          frame.push_bytes(chunk.drop((chunk_offset / 8) as usize));
+          frame.push_bytes(chunk.slice((chunk_offset / 8) as usize..));
           self.pixel_data_read_offset += chunk.len() as u64 * 8 - chunk_offset;
         }
         // Otherwise, take just the part of this chunk of pixel data needed for
@@ -356,8 +356,8 @@ impl P10PixelDataFrameTransform {
         else {
           let length_in_bits = frame_size - frame.len_bits();
           frame.push_bytes(chunk.slice(
-            (chunk_offset / 8) as usize,
-            (chunk_offset + length_in_bits).div_ceil(8) as usize,
+            (chunk_offset / 8) as usize
+              ..(chunk_offset + length_in_bits).div_ceil(8) as usize,
           ));
 
           // Put the unused part of the chunk back on so it can be used by the

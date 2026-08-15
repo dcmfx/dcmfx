@@ -4,6 +4,8 @@ use std::collections::VecDeque;
 #[cfg(not(feature = "std"))]
 use alloc::{collections::VecDeque, vec, vec::Vec};
 
+use bytes::Buf;
+
 use dcmfx_core::RcByteSlice;
 
 /// A byte stream that takes incoming chunks of binary data of any size and
@@ -120,7 +122,7 @@ impl ByteStream {
     byte_count: usize,
   ) -> Result<RcByteSlice, ByteStreamError> {
     if byte_count == 0 {
-      return Ok(RcByteSlice::empty());
+      return Ok(RcByteSlice::default());
     }
 
     self.inflate_up_to_read_size(byte_count)?;
@@ -140,10 +142,10 @@ impl ByteStream {
     match byte_count.cmp(&self.bytes_queue.front().unwrap().len()) {
       // Return a byte slice inside the first queue item if possible
       core::cmp::Ordering::Less => {
-        let result = self.bytes_queue.front().unwrap().take(byte_count);
+        let result = self.bytes_queue.front().unwrap().slice(..byte_count);
 
         let queue_item = self.bytes_queue.front_mut().unwrap();
-        *queue_item = queue_item.drop(byte_count);
+        queue_item.advance(byte_count);
 
         Ok(result)
       }
@@ -162,7 +164,7 @@ impl ByteStream {
           let end = core::cmp::min(queue_item.len(), byte_count - result.len());
           result.extend_from_slice(&queue_item[..end]);
 
-          *queue_item = queue_item.drop(end);
+          queue_item.advance(end);
 
           // If the chunk was fully consumed then remove it from the queue
           if queue_item.is_empty() {
@@ -247,7 +249,7 @@ impl ByteStream {
     };
 
     while self.bytes_queue_size < read_size as u64 {
-      let queue_item = match self.zlib_input_queue.pop_front() {
+      let mut queue_item = match self.zlib_input_queue.pop_front() {
         Some(queue_item) => queue_item,
         None => return Ok(()),
       };
@@ -270,9 +272,8 @@ impl ByteStream {
           // they result in more data than can be held in the output buffer,
           // then keep the remaining bytes for the next decompression call
           if bytes_consumed < queue_item.len() as u64 {
-            self
-              .zlib_input_queue
-              .push_front(queue_item.drop(bytes_consumed as usize));
+            queue_item.advance(bytes_consumed as usize);
+            self.zlib_input_queue.push_front(queue_item);
           }
 
           // Put any inflated bytes onto the bytes queue
