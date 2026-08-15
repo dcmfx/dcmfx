@@ -150,7 +150,7 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
   }
 
   // Convert extension to lowercase for comparison
-  let extension = args.extension.as_ref().map(|e| e.to_lowercase());
+  let extension = Arc::new(args.extension.as_ref().map(|e| e.to_lowercase()));
 
   // Create iterator for listing all files to be processed
   let file_iterator = args.directories.clone().into_iter().flat_map(|dir| {
@@ -202,35 +202,48 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
   for glob in args.ignore_patterns.iter() {
     glob_set_builder.add(glob.clone());
   }
-  let ignore_patterns_glob_set = glob_set_builder.build().unwrap();
+  let ignore_patterns_glob_set = Arc::new(glob_set_builder.build().unwrap());
 
-  let result = utils::run_tasks(
-    args.concurrency,
-    futures::stream::iter(file_iterator),
-    async |path: PathBuf| {
-      // Check file's extension is allowed, if this check was requested
-      if let Some(extension) = &extension {
-        let Some(path_extension) = path.extension() else {
-          return Ok(());
-        };
+  let args = Arc::new(args);
 
-        if path_extension.to_string_lossy().to_lowercase() != *extension {
-          return Ok(());
+  let result =
+    utils::run_tasks(args.concurrency, futures::stream::iter(file_iterator), {
+      let args = args.clone();
+      let summary = summary.clone();
+      let stdout_tx = stdout_tx.clone();
+
+      move |path: PathBuf| {
+        let args = args.clone();
+        let extension = extension.clone();
+        let ignore_patterns_glob_set = ignore_patterns_glob_set.clone();
+        let summary = summary.clone();
+        let stdout_tx = stdout_tx.clone();
+
+        async move {
+          // Check file's extension is allowed, if this check was requested
+          if let Some(extension) = extension.as_ref() {
+            let Some(path_extension) = path.extension() else {
+              return Ok(());
+            };
+
+            if path_extension.to_string_lossy().to_lowercase() != *extension {
+              return Ok(());
+            }
+          }
+
+          if ignore_patterns_glob_set
+            .is_match(path.to_string_lossy().to_lowercase())
+          {
+            return Ok(());
+          }
+
+          process_file(&path, &args, summary, stdout_tx)
+            .await
+            .map_err(|e| (path, e))
         }
       }
-
-      if ignore_patterns_glob_set
-        .is_match(path.to_string_lossy().to_lowercase())
-      {
-        return Ok(());
-      }
-
-      process_file(&path, &args, summary.clone(), stdout_tx.clone())
-        .await
-        .map_err(|e| (path, e))
-    },
-  )
-  .await;
+    })
+    .await;
 
   // Wait for stdout writer task to complete
   drop(stdout_tx);

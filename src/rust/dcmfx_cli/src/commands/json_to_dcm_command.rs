@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 use clap::Args;
 use tokio::io::AsyncReadExt;
@@ -77,33 +77,40 @@ pub async fn run(args: ToDcmArgs) -> Result<(), ()> {
 
   let input_sources = args.input.input_sources().await;
 
+  let args = Arc::new(args);
+
   let result = utils::run_tasks(
     args.concurrency,
     input_sources,
-    async |input_source: InputSource| {
-      let output_target = if let Some(output_filename) = &args.output_filename {
-        OutputTarget::new(output_filename).await
-      } else {
-        OutputTarget::from_input_source(
-          &input_source,
-          ".dcm",
-          &args.output_directory,
-        )
-        .await
-      };
+    move |input_source: InputSource| {
+      let args = args.clone();
 
-      match input_source_to_dcm(&input_source, output_target, &args).await {
-        Ok(()) => Ok(()),
+      async move {
+        let output_target = if let Some(output_filename) = &args.output_filename
+        {
+          OutputTarget::new(output_filename).await
+        } else {
+          OutputTarget::from_input_source(
+            &input_source,
+            ".dcm",
+            &args.output_directory,
+          )
+          .await
+        };
 
-        Err(e) => {
-          let task_description = format!("converting \"{input_source}\"");
+        match input_source_to_dcm(&input_source, output_target, &args).await {
+          Ok(()) => Ok(()),
 
-          Err(match e {
-            ToDcmError::P10Error(e) => e.to_lines(&task_description),
-            ToDcmError::JsonDeserializeError(e) => {
-              e.to_lines(&task_description)
-            }
-          })
+          Err(e) => {
+            let task_description = format!("converting \"{input_source}\"");
+
+            Err(match e {
+              ToDcmError::P10Error(e) => e.to_lines(&task_description),
+              ToDcmError::JsonDeserializeError(e) => {
+                e.to_lines(&task_description)
+              }
+            })
+          }
         }
       }
     },

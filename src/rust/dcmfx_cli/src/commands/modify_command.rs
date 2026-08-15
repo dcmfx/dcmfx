@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use clap::Args;
 
@@ -363,50 +364,56 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
 
   let input_sources = args.input.base.input_sources().await;
 
+  let args = Arc::new(args);
+
   let result = utils::run_tasks(
     args.concurrency,
     input_sources,
-    async |input_source: InputSource| {
-      if args.in_place
-        && let InputSource::Stdin = input_source
-      {
-        crate::utils::exit_with_error(
-          "--in-place can't be used with stdin as an input",
-          "",
-        );
-      }
+    move |input_source: InputSource| {
+      let args = args.clone();
 
-      let output_target = if args.in_place {
-        OutputTarget::in_place(&input_source)
-      } else if let Some(output_filename) = &args.output_filename {
-        OutputTarget::new(output_filename).await
-      } else {
-        OutputTarget::from_input_source(
-          &input_source,
-          "",
-          &args.output_directory,
-        )
-        .await
-      };
-
-      match modify_input_source(&input_source, output_target, &args).await {
-        Ok(()) => Ok(()),
-
-        Err(ModifyCommandError::P10Error(P10Error::DicmPrefixNotPresent))
-          if args.input.ignore_invalid =>
+      async move {
+        if args.in_place
+          && let InputSource::Stdin = input_source
         {
-          Ok(())
+          crate::utils::exit_with_error(
+            "--in-place can't be used with stdin as an input",
+            "",
+          );
         }
 
-        Err(e) => {
-          let task_description = format!("modifying \"{input_source}\"");
+        let output_target = if args.in_place {
+          OutputTarget::in_place(&input_source)
+        } else if let Some(output_filename) = &args.output_filename {
+          OutputTarget::new(output_filename).await
+        } else {
+          OutputTarget::from_input_source(
+            &input_source,
+            "",
+            &args.output_directory,
+          )
+          .await
+        };
 
-          Err(match e {
-            ModifyCommandError::P10Error(e) => e.to_lines(&task_description),
-            ModifyCommandError::P10PixelDataTranscodeTransformError(e) => {
-              e.to_lines(&task_description)
-            }
-          })
+        match modify_input_source(&input_source, output_target, &args).await {
+          Ok(()) => Ok(()),
+
+          Err(ModifyCommandError::P10Error(P10Error::DicmPrefixNotPresent))
+            if args.input.ignore_invalid =>
+          {
+            Ok(())
+          }
+
+          Err(e) => {
+            let task_description = format!("modifying \"{input_source}\"");
+
+            Err(match e {
+              ModifyCommandError::P10Error(e) => e.to_lines(&task_description),
+              ModifyCommandError::P10PixelDataTranscodeTransformError(e) => {
+                e.to_lines(&task_description)
+              }
+            })
+          }
         }
       }
     },

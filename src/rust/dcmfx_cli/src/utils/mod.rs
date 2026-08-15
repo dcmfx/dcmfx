@@ -7,27 +7,66 @@ pub use input_source::InputSource;
 pub use output_target::OutputTarget;
 
 use std::path::{Component, Path, PathBuf};
+use std::sync::Arc;
 
-use futures::{TryStreamExt, stream::StreamExt};
+use futures::stream::StreamExt;
 
-/// Runs tasks concurrently up to the specified task count, passing each item
-/// from the given stream to the provided async body function.
+/// Runs tasks in parallel up to the specified task count, passing each item
+/// from the given stream to the provided body function.
 ///
-/// Returns an error as soon as any of the tasks return an error.
+/// Each task runs on its own thread taken from the async runtime's blocking
+/// thread pool, which allows all available cores to be used.
 ///
-pub async fn run_tasks<InputStream, Item, E>(
+/// Returns an error as soon as any of the tasks return an error. Tasks that are
+/// still in-flight at that time continue running until they complete.
+///
+pub async fn run_tasks<InputStream, Item, F, Fut, E>(
   task_count: usize,
   inputs: InputStream,
-  body_func: impl AsyncFn(Item) -> Result<(), E>,
+  body_func: F,
 ) -> Result<(), E>
 where
   InputStream: futures::stream::Stream<Item = Item>,
+  Item: Send + 'static,
+  F: Fn(Item) -> Fut + Send + Sync + 'static,
+  Fut: Future<Output = Result<(), E>>,
+  E: Send + 'static,
 {
-  inputs
-    .map(async |i| body_func(i).await)
-    .buffer_unordered(task_count.max(1))
-    .try_collect::<()>()
-    .await
+  let task_count = task_count.max(1);
+
+  let runtime = tokio::runtime::Handle::current();
+  let body_func = Arc::new(body_func);
+
+  let mut inputs = std::pin::pin!(inputs);
+  let mut inputs_exhausted = false;
+
+  let mut tasks = tokio::task::JoinSet::new();
+
+  loop {
+    // Start new tasks until the task count is reached or there are no further
+    // inputs
+    while !inputs_exhausted && tasks.len() < task_count {
+      match inputs.next().await {
+        Some(item) => {
+          let runtime = runtime.clone();
+          let body_func = body_func.clone();
+
+          tasks.spawn_blocking(move || runtime.block_on(body_func(item)));
+        }
+
+        None => inputs_exhausted = true,
+      }
+    }
+
+    match tasks.join_next().await {
+      Some(Ok(Ok(()))) => (),
+      Some(Ok(Err(e))) => return Err(e),
+      Some(Err(e)) => std::panic::resume_unwind(e.into_panic()),
+
+      // There are no tasks left to run, so all inputs have been processed
+      None => return Ok(()),
+    }
+  }
 }
 
 /// Normalizes a path by making it absolute if it is a relative path, and

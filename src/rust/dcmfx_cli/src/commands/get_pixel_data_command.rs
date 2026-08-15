@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 use clap::{Args, ValueEnum};
 use tokio::io::AsyncWriteExt;
@@ -344,59 +344,65 @@ pub async fn run(args: GetPixelDataArgs) -> Result<(), ()> {
 
   let input_sources = args.input.base.input_sources().await;
 
+  let args = Arc::new(args);
+
   let result = utils::run_tasks(
     args.concurrency,
     input_sources,
-    async |input_source: InputSource| {
-      let output_target_base = OutputTarget::from_input_source(
-        &input_source,
-        "",
-        &args.output_directory,
-      )
-      .await;
+    move |input_source: InputSource| {
+      let args = args.clone();
 
-      match get_pixel_data_from_input_source(
-        &input_source,
-        output_target_base,
-        &args,
-      )
-      .await
-      {
-        Ok(()) => Ok(()),
+      async move {
+        let output_target_base = OutputTarget::from_input_source(
+          &input_source,
+          "",
+          &args.output_directory,
+        )
+        .await;
 
-        Err(GetPixelDataError::P10Error(P10Error::DicmPrefixNotPresent))
-          if args.input.ignore_invalid =>
+        match get_pixel_data_from_input_source(
+          &input_source,
+          output_target_base,
+          &args,
+        )
+        .await
         {
-          Ok(())
-        }
+          Ok(()) => Ok(()),
 
-        Err(e) => {
-          let task_description =
-            format!("extracting pixel data from \"{input_source}\"");
+          Err(GetPixelDataError::P10Error(P10Error::DicmPrefixNotPresent))
+            if args.input.ignore_invalid =>
+          {
+            Ok(())
+          }
 
-          Err(match e {
-            GetPixelDataError::DataError(e) => e.to_lines(&task_description),
-            GetPixelDataError::P10Error(e) => e.to_lines(&task_description),
-            GetPixelDataError::PixelDataDecodeError(e) => {
-              e.to_lines(&task_description)
-            }
-            GetPixelDataError::ImageError(e) => vec![
-              format!("Image error {}", task_description),
-              "".to_string(),
-              format!("  Error: {}", e),
-            ],
+          Err(e) => {
+            let task_description =
+              format!("extracting pixel data from \"{input_source}\"");
 
-            GetPixelDataError::FFmpegError(e) => vec![
-              format!("FFmpeg encoding error {}", task_description),
-              "".to_string(),
-              format!("  Error: {}", e),
-            ],
-            GetPixelDataError::OtherError(s) => vec![
-              format!("Error {}", task_description),
-              "".to_string(),
-              format!("  Error: {}", s),
-            ],
-          })
+            Err(match e {
+              GetPixelDataError::DataError(e) => e.to_lines(&task_description),
+              GetPixelDataError::P10Error(e) => e.to_lines(&task_description),
+              GetPixelDataError::PixelDataDecodeError(e) => {
+                e.to_lines(&task_description)
+              }
+              GetPixelDataError::ImageError(e) => vec![
+                format!("Image error {}", task_description),
+                "".to_string(),
+                format!("  Error: {}", e),
+              ],
+
+              GetPixelDataError::FFmpegError(e) => vec![
+                format!("FFmpeg encoding error {}", task_description),
+                "".to_string(),
+                format!("  Error: {}", e),
+              ],
+              GetPixelDataError::OtherError(s) => vec![
+                format!("Error {}", task_description),
+                "".to_string(),
+                format!("  Error: {}", s),
+              ],
+            })
+          }
         }
       }
     },

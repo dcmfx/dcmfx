@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use clap::Args;
 use tokio::io::AsyncWriteExt;
@@ -143,46 +144,56 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
     None
   };
 
-  let config = DicomJsonConfig {
+  let config = Arc::new(DicomJsonConfig {
     pretty_print: args.pretty_print,
     store_encapsulated_pixel_data: args.store_encapsulated_pixel_data,
     selected_binary_data_values,
     ignore_invalid_data: args.ignore_invalid_data.clone(),
-  };
+  });
+
+  let args = Arc::new(args);
 
   let result = utils::run_tasks(
     args.concurrency,
     input_sources,
-    async |input_source: InputSource| {
-      let output_target = if let Some(output_filename) = &args.output_filename {
-        OutputTarget::new(output_filename).await
-      } else {
-        OutputTarget::from_input_source(
-          &input_source,
-          ".json",
-          &args.output_directory,
-        )
-        .await
-      };
+    move |input_source: InputSource| {
+      let args = args.clone();
+      let config = config.clone();
 
-      match input_source_to_json(&input_source, output_target, &args, &config)
-        .await
-      {
-        Ok(()) => Ok(()),
-
-        Err(ToJsonError::P10Error(P10Error::DicmPrefixNotPresent))
-          if args.input.ignore_invalid =>
+      async move {
+        let output_target = if let Some(output_filename) = &args.output_filename
         {
-          Ok(())
-        }
+          OutputTarget::new(output_filename).await
+        } else {
+          OutputTarget::from_input_source(
+            &input_source,
+            ".json",
+            &args.output_directory,
+          )
+          .await
+        };
 
-        Err(e) => {
-          let task_description = format!("converting \"{input_source}\"");
+        match input_source_to_json(&input_source, output_target, &args, &config)
+          .await
+        {
+          Ok(()) => Ok(()),
 
-          Err(match e {
-            ToJsonError::P10Error(e) => e.to_lines(&task_description),
-            ToJsonError::JsonSerializeError(e) => e.to_lines(&task_description),
-          })
+          Err(ToJsonError::P10Error(P10Error::DicmPrefixNotPresent))
+            if args.input.ignore_invalid =>
+          {
+            Ok(())
+          }
+
+          Err(e) => {
+            let task_description = format!("converting \"{input_source}\"");
+
+            Err(match e {
+              ToJsonError::P10Error(e) => e.to_lines(&task_description),
+              ToJsonError::JsonSerializeError(e) => {
+                e.to_lines(&task_description)
+              }
+            })
+          }
         }
       }
     },
