@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 macro_rules! assert_image_snapshot {
   ($left:expr, $right:expr) => {
     assert_eq!(
-      crate::assert_image_snapshot::image_matches_snapshot(
+      $crate::assert_image_snapshot::image_matches_snapshot(
         $left,
         &format!("{}__{}", module_path!(), $right)
       ),
@@ -52,10 +52,9 @@ pub fn image_matches_snapshot<P: AsRef<Path>>(
   let image_2 = image::ImageReader::open(&image_snapshot_path)
     .unwrap()
     .decode()
-    .expect(&format!(
-      "{} to be a valid image file",
-      image_snapshot_path.display()
-    ))
+    .unwrap_or_else(|_| {
+      panic!("{} to be a valid image file", image_snapshot_path.display())
+    })
     .to_rgb16();
 
   if image_1.width() != image_2.width() || image_1.height() != image_2.height()

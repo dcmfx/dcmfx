@@ -454,12 +454,11 @@ impl MonochromeImage {
 
         let mut output_bit = 0;
         for row in top..top + height {
-          let mut input_bit = row as usize * old_width as usize + left as usize;
-          for _ in 0..width {
+          let start = row as usize * old_width as usize + left as usize;
+          for input_bit in (start..).take(width as usize) {
             let bit = (data[input_bit / 8] >> (input_bit % 8)) & 1;
             new_data[output_bit / 8] |= bit << (output_bit % 8);
 
-            input_bit += 1;
             output_bit += 1;
           }
         }

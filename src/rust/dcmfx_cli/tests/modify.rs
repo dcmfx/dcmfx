@@ -385,7 +385,7 @@ fn delete_private_tags() {
     .success()
     .stdout(format!(
       "Modifying \"{}\" => \"{}\" …\n",
-      &input_file,
+      input_file,
       output_file.display()
     ));
 
@@ -1441,7 +1441,7 @@ fn check_pixel_data_against_snapshot(
 ) {
   dcmfx_cli()
     .arg("get-pixel-data")
-    .arg(&dicom_path)
+    .arg(dicom_path)
     .arg("-f")
     .arg("png16")
     .args(extra_args)

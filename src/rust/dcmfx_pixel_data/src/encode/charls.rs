@@ -217,7 +217,7 @@ fn encode(
     });
   }
 
-  output_buffer.truncate(bytes_written as usize);
+  output_buffer.truncate(bytes_written);
 
   Ok(output_buffer)
 }

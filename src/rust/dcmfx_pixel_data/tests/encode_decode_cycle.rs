@@ -175,8 +175,10 @@ fn test_high_throughput_jpeg_2000_lossless_only_encode_decode_cycle() {
     HighThroughputJpeg2000Decoder::OpenJpeg,
     HighThroughputJpeg2000Decoder::OpenJph,
   ] {
-    let mut decode_config = PixelDataDecodeConfig::default();
-    decode_config.high_throughput_jpeg_2000_decoder = decoder;
+    let decode_config = PixelDataDecodeConfig {
+      high_throughput_jpeg_2000_decoder: decoder,
+      ..Default::default()
+    };
 
     test_encode_decode_cycle(
       all_image_pixel_modules()
@@ -201,8 +203,10 @@ fn test_high_throughput_jpeg_2000_encode_decode_cycle() {
     HighThroughputJpeg2000Decoder::OpenJpeg,
     HighThroughputJpeg2000Decoder::OpenJph,
   ] {
-    let mut decode_config = PixelDataDecodeConfig::default();
-    decode_config.high_throughput_jpeg_2000_decoder = decoder;
+    let decode_config = PixelDataDecodeConfig {
+      high_throughput_jpeg_2000_decoder: decoder,
+      ..Default::default()
+    };
 
     test_encode_decode_cycle(
       all_image_pixel_modules()
@@ -225,8 +229,10 @@ fn test_high_throughput_jpeg_2000_encode_decode_cycle() {
 #[test]
 fn test_jpeg_xl_lossless_encode_decode_cycle() {
   for jpeg_xl_decoder in [JpegXlDecoder::LibJxl, JpegXlDecoder::JxlOxide] {
-    let mut decode_config = PixelDataDecodeConfig::default();
-    decode_config.jpeg_xl_decoder = jpeg_xl_decoder;
+    let decode_config = PixelDataDecodeConfig {
+      jpeg_xl_decoder,
+      ..Default::default()
+    };
 
     test_encode_decode_cycle(
       all_image_pixel_modules()
@@ -251,8 +257,10 @@ fn test_jpeg_xl_lossless_encode_decode_cycle() {
 #[test]
 fn test_jpeg_xl_encode_decode_cycle() {
   for jpeg_xl_decoder in [JpegXlDecoder::LibJxl, JpegXlDecoder::JxlOxide] {
-    let mut decode_config = PixelDataDecodeConfig::default();
-    decode_config.jpeg_xl_decoder = jpeg_xl_decoder;
+    let decode_config = PixelDataDecodeConfig {
+      jpeg_xl_decoder,
+      ..Default::default()
+    };
 
     test_encode_decode_cycle(
       all_image_pixel_modules()
@@ -324,12 +332,12 @@ fn test_monochrome_image_encode_decode_cycle(
   decode_config: PixelDataDecodeConfig,
   max_reencode_delta: f64,
 ) {
-  let original_image = create_monochrome_image(&image_pixel_module);
+  let original_image = create_monochrome_image(image_pixel_module);
 
   // Encode into the target transfer syntax
   let mut encoded_frame = encode::encode_monochrome(
     &original_image,
-    &image_pixel_module,
+    image_pixel_module,
     transfer_syntax,
     &encode_config,
   )
@@ -339,7 +347,7 @@ fn test_monochrome_image_encode_decode_cycle(
   let decoded_image = decode::decode_monochrome(
     &mut encoded_frame,
     transfer_syntax,
-    &image_pixel_module,
+    image_pixel_module,
     &decode_config,
   )
   .unwrap();
@@ -392,7 +400,7 @@ fn test_color_image_encode_decode_cycle(
   .unwrap();
 
   // Create a random color image to test with
-  let original_image = create_color_image(&image_pixel_module);
+  let original_image = create_color_image(image_pixel_module);
 
   // Encode into the target transfer syntax
   let mut encoded_frame = encode::encode_color(
@@ -635,8 +643,8 @@ fn create_monochrome_image(
         / core::mem::size_of::<T>()
     ];
 
-    for i in 0..data.len() {
-      data[i] = T::try_from(rng.random_range(range.clone())).unwrap();
+    for value in &mut data {
+      *value = T::try_from(rng.random_range(range.clone())).unwrap();
     }
 
     create(
@@ -656,7 +664,7 @@ fn create_monochrome_image(
     image_pixel_module.pixel_representation(),
   ) {
     (BitsAllocated::One, pixel_representation) => create_image(
-      &image_pixel_module,
+      image_pixel_module,
       |width, height, data, _bits_stored, is_monochrome1| {
         MonochromeImage::new_bitmap(
           width,
@@ -669,27 +677,27 @@ fn create_monochrome_image(
     ),
 
     (BitsAllocated::Eight, PixelRepresentation::Signed) => {
-      create_image(&image_pixel_module, MonochromeImage::new_i8)
+      create_image(image_pixel_module, MonochromeImage::new_i8)
     }
 
     (BitsAllocated::Eight, PixelRepresentation::Unsigned) => {
-      create_image(&image_pixel_module, MonochromeImage::new_u8)
+      create_image(image_pixel_module, MonochromeImage::new_u8)
     }
 
     (BitsAllocated::Sixteen, PixelRepresentation::Signed) => {
-      create_image(&image_pixel_module, MonochromeImage::new_i16)
+      create_image(image_pixel_module, MonochromeImage::new_i16)
     }
 
     (BitsAllocated::Sixteen, PixelRepresentation::Unsigned) => {
-      create_image(&image_pixel_module, MonochromeImage::new_u16)
+      create_image(image_pixel_module, MonochromeImage::new_u16)
     }
 
     (BitsAllocated::ThirtyTwo, PixelRepresentation::Signed) => {
-      create_image(&image_pixel_module, MonochromeImage::new_i32)
+      create_image(image_pixel_module, MonochromeImage::new_i32)
     }
 
     (BitsAllocated::ThirtyTwo, PixelRepresentation::Unsigned) => {
-      create_image(&image_pixel_module, MonochromeImage::new_u32)
+      create_image(image_pixel_module, MonochromeImage::new_u32)
     }
   }
 }
@@ -748,7 +756,7 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
       image_pixel_module.columns(),
       image_pixel_module.rows(),
       data,
-      color_space.clone(),
+      color_space,
       image_pixel_module.bits_stored(),
     )
     .unwrap()
@@ -763,14 +771,14 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
         .is_palette_color()
       {
         create_image(
-          &image_pixel_module,
+          image_pixel_module,
           |columns, rows, data, _color_space, bits_stored| {
             let palette = create_palette_color_lookup_table_module();
             ColorImage::new_palette8(columns, rows, data, palette, bits_stored)
           },
         )
       } else {
-        create_image(&image_pixel_module, ColorImage::new_u8)
+        create_image(image_pixel_module, ColorImage::new_u8)
       }
     }
 
@@ -780,19 +788,19 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
         .is_palette_color()
       {
         create_image(
-          &image_pixel_module,
+          image_pixel_module,
           |columns, rows, data, _color_space, bits_stored| {
             let palette = create_palette_color_lookup_table_module();
             ColorImage::new_palette16(columns, rows, data, palette, bits_stored)
           },
         )
       } else {
-        create_image(&image_pixel_module, ColorImage::new_u16)
+        create_image(image_pixel_module, ColorImage::new_u16)
       }
     }
 
     BitsAllocated::ThirtyTwo => {
-      create_image(&image_pixel_module, ColorImage::new_u32)
+      create_image(image_pixel_module, ColorImage::new_u32)
     }
   }
 }

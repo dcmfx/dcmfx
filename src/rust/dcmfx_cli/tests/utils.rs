@@ -77,7 +77,7 @@ pub async fn s3_get_object(key: &str) -> NamedTempFile {
   let extension = PathBuf::from(key).extension().unwrap().to_os_string();
   let suffix = format!(".{}", extension.to_string_lossy());
   let temp_file = NamedTempFile::with_suffix_in(&suffix, temp_dir()).unwrap();
-  std::fs::write(&temp_file.path(), &bytes).unwrap();
+  std::fs::write(temp_file.path(), &bytes).unwrap();
 
   temp_file
 }

@@ -461,7 +461,7 @@ fn jpeg_2000_color_to_png() {
     .arg("get-pixel-data")
     .arg(input_file)
     .arg("--output-directory")
-    .arg(&output_directory.path())
+    .arg(output_directory.path())
     .arg("-f")
     .arg("png")
     .assert()
@@ -1177,7 +1177,7 @@ fn get_video_frame_count(path: &str) -> Result<u32, String> {
       "stream=nb_read_frames",
       "-of",
       "default=nokey=1:noprint_wrappers=1",
-      &path,
+      path,
     ])
     .output()
     .map_err(|e| e.to_string())?;
@@ -1201,7 +1201,7 @@ fn get_video_stream_details(path: &str) -> Result<VideoStreamDetails, String> {
       "stream=codec_name,profile,width,height,pix_fmt,nb_frames,r_frame_rate",
       "-of",
       "json",
-      &path,
+      path,
     ])
     .output()
     .map_err(|e| e.to_string())?;

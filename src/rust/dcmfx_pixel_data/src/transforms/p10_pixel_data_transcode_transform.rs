@@ -1066,16 +1066,16 @@ impl TranscodeImageDataFunctions {
         // Convert to MONOCHROME1/MONOCHROME2 based on the output photometric
         // interpretation
         match image_pixel_module.photometric_interpretation() {
-          PhotometricInterpretation::Monochrome1 { .. } => {
-            if !image.is_monochrome1() {
-              image.change_monochrome_representation();
-            }
+          PhotometricInterpretation::Monochrome1 { .. }
+            if !image.is_monochrome1() =>
+          {
+            image.change_monochrome_representation();
           }
 
-          PhotometricInterpretation::Monochrome2 { .. } => {
-            if image.is_monochrome1() {
-              image.change_monochrome_representation();
-            }
+          PhotometricInterpretation::Monochrome2 { .. }
+            if image.is_monochrome1() =>
+          {
+            image.change_monochrome_representation();
           }
 
           _ => (),

@@ -467,9 +467,7 @@ fn test_pixel_data_read(
     )));
   }
 
-  for (mut frame, expected_frame) in
-    frames.into_iter().zip(expected_frames.into_iter())
-  {
+  for (mut frame, expected_frame) in frames.into_iter().zip(expected_frames) {
     let frame_index = frame.index().unwrap();
 
     if pixel_data_renderer.image_pixel_module.is_monochrome() {

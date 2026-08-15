@@ -1934,7 +1934,7 @@ mod tests {
       DataElementValue::new_signed_very_long(&[i64::MIN, i64::MAX])
         .unwrap()
         .get_big_ints::<i64>(),
-      Ok(vec![i64::MIN.into(), i64::MAX.into()])
+      Ok(vec![i64::MIN, i64::MAX])
     );
 
     assert_eq!(

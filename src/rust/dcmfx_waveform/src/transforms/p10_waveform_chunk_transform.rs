@@ -303,11 +303,12 @@ impl P10WaveformChunkTransform {
       return Ok(vec![]);
     };
 
-    let sample_set_size = multiplex_group.sample_set_size();
+    let sample_set_size =
+      core::num::NonZeroUsize::new(multiplex_group.sample_set_size());
 
     let mut chunks = vec![];
 
-    if sample_set_size > 0 {
+    if let Some(sample_set_size) = sample_set_size {
       let remaining_sample_sets = usize::try_from(
         u64::from(multiplex_group.number_of_samples()) - self.sample_offset,
       )
@@ -318,7 +319,7 @@ impl P10WaveformChunkTransform {
       let chunk_data = if self.pending_bytes.is_empty() {
         let sample_sets =
           (data.len() / sample_set_size).min(remaining_sample_sets);
-        let length = sample_sets * sample_set_size;
+        let length = sample_sets * sample_set_size.get();
 
         self.pending_bytes.extend_from_slice(&data[length..]);
 
@@ -332,7 +333,7 @@ impl P10WaveformChunkTransform {
 
         let sample_sets = (self.pending_bytes.len() / sample_set_size)
           .min(remaining_sample_sets);
-        let length = sample_sets * sample_set_size;
+        let length = sample_sets * sample_set_size.get();
 
         if length > 0 {
           let rest = self.pending_bytes.split_off(length);

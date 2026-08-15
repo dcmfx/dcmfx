@@ -12,13 +12,13 @@ homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
-base64 = "0.22.1"
+base64 = "0.23.1"
 byteorder = "1.5.0"
 dcmfx_core = { path = "../dcmfx_core", default-features = false }
 dcmfx_p10 = { path = "../dcmfx_p10", default-features = false }
 num-traits = "0.2.19"
-serde = { version = "1.0.228", features = ["serde_derive"] }
-serde_json = { version = "1.0.149", features = ["float_roundtrip"] }
+serde = { version = "1.0.229", features = ["serde_derive"] }
+serde_json = { version = "1.0.151", features = ["float_roundtrip"] }
 
 [features]
 default = ["std"]

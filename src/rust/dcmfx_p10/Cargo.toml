@@ -12,15 +12,15 @@ homepage.workspace = true
 keywords.workspace = true
 
 [dependencies]
-async-trait = { version = "0.1.89", optional = true }
+async-trait = { version = "0.1.92", optional = true }
 byteorder = "1.5.0"
 bytes = { version = "1.12.1", default-features = false }
 dcmfx_character_set = { path = "../dcmfx_character_set", default-features = false }
 dcmfx_core = { path = "../dcmfx_core", default-features = false }
 flate2 = "1.1.9"
-futures = { version = "0.3.32", optional = true }
+futures = { version = "0.3.34", optional = true }
 miniz_oxide = "0.9.1"
-tokio = { version = "1.52.1", features = [
+tokio = { version = "1.53.1", features = [
   "fs",
   "io-util",
   "macros",
