@@ -139,13 +139,55 @@ pub async fn run(args: ListArgs) -> Result<(), ()> {
     );
   }
 
-  // Check that all input directories are valid
+  // Check that all input directories are valid, and get their canonical paths
+  // so that duplicate and nested input directories can be detected
+  let mut directories = vec![];
   for dir in args.directories.iter() {
     if !dir.is_dir() {
       crate::utils::exit_with_error(
         &format!("{:?} is not a directory", dir),
         "",
       );
+    }
+
+    let canonical_dir = match dir.canonicalize() {
+      Ok(canonical_dir) => canonical_dir,
+      Err(e) => crate::utils::exit_with_error(
+        &format!("Failed accessing directory '{}'", dir.display()),
+        e,
+      ),
+    };
+
+    directories.push((dir, canonical_dir));
+  }
+
+  // Check that no input directory is contained in another input directory, and
+  // that there are no duplicate input directories, as either would result in
+  // duplicated output. Sorting by the canonical path puts containing
+  // directories ahead of the directories they contain.
+  directories.sort_by(|a, b| a.1.cmp(&b.1));
+  for (i, (dir, canonical_dir)) in directories.iter().enumerate() {
+    for (container, canonical_container) in directories.iter().take(i) {
+      if canonical_dir == canonical_container {
+        crate::utils::exit_with_error(
+          &format!(
+            "Input directory '{}' is specified more than once",
+            dir.display()
+          ),
+          "",
+        );
+      }
+
+      if canonical_dir.starts_with(canonical_container) {
+        crate::utils::exit_with_error(
+          &format!(
+            "Input directory '{}' is contained in input directory '{}'",
+            dir.display(),
+            container.display()
+          ),
+          "",
+        );
+      }
     }
   }
 

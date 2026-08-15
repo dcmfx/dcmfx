@@ -2,7 +2,8 @@ mod utils;
 
 use insta::assert_snapshot;
 use utils::{
-  dcmfx_cli, get_stderr, get_stdout, get_stdout_and_stderr, to_native_path,
+  create_temp_dir, dcmfx_cli, get_stderr, get_stdout, get_stdout_and_stderr,
+  to_native_path,
 };
 
 #[test]
@@ -128,6 +129,53 @@ fn with_invalid_directory() {
     .failure();
 
   assert_snapshot!("with_invalid_directory", get_stderr(assert));
+}
+
+#[test]
+fn with_duplicate_directory() {
+  let assert = dcmfx_cli()
+    .arg("list")
+    .arg(to_native_path("../../../test/assets/pydicom"))
+    .arg(to_native_path("../../../test/assets/fo-dicom"))
+    .arg(to_native_path("../../../test/assets/pydicom"))
+    .assert()
+    .failure();
+
+  #[cfg(windows)]
+  assert_snapshot!("with_duplicate_directory_windows", get_stderr(assert));
+
+  #[cfg(not(windows))]
+  assert_snapshot!("with_duplicate_directory", get_stderr(assert));
+}
+
+#[test]
+fn with_nested_directory() {
+  let assert = dcmfx_cli()
+    .arg("list")
+    .arg(to_native_path("../../../test/assets/pydicom/charset_files"))
+    .arg(to_native_path("../../../test/assets/pydicom"))
+    .assert()
+    .failure();
+
+  #[cfg(windows)]
+  assert_snapshot!("with_nested_directory_windows", get_stderr(assert));
+
+  #[cfg(not(windows))]
+  assert_snapshot!("with_nested_directory", get_stderr(assert));
+}
+
+#[test]
+fn with_sibling_directories_sharing_a_name_prefix() {
+  let temp_dir = create_temp_dir();
+  std::fs::create_dir(temp_dir.path().join("data")).unwrap();
+  std::fs::create_dir(temp_dir.path().join("data_2")).unwrap();
+
+  dcmfx_cli()
+    .arg("list")
+    .arg(temp_dir.path().join("data"))
+    .arg(temp_dir.path().join("data_2"))
+    .assert()
+    .success();
 }
 
 #[test]

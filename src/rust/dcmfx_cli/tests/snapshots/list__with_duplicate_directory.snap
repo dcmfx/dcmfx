@@ -1,0 +1,5 @@
+---
+source: dcmfx_cli/tests/list.rs
+expression: get_stderr(assert)
+---
+Error: Input directory '../../../test/assets/pydicom' is specified more than once
