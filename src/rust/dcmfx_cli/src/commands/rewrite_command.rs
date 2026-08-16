@@ -154,7 +154,9 @@ pub async fn run(args: RewriteArgs) -> Result<(), ()> {
         match rewrite_input_source(&input_source, output_target, &args).await {
           Ok(()) => Ok(()),
 
-          Err(P10Error::DicmPrefixNotPresent) if args.input.ignore_invalid => {
+          Err(P10Error::DicmPrefixNotPresent)
+            if args.input.ignore_non_dicom_inputs =>
+          {
             Ok(())
           }
 
@@ -203,7 +205,7 @@ async fn rewrite_input_source(
   let read_config = args
     .input
     .p10_read_config()
-    .require_dicm_prefix(args.input.ignore_invalid);
+    .require_dicm_prefix(args.input.ignore_non_dicom_inputs);
 
   // Open input stream
   let mut input_stream = input_source.open_read_stream().await?;

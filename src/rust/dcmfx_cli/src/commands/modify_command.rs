@@ -399,7 +399,7 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
           Ok(()) => Ok(()),
 
           Err(ModifyCommandError::P10Error(P10Error::DicmPrefixNotPresent))
-            if args.input.ignore_invalid =>
+            if args.input.ignore_non_dicom_inputs =>
           {
             Ok(())
           }
@@ -535,7 +535,7 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
     .input
     .p10_read_config()
     .max_token_size(256 * 1024)
-    .require_dicm_prefix(args.input.ignore_invalid);
+    .require_dicm_prefix(args.input.ignore_non_dicom_inputs);
 
   let mut p10_read_context = P10ReadContext::new(Some(read_config));
   let mut p10_write_context = P10WriteContext::new(Some(write_config));

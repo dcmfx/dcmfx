@@ -42,7 +42,7 @@ pub struct P10InputArgs {
       defined as not having the 'DICM' prefix at byte offset 128.",
     default_value_t = false
   )]
-  pub ignore_invalid: bool,
+  pub ignore_non_dicom_inputs: bool,
 
   #[arg(
     long,

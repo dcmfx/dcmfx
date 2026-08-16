@@ -370,7 +370,7 @@ pub async fn run(args: GetPixelDataArgs) -> Result<(), ()> {
           Ok(()) => Ok(()),
 
           Err(GetPixelDataError::P10Error(P10Error::DicmPrefixNotPresent))
-            if args.input.ignore_invalid =>
+            if args.input.ignore_non_dicom_inputs =>
           {
             Ok(())
           }

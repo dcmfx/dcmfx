@@ -52,14 +52,15 @@ pub async fn run(args: PrintArgs) -> Result<(), ()> {
     .input
     .p10_read_config()
     .max_token_size(256 * 1024)
-    .require_dicm_prefix(args.input.ignore_invalid);
+    .require_dicm_prefix(args.input.ignore_non_dicom_inputs);
 
   while let Some(input_source) = input_sources.next().await {
     match print_input_source(&input_source, &read_config, &print_options).await
     {
       Ok(()) => (),
 
-      Err(P10Error::DicmPrefixNotPresent) if args.input.ignore_invalid => (),
+      Err(P10Error::DicmPrefixNotPresent)
+        if args.input.ignore_non_dicom_inputs => {}
 
       Err(e) => {
         e.print(&format!("printing \"{input_source}\""));

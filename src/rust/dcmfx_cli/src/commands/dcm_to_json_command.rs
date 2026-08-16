@@ -179,7 +179,7 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
           Ok(()) => Ok(()),
 
           Err(ToJsonError::P10Error(P10Error::DicmPrefixNotPresent))
-            if args.input.ignore_invalid =>
+            if args.input.ignore_non_dicom_inputs =>
           {
             Ok(())
           }
@@ -230,7 +230,7 @@ async fn input_source_to_json(
   let read_config = args
     .input
     .p10_read_config()
-    .require_dicm_prefix(args.input.ignore_invalid);
+    .require_dicm_prefix(args.input.ignore_non_dicom_inputs);
 
   if args.selected_data_elements.is_empty() {
     // Create P10 read context with a max token size of 256 KiB
