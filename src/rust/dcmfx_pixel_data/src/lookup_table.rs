@@ -118,14 +118,11 @@ impl LookupTable {
     }
 
     // Read the LUT explanation if specified. It's allowed to be absent.
-    let explanation = if let Some(lut_explanation_tag) = lut_explanation_tag {
-      if data_set.has(lut_explanation_tag) {
-        Some(data_set.get_string(lut_explanation_tag)?.to_string())
-      } else {
-        None
-      }
-    } else {
-      None
+    let explanation = match lut_explanation_tag {
+      Some(lut_explanation_tag) => data_set
+        .get_optional_string(lut_explanation_tag)?
+        .map(String::from),
+      None => None,
     };
 
     let int_max = ((1u32 << bits_per_entry) - 1) as u16;

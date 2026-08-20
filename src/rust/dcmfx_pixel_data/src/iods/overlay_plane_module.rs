@@ -239,61 +239,42 @@ impl OverlayPlane {
       )?
       .clone();
 
-    let description_tag =
-      dictionary::OVERLAY_DESCRIPTION.tag.with_group(tag_group);
-    let description = if data_set.has(description_tag) {
-      Some(data_set.get_string(description_tag)?.to_string())
-    } else {
-      None
-    };
+    let description = data_set
+      .get_optional_string(
+        dictionary::OVERLAY_DESCRIPTION.tag.with_group(tag_group),
+      )?
+      .map(String::from);
 
-    let subtype_tag = dictionary::OVERLAY_SUBTYPE.tag.with_group(tag_group);
-    let subtype = if data_set.has(subtype_tag) {
-      Some(OverlaySubtype::from_data_set(data_set, tag_group)?)
-    } else {
-      None
-    };
+    let subtype = OverlaySubtype::from_data_set(data_set, tag_group)?;
 
-    let label_tag = dictionary::OVERLAY_LABEL.tag.with_group(tag_group);
-    let label = if data_set.has(label_tag) {
-      Some(data_set.get_string(label_tag)?.to_string())
-    } else {
-      None
-    };
+    let label = data_set
+      .get_optional_string(dictionary::OVERLAY_LABEL.tag.with_group(tag_group))?
+      .map(String::from);
 
-    let roi_area_tag = dictionary::ROI_AREA.tag.with_group(tag_group);
-    let roi_area = if data_set.has(roi_area_tag) {
-      Some(data_set.get_int::<u64>(roi_area_tag)?)
-    } else {
-      None
-    };
-
-    let roi_mean_tag = dictionary::ROI_MEAN.tag.with_group(tag_group);
-    let roi_mean = if data_set.has(roi_mean_tag) {
-      Some(data_set.get_float(roi_mean_tag)?)
-    } else {
-      None
-    };
-
-    let roi_standard_deviation_tag =
-      dictionary::ROI_STANDARD_DEVIATION.tag.with_group(tag_group);
-    let roi_standard_deviation = if data_set.has(roi_standard_deviation_tag) {
-      Some(data_set.get_float(roi_standard_deviation_tag)?)
-    } else {
-      None
-    };
-
-    let number_of_frames_in_overlay = data_set.get_int_with_default::<usize>(
-      dictionary::NUMBER_OF_FRAMES_IN_OVERLAY
-        .tag
-        .with_group(tag_group),
-      1,
+    let roi_area = data_set.get_optional_int::<u64>(
+      dictionary::ROI_AREA.tag.with_group(tag_group),
     )?;
 
-    let image_frame_origin = data_set.get_int_with_default::<usize>(
-      dictionary::IMAGE_FRAME_ORIGIN.tag.with_group(tag_group),
-      1,
+    let roi_mean = data_set
+      .get_optional_float(dictionary::ROI_MEAN.tag.with_group(tag_group))?;
+
+    let roi_standard_deviation = data_set.get_optional_float(
+      dictionary::ROI_STANDARD_DEVIATION.tag.with_group(tag_group),
     )?;
+
+    let number_of_frames_in_overlay = data_set
+      .get_optional_int::<usize>(
+        dictionary::NUMBER_OF_FRAMES_IN_OVERLAY
+          .tag
+          .with_group(tag_group),
+      )?
+      .unwrap_or(1);
+
+    let image_frame_origin = data_set
+      .get_optional_int::<usize>(
+        dictionary::IMAGE_FRAME_ORIGIN.tag.with_group(tag_group),
+      )?
+      .unwrap_or(1);
 
     let expected_data_length =
       (usize::from(rows) * usize::from(columns) * number_of_frames_in_overlay)
@@ -468,19 +449,21 @@ pub enum OverlaySubtype {
 
 impl OverlaySubtype {
   /// Creates a new [`OverlaySubtype`] from the *'(60gg,0045) Overlay Subtype'*
-  /// data element in the given data set.
+  /// data element in the given data set. Returns `None` if the data element is
+  /// not present.
   ///
   pub fn from_data_set(
     data_set: &DataSet,
     group: u16,
-  ) -> Result<Self, DataError> {
+  ) -> Result<Option<Self>, DataError> {
     let tag =
       DataElementTag::new(group, dictionary::OVERLAY_SUBTYPE.tag.element);
 
-    match data_set.get_string(tag)? {
-      "USER" => Ok(Self::User),
-      "AUTOMATED" => Ok(Self::Automated),
-      value => Err(
+    match data_set.get_optional_string(tag)? {
+      None => Ok(None),
+      Some("USER") => Ok(Some(Self::User)),
+      Some("AUTOMATED") => Ok(Some(Self::Automated)),
+      Some(value) => Err(
         DataError::new_value_invalid(format!(
           "Overlay subtype value of '{value}' is invalid"
         ))

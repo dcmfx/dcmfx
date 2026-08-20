@@ -61,11 +61,7 @@ impl IodModule for CineModule {
     let preferred_playback_sequencing =
       PreferredPlaybackSequencing::from_data_set(data_set)?;
 
-    let frame_time = if data_set.has(dictionary::FRAME_TIME.tag) {
-      Some(data_set.get_float(dictionary::FRAME_TIME.tag)?)
-    } else {
-      None
-    };
+    let frame_time = data_set.get_optional_float(dictionary::FRAME_TIME.tag)?;
 
     let frame_time_vector = if data_set.has(dictionary::FRAME_TIME_VECTOR.tag) {
       Some(data_set.get_floats(dictionary::FRAME_TIME_VECTOR.tag)?)
@@ -73,60 +69,30 @@ impl IodModule for CineModule {
       None
     };
 
-    let start_trim = if data_set.has(dictionary::START_TRIM.tag) {
-      Some(data_set.get_int::<usize>(dictionary::START_TRIM.tag)?)
-    } else {
-      None
-    };
+    let start_trim =
+      data_set.get_optional_int::<usize>(dictionary::START_TRIM.tag)?;
 
-    let stop_trim = if data_set.has(dictionary::STOP_TRIM.tag) {
-      Some(data_set.get_int::<usize>(dictionary::STOP_TRIM.tag)?)
-    } else {
-      None
-    };
+    let stop_trim =
+      data_set.get_optional_int::<usize>(dictionary::STOP_TRIM.tag)?;
 
-    let recommended_display_frame_rate =
-      if data_set.has(dictionary::RECOMMENDED_DISPLAY_FRAME_RATE.tag) {
-        Some(
-          data_set
-            .get_int::<u32>(dictionary::RECOMMENDED_DISPLAY_FRAME_RATE.tag)?,
-        )
-      } else {
-        None
-      };
+    let recommended_display_frame_rate = data_set.get_optional_int::<u32>(
+      dictionary::RECOMMENDED_DISPLAY_FRAME_RATE.tag,
+    )?;
 
-    let cine_rate = if data_set.has(dictionary::CINE_RATE.tag) {
-      Some(data_set.get_int::<u32>(dictionary::CINE_RATE.tag)?)
-    } else {
-      None
-    };
+    let cine_rate =
+      data_set.get_optional_int::<u32>(dictionary::CINE_RATE.tag)?;
 
-    let frame_delay = if data_set.has(dictionary::FRAME_DELAY.tag) {
-      Some(data_set.get_float(dictionary::FRAME_DELAY.tag)?)
-    } else {
-      None
-    };
+    let frame_delay =
+      data_set.get_optional_float(dictionary::FRAME_DELAY.tag)?;
 
     let image_trigger_delay =
-      if data_set.has(dictionary::IMAGE_TRIGGER_DELAY.tag) {
-        Some(data_set.get_float(dictionary::IMAGE_TRIGGER_DELAY.tag)?)
-      } else {
-        None
-      };
+      data_set.get_optional_float(dictionary::IMAGE_TRIGGER_DELAY.tag)?;
 
-    let effective_duration = if data_set.has(dictionary::EFFECTIVE_DURATION.tag)
-    {
-      Some(data_set.get_float(dictionary::EFFECTIVE_DURATION.tag)?)
-    } else {
-      None
-    };
+    let effective_duration =
+      data_set.get_optional_float(dictionary::EFFECTIVE_DURATION.tag)?;
 
-    let actual_frame_duration =
-      if data_set.has(dictionary::ACTUAL_FRAME_DURATION.tag) {
-        Some(data_set.get_int::<usize>(dictionary::ACTUAL_FRAME_DURATION.tag)?)
-      } else {
-        None
-      };
+    let actual_frame_duration = data_set
+      .get_optional_int::<usize>(dictionary::ACTUAL_FRAME_DURATION.tag)?;
 
     Ok(Self {
       preferred_playback_sequencing,
@@ -289,14 +255,11 @@ impl PreferredPlaybackSequencing {
   fn from_data_set(data_set: &DataSet) -> Result<Option<Self>, DataError> {
     let tag = dictionary::PREFERRED_PLAYBACK_SEQUENCING.tag;
 
-    if !data_set.has(tag) {
-      return Ok(None);
-    }
-
-    match data_set.get_int::<i64>(tag)? {
-      0 => Ok(Some(Self::Looping)),
-      1 => Ok(Some(Self::Sweeping)),
-      value => Err(
+    match data_set.get_optional_int::<i64>(tag)? {
+      None => Ok(None),
+      Some(0) => Ok(Some(Self::Looping)),
+      Some(1) => Ok(Some(Self::Sweeping)),
+      Some(value) => Err(
         DataError::new_value_invalid(format!(
           "Preferred playback sequencing value of '{value}' is invalid"
         ))

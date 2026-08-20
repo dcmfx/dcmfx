@@ -41,54 +41,29 @@ impl IodModule for MultiFrameModule {
   }
 
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
-    let number_of_frames = if data_set.has(dictionary::NUMBER_OF_FRAMES.tag) {
-      Some(data_set.get_int::<usize>(dictionary::NUMBER_OF_FRAMES.tag)?)
-    } else {
-      None
-    };
+    let number_of_frames =
+      data_set.get_optional_int::<usize>(dictionary::NUMBER_OF_FRAMES.tag)?;
 
-    let tag = dictionary::FRAME_INCREMENT_POINTER.tag;
-    let frame_increment_pointer = if data_set.has(tag) {
-      match data_set.get_attribute_tags(tag)?.as_slice() {
-        [tag] => Some(*tag),
-        _ => {
-          return Err(
-            DataError::new_multiplicity_mismatch()
-              .with_path(&DataSetPath::new_with_data_element(tag)),
-          );
-        }
-      }
-    } else {
-      None
-    };
+    let frame_increment_pointer = data_set
+      .get_optional_attribute_tag(dictionary::FRAME_INCREMENT_POINTER.tag)?;
 
     let tag = dictionary::STEREO_PAIRS_PRESENT.tag;
-    let stereo_pairs_present = if data_set.has(tag) {
-      match data_set.get_string(tag)? {
-        "YES" => Some(true),
-        "NO" => Some(false),
-        value => {
-          return Err(
-            DataError::new_value_invalid(format!(
-              "Invalid enum value '{value}'"
-            ))
+    let stereo_pairs_present = match data_set.get_optional_string(tag)? {
+      None => None,
+      Some("YES") => Some(true),
+      Some("NO") => Some(false),
+      Some(value) => {
+        return Err(
+          DataError::new_value_invalid(format!("Invalid enum value '{value}'"))
             .with_path(&DataSetPath::new_with_data_element(tag)),
-          );
-        }
+        );
       }
-    } else {
-      None
     };
 
-    let encapsulated_pixel_data_value_total_length = if data_set
-      .has(dictionary::ENCAPSULATED_PIXEL_DATA_VALUE_TOTAL_LENGTH.tag)
-    {
-      Some(data_set.get_int::<usize>(
+    let encapsulated_pixel_data_value_total_length = data_set
+      .get_optional_int::<usize>(
         dictionary::ENCAPSULATED_PIXEL_DATA_VALUE_TOTAL_LENGTH.tag,
-      )?)
-    } else {
-      None
-    };
+      )?;
 
     Ok(Self {
       number_of_frames,

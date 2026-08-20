@@ -107,13 +107,10 @@ impl ModalityLutModule {
     let rescale_slope =
       data_set.get_float(dictionary::RESCALE_SLOPE.tag)? as f32;
 
-    let rescale_type = if data_set.has(dictionary::RESCALE_TYPE.tag) {
-      ModalityLutOutputType::from_string(
-        data_set.get_string(dictionary::RESCALE_TYPE.tag)?,
-      )
-    } else {
-      ModalityLutOutputType::Unspecified
-    };
+    let rescale_type = data_set
+      .get_optional_string(dictionary::RESCALE_TYPE.tag)?
+      .map(ModalityLutOutputType::from_string)
+      .unwrap_or(ModalityLutOutputType::Unspecified);
 
     Ok(Self::Rescale {
       rescale_intercept,

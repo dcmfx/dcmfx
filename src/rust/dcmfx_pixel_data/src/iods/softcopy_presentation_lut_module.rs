@@ -114,15 +114,11 @@ impl PresentationLutShape {
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let tag = dictionary::PRESENTATION_LUT_SHAPE.tag;
 
-    if !data_set.has(tag) {
-      return Ok(Self::Identity);
-    }
+    match data_set.get_optional_string(tag)? {
+      None | Some("IDENTITY") => Ok(Self::Identity),
+      Some("INVERSE") => Ok(Self::Inverse),
 
-    match data_set.get_string(tag)? {
-      "" | "IDENTITY" => Ok(Self::Identity),
-      "INVERSE" => Ok(Self::Inverse),
-
-      value => Err(
+      Some(value) => Err(
         DataError::new_value_invalid(format!(
           "Presentation LUT shape value of '{value}' is invalid"
         ))

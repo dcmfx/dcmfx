@@ -66,6 +66,19 @@ impl DataSet {
     self.0.contains_key(&tag)
   }
 
+  /// Returns whether a data element with the specified tag exists in a data
+  /// set and that value isn't empty.
+  ///
+  pub fn has_value(&self, tag: DataElementTag) -> bool {
+    match self.0.get(&tag) {
+      Some(value) => match value.bytes() {
+        Ok(bytes) => !bytes.is_empty(),
+        _ => false,
+      },
+      None => false,
+    }
+  }
+
   /// Returns a new data set containing the File Meta Information data elements
   /// in this data set, i.e. those where the data element tag group equals 2.
   ///
@@ -760,6 +773,22 @@ impl DataSet {
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
   }
 
+  /// Similar to [`DataSet::get_string`] but returns `None` if the the data
+  /// element is not present in the data set or there is no string data present
+  /// in the value.
+  ///
+  pub fn get_optional_string(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<Option<&str>, DataError> {
+    match self.0.get(&tag) {
+      Some(value) => value
+        .get_optional_string()
+        .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag))),
+      _ => Ok(None),
+    }
+  }
+
   /// Returns all of the string values for a data element in a data set. If the
   /// data element with the specified tag is not of a type that supports
   /// multiple string values then an error is returned.
@@ -788,22 +817,19 @@ impl DataSet {
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
   }
 
-  /// Returns the singular integer value for a data element in a data set. If
-  /// the data element with the specified tag does not hold exactly one integer
-  /// value then an error is returned.
+  /// Similar to [`DataSet::get_int`] but returns `None` if the the data element
+  /// is not present in the data set or there is no integer data present in the
+  /// value.
   ///
-  /// If the data element is not in the data set then the specified default
-  /// value is returned.
-  ///
-  pub fn get_int_with_default<T: num_traits::PrimInt + TryFrom<i64>>(
+  pub fn get_optional_int<T: num_traits::PrimInt + TryFrom<i64>>(
     &self,
     tag: DataElementTag,
-    default: T,
-  ) -> Result<T, DataError> {
-    if self.has(tag) {
-      self.get_int(tag)
-    } else {
-      Ok(default)
+  ) -> Result<Option<T>, DataError> {
+    match self.0.get(&tag) {
+      Some(value) => value
+        .get_optional_int()
+        .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag))),
+      _ => Ok(None),
     }
   }
 
@@ -849,6 +875,22 @@ impl DataSet {
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
   }
 
+  /// Similar to [`DataSet::get_big_int`] but returns `None` if the the data
+  /// element is not present in the data set or there is no big integer data
+  /// present in the value.
+  ///
+  pub fn get_optional_big_int<T: num_traits::PrimInt + TryFrom<i128>>(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<Option<T>, DataError> {
+    match self.0.get(&tag) {
+      Some(value) => value
+        .get_optional_big_int()
+        .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag))),
+      _ => Ok(None),
+    }
+  }
+
   /// Returns all of the big integer values for a data element in a data set. If
   /// the data element with the specified tag is not of a type that supports
   /// multiple big integer values then an error is returned.
@@ -872,6 +914,22 @@ impl DataSet {
       .get_value(tag)?
       .get_float()
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
+  }
+
+  /// Similar to [`DataSet::get_float`] but returns `None` if the the data
+  /// element is not present in the data set or there is no float data present
+  /// in the value.
+  ///
+  pub fn get_optional_float(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<Option<f64>, DataError> {
+    match self.0.get(&tag) {
+      Some(value) => value
+        .get_optional_float()
+        .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag))),
+      _ => Ok(None),
+    }
   }
 
   /// Returns the singular floating point value for a data element in a data
@@ -915,6 +973,36 @@ impl DataSet {
       .get_value(tag)?
       .get_age()
       .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
+  }
+
+  /// Returns the singular attribute tag value for a data element in a data set.
+  /// If the data element with the specified tag does not hold exactly one
+  /// attribute tag value then an error is returned.
+  ///
+  pub fn get_attribute_tag(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<DataElementTag, DataError> {
+    self
+      .get_value(tag)?
+      .get_attribute_tag()
+      .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag)))
+  }
+
+  /// Similar to [`DataSet::get_attribute_tag`] but returns `None` if the the
+  /// data element is not present in the data set or there is no attribute tag
+  /// data present in the value.
+  ///
+  pub fn get_optional_attribute_tag(
+    &self,
+    tag: DataElementTag,
+  ) -> Result<Option<DataElementTag>, DataError> {
+    match self.0.get(&tag) {
+      Some(value) => value
+        .get_optional_attribute_tag()
+        .map_err(|e| e.with_path(&DataSetPath::new_with_data_element(tag))),
+      _ => Ok(None),
+    }
   }
 
   /// Returns the attribute tags value for a data element in a data set. If the

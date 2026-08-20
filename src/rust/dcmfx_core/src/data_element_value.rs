@@ -921,10 +921,23 @@ impl DataElementValue {
         let strings = self.get_strings()?;
 
         match strings.as_slice() {
+          [] => Err(DataError::new_value_not_present()),
           [s] => Ok(s),
           _ => Err(DataError::new_multiplicity_mismatch()),
         }
       }
+    }
+  }
+
+  /// Similar to [`DataElementValue::get_string`] but returns `None` if there is
+  /// no string data present in the value.
+  ///
+  pub fn get_optional_string(&self) -> Result<Option<&str>, DataError> {
+    match self.get_string() {
+      Ok("") => Ok(None),
+      Ok(s) => Ok(Some(s)),
+      Err(DataError::ValueNotPresent { .. }) => Ok(None),
+      Err(e) => Err(e),
     }
   }
 
@@ -979,7 +992,23 @@ impl DataElementValue {
     let ints = self.get_ints()?;
 
     match ints.as_slice() {
+      [] => Err(DataError::new_value_not_present()),
       [i] => Ok(*i),
+      _ => Err(DataError::new_multiplicity_mismatch()),
+    }
+  }
+
+  /// Similar to [`DataElementValue::get_int`] but returns `None` if there is no
+  /// integer data present in the value.
+  ///
+  pub fn get_optional_int<T: num_traits::PrimInt + TryFrom<i64>>(
+    &self,
+  ) -> Result<Option<T>, DataError> {
+    let ints = self.get_ints()?;
+
+    match ints.as_slice() {
+      [] => Ok(None),
+      [i] => Ok(Some(*i)),
       _ => Err(DataError::new_multiplicity_mismatch()),
     }
   }
@@ -1161,7 +1190,23 @@ impl DataElementValue {
     let ints = self.get_big_ints()?;
 
     match ints.as_slice() {
+      [] => Err(DataError::new_value_not_present()),
       [i] => Ok(*i),
+      _ => Err(DataError::new_multiplicity_mismatch()),
+    }
+  }
+
+  /// Similar to [`DataElementValue::get_big_int`] but returns `None` if there
+  /// is no big integer data present in the value.
+  ///
+  pub fn get_optional_big_int<T: num_traits::PrimInt + TryFrom<i128>>(
+    &self,
+  ) -> Result<Option<T>, DataError> {
+    let ints = self.get_big_ints()?;
+
+    match ints.as_slice() {
+      [] => Ok(None),
+      [i] => Ok(Some(*i)),
       _ => Err(DataError::new_multiplicity_mismatch()),
     }
   }
@@ -1241,7 +1286,21 @@ impl DataElementValue {
     let floats = self.get_floats()?;
 
     match floats.as_slice() {
+      [] => Err(DataError::new_value_not_present()),
       [f] => Ok(*f),
+      _ => Err(DataError::new_multiplicity_mismatch()),
+    }
+  }
+
+  /// Similar to [`DataElementValue::get_float`] but returns `None` if there is
+  /// no float data present in the value.
+  ///
+  pub fn get_optional_float(&self) -> Result<Option<f64>, DataError> {
+    let floats = self.get_floats()?;
+
+    match floats.as_slice() {
+      [] => Ok(None),
+      [f] => Ok(Some(*f)),
       _ => Err(DataError::new_multiplicity_mismatch()),
     }
   }
@@ -1307,6 +1366,35 @@ impl DataElementValue {
         bytes,
       } => StructuredAge::from_bytes(bytes),
       _ => Err(DataError::new_value_not_present()),
+    }
+  }
+
+  /// Returns the data element tag contained in a data element value. This is
+  /// only supported for the `AttributeTag` value representation and when
+  /// exactly one tag is present.
+  ///
+  pub fn get_attribute_tag(&self) -> Result<DataElementTag, DataError> {
+    let tags = self.get_attribute_tags()?;
+
+    match tags.as_slice() {
+      [] => Err(DataError::new_value_not_present()),
+      [tag] => Ok(*tag),
+      _ => Err(DataError::new_multiplicity_mismatch()),
+    }
+  }
+
+  /// Similar to [`DataElementValue::get_attribute_tag`] but returns `None` if
+  /// there is no data element tag present in the value.
+  ///
+  pub fn get_optional_attribute_tag(
+    &self,
+  ) -> Result<Option<DataElementTag>, DataError> {
+    let tags = self.get_attribute_tags()?;
+
+    match tags.as_slice() {
+      [] => Ok(None),
+      [tag] => Ok(Some(*tag)),
+      _ => Err(DataError::new_multiplicity_mismatch()),
     }
   }
 

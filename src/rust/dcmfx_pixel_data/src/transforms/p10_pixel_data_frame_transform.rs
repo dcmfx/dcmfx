@@ -85,7 +85,8 @@ struct PixelDataFrameTransformDetails {
 impl PixelDataFrameTransformDetails {
   fn from_data_set(data_set: &DataSet) -> Result<Self, DataError> {
     let number_of_frames = data_set
-      .get_int_with_default::<usize>(dictionary::NUMBER_OF_FRAMES.tag, 1)?;
+      .get_optional_int::<usize>(dictionary::NUMBER_OF_FRAMES.tag)?
+      .unwrap_or(1);
 
     Ok(Self {
       number_of_frames,

@@ -96,21 +96,11 @@ impl IodModule for ImagePixelModule {
       None
     };
 
-    let smallest_image_pixel_value = if data_set
-      .has(dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag)
-    {
-      Some(data_set.get_int::<i64>(dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag)?)
-    } else {
-      None
-    };
+    let smallest_image_pixel_value = data_set
+      .get_optional_int::<i64>(dictionary::SMALLEST_IMAGE_PIXEL_VALUE.tag)?;
 
-    let largest_image_pixel_value = if data_set
-      .has(dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag)
-    {
-      Some(data_set.get_int::<i64>(dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag)?)
-    } else {
-      None
-    };
+    let largest_image_pixel_value = data_set
+      .get_optional_int::<i64>(dictionary::LARGEST_IMAGE_PIXEL_VALUE.tag)?;
 
     let icc_profile = if data_set.has(dictionary::ICC_PROFILE.tag) {
       Some(
@@ -122,15 +112,9 @@ impl IodModule for ImagePixelModule {
       None
     };
 
-    let color_space = if data_set.has(dictionary::COLOR_SPACE.tag) {
-      Some(
-        data_set
-          .get_string(dictionary::COLOR_SPACE.tag)?
-          .to_string(),
-      )
-    } else {
-      None
-    };
+    let color_space = data_set
+      .get_optional_string(dictionary::COLOR_SPACE.tag)?
+      .map(String::from);
 
     Self::new(
       samples_per_pixel,

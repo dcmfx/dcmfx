@@ -49,11 +49,8 @@ impl IodModule for SopCommonModule {
       .get_string(dictionary::SOP_INSTANCE_UID.tag)?
       .to_string();
 
-    let instance_number = if data_set.has(dictionary::INSTANCE_NUMBER.tag) {
-      Some(data_set.get_int::<i32>(dictionary::INSTANCE_NUMBER.tag)?)
-    } else {
-      None
-    };
+    let instance_number =
+      data_set.get_optional_int::<i32>(dictionary::INSTANCE_NUMBER.tag)?;
 
     Ok(Self {
       sop_class_uid,
