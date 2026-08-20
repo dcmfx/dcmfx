@@ -17,7 +17,7 @@ use crate::iods::channel_definition::ChannelDefinition;
 use crate::iods::coded_concept::CodedConcept;
 use crate::iods::{
   get_optional_float, get_optional_stored_value, get_optional_string,
-  insert_stored_value,
+  has_value, insert_stored_value,
 };
 
 /// Holds values of all of the data elements in the Waveform module, which
@@ -238,7 +238,7 @@ impl WaveformMultiplexGroup {
       get_optional_float(item, dictionary::TRIGGER_TIME_OFFSET.tag)?;
 
     let trigger_sample_position =
-      if item.has(dictionary::TRIGGER_SAMPLE_POSITION.tag) {
+      if has_value(item, dictionary::TRIGGER_SAMPLE_POSITION.tag) {
         Some(item.get_int::<u32>(dictionary::TRIGGER_SAMPLE_POSITION.tag)?)
       } else {
         None

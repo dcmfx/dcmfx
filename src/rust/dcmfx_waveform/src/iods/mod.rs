@@ -39,28 +39,49 @@ pub(crate) fn get_single_sequence_item(
   }
 }
 
+/// Returns whether a data element is present in the data set and has a value
+/// that isn't zero-length. Data elements with a zero-length value are treated
+/// as absent, as this is how they are commonly used to indicate that no value
+/// is available.
+///
+/// Ref: PS3.3 5.4.
+///
+pub(crate) fn has_value(data_set: &DataSet, tag: DataElementTag) -> bool {
+  data_set.has(tag)
+    && data_set
+      .get_value_bytes(tag)
+      .map(|bytes| !bytes.is_empty())
+      .unwrap_or(true)
+}
+
 /// Returns the value of an optional string data element, or `None` when it
-/// isn't present in the data set.
+/// isn't present in the data set or has a zero-length value.
 ///
 pub(crate) fn get_optional_string(
   data_set: &DataSet,
   tag: DataElementTag,
 ) -> Result<Option<String>, DataError> {
-  if data_set.has(tag) {
-    Ok(Some(data_set.get_string(tag)?.to_string()))
-  } else {
-    Ok(None)
+  if !has_value(data_set, tag) {
+    return Ok(None);
+  }
+
+  // A value containing only padding also indicates that no value is available.
+  // Such values are out of spec, as a zero-length value should be used
+  // instead, but they occur in the wild.
+  match data_set.get_string(tag)? {
+    "" => Ok(None),
+    value => Ok(Some(value.to_string())),
   }
 }
 
 /// Returns the value of an optional float data element, or `None` when it
-/// isn't present in the data set.
+/// isn't present in the data set or has a zero-length value.
 ///
 pub(crate) fn get_optional_float(
   data_set: &DataSet,
   tag: DataElementTag,
 ) -> Result<Option<f64>, DataError> {
-  if data_set.has(tag) {
+  if has_value(data_set, tag) {
     Ok(Some(data_set.get_float(tag)?))
   } else {
     Ok(None)
@@ -77,7 +98,7 @@ pub(crate) fn get_optional_stored_value(
   tag: DataElementTag,
   sample_interpretation: WaveformSampleInterpretation,
 ) -> Result<Option<i64>, DataError> {
-  if !item.has(tag) {
+  if !has_value(item, tag) {
     return Ok(None);
   }
 

@@ -13,7 +13,7 @@ use crate::iods::coded_concept::CodedConcept;
 use crate::iods::waveform_module::WaveformSampleInterpretation;
 use crate::iods::{
   get_optional_float, get_optional_stored_value, get_optional_string,
-  insert_stored_value,
+  has_value, insert_stored_value,
 };
 
 /// The definition of a single channel of a waveform multiplex group, read
@@ -122,22 +122,19 @@ impl ChannelDefinition {
     sample_interpretation: WaveformSampleInterpretation,
   ) -> Result<Self, DataError> {
     let waveform_channel_number =
-      if item.has(dictionary::WAVEFORM_CHANNEL_NUMBER.tag) {
+      if has_value(item, dictionary::WAVEFORM_CHANNEL_NUMBER.tag) {
         Some(item.get_int::<i32>(dictionary::WAVEFORM_CHANNEL_NUMBER.tag)?)
       } else {
         None
       };
 
-    let label = if item.has(dictionary::CHANNEL_LABEL.tag) {
-      Some(item.get_string(dictionary::CHANNEL_LABEL.tag)?.to_string())
-    } else {
-      None
-    };
+    let label = get_optional_string(item, dictionary::CHANNEL_LABEL.tag)?;
 
-    let status = if item.has(dictionary::CHANNEL_STATUS.tag) {
+    let status = if has_value(item, dictionary::CHANNEL_STATUS.tag) {
       item
         .get_strings(dictionary::CHANNEL_STATUS.tag)?
         .iter()
+        .filter(|s| !s.is_empty())
         .map(|s| ChannelStatus::from_string(s))
         .collect()
     } else {
@@ -421,6 +418,7 @@ impl ChannelStatus {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use dcmfx_core::ValueRepresentation;
 
   fn test_channel_definition() -> ChannelDefinition {
     ChannelDefinition {
