@@ -5,7 +5,7 @@ use alloc::string::String;
 
 use dcmfx_core::{DataElementTag, DataError, DataSet, dictionary};
 
-use crate::iods::{get_optional_string, get_single_sequence_item};
+use crate::iods::get_single_sequence_item;
 
 /// A single coded concept read from an item of a code sequence, e.g. the
 /// *'(003A,0208) Channel Source Sequence'* or the *'(003A,0211) Channel
@@ -35,16 +35,18 @@ impl CodedConcept {
   ///
   pub fn from_data_set(item: &DataSet) -> Result<Self, DataError> {
     Ok(Self {
-      code_value: get_optional_string(item, dictionary::CODE_VALUE.tag)?,
-      coding_scheme_designator: get_optional_string(
-        item,
-        dictionary::CODING_SCHEME_DESIGNATOR.tag,
-      )?,
-      coding_scheme_version: get_optional_string(
-        item,
-        dictionary::CODING_SCHEME_VERSION.tag,
-      )?,
-      code_meaning: get_optional_string(item, dictionary::CODE_MEANING.tag)?,
+      code_value: item
+        .get_optional_string(dictionary::CODE_VALUE.tag)?
+        .map(String::from),
+      coding_scheme_designator: item
+        .get_optional_string(dictionary::CODING_SCHEME_DESIGNATOR.tag)?
+        .map(String::from),
+      coding_scheme_version: item
+        .get_optional_string(dictionary::CODING_SCHEME_VERSION.tag)?
+        .map(String::from),
+      code_meaning: item
+        .get_optional_string(dictionary::CODE_MEANING.tag)?
+        .map(String::from),
     })
   }
 

@@ -10,10 +10,7 @@ pub use waveform_module::{
 };
 
 #[cfg(not(feature = "std"))]
-use alloc::{
-  format,
-  string::{String, ToString},
-};
+use alloc::format;
 
 use dcmfx_core::{DataElementTag, DataError, DataSet, DataSetPath};
 
@@ -39,34 +36,6 @@ pub(crate) fn get_single_sequence_item(
   }
 }
 
-/// Returns the value of an optional string data element, or `None` when it
-/// isn't present in the data set.
-///
-pub(crate) fn get_optional_string(
-  data_set: &DataSet,
-  tag: DataElementTag,
-) -> Result<Option<String>, DataError> {
-  if data_set.has(tag) {
-    Ok(Some(data_set.get_string(tag)?.to_string()))
-  } else {
-    Ok(None)
-  }
-}
-
-/// Returns the value of an optional float data element, or `None` when it
-/// isn't present in the data set.
-///
-pub(crate) fn get_optional_float(
-  data_set: &DataSet,
-  tag: DataElementTag,
-) -> Result<Option<f64>, DataError> {
-  if data_set.has(tag) {
-    Ok(Some(data_set.get_float(tag)?))
-  } else {
-    Ok(None)
-  }
-}
-
 /// Reads an optional OB/OW data element that stores a single value in the
 /// multiplex group's sample encoding, i.e. the waveform padding value and the
 /// channel minimum and maximum values. The returned value is the raw stored
@@ -77,7 +46,7 @@ pub(crate) fn get_optional_stored_value(
   tag: DataElementTag,
   sample_interpretation: WaveformSampleInterpretation,
 ) -> Result<Option<i64>, DataError> {
-  if !item.has(tag) {
+  if !item.has_value(tag) {
     return Ok(None);
   }
 

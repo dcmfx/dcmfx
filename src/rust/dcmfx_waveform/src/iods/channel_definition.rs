@@ -11,10 +11,7 @@ use dcmfx_core::{DataElementTag, DataError, DataSet, dictionary};
 
 use crate::iods::coded_concept::CodedConcept;
 use crate::iods::waveform_module::WaveformSampleInterpretation;
-use crate::iods::{
-  get_optional_float, get_optional_stored_value, get_optional_string,
-  insert_stored_value,
-};
+use crate::iods::{get_optional_stored_value, insert_stored_value};
 
 /// The definition of a single channel of a waveform multiplex group, read
 /// from an item of the *'(003A,0200) Channel Definition Sequence'*.
@@ -122,22 +119,17 @@ impl ChannelDefinition {
     sample_interpretation: WaveformSampleInterpretation,
   ) -> Result<Self, DataError> {
     let waveform_channel_number =
-      if item.has(dictionary::WAVEFORM_CHANNEL_NUMBER.tag) {
-        Some(item.get_int::<i32>(dictionary::WAVEFORM_CHANNEL_NUMBER.tag)?)
-      } else {
-        None
-      };
+      item.get_optional_int::<i32>(dictionary::WAVEFORM_CHANNEL_NUMBER.tag)?;
 
-    let label = if item.has(dictionary::CHANNEL_LABEL.tag) {
-      Some(item.get_string(dictionary::CHANNEL_LABEL.tag)?.to_string())
-    } else {
-      None
-    };
+    let label = item
+      .get_optional_string(dictionary::CHANNEL_LABEL.tag)?
+      .map(String::from);
 
     let status = if item.has(dictionary::CHANNEL_STATUS.tag) {
       item
         .get_strings(dictionary::CHANNEL_STATUS.tag)?
         .iter()
+        .filter(|s| !s.is_empty())
         .map(|s| ChannelStatus::from_string(s))
         .collect()
     } else {
@@ -149,13 +141,12 @@ impl ChannelDefinition {
       dictionary::CHANNEL_SOURCE_SEQUENCE.tag,
     )?;
 
-    let derivation_description = get_optional_string(
-      item,
-      dictionary::CHANNEL_DERIVATION_DESCRIPTION.tag,
-    )?;
+    let derivation_description = item
+      .get_optional_string(dictionary::CHANNEL_DERIVATION_DESCRIPTION.tag)?
+      .map(String::from);
 
     let sensitivity =
-      get_optional_float(item, dictionary::CHANNEL_SENSITIVITY.tag)?;
+      item.get_optional_float(dictionary::CHANNEL_SENSITIVITY.tag)?;
 
     let sensitivity_units =
       if item.has(dictionary::CHANNEL_SENSITIVITY_UNITS_SEQUENCE.tag) {
@@ -167,32 +158,32 @@ impl ChannelDefinition {
         None
       };
 
-    let sensitivity_correction_factor = get_optional_float(
-      item,
+    let sensitivity_correction_factor = item.get_optional_float(
       dictionary::CHANNEL_SENSITIVITY_CORRECTION_FACTOR.tag,
     )?;
 
-    let baseline = get_optional_float(item, dictionary::CHANNEL_BASELINE.tag)?;
+    let baseline = item.get_optional_float(dictionary::CHANNEL_BASELINE.tag)?;
     let time_skew =
-      get_optional_float(item, dictionary::CHANNEL_TIME_SKEW.tag)?;
+      item.get_optional_float(dictionary::CHANNEL_TIME_SKEW.tag)?;
     let sample_skew =
-      get_optional_float(item, dictionary::CHANNEL_SAMPLE_SKEW.tag)?;
-    let offset = get_optional_float(item, dictionary::CHANNEL_OFFSET.tag)?;
+      item.get_optional_float(dictionary::CHANNEL_SAMPLE_SKEW.tag)?;
+    let offset = item.get_optional_float(dictionary::CHANNEL_OFFSET.tag)?;
 
     let bits_stored =
       item.get_int::<u16>(dictionary::WAVEFORM_BITS_STORED.tag)?;
 
-    let amplifier_type =
-      get_optional_string(item, dictionary::WAVEFORM_AMPLIFIER_TYPE.tag)?;
+    let amplifier_type = item
+      .get_optional_string(dictionary::WAVEFORM_AMPLIFIER_TYPE.tag)?
+      .map(String::from);
 
     let filter_low_frequency =
-      get_optional_float(item, dictionary::FILTER_LOW_FREQUENCY.tag)?;
+      item.get_optional_float(dictionary::FILTER_LOW_FREQUENCY.tag)?;
     let filter_high_frequency =
-      get_optional_float(item, dictionary::FILTER_HIGH_FREQUENCY.tag)?;
+      item.get_optional_float(dictionary::FILTER_HIGH_FREQUENCY.tag)?;
     let notch_filter_frequency =
-      get_optional_float(item, dictionary::NOTCH_FILTER_FREQUENCY.tag)?;
+      item.get_optional_float(dictionary::NOTCH_FILTER_FREQUENCY.tag)?;
     let notch_filter_bandwidth =
-      get_optional_float(item, dictionary::NOTCH_FILTER_BANDWIDTH.tag)?;
+      item.get_optional_float(dictionary::NOTCH_FILTER_BANDWIDTH.tag)?;
 
     let minimum_value = get_optional_stored_value(
       item,

@@ -15,10 +15,7 @@ use dcmfx_core::{
 use crate::encode;
 use crate::iods::channel_definition::ChannelDefinition;
 use crate::iods::coded_concept::CodedConcept;
-use crate::iods::{
-  get_optional_float, get_optional_stored_value, get_optional_string,
-  insert_stored_value,
-};
+use crate::iods::{get_optional_stored_value, insert_stored_value};
 
 /// Holds values of all of the data elements in the Waveform module, which
 /// describes multi-channel time-based digitized waveforms such as ECGs,
@@ -232,22 +229,21 @@ impl WaveformMultiplexGroup {
       item.get_float(dictionary::SAMPLING_FREQUENCY.tag)?;
 
     let time_offset =
-      get_optional_float(item, dictionary::MULTIPLEX_GROUP_TIME_OFFSET.tag)?;
+      item.get_optional_float(dictionary::MULTIPLEX_GROUP_TIME_OFFSET.tag)?;
 
     let trigger_time_offset =
-      get_optional_float(item, dictionary::TRIGGER_TIME_OFFSET.tag)?;
+      item.get_optional_float(dictionary::TRIGGER_TIME_OFFSET.tag)?;
 
     let trigger_sample_position =
-      if item.has(dictionary::TRIGGER_SAMPLE_POSITION.tag) {
-        Some(item.get_int::<u32>(dictionary::TRIGGER_SAMPLE_POSITION.tag)?)
-      } else {
-        None
-      };
+      item.get_optional_int::<u32>(dictionary::TRIGGER_SAMPLE_POSITION.tag)?;
 
-    let label =
-      get_optional_string(item, dictionary::MULTIPLEX_GROUP_LABEL.tag)?;
+    let label = item
+      .get_optional_string(dictionary::MULTIPLEX_GROUP_LABEL.tag)?
+      .map(String::from);
 
-    let uid = get_optional_string(item, dictionary::MULTIPLEX_GROUP_UID.tag)?;
+    let uid = item
+      .get_optional_string(dictionary::MULTIPLEX_GROUP_UID.tag)?
+      .map(String::from);
 
     let bits_allocated = WaveformBitsAllocated::from_data_set(item)?;
     let sample_interpretation =
