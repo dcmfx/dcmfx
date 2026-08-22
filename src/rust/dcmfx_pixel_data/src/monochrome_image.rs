@@ -2,7 +2,7 @@
 use alloc::{vec, vec::Vec};
 
 use crate::{
-  GrayscalePipeline,
+  GrayscalePipeline, PixelRect,
   iods::{
     image_pixel_module::BitsAllocated,
     voi_lut_module::{VoiLutFunction, VoiWindow},
@@ -489,6 +489,101 @@ impl MonochromeImage {
     self.height = height;
   }
 
+  /// Returns the range of stored values that this monochrome image's bits stored
+  /// and signedness are able to represent.
+  ///
+  pub fn stored_value_range(&self) -> core::ops::RangeInclusive<i64> {
+    if self.is_signed() {
+      -(1i64 << (self.bits_stored - 1))..=(1i64 << (self.bits_stored - 1)) - 1
+    } else {
+      0..=(1i64 << self.bits_stored) - 1
+    }
+  }
+
+  /// Sets every pixel in the specified rectangle to the stored value that is
+  /// displayed as black. Any part of the rectangle that falls outside this
+  /// image is ignored.
+  ///
+  pub fn black_out_rect(&mut self, rect: &PixelRect) {
+    let Some(rect) = rect.clamped_to_image(self.width, self.height) else {
+      return;
+    };
+
+    // The stored value in this monochrome image that is displayed as black
+    let black = {
+      let range = self.stored_value_range();
+
+      if self.is_monochrome1 {
+        *range.end()
+      } else {
+        *range.start()
+      }
+    };
+
+    /// Fills the rect in an image's pixel data with a stored value. Each row of
+    /// the rect is contiguous in memory because there's exactly one sample per
+    /// pixel.
+    ///
+    fn fill_rect<T: Copy>(
+      data: &mut [T],
+      image_width: u16,
+      rect: &PixelRect,
+      value: T,
+    ) {
+      for row in rect.top..(rect.bottom() as u16) {
+        let start =
+          usize::from(row) * usize::from(image_width) + usize::from(rect.left);
+        let end = start + usize::from(rect.width);
+
+        data[start..end].fill(value);
+      }
+    }
+
+    match &mut self.data {
+      // Set or clear the individual bits covered by the rect. A set bit holds
+      // the value 1 when unsigned and -1 when signed, so whether the black
+      // stored value is a set bit depends on the signedness as well as the
+      // photometric interpretation.
+      MonochromeImageData::Bitmap { data, .. } => {
+        let is_bit_set = black != 0;
+
+        for row in rect.top..(rect.bottom() as u16) {
+          let row_start = usize::from(row) * usize::from(self.width);
+          let first_bit = row_start + usize::from(rect.left);
+
+          for bit in first_bit..(first_bit + usize::from(rect.width)) {
+            let mask = 1u8 << (bit % 8);
+
+            if is_bit_set {
+              data[bit / 8] |= mask;
+            } else {
+              data[bit / 8] &= !mask;
+            }
+          }
+        }
+      }
+
+      MonochromeImageData::I8(data) => {
+        fill_rect(data, self.width, &rect, black as i8)
+      }
+      MonochromeImageData::U8(data) => {
+        fill_rect(data, self.width, &rect, black as u8)
+      }
+      MonochromeImageData::I16(data) => {
+        fill_rect(data, self.width, &rect, black as i16)
+      }
+      MonochromeImageData::U16(data) => {
+        fill_rect(data, self.width, &rect, black as u16)
+      }
+      MonochromeImageData::I32(data) => {
+        fill_rect(data, self.width, &rect, black as i32)
+      }
+      MonochromeImageData::U32(data) => {
+        fill_rect(data, self.width, &rect, black as u32)
+      }
+    }
+  }
+
   /// Converts this monochrome image to an 8-bit grayscale image by passing
   /// its values through the given grayscale LUT pipeline.
   ///
@@ -684,3 +779,104 @@ impl Iterator for StoredValues<'_> {
 }
 
 impl ExactSizeIterator for StoredValues<'_> {}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn black_out_rect_test() {
+    // MONOCHROME2 blacks out using the minimum stored value
+    let mut image =
+      MonochromeImage::new_u8(3, 3, vec![9; 9], 8, false).unwrap();
+    image.black_out_rect(&PixelRect::new(1, 1, 2, 2));
+    assert_eq!(
+      image.data(),
+      &MonochromeImageData::U8(vec![9, 9, 9, 9, 0, 0, 9, 0, 0])
+    );
+
+    // MONOCHROME1 blacks out using the maximum stored value
+    let mut image = MonochromeImage::new_u8(3, 3, vec![9; 9], 8, true).unwrap();
+    image.black_out_rect(&PixelRect::new(1, 1, 2, 2));
+    assert_eq!(
+      image.data(),
+      &MonochromeImageData::U8(vec![9, 9, 9, 9, 255, 255, 9, 255, 255])
+    );
+  }
+
+  #[test]
+  fn black_out_rect_uses_bits_stored_and_signedness_test() {
+    // Unsigned 12-bit MONOCHROME1 blacks out with 4095, not 65535
+    let mut image =
+      MonochromeImage::new_u16(2, 1, vec![9, 9], 12, true).unwrap();
+    image.black_out_rect(&PixelRect::new(0, 0, 2, 1));
+    assert_eq!(image.data(), &MonochromeImageData::U16(vec![4095, 4095]));
+
+    // Signed 12-bit MONOCHROME2 blacks out with -2048
+    let mut image =
+      MonochromeImage::new_i16(2, 1, vec![9, 9], 12, false).unwrap();
+    image.black_out_rect(&PixelRect::new(0, 0, 2, 1));
+    assert_eq!(image.data(), &MonochromeImageData::I16(vec![-2048, -2048]));
+
+    // Signed 12-bit MONOCHROME1 blacks out with 2047
+    let mut image =
+      MonochromeImage::new_i16(2, 1, vec![9, 9], 12, true).unwrap();
+    image.black_out_rect(&PixelRect::new(0, 0, 2, 1));
+    assert_eq!(image.data(), &MonochromeImageData::I16(vec![2047, 2047]));
+  }
+
+  #[test]
+  fn black_out_rect_bitmap_test() {
+    // In unsigned MONOCHROME2 data a set bit is white, so the bits covered by
+    // the rect are cleared
+    let mut image =
+      MonochromeImage::new_bitmap(4, 2, vec![0b11111111], false, false)
+        .unwrap();
+    image.black_out_rect(&PixelRect::new(1, 0, 2, 1));
+    assert_eq!(
+      image.data(),
+      &MonochromeImageData::Bitmap {
+        data: vec![0b11111001],
+        is_signed: false
+      }
+    );
+
+    // In unsigned MONOCHROME1 data a set bit is black
+    let mut image =
+      MonochromeImage::new_bitmap(4, 2, vec![0b00000000], false, true).unwrap();
+    image.black_out_rect(&PixelRect::new(1, 0, 2, 1));
+    assert_eq!(
+      image.data(),
+      &MonochromeImageData::Bitmap {
+        data: vec![0b00000110],
+        is_signed: false
+      }
+    );
+
+    // A set bit in signed data is -1, which reverses which bit value is black
+    let mut image =
+      MonochromeImage::new_bitmap(4, 2, vec![0b00000000], true, false).unwrap();
+    image.black_out_rect(&PixelRect::new(1, 0, 2, 1));
+    assert_eq!(
+      image.data(),
+      &MonochromeImageData::Bitmap {
+        data: vec![0b00000110],
+        is_signed: true
+      }
+    );
+  }
+
+  #[test]
+  fn black_out_rect_clamps_to_image_bounds_test() {
+    let mut image =
+      MonochromeImage::new_u8(2, 2, vec![9; 4], 8, false).unwrap();
+
+    // A rect that extends beyond the image is clipped to it
+    image.black_out_rect(&PixelRect::new(1, 1, 100, 100));
+    assert_eq!(image.data(), &MonochromeImageData::U8(vec![9, 9, 9, 0]));
+
+    // A rect that lies entirely outside the image does nothing
+    image.black_out_rect(&PixelRect::new(2, 0, 10, 10));
+    assert_eq!(image.data(), &MonochromeImageData::U8(vec![9, 9, 9, 0]));
+  }
+}

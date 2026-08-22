@@ -120,6 +120,23 @@ impl PaletteColorLookupTableModule {
     ]
   }
 
+  /// Returns the stored value in the given range that looks up to the color
+  /// closest to black. A palette isn't guaranteed to contain a true black, so
+  /// the darkest color it does contain is the best available result.
+  ///
+  pub fn darkest_stored_value(
+    &self,
+    stored_value_range: &core::ops::RangeInclusive<i64>,
+  ) -> i64 {
+    stored_value_range
+      .clone()
+      .min_by_key(|stored_value| {
+        let [red, green, blue] = self.lookup(*stored_value);
+        u32::from(red) + u32::from(green) + u32::from(blue)
+      })
+      .unwrap_or(*stored_value_range.start())
+  }
+
   /// Returns the maximum value that can be stored by any of the red, green or
   /// blue LUTs.
   ///

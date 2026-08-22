@@ -22,6 +22,7 @@ mod lookup_table;
 mod monochrome_image;
 mod pixel_data_frame;
 mod pixel_data_renderer;
+mod pixel_rect;
 pub mod standard_color_palettes;
 mod stored_value_output_cache;
 pub mod transforms;
@@ -35,6 +36,7 @@ pub use lookup_table::LookupTable;
 pub use monochrome_image::{MonochromeImage, MonochromeImageData};
 pub use pixel_data_frame::PixelDataFrame;
 pub use pixel_data_renderer::PixelDataRenderer;
+pub use pixel_rect::PixelRect;
 pub use standard_color_palettes::StandardColorPalette;
 pub use stored_value_output_cache::StoredValueOutputCache;
 

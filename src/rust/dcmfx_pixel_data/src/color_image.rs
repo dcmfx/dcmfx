@@ -4,6 +4,7 @@ use alloc::vec::Vec;
 use dcmfx_core::Rc;
 
 use crate::{
+  PixelRect,
   iods::{PaletteColorLookupTableModule, image_pixel_module::BitsAllocated},
   transforms::CropRect,
   utils::udiv_round,
@@ -614,6 +615,103 @@ impl ColorImage {
     self.height = height;
   }
 
+  /// Sets every pixel in the specified rectangle to black. Any part of the
+  /// rectangle that falls outside this image is ignored.
+  ///
+  /// If this color image is paletted, the available color in the palette
+  /// closest to black is used.
+  ///
+  pub fn black_out_rect(&mut self, rect: &PixelRect) {
+    let Some(rect) = rect.clamped_to_image(self.width, self.height) else {
+      return;
+    };
+
+    /// Fills the rect in an image's interleaved pixel data with a value. The
+    /// number of samples per pixel is taken from the length of `value`.
+    ///
+    fn fill_rect<T: Copy>(
+      data: &mut [T],
+      image_width: u16,
+      rect: &PixelRect,
+      value: &[T],
+    ) {
+      let samples_per_pixel = value.len();
+
+      for row in rect.top..(rect.bottom() as u16) {
+        let start = (usize::from(row) * usize::from(image_width)
+          + usize::from(rect.left))
+          * samples_per_pixel;
+        let end = start + usize::from(rect.width) * samples_per_pixel;
+
+        for pixel in data[start..end].chunks_exact_mut(samples_per_pixel) {
+          pixel.copy_from_slice(value);
+        }
+      }
+    }
+
+    // Returns the sample values that are displayed as black in the given color
+    // space
+    let black_samples = |color_space: ColorSpace| -> [u32; 3] {
+      let half_full_scale = 1u32 << (self.bits_stored - 1);
+
+      match color_space {
+        // The minimum sample value for each color plane represents the minimum
+        // intensity of that color
+        ColorSpace::Rgb => [0, 0, 0],
+
+        // Black is Y equal to zero, and the absence of color is both CB and CR
+        // equal to half full scale. Ref: PS3.5 C.7.6.3.1.2.
+        ColorSpace::Ybr { .. } => [0, half_full_scale, half_full_scale],
+      }
+    };
+
+    let max_storable_value = self.max_storable_value();
+
+    match &mut self.data {
+      ColorImageData::U8 { data, color_space } => {
+        let black = black_samples(*color_space);
+
+        fill_rect(
+          data,
+          self.width,
+          &rect,
+          &[black[0] as u8, black[1] as u8, black[2] as u8],
+        );
+      }
+
+      ColorImageData::U16 { data, color_space } => {
+        let black = black_samples(*color_space);
+
+        fill_rect(
+          data,
+          self.width,
+          &rect,
+          &[black[0] as u16, black[1] as u16, black[2] as u16],
+        );
+      }
+
+      ColorImageData::U32 { data, color_space } => {
+        let black = black_samples(*color_space);
+
+        fill_rect(data, self.width, &rect, &black);
+      }
+
+      ColorImageData::PaletteU8 { data, palette } => {
+        let index =
+          palette.darkest_stored_value(&(0..=i64::from(max_storable_value)));
+
+        fill_rect(data, self.width, &rect, &[index as u8]);
+      }
+
+      ColorImageData::PaletteU16 { data, palette } => {
+        let index =
+          palette.darkest_stored_value(&(0..=i64::from(max_storable_value)));
+
+        fill_rect(data, self.width, &rect, &[index as u16]);
+      }
+    }
+  }
+
   /// Converts this color image to an 8-bit RGB image.
   ///
   pub fn into_rgb_u8_image(
@@ -966,4 +1064,150 @@ fn rgb_to_ybr(r: f64, g: f64, b: f64) -> [f64; 3] {
   let cr = 0.5 * r - 0.418688 * g - 0.081312 * b + 0.5;
 
   [y.clamp(0.0, 1.0), cb.clamp(0.0, 1.0), cr.clamp(0.0, 1.0)]
+}
+
+#[cfg(test)]
+mod tests {
+  use dcmfx_core::{
+    DataElementValue, DataSet, IodModule, ValueRepresentation, dictionary,
+  };
+
+  use super::*;
+
+  #[test]
+  fn black_out_rect_rgb_test() {
+    let mut image =
+      ColorImage::new_u8(2, 1, vec![1, 2, 3, 4, 5, 6], ColorSpace::Rgb, 8)
+        .unwrap();
+
+    image.black_out_rect(&PixelRect::new(1, 0, 1, 1));
+
+    assert_eq!(
+      image.data(),
+      &ColorImageData::U8 {
+        data: vec![1, 2, 3, 0, 0, 0],
+        color_space: ColorSpace::Rgb
+      }
+    );
+
+    // Check that the row stride accounts for the three samples per pixel
+    let mut image = ColorImage::new_u8(
+      2,
+      2,
+      vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      ColorSpace::Rgb,
+      8,
+    )
+    .unwrap();
+
+    image.black_out_rect(&PixelRect::new(1, 1, 1, 1));
+
+    assert_eq!(
+      image.data(),
+      &ColorImageData::U8 {
+        data: vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0],
+        color_space: ColorSpace::Rgb
+      }
+    );
+  }
+
+  #[test]
+  fn black_out_rect_ybr_test() {
+    let color_space = ColorSpace::Ybr { is_422: false };
+
+    // Black in YBR is Y equal to zero with CB and CR at half full scale
+    let mut image =
+      ColorImage::new_u8(2, 1, vec![1, 2, 3, 4, 5, 6], color_space, 8).unwrap();
+
+    image.black_out_rect(&PixelRect::new(0, 0, 2, 1));
+
+    assert_eq!(
+      image.data(),
+      &ColorImageData::U8 {
+        data: vec![0, 128, 128, 0, 128, 128],
+        color_space
+      }
+    );
+
+    // Half full scale depends on the bits stored
+    let mut image =
+      ColorImage::new_u16(1, 1, vec![1, 2, 3], color_space, 12).unwrap();
+
+    image.black_out_rect(&PixelRect::new(0, 0, 1, 1));
+
+    assert_eq!(
+      image.data(),
+      &ColorImageData::U16 {
+        data: vec![0, 2048, 2048],
+        color_space
+      }
+    );
+  }
+
+  #[test]
+  fn black_out_rect_palette_test() {
+    let palette = Rc::new(palette_color_lookup_table_module());
+
+    let mut image =
+      ColorImage::new_palette8(2, 2, vec![0, 1, 2, 2], palette.clone(), 2)
+        .unwrap();
+
+    image.black_out_rect(&PixelRect::new(0, 0, 2, 1));
+
+    // Entry 3 is the darkest entry in the palette, so it's the one used for the
+    // blacked out pixels
+    assert_eq!(
+      image.data(),
+      &ColorImageData::PaletteU8 {
+        data: vec![3, 3, 2, 2],
+        palette
+      }
+    );
+  }
+
+  /// Returns a palette with four 8-bit entries, the last of which is black.
+  ///
+  fn palette_color_lookup_table_module() -> PaletteColorLookupTableModule {
+    let mut data_set = DataSet::new();
+
+    let luts = [
+      (
+        dictionary::RED_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
+        dictionary::RED_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
+        vec![200u8, 10, 255, 0],
+      ),
+      (
+        dictionary::GREEN_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
+        dictionary::GREEN_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
+        vec![200u8, 20, 255, 0],
+      ),
+      (
+        dictionary::BLUE_PALETTE_COLOR_LOOKUP_TABLE_DESCRIPTOR.tag,
+        dictionary::BLUE_PALETTE_COLOR_LOOKUP_TABLE_DATA.tag,
+        vec![200u8, 30, 255, 0],
+      ),
+    ];
+
+    for (descriptor_tag, data_tag, entries) in luts {
+      // Four entries, a first input value of zero, and eight bits per entry
+      data_set.insert(
+        descriptor_tag,
+        DataElementValue::new_lookup_table_descriptor(
+          ValueRepresentation::UnsignedShort,
+          vec![4, 0, 0, 0, 8, 0].into(),
+        )
+        .unwrap(),
+      );
+      data_set.insert(
+        data_tag,
+        DataElementValue::new_binary(
+          ValueRepresentation::OtherWordString,
+          entries.into(),
+        )
+        .unwrap(),
+      );
+    }
+
+    PaletteColorLookupTableModule::from_data_set(&data_set).unwrap()
+  }
 }
