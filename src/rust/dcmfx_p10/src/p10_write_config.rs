@@ -10,6 +10,7 @@ pub struct P10WriteConfig {
   pub(crate) implementation_class_uid: String,
   pub(crate) implementation_version_name: String,
   pub(crate) zlib_compression_level: u32,
+  pub(crate) omit_file_header: bool,
 }
 
 impl Default for P10WriteConfig {
@@ -20,6 +21,7 @@ impl Default for P10WriteConfig {
       implementation_version_name: uids::DCMFX_IMPLEMENTATION_VERSION_NAME
         .to_string(),
       zlib_compression_level: 6,
+      omit_file_header: false,
     }
   }
 }
@@ -57,6 +59,22 @@ impl P10WriteConfig {
   ///
   pub fn zlib_compression_level(mut self, value: u32) -> Self {
     self.zlib_compression_level = value.clamp(0, 9);
+    self
+  }
+
+  /// Whether to omit the File Preamble, 'DICM' prefix, and File Meta
+  /// Information from serialized DICOM P10 data, writing only the raw data
+  /// set content that follows them.
+  ///
+  /// The transfer syntax is still read out of the File Meta Information token
+  /// when it's written to the context, as it's needed to correctly serialize
+  /// the data set tokens that follow, but no File Meta Information bytes are
+  /// emitted into the output.
+  ///
+  /// Default: `false`.
+  ///
+  pub fn omit_file_header(mut self, value: bool) -> Self {
+    self.omit_file_header = value;
     self
   }
 }

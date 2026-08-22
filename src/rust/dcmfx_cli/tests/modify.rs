@@ -236,6 +236,22 @@ fn errors_on_missing_file() {
 }
 
 #[test]
+fn errors_on_omit_file_header_with_in_place() {
+  let assert = dcmfx_cli()
+    .arg("modify")
+    .arg("--omit-file-header")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(
+    "errors_on_omit_file_header_with_in_place",
+    get_stderr(assert)
+  );
+}
+
+#[test]
 fn errors_on_photometric_interpretation_monochrome_without_transfer_syntax() {
   let assert = dcmfx_cli()
     .arg("modify")
@@ -396,6 +412,52 @@ fn delete_private_tags() {
     .success();
 
   assert_snapshot!("delete_private_tags_after", get_stdout(assert));
+}
+
+#[test]
+fn modify_omit_file_header() {
+  let temp_dir = create_temp_dir();
+  let input_file = "../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm";
+  let full_output_file = temp_dir.path().join("full_output.dcm");
+  let bare_output_file = temp_dir.path().join("bare_output.raw");
+
+  dcmfx_cli()
+    .arg("modify")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg(&full_output_file)
+    .assert()
+    .success();
+
+  dcmfx_cli()
+    .arg("modify")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg(&bare_output_file)
+    .arg("--omit-file-header")
+    .assert()
+    .success();
+
+  let full_output = std::fs::read(&full_output_file).unwrap();
+  let bare_output = std::fs::read(&bare_output_file).unwrap();
+
+  // Sanity check that the full output is a normal P10 file, i.e. that our
+  // baseline to compare against is actually meaningful
+  assert_eq!(&full_output[128..132], b"DICM");
+
+  // The File Meta Information Group Length element's value gives the exact
+  // byte length of the rest of the File Meta Information that follows it, so
+  // it precisely determines where the data set starts. This is always at a
+  // fixed offset: 128-byte preamble + 4-byte 'DICM' prefix + 12 bytes for the
+  // group length element itself (4-byte tag + 2-byte VR + 2-byte length +
+  // 4-byte value).
+  let group_length =
+    u32::from_le_bytes(full_output[140..144].try_into().unwrap());
+  let header_length = 144 + group_length as usize;
+
+  // The bare output should be exactly the data set bytes that follow the P10
+  // file header, with nothing added, removed, or altered
+  assert_eq!(bare_output, full_output[header_length..]);
 }
 
 #[test]

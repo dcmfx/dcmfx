@@ -117,10 +117,21 @@ impl P10WriteContext {
 
         self.transfer_syntax = new_transfer_syntax;
 
-        let token_bytes = self.token_to_bytes(token)?;
-        self.p10_total_byte_count += token_bytes.len() as u64;
-        self.p10_bytes.push(token_bytes);
+        if !self.config.omit_file_header {
+          let token_bytes = self.token_to_bytes(token)?;
+          self.p10_total_byte_count += token_bytes.len() as u64;
+          self.p10_bytes.push(token_bytes);
+        }
 
+        Ok(())
+      }
+
+      // The File Preamble and 'DICM' prefix are omitted from the output when
+      // configured to do so, as they only have meaning as part of the P10
+      // file wrapper around the data set
+      P10Token::FilePreambleAndDICMPrefix { .. }
+        if self.config.omit_file_header =>
+      {
         Ok(())
       }
 

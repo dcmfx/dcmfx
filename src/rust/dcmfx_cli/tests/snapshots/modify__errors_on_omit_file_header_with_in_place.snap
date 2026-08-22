@@ -1,0 +1,5 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+---
+Error: --omit-file-header can't be used with --in-place, as the result would no longer be a valid DICOM P10 file
