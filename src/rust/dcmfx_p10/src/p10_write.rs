@@ -89,6 +89,14 @@ impl P10WriteContext {
     }
 
     match token {
+      // When the DICOM header isn't being written, skip the File Preamble and
+      // 'DICM' prefix altogether
+      P10Token::FilePreambleAndDICMPrefix { .. }
+        if !self.config.write_dicom_header =>
+      {
+        Ok(())
+      }
+
       // When the File Meta Information token is received, check it for a
       // transfer syntax value that should be put onto the write context, and
       // start a zlib compressor if the transfer syntax is deflated
@@ -117,9 +125,11 @@ impl P10WriteContext {
 
         self.transfer_syntax = new_transfer_syntax;
 
-        let token_bytes = self.token_to_bytes(token)?;
-        self.p10_total_byte_count += token_bytes.len() as u64;
-        self.p10_bytes.push(token_bytes);
+        if self.config.write_dicom_header {
+          let token_bytes = self.token_to_bytes(token)?;
+          self.p10_total_byte_count += token_bytes.len() as u64;
+          self.p10_bytes.push(token_bytes);
+        }
 
         Ok(())
       }

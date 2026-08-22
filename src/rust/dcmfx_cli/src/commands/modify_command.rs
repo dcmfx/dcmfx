@@ -89,6 +89,19 @@ pub struct ModifyArgs {
 
   #[arg(
     long,
+    help_heading = "Output",
+    help = "Don't write the DICOM header, i.e. the File Preamble, the 'DICM' \
+      prefix, and the File Meta Information, to output DICOM P10 files. The \
+      output will contain only the main data set.\n\
+      \n\
+      Note that output written without a DICOM header doesn't specify its \
+      transfer syntax, so readers will need to be told which one to use.",
+    default_value_t = false
+  )]
+  omit_dicom_header: bool,
+
+  #[arg(
+    long,
     help_heading = "Data Set Content",
     help = "A DICOM JSON data set to merge into the output DICOM P10 data \
       sets. If this specifies data elements already present in the input data \
@@ -312,6 +325,14 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
     return Err(());
   }
 
+  if args.omit_dicom_header && args.in_place {
+    eprintln!(
+      "Error: --omit-dicom-header can't be used with --in-place, as the \
+       result would no longer be a valid DICOM P10 file"
+    );
+    return Err(());
+  }
+
   if args.transfer_syntax.is_none() {
     if args.photometric_interpretation_monochrome.is_some() {
       eprintln!(
@@ -487,7 +508,8 @@ async fn modify_input_source(
   // Setup write config
   let write_config = P10WriteConfig::default()
     .implementation_version_name(args.implementation_version_name.clone())
-    .zlib_compression_level(args.zlib_compression_level);
+    .zlib_compression_level(args.zlib_compression_level)
+    .write_dicom_header(!args.omit_dicom_header);
 
   let mut input_stream = input_source
     .open_read_stream()

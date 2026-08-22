@@ -399,6 +399,44 @@ fn delete_private_tags() {
 }
 
 #[test]
+fn modify_omit_dicom_header() {
+  let temp_dir = create_temp_dir();
+  let input_file = "../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm";
+  let full_output_file = temp_dir.path().join("full_output.dcm");
+  let bare_output_file = temp_dir.path().join("bare_output.raw");
+
+  dcmfx_cli()
+    .arg("modify")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg(&full_output_file)
+    .assert()
+    .success();
+
+  dcmfx_cli()
+    .arg("modify")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg(&bare_output_file)
+    .arg("--omit-dicom-header")
+    .assert()
+    .success();
+
+  let full_output = std::fs::read(&full_output_file).unwrap();
+  let bare_output = std::fs::read(&bare_output_file).unwrap();
+
+  // The File Meta Information Group Length element's value gives the exact
+  // byte length of the rest of the File Meta Information that follows it, so
+  // it precisely determines where the data set starts.
+  let group_length =
+    u32::from_le_bytes(full_output[140..144].try_into().unwrap());
+  let header_length = 144 + group_length as usize;
+
+  // The bare output should be exactly match to the rest of the normal file
+  assert_eq!(bare_output, full_output[header_length..]);
+}
+
+#[test]
 fn dicom_sr_explicit_vr_little_endian_to_implicit_vr_little_endian() {
   modify_transfer_syntax(
     "../../../test/assets/pydicom/test_files/test-SR.dcm",

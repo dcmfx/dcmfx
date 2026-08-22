@@ -10,6 +10,7 @@ pub struct P10WriteConfig {
   pub(crate) implementation_class_uid: String,
   pub(crate) implementation_version_name: String,
   pub(crate) zlib_compression_level: u32,
+  pub(crate) write_dicom_header: bool,
 }
 
 impl Default for P10WriteConfig {
@@ -20,6 +21,7 @@ impl Default for P10WriteConfig {
       implementation_version_name: uids::DCMFX_IMPLEMENTATION_VERSION_NAME
         .to_string(),
       zlib_compression_level: 6,
+      write_dicom_header: true,
     }
   }
 }
@@ -57,6 +59,21 @@ impl P10WriteConfig {
   ///
   pub fn zlib_compression_level(mut self, value: u32) -> Self {
     self.zlib_compression_level = value.clamp(0, 9);
+    self
+  }
+
+  /// Whether to write the DICOM header, i.e. the File Preamble, the 'DICM'
+  /// prefix, and the File Meta Information, to the output DICOM P10 data.
+  ///
+  /// When this is set to `false` the output contains only the main data set,
+  /// serialized using the transfer syntax specified in the File Meta
+  /// Information. Note that such output does not itself specify its transfer
+  /// syntax, so readers will need to be told which one to use.
+  ///
+  /// Default: `true`.
+  ///
+  pub fn write_dicom_header(mut self, value: bool) -> Self {
+    self.write_dicom_header = value;
     self
   }
 }
