@@ -29,6 +29,13 @@ jobs:
           gleam-version: 1.18.1
           version-type: strict
 
+      - name: Cache Gleam packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/gleam
+          key: gleam-src-${{ runner.os }}-${{ hashFiles('src/gleam/*/manifest.toml') }}
+          restore-keys: gleam-src-${{ runner.os }}-
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -254,6 +261,13 @@ jobs:
           otp-version: 28.5
           gleam-version: 1.18.1
           version-type: strict
+
+      - name: Cache Gleam packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/gleam
+          key: gleam-examples-${{ runner.os }}-${{ hashFiles('src/gleam/*/manifest.toml', 'examples/*/gleam/manifest.toml') }}
+          restore-keys: gleam-examples-${{ runner.os }}-
 
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
