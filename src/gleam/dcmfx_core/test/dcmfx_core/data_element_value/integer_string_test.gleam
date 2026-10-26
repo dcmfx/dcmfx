@@ -10,6 +10,10 @@ pub fn from_bytes_test() {
 
   assert integer_string.from_bytes(<<"  1\\2 ">>) == Ok([1, 2])
 
+  assert integer_string.from_bytes(<<"+">>) == Ok([0])
+
+  assert integer_string.from_bytes(<<"-\\1">>) == Ok([0, 1])
+
   assert integer_string.from_bytes(<<0xD0>>)
     == Error(data_error.new_value_invalid("IntegerString is invalid UTF-8"))
 

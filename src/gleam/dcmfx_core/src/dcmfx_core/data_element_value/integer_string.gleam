@@ -27,7 +27,13 @@ pub fn from_bytes(bytes: BitArray) -> Result(List(Int), DataError) {
   |> string.split("\\")
   |> list.map(string.trim)
   |> list.filter(fn(s) { !string.is_empty(s) })
-  |> list.map(int.parse)
+  |> list.map(fn(s) {
+    // A bare sign with no digits is treated as zero
+    case s {
+      "+" | "-" -> Ok(0)
+      _ -> int.parse(s)
+    }
+  })
   |> result.all
   |> result.map_error(fn(_) {
     data_error.new_value_invalid(

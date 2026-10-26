@@ -22,7 +22,14 @@ pub fn from_bytes(bytes: &[u8]) -> Result<Vec<i32>, DataError> {
     .split('\\')
     .map(|s| s.trim())
     .filter(|s| !s.is_empty())
-    .map(|s| s.parse::<i32>())
+    .map(|s| {
+      // A bare sign with no digits is treated as zero
+      if s == "+" || s == "-" {
+        Ok(0)
+      } else {
+        s.parse::<i32>()
+      }
+    })
     .collect::<Result<Vec<i32>, _>>()
     .map_err(|_| {
       DataError::new_value_invalid(format!(
@@ -64,6 +71,10 @@ mod tests {
     assert_eq!(from_bytes(b" 1"), Ok(vec![1]));
 
     assert_eq!(from_bytes(b" 1\\2 "), Ok(vec![1, 2]));
+
+    assert_eq!(from_bytes(b"+"), Ok(vec![0]));
+
+    assert_eq!(from_bytes(b"-\\1"), Ok(vec![0, 1]));
 
     assert_eq!(
       from_bytes(&[0xD0]),
