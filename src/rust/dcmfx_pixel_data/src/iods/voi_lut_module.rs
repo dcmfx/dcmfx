@@ -160,7 +160,7 @@ impl VoiWindow {
     // Read VOI LUT Function without regard for the specified VR. This makes it
     // readable evevn if the VR is 'OB', which is out of spec but has been
     // observed in the wild from Siemens AXIOM-Artis modalities.
-    let functions = if let Ok(bytes) =
+    let function = if let Ok(bytes) =
       data_set.get_value_bytes(dictionary::VOILUT_FUNCTION.tag)
     {
       let value = DataElementValue::new_binary_unchecked(
@@ -168,19 +168,15 @@ impl VoiWindow {
         bytes.clone(),
       );
 
-      value
-        .get_strings()?
-        .into_iter()
-        .map(|s| s.to_string())
-        .collect()
+      match value.get_optional_string()? {
+        Some(function) => VoiLutFunction::from_string(function)?,
+        None => VoiLutFunction::Linear,
+      }
     } else {
-      vec!["LINEAR".to_string(); centers.len()]
+      VoiLutFunction::Linear
     };
 
-    if centers.len() != widths.len()
-      || centers.len() != explanations.len()
-      || centers.len() != functions.len()
-    {
+    if centers.len() != widths.len() || centers.len() != explanations.len() {
       return Err(DataError::new_value_invalid(
         "The number of VOI window widths, centers, and explanations is \
          inconsistent"
@@ -194,7 +190,6 @@ impl VoiWindow {
       let center = centers[i] as f32;
       let width = widths[i] as f32;
       let explanation = explanations[i].to_string();
-      let function = VoiLutFunction::from_string(&functions[i])?;
 
       windows.push(VoiWindow::new(center, width, explanation, function));
     }
@@ -348,6 +343,58 @@ mod tests {
     assert_eq!(window.compute(1800.0), 0.3100255);
 
     assert_eq!(window.compute(1000000000.0), 1.0);
+  }
+
+  #[test]
+  fn single_voi_lut_function_applies_to_all_windows() {
+    let mut data_set = DataSet::new();
+    data_set
+      .insert_float_value(&dictionary::WINDOW_CENTER, &[2205.0, 2173.0, 2244.0])
+      .unwrap();
+    data_set
+      .insert_float_value(&dictionary::WINDOW_WIDTH, &[707.0, 634.0, 797.0])
+      .unwrap();
+    data_set
+      .insert_string_value(
+        &dictionary::WINDOW_CENTER_WIDTH_EXPLANATION,
+        &["NORMAL", "HARDER", "SOFTER"],
+      )
+      .unwrap();
+    data_set
+      .insert_string_value(&dictionary::VOILUT_FUNCTION, &["SIGMOID"])
+      .unwrap();
+
+    let windows = VoiWindow::from_data_set(&data_set).unwrap();
+
+    assert_eq!(windows.len(), 3);
+    assert!(
+      windows
+        .iter()
+        .all(|window| window.function == VoiLutFunction::Sigmoid)
+    );
+  }
+
+  #[test]
+  fn zero_length_voi_lut_function_is_linear() {
+    let mut data_set = DataSet::new();
+    data_set
+      .insert_float_value(&dictionary::WINDOW_CENTER, &[40.0, 400.0])
+      .unwrap();
+    data_set
+      .insert_float_value(&dictionary::WINDOW_WIDTH, &[80.0, 2000.0])
+      .unwrap();
+    data_set
+      .insert_string_value(&dictionary::VOILUT_FUNCTION, &[""])
+      .unwrap();
+
+    let windows = VoiWindow::from_data_set(&data_set).unwrap();
+
+    assert_eq!(windows.len(), 2);
+    assert!(
+      windows
+        .iter()
+        .all(|window| window.function == VoiLutFunction::Linear)
+    );
   }
 
   #[test]
