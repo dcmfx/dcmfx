@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx_waveform"
-version = "0.52.1"
+version = "0.52.2"
 description = "DCMfx waveform library"
 
 repository.workspace = true
