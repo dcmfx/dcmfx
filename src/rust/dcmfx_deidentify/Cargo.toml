@@ -1,0 +1,27 @@
+[package]
+name = "dcmfx_deidentify"
+version = "0.52.2"
+description = "DCMfx de-identification library"
+
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+
+[dependencies]
+bytes = { version = "1.12.1", default-features = false }
+dcmfx_core = { path = "../dcmfx_core", default-features = false }
+dcmfx_p10 = { path = "../dcmfx_p10", default-features = false }
+sha2 = { version = "0.11.0", default-features = false }
+
+# wasm32-unknown-unknown has no entropy source, so random UID secrets aren't
+# available there and a secret must be supplied explicitly
+[target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
+getrandom = { version = "0.4.2", optional = true }
+
+[features]
+default = ["std"]
+std = ["bytes/std", "dcmfx_core/std", "dcmfx_p10/std", "dep:getrandom"]

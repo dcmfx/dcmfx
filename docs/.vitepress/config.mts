@@ -76,8 +76,8 @@ export default defineConfig({
                 link: "/libraries/examples/dicom-json-write",
               },
               {
-                text: "Anonymize DICOM",
-                link: "/libraries/examples/dicom-anonymize",
+                text: "De-identify DICOM",
+                link: "/libraries/examples/dicom-deidentify",
               },
               {
                 text: "Read DICOM Pixel Data",

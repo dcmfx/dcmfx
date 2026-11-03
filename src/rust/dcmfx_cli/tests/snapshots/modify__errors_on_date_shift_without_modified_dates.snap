@@ -1,0 +1,5 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+---
+Error: The --deidentify-date-shift option is only valid when the retain-modified-dates de-identify option is specified

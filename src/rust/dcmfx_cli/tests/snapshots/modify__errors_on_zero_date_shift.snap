@@ -1,0 +1,5 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+---
+Error: The --deidentify-date-shift option must not be zero, as that would leave dates unmodified while recording them as modified

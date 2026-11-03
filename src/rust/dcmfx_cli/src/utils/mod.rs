@@ -17,8 +17,9 @@ use futures::stream::StreamExt;
 /// Each task runs on its own thread taken from the async runtime's blocking
 /// thread pool, which allows all available cores to be used.
 ///
-/// Returns an error as soon as any of the tasks return an error. Tasks that are
-/// still in-flight at that time continue running until they complete.
+/// Returns the first error returned by a task, once the tasks that were
+/// in-flight at that time have completed so that their outputs are finished.
+/// No further tasks are started after an error.
 ///
 pub async fn run_tasks<InputStream, Item, F, Fut, E>(
   task_count: usize,
@@ -41,6 +42,7 @@ where
   let mut inputs_exhausted = false;
 
   let mut tasks = tokio::task::JoinSet::new();
+  let mut first_error: Option<E> = None;
 
   loop {
     // Start new tasks until the task count is reached or there are no further
@@ -60,11 +62,25 @@ where
 
     match tasks.join_next().await {
       Some(Ok(Ok(()))) => (),
-      Some(Ok(Err(e))) => return Err(e),
+
+      // On an error no further inputs are started, and the tasks that are
+      // in-flight are allowed to finish so that their outputs are completed
+      Some(Ok(Err(e))) => {
+        if first_error.is_none() {
+          first_error = Some(e);
+        }
+        inputs_exhausted = true;
+      }
+
       Some(Err(e)) => std::panic::resume_unwind(e.into_panic()),
 
       // There are no tasks left to run, so all inputs have been processed
-      None => return Ok(()),
+      None => {
+        return match first_error {
+          Some(e) => Err(e),
+          None => Ok(()),
+        };
+      }
     }
   }
 }

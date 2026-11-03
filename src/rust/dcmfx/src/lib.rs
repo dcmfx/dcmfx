@@ -4,13 +4,14 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-/// Anonymization of data sets by removing data elements that identify the
-/// patient, or potentially contribute to identification of the patient.
+/// De-identification of data sets and streams of DICOM P10 tokens following the
+/// Basic Application Level Confidentiality Profile defined in DICOM PS3.15
+/// Annex E, with support for several of the profile's options.
 ///
-/// This module is a re-export of the `dcmfx_anonymize` crate.
+/// This module is a re-export of the `dcmfx_deidentify` crate.
 ///
-pub mod anonymize {
-  pub use dcmfx_anonymize::*;
+pub mod deidentify {
+  pub use dcmfx_deidentify::*;
 }
 
 /// Provides core DICOM concepts including data sets, data elements, value

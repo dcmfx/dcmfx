@@ -14,7 +14,7 @@ keywords.workspace = true
 
 [dependencies]
 bytes = "1.12.1"
-dcmfx_anonymize = { path = "../dcmfx_anonymize", default-features = false }
+dcmfx_deidentify = { path = "../dcmfx_deidentify", default-features = false }
 dcmfx_character_set = { path = "../dcmfx_character_set", default-features = false }
 dcmfx_core = { path = "../dcmfx_core", default-features = false }
 dcmfx_json = { path = "../dcmfx_json", default-features = false }
@@ -37,7 +37,7 @@ tokio = { version = "1.53.1", features = ["macros"] }
 [features]
 default = ["std", "pixel_data_native"]
 std = [
-  "dcmfx_anonymize/std",
+  "dcmfx_deidentify/std",
   "dcmfx_character_set/std",
   "dcmfx_core/std",
   "dcmfx_json/std",

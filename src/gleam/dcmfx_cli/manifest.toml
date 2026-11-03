@@ -10,7 +10,6 @@ packages = [
   { name = "argv", version = "1.1.0", build_tools = ["gleam"], requirements = [], otp_app = "argv", source = "hex", outer_checksum = "3277D100448BDB4A29B6D58C0F36F631CBC349E8BDD09766C6309DF202831140" },
   { name = "bigi", version = "4.1.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "bigi", source = "hex", outer_checksum = "44FEDF1DF5C1F426A80B67C32B976D0828D66524E11BDC2DD22B78D37C883BA7" },
   { name = "birl", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_regexp", "gleam_stdlib", "gleam_time", "ranger"], otp_app = "birl", source = "hex", outer_checksum = "51F9D18050231ED8A324A5A87C07F2582E22C1CA8BBDEC213623A7B39AF060F1" },
-  { name = "dcmfx_anonymize", version = "0.52.2", build_tools = ["gleam"], requirements = ["dcmfx_core", "gleam_stdlib"], source = "local", path = "../dcmfx_anonymize" },
   { name = "dcmfx_character_set", version = "0.52.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], source = "local", path = "../dcmfx_character_set" },
   { name = "dcmfx_core", version = "0.52.2", build_tools = ["gleam"], requirements = ["bigi", "envoy", "gleam_regexp", "gleam_stdlib", "ieee_float", "term_size"], source = "local", path = "../dcmfx_core" },
   { name = "dcmfx_json", version = "0.52.2", build_tools = ["gleam"], requirements = ["bigi", "dcmfx_core", "dcmfx_p10", "gleam_json", "gleam_stdlib", "ieee_float"], source = "local", path = "../dcmfx_json" },
@@ -39,7 +38,6 @@ packages = [
 [requirements]
 argv = { version = ">= 1.0.2 and < 2.0.0" }
 birl = { version = ">= 2.0.0 and < 3.0.0" }
-dcmfx_anonymize = { path = "../dcmfx_anonymize" }
 dcmfx_character_set = { path = "../dcmfx_character_set" }
 dcmfx_core = { path = "../dcmfx_core" }
 dcmfx_json = { path = "../dcmfx_json" }

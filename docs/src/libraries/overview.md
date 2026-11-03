@@ -20,8 +20,12 @@ The internal libraries that make up DCMfx are:
   from a DICOM data set and streams of DICOM P10 data. The Rust version also
   supports decoding and encoding pixel data.
 
-- **`dcmfx_anonymize` / `dcmfx::anonymize`**. Anonymizes the data elements in a
-  DICOM data set or stream of DICOM P10 data.
+- **`dcmfx_deidentify` / `dcmfx::deidentify`**. De-identifies a DICOM data set or
+  stream of DICOM P10 data following the Basic Application Level
+  Confidentiality Profile defined in DICOM PS3.15 Annex E, with support for
+  the profile's options that retain patient characteristics, device identity,
+  institution identity, UIDs, and longitudinal temporal information, and that
+  clean structured content. This library is only available in Rust.
 
 See the [examples](./examples/) section for code examples showing how to perform
 common tasks using the DCMfx libraries.

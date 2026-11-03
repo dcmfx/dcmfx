@@ -9,14 +9,16 @@ for dir in dicom_*; do
   echo ""
   echo "Testing $dir …"
 
-  cd $dir/gleam
-  gleam format --check .
-  gleam run --target erlang
-  gleam run --target javascript --runtime node
-  gleam run --target javascript --runtime deno
-  gleam run --target javascript --runtime bun
+  if [ -d "$dir/gleam" ]; then
+    cd $dir/gleam
+    gleam format --check .
+    gleam run --target erlang
+    gleam run --target javascript --runtime node
+    gleam run --target javascript --runtime deno
+    gleam run --target javascript --runtime bun
 
-  cd ../..
+    cd ../..
+  fi
 
   cargo run --locked -p $dir
 done

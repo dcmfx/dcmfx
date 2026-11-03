@@ -22969,7 +22969,12 @@ pub const underlined = Item(
   vm_1,
 )
 
-pub const bold = Item(DataElementTag(0x0070, 0x0249), "Bold", [CodeString], vm_1)
+pub const bold = Item(
+  DataElementTag(0x0070, 0x0249),
+  "Bold",
+  [CodeString],
+  vm_1,
+)
 
 pub const italic = Item(
   DataElementTag(0x0070, 0x0250),
@@ -23349,7 +23354,12 @@ pub const input_sequence_position_index = Item(
   vm_1,
 )
 
-pub const crop = Item(DataElementTag(0x0070, 0x1204), "Crop", [CodeString], vm_1)
+pub const crop = Item(
+  DataElementTag(0x0070, 0x1204),
+  "Crop",
+  [CodeString],
+  vm_1,
+)
 
 pub const cropping_specification_index = Item(
   DataElementTag(0x0070, 0x1205),
@@ -26347,7 +26357,12 @@ pub const max_density = Item(
   vm_1,
 )
 
-pub const trim = Item(DataElementTag(0x2010, 0x0140), "Trim", [CodeString], vm_1)
+pub const trim = Item(
+  DataElementTag(0x2010, 0x0140),
+  "Trim",
+  [CodeString],
+  vm_1,
+)
 
 pub const configuration_information = Item(
   DataElementTag(0x2010, 0x0150),
@@ -35936,6 +35951,1266 @@ pub const sequence_delimitation_item = Item(
 
 /// Returns details for a data element in group 0x0002.
 ///
+pub const principal_diagnosis_code_sequence = Item(
+  DataElementTag(0x0008, 0x1301),
+  "Principal Diagnosis Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const primary_diagnosis_code_sequence = Item(
+  DataElementTag(0x0008, 0x1302),
+  "Primary Diagnosis Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const secondary_diagnoses_code_sequence = Item(
+  DataElementTag(0x0008, 0x1303),
+  "Secondary Diagnoses Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const histological_diagnoses_code_sequence = Item(
+  DataElementTag(0x0008, 0x1304),
+  "Histological Diagnoses Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const person_names_to_use_sequence = Item(
+  DataElementTag(0x0010, 0x0011),
+  "Person Names to Use Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const name_to_use = Item(
+  DataElementTag(0x0010, 0x0012),
+  "Name to Use",
+  [LongText],
+  vm_1,
+)
+
+pub const name_to_use_comment = Item(
+  DataElementTag(0x0010, 0x0013),
+  "Name to Use Comment",
+  [UnlimitedText],
+  vm_1,
+)
+
+pub const third_person_pronouns_sequence = Item(
+  DataElementTag(0x0010, 0x0014),
+  "Third Person Pronouns Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const pronoun_code_sequence = Item(
+  DataElementTag(0x0010, 0x0015),
+  "Pronoun Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const pronoun_comment = Item(
+  DataElementTag(0x0010, 0x0016),
+  "Pronoun Comment",
+  [UnlimitedText],
+  vm_1,
+)
+
+pub const gender_identity_sequence = Item(
+  DataElementTag(0x0010, 0x0041),
+  "Gender Identity Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const sex_parameters_for_clinical_use_category_comment = Item(
+  DataElementTag(0x0010, 0x0042),
+  "Sex Parameters for Clinical Use Category Comment",
+  [UnlimitedText],
+  vm_1,
+)
+
+pub const sex_parameters_for_clinical_use_category_sequence = Item(
+  DataElementTag(0x0010, 0x0043),
+  "Sex Parameters for Clinical Use Category Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const gender_identity_code_sequence = Item(
+  DataElementTag(0x0010, 0x0044),
+  "Gender Identity Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const gender_identity_comment = Item(
+  DataElementTag(0x0010, 0x0045),
+  "Gender Identity Comment",
+  [UnlimitedText],
+  vm_1,
+)
+
+pub const sex_parameters_for_clinical_use_category_code_sequence = Item(
+  DataElementTag(0x0010, 0x0046),
+  "Sex Parameters for Clinical Use Category Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const sex_parameters_for_clinical_use_category_reference = Item(
+  DataElementTag(0x0010, 0x0047),
+  "Sex Parameters for Clinical Use Category Reference",
+  [UniversalResourceIdentifier],
+  vm_1_to_n,
+)
+
+pub const ethnic_group_code_sequence = Item(
+  DataElementTag(0x0010, 0x2161),
+  "Ethnic Group Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const ethnic_groups = Item(
+  DataElementTag(0x0010, 0x2162),
+  "Ethnic Groups",
+  [UnlimitedCharacters],
+  vm_1_to_n,
+)
+
+pub const effective_start_date_time = Item(
+  DataElementTag(0x0040, 0xA034),
+  "Effective Start DateTime",
+  [DateTime],
+  vm_1,
+)
+
+pub const effective_stop_date_time = Item(
+  DataElementTag(0x0040, 0xA035),
+  "Effective Stop DateTime",
+  [DateTime],
+  vm_1,
+)
+
+pub const annotation_date_time = Item(
+  DataElementTag(0x0040, 0xB034),
+  "Annotation DateTime",
+  [DateTime],
+  vm_1,
+)
+
+pub const segment_definition_date_time = Item(
+  DataElementTag(0x0040, 0xB036),
+  "Segment Definition DateTime",
+  [DateTime],
+  vm_1,
+)
+
+pub const montage_name = Item(
+  DataElementTag(0x0040, 0xB03B),
+  "Montage Name",
+  [LongText],
+  vm_1,
+)
+
+pub const montage_channel_label = Item(
+  DataElementTag(0x0040, 0xB03F),
+  "Montage Channel Label",
+  [LongString],
+  vm_1,
+)
+
+pub const display_uri = Item(
+  DataElementTag(0x0040, 0xE012),
+  "Display URI",
+  [UniversalResourceIdentifier],
+  vm_1,
+)
+
+pub const dose_calculation_model_name = Item(
+  DataElementTag(0x3004, 0x007F),
+  "Dose Calculation Model Name",
+  [LongString],
+  vm_1,
+)
+
+pub const table_top_position_alignment_uid = Item(
+  DataElementTag(0x300A, 0x0054),
+  "Table Top Position Alignment UID",
+  [UniqueIdentifier],
+  vm_1,
+)
+
+pub const sensitive_content_code_sequence = Item(
+  DataElementTag(0x0008, 0x001D),
+  "Sensitive Content Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const referenced_segmentation_sequence = Item(
+  DataElementTag(0x0008, 0x114C),
+  "Referenced Segmentation Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const referenced_surface_segmentation_sequence = Item(
+  DataElementTag(0x0008, 0x114D),
+  "Referenced Surface Segmentation Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const wave_dimensions_definition_sequence = Item(
+  DataElementTag(0x0014, 0x4101),
+  "Wave Dimensions Definition Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const wave_dimension_number = Item(
+  DataElementTag(0x0014, 0x4102),
+  "Wave Dimension Number",
+  [UnsignedShort],
+  vm_1,
+)
+
+pub const wave_dimension_description = Item(
+  DataElementTag(0x0014, 0x4103),
+  "Wave Dimension Description",
+  [LongString],
+  vm_1,
+)
+
+pub const wave_dimension_unit = Item(
+  DataElementTag(0x0014, 0x4104),
+  "Wave Dimension Unit",
+  [UnsignedShort],
+  vm_1,
+)
+
+pub const wave_dimension_value_type = Item(
+  DataElementTag(0x0014, 0x4105),
+  "Wave Dimension Value Type",
+  [CodeString],
+  vm_1,
+)
+
+pub const wave_dimension_values_sequence = Item(
+  DataElementTag(0x0014, 0x4106),
+  "Wave Dimension Values Sequence",
+  [Sequence],
+  vm_1_to_n,
+)
+
+pub const referenced_wave_dimension = Item(
+  DataElementTag(0x0014, 0x4107),
+  "Referenced Wave Dimension",
+  [UnsignedShort],
+  vm_1,
+)
+
+pub const integer_numeric_value = Item(
+  DataElementTag(0x0014, 0x4108),
+  "Integer Numeric Value",
+  [SignedLong],
+  vm_1,
+)
+
+pub const byte_numeric_value = Item(
+  DataElementTag(0x0014, 0x4109),
+  "Byte Numeric Value",
+  [OtherByteString],
+  vm_1,
+)
+
+pub const short_numeric_value = Item(
+  DataElementTag(0x0014, 0x410A),
+  "Short Numeric Value",
+  [OtherWordString],
+  vm_1,
+)
+
+pub const single_precision_floating_point_numeric_value = Item(
+  DataElementTag(0x0014, 0x410B),
+  "Single Precision Floating Point Numeric Value",
+  [OtherFloatString],
+  vm_1,
+)
+
+pub const double_precision_floating_point_numeric_value = Item(
+  DataElementTag(0x0014, 0x410C),
+  "Double Precision Floating Point Numeric Value",
+  [OtherDoubleString],
+  vm_1,
+)
+
+pub const thermal_camera_settings_sequence = Item(
+  DataElementTag(0x0014, 0x6001),
+  "Thermal Camera Settings Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const acquisition_frame_rate = Item(
+  DataElementTag(0x0014, 0x6002),
+  "Acquisition Frame Rate",
+  [DecimalString],
+  vm_1,
+)
+
+pub const integration_time = Item(
+  DataElementTag(0x0014, 0x6003),
+  "Integration Time",
+  [DecimalString],
+  vm_1,
+)
+
+pub const number_of_calibration_frames = Item(
+  DataElementTag(0x0014, 0x6004),
+  "Number of Calibration Frames",
+  [DecimalString],
+  vm_1,
+)
+
+pub const number_of_rows_in_full_acquisition_image = Item(
+  DataElementTag(0x0014, 0x6005),
+  "Number of Rows in Full Acquisition Image",
+  [DecimalString],
+  vm_1,
+)
+
+pub const number_of_columns_in_full_acquisition_image = Item(
+  DataElementTag(0x0014, 0x6006),
+  "Number Of Columns in Full Acquisition Image",
+  [DecimalString],
+  vm_1,
+)
+
+pub const thermal_source_settings_sequence = Item(
+  DataElementTag(0x0014, 0x6007),
+  "Thermal Source Settings Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const source_horizontal_pitch = Item(
+  DataElementTag(0x0014, 0x6008),
+  "Source Horizontal Pitch",
+  [DecimalString],
+  vm_1,
+)
+
+pub const source_vertical_pitch = Item(
+  DataElementTag(0x0014, 0x6009),
+  "Source Vertical Pitch",
+  [DecimalString],
+  vm_1,
+)
+
+pub const source_horizontal_scan_speed = Item(
+  DataElementTag(0x0014, 0x600A),
+  "Source Horizontal Scan Speed",
+  [DecimalString],
+  vm_1,
+)
+
+pub const thermal_source_modulation_frequency = Item(
+  DataElementTag(0x0014, 0x600B),
+  "Thermal Source Modulation Frequency",
+  [DecimalString],
+  vm_1,
+)
+
+pub const induction_source_setting_sequence = Item(
+  DataElementTag(0x0014, 0x600C),
+  "Induction Source Setting Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const coil_frequency = Item(
+  DataElementTag(0x0014, 0x600D),
+  "Coil Frequency",
+  [DecimalString],
+  vm_1,
+)
+
+pub const current_amplitude_across_coil = Item(
+  DataElementTag(0x0014, 0x600E),
+  "Current Amplitude Across Coil",
+  [DecimalString],
+  vm_1,
+)
+
+pub const flash_source_setting_sequence = Item(
+  DataElementTag(0x0014, 0x600F),
+  "Flash Source Setting Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const flash_duration = Item(
+  DataElementTag(0x0014, 0x6010),
+  "Flash Duration",
+  [DecimalString],
+  vm_1,
+)
+
+pub const flash_frame_number = Item(
+  DataElementTag(0x0014, 0x6011),
+  "Flash Frame Number",
+  [DecimalString],
+  vm_1_to_n,
+)
+
+pub const laser_source_setting_sequence = Item(
+  DataElementTag(0x0014, 0x6012),
+  "Laser Source Setting Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const horizontal_laser_spot_dimension = Item(
+  DataElementTag(0x0014, 0x6013),
+  "Horizontal Laser Spot Dimension",
+  [DecimalString],
+  vm_1,
+)
+
+pub const vertical_laser_spot_dimension = Item(
+  DataElementTag(0x0014, 0x6014),
+  "Vertical Laser Spot Dimension",
+  [DecimalString],
+  vm_1,
+)
+
+pub const laser_wavelength = Item(
+  DataElementTag(0x0014, 0x6015),
+  "Laser Wavelength",
+  [DecimalString],
+  vm_1,
+)
+
+pub const laser_power = Item(
+  DataElementTag(0x0014, 0x6016),
+  "Laser Power",
+  [DecimalString],
+  vm_1,
+)
+
+pub const forced_gas_setting_sequence = Item(
+  DataElementTag(0x0014, 0x6017),
+  "Forced Gas Setting Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const vibration_source_setting_sequence = Item(
+  DataElementTag(0x0014, 0x6018),
+  "Vibration Source Setting Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const vibration_excitation_frequency = Item(
+  DataElementTag(0x0014, 0x6019),
+  "Vibration Excitation Frequency",
+  [DecimalString],
+  vm_1,
+)
+
+pub const vibration_excitation_voltage = Item(
+  DataElementTag(0x0014, 0x601A),
+  "Vibration Excitation Voltage",
+  [DecimalString],
+  vm_1,
+)
+
+pub const thermography_data_capture_method = Item(
+  DataElementTag(0x0014, 0x601B),
+  "Thermography Data Capture Method",
+  [CodeString],
+  vm_1,
+)
+
+pub const thermal_technique = Item(
+  DataElementTag(0x0014, 0x601C),
+  "Thermal Technique",
+  [CodeString],
+  vm_1,
+)
+
+pub const thermal_camera_core_sequence = Item(
+  DataElementTag(0x0014, 0x601D),
+  "Thermal Camera Core Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const detector_wavelength_range = Item(
+  DataElementTag(0x0014, 0x601E),
+  "Detector Wavelength Range",
+  [CodeString],
+  vm_1,
+)
+
+pub const thermal_camera_calibration_type = Item(
+  DataElementTag(0x0014, 0x601F),
+  "Thermal Camera Calibration Type",
+  [CodeString],
+  vm_1,
+)
+
+pub const acquisition_image_counter = Item(
+  DataElementTag(0x0014, 0x6020),
+  "Acquisition Image Counter",
+  [UnsignedVeryLong],
+  vm_1,
+)
+
+pub const front_panel_temperature = Item(
+  DataElementTag(0x0014, 0x6021),
+  "Front Panel Temperature",
+  [DecimalString],
+  vm_1,
+)
+
+pub const air_gap_temperature = Item(
+  DataElementTag(0x0014, 0x6022),
+  "Air Gap Temperature",
+  [DecimalString],
+  vm_1,
+)
+
+pub const vertical_pixel_size = Item(
+  DataElementTag(0x0014, 0x6023),
+  "Vertical Pixel Size",
+  [DecimalString],
+  vm_1,
+)
+
+pub const horizontal_pixel_size = Item(
+  DataElementTag(0x0014, 0x6024),
+  "Horizontal Pixel Size",
+  [DecimalString],
+  vm_1,
+)
+
+pub const data_streaming_protocol = Item(
+  DataElementTag(0x0014, 0x6025),
+  "Data Streaming Protocol",
+  [ShortText],
+  vm_1_to_n,
+)
+
+pub const lens_sequence = Item(
+  DataElementTag(0x0014, 0x6026),
+  "Lens Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const field_of_view = Item(
+  DataElementTag(0x0014, 0x6027),
+  "Field of View",
+  [DecimalString],
+  vm_1,
+)
+
+pub const lens_filter_manufacturer = Item(
+  DataElementTag(0x0014, 0x6028),
+  "Lens Filter Manufacturer",
+  [LongString],
+  vm_1,
+)
+
+pub const cutoff_filter_type = Item(
+  DataElementTag(0x0014, 0x6029),
+  "Cutoff Filter Type",
+  [CodeString],
+  vm_1,
+)
+
+pub const lens_filter_cut_off_wavelength = Item(
+  DataElementTag(0x0014, 0x602A),
+  "Lens Filter Cut-Off Wavelength",
+  [DecimalString],
+  vm_1_to_n,
+)
+
+pub const thermal_source_sequence = Item(
+  DataElementTag(0x0014, 0x602B),
+  "Thermal Source Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const thermal_source_motion_state = Item(
+  DataElementTag(0x0014, 0x602C),
+  "Thermal Source Motion State",
+  [CodeString],
+  vm_1,
+)
+
+pub const thermal_source_motion_type = Item(
+  DataElementTag(0x0014, 0x602D),
+  "Thermal Source Motion Type",
+  [CodeString],
+  vm_1,
+)
+
+pub const induction_heating_sequence = Item(
+  DataElementTag(0x0014, 0x602E),
+  "Induction Heating Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const coil_configuration_id = Item(
+  DataElementTag(0x0014, 0x602F),
+  "Coil Configuration ID",
+  [ShortText],
+  vm_1,
+)
+
+pub const number_of_turns_in_coil = Item(
+  DataElementTag(0x0014, 0x6030),
+  "Number of Turns in Coil",
+  [DecimalString],
+  vm_1,
+)
+
+pub const shape_of_individual_turn = Item(
+  DataElementTag(0x0014, 0x6031),
+  "Shape of Individual Turn",
+  [CodeString],
+  vm_1,
+)
+
+pub const size_of_individual_turn = Item(
+  DataElementTag(0x0014, 0x6032),
+  "Size of Individual Turn",
+  [DecimalString],
+  vm_1_to_n,
+)
+
+pub const distance_between_turns = Item(
+  DataElementTag(0x0014, 0x6033),
+  "Distance Between Turns",
+  [DecimalString],
+  vm_1_to_n,
+)
+
+pub const flash_heating_sequence = Item(
+  DataElementTag(0x0014, 0x6034),
+  "Flash Heating Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const number_of_lamps = Item(
+  DataElementTag(0x0014, 0x6035),
+  "Number of Lamps",
+  [DecimalString],
+  vm_1,
+)
+
+pub const flash_synchronization_protocol = Item(
+  DataElementTag(0x0014, 0x6036),
+  "Flash Synchronization Protocol",
+  [ShortText],
+  vm_1,
+)
+
+pub const flash_modification_status = Item(
+  DataElementTag(0x0014, 0x6037),
+  "Flash Modification Status",
+  [CodeString],
+  vm_1,
+)
+
+pub const laser_heating_sequence = Item(
+  DataElementTag(0x0014, 0x6038),
+  "Laser Heating Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const laser_manufacturer = Item(
+  DataElementTag(0x0014, 0x6039),
+  "Laser Manufacturer",
+  [LongString],
+  vm_1,
+)
+
+pub const laser_model_number = Item(
+  DataElementTag(0x0014, 0x603A),
+  "Laser Model Number",
+  [LongString],
+  vm_1,
+)
+
+pub const laser_type_description = Item(
+  DataElementTag(0x0014, 0x603B),
+  "Laser Type Description",
+  [ShortText],
+  vm_1,
+)
+
+pub const forced_gas_heating_sequence = Item(
+  DataElementTag(0x0014, 0x603C),
+  "Forced Gas Heating Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const gas_used_for_heating_cooling_part = Item(
+  DataElementTag(0x0014, 0x603D),
+  "Gas Used for Heating/Cooling Part",
+  [LongString],
+  vm_1,
+)
+
+pub const vibration_sonic_heating_sequence = Item(
+  DataElementTag(0x0014, 0x603E),
+  "Vibration/Sonic Heating Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const probe_manufacturer = Item(
+  DataElementTag(0x0014, 0x603F),
+  "Probe Manufacturer",
+  [LongString],
+  vm_1,
+)
+
+pub const probe_model_number = Item(
+  DataElementTag(0x0014, 0x6040),
+  "Probe Model Number",
+  [LongString],
+  vm_1,
+)
+
+pub const aperture_size = Item(
+  DataElementTag(0x0014, 0x6041),
+  "Aperture Size",
+  [DecimalString],
+  vm_1,
+)
+
+pub const probe_resonant_frequency = Item(
+  DataElementTag(0x0014, 0x6042),
+  "Probe Resonant Frequency",
+  [DecimalString],
+  vm_1,
+)
+
+pub const heat_source_description = Item(
+  DataElementTag(0x0014, 0x6043),
+  "Heat Source Description",
+  [UnlimitedText],
+  vm_1,
+)
+
+pub const surface_preparation_with_optical_coating = Item(
+  DataElementTag(0x0014, 0x6044),
+  "Surface Preparation with Optical Coating",
+  [CodeString],
+  vm_1,
+)
+
+pub const optical_coating_type = Item(
+  DataElementTag(0x0014, 0x6045),
+  "Optical Coating Type",
+  [ShortText],
+  vm_1,
+)
+
+pub const thermal_conductivity_of_exposed_surface = Item(
+  DataElementTag(0x0014, 0x6046),
+  "Thermal Conductivity of Exposed Surface",
+  [DecimalString],
+  vm_1,
+)
+
+pub const material_density = Item(
+  DataElementTag(0x0014, 0x6047),
+  "Material Density",
+  [DecimalString],
+  vm_1,
+)
+
+pub const specific_heat_of_inspection_surface = Item(
+  DataElementTag(0x0014, 0x6048),
+  "Specific Heat of Inspection Surface",
+  [DecimalString],
+  vm_1,
+)
+
+pub const emissivity_of_inspection_surface = Item(
+  DataElementTag(0x0014, 0x6049),
+  "Emissivity of Inspection Surface",
+  [DecimalString],
+  vm_1,
+)
+
+pub const electromagnetic_classification_of_inspection_surface = Item(
+  DataElementTag(0x0014, 0x604A),
+  "Electromagnetic Classification of Inspection Surface",
+  [CodeString],
+  vm_1_to_n,
+)
+
+pub const moving_window_size = Item(
+  DataElementTag(0x0014, 0x604C),
+  "Moving Window Size",
+  [DecimalString],
+  vm_1,
+)
+
+pub const moving_window_type = Item(
+  DataElementTag(0x0014, 0x604D),
+  "Moving Window Type",
+  [CodeString],
+  vm_1,
+)
+
+pub const moving_window_weights = Item(
+  DataElementTag(0x0014, 0x604E),
+  "Moving Window Weights",
+  [DecimalString],
+  vm_1_to_n,
+)
+
+pub const moving_window_pitch = Item(
+  DataElementTag(0x0014, 0x604F),
+  "Moving Window Pitch",
+  [DecimalString],
+  vm_1,
+)
+
+pub const moving_window_padding_scheme = Item(
+  DataElementTag(0x0014, 0x6050),
+  "Moving Window Padding Scheme",
+  [CodeString],
+  vm_1,
+)
+
+pub const moving_window_padding_length = Item(
+  DataElementTag(0x0014, 0x6051),
+  "Moving Window Padding Length",
+  [DecimalString],
+  vm_1,
+)
+
+pub const spatial_filtering_parameters_sequence = Item(
+  DataElementTag(0x0014, 0x6052),
+  "Spatial Filtering Parameters Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const spatial_filtering_scheme = Item(
+  DataElementTag(0x0014, 0x6053),
+  "Spatial Filtering Scheme",
+  [CodeString],
+  vm_1,
+)
+
+pub const horizontal_moving_window_size = Item(
+  DataElementTag(0x0014, 0x6056),
+  "Horizontal Moving Window Size",
+  [DecimalString],
+  vm_1,
+)
+
+pub const vertical_moving_window_size = Item(
+  DataElementTag(0x0014, 0x6057),
+  "Vertical Moving Window Size",
+  [DecimalString],
+  vm_1,
+)
+
+pub const polynomial_fitting_sequence = Item(
+  DataElementTag(0x0014, 0x6059),
+  "Polynomial Fitting Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const fitting_data_type = Item(
+  DataElementTag(0x0014, 0x605A),
+  "Fitting Data Type",
+  [CodeString],
+  vm_1_to_n,
+)
+
+pub const operation_on_time_axis_before_fitting = Item(
+  DataElementTag(0x0014, 0x605B),
+  "Operation on Time Axis Before Fitting",
+  [CodeString],
+  vm_1,
+)
+
+pub const operation_on_pixel_intensity_before_fitting = Item(
+  DataElementTag(0x0014, 0x605C),
+  "Operation on Pixel Intensity Before Fitting",
+  [CodeString],
+  vm_1,
+)
+
+pub const order_of_polynomial = Item(
+  DataElementTag(0x0014, 0x605D),
+  "Order of Polynomial",
+  [DecimalString],
+  vm_1,
+)
+
+pub const independent_variable_for_polynomial_fit = Item(
+  DataElementTag(0x0014, 0x605E),
+  "Independent Variable for Polynomial Fit",
+  [CodeString],
+  vm_1,
+)
+
+pub const polynomial_coefficients = Item(
+  DataElementTag(0x0014, 0x605F),
+  "PolynomialCoefficients",
+  [DecimalString],
+  vm_1_to_n,
+)
+
+pub const thermography_pixel_data_unit = Item(
+  DataElementTag(0x0014, 0x6060),
+  "Thermography Pixel Data Unit",
+  [CodeString],
+  vm_1,
+)
+
+pub const metal_artifact_reduction_sequence = Item(
+  DataElementTag(0x0018, 0x9390),
+  "Metal Artifact Reduction Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const metal_artifact_reduction_applied = Item(
+  DataElementTag(0x0018, 0x9391),
+  "Metal Artifact Reduction Applied",
+  [CodeString],
+  vm_1,
+)
+
+pub const metal_artifact_reduction_algorithm_identification_sequence = Item(
+  DataElementTag(0x0018, 0x9392),
+  "Metal Artifact Reduction Algorithm Identification Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const ophthalmic_anatomic_reference_point_frame_coordinate = Item(
+  DataElementTag(0x0022, 0x1623),
+  "Ophthalmic Anatomic Reference Point Frame Coordinate",
+  [FloatingPointSingle],
+  vm_1,
+)
+
+pub const ophthalmic_en_face_volume_descriptor_sequence = Item(
+  DataElementTag(0x0022, 0x1627),
+  "Ophthalmic En Face Volume Descriptor Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const ophthalmic_en_face_volume_descriptor_scope = Item(
+  DataElementTag(0x0022, 0x1629),
+  "Ophthalmic En Face Volume Descriptor Scope",
+  [CodeString],
+  vm_1,
+)
+
+pub const ophthalmic_anatomic_reference_point_sequence = Item(
+  DataElementTag(0x0022, 0x1632),
+  "Ophthalmic Anatomic Reference Point Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const ophthalmic_anatomic_reference_point_localization_type = Item(
+  DataElementTag(0x0022, 0x1633),
+  "Ophthalmic Anatomic Reference Point Localization Type",
+  [CodeString],
+  vm_1,
+)
+
+pub const primary_anatomic_structure_item_index = Item(
+  DataElementTag(0x0022, 0x1634),
+  "Primary Anatomic Structure Item Index",
+  [IntegerString],
+  vm_1,
+)
+
+pub const structured_waveform_annotation_sequence = Item(
+  DataElementTag(0x0040, 0xB030),
+  "Structured Waveform Annotation Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const waveform_annotation_display_selection_sequence = Item(
+  DataElementTag(0x0040, 0xB031),
+  "Waveform Annotation Display Selection Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const referenced_montage_index = Item(
+  DataElementTag(0x0040, 0xB032),
+  "Referenced Montage Index",
+  [UnsignedShort],
+  vm_1,
+)
+
+pub const waveform_textual_annotation_sequence = Item(
+  DataElementTag(0x0040, 0xB033),
+  "Waveform Textual Annotation Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const displayed_waveform_segment_sequence = Item(
+  DataElementTag(0x0040, 0xB035),
+  "Displayed Waveform Segment Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const montage_activation_sequence = Item(
+  DataElementTag(0x0040, 0xB037),
+  "Montage Activation Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const montage_activation_time_offset = Item(
+  DataElementTag(0x0040, 0xB038),
+  "Montage Activation Time Offset",
+  [DecimalString],
+  vm_1,
+)
+
+pub const waveform_montage_sequence = Item(
+  DataElementTag(0x0040, 0xB039),
+  "Waveform Montage Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const referenced_montage_channel_number = Item(
+  DataElementTag(0x0040, 0xB03A),
+  "Referenced Montage Channel Number",
+  [IntegerString],
+  vm_1,
+)
+
+pub const montage_channel_sequence = Item(
+  DataElementTag(0x0040, 0xB03C),
+  "Montage Channel Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const montage_index = Item(
+  DataElementTag(0x0040, 0xB03D),
+  "Montage Index",
+  [UnsignedShort],
+  vm_1,
+)
+
+pub const montage_channel_number = Item(
+  DataElementTag(0x0040, 0xB03E),
+  "Montage Channel Number",
+  [IntegerString],
+  vm_1,
+)
+
+pub const montage_channel_source_code_sequence = Item(
+  DataElementTag(0x0040, 0xB040),
+  "Montage Channel Source Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const contributing_channel_sources_sequence = Item(
+  DataElementTag(0x0040, 0xB041),
+  "Contributing Channel Sources Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const channel_weight = Item(
+  DataElementTag(0x0040, 0xB042),
+  "Channel Weight",
+  [FloatingPointSingle],
+  vm_1,
+)
+
+pub const rt_assertions_sequence = Item(
+  DataElementTag(0x0044, 0x0110),
+  "RT Assertions Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const tiles_overlap = Item(
+  DataElementTag(0x0048, 0x0304),
+  "Tiles Overlap",
+  [CodeString],
+  vm_1,
+)
+
+pub const surface_offset = Item(
+  DataElementTag(0x0066, 0x0005),
+  "Surface Offset",
+  [FloatingPointSingle],
+  vm_1,
+)
+
+pub const rt_cone_beam_imaging_geometry_sequence = Item(
+  DataElementTag(0x3002, 0x0136),
+  "RT Cone-Beam Imaging Geometry Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const recommended_isodose_level_sequence = Item(
+  DataElementTag(0x3004, 0x0016),
+  "Recommended Isodose Level Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const dose_unit_code_sequence = Item(
+  DataElementTag(0x3004, 0x0020),
+  "Dose Unit Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const rt_dose_interpreted_type_code_sequence = Item(
+  DataElementTag(0x3004, 0x0021),
+  "RT Dose Interpreted Type Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const rt_dose_interpreted_type_code_modifier_sequence = Item(
+  DataElementTag(0x3004, 0x0022),
+  "RT Dose Interpreted Type Code Modifier Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const dose_radiobiological_interpretation_sequence = Item(
+  DataElementTag(0x3004, 0x0023),
+  "Dose Radiobiological Interpretation Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const rt_dose_intent_code_sequence = Item(
+  DataElementTag(0x3004, 0x0024),
+  "RT Dose Intent Code Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const dose_calculation_model_sequence = Item(
+  DataElementTag(0x3004, 0x0080),
+  "Dose Calculation Model Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const dose_calculation_algorithm_sequence = Item(
+  DataElementTag(0x3004, 0x0081),
+  "Dose Calculation Algorithm Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const commissioning_status = Item(
+  DataElementTag(0x3004, 0x0082),
+  "Commissioning Status",
+  [CodeString],
+  vm_1,
+)
+
+pub const dose_calculation_model_parameter_sequence = Item(
+  DataElementTag(0x3004, 0x0083),
+  "Dose Calculation Model Parameter Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const dose_deposition_calculation_medium = Item(
+  DataElementTag(0x3004, 0x0084),
+  "Dose Deposition Calculation Medium",
+  [CodeString],
+  vm_1,
+)
+
+pub const compensator_surface_representation_flag = Item(
+  DataElementTag(0x300A, 0x02EC),
+  "Compensator Surface Representation Flag",
+  [CodeString],
+  vm_1,
+)
+
+pub const scan_spot_gantry_angles = Item(
+  DataElementTag(0x300A, 0x039B),
+  "Scan Spot Gantry Angles",
+  [FloatingPointSingle],
+  vm_1_to_n,
+)
+
+pub const scan_spot_patient_support_angles = Item(
+  DataElementTag(0x300A, 0x039C),
+  "Scan Spot Patient Support Angles",
+  [FloatingPointSingle],
+  vm_1_to_n,
+)
+
+pub const patient_treatment_preparation_sequence = Item(
+  DataElementTag(0x300A, 0x079F),
+  "Patient Treatment Preparation Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const patient_to_equipment_relationship_sequence = Item(
+  DataElementTag(0x300A, 0x07A0),
+  "Patient to Equipment Relationship Sequence",
+  [Sequence],
+  vm_1,
+)
+
+pub const imaging_equipment_to_treatment_delivery_device_relationship_sequence = Item(
+  DataElementTag(0x300A, 0x07A1),
+  "Imaging Equipment to Treatment Delivery Device Relationship Sequence",
+  [Sequence],
+  vm_1,
+)
+
 fn find_element_in_group_0002(element: Int) -> Result(Item, Nil) {
   case element {
     0x0000 -> Ok(file_meta_information_group_length)
@@ -36271,6 +37546,13 @@ fn find_element_in_group_0008(element: Int) -> Result(Item, Nil) {
     0x9458 -> Ok(frame_display_sequence)
     0x9459 -> Ok(recommended_display_frame_rate_in_float)
     0x9460 -> Ok(skip_frame_range_flag)
+    0x1301 -> Ok(principal_diagnosis_code_sequence)
+    0x1302 -> Ok(primary_diagnosis_code_sequence)
+    0x1303 -> Ok(secondary_diagnoses_code_sequence)
+    0x1304 -> Ok(histological_diagnoses_code_sequence)
+    0x001D -> Ok(sensitive_content_code_sequence)
+    0x114C -> Ok(referenced_segmentation_sequence)
+    0x114D -> Ok(referenced_surface_segmentation_sequence)
     _ -> Error(Nil)
   }
 }
@@ -36355,6 +37637,21 @@ fn find_element_in_group_0010(element: Int) -> Result(Item, Nil) {
     0x2299 -> Ok(responsible_organization)
     0x4000 -> Ok(patient_comments)
     0x9431 -> Ok(examined_body_thickness)
+    0x0011 -> Ok(person_names_to_use_sequence)
+    0x0012 -> Ok(name_to_use)
+    0x0013 -> Ok(name_to_use_comment)
+    0x0014 -> Ok(third_person_pronouns_sequence)
+    0x0015 -> Ok(pronoun_code_sequence)
+    0x0016 -> Ok(pronoun_comment)
+    0x0041 -> Ok(gender_identity_sequence)
+    0x0042 -> Ok(sex_parameters_for_clinical_use_category_comment)
+    0x0043 -> Ok(sex_parameters_for_clinical_use_category_sequence)
+    0x0044 -> Ok(gender_identity_code_sequence)
+    0x0045 -> Ok(gender_identity_comment)
+    0x0046 -> Ok(sex_parameters_for_clinical_use_category_code_sequence)
+    0x0047 -> Ok(sex_parameters_for_clinical_use_category_reference)
+    0x2161 -> Ok(ethnic_group_code_sequence)
+    0x2162 -> Ok(ethnic_groups)
     _ -> Error(Nil)
   }
 }
@@ -36605,6 +37902,110 @@ fn find_element_in_group_0014(element: Int) -> Result(Item, Nil) {
     0x511D -> Ok(wedge_chamfer_height)
     0x511E -> Ok(wedge_curve)
     0x511F -> Ok(radius_along_wedge)
+    0x4101 -> Ok(wave_dimensions_definition_sequence)
+    0x4102 -> Ok(wave_dimension_number)
+    0x4103 -> Ok(wave_dimension_description)
+    0x4104 -> Ok(wave_dimension_unit)
+    0x4105 -> Ok(wave_dimension_value_type)
+    0x4106 -> Ok(wave_dimension_values_sequence)
+    0x4107 -> Ok(referenced_wave_dimension)
+    0x4108 -> Ok(integer_numeric_value)
+    0x4109 -> Ok(byte_numeric_value)
+    0x410A -> Ok(short_numeric_value)
+    0x410B -> Ok(single_precision_floating_point_numeric_value)
+    0x410C -> Ok(double_precision_floating_point_numeric_value)
+    0x6001 -> Ok(thermal_camera_settings_sequence)
+    0x6002 -> Ok(acquisition_frame_rate)
+    0x6003 -> Ok(integration_time)
+    0x6004 -> Ok(number_of_calibration_frames)
+    0x6005 -> Ok(number_of_rows_in_full_acquisition_image)
+    0x6006 -> Ok(number_of_columns_in_full_acquisition_image)
+    0x6007 -> Ok(thermal_source_settings_sequence)
+    0x6008 -> Ok(source_horizontal_pitch)
+    0x6009 -> Ok(source_vertical_pitch)
+    0x600A -> Ok(source_horizontal_scan_speed)
+    0x600B -> Ok(thermal_source_modulation_frequency)
+    0x600C -> Ok(induction_source_setting_sequence)
+    0x600D -> Ok(coil_frequency)
+    0x600E -> Ok(current_amplitude_across_coil)
+    0x600F -> Ok(flash_source_setting_sequence)
+    0x6010 -> Ok(flash_duration)
+    0x6011 -> Ok(flash_frame_number)
+    0x6012 -> Ok(laser_source_setting_sequence)
+    0x6013 -> Ok(horizontal_laser_spot_dimension)
+    0x6014 -> Ok(vertical_laser_spot_dimension)
+    0x6015 -> Ok(laser_wavelength)
+    0x6016 -> Ok(laser_power)
+    0x6017 -> Ok(forced_gas_setting_sequence)
+    0x6018 -> Ok(vibration_source_setting_sequence)
+    0x6019 -> Ok(vibration_excitation_frequency)
+    0x601A -> Ok(vibration_excitation_voltage)
+    0x601B -> Ok(thermography_data_capture_method)
+    0x601C -> Ok(thermal_technique)
+    0x601D -> Ok(thermal_camera_core_sequence)
+    0x601E -> Ok(detector_wavelength_range)
+    0x601F -> Ok(thermal_camera_calibration_type)
+    0x6020 -> Ok(acquisition_image_counter)
+    0x6021 -> Ok(front_panel_temperature)
+    0x6022 -> Ok(air_gap_temperature)
+    0x6023 -> Ok(vertical_pixel_size)
+    0x6024 -> Ok(horizontal_pixel_size)
+    0x6025 -> Ok(data_streaming_protocol)
+    0x6026 -> Ok(lens_sequence)
+    0x6027 -> Ok(field_of_view)
+    0x6028 -> Ok(lens_filter_manufacturer)
+    0x6029 -> Ok(cutoff_filter_type)
+    0x602A -> Ok(lens_filter_cut_off_wavelength)
+    0x602B -> Ok(thermal_source_sequence)
+    0x602C -> Ok(thermal_source_motion_state)
+    0x602D -> Ok(thermal_source_motion_type)
+    0x602E -> Ok(induction_heating_sequence)
+    0x602F -> Ok(coil_configuration_id)
+    0x6030 -> Ok(number_of_turns_in_coil)
+    0x6031 -> Ok(shape_of_individual_turn)
+    0x6032 -> Ok(size_of_individual_turn)
+    0x6033 -> Ok(distance_between_turns)
+    0x6034 -> Ok(flash_heating_sequence)
+    0x6035 -> Ok(number_of_lamps)
+    0x6036 -> Ok(flash_synchronization_protocol)
+    0x6037 -> Ok(flash_modification_status)
+    0x6038 -> Ok(laser_heating_sequence)
+    0x6039 -> Ok(laser_manufacturer)
+    0x603A -> Ok(laser_model_number)
+    0x603B -> Ok(laser_type_description)
+    0x603C -> Ok(forced_gas_heating_sequence)
+    0x603D -> Ok(gas_used_for_heating_cooling_part)
+    0x603E -> Ok(vibration_sonic_heating_sequence)
+    0x603F -> Ok(probe_manufacturer)
+    0x6040 -> Ok(probe_model_number)
+    0x6041 -> Ok(aperture_size)
+    0x6042 -> Ok(probe_resonant_frequency)
+    0x6043 -> Ok(heat_source_description)
+    0x6044 -> Ok(surface_preparation_with_optical_coating)
+    0x6045 -> Ok(optical_coating_type)
+    0x6046 -> Ok(thermal_conductivity_of_exposed_surface)
+    0x6047 -> Ok(material_density)
+    0x6048 -> Ok(specific_heat_of_inspection_surface)
+    0x6049 -> Ok(emissivity_of_inspection_surface)
+    0x604A -> Ok(electromagnetic_classification_of_inspection_surface)
+    0x604C -> Ok(moving_window_size)
+    0x604D -> Ok(moving_window_type)
+    0x604E -> Ok(moving_window_weights)
+    0x604F -> Ok(moving_window_pitch)
+    0x6050 -> Ok(moving_window_padding_scheme)
+    0x6051 -> Ok(moving_window_padding_length)
+    0x6052 -> Ok(spatial_filtering_parameters_sequence)
+    0x6053 -> Ok(spatial_filtering_scheme)
+    0x6056 -> Ok(horizontal_moving_window_size)
+    0x6057 -> Ok(vertical_moving_window_size)
+    0x6059 -> Ok(polynomial_fitting_sequence)
+    0x605A -> Ok(fitting_data_type)
+    0x605B -> Ok(operation_on_time_axis_before_fitting)
+    0x605C -> Ok(operation_on_pixel_intensity_before_fitting)
+    0x605D -> Ok(order_of_polynomial)
+    0x605E -> Ok(independent_variable_for_polynomial_fit)
+    0x605F -> Ok(polynomial_coefficients)
+    0x6060 -> Ok(thermography_pixel_data_unit)
     _ -> Error(Nil)
   }
 }
@@ -37626,6 +39027,9 @@ fn find_element_in_group_0018(element: Int) -> Result(Item, Nil) {
     0xA001 -> Ok(contributing_equipment_sequence)
     0xA002 -> Ok(contribution_date_time)
     0xA003 -> Ok(contribution_description)
+    0x9390 -> Ok(metal_artifact_reduction_sequence)
+    0x9391 -> Ok(metal_artifact_reduction_applied)
+    0x9392 -> Ok(metal_artifact_reduction_algorithm_identification_sequence)
     _ -> Error(Nil)
   }
 }
@@ -37941,6 +39345,12 @@ fn find_element_in_group_0022(element: Int) -> Result(Item, Nil) {
     0x1649 -> Ok(ascan_rate)
     0x1650 -> Ok(bscan_rate)
     0x1658 -> Ok(surface_mesh_z_pixel_offset)
+    0x1623 -> Ok(ophthalmic_anatomic_reference_point_frame_coordinate)
+    0x1627 -> Ok(ophthalmic_en_face_volume_descriptor_sequence)
+    0x1629 -> Ok(ophthalmic_en_face_volume_descriptor_scope)
+    0x1632 -> Ok(ophthalmic_anatomic_reference_point_sequence)
+    0x1633 -> Ok(ophthalmic_anatomic_reference_point_localization_type)
+    0x1634 -> Ok(primary_anatomic_structure_item_index)
     _ -> Error(Nil)
   }
 }
@@ -38802,6 +40212,28 @@ fn find_element_in_group_0040(element: Int) -> Result(Item, Nil) {
     0xE025 -> Ok(wadors_retrieval_sequence)
     0xE030 -> Ok(repository_unique_id)
     0xE031 -> Ok(home_community_id)
+    0xA034 -> Ok(effective_start_date_time)
+    0xA035 -> Ok(effective_stop_date_time)
+    0xB034 -> Ok(annotation_date_time)
+    0xB036 -> Ok(segment_definition_date_time)
+    0xB03B -> Ok(montage_name)
+    0xB03F -> Ok(montage_channel_label)
+    0xE012 -> Ok(display_uri)
+    0xB030 -> Ok(structured_waveform_annotation_sequence)
+    0xB031 -> Ok(waveform_annotation_display_selection_sequence)
+    0xB032 -> Ok(referenced_montage_index)
+    0xB033 -> Ok(waveform_textual_annotation_sequence)
+    0xB035 -> Ok(displayed_waveform_segment_sequence)
+    0xB037 -> Ok(montage_activation_sequence)
+    0xB038 -> Ok(montage_activation_time_offset)
+    0xB039 -> Ok(waveform_montage_sequence)
+    0xB03A -> Ok(referenced_montage_channel_number)
+    0xB03C -> Ok(montage_channel_sequence)
+    0xB03D -> Ok(montage_index)
+    0xB03E -> Ok(montage_channel_number)
+    0xB040 -> Ok(montage_channel_source_code_sequence)
+    0xB041 -> Ok(contributing_channel_sources_sequence)
+    0xB042 -> Ok(channel_weight)
     _ -> Error(Nil)
   }
 }
@@ -38849,6 +40281,7 @@ fn find_element_in_group_0044(element: Int) -> Result(Item, Nil) {
     0x0108 -> Ok(referenced_assertion_uid)
     0x0109 -> Ok(approval_subject_sequence)
     0x010A -> Ok(organizational_role_code_sequence)
+    0x0110 -> Ok(rt_assertions_sequence)
     _ -> Error(Nil)
   }
 }
@@ -38991,6 +40424,7 @@ fn find_element_in_group_0048(element: Int) -> Result(Item, Nil) {
     0x0301 -> Ok(pixel_origin_interpretation)
     0x0302 -> Ok(number_of_optical_paths)
     0x0303 -> Ok(total_pixel_matrix_focal_planes)
+    0x0304 -> Ok(tiles_overlap)
     _ -> Error(Nil)
   }
 }
@@ -39275,6 +40709,7 @@ fn find_element_in_group_0066(element: Int) -> Result(Item, Nil) {
     0x0132 -> Ok(measurement_values_sequence)
     0x0133 -> Ok(diffusion_acquisition_code_sequence)
     0x0134 -> Ok(diffusion_model_code_sequence)
+    0x0005 -> Ok(surface_offset)
     _ -> Error(Nil)
   }
 }
@@ -40259,6 +41694,7 @@ fn find_element_in_group_3002(element: Int) -> Result(Item, Nil) {
     0x0133 -> Ok(energy_derivation_code_sequence)
     0x0134 -> Ok(maximum_cumulative_meterset_exposure)
     0x0135 -> Ok(acquisition_initiation_sequence)
+    0x0136 -> Ok(rt_cone_beam_imaging_geometry_sequence)
     _ -> Error(Nil)
   }
 }
@@ -40291,6 +41727,18 @@ fn find_element_in_group_3004(element: Int) -> Result(Item, Nil) {
     0x0070 -> Ok(dvh_minimum_dose)
     0x0072 -> Ok(dvh_maximum_dose)
     0x0074 -> Ok(dvh_mean_dose)
+    0x007F -> Ok(dose_calculation_model_name)
+    0x0016 -> Ok(recommended_isodose_level_sequence)
+    0x0020 -> Ok(dose_unit_code_sequence)
+    0x0021 -> Ok(rt_dose_interpreted_type_code_sequence)
+    0x0022 -> Ok(rt_dose_interpreted_type_code_modifier_sequence)
+    0x0023 -> Ok(dose_radiobiological_interpretation_sequence)
+    0x0024 -> Ok(rt_dose_intent_code_sequence)
+    0x0080 -> Ok(dose_calculation_model_sequence)
+    0x0081 -> Ok(dose_calculation_algorithm_sequence)
+    0x0082 -> Ok(commissioning_status)
+    0x0083 -> Ok(dose_calculation_model_parameter_sequence)
+    0x0084 -> Ok(dose_deposition_calculation_medium)
     _ -> Error(Nil)
   }
 }
@@ -41089,6 +42537,14 @@ fn find_element_in_group_300a(element: Int) -> Result(Item, Nil) {
     0x079C -> Ok(patient_support_displacement_sequence)
     0x079D -> Ok(displacement_reference_location_code_sequence)
     0x079E -> Ok(rt_radiation_set_delivery_usage)
+    0x0054 -> Ok(table_top_position_alignment_uid)
+    0x02EC -> Ok(compensator_surface_representation_flag)
+    0x039B -> Ok(scan_spot_gantry_angles)
+    0x039C -> Ok(scan_spot_patient_support_angles)
+    0x079F -> Ok(patient_treatment_preparation_sequence)
+    0x07A0 -> Ok(patient_to_equipment_relationship_sequence)
+    0x07A1 ->
+      Ok(imaging_equipment_to_treatment_delivery_device_relationship_sequence)
     _ -> Error(Nil)
   }
 }

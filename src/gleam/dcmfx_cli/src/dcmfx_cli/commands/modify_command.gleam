@@ -1,4 +1,3 @@
-import dcmfx_anonymize
 import dcmfx_cli/input_source.{type InputSource}
 import dcmfx_cli/utils.{bool_to_int}
 import dcmfx_core/data_element_tag.{type DataElementTag}
@@ -75,17 +74,6 @@ fn zlib_compression_level_flag() {
   })
 }
 
-fn anonymize_flag() {
-  glint.bool_flag("anonymize")
-  |> glint.flag_default(False)
-  |> glint.flag_help(
-    "Whether to anonymize the output DICOM P10 file by removing all patient "
-    <> "data elements, other identifying data elements, as well as private "
-    <> "data elements. Note that this option does not remove any identifying "
-    <> "information that may be baked into the pixel data.",
-  )
-}
-
 fn delete_tags_flag() {
   glint.strings_flag("delete")
   |> glint.flag_help(
@@ -125,7 +113,6 @@ type ModifyArgs {
     output_directory: Option(String),
     in_place: Bool,
     zlib_compression_level: Int,
-    anonymize: Bool,
     tags_to_delete: List(DataElementTag),
     implementation_version_name: String,
   )
@@ -138,7 +125,6 @@ pub fn run() {
   use output_directory <- glint.flag(output_directory_flag())
   use in_place <- glint.flag(in_place_flag())
   use zlib_compression_level_flag <- glint.flag(zlib_compression_level_flag())
-  use anonymize_flag <- glint.flag(anonymize_flag())
   use delete_tags_flag <- glint.flag(delete_tags_flag())
   use implementation_version_name <- glint.flag(
     implementation_version_name_flag(),
@@ -148,7 +134,6 @@ pub fn run() {
   let input_filenames = unnamed_args
 
   let assert Ok(in_place) = in_place(flags)
-  let assert Ok(anonymize) = anonymize_flag(flags)
 
   // Get the list of tags to be deleted
   let assert Ok(tags_to_delete) =
@@ -168,7 +153,6 @@ pub fn run() {
       zlib_compression_level: zlib_compression_level_flag(flags)
         |> option.from_result
         |> option.unwrap(6),
-      anonymize:,
       tags_to_delete:,
       implementation_version_name:,
     )
@@ -259,17 +243,14 @@ fn modify_input_source(
     output_filename <> "." <> random_suffix <> ".tmp"
   }
 
-  // Create a filter transform for anonymization and tag deletion if needed
-  let filter_transform = case
-    args.anonymize || !list.is_empty(args.tags_to_delete)
-  {
-    True ->
-      p10_filter_transform.new(fn(tag, vr, _length, _location) {
-        { !args.anonymize || dcmfx_anonymize.filter_tag(tag, vr) }
-        && !list.contains(args.tags_to_delete, tag)
+  // Create a filter transform for tag deletion if needed
+  let filter_transform = case list.is_empty(args.tags_to_delete) {
+    False ->
+      p10_filter_transform.new(fn(tag, _vr, _length, _location) {
+        !list.contains(args.tags_to_delete, tag)
       })
       |> Some
-    False -> None
+    True -> None
   }
 
   // Setup write config

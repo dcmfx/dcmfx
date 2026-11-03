@@ -5,12 +5,14 @@ use clap::Args;
 
 use dcmfx::{
   core::*,
+  deidentify::{Deidentifier, P10DeidentifyTransform},
   p10::*,
   pixel_data::{transforms::*, *},
 };
 
 use crate::{
   args::{
+    deidentify_option_arg::{self, DeidentifyOptionArg},
     photometric_interpretation_arg::{
       PhotometricInterpretationColorArg, PhotometricInterpretationMonochromeArg,
     },
@@ -106,7 +108,9 @@ pub struct ModifyArgs {
     help = "A DICOM JSON data set to merge into the output DICOM P10 data \
       sets. If this specifies data elements already present in the input data \
       set then the data elements specified by this argument will replace those \
-      existing values.",
+      existing values. The merge is applied after de-identification, so the \
+      data elements it specifies replace de-identified values and aren't \
+      themselves de-identified.",
     value_parser = crate::args::parse_dicom_json_data_set,
   )]
   merge_dicom_json: Option<DataSet>,
@@ -133,15 +137,74 @@ pub struct ModifyArgs {
 
   #[arg(
     long,
-    help_heading = "Data Set Content",
-    help = "Anonymize the data set file by removing all patient data elements, \
-      other potentially identifying data elements, as well as private data \
-      elements. Note that this option does not remove identifying information \
-      baked into the pixel data, however such data may be able to be cropped \
-      out using --crop.",
+    help_heading = "De-identification",
+    help = "De-identify the data set following the Basic Application Level \
+      Confidentiality Profile defined in DICOM PS3.15 Annex E. This removes \
+      or replaces data elements that identify the patient, other people, and \
+      organizations, as well as dates, times, and private data elements, and \
+      replaces UIDs with new UIDs that remain consistent with each other. \
+      The profile's options can be enabled with --deidentify-options to retain \
+      some of this information. Pixel data is not inspected: identifying \
+      information burned into the pixel data, such as a patient's name in \
+      the header of an ultrasound image or a scanned document, and \
+      recognizable features such as a face, are not detected or removed, and \
+      metadata inside the frames of encapsulated pixel data, such as EXIF \
+      data in JPEG frames, is not stripped. Burned In Annotation (0028,0301) \
+      and Recognizable Visual Features (0028,0302) are kept so they can be \
+      checked, but are often absent. Burned-in text at a fixed position may \
+      be able to be cropped out using --crop.",
     default_value_t = false
   )]
-  anonymize: bool,
+  deidentify: bool,
+
+  #[arg(
+    long,
+    help_heading = "De-identification",
+    help = "The secret used to generate replacement UIDs when de-identifying. \
+      Replacement UIDs are derived from the original UID and this secret, so \
+      specifying the same secret across separate runs keeps UIDs consistent \
+      and references between separately de-identified files intact. When not \
+      specified a random secret is used, which keeps UIDs consistent only \
+      across the files de-identified in a single run. Anyone with the secret and \
+      the original UIDs is able to match de-identified files to their originals, \
+      so it should be kept private. The secret is also used to derive the \
+      date shift for the retain-modified-dates de-identify option when \
+      --deidentify-date-shift isn't specified. The secret can also be given \
+      in the DCMFX_DEIDENTIFY_UID_SECRET environment variable, which keeps it \
+      out of the process list and shell history. Ignored when --deidentify \
+      isn't specified.",
+    env = "DCMFX_DEIDENTIFY_UID_SECRET",
+    hide_env_values = true
+  )]
+  deidentify_uid_secret: Option<String>,
+
+  #[arg(
+    long,
+    help_heading = "De-identification",
+    help = "The options to the Basic Application Level Confidentiality \
+      Profile to apply when de-identifying, as defined in DICOM PS3.15 Annex \
+      E.3. Each option retains or cleans information that the profile would \
+      otherwise remove. Multiple options can be specified separated by \
+      commas. The options that are applied are recorded in the de-identified \
+      data set's De-identification Method data elements.",
+    value_delimiter = ',',
+    requires = "deidentify"
+  )]
+  deidentify_options: Vec<DeidentifyOptionArg>,
+
+  #[arg(
+    long,
+    help_heading = "De-identification",
+    help = "The number of days to shift dates by when the \
+      retain-modified-dates de-identify option is specified. Must not be zero, \
+      and is usually negative so that dates are moved into the past. Times \
+      are not modified. When not specified the shift is derived from the UID \
+      secret and lies between 1 and 3650 days into the past, so specifying \
+      the same secret across separate runs shifts dates consistently.",
+    allow_negative_numbers = true,
+    requires = "deidentify"
+  )]
+  deidentify_date_shift: Option<i32>,
 
   #[arg(
     long,
@@ -375,6 +438,27 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
     }
   }
 
+  let profile_options = match deidentify_option_arg::profile_options(
+    &args.deidentify_options,
+    args.deidentify_date_shift,
+  ) {
+    Ok(profile_options) => profile_options,
+    Err(e) => {
+      eprintln!("Error: {e}");
+      return Err(());
+    }
+  };
+
+  if args.deidentify && args.deidentify_uid_secret.as_deref() == Some("") {
+    eprintln!(
+      "Error: The --deidentify-uid-secret option or the \
+       DCMFX_DEIDENTIFY_UID_SECRET environment variable is empty. An empty \
+       secret makes the replacement UIDs and the date shift predictable, so \
+       specify a secret, or don't specify one to have a random secret generated"
+    );
+    return Err(());
+  }
+
   crate::validate_output_args(
     args.output_filename.as_ref(),
     args.output_directory.as_ref(),
@@ -385,6 +469,19 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
 
   let input_sources = args.input.base.input_sources().await;
 
+  // Create a single de-identifier that is shared by all input sources so that
+  // the replacement UIDs are consistent across all of them
+  let deidentifier = if args.deidentify {
+    let deidentifier = match &args.deidentify_uid_secret {
+      Some(secret) => Deidentifier::with_uid_secret(secret.as_bytes()),
+      None => Deidentifier::new(),
+    };
+
+    Some(deidentifier.with_options(profile_options))
+  } else {
+    None
+  };
+
   let args = Arc::new(args);
 
   let result = utils::run_tasks(
@@ -392,6 +489,7 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
     input_sources,
     move |input_source: InputSource| {
       let args = args.clone();
+      let deidentifier = deidentifier.clone();
 
       async move {
         if args.in_place
@@ -416,7 +514,14 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
           .await
         };
 
-        match modify_input_source(&input_source, output_target, &args).await {
+        match modify_input_source(
+          &input_source,
+          output_target,
+          &args,
+          deidentifier,
+        )
+        .await
+        {
           Ok(()) => Ok(()),
 
           Err(ModifyCommandError::P10Error(P10Error::DicmPrefixNotPresent))
@@ -455,6 +560,7 @@ async fn modify_input_source(
   input_source: &InputSource,
   output_target: OutputTarget,
   args: &ModifyArgs,
+  deidentifier: Option<Deidentifier>,
 ) -> Result<(), ModifyCommandError> {
   if args.in_place {
     println!("Modifying \"{input_source}\" in place …");
@@ -478,23 +584,20 @@ async fn modify_input_source(
     .as_ref()
     .map(|merge_dicom_json| P10InsertTransform::new(merge_dicom_json.clone()));
 
-  // Create a filter transform for anonymization and tag deletion, if needed
+  // Create an de-identify transform, if needed
+  let deidentify_transform = deidentifier.map(P10DeidentifyTransform::new);
+
+  // Create a filter transform for tag deletion, if needed
   let deletions = args.deletions.clone();
   let delete_private = args.delete_private;
-  let anonymize = args.anonymize;
-  let filter_transform = if anonymize || !deletions.is_empty() || delete_private
-  {
+  let filter_transform = if !deletions.is_empty() || delete_private {
     Some(P10FilterTransform::new(Box::new(
-      move |tag, vr, _length, _path| {
+      move |tag, _vr, _length, _path| {
         if deletions.contains(&tag) {
           return false;
         }
 
         if delete_private && tag.is_private() {
-          return false;
-        }
-
-        if anonymize && !dcmfx::anonymize::filter_tag(tag, vr) {
           return false;
         }
 
@@ -529,6 +632,7 @@ async fn modify_input_source(
     &mut input_stream,
     &mut *output_stream,
     write_config,
+    deidentify_transform,
     insert_transform,
     filter_transform,
     args,
@@ -548,6 +652,7 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
   input_stream: &mut I,
   output_stream: &mut O,
   write_config: P10WriteConfig,
+  mut deidentify_transform: Option<P10DeidentifyTransform>,
   mut insert_transform: Option<P10InsertTransform>,
   mut filter_transform: Option<P10FilterTransform>,
   args: &ModifyArgs,
@@ -687,6 +792,26 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
 
       tokens = new_tokens
     }
+
+    // Pass tokens through the de-identify transform if one is specified. This is
+    // done prior to the insert transform so that inserted data elements take
+    // precedence over de-identification.
+    let tokens =
+      if let Some(deidentify_transform) = deidentify_transform.as_mut() {
+        let mut new_tokens = vec![];
+
+        for token in tokens.iter() {
+          new_tokens.extend(
+            deidentify_transform
+              .add_token(token)
+              .map_err(ModifyCommandError::P10Error)?,
+          );
+        }
+
+        Ok(new_tokens)
+      } else {
+        Ok(tokens)
+      }?;
 
     // Pass tokens through the insert transform if one is specified
     let tokens = if let Some(insert_transform) = insert_transform.as_mut() {

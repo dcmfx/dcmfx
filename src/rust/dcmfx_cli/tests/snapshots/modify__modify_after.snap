@@ -4,26 +4,40 @@ expression: get_stdout(assert)
 ---
 (0002,0001) OB File Meta Information Version        [     2 bytes] [00 01]
 (0002,0002) UI Media Storage SOP Class UID          [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
-(0002,0003) UI Media Storage SOP Instance UID       [    50 bytes] "1.2.840.11 …
+(0002,0003) UI Media Storage SOP Instance UID       [    44 bytes] "2.25.11368 …
 (0002,0010) UI Transfer Syntax UID                  [    20 bytes] "1.2.840 … (Explicit VR Big Endian)
 (0002,0012) UI Implementation Class UID             [    32 bytes] "1.2.826.0. …
 (0002,0013) SH Implementation Version Name          [    10 bytes] "DCMfx Test"
-(0002,0016) AE Source Application Entity Title      [    12 bytes] "CTN_STORAGE"
 (0008,0005) CS Specific Character Set               [    10 bytes] "ISO_IR 192"
 (0008,0008) CS Image Type                           [    20 bytes] "DERIVED",  …
 (0008,0016) UI SOP Class UID                        [    26 bytes] "1.2.840 … (Secondary Capture Image Storage)
-(0008,0018) UI SOP Instance UID                     [    50 bytes] "1.2.840.11 …
-(0008,0020) DA Study Date                           [    10 bytes] "1993.04.30"
-(0008,0021) DA Series Date                          [    10 bytes] "1993.04.30"
-(0008,0023) DA Content Date                         [    10 bytes] "1993.04.30"
-(0008,0030) TM Study Time                           [     8 bytes] "11:27:24"
-(0008,0031) TM Series Time                          [     8 bytes] "11:27:24"
-(0008,0033) TM Content Time                         [     8 bytes] "11:27:24"
+(0008,0018) UI SOP Instance UID                     [    44 bytes] "2.25.11368 …
+(0008,0020) DA Study Date                           [     0 bytes] ""
+(0008,0021) DA Series Date                          [     8 bytes] 1900-01-01
+(0008,0023) DA Content Date                         [     8 bytes] 1900-01-01
+(0008,0030) TM Study Time                           [     0 bytes] ""
+(0008,0031) TM Series Time                          [     4 bytes] 00:00
+(0008,0033) TM Content Time                         [     4 bytes] 00:00
 (0008,0060) CS Modality                             [     2 bytes] "CT" (Computed Tomography)
 (0008,0070) LO Manufacturer                         [    18 bytes] "GE MEDICAL …
+(0008,0080) LO Institution Name                     [    12 bytes] "DEIDENTIFI …
+(0008,0090) PN Referring Physician's Name           [     0 bytes] ""
+(0008,1010) SH Station Name                         [    12 bytes] "DEIDENTIFI …
+(0008,1030) LO Study Description                    [     0 bytes] ""
+(0008,1070) PN Operators' Name                      [    12 bytes] "DEIDENTIFI …
 (0008,1090) LO Manufacturer's Model Name            [    12 bytes] "GENESIS_ZE …
-(0020,000D) UI Study Instance UID                   [    48 bytes] "1.2.840.11 …
-(0020,000E) UI Series Instance UID                  [    48 bytes] "1.2.840.11 …
+(0010,0010) PN Patient's Name                       [     0 bytes] ""
+(0012,0062) CS Patient Identity Removed             [     4 bytes] "YES"
+(0012,0063) LO De-identification Method             [    42 bytes] "Basic Appl …
+(0012,0064) SQ De-identification Method Code Sequence
+  (FFFE,E000) Item
+    (0008,0100) SH Code Value                           [     6 bytes] "113100"
+    (0008,0102) SH Coding Scheme Designator             [     4 bytes] "DCM"
+    (0008,0104) LO Code Meaning                         [    42 bytes] "Basic A …
+  (FFFE,E00D) Item Delimitation Item
+(FFFE,E0DD) Sequence Delimitation Item
+(0020,000D) UI Study Instance UID                   [    44 bytes] "2.25.10130 …
+(0020,000E) UI Series Instance UID                  [    44 bytes] "2.25.47695 …
 (0020,0011) IS Series Number                        [     4 bytes] "365"
 (0020,0013) IS Instance Number                      [     2 bytes] "1"
 (0028,0002) US Samples per Pixel                    [     2 bytes] 1
@@ -36,6 +50,7 @@ expression: get_stdout(assert)
 (0028,0103) US Pixel Representation                 [     2 bytes] 1
 (0028,0106) SS Smallest Image Pixel Value           [     2 bytes] 0
 (0028,0120) SS Pixel Padding Value                  [     2 bytes] 0
+(0028,0303) CS Longitudinal Temporal Information Modified  [     8 bytes] "REMOVED"
 (0028,1050) DS Window Center                        [     4 bytes] "1024"
 (0028,1051) DS Window Width                         [     4 bytes] "4095"
 (0028,1052) DS Rescale Intercept                    [     6 bytes] "-1024"

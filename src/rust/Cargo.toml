@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
   "dcmfx",
-  "dcmfx_anonymize",
+  "dcmfx_deidentify",
   "dcmfx_character_set",
   "dcmfx_cli",
   "dcmfx_core",

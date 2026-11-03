@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-  "dicom_anonymize/rust",
+  "dicom_deidentify/rust",
   "dicom_json_read/rust",
   "dicom_json_write/rust",
   "dicom_read/rust",

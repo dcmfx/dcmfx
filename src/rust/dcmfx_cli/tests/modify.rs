@@ -24,7 +24,9 @@ fn modify() {
     .arg("modify")
     .arg("--transfer-syntax")
     .arg("explicit-vr-big-endian")
-    .arg("--anonymize")
+    .arg("--deidentify")
+    .arg("--deidentify-uid-secret")
+    .arg("dcmfx-test")
     .arg(input_file)
     .arg("--output-filename")
     .arg(&output_file)
@@ -49,6 +51,102 @@ fn modify() {
     .success();
 
   assert_snapshot!("modify_after", get_stdout(assert));
+}
+
+#[test]
+fn deidentify_with_options() {
+  let temp_dir = create_temp_dir();
+  let input_file = "../../../test/assets/pydicom/test_files/test-SR.dcm";
+  let output_file = temp_dir.path().join("output.dcm");
+
+  // The secret is given through the environment variable
+  dcmfx_cli()
+    .env("DCMFX_DEIDENTIFY_UID_SECRET", "dcmfx-test")
+    .arg("modify")
+    .arg("--deidentify")
+    .arg("--deidentify-options")
+    .arg(
+      "retain-device-identity,retain-institution-identity,\
+       retain-modified-dates,clean-structured-content",
+    )
+    .arg("--deidentify-date-shift")
+    .arg("-100")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg(&output_file)
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
+    .assert()
+    .success();
+
+  let assert = dcmfx_cli()
+    .arg("print")
+    .arg(&output_file)
+    .assert()
+    .success();
+
+  assert_snapshot!("deidentify_with_options_after", get_stdout(assert));
+}
+
+#[test]
+fn errors_on_empty_deidentify_uid_secret() {
+  let assert = dcmfx_cli()
+    .env("DCMFX_DEIDENTIFY_UID_SECRET", "")
+    .arg("modify")
+    .arg("--deidentify")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(get_stderr(assert));
+}
+
+#[test]
+fn errors_on_conflicting_deidentify_date_options() {
+  let assert = dcmfx_cli()
+    .arg("modify")
+    .arg("--deidentify")
+    .arg("--deidentify-options")
+    .arg("retain-full-dates,retain-modified-dates")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(get_stderr(assert));
+}
+
+#[test]
+fn errors_on_zero_date_shift() {
+  let assert = dcmfx_cli()
+    .arg("modify")
+    .arg("--deidentify")
+    .arg("--deidentify-options")
+    .arg("retain-modified-dates")
+    .arg("--deidentify-date-shift")
+    .arg("0")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(get_stderr(assert));
+}
+
+#[test]
+fn errors_on_date_shift_without_modified_dates() {
+  let assert = dcmfx_cli()
+    .arg("modify")
+    .arg("--deidentify")
+    .arg("--deidentify-date-shift")
+    .arg("-10")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(get_stderr(assert));
 }
 
 #[test]

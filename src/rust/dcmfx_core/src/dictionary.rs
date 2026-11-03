@@ -51983,6 +51983,13 @@ fn find_element_in_group_0008(element: u16) -> Result<Item, ()> {
     0x9458 => Ok(FRAME_DISPLAY_SEQUENCE),
     0x9459 => Ok(RECOMMENDED_DISPLAY_FRAME_RATE_IN_FLOAT),
     0x9460 => Ok(SKIP_FRAME_RANGE_FLAG),
+    0x1301 => Ok(PRINCIPAL_DIAGNOSIS_CODE_SEQUENCE),
+    0x1302 => Ok(PRIMARY_DIAGNOSIS_CODE_SEQUENCE),
+    0x1303 => Ok(SECONDARY_DIAGNOSES_CODE_SEQUENCE),
+    0x1304 => Ok(HISTOLOGICAL_DIAGNOSES_CODE_SEQUENCE),
+    0x001D => Ok(SENSITIVE_CONTENT_CODE_SEQUENCE),
+    0x114C => Ok(REFERENCED_SEGMENTATION_SEQUENCE),
+    0x114D => Ok(REFERENCED_SURFACE_SEGMENTATION_SEQUENCE),
     _ => Err(()),
   }
 }
@@ -52067,6 +52074,21 @@ fn find_element_in_group_0010(element: u16) -> Result<Item, ()> {
     0x2299 => Ok(RESPONSIBLE_ORGANIZATION),
     0x4000 => Ok(PATIENT_COMMENTS),
     0x9431 => Ok(EXAMINED_BODY_THICKNESS),
+    0x0011 => Ok(PERSON_NAMES_TO_USE_SEQUENCE),
+    0x0012 => Ok(NAME_TO_USE),
+    0x0013 => Ok(NAME_TO_USE_COMMENT),
+    0x0014 => Ok(THIRD_PERSON_PRONOUNS_SEQUENCE),
+    0x0015 => Ok(PRONOUN_CODE_SEQUENCE),
+    0x0016 => Ok(PRONOUN_COMMENT),
+    0x0041 => Ok(GENDER_IDENTITY_SEQUENCE),
+    0x0042 => Ok(SEX_PARAMETERS_FOR_CLINICAL_USE_CATEGORY_COMMENT),
+    0x0043 => Ok(SEX_PARAMETERS_FOR_CLINICAL_USE_CATEGORY_SEQUENCE),
+    0x0044 => Ok(GENDER_IDENTITY_CODE_SEQUENCE),
+    0x0045 => Ok(GENDER_IDENTITY_COMMENT),
+    0x0046 => Ok(SEX_PARAMETERS_FOR_CLINICAL_USE_CATEGORY_CODE_SEQUENCE),
+    0x0047 => Ok(SEX_PARAMETERS_FOR_CLINICAL_USE_CATEGORY_REFERENCE),
+    0x2161 => Ok(ETHNIC_GROUP_CODE_SEQUENCE),
+    0x2162 => Ok(ETHNIC_GROUPS),
     _ => Err(()),
   }
 }
@@ -52317,6 +52339,110 @@ fn find_element_in_group_0014(element: u16) -> Result<Item, ()> {
     0x511D => Ok(WEDGE_CHAMFER_HEIGHT),
     0x511E => Ok(WEDGE_CURVE),
     0x511F => Ok(RADIUS_ALONG_WEDGE),
+    0x4101 => Ok(WAVE_DIMENSIONS_DEFINITION_SEQUENCE),
+    0x4102 => Ok(WAVE_DIMENSION_NUMBER),
+    0x4103 => Ok(WAVE_DIMENSION_DESCRIPTION),
+    0x4104 => Ok(WAVE_DIMENSION_UNIT),
+    0x4105 => Ok(WAVE_DIMENSION_VALUE_TYPE),
+    0x4106 => Ok(WAVE_DIMENSION_VALUES_SEQUENCE),
+    0x4107 => Ok(REFERENCED_WAVE_DIMENSION),
+    0x4108 => Ok(INTEGER_NUMERIC_VALUE),
+    0x4109 => Ok(BYTE_NUMERIC_VALUE),
+    0x410A => Ok(SHORT_NUMERIC_VALUE),
+    0x410B => Ok(SINGLE_PRECISION_FLOATING_POINT_NUMERIC_VALUE),
+    0x410C => Ok(DOUBLE_PRECISION_FLOATING_POINT_NUMERIC_VALUE),
+    0x6001 => Ok(THERMAL_CAMERA_SETTINGS_SEQUENCE),
+    0x6002 => Ok(ACQUISITION_FRAME_RATE),
+    0x6003 => Ok(INTEGRATION_TIME),
+    0x6004 => Ok(NUMBER_OF_CALIBRATION_FRAMES),
+    0x6005 => Ok(NUMBER_OF_ROWS_IN_FULL_ACQUISITION_IMAGE),
+    0x6006 => Ok(NUMBER_OF_COLUMNS_IN_FULL_ACQUISITION_IMAGE),
+    0x6007 => Ok(THERMAL_SOURCE_SETTINGS_SEQUENCE),
+    0x6008 => Ok(SOURCE_HORIZONTAL_PITCH),
+    0x6009 => Ok(SOURCE_VERTICAL_PITCH),
+    0x600A => Ok(SOURCE_HORIZONTAL_SCAN_SPEED),
+    0x600B => Ok(THERMAL_SOURCE_MODULATION_FREQUENCY),
+    0x600C => Ok(INDUCTION_SOURCE_SETTING_SEQUENCE),
+    0x600D => Ok(COIL_FREQUENCY),
+    0x600E => Ok(CURRENT_AMPLITUDE_ACROSS_COIL),
+    0x600F => Ok(FLASH_SOURCE_SETTING_SEQUENCE),
+    0x6010 => Ok(FLASH_DURATION),
+    0x6011 => Ok(FLASH_FRAME_NUMBER),
+    0x6012 => Ok(LASER_SOURCE_SETTING_SEQUENCE),
+    0x6013 => Ok(HORIZONTAL_LASER_SPOT_DIMENSION),
+    0x6014 => Ok(VERTICAL_LASER_SPOT_DIMENSION),
+    0x6015 => Ok(LASER_WAVELENGTH),
+    0x6016 => Ok(LASER_POWER),
+    0x6017 => Ok(FORCED_GAS_SETTING_SEQUENCE),
+    0x6018 => Ok(VIBRATION_SOURCE_SETTING_SEQUENCE),
+    0x6019 => Ok(VIBRATION_EXCITATION_FREQUENCY),
+    0x601A => Ok(VIBRATION_EXCITATION_VOLTAGE),
+    0x601B => Ok(THERMOGRAPHY_DATA_CAPTURE_METHOD),
+    0x601C => Ok(THERMAL_TECHNIQUE),
+    0x601D => Ok(THERMAL_CAMERA_CORE_SEQUENCE),
+    0x601E => Ok(DETECTOR_WAVELENGTH_RANGE),
+    0x601F => Ok(THERMAL_CAMERA_CALIBRATION_TYPE),
+    0x6020 => Ok(ACQUISITION_IMAGE_COUNTER),
+    0x6021 => Ok(FRONT_PANEL_TEMPERATURE),
+    0x6022 => Ok(AIR_GAP_TEMPERATURE),
+    0x6023 => Ok(VERTICAL_PIXEL_SIZE),
+    0x6024 => Ok(HORIZONTAL_PIXEL_SIZE),
+    0x6025 => Ok(DATA_STREAMING_PROTOCOL),
+    0x6026 => Ok(LENS_SEQUENCE),
+    0x6027 => Ok(FIELD_OF_VIEW),
+    0x6028 => Ok(LENS_FILTER_MANUFACTURER),
+    0x6029 => Ok(CUTOFF_FILTER_TYPE),
+    0x602A => Ok(LENS_FILTER_CUT_OFF_WAVELENGTH),
+    0x602B => Ok(THERMAL_SOURCE_SEQUENCE),
+    0x602C => Ok(THERMAL_SOURCE_MOTION_STATE),
+    0x602D => Ok(THERMAL_SOURCE_MOTION_TYPE),
+    0x602E => Ok(INDUCTION_HEATING_SEQUENCE),
+    0x602F => Ok(COIL_CONFIGURATION_ID),
+    0x6030 => Ok(NUMBER_OF_TURNS_IN_COIL),
+    0x6031 => Ok(SHAPE_OF_INDIVIDUAL_TURN),
+    0x6032 => Ok(SIZE_OF_INDIVIDUAL_TURN),
+    0x6033 => Ok(DISTANCE_BETWEEN_TURNS),
+    0x6034 => Ok(FLASH_HEATING_SEQUENCE),
+    0x6035 => Ok(NUMBER_OF_LAMPS),
+    0x6036 => Ok(FLASH_SYNCHRONIZATION_PROTOCOL),
+    0x6037 => Ok(FLASH_MODIFICATION_STATUS),
+    0x6038 => Ok(LASER_HEATING_SEQUENCE),
+    0x6039 => Ok(LASER_MANUFACTURER),
+    0x603A => Ok(LASER_MODEL_NUMBER),
+    0x603B => Ok(LASER_TYPE_DESCRIPTION),
+    0x603C => Ok(FORCED_GAS_HEATING_SEQUENCE),
+    0x603D => Ok(GAS_USED_FOR_HEATING_COOLING_PART),
+    0x603E => Ok(VIBRATION_SONIC_HEATING_SEQUENCE),
+    0x603F => Ok(PROBE_MANUFACTURER),
+    0x6040 => Ok(PROBE_MODEL_NUMBER),
+    0x6041 => Ok(APERTURE_SIZE),
+    0x6042 => Ok(PROBE_RESONANT_FREQUENCY),
+    0x6043 => Ok(HEAT_SOURCE_DESCRIPTION),
+    0x6044 => Ok(SURFACE_PREPARATION_WITH_OPTICAL_COATING),
+    0x6045 => Ok(OPTICAL_COATING_TYPE),
+    0x6046 => Ok(THERMAL_CONDUCTIVITY_OF_EXPOSED_SURFACE),
+    0x6047 => Ok(MATERIAL_DENSITY),
+    0x6048 => Ok(SPECIFIC_HEAT_OF_INSPECTION_SURFACE),
+    0x6049 => Ok(EMISSIVITY_OF_INSPECTION_SURFACE),
+    0x604A => Ok(ELECTROMAGNETIC_CLASSIFICATION_OF_INSPECTION_SURFACE),
+    0x604C => Ok(MOVING_WINDOW_SIZE),
+    0x604D => Ok(MOVING_WINDOW_TYPE),
+    0x604E => Ok(MOVING_WINDOW_WEIGHTS),
+    0x604F => Ok(MOVING_WINDOW_PITCH),
+    0x6050 => Ok(MOVING_WINDOW_PADDING_SCHEME),
+    0x6051 => Ok(MOVING_WINDOW_PADDING_LENGTH),
+    0x6052 => Ok(SPATIAL_FILTERING_PARAMETERS_SEQUENCE),
+    0x6053 => Ok(SPATIAL_FILTERING_SCHEME),
+    0x6056 => Ok(HORIZONTAL_MOVING_WINDOW_SIZE),
+    0x6057 => Ok(VERTICAL_MOVING_WINDOW_SIZE),
+    0x6059 => Ok(POLYNOMIAL_FITTING_SEQUENCE),
+    0x605A => Ok(FITTING_DATA_TYPE),
+    0x605B => Ok(OPERATION_ON_TIME_AXIS_BEFORE_FITTING),
+    0x605C => Ok(OPERATION_ON_PIXEL_INTENSITY_BEFORE_FITTING),
+    0x605D => Ok(ORDER_OF_POLYNOMIAL),
+    0x605E => Ok(INDEPENDENT_VARIABLE_FOR_POLYNOMIAL_FIT),
+    0x605F => Ok(POLYNOMIAL_COEFFICIENTS),
+    0x6060 => Ok(THERMOGRAPHY_PIXEL_DATA_UNIT),
     _ => Err(()),
   }
 }
@@ -53338,6 +53464,9 @@ fn find_element_in_group_0018(element: u16) -> Result<Item, ()> {
     0xA001 => Ok(CONTRIBUTING_EQUIPMENT_SEQUENCE),
     0xA002 => Ok(CONTRIBUTION_DATE_TIME),
     0xA003 => Ok(CONTRIBUTION_DESCRIPTION),
+    0x9390 => Ok(METAL_ARTIFACT_REDUCTION_SEQUENCE),
+    0x9391 => Ok(METAL_ARTIFACT_REDUCTION_APPLIED),
+    0x9392 => Ok(METAL_ARTIFACT_REDUCTION_ALGORITHM_IDENTIFICATION_SEQUENCE),
     _ => Err(()),
   }
 }
@@ -53659,6 +53788,12 @@ fn find_element_in_group_0022(element: u16) -> Result<Item, ()> {
     0x1649 => Ok(ASCAN_RATE),
     0x1650 => Ok(BSCAN_RATE),
     0x1658 => Ok(SURFACE_MESH_Z_PIXEL_OFFSET),
+    0x1623 => Ok(OPHTHALMIC_ANATOMIC_REFERENCE_POINT_FRAME_COORDINATE),
+    0x1627 => Ok(OPHTHALMIC_EN_FACE_VOLUME_DESCRIPTOR_SEQUENCE),
+    0x1629 => Ok(OPHTHALMIC_EN_FACE_VOLUME_DESCRIPTOR_SCOPE),
+    0x1632 => Ok(OPHTHALMIC_ANATOMIC_REFERENCE_POINT_SEQUENCE),
+    0x1633 => Ok(OPHTHALMIC_ANATOMIC_REFERENCE_POINT_LOCALIZATION_TYPE),
+    0x1634 => Ok(PRIMARY_ANATOMIC_STRUCTURE_ITEM_INDEX),
     _ => Err(()),
   }
 }
@@ -54523,6 +54658,28 @@ fn find_element_in_group_0040(element: u16) -> Result<Item, ()> {
     0xE025 => Ok(WADORS_RETRIEVAL_SEQUENCE),
     0xE030 => Ok(REPOSITORY_UNIQUE_ID),
     0xE031 => Ok(HOME_COMMUNITY_ID),
+    0xA034 => Ok(EFFECTIVE_START_DATE_TIME),
+    0xA035 => Ok(EFFECTIVE_STOP_DATE_TIME),
+    0xB034 => Ok(ANNOTATION_DATE_TIME),
+    0xB036 => Ok(SEGMENT_DEFINITION_DATE_TIME),
+    0xB03B => Ok(MONTAGE_NAME),
+    0xB03F => Ok(MONTAGE_CHANNEL_LABEL),
+    0xE012 => Ok(DISPLAY_URI),
+    0xB030 => Ok(STRUCTURED_WAVEFORM_ANNOTATION_SEQUENCE),
+    0xB031 => Ok(WAVEFORM_ANNOTATION_DISPLAY_SELECTION_SEQUENCE),
+    0xB032 => Ok(REFERENCED_MONTAGE_INDEX),
+    0xB033 => Ok(WAVEFORM_TEXTUAL_ANNOTATION_SEQUENCE),
+    0xB035 => Ok(DISPLAYED_WAVEFORM_SEGMENT_SEQUENCE),
+    0xB037 => Ok(MONTAGE_ACTIVATION_SEQUENCE),
+    0xB038 => Ok(MONTAGE_ACTIVATION_TIME_OFFSET),
+    0xB039 => Ok(WAVEFORM_MONTAGE_SEQUENCE),
+    0xB03A => Ok(REFERENCED_MONTAGE_CHANNEL_NUMBER),
+    0xB03C => Ok(MONTAGE_CHANNEL_SEQUENCE),
+    0xB03D => Ok(MONTAGE_INDEX),
+    0xB03E => Ok(MONTAGE_CHANNEL_NUMBER),
+    0xB040 => Ok(MONTAGE_CHANNEL_SOURCE_CODE_SEQUENCE),
+    0xB041 => Ok(CONTRIBUTING_CHANNEL_SOURCES_SEQUENCE),
+    0xB042 => Ok(CHANNEL_WEIGHT),
     _ => Err(()),
   }
 }
@@ -54570,6 +54727,7 @@ fn find_element_in_group_0044(element: u16) -> Result<Item, ()> {
     0x0108 => Ok(REFERENCED_ASSERTION_UID),
     0x0109 => Ok(APPROVAL_SUBJECT_SEQUENCE),
     0x010A => Ok(ORGANIZATIONAL_ROLE_CODE_SEQUENCE),
+    0x0110 => Ok(RT_ASSERTIONS_SEQUENCE),
     _ => Err(()),
   }
 }
@@ -54712,6 +54870,7 @@ fn find_element_in_group_0048(element: u16) -> Result<Item, ()> {
     0x0301 => Ok(PIXEL_ORIGIN_INTERPRETATION),
     0x0302 => Ok(NUMBER_OF_OPTICAL_PATHS),
     0x0303 => Ok(TOTAL_PIXEL_MATRIX_FOCAL_PLANES),
+    0x0304 => Ok(TILES_OVERLAP),
     _ => Err(()),
   }
 }
@@ -54996,6 +55155,7 @@ fn find_element_in_group_0066(element: u16) -> Result<Item, ()> {
     0x0132 => Ok(MEASUREMENT_VALUES_SEQUENCE),
     0x0133 => Ok(DIFFUSION_ACQUISITION_CODE_SEQUENCE),
     0x0134 => Ok(DIFFUSION_MODEL_CODE_SEQUENCE),
+    0x0005 => Ok(SURFACE_OFFSET),
     _ => Err(()),
   }
 }
@@ -55981,6 +56141,7 @@ fn find_element_in_group_3002(element: u16) -> Result<Item, ()> {
     0x0133 => Ok(ENERGY_DERIVATION_CODE_SEQUENCE),
     0x0134 => Ok(MAXIMUM_CUMULATIVE_METERSET_EXPOSURE),
     0x0135 => Ok(ACQUISITION_INITIATION_SEQUENCE),
+    0x0136 => Ok(RT_CONE_BEAM_IMAGING_GEOMETRY_SEQUENCE),
     _ => Err(()),
   }
 }
@@ -56013,6 +56174,18 @@ fn find_element_in_group_3004(element: u16) -> Result<Item, ()> {
     0x0070 => Ok(DVH_MINIMUM_DOSE),
     0x0072 => Ok(DVH_MAXIMUM_DOSE),
     0x0074 => Ok(DVH_MEAN_DOSE),
+    0x007F => Ok(DOSE_CALCULATION_MODEL_NAME),
+    0x0016 => Ok(RECOMMENDED_ISODOSE_LEVEL_SEQUENCE),
+    0x0020 => Ok(DOSE_UNIT_CODE_SEQUENCE),
+    0x0021 => Ok(RT_DOSE_INTERPRETED_TYPE_CODE_SEQUENCE),
+    0x0022 => Ok(RT_DOSE_INTERPRETED_TYPE_CODE_MODIFIER_SEQUENCE),
+    0x0023 => Ok(DOSE_RADIOBIOLOGICAL_INTERPRETATION_SEQUENCE),
+    0x0024 => Ok(RT_DOSE_INTENT_CODE_SEQUENCE),
+    0x0080 => Ok(DOSE_CALCULATION_MODEL_SEQUENCE),
+    0x0081 => Ok(DOSE_CALCULATION_ALGORITHM_SEQUENCE),
+    0x0082 => Ok(COMMISSIONING_STATUS),
+    0x0083 => Ok(DOSE_CALCULATION_MODEL_PARAMETER_SEQUENCE),
+    0x0084 => Ok(DOSE_DEPOSITION_CALCULATION_MEDIUM),
     _ => Err(()),
   }
 }
@@ -56812,6 +56985,15 @@ fn find_element_in_group_300a(element: u16) -> Result<Item, ()> {
     0x079C => Ok(PATIENT_SUPPORT_DISPLACEMENT_SEQUENCE),
     0x079D => Ok(DISPLACEMENT_REFERENCE_LOCATION_CODE_SEQUENCE),
     0x079E => Ok(RT_RADIATION_SET_DELIVERY_USAGE),
+    0x0054 => Ok(TABLE_TOP_POSITION_ALIGNMENT_UID),
+    0x02EC => Ok(COMPENSATOR_SURFACE_REPRESENTATION_FLAG),
+    0x039B => Ok(SCAN_SPOT_GANTRY_ANGLES),
+    0x039C => Ok(SCAN_SPOT_PATIENT_SUPPORT_ANGLES),
+    0x079F => Ok(PATIENT_TREATMENT_PREPARATION_SEQUENCE),
+    0x07A0 => Ok(PATIENT_TO_EQUIPMENT_RELATIONSHIP_SEQUENCE),
+    0x07A1 => {
+      Ok(IMAGING_EQUIPMENT_TO_TREATMENT_DELIVERY_DEVICE_RELATIONSHIP_SEQUENCE)
+    }
     _ => Err(()),
   }
 }
@@ -57275,6 +57457,1807 @@ fn find_element_in_group_fffe(element: u16) -> Result<Item, ()> {
 /// Returns details for a data element based on a tag. The private creator is
 /// required in order to look up well-known privately defined data elements.
 ///
+pub const PRINCIPAL_DIAGNOSIS_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0008,
+    element: 0x1301,
+  },
+  name: "Principal Diagnosis Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const PRIMARY_DIAGNOSIS_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0008,
+    element: 0x1302,
+  },
+  name: "Primary Diagnosis Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const SECONDARY_DIAGNOSES_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0008,
+    element: 0x1303,
+  },
+  name: "Secondary Diagnoses Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const HISTOLOGICAL_DIAGNOSES_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0008,
+    element: 0x1304,
+  },
+  name: "Histological Diagnoses Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const PERSON_NAMES_TO_USE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0011,
+  },
+  name: "Person Names to Use Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const NAME_TO_USE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0012,
+  },
+  name: "Name to Use",
+  vrs: &[ValueRepresentation::LongText],
+  multiplicity: VM_1,
+};
+
+pub const NAME_TO_USE_COMMENT: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0013,
+  },
+  name: "Name to Use Comment",
+  vrs: &[ValueRepresentation::UnlimitedText],
+  multiplicity: VM_1,
+};
+
+pub const THIRD_PERSON_PRONOUNS_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0014,
+  },
+  name: "Third Person Pronouns Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const PRONOUN_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0015,
+  },
+  name: "Pronoun Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const PRONOUN_COMMENT: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0016,
+  },
+  name: "Pronoun Comment",
+  vrs: &[ValueRepresentation::UnlimitedText],
+  multiplicity: VM_1,
+};
+
+pub const GENDER_IDENTITY_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0041,
+  },
+  name: "Gender Identity Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const SEX_PARAMETERS_FOR_CLINICAL_USE_CATEGORY_COMMENT: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0042,
+  },
+  name: "Sex Parameters for Clinical Use Category Comment",
+  vrs: &[ValueRepresentation::UnlimitedText],
+  multiplicity: VM_1,
+};
+
+pub const SEX_PARAMETERS_FOR_CLINICAL_USE_CATEGORY_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0043,
+  },
+  name: "Sex Parameters for Clinical Use Category Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const GENDER_IDENTITY_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0044,
+  },
+  name: "Gender Identity Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const GENDER_IDENTITY_COMMENT: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0045,
+  },
+  name: "Gender Identity Comment",
+  vrs: &[ValueRepresentation::UnlimitedText],
+  multiplicity: VM_1,
+};
+
+pub const SEX_PARAMETERS_FOR_CLINICAL_USE_CATEGORY_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0046,
+  },
+  name: "Sex Parameters for Clinical Use Category Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const SEX_PARAMETERS_FOR_CLINICAL_USE_CATEGORY_REFERENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x0047,
+  },
+  name: "Sex Parameters for Clinical Use Category Reference",
+  vrs: &[ValueRepresentation::UniversalResourceIdentifier],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const ETHNIC_GROUP_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x2161,
+  },
+  name: "Ethnic Group Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const ETHNIC_GROUPS: Item = Item {
+  tag: DataElementTag {
+    group: 0x0010,
+    element: 0x2162,
+  },
+  name: "Ethnic Groups",
+  vrs: &[ValueRepresentation::UnlimitedCharacters],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const EFFECTIVE_START_DATE_TIME: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xA034,
+  },
+  name: "Effective Start DateTime",
+  vrs: &[ValueRepresentation::DateTime],
+  multiplicity: VM_1,
+};
+
+pub const EFFECTIVE_STOP_DATE_TIME: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xA035,
+  },
+  name: "Effective Stop DateTime",
+  vrs: &[ValueRepresentation::DateTime],
+  multiplicity: VM_1,
+};
+
+pub const ANNOTATION_DATE_TIME: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB034,
+  },
+  name: "Annotation DateTime",
+  vrs: &[ValueRepresentation::DateTime],
+  multiplicity: VM_1,
+};
+
+pub const SEGMENT_DEFINITION_DATE_TIME: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB036,
+  },
+  name: "Segment Definition DateTime",
+  vrs: &[ValueRepresentation::DateTime],
+  multiplicity: VM_1,
+};
+
+pub const MONTAGE_NAME: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB03B,
+  },
+  name: "Montage Name",
+  vrs: &[ValueRepresentation::LongText],
+  multiplicity: VM_1,
+};
+
+pub const MONTAGE_CHANNEL_LABEL: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB03F,
+  },
+  name: "Montage Channel Label",
+  vrs: &[ValueRepresentation::LongString],
+  multiplicity: VM_1,
+};
+
+pub const DISPLAY_URI: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xE012,
+  },
+  name: "Display URI",
+  vrs: &[ValueRepresentation::UniversalResourceIdentifier],
+  multiplicity: VM_1,
+};
+
+pub const DOSE_CALCULATION_MODEL_NAME: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x007F,
+  },
+  name: "Dose Calculation Model Name",
+  vrs: &[ValueRepresentation::LongString],
+  multiplicity: VM_1,
+};
+
+pub const TABLE_TOP_POSITION_ALIGNMENT_UID: Item = Item {
+  tag: DataElementTag {
+    group: 0x300A,
+    element: 0x0054,
+  },
+  name: "Table Top Position Alignment UID",
+  vrs: &[ValueRepresentation::UniqueIdentifier],
+  multiplicity: VM_1,
+};
+
+pub const SENSITIVE_CONTENT_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0008,
+    element: 0x001D,
+  },
+  name: "Sensitive Content Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const REFERENCED_SEGMENTATION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0008,
+    element: 0x114C,
+  },
+  name: "Referenced Segmentation Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const REFERENCED_SURFACE_SEGMENTATION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0008,
+    element: 0x114D,
+  },
+  name: "Referenced Surface Segmentation Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const WAVE_DIMENSIONS_DEFINITION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x4101,
+  },
+  name: "Wave Dimensions Definition Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const WAVE_DIMENSION_NUMBER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x4102,
+  },
+  name: "Wave Dimension Number",
+  vrs: &[ValueRepresentation::UnsignedShort],
+  multiplicity: VM_1,
+};
+
+pub const WAVE_DIMENSION_DESCRIPTION: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x4103,
+  },
+  name: "Wave Dimension Description",
+  vrs: &[ValueRepresentation::LongString],
+  multiplicity: VM_1,
+};
+
+pub const WAVE_DIMENSION_UNIT: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x4104,
+  },
+  name: "Wave Dimension Unit",
+  vrs: &[ValueRepresentation::UnsignedShort],
+  multiplicity: VM_1,
+};
+
+pub const WAVE_DIMENSION_VALUE_TYPE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x4105,
+  },
+  name: "Wave Dimension Value Type",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const WAVE_DIMENSION_VALUES_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x4106,
+  },
+  name: "Wave Dimension Values Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const REFERENCED_WAVE_DIMENSION: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x4107,
+  },
+  name: "Referenced Wave Dimension",
+  vrs: &[ValueRepresentation::UnsignedShort],
+  multiplicity: VM_1,
+};
+
+pub const INTEGER_NUMERIC_VALUE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x4108,
+  },
+  name: "Integer Numeric Value",
+  vrs: &[ValueRepresentation::SignedLong],
+  multiplicity: VM_1,
+};
+
+pub const BYTE_NUMERIC_VALUE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x4109,
+  },
+  name: "Byte Numeric Value",
+  vrs: &[ValueRepresentation::OtherByteString],
+  multiplicity: VM_1,
+};
+
+pub const SHORT_NUMERIC_VALUE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x410A,
+  },
+  name: "Short Numeric Value",
+  vrs: &[ValueRepresentation::OtherWordString],
+  multiplicity: VM_1,
+};
+
+pub const SINGLE_PRECISION_FLOATING_POINT_NUMERIC_VALUE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x410B,
+  },
+  name: "Single Precision Floating Point Numeric Value",
+  vrs: &[ValueRepresentation::OtherFloatString],
+  multiplicity: VM_1,
+};
+
+pub const DOUBLE_PRECISION_FLOATING_POINT_NUMERIC_VALUE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x410C,
+  },
+  name: "Double Precision Floating Point Numeric Value",
+  vrs: &[ValueRepresentation::OtherDoubleString],
+  multiplicity: VM_1,
+};
+
+pub const THERMAL_CAMERA_SETTINGS_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6001,
+  },
+  name: "Thermal Camera Settings Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const ACQUISITION_FRAME_RATE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6002,
+  },
+  name: "Acquisition Frame Rate",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const INTEGRATION_TIME: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6003,
+  },
+  name: "Integration Time",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const NUMBER_OF_CALIBRATION_FRAMES: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6004,
+  },
+  name: "Number of Calibration Frames",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const NUMBER_OF_ROWS_IN_FULL_ACQUISITION_IMAGE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6005,
+  },
+  name: "Number of Rows in Full Acquisition Image",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const NUMBER_OF_COLUMNS_IN_FULL_ACQUISITION_IMAGE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6006,
+  },
+  name: "Number Of Columns in Full Acquisition Image",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const THERMAL_SOURCE_SETTINGS_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6007,
+  },
+  name: "Thermal Source Settings Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const SOURCE_HORIZONTAL_PITCH: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6008,
+  },
+  name: "Source Horizontal Pitch",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const SOURCE_VERTICAL_PITCH: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6009,
+  },
+  name: "Source Vertical Pitch",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const SOURCE_HORIZONTAL_SCAN_SPEED: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x600A,
+  },
+  name: "Source Horizontal Scan Speed",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const THERMAL_SOURCE_MODULATION_FREQUENCY: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x600B,
+  },
+  name: "Thermal Source Modulation Frequency",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const INDUCTION_SOURCE_SETTING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x600C,
+  },
+  name: "Induction Source Setting Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const COIL_FREQUENCY: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x600D,
+  },
+  name: "Coil Frequency",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const CURRENT_AMPLITUDE_ACROSS_COIL: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x600E,
+  },
+  name: "Current Amplitude Across Coil",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const FLASH_SOURCE_SETTING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x600F,
+  },
+  name: "Flash Source Setting Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const FLASH_DURATION: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6010,
+  },
+  name: "Flash Duration",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const FLASH_FRAME_NUMBER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6011,
+  },
+  name: "Flash Frame Number",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const LASER_SOURCE_SETTING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6012,
+  },
+  name: "Laser Source Setting Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const HORIZONTAL_LASER_SPOT_DIMENSION: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6013,
+  },
+  name: "Horizontal Laser Spot Dimension",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const VERTICAL_LASER_SPOT_DIMENSION: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6014,
+  },
+  name: "Vertical Laser Spot Dimension",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const LASER_WAVELENGTH: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6015,
+  },
+  name: "Laser Wavelength",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const LASER_POWER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6016,
+  },
+  name: "Laser Power",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const FORCED_GAS_SETTING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6017,
+  },
+  name: "Forced Gas Setting Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const VIBRATION_SOURCE_SETTING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6018,
+  },
+  name: "Vibration Source Setting Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const VIBRATION_EXCITATION_FREQUENCY: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6019,
+  },
+  name: "Vibration Excitation Frequency",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const VIBRATION_EXCITATION_VOLTAGE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x601A,
+  },
+  name: "Vibration Excitation Voltage",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const THERMOGRAPHY_DATA_CAPTURE_METHOD: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x601B,
+  },
+  name: "Thermography Data Capture Method",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const THERMAL_TECHNIQUE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x601C,
+  },
+  name: "Thermal Technique",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const THERMAL_CAMERA_CORE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x601D,
+  },
+  name: "Thermal Camera Core Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const DETECTOR_WAVELENGTH_RANGE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x601E,
+  },
+  name: "Detector Wavelength Range",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const THERMAL_CAMERA_CALIBRATION_TYPE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x601F,
+  },
+  name: "Thermal Camera Calibration Type",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const ACQUISITION_IMAGE_COUNTER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6020,
+  },
+  name: "Acquisition Image Counter",
+  vrs: &[ValueRepresentation::UnsignedVeryLong],
+  multiplicity: VM_1,
+};
+
+pub const FRONT_PANEL_TEMPERATURE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6021,
+  },
+  name: "Front Panel Temperature",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const AIR_GAP_TEMPERATURE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6022,
+  },
+  name: "Air Gap Temperature",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const VERTICAL_PIXEL_SIZE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6023,
+  },
+  name: "Vertical Pixel Size",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const HORIZONTAL_PIXEL_SIZE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6024,
+  },
+  name: "Horizontal Pixel Size",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const DATA_STREAMING_PROTOCOL: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6025,
+  },
+  name: "Data Streaming Protocol",
+  vrs: &[ValueRepresentation::ShortText],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const LENS_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6026,
+  },
+  name: "Lens Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const FIELD_OF_VIEW: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6027,
+  },
+  name: "Field of View",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const LENS_FILTER_MANUFACTURER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6028,
+  },
+  name: "Lens Filter Manufacturer",
+  vrs: &[ValueRepresentation::LongString],
+  multiplicity: VM_1,
+};
+
+pub const CUTOFF_FILTER_TYPE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6029,
+  },
+  name: "Cutoff Filter Type",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const LENS_FILTER_CUT_OFF_WAVELENGTH: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x602A,
+  },
+  name: "Lens Filter Cut-Off Wavelength",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const THERMAL_SOURCE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x602B,
+  },
+  name: "Thermal Source Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const THERMAL_SOURCE_MOTION_STATE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x602C,
+  },
+  name: "Thermal Source Motion State",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const THERMAL_SOURCE_MOTION_TYPE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x602D,
+  },
+  name: "Thermal Source Motion Type",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const INDUCTION_HEATING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x602E,
+  },
+  name: "Induction Heating Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const COIL_CONFIGURATION_ID: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x602F,
+  },
+  name: "Coil Configuration ID",
+  vrs: &[ValueRepresentation::ShortText],
+  multiplicity: VM_1,
+};
+
+pub const NUMBER_OF_TURNS_IN_COIL: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6030,
+  },
+  name: "Number of Turns in Coil",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const SHAPE_OF_INDIVIDUAL_TURN: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6031,
+  },
+  name: "Shape of Individual Turn",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const SIZE_OF_INDIVIDUAL_TURN: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6032,
+  },
+  name: "Size of Individual Turn",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const DISTANCE_BETWEEN_TURNS: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6033,
+  },
+  name: "Distance Between Turns",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const FLASH_HEATING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6034,
+  },
+  name: "Flash Heating Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const NUMBER_OF_LAMPS: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6035,
+  },
+  name: "Number of Lamps",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const FLASH_SYNCHRONIZATION_PROTOCOL: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6036,
+  },
+  name: "Flash Synchronization Protocol",
+  vrs: &[ValueRepresentation::ShortText],
+  multiplicity: VM_1,
+};
+
+pub const FLASH_MODIFICATION_STATUS: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6037,
+  },
+  name: "Flash Modification Status",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const LASER_HEATING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6038,
+  },
+  name: "Laser Heating Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const LASER_MANUFACTURER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6039,
+  },
+  name: "Laser Manufacturer",
+  vrs: &[ValueRepresentation::LongString],
+  multiplicity: VM_1,
+};
+
+pub const LASER_MODEL_NUMBER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x603A,
+  },
+  name: "Laser Model Number",
+  vrs: &[ValueRepresentation::LongString],
+  multiplicity: VM_1,
+};
+
+pub const LASER_TYPE_DESCRIPTION: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x603B,
+  },
+  name: "Laser Type Description",
+  vrs: &[ValueRepresentation::ShortText],
+  multiplicity: VM_1,
+};
+
+pub const FORCED_GAS_HEATING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x603C,
+  },
+  name: "Forced Gas Heating Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const GAS_USED_FOR_HEATING_COOLING_PART: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x603D,
+  },
+  name: "Gas Used for Heating/Cooling Part",
+  vrs: &[ValueRepresentation::LongString],
+  multiplicity: VM_1,
+};
+
+pub const VIBRATION_SONIC_HEATING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x603E,
+  },
+  name: "Vibration/Sonic Heating Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const PROBE_MANUFACTURER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x603F,
+  },
+  name: "Probe Manufacturer",
+  vrs: &[ValueRepresentation::LongString],
+  multiplicity: VM_1,
+};
+
+pub const PROBE_MODEL_NUMBER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6040,
+  },
+  name: "Probe Model Number",
+  vrs: &[ValueRepresentation::LongString],
+  multiplicity: VM_1,
+};
+
+pub const APERTURE_SIZE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6041,
+  },
+  name: "Aperture Size",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const PROBE_RESONANT_FREQUENCY: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6042,
+  },
+  name: "Probe Resonant Frequency",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const HEAT_SOURCE_DESCRIPTION: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6043,
+  },
+  name: "Heat Source Description",
+  vrs: &[ValueRepresentation::UnlimitedText],
+  multiplicity: VM_1,
+};
+
+pub const SURFACE_PREPARATION_WITH_OPTICAL_COATING: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6044,
+  },
+  name: "Surface Preparation with Optical Coating",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const OPTICAL_COATING_TYPE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6045,
+  },
+  name: "Optical Coating Type",
+  vrs: &[ValueRepresentation::ShortText],
+  multiplicity: VM_1,
+};
+
+pub const THERMAL_CONDUCTIVITY_OF_EXPOSED_SURFACE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6046,
+  },
+  name: "Thermal Conductivity of Exposed Surface",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const MATERIAL_DENSITY: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6047,
+  },
+  name: "Material Density",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const SPECIFIC_HEAT_OF_INSPECTION_SURFACE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6048,
+  },
+  name: "Specific Heat of Inspection Surface",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const EMISSIVITY_OF_INSPECTION_SURFACE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6049,
+  },
+  name: "Emissivity of Inspection Surface",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const ELECTROMAGNETIC_CLASSIFICATION_OF_INSPECTION_SURFACE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x604A,
+  },
+  name: "Electromagnetic Classification of Inspection Surface",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const MOVING_WINDOW_SIZE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x604C,
+  },
+  name: "Moving Window Size",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const MOVING_WINDOW_TYPE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x604D,
+  },
+  name: "Moving Window Type",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const MOVING_WINDOW_WEIGHTS: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x604E,
+  },
+  name: "Moving Window Weights",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const MOVING_WINDOW_PITCH: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x604F,
+  },
+  name: "Moving Window Pitch",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const MOVING_WINDOW_PADDING_SCHEME: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6050,
+  },
+  name: "Moving Window Padding Scheme",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const MOVING_WINDOW_PADDING_LENGTH: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6051,
+  },
+  name: "Moving Window Padding Length",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const SPATIAL_FILTERING_PARAMETERS_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6052,
+  },
+  name: "Spatial Filtering Parameters Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const SPATIAL_FILTERING_SCHEME: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6053,
+  },
+  name: "Spatial Filtering Scheme",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const HORIZONTAL_MOVING_WINDOW_SIZE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6056,
+  },
+  name: "Horizontal Moving Window Size",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const VERTICAL_MOVING_WINDOW_SIZE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6057,
+  },
+  name: "Vertical Moving Window Size",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const POLYNOMIAL_FITTING_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6059,
+  },
+  name: "Polynomial Fitting Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const FITTING_DATA_TYPE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x605A,
+  },
+  name: "Fitting Data Type",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const OPERATION_ON_TIME_AXIS_BEFORE_FITTING: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x605B,
+  },
+  name: "Operation on Time Axis Before Fitting",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const OPERATION_ON_PIXEL_INTENSITY_BEFORE_FITTING: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x605C,
+  },
+  name: "Operation on Pixel Intensity Before Fitting",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const ORDER_OF_POLYNOMIAL: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x605D,
+  },
+  name: "Order of Polynomial",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const INDEPENDENT_VARIABLE_FOR_POLYNOMIAL_FIT: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x605E,
+  },
+  name: "Independent Variable for Polynomial Fit",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const POLYNOMIAL_COEFFICIENTS: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x605F,
+  },
+  name: "PolynomialCoefficients",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const THERMOGRAPHY_PIXEL_DATA_UNIT: Item = Item {
+  tag: DataElementTag {
+    group: 0x0014,
+    element: 0x6060,
+  },
+  name: "Thermography Pixel Data Unit",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const METAL_ARTIFACT_REDUCTION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0018,
+    element: 0x9390,
+  },
+  name: "Metal Artifact Reduction Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const METAL_ARTIFACT_REDUCTION_APPLIED: Item = Item {
+  tag: DataElementTag {
+    group: 0x0018,
+    element: 0x9391,
+  },
+  name: "Metal Artifact Reduction Applied",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const METAL_ARTIFACT_REDUCTION_ALGORITHM_IDENTIFICATION_SEQUENCE: Item =
+  Item {
+    tag: DataElementTag {
+      group: 0x0018,
+      element: 0x9392,
+    },
+    name: "Metal Artifact Reduction Algorithm Identification Sequence",
+    vrs: &[ValueRepresentation::Sequence],
+    multiplicity: VM_1,
+  };
+
+pub const OPHTHALMIC_ANATOMIC_REFERENCE_POINT_FRAME_COORDINATE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0022,
+    element: 0x1623,
+  },
+  name: "Ophthalmic Anatomic Reference Point Frame Coordinate",
+  vrs: &[ValueRepresentation::FloatingPointSingle],
+  multiplicity: VM_1,
+};
+
+pub const OPHTHALMIC_EN_FACE_VOLUME_DESCRIPTOR_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0022,
+    element: 0x1627,
+  },
+  name: "Ophthalmic En Face Volume Descriptor Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const OPHTHALMIC_EN_FACE_VOLUME_DESCRIPTOR_SCOPE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0022,
+    element: 0x1629,
+  },
+  name: "Ophthalmic En Face Volume Descriptor Scope",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const OPHTHALMIC_ANATOMIC_REFERENCE_POINT_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0022,
+    element: 0x1632,
+  },
+  name: "Ophthalmic Anatomic Reference Point Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const OPHTHALMIC_ANATOMIC_REFERENCE_POINT_LOCALIZATION_TYPE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0022,
+    element: 0x1633,
+  },
+  name: "Ophthalmic Anatomic Reference Point Localization Type",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const PRIMARY_ANATOMIC_STRUCTURE_ITEM_INDEX: Item = Item {
+  tag: DataElementTag {
+    group: 0x0022,
+    element: 0x1634,
+  },
+  name: "Primary Anatomic Structure Item Index",
+  vrs: &[ValueRepresentation::IntegerString],
+  multiplicity: VM_1,
+};
+
+pub const STRUCTURED_WAVEFORM_ANNOTATION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB030,
+  },
+  name: "Structured Waveform Annotation Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const WAVEFORM_ANNOTATION_DISPLAY_SELECTION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB031,
+  },
+  name: "Waveform Annotation Display Selection Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const REFERENCED_MONTAGE_INDEX: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB032,
+  },
+  name: "Referenced Montage Index",
+  vrs: &[ValueRepresentation::UnsignedShort],
+  multiplicity: VM_1,
+};
+
+pub const WAVEFORM_TEXTUAL_ANNOTATION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB033,
+  },
+  name: "Waveform Textual Annotation Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const DISPLAYED_WAVEFORM_SEGMENT_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB035,
+  },
+  name: "Displayed Waveform Segment Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const MONTAGE_ACTIVATION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB037,
+  },
+  name: "Montage Activation Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const MONTAGE_ACTIVATION_TIME_OFFSET: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB038,
+  },
+  name: "Montage Activation Time Offset",
+  vrs: &[ValueRepresentation::DecimalString],
+  multiplicity: VM_1,
+};
+
+pub const WAVEFORM_MONTAGE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB039,
+  },
+  name: "Waveform Montage Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const REFERENCED_MONTAGE_CHANNEL_NUMBER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB03A,
+  },
+  name: "Referenced Montage Channel Number",
+  vrs: &[ValueRepresentation::IntegerString],
+  multiplicity: VM_1,
+};
+
+pub const MONTAGE_CHANNEL_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB03C,
+  },
+  name: "Montage Channel Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const MONTAGE_INDEX: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB03D,
+  },
+  name: "Montage Index",
+  vrs: &[ValueRepresentation::UnsignedShort],
+  multiplicity: VM_1,
+};
+
+pub const MONTAGE_CHANNEL_NUMBER: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB03E,
+  },
+  name: "Montage Channel Number",
+  vrs: &[ValueRepresentation::IntegerString],
+  multiplicity: VM_1,
+};
+
+pub const MONTAGE_CHANNEL_SOURCE_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB040,
+  },
+  name: "Montage Channel Source Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const CONTRIBUTING_CHANNEL_SOURCES_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB041,
+  },
+  name: "Contributing Channel Sources Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const CHANNEL_WEIGHT: Item = Item {
+  tag: DataElementTag {
+    group: 0x0040,
+    element: 0xB042,
+  },
+  name: "Channel Weight",
+  vrs: &[ValueRepresentation::FloatingPointSingle],
+  multiplicity: VM_1,
+};
+
+pub const RT_ASSERTIONS_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x0044,
+    element: 0x0110,
+  },
+  name: "RT Assertions Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const TILES_OVERLAP: Item = Item {
+  tag: DataElementTag {
+    group: 0x0048,
+    element: 0x0304,
+  },
+  name: "Tiles Overlap",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const SURFACE_OFFSET: Item = Item {
+  tag: DataElementTag {
+    group: 0x0066,
+    element: 0x0005,
+  },
+  name: "Surface Offset",
+  vrs: &[ValueRepresentation::FloatingPointSingle],
+  multiplicity: VM_1,
+};
+
+pub const RT_CONE_BEAM_IMAGING_GEOMETRY_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3002,
+    element: 0x0136,
+  },
+  name: "RT Cone-Beam Imaging Geometry Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const RECOMMENDED_ISODOSE_LEVEL_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0016,
+  },
+  name: "Recommended Isodose Level Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const DOSE_UNIT_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0020,
+  },
+  name: "Dose Unit Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const RT_DOSE_INTERPRETED_TYPE_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0021,
+  },
+  name: "RT Dose Interpreted Type Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const RT_DOSE_INTERPRETED_TYPE_CODE_MODIFIER_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0022,
+  },
+  name: "RT Dose Interpreted Type Code Modifier Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const DOSE_RADIOBIOLOGICAL_INTERPRETATION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0023,
+  },
+  name: "Dose Radiobiological Interpretation Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const RT_DOSE_INTENT_CODE_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0024,
+  },
+  name: "RT Dose Intent Code Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const DOSE_CALCULATION_MODEL_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0080,
+  },
+  name: "Dose Calculation Model Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const DOSE_CALCULATION_ALGORITHM_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0081,
+  },
+  name: "Dose Calculation Algorithm Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const COMMISSIONING_STATUS: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0082,
+  },
+  name: "Commissioning Status",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const DOSE_CALCULATION_MODEL_PARAMETER_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0083,
+  },
+  name: "Dose Calculation Model Parameter Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const DOSE_DEPOSITION_CALCULATION_MEDIUM: Item = Item {
+  tag: DataElementTag {
+    group: 0x3004,
+    element: 0x0084,
+  },
+  name: "Dose Deposition Calculation Medium",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const COMPENSATOR_SURFACE_REPRESENTATION_FLAG: Item = Item {
+  tag: DataElementTag {
+    group: 0x300A,
+    element: 0x02EC,
+  },
+  name: "Compensator Surface Representation Flag",
+  vrs: &[ValueRepresentation::CodeString],
+  multiplicity: VM_1,
+};
+
+pub const SCAN_SPOT_GANTRY_ANGLES: Item = Item {
+  tag: DataElementTag {
+    group: 0x300A,
+    element: 0x039B,
+  },
+  name: "Scan Spot Gantry Angles",
+  vrs: &[ValueRepresentation::FloatingPointSingle],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const SCAN_SPOT_PATIENT_SUPPORT_ANGLES: Item = Item {
+  tag: DataElementTag {
+    group: 0x300A,
+    element: 0x039C,
+  },
+  name: "Scan Spot Patient Support Angles",
+  vrs: &[ValueRepresentation::FloatingPointSingle],
+  multiplicity: VM_1_TO_N,
+};
+
+pub const PATIENT_TREATMENT_PREPARATION_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x300A,
+    element: 0x079F,
+  },
+  name: "Patient Treatment Preparation Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const PATIENT_TO_EQUIPMENT_RELATIONSHIP_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x300A,
+    element: 0x07A0,
+  },
+  name: "Patient to Equipment Relationship Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
+pub const IMAGING_EQUIPMENT_TO_TREATMENT_DELIVERY_DEVICE_RELATIONSHIP_SEQUENCE: Item = Item {
+  tag: DataElementTag {
+    group: 0x300A,
+    element: 0x07A1,
+  },
+  name: "Imaging Equipment to Treatment Delivery Device Relationship Sequence",
+  vrs: &[ValueRepresentation::Sequence],
+  multiplicity: VM_1,
+};
+
 pub fn find(
   tag: DataElementTag,
   private_creator: Option<&str>,

@@ -4,6 +4,7 @@ use dcmfx::{
 };
 
 pub mod decoder_args;
+pub mod deidentify_option_arg;
 pub mod frame_selection_arg;
 pub mod input_args;
 pub mod photometric_interpretation_arg;

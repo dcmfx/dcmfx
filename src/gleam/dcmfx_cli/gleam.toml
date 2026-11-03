@@ -7,7 +7,6 @@ gleam = ">= 1.14.0"
 [dependencies]
 argv = ">= 1.0.2 and < 2.0.0"
 birl = ">= 2.0.0 and < 3.0.0"
-dcmfx_anonymize = { path = "../dcmfx_anonymize" }
 dcmfx_character_set = { path = "../dcmfx_character_set" }
 dcmfx_core = { path = "../dcmfx_core" }
 dcmfx_json = { path = "../dcmfx_json" }

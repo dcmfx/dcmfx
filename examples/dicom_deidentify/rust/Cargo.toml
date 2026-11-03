@@ -1,5 +1,5 @@
 [package]
-name = "dicom_anonymize"
+name = "dicom_deidentify"
 edition.workspace = true
 rust-version.workspace = true
 

@@ -178,16 +178,48 @@ Azure Blob Storage (`az://`).
    Pixel data will be automatically transcoded as appropriate. See the output
    of `dcmfx modify --help` for details of supported transfer syntaxes.
 
-8. Anonymize a DICOM P10 file in-place by removing all identifying data
-   elements and private data elements:
+8. De-identify a DICOM P10 file in-place following the Basic Application Level
+   Confidentiality Profile defined in DICOM PS3.15 Annex E, which removes or
+   replaces identifying data elements, replaces UIDs, and removes private data
+   elements:
 
    ```sh
-   dcmfx modify input.dcm --in-place --anonymize
+   dcmfx modify input.dcm --in-place --deidentify
    ```
 
-   Note that this does not remove any identifying information baked into pixel
-   data or other binary data elements, however such pixel data may be able to
-   be removed using the `--crop` argument.
+   Replacement UIDs are derived from the original UIDs using a secret that is
+   randomly generated for each run, so references between the files de-identified
+   in a single run stay intact. To keep UIDs consistent across separate runs,
+   pass the same secret each time with `--deidentify-uid-secret`, or set it in
+   the `DCMFX_DEIDENTIFY_UID_SECRET` environment variable to keep it out of the
+   process list and shell history.
+
+   The profile's options defined in DICOM PS3.15 Annex E.3 can be enabled with
+   `--deidentify-options` to retain information that the profile would
+   otherwise remove, e.g. to retain dates shifted by a consistent number of
+   days and the content of Structured Reports:
+
+   ```sh
+   dcmfx modify input.dcm --in-place --deidentify \
+     --deidentify-options retain-modified-dates,clean-structured-content \
+     --deidentify-date-shift -100
+   ```
+
+   The supported options are `retain-patient-characteristics`,
+   `retain-device-identity`, `retain-institution-identity`, `retain-uids`,
+   `retain-full-dates`, `retain-modified-dates`, and
+   `clean-structured-content`. See the output of `dcmfx modify --help` for
+   details of each option.
+
+   Note that pixel data is not inspected: identifying information burned into
+   pixel data, recognizable features such as faces, and metadata inside the
+   frames of encapsulated pixel data are not detected or removed, however
+   burned-in text at a fixed position may be able to be removed using the
+   `--crop` argument. Free text in content items retained by
+   `clean-structured-content` is not scanned for identifying information.
+   Encapsulated documents such as PDFs are removed rather than replaced, and a
+   DICOMDIR loses its directory records, so a DICOMDIR should instead be
+   regenerated from the de-identified files.
 
 9. Remove the top-level _'(7FE0,0010) Pixel Data'_ data element and all private
    data elements from a DICOM P10 file:

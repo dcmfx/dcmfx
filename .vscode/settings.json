@@ -12,7 +12,7 @@
   },
 
   "rust-analyzer.linkedProjects": [
-    "examples/dicom_anonymize/rust/Cargo.toml",
+    "examples/dicom_deidentify/rust/Cargo.toml",
     "examples/dicom_json_read/rust/Cargo.toml",
     "examples/dicom_json_write/rust/Cargo.toml",
     "examples/dicom_read/rust/Cargo.toml",
@@ -24,7 +24,10 @@
 
   "cSpell.enabledFileTypes": { "gleam": true },
   "cSpell.words": [
-    "anonymization",
+    "deidentification",
+    "deidentified",
+    "deidentifier",
+    "deidentify",
     "bigi",
     "byteorder",
     "charls",

@@ -1,0 +1,5 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+---
+Error: The retain-full-dates and retain-modified-dates de-identify options can't be used together
