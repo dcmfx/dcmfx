@@ -7,7 +7,7 @@ jobs:
     name: Test Homebrew tap
     timeout-minutes: 10
 
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Install DCMfx
