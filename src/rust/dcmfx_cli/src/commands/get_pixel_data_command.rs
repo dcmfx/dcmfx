@@ -13,7 +13,8 @@ use dcmfx::{
       voi_lut_module::{VoiLutFunction, VoiWindow},
     },
     transforms::{
-      CropRect, P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
+      P10PixelDataFrameTransform, P10PixelDataFrameTransformError,
+      PixelRectSpec,
     },
   },
 };
@@ -95,6 +96,22 @@ pub struct GetPixelDataArgs {
   #[arg(
     long,
     help_heading = "Output",
+    help = "When the output format is not 'raw', specifies a mask to \
+      apply to the frames of image data. All pixels outside the mask rectangle \
+      are set to black, and the dimensions of the image data are not changed. \
+      The mask is specified as \
+      'x,y[,(width_or_right)[,(height_or_bottom)]]'. The last two values are \
+      optional, and if positive they specify the width and height of the mask \
+      rectangle, however if they are zero or negative then they specify an \
+      offset from the right and bottom edges of the pixel data respectively.\n\
+      \n\
+      The order of image data operations is: mask, crop, transform, resize."
+  )]
+  mask: Option<PixelRectSpec>,
+
+  #[arg(
+    long,
+    help_heading = "Output",
     help = "When the output format is not 'raw', specifies a crop to \
       apply to the frames of image data. The crop is specified as \
       'x,y[,(width_or_right)[,(height_or_bottom)]]'. The last two values are \
@@ -102,9 +119,9 @@ pub struct GetPixelDataArgs {
       rectangle, however if they are zero or negative then they specify an \
       offset from the right and bottom edges of the pixel data respectively.\n\
       \n\
-      The order of image data operations is: crop, transform, resize."
+      The order of image data operations is: mask, crop, transform, resize."
   )]
-  crop: Option<CropRect>,
+  crop: Option<PixelRectSpec>,
 
   #[arg(
     long,
@@ -112,7 +129,7 @@ pub struct GetPixelDataArgs {
     help = "When the output format is not 'raw', specifies a transform to \
       apply to the frames of image data.\n\
       \n\
-      The order of image data operations is: crop, transform, resize."
+      The order of image data operations is: mask, crop, transform, resize."
   )]
   transform: Option<TransformArg>,
 
@@ -126,7 +143,7 @@ pub struct GetPixelDataArgs {
       output images and videos. If either width or height is zero then it is \
       calculated automatically such that the input aspect ratio is preserved.\n\
       \n\
-      The order of image data operations is: crop, transform, resize."
+      The order of image data operations is: mask, crop, transform, resize."
   )]
   resize: Option<Vec<u32>>,
 
@@ -747,6 +764,29 @@ fn frame_to_final_image(
     overlay_plane_module
       .render_to_rgb_image(&mut image, frame.index().unwrap())
       .unwrap();
+  }
+
+  // Apply the image mask, if specified, by copying the pixels inside the mask
+  // onto a black image
+  if let Some(mask) = args.mask {
+    let rect = mask.to_pixel_rect(image.height() as u16, image.width() as u16);
+
+    let mut masked_image =
+      image::DynamicImage::new(image.width(), image.height(), image.color());
+
+    image::imageops::replace(
+      &mut masked_image,
+      &image.crop_imm(
+        rect.left.into(),
+        rect.top.into(),
+        rect.width.into(),
+        rect.height.into(),
+      ),
+      rect.left.into(),
+      rect.top.into(),
+    );
+
+    image = masked_image;
   }
 
   // Apply the image crop, if specified

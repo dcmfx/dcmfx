@@ -4,23 +4,29 @@ use alloc::{
   vec::Vec,
 };
 
-/// Describes a pixel data crop rectangle. The crop is defined by top and left
-/// values for the top-left corner of the crop rectangle, and two optional
-/// values that, if positive, define the width and height, or if
-/// less than or equal to zero, define the offset from the right and bottom
-/// edges respectively.
+use crate::PixelRect;
+
+/// Specifies a rectangle of pixels in an image whose dimensions aren't yet
+/// known, e.g. the rectangle to crop or mask pixel data to. The rectangle is
+/// defined by top and left values for its top-left corner, and two optional
+/// values that, if positive, define the width and height, or if less than or
+/// equal to zero, define the offset from the right and bottom edges of the
+/// image respectively.
+///
+/// Use [`PixelRectSpec::to_pixel_rect()`] to resolve this into a [`PixelRect`]
+/// for an image with specific dimensions.
 ///
 #[derive(Clone, Copy, Debug)]
-pub struct CropRect {
+pub struct PixelRectSpec {
   pub left: u16,
   pub top: u16,
   pub width_or_right: Option<i32>,
   pub height_or_bottom: Option<i32>,
 }
 
-impl CropRect {
-  /// Returns cropped rows and columns values resulting from applying this crop
-  /// rect to the passed input dimensions.
+impl PixelRectSpec {
+  /// Returns the rows and columns values of the rectangle that results from
+  /// applying this rect spec to an image with the passed dimensions.
   ///
   pub fn apply(&self, rows: u16, columns: u16) -> (u16, u16) {
     let mut new_rows = rows;
@@ -51,9 +57,19 @@ impl CropRect {
 
     (new_rows, new_columns)
   }
+
+  /// Returns the rectangle of pixels selected by this rect spec in an image
+  /// with the passed dimensions. The returned rect lies entirely inside the
+  /// image, and is empty if this rect spec selects no pixels.
+  ///
+  pub fn to_pixel_rect(&self, rows: u16, columns: u16) -> PixelRect {
+    let (height, width) = self.apply(rows, columns);
+
+    PixelRect::new(self.left, self.top, width, height)
+  }
 }
 
-impl core::str::FromStr for CropRect {
+impl core::str::FromStr for PixelRectSpec {
   type Err = String;
 
   fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -61,23 +77,21 @@ impl core::str::FromStr for CropRect {
 
     if parts.len() < 2 || parts.len() > 4 {
       return Err(
-        "Expected crop rect to use format: left,top[,(width|right)[,(height|bottom)]]"
+        "Expected rect to use format: left,top[,(width|right)[,(height|bottom)]]"
           .to_string(),
       );
     }
 
     let left = parts[0]
       .parse()
-      .map_err(|_| "Invalid value for crop_rect.left")?;
-    let top = parts[1]
-      .parse()
-      .map_err(|_| "Invalid value for crop_rect.top")?;
+      .map_err(|_| "Invalid value for rect.left")?;
+    let top = parts[1].parse().map_err(|_| "Invalid value for rect.top")?;
 
     let width_or_right = if parts.len() > 2 {
       Some(
         parts[2]
           .parse()
-          .map_err(|_| "Invalid value for crop_rect.width|right")?,
+          .map_err(|_| "Invalid value for rect.width|right")?,
       )
     } else {
       None
@@ -87,13 +101,13 @@ impl core::str::FromStr for CropRect {
       Some(
         parts[3]
           .parse()
-          .map_err(|_| "Invalid value for crop_rect.height|bottom")?,
+          .map_err(|_| "Invalid value for rect.height|bottom")?,
       )
     } else {
       None
     };
 
-    Ok(CropRect {
+    Ok(PixelRectSpec {
       left,
       top,
       width_or_right,

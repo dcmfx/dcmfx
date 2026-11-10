@@ -1425,6 +1425,61 @@ fn with_crop() {
 }
 
 #[test]
+fn with_mask() {
+  let dicom_files = [
+    "../../../test/assets/fo-dicom/mr_brucker.dcm",
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+  ];
+
+  let masks = ["0,0,0,0", "50,45,101,60", "100,10,-100,-100", "9999,9999"];
+
+  for dicom_file in dicom_files {
+    for mask in masks {
+      let snapshot_prefix =
+        format!("with_mask_{}_{mask}", dicom_file.split("/").last().unwrap());
+
+      modify_transfer_syntax_and_check_pixel_data(
+        dicom_file,
+        "pass-through",
+        &snapshot_prefix,
+        &["--mask", mask],
+      );
+    }
+  }
+}
+
+#[test]
+fn with_mask_and_crop() {
+  modify_transfer_syntax_and_check_pixel_data(
+    "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",
+    "explicit-vr-little-endian",
+    "with_mask_and_crop",
+    &["--mask", "100,100,200,200", "--crop", "50,50,300,300"],
+  );
+}
+
+#[test]
+fn errors_with_mask_and_no_transfer_syntax() {
+  let temp_dir = create_temp_dir();
+
+  let assert = dcmfx_cli()
+    .arg("modify")
+    .arg("--output-directory")
+    .arg(temp_dir.path())
+    .arg("--mask")
+    .arg("10,10")
+    .arg("../../../test/assets/fo-dicom/TestPattern_Palette.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(
+    "errors_with_mask_and_no_transfer_syntax",
+    get_stderr(assert)
+  );
+}
+
+#[test]
 fn errors_with_all_pixels_cropped() {
   let output_directory = create_temp_dir();
 

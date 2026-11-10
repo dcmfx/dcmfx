@@ -7,7 +7,7 @@ use crate::{
     image_pixel_module::BitsAllocated,
     voi_lut_module::{VoiLutFunction, VoiWindow},
   },
-  transforms::CropRect,
+  transforms::PixelRectSpec,
 };
 
 /// A monochrome image that stores an integer value for each pixel.
@@ -416,7 +416,7 @@ impl MonochromeImage {
 
   /// Crops this monochrome image to the specified rectangle.
   ///
-  pub fn crop(&mut self, crop_rect: &CropRect) {
+  pub fn crop(&mut self, crop_rect: &PixelRectSpec) {
     let left = crop_rect.left;
     let top = crop_rect.top;
     let (height, width) = crop_rect.apply(self.height(), self.width());
@@ -487,6 +487,18 @@ impl MonochromeImage {
 
     self.width = width;
     self.height = height;
+  }
+
+  /// Masks this monochrome image to the specified rectangle, which sets every
+  /// pixel outside of it to the stored value that is displayed as black. This
+  /// image's dimensions are not changed.
+  ///
+  pub fn mask(&mut self, mask_rect: &PixelRectSpec) {
+    let rect = mask_rect.to_pixel_rect(self.height, self.width);
+
+    for outside_rect in rect.outside_rects(self.width, self.height) {
+      self.black_out_rect(&outside_rect);
+    }
   }
 
   /// Returns the range of stored values that this monochrome image's bits stored
@@ -878,5 +890,23 @@ mod tests {
     // A rect that lies entirely outside the image does nothing
     image.black_out_rect(&PixelRect::new(2, 0, 10, 10));
     assert_eq!(image.data(), &MonochromeImageData::U8(vec![9, 9, 9, 0]));
+  }
+
+  #[test]
+  fn mask_test() {
+    let mut image =
+      MonochromeImage::new_u8(3, 3, vec![9; 9], 8, false).unwrap();
+
+    // Keep the center pixel, with dimensions unchanged
+    image.mask(&"1,1,1,1".parse().unwrap());
+    assert_eq!((image.width(), image.height()), (3, 3));
+    assert_eq!(
+      image.data(),
+      &MonochromeImageData::U8(vec![0, 0, 0, 0, 9, 0, 0, 0, 0])
+    );
+
+    // A mask that selects no pixels blacks out the whole image
+    image.mask(&"3,3".parse().unwrap());
+    assert_eq!(image.data(), &MonochromeImageData::U8(vec![0; 9]));
   }
 }

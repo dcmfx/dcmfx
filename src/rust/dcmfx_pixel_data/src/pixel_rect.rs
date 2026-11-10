@@ -79,6 +79,34 @@ impl PixelRect {
       height: (self.bottom().min(height.into()) as u16) - self.top,
     })
   }
+
+  /// Returns the rects that together cover every pixel of an image of the
+  /// given dimensions that is outside of this rect. The returned rects don't
+  /// overlap each other, and some of them may be empty.
+  ///
+  pub fn outside_rects(&self, width: u16, height: u16) -> [Self; 4] {
+    // If this rect doesn't overlap the image then the whole image is outside it
+    let Some(rect) = self.clamped_to_image(width, height) else {
+      return [
+        Self::new(0, 0, width, height),
+        Self::new(0, 0, 0, 0),
+        Self::new(0, 0, 0, 0),
+        Self::new(0, 0, 0, 0),
+      ];
+    };
+
+    let right = rect.right() as u16;
+    let bottom = rect.bottom() as u16;
+
+    [
+      // Full-width bands above and below
+      Self::new(0, 0, width, rect.top),
+      Self::new(0, bottom, width, height - bottom),
+      // Bands to the left and right, between the two bands above
+      Self::new(0, rect.top, rect.left, rect.height),
+      Self::new(right, rect.top, width - right, rect.height),
+    ]
+  }
 }
 
 #[cfg(test)]
@@ -129,5 +157,34 @@ mod tests {
       PixelRect::new(10, 20, 0, 40).clamped_to_image(100, 100),
       None
     );
+  }
+
+  #[test]
+  fn outside_rects_test() {
+    assert_eq!(
+      PixelRect::new(10, 20, 30, 40).outside_rects(100, 200),
+      [
+        PixelRect::new(0, 0, 100, 20),
+        PixelRect::new(0, 60, 100, 140),
+        PixelRect::new(0, 20, 10, 40),
+        PixelRect::new(40, 20, 60, 40),
+      ]
+    );
+
+    // A rect covering the whole image has nothing outside it
+    assert!(
+      PixelRect::new(0, 0, 100, 200)
+        .outside_rects(100, 200)
+        .iter()
+        .all(PixelRect::is_empty)
+    );
+
+    // A rect that doesn't overlap the image has the whole image outside it
+    for rect in [PixelRect::new(100, 0, 10, 10), PixelRect::new(0, 0, 0, 10)] {
+      let outside_rects = rect.outside_rects(100, 200);
+
+      assert_eq!(outside_rects[0], PixelRect::new(0, 0, 100, 200));
+      assert!(outside_rects[1..].iter().all(PixelRect::is_empty));
+    }
   }
 }

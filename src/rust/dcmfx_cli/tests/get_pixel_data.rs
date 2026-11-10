@@ -376,6 +376,52 @@ fn crop() {
 }
 
 #[test]
+fn mask() {
+  let input_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
+  let (output_file, output_directory) =
+    prepare_outputs(input_file, ".0000.png");
+
+  dcmfx_cli()
+    .arg("get-pixel-data")
+    .arg(input_file)
+    .arg("--output-directory")
+    .arg(output_directory.path())
+    .arg("-f")
+    .arg("png")
+    .arg("--mask")
+    .arg("100,50,50,80")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "mask.png");
+}
+
+#[test]
+fn mask_and_crop() {
+  let input_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
+  let (output_file, output_directory) =
+    prepare_outputs(input_file, ".0000.png");
+
+  dcmfx_cli()
+    .arg("get-pixel-data")
+    .arg(input_file)
+    .arg("--output-directory")
+    .arg(output_directory.path())
+    .arg("-f")
+    .arg("png")
+    .arg("--mask")
+    .arg("100,50,-100,-50")
+    .arg("--crop")
+    .arg("50,25,-50,-25")
+    .assert()
+    .success()
+    .stdout(format!("Writing \"{}\" …\n", to_native_path(&output_file)));
+
+  assert_image_snapshot!(output_file, "mask_and_crop.png");
+}
+
+#[test]
 fn crop_and_transform_and_resize() {
   let input_file = "../../../test/assets/fo-dicom/TestPattern_Palette_16.dcm";
   let (output_file, output_directory) =

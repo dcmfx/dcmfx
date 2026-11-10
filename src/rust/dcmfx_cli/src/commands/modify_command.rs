@@ -152,7 +152,7 @@ pub struct ModifyArgs {
       data in JPEG frames, is not stripped. Burned In Annotation (0028,0301) \
       and Recognizable Visual Features (0028,0302) are kept so they can be \
       checked, but are often absent. Burned-in text at a fixed position may \
-      be able to be cropped out using --crop.",
+      be able to be removed using --mask or --crop.",
     default_value_t = false
   )]
   deidentify: bool,
@@ -343,6 +343,34 @@ pub struct ModifyArgs {
     long,
     help_heading = "Transcoding",
     help = "When transcoding pixel data using --transfer-syntax, specifies a \
+      mask to apply to the pixel data. All pixels outside the mask rectangle \
+      are set to black, and the dimensions of the pixel data are not changed. \
+      The mask is specified as \
+      'x,y[,(width_or_right)[,(height_or_bottom)]]'. The last two values are \
+      optional, and if positive they specify the width and height of the mask \
+      rectangle, however if they are zero or negative then they specify an \
+      offset from the right and bottom edges of the pixel data respectively.\n\
+      \n\
+      Monochrome pixel data is set to its lowest possible stored value, or \
+      its highest for MONOCHROME1, which is displayed as black regardless of \
+      the VOI LUT. This value can be well outside the range of values present \
+      in the pixel data, which affects viewers that derive a default window \
+      from that range. Palette color pixel data that isn't expanded to RGB is \
+      set to the darkest color in its palette. When the output transfer \
+      syntax is lossy, compression artifacts can appear in the black area near \
+      the edges of the mask.\n\
+      \n\
+      Overlays are not altered by the mask.\n\
+      \n\
+      If --crop is also specified then the mask is applied first, and both \
+      are specified in the coordinates of the input pixel data."
+  )]
+  mask: Option<PixelRectSpec>,
+
+  #[arg(
+    long,
+    help_heading = "Transcoding",
+    help = "When transcoding pixel data using --transfer-syntax, specifies a \
       crop to apply to the pixel data. The crop is specified as \
       'x,y[,(width_or_right)[,(height_or_bottom)]]'. The last two values are \
       optional, and if positive they specify the width and height of the crop \
@@ -352,7 +380,7 @@ pub struct ModifyArgs {
       This option is ignored when transcoding between the 'JPEG XL JPEG \
       Recompression' and 'JPEG Baseline 8-bit' transfer syntaxes."
   )]
-  crop: Option<CropRect>,
+  crop: Option<PixelRectSpec>,
 
   #[command(flatten)]
   decoder: crate::args::decoder_args::DecoderArgs,
@@ -424,6 +452,14 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
     if args.effort.is_some() {
       eprintln!(
         "Error: The --effort option is only valid when --transfer-syntax is \
+         specified"
+      );
+      return Err(());
+    }
+
+    if args.mask.is_some() {
+      eprintln!(
+        "Error: The --mask option is only valid when --transfer-syntax is \
          specified"
       );
       return Err(());
@@ -715,6 +751,7 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
                 .and_then(|arg| arg.as_photometric_interpretation())
             }),
             args.planar_configuration.map(|a| a.into()),
+            args.mask,
             args.crop,
             args.quality.is_some(),
           );

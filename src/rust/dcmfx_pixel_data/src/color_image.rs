@@ -6,7 +6,7 @@ use dcmfx_core::Rc;
 use crate::{
   PixelRect,
   iods::{PaletteColorLookupTableModule, image_pixel_module::BitsAllocated},
-  transforms::CropRect,
+  transforms::PixelRectSpec,
   utils::udiv_round,
 };
 
@@ -561,7 +561,7 @@ impl ColorImage {
 
   /// Crops this color image to the specified rectangle.
   ///
-  pub fn crop(&mut self, crop_rect: &CropRect) {
+  pub fn crop(&mut self, crop_rect: &PixelRectSpec) {
     let left = crop_rect.left;
     let top = crop_rect.top;
     let (height, width) = crop_rect.apply(self.height(), self.width());
@@ -709,6 +709,20 @@ impl ColorImage {
 
         fill_rect(data, self.width, &rect, &[index as u16]);
       }
+    }
+  }
+
+  /// Masks this color image to the specified rectangle, which sets every pixel
+  /// outside of it to black. This image's dimensions are not changed.
+  ///
+  /// If this color image is paletted, the available color in the palette
+  /// closest to black is used.
+  ///
+  pub fn mask(&mut self, mask_rect: &PixelRectSpec) {
+    let rect = mask_rect.to_pixel_rect(self.height, self.width);
+
+    for outside_rect in rect.outside_rects(self.width, self.height) {
+      self.black_out_rect(&outside_rect);
     }
   }
 
@@ -1209,5 +1223,29 @@ mod tests {
     }
 
     PaletteColorLookupTableModule::from_data_set(&data_set).unwrap()
+  }
+
+  #[test]
+  fn mask_test() {
+    let mut image = ColorImage::new_u8(
+      2,
+      2,
+      vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      ColorSpace::Rgb,
+      8,
+    )
+    .unwrap();
+
+    // Keep the right column, with dimensions unchanged
+    image.mask(&"1,0".parse().unwrap());
+
+    assert_eq!((image.width(), image.height()), (2, 2));
+    assert_eq!(
+      image.data(),
+      &ColorImageData::U8 {
+        data: vec![0, 0, 0, 4, 5, 6, 0, 0, 0, 10, 11, 12],
+        color_space: ColorSpace::Rgb
+      }
+    );
   }
 }

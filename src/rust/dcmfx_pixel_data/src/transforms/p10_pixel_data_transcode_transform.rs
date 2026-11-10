@@ -25,7 +25,7 @@ use crate::{
   iods::image_pixel_module::{
     ImagePixelModule, PhotometricInterpretation, PlanarConfiguration,
   },
-  transforms::CropRect,
+  transforms::PixelRectSpec,
 };
 
 /// This transform takes a stream of DICOM P10 tokens and transcodes its pixel
@@ -866,7 +866,12 @@ impl TranscodeImageDataFunctions {
   ///   syntax doesn't support PALETTE_COLOR.
   /// - Expansion of YBR_FULL_422 to YBR_FULL when the output transfer syntax
   ///   doesn't support YBR_FULL_422.
+  /// - Optional mask rectangle to apply to the pixel data. Pixels outside the
+  ///   mask rectangle are set to black, and the dimensions are not changed.
   /// - Optional crop rectangle to apply to the pixel data.
+  ///
+  /// The mask rectangle and the crop rectangle are both specified in the
+  /// coordinates of the input pixel data.
   ///
   /// Also provided is the ability to set a desired photometric interpretation
   /// for the output pixel data, as well as the desired planar configuration.
@@ -880,7 +885,8 @@ impl TranscodeImageDataFunctions {
     >,
     photometric_interpretation_color: Rc<TranscodedPhotometricInterpretationFn>,
     planar_configuration: Option<PlanarConfiguration>,
-    crop_rect: Option<CropRect>,
+    mask_rect: Option<PixelRectSpec>,
+    crop_rect: Option<PixelRectSpec>,
     is_output_quality_specified: bool,
   ) -> Self {
     let is_encode_decode_cycle_required = {
@@ -916,8 +922,8 @@ impl TranscodeImageDataFunctions {
           return true;
         }
 
-        // Check whether there is an active crop
-        if crop_rect.is_some() {
+        // Check whether there is an active mask or crop
+        if mask_rect.is_some() || crop_rect.is_some() {
           return true;
         }
 
@@ -1082,6 +1088,11 @@ impl TranscodeImageDataFunctions {
           _ => (),
         }
 
+        // Black out image data outside the mask
+        if let Some(mask_rect) = mask_rect {
+          image.mask(&mask_rect);
+        }
+
         // Crop image data
         if let Some(crop_rect) = crop_rect {
           image.crop(&crop_rect);
@@ -1100,6 +1111,13 @@ impl TranscodeImageDataFunctions {
             .is_palette_color()
         {
           image.convert_palette_color_to_rgb();
+        }
+
+        // Black out image data outside the mask. This is done prior to color
+        // space conversion so that black pixels are included in the averaging
+        // of chrominance values when converting to YBR 4:2:2.
+        if let Some(mask_rect) = mask_rect {
+          image.mask(&mask_rect);
         }
 
         let photometric_interpretation =

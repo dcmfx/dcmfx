@@ -215,7 +215,7 @@ Azure Blob Storage (`az://`).
    pixel data, recognizable features such as faces, and metadata inside the
    frames of encapsulated pixel data are not detected or removed, however
    burned-in text at a fixed position may be able to be removed using the
-   `--crop` argument. Free text in content items retained by
+   `--mask` or `--crop` arguments. Free text in content items retained by
    `clean-structured-content` is not scanned for identifying information.
    Encapsulated documents such as PDFs are removed rather than replaced, and a
    DICOMDIR loses its directory records, so a DICOMDIR should instead be
