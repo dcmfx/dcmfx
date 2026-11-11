@@ -108,12 +108,35 @@ pub struct ModifyArgs {
     help = "A DICOM JSON data set to merge into the output DICOM P10 data \
       sets. If this specifies data elements already present in the input data \
       set then the data elements specified by this argument will replace those \
-      existing values. The merge is applied after de-identification, so the \
-      data elements it specifies replace de-identified values and aren't \
-      themselves de-identified.",
+      existing values.\n\
+      \n\
+      When --deidentify is specified the merge is applied after \
+      de-identification, so the data elements it specifies replace \
+      de-identified values and aren't themselves de-identified. This allows \
+      values such as a pseudonymous patient name and ID to be set. Use \
+      --merge-dicom-json-before-deidentify to merge data elements that should \
+      be de-identified.",
     value_parser = crate::args::parse_dicom_json_data_set,
   )]
   merge_dicom_json: Option<DataSet>,
+
+  #[arg(
+    long,
+    help_heading = "Data Set Content",
+    help = "A DICOM JSON data set to merge into the output DICOM P10 data \
+      sets prior to de-identification. The merged data elements are \
+      de-identified along with the rest of the data set, e.g. merged UIDs are \
+      replaced consistently with all other UIDs, and merged data elements that \
+      the de-identification profile removes or replaces won't be present in \
+      the output.\n\
+      \n\
+      This can be used together with --merge-dicom-json, which is applied \
+      after de-identification. If both specify the same data element then the \
+      value from --merge-dicom-json is the one present in the output.",
+    value_parser = crate::args::parse_dicom_json_data_set,
+    requires = "deidentify"
+  )]
+  merge_dicom_json_before_deidentify: Option<DataSet>,
 
   #[arg(
     long = "delete",
@@ -614,12 +637,6 @@ async fn modify_input_source(
     );
   }
 
-  // Create an insert transform for merging in another data set, if needed
-  let insert_transform = args
-    .merge_dicom_json
-    .as_ref()
-    .map(|merge_dicom_json| P10InsertTransform::new(merge_dicom_json.clone()));
-
   // Create an de-identify transform, if needed
   let deidentify_transform = deidentifier.map(P10DeidentifyTransform::new);
 
@@ -669,7 +686,6 @@ async fn modify_input_source(
     &mut *output_stream,
     write_config,
     deidentify_transform,
-    insert_transform,
     filter_transform,
     args,
   )
@@ -689,10 +705,20 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
   output_stream: &mut O,
   write_config: P10WriteConfig,
   mut deidentify_transform: Option<P10DeidentifyTransform>,
-  mut insert_transform: Option<P10InsertTransform>,
   mut filter_transform: Option<P10FilterTransform>,
   args: &ModifyArgs,
 ) -> Result<(), ModifyCommandError> {
+  // Create insert transforms for merging in other data sets before and after
+  // de-identification, if needed
+  let mut pre_deidentify_insert_transform = args
+    .merge_dicom_json_before_deidentify
+    .as_ref()
+    .map(|data_set| P10InsertTransform::new(data_set.clone()));
+  let mut insert_transform = args
+    .merge_dicom_json
+    .as_ref()
+    .map(|data_set| P10InsertTransform::new(data_set.clone()));
+
   // Create read and write contexts
   let read_config = args
     .input
@@ -830,9 +856,14 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
       tokens = new_tokens
     }
 
+    // Pass tokens through the pre-de-identification insert transform if one is
+    // specified
+    let tokens =
+      apply_insert_transform(pre_deidentify_insert_transform.as_mut(), tokens)?;
+
     // Pass tokens through the de-identify transform if one is specified. This is
-    // done prior to the insert transform so that inserted data elements take
-    // precedence over de-identification.
+    // done prior to the main insert transform so that its inserted data
+    // elements take precedence over de-identification.
     let tokens =
       if let Some(deidentify_transform) = deidentify_transform.as_mut() {
         let mut new_tokens = vec![];
@@ -851,21 +882,7 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
       }?;
 
     // Pass tokens through the insert transform if one is specified
-    let tokens = if let Some(insert_transform) = insert_transform.as_mut() {
-      let mut new_tokens = vec![];
-
-      for token in tokens.iter() {
-        new_tokens.extend(
-          insert_transform
-            .add_token(token)
-            .map_err(ModifyCommandError::P10Error)?,
-        );
-      }
-
-      Ok(new_tokens)
-    } else {
-      Ok(tokens)
-    }?;
+    let tokens = apply_insert_transform(insert_transform.as_mut(), tokens)?;
 
     // Pass tokens through the filter transform if one is specified
     let tokens = if let Some(filter_transform) = filter_transform.as_mut() {
@@ -899,4 +916,27 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
   }
 
   Ok(())
+}
+
+/// Passes tokens through an insert transform, if one is specified.
+///
+fn apply_insert_transform(
+  insert_transform: Option<&mut P10InsertTransform>,
+  tokens: Vec<P10Token>,
+) -> Result<Vec<P10Token>, ModifyCommandError> {
+  let Some(insert_transform) = insert_transform else {
+    return Ok(tokens);
+  };
+
+  let mut new_tokens = vec![];
+
+  for token in tokens.iter() {
+    new_tokens.extend(
+      insert_transform
+        .add_token(token)
+        .map_err(ModifyCommandError::P10Error)?,
+    );
+  }
+
+  Ok(new_tokens)
 }

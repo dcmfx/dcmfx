@@ -1,0 +1,10 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+---
+error: the following required arguments were not provided:
+  --deidentify
+
+Usage: dcmfx modify --deidentify --merge-dicom-json-before-deidentify <MERGE_DICOM_JSON_BEFORE_DEIDENTIFY> --in-place <INPUT_FILENAMES>...
+
+For more information, try '--help'.

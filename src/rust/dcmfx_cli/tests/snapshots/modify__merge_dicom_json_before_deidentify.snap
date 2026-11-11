@@ -1,0 +1,15 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stdout(assert)
+---
+{
+  "00100010": {
+    "vr": "PN"
+  },
+  "0020000D": {
+    "vr": "UI",
+    "Value": [
+      "2.25.208769766734678800696555989040821955370"
+    ]
+  }
+}

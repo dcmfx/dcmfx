@@ -460,6 +460,101 @@ fn merge_dicom_json() {
 }
 
 #[test]
+fn merge_dicom_json_with_deidentify() {
+  let temp_dir = create_temp_dir();
+
+  let input_file =
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm";
+
+  // Patient's Name and Study Instance UID are both replaced by
+  // de-identification
+  let merge_dicom_json = serde_json::json!({
+    "00100010": { "vr": "PN", "Value": [{ "Alphabetic": "SUBJECT-001" }] },
+    "0020000D": { "vr": "UI", "Value": ["1.2.3.4"] },
+  })
+  .to_string();
+
+  let patient_name_dicom_json = serde_json::json!({
+    "00100010": { "vr": "PN", "Value": [{ "Alphabetic": "SUBJECT-002" }] },
+  })
+  .to_string();
+
+  for (merge_before, merge_after, snapshot_name) in [
+    (
+      None,
+      Some(&merge_dicom_json),
+      "merge_dicom_json_after_deidentify",
+    ),
+    (
+      Some(&merge_dicom_json),
+      None,
+      "merge_dicom_json_before_deidentify",
+    ),
+    (
+      Some(&merge_dicom_json),
+      Some(&patient_name_dicom_json),
+      "merge_dicom_json_before_and_after_deidentify",
+    ),
+  ] {
+    let output_file = temp_dir.path().join(format!("{snapshot_name}.dcm"));
+
+    let mut cmd = dcmfx_cli();
+    cmd
+      .arg("modify")
+      .arg(input_file)
+      .arg("--output-filename")
+      .arg(&output_file)
+      .arg("--deidentify")
+      .arg("--deidentify-uid-secret")
+      .arg("dcmfx-test");
+
+    if let Some(merge_before) = merge_before {
+      cmd
+        .arg("--merge-dicom-json-before-deidentify")
+        .arg(merge_before);
+    }
+
+    if let Some(merge_after) = merge_after {
+      cmd.arg("--merge-dicom-json").arg(merge_after);
+    }
+
+    cmd.assert().success();
+
+    let assert = dcmfx_cli()
+      .arg("dcm-to-json")
+      .arg(&output_file)
+      .arg("--output-filename")
+      .arg("-")
+      .arg("--select")
+      .arg("00100010")
+      .arg("--select")
+      .arg("0020000D")
+      .arg("--pretty")
+      .assert()
+      .success();
+
+    assert_snapshot!(snapshot_name, get_stdout(assert));
+  }
+}
+
+#[test]
+fn errors_on_merge_dicom_json_before_deidentify_without_deidentify() {
+  let assert = dcmfx_cli()
+    .arg("modify")
+    .arg("--merge-dicom-json-before-deidentify")
+    .arg("{}")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(
+    "errors_on_merge_dicom_json_before_deidentify_without_deidentify",
+    get_stderr(assert)
+  );
+}
+
+#[test]
 fn delete_private_tags() {
   let temp_dir = create_temp_dir();
 
