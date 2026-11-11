@@ -322,7 +322,7 @@ impl ColorImage {
 
     match &mut self.data {
       ColorImageData::U8 { data, color_space } if color_space.is_ybr() => {
-        for pixel in data.chunks_exact_mut(3) {
+        for pixel in data.as_chunks_mut::<3>().0 {
           let y: f64 = pixel[0].into();
           let cb: f64 = pixel[1].into();
           let cr: f64 = pixel[2].into();
@@ -338,7 +338,7 @@ impl ColorImage {
       }
 
       ColorImageData::U16 { data, color_space } if color_space.is_ybr() => {
-        for pixel in data.chunks_exact_mut(3) {
+        for pixel in data.as_chunks_mut::<3>().0 {
           let y: f64 = pixel[0].into();
           let cb: f64 = pixel[1].into();
           let cr: f64 = pixel[2].into();
@@ -354,7 +354,7 @@ impl ColorImage {
       }
 
       ColorImageData::U32 { data, color_space } if color_space.is_ybr() => {
-        for pixel in data.chunks_exact_mut(3) {
+        for pixel in data.as_chunks_mut::<3>().0 {
           let y: f64 = pixel[0].into();
           let cb: f64 = pixel[1].into();
           let cr: f64 = pixel[2].into();
@@ -439,7 +439,7 @@ impl ColorImage {
 
     match &mut self.data {
       ColorImageData::U8 { data, color_space } if color_space.is_rgb() => {
-        for pixel in data.chunks_exact_mut(3) {
+        for pixel in data.as_chunks_mut::<3>().0 {
           let r: f64 = pixel[0].into();
           let g: f64 = pixel[1].into();
           let b: f64 = pixel[2].into();
@@ -459,7 +459,7 @@ impl ColorImage {
       }
 
       ColorImageData::U16 { data, color_space } if color_space.is_rgb() => {
-        for pixel in data.chunks_exact_mut(3) {
+        for pixel in data.as_chunks_mut::<3>().0 {
           let r: f64 = pixel[0].into();
           let g: f64 = pixel[1].into();
           let b: f64 = pixel[2].into();
@@ -479,7 +479,7 @@ impl ColorImage {
       }
 
       ColorImageData::U32 { data, color_space } if color_space.is_rgb() => {
-        for pixel in data.chunks_exact_mut(3) {
+        for pixel in data.as_chunks_mut::<3>().0 {
           let r: f64 = pixel[0].into();
           let g: f64 = pixel[1].into();
           let b: f64 = pixel[2].into();
@@ -514,7 +514,7 @@ impl ColorImage {
     // Ensure YBR 422 data has identical Cb and Cr values
     match &mut self.data {
       ColorImageData::U8 { data, color_space } => {
-        for pixels in data.chunks_exact_mut(6) {
+        for pixels in data.as_chunks_mut::<6>().0 {
           let cb = (u64::from(pixels[1]) + u64::from(pixels[4])).div_ceil(2);
           let cr = (u64::from(pixels[2]) + u64::from(pixels[5])).div_ceil(2);
 
@@ -528,7 +528,7 @@ impl ColorImage {
       }
 
       ColorImageData::U16 { data, color_space } => {
-        for pixels in data.chunks_exact_mut(6) {
+        for pixels in data.as_chunks_mut::<6>().0 {
           let cb = (u64::from(pixels[1]) + u64::from(pixels[4])).div_ceil(2);
           let cr = (u64::from(pixels[2]) + u64::from(pixels[5])).div_ceil(2);
 
@@ -542,7 +542,7 @@ impl ColorImage {
       }
 
       ColorImageData::U32 { data, color_space } => {
-        for pixels in data.chunks_exact_mut(6) {
+        for pixels in data.as_chunks_mut::<6>().0 {
           let cb = (u64::from(pixels[1]) + u64::from(pixels[4])).div_ceil(2);
           let cr = (u64::from(pixels[2]) + u64::from(pixels[5])).div_ceil(2);
 
@@ -773,7 +773,7 @@ impl ColorImage {
             ColorSpace::Ybr { .. } => {
               let scale = 1.0 / f64::from(max_storable_value);
 
-              for ybr in data.chunks_exact(3) {
+              for ybr in data.as_chunks::<3>().0 {
                 let y: f64 = ybr[0].into();
                 let cb: f64 = ybr[1].into();
                 let cr: f64 = ybr[2].into();
@@ -892,7 +892,7 @@ impl ColorImage {
             ColorSpace::Ybr { .. } => {
               let scale = 1.0 / f64::from(max_storable_value);
 
-              for ybr in data.chunks_exact(3) {
+              for ybr in data.as_chunks::<3>().0 {
                 let y: f64 = ybr[0].into();
                 let cb: f64 = ybr[1].into();
                 let cr: f64 = ybr[2].into();
@@ -987,7 +987,7 @@ impl ColorImage {
 
       match color_space {
         ColorSpace::Rgb => {
-          for rgb in data.chunks_exact(3) {
+          for rgb in data.as_chunks::<3>().0 {
             rgb_pixels.push(rgb[0].into() * scale);
             rgb_pixels.push(rgb[1].into() * scale);
             rgb_pixels.push(rgb[2].into() * scale);
@@ -995,7 +995,7 @@ impl ColorImage {
         }
 
         ColorSpace::Ybr { .. } => {
-          for ybr in data.chunks_exact(3) {
+          for ybr in data.as_chunks::<3>().0 {
             let rgb = ybr_to_rgb(
               ybr[0].into() * scale,
               ybr[1].into() * scale,

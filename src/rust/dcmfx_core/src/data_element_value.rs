@@ -1063,7 +1063,7 @@ impl DataElementValue {
         }
 
         let mut values = Vec::<T>::with_capacity(bytes.len() / 4);
-        for i32_bytes in bytes.chunks_exact(4) {
+        for i32_bytes in bytes.as_chunks::<4>().0 {
           values
             .push(convert_int(byteorder::LittleEndian::read_i32(i32_bytes))?);
         }
@@ -1082,7 +1082,7 @@ impl DataElementValue {
         }
 
         let mut values = Vec::<T>::with_capacity(bytes.len() / 2);
-        for i16_bytes in bytes.chunks_exact(2) {
+        for i16_bytes in bytes.as_chunks::<2>().0 {
           values
             .push(convert_int(byteorder::LittleEndian::read_i16(i16_bytes))?);
         }
@@ -1101,7 +1101,7 @@ impl DataElementValue {
         }
 
         let mut values = Vec::with_capacity(bytes.len() / 4);
-        for u32_bytes in bytes.chunks_exact(4) {
+        for u32_bytes in bytes.as_chunks::<4>().0 {
           values
             .push(convert_int(byteorder::LittleEndian::read_u32(u32_bytes))?);
         }
@@ -1120,7 +1120,7 @@ impl DataElementValue {
         }
 
         let mut values = Vec::<T>::with_capacity(bytes.len() / 2);
-        for u16_bytes in bytes.chunks_exact(2) {
+        for u16_bytes in bytes.as_chunks::<2>().0 {
           values
             .push(convert_int(byteorder::LittleEndian::read_u16(u16_bytes))?);
         }
@@ -1247,7 +1247,7 @@ impl DataElementValue {
         }
 
         let mut values = Vec::with_capacity(bytes.len() / 8);
-        for i64_bytes in bytes.chunks_exact(8) {
+        for i64_bytes in bytes.as_chunks::<8>().0 {
           values
             .push(convert_int(byteorder::LittleEndian::read_i64(i64_bytes))?);
         }
@@ -1266,7 +1266,7 @@ impl DataElementValue {
         }
 
         let mut values = Vec::with_capacity(bytes.len() / 8);
-        for u64_bytes in bytes.chunks_exact(8) {
+        for u64_bytes in bytes.as_chunks::<8>().0 {
           values
             .push(convert_int(byteorder::LittleEndian::read_u64(u64_bytes))?);
         }
@@ -1327,7 +1327,7 @@ impl DataElementValue {
         }
 
         let mut values = Vec::with_capacity(bytes.len() / 8);
-        for f64_bytes in bytes.chunks_exact(8) {
+        for f64_bytes in bytes.as_chunks::<8>().0 {
           values.push(byteorder::LittleEndian::read_f64(f64_bytes));
         }
 
@@ -1345,7 +1345,7 @@ impl DataElementValue {
         }
 
         let mut values = Vec::with_capacity(bytes.len() / 4);
-        for f32_bytes in bytes.chunks_exact(4) {
+        for f32_bytes in bytes.as_chunks::<4>().0 {
           values.push(f64::from(byteorder::LittleEndian::read_f32(f32_bytes)));
         }
 

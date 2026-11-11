@@ -353,7 +353,7 @@ fn convert_unsigned_values_to_signed_values(
     BitsAllocated::Sixteen => {
       let threshold = 2i32.pow(image_pixel_module.bits_stored() as u32 - 1);
 
-      for chunk in data.chunks_exact_mut(2) {
+      for chunk in data.as_chunks_mut::<2>().0 {
         let value = u16::from_ne_bytes([chunk[0], chunk[1]]);
         if value as i32 >= threshold {
           chunk.copy_from_slice(
@@ -366,7 +366,7 @@ fn convert_unsigned_values_to_signed_values(
     BitsAllocated::ThirtyTwo => {
       let threshold = 2i64.pow(image_pixel_module.bits_stored() as u32 - 1);
 
-      for chunk in data.chunks_exact_mut(4) {
+      for chunk in data.as_chunks_mut::<4>().0 {
         let value =
           u32::from_ne_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
         if i64::from(value) >= threshold {

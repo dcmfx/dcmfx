@@ -525,7 +525,7 @@ pub fn encode_color(
       PhotometricInterpretation::YbrFull422,
       BitsAllocated::Eight,
     ) => {
-      for (i, pixels) in data.chunks_exact(6).enumerate() {
+      for (i, pixels) in data.as_chunks::<6>().0.iter().enumerate() {
         let y0 = pixels[0];
         let y1 = pixels[3];
         let cb = ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u8;
@@ -548,7 +548,7 @@ pub fn encode_color(
       PhotometricInterpretation::YbrFull422,
       BitsAllocated::Eight,
     ) => {
-      for (i, pixels) in data.chunks_exact(6).enumerate() {
+      for (i, pixels) in data.as_chunks::<6>().0.iter().enumerate() {
         let y0 = pixels[0];
         let y1 = pixels[3];
         let cb = ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u8;
@@ -575,7 +575,7 @@ pub fn encode_color(
       PhotometricInterpretation::YbrFull422,
       BitsAllocated::Sixteen,
     ) => {
-      for (i, pixels) in data.chunks_exact(6).enumerate() {
+      for (i, pixels) in data.as_chunks::<6>().0.iter().enumerate() {
         let y0 = pixels[0];
         let y1 = pixels[3];
         let cb = ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u16;
@@ -598,7 +598,7 @@ pub fn encode_color(
       PhotometricInterpretation::YbrFull422,
       BitsAllocated::Sixteen,
     ) => {
-      for (i, pixels) in data.chunks_exact(6).enumerate() {
+      for (i, pixels) in data.as_chunks::<6>().0.iter().enumerate() {
         let y0 = pixels[0];
         let y1 = pixels[3];
         let cb = ((usize::from(pixels[1]) + usize::from(pixels[4])) / 2) as u16;
@@ -625,7 +625,7 @@ pub fn encode_color(
       PhotometricInterpretation::YbrFull422,
       BitsAllocated::ThirtyTwo,
     ) => {
-      for (i, pixels) in data.chunks_exact(6).enumerate() {
+      for (i, pixels) in data.as_chunks::<6>().0.iter().enumerate() {
         let y0 = pixels[0];
         let y1 = pixels[3];
         let cb = ((u64::from(pixels[1]) + u64::from(pixels[4])) / 2) as u32;
@@ -648,7 +648,7 @@ pub fn encode_color(
       PhotometricInterpretation::YbrFull422,
       BitsAllocated::ThirtyTwo,
     ) => {
-      for (i, pixels) in data.chunks_exact(6).enumerate() {
+      for (i, pixels) in data.as_chunks::<6>().0.iter().enumerate() {
         let y0 = pixels[0];
         let y1 = pixels[3];
         let cb = ((u64::from(pixels[1]) + u64::from(pixels[4])) / 2) as u32;

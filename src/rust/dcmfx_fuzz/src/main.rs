@@ -49,23 +49,20 @@ fn main() {
       // Render the overlays. This should never panic.
       if let Ok(overlay_plane_module) =
         OverlayPlaneModule::from_data_set(&data_set)
+        && !overlay_plane_module.is_empty()
+        && let Ok(image_pixel_module) =
+          ImagePixelModule::from_data_set(&data_set)
+        && image_pixel_module.pixel_count() <= 4096 * 4096
       {
-        if !overlay_plane_module.is_empty() {
-          if let Ok(image_pixel_module) =
-            ImagePixelModule::from_data_set(&data_set)
-            && image_pixel_module.pixel_count() <= 4096 * 4096
-          {
-            // Allocate output image
-            let mut rgb_image = image::DynamicImage::new_rgb8(
-              image_pixel_module.rows().into(),
-              image_pixel_module.columns().into(),
-            );
+        // Allocate output image
+        let mut rgb_image = image::DynamicImage::new_rgb8(
+          image_pixel_module.rows().into(),
+          image_pixel_module.columns().into(),
+        );
 
-            overlay_plane_module
-              .render_to_rgb_image(&mut rgb_image, 0)
-              .unwrap();
-          }
-        }
+        overlay_plane_module
+          .render_to_rgb_image(&mut rgb_image, 0)
+          .unwrap();
       }
     }
   });

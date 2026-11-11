@@ -10,6 +10,6 @@
 (0032,1064) SQ Requested Procedure Code Sequence
   (FFFE,E000) Item
     (0008,0100) SH Code Value                           [    10 bytes] "CodeValue"
-    (0010,0010) PN Patient's Name                       [    56 bytes] "ﾔﾏﾀ\u{ff9e}^ﾀﾛｳ=山田^太郎=やまだ^ …
+    (0010,0010) PN Patient's Name                       [    56 bytes] "ﾔﾏﾀﾞ^ﾀﾛｳ=山田^太郎=やまだ^たろう"
   (FFFE,E00D) Item Delimitation Item
 (FFFE,E0DD) Sequence Delimitation Item

@@ -738,7 +738,7 @@ fn create_color_image(image_pixel_module: &ImagePixelModule) -> ColorImage {
       .photometric_interpretation()
       .is_ybr_full_422()
     {
-      for i in data.chunks_exact_mut(6) {
+      for i in data.as_chunks_mut::<6>().0 {
         i[4] = i[1];
         i[5] = i[2];
       }

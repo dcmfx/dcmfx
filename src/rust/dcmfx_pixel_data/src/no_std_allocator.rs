@@ -5,9 +5,10 @@
 //! libraries such as OpenJPEG can allocate memory.
 
 use alloc::alloc::Layout;
+use core::ffi::c_void;
 
 #[unsafe(no_mangle)]
-pub extern "C" fn malloc(size: usize) -> *mut u8 {
+pub unsafe extern "C" fn malloc(size: usize) -> *mut c_void {
   let layout_size = ::core::mem::size_of::<Layout>();
 
   // Construct layout that has enough space for the allocation preceded by the
@@ -22,41 +23,44 @@ pub extern "C" fn malloc(size: usize) -> *mut u8 {
     // Allocate
     let ptr = alloc::alloc::alloc(layout);
     if ptr.is_null() {
-      return ptr;
+      return ptr.cast();
     }
 
     // Copy layout into the initial bytes
     *(ptr as *mut Layout) = layout;
 
     // Return pointer to the data following the layout definition
-    ptr.add(layout_size)
+    ptr.add(layout_size).cast()
   }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn calloc(count: usize, size: usize) -> *mut u8 {
-  let ptr = malloc(count * size);
+pub unsafe extern "C" fn calloc(count: usize, size: usize) -> *mut c_void {
+  unsafe {
+    let ptr = malloc(count * size);
 
-  // Zero the allocated bytes
-  if !ptr.is_null() {
-    unsafe {
-      ::core::ptr::write_bytes(ptr, 0, count * size);
+    // Zero the allocated bytes
+    if !ptr.is_null() {
+      ::core::ptr::write_bytes(ptr.cast::<u8>(), 0, count * size);
     }
-  }
 
-  ptr
+    ptr
+  }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn realloc(ptr: *mut u8, new_size: usize) -> *mut u8 {
+pub unsafe extern "C" fn realloc(
+  ptr: *mut c_void,
+  new_size: usize,
+) -> *mut c_void {
   if ptr.is_null() {
-    return malloc(new_size);
+    return unsafe { malloc(new_size) };
   }
 
   let layout_size = ::core::mem::size_of::<Layout>();
 
   unsafe {
-    let ptr = ptr.sub(layout_size);
+    let ptr = ptr.cast::<u8>().sub(layout_size);
 
     // Read current layout from the start of the allocation
     let layout: Layout = *(ptr as *const Layout);
@@ -64,7 +68,7 @@ pub extern "C" fn realloc(ptr: *mut u8, new_size: usize) -> *mut u8 {
     // Perform reallocation
     let ptr = alloc::alloc::realloc(ptr, layout, layout_size + new_size);
     if ptr.is_null() {
-      return ptr;
+      return ptr.cast();
     }
 
     // Set new layout into the initial bytes
@@ -72,12 +76,12 @@ pub extern "C" fn realloc(ptr: *mut u8, new_size: usize) -> *mut u8 {
       Layout::from_size_align(new_size, layout.align()).unwrap();
 
     // Return pointer to the data following the layout definition
-    ptr.add(layout_size)
+    ptr.add(layout_size).cast()
   }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn free(ptr: *mut u8) {
+pub unsafe extern "C" fn free(ptr: *mut c_void) {
   if ptr.is_null() {
     return;
   }
@@ -85,7 +89,7 @@ pub extern "C" fn free(ptr: *mut u8) {
   let layout_size = ::core::mem::size_of::<Layout>();
 
   unsafe {
-    let ptr = ptr.sub(layout_size);
+    let ptr = ptr.cast::<u8>().sub(layout_size);
 
     // Read layout from the start of the allocation
     let layout: Layout = *(ptr as *const Layout);

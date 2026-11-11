@@ -16,7 +16,7 @@ pub fn from_bytes(bytes: &[u8]) -> Result<Vec<DataElementTag>, DataError> {
 
   let mut tags = Vec::<DataElementTag>::new();
 
-  for chunk in bytes.chunks_exact(4) {
+  for chunk in bytes.as_chunks::<4>().0 {
     let group = u16::from_le_bytes([chunk[0], chunk[1]]);
     let element = u16::from_le_bytes([chunk[2], chunk[3]]);
 

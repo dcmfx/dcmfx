@@ -47,8 +47,15 @@ impl PartialEq for JsonSerializeError {
       (JsonSerializeError::P10Error(a), JsonSerializeError::P10Error(b)) => {
         a == b
       }
+
+      #[cfg(feature = "std")]
       (JsonSerializeError::IOError(a), JsonSerializeError::IOError(b)) => {
         a.to_string() == b.to_string()
+      }
+
+      #[cfg(not(feature = "std"))]
+      (JsonSerializeError::IOError(a), JsonSerializeError::IOError(b)) => {
+        a == b
       }
       _ => false,
     }

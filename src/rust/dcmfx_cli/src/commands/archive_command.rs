@@ -94,7 +94,8 @@ pub async fn run(args: ArchiveArgs) -> Result<(), ()> {
   match create_archive(args).await {
     Ok(()) => Ok(()),
 
-    Err((error, task_description)) => {
+    Err(error) => {
+      let (error, task_description) = *error;
       error.print(&task_description);
       Err(())
     }
@@ -103,7 +104,7 @@ pub async fn run(args: ArchiveArgs) -> Result<(), ()> {
 
 async fn create_archive(
   args: ArchiveArgs,
-) -> Result<(), (ArchiveError, String)> {
+) -> Result<(), Box<(ArchiveError, String)>> {
   let task_description =
     format!("creating archive \"{}\"", args.output_filename.display());
 
@@ -116,7 +117,7 @@ async fn create_archive(
   let output_stream = output_target
     .open_write_stream(!output_target.is_stdout())
     .await
-    .map_err(|e| (e.into(), task_description.clone()))?;
+    .map_err(|e| Box::new((e.into(), task_description.clone())))?;
 
   let mut output_stream = output_stream.lock().await;
   let mut zip_file_writer = ZipFileWriter::with_tokio(&mut *output_stream);
@@ -130,7 +131,7 @@ async fn create_archive(
     let mut input_stream = input_source
       .open_read_stream()
       .await
-      .map_err(|e| (e.into(), input_task_description.clone()))?;
+      .map_err(|e| Box::new((e.into(), input_task_description.clone())))?;
 
     // Read the start of the input, which provides the data elements needed for
     // the DICOMDIR as well as the file's name in the ZIP archive. The result is
@@ -139,7 +140,7 @@ async fn create_archive(
     let Some((leading_bytes, data_set)) =
       read_partial_data_set(&mut input_stream, &args)
         .await
-        .map_err(|e| (e, input_task_description.clone()))?
+        .map_err(|e| Box::new((e, input_task_description.clone())))?
     else {
       continue;
     };
@@ -154,24 +155,24 @@ async fn create_archive(
       &args,
     )
     .await
-    .map_err(|e| (e, input_task_description.clone()))?;
+    .map_err(|e| Box::new((e, input_task_description.clone())))?;
 
     dicom_files.push((file_name, data_set));
   }
 
   add_dicomdir_to_zip_archive(&mut zip_file_writer, &dicom_files, &args)
     .await
-    .map_err(|e| (e, "creating DICOMDIR".into()))?;
+    .map_err(|e| Box::new((e, "creating DICOMDIR".into())))?;
 
   zip_file_writer
     .close()
     .await
-    .map_err(|e| (e.into(), task_description.clone()))?;
+    .map_err(|e| Box::new((e.into(), task_description.clone())))?;
 
   output_target
     .commit(&mut output_stream)
     .await
-    .map_err(|e| (e.into(), task_description))?;
+    .map_err(|e| Box::new((e.into(), task_description)))?;
 
   Ok(())
 }
