@@ -46,6 +46,22 @@ pub struct P10PixelDataFrameTransform {
   // When reading native pixel data, the size of a single frame in bits
   native_pixel_data_frame_size: u64,
 
+  // When reading native pixel data, the size in bits of the pixel data implied
+  // by '(0028,0008) Number of Frames', including any unused bits in the final
+  // byte and the padding byte needed to make the length even.
+  native_pixel_data_expected_size: u64,
+
+  // When reading native pixel data, its size in bits as specified by the
+  // length of the '(7FE0,0010) Pixel Data' data element.
+  native_pixel_data_size: u64,
+
+  // When reading native pixel data, frames beyond '(0028,0008) Number of
+  // Frames' that lie entirely within the expected size of the pixel data. These
+  // may just be unused bits and padding, so they are only emitted if a
+  // subsequent frame extends beyond the expected size, which shows that they
+  // are real frames.
+  native_possible_padding_frames: Vec<PixelDataFrame>,
+
   // Chunks of pixel data that have not yet been emitted as part of a frame.
   //
   // The second value is an offset into the chunk where the un-emitted frame
@@ -173,6 +189,9 @@ impl P10PixelDataFrameTransform {
       details: details_transform,
       pixel_data_filter,
       native_pixel_data_frame_size: 0,
+      native_pixel_data_expected_size: 0,
+      native_pixel_data_size: 0,
+      native_possible_padding_frames: vec![],
       pixel_data: VecDeque::new(),
       pixel_data_write_offset: 0,
       pixel_data_read_offset: 0,
@@ -219,8 +238,9 @@ impl P10PixelDataFrameTransform {
   ) -> Result<Vec<PixelDataFrame>, DataError> {
     match token {
       // The start of native pixel data
-      P10Token::DataElementHeader { .. } => {
+      P10Token::DataElementHeader { length, .. } => {
         self.is_encapsulated = false;
+        self.native_pixel_data_size = u64::from(*length) * 8;
 
         // We cannot validate the pixel data length in any way because
         // of the presence of trailing padding after the pixel data.
@@ -238,6 +258,14 @@ impl P10PixelDataFrameTransform {
           self.native_pixel_data_frame_size = details.rows as u64
             * details.columns as u64
             * bits_per_pixel as u64;
+
+          // Round up to a whole number of bytes, and then to an even number of
+          // bytes as DICOM requires
+          self.native_pixel_data_expected_size = (self
+            .native_pixel_data_frame_size
+            * details.number_of_frames as u64)
+            .div_ceil(16)
+            * 16;
         }
 
         Ok(vec![])
@@ -373,12 +401,32 @@ impl P10PixelDataFrameTransform {
         }
       }
 
-      // For native frame data, don't emit more frames than is specified by the
-      // '(0028,0008) Number of Frames' data element. This is important in the
-      // case of 1bpp pixel data when there are unused bits at the end of the
-      // data and there are enough unused bits to contain data for one or more
-      // frames. This can occur when the size of a single frame is <= 7 bits.
+      // Frames beyond '(0028,0008) Number of Frames' that lie entirely within
+      // the expected size of the pixel data may just be unused bits and
+      // padding. This can occur when the pixel data has an odd length and so
+      // has a padding byte, and in the case of 1bpp pixel data when the unused
+      // bits at the end of the data are enough to contain data for one or more
+      // frames.
+      //
+      // Such frames are held back, and are only emitted if a subsequent frame
+      // extends beyond the expected size, as that shows they're real frames.
+      //
+      // Frames beyond '(0028,0008) Number of Frames' that lie entirely within
+      // the final byte of the pixel data are also dropped as they may be its
+      // padding byte. This can only occur when the size of a single frame is
+      // <= 8 bits.
       if self.next_frame_index < self.get_number_of_frames() {
+        frames.push(frame);
+      } else if self.pixel_data_read_offset
+        <= self.native_pixel_data_expected_size
+      {
+        self.native_possible_padding_frames.push(frame);
+      } else if self.pixel_data_read_offset - frame_size + 8
+        >= self.native_pixel_data_size
+      {
+        // Possible padding byte, so drop
+      } else {
+        frames.append(&mut self.native_possible_padding_frames);
         frames.push(frame);
       }
 

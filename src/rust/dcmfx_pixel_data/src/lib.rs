@@ -522,6 +522,95 @@ mod tests {
     assert_eq!(frames[3].bit_offset(), 1);
   }
 
+  #[test]
+  fn read_native_ignores_padding_byte() {
+    let ds = native_data_set(1, 1, 1, 8, vec![7, 0]);
+
+    assert_eq!(native_frames_data(&ds), vec![vec![7]]);
+  }
+
+  #[test]
+  fn read_native_with_more_frames_than_number_of_frames() {
+    let ds = native_data_set(2, 1, 2, 8, vec![1, 2, 3, 4, 5, 6]);
+
+    assert_eq!(
+      native_frames_data(&ds),
+      vec![vec![1, 2], vec![3, 4], vec![5, 6]]
+    );
+  }
+
+  #[test]
+  fn read_native_with_more_frames_than_number_of_frames_and_padding_byte() {
+    let ds = native_data_set(2, 1, 1, 8, vec![1, 2, 3, 0]);
+
+    assert_eq!(native_frames_data(&ds), vec![vec![1], vec![2], vec![3]]);
+  }
+
+  #[test]
+  fn read_native_with_one_bit_allocated_and_more_frames_than_number_of_frames()
+  {
+    // Six frames of 4 bits each, followed by a padding byte. Number of Frames
+    // is 3, so the expected size is 12 bits rounded up to 16 bits, which means
+    // the fourth frame lies within the expected size and is only known to be a
+    // real frame once the fifth frame extends past it.
+    let ds = native_data_set(
+      3,
+      2,
+      2,
+      1,
+      vec![0b0010_0001, 0b0100_0011, 0b0110_0101, 0],
+    );
+
+    let frames = ds.get_pixel_data_frames().unwrap();
+    assert_eq!(frames.len(), 6);
+    for (i, frame) in frames.iter().enumerate() {
+      assert_eq!(frame.index(), Some(i));
+      assert_eq!(frame.to_bytes()[0] & 0xF, i as u8 + 1);
+    }
+  }
+
+  fn native_data_set(
+    number_of_frames: i64,
+    rows: i64,
+    columns: i64,
+    bits_allocated: i64,
+    pixel_data: Vec<u8>,
+  ) -> DataSet {
+    let mut ds = DataSet::new();
+    ds.insert_int_value(&dictionary::NUMBER_OF_FRAMES, &[number_of_frames])
+      .unwrap();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
+    ds.insert_int_value(&dictionary::ROWS, &[rows]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[columns])
+      .unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[bits_allocated])
+      .unwrap();
+    ds.insert(
+      dictionary::PIXEL_DATA.tag,
+      DataElementValue::new_binary(
+        ValueRepresentation::OtherByteString,
+        pixel_data.into(),
+      )
+      .unwrap(),
+    );
+
+    ds
+  }
+
+  fn native_frames_data(ds: &DataSet) -> Vec<Vec<u8>> {
+    ds.get_pixel_data_frames()
+      .unwrap()
+      .iter()
+      .map(|frame| frame.to_bytes().to_vec())
+      .collect()
+  }
+
   // This test is taken from the DICOM standard. Ref: PS3.5 Table A.4-1.
   #[test]
   fn read_encapsulated_multiple_fragments_into_single_frame() {

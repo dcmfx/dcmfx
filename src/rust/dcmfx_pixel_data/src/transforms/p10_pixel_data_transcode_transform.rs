@@ -92,6 +92,11 @@ pub struct P10PixelDataTranscodeTransform {
   /// every frame of pixel data that's emitted.
   native_pixel_data_bytes_remaining: u32,
 
+  /// Whether any frames of output pixel data have been emitted. When the input
+  /// pixel data ends, this indicates that the output pixel data needs to be
+  /// completed.
+  has_output_pixel_data: bool,
+
   /// If the output transfer syntax is lossy, this is an insert transform that
   /// inserts the '(0028,2110) Lossy Image Compression' data element.
   lossy_image_compression_insert_transform: Option<P10InsertTransform>,
@@ -162,6 +167,7 @@ impl P10PixelDataTranscodeTransform {
       )),
       p10_pixel_data_frame_transform: P10PixelDataFrameTransform::new(),
       native_pixel_data_bytes_remaining: 0,
+      has_output_pixel_data: false,
       lossy_image_compression_insert_transform:
         Self::lossy_image_compression_insert_transform(output_transfer_syntax),
     }
@@ -258,6 +264,7 @@ impl P10PixelDataTranscodeTransform {
     };
 
     let mut output_tokens = vec![];
+    let mut is_input_pixel_data_complete = false;
 
     // Remove the original '(7FE0,0010) Pixel Data' data element from the
     // incoming tokens. It will be replaced with the transcoded pixel data.
@@ -268,15 +275,51 @@ impl P10PixelDataTranscodeTransform {
         .map_err(P10PixelDataTranscodeTransformError::P10Error)?
       {
         output_tokens.push(token);
+      } else {
+        // Detect the end of the input pixel data, which is either the final
+        // bytes of native pixel data, or the delimiter of encapsulated pixel
+        // data
+        is_input_pixel_data_complete |= match token {
+          P10Token::DataElementValueBytes {
+            tag,
+            bytes_remaining,
+            ..
+          } => tag == dictionary::PIXEL_DATA.tag && bytes_remaining == 0,
+          P10Token::SequenceDelimiter { tag } => {
+            tag == dictionary::PIXEL_DATA.tag
+          }
+          _ => false,
+        };
       }
     }
 
     // Iterate over the available pixel data frames and convert them into the
     // target transfer syntax, appending the resulting tokens to the vector
     for mut input_frame in input_frames {
-      let encoded_frame = self.transcode_frame(&mut input_frame)?;
-
       let frame_index = input_frame.index().unwrap();
+
+      // Native output pixel data has its length set upfront based on Number of
+      // Frames, so it can't hold any frames beyond that. Rather than silently
+      // dropping them, return an error. Encapsulated output pixel data has no
+      // such constraint, so all frames are included.
+      let number_of_frames =
+        self.p10_pixel_data_frame_transform.get_number_of_frames();
+      if !self.output_transfer_syntax.is_encapsulated
+        && frame_index >= number_of_frames
+      {
+        return Err(P10PixelDataTranscodeTransformError::DataError(
+          DataError::new_value_invalid(format!(
+            "Pixel data contains more frames than the {number_of_frames} \
+             specified by Number of Frames, which is not supported when \
+             transcoding to native pixel data"
+          ))
+          .with_path(&DataSetPath::new_with_data_element(
+            dictionary::NUMBER_OF_FRAMES.tag,
+          )),
+        ));
+      }
+
+      let encoded_frame = self.transcode_frame(&mut input_frame)?;
 
       if self.output_transfer_syntax.is_encapsulated {
         output_tokens.extend(
@@ -286,6 +329,13 @@ impl P10PixelDataTranscodeTransform {
         output_tokens
           .extend(self.native_pixel_data_tokens(frame_index, encoded_frame)?);
       }
+
+      self.has_output_pixel_data = true;
+    }
+
+    // Once the input pixel data is complete, complete the output pixel data
+    if is_input_pixel_data_complete && self.has_output_pixel_data {
+      output_tokens.extend(self.pixel_data_end_tokens());
     }
 
     // Pass through the lossy image compression insert transform if defined
@@ -589,15 +639,11 @@ impl P10PixelDataTranscodeTransform {
     frame_index: usize,
     encoded_frame: Bytes,
   ) -> Result<Vec<P10Token>, P10PixelDataTranscodeTransformError> {
+    let vr = self.native_pixel_data_vr();
+
     // Get the Image Pixel Module. This is safe to unwrap because it must have
     // been fully received by the time pixel data is encountered.
     let image_pixel_module = self.decoded_image_pixel_module.as_ref().unwrap();
-
-    let vr = if u8::from(image_pixel_module.bits_allocated()) <= 8 {
-      ValueRepresentation::OtherByteString
-    } else {
-      ValueRepresentation::OtherWordString
-    };
 
     let mut tokens = vec![];
 
@@ -723,16 +769,60 @@ impl P10PixelDataTranscodeTransform {
       bytes_remaining: 0,
     });
 
-    // On the last frame, emit a sequence delimiter
-    if frame_index + 1
-      == self.p10_pixel_data_frame_transform.get_number_of_frames()
-    {
-      tokens.push(P10Token::SequenceDelimiter {
+    Ok(tokens)
+  }
+
+  /// Returns the DICOM P10 tokens that complete the output pixel data once the
+  /// input pixel data has ended.
+  ///
+  /// Encapsulated pixel data is ended with a sequence delimiter, regardless of
+  /// how many frames it contains. Native pixel data has its length set upfront
+  /// based on '(0028,0008) Number of Frames', so if the input pixel data
+  /// contained fewer frames than this then it is padded with zeros up to that
+  /// length.
+  ///
+  fn pixel_data_end_tokens(&mut self) -> Vec<P10Token> {
+    if self.output_transfer_syntax.is_encapsulated {
+      return vec![P10Token::SequenceDelimiter {
         tag: dictionary::PIXEL_DATA.tag,
-      })
+      }];
     }
 
-    Ok(tokens)
+    static ZEROS: [u8; 65536] = [0; 65536];
+
+    let vr = self.native_pixel_data_vr();
+
+    let mut tokens = vec![];
+    while self.native_pixel_data_bytes_remaining > 0 {
+      let length = self
+        .native_pixel_data_bytes_remaining
+        .min(ZEROS.len() as u32);
+
+      self.native_pixel_data_bytes_remaining -= length;
+
+      tokens.push(P10Token::DataElementValueBytes {
+        tag: dictionary::PIXEL_DATA.tag,
+        vr,
+        data: Bytes::from_static(&ZEROS[..length as usize]),
+        bytes_remaining: self.native_pixel_data_bytes_remaining,
+      });
+    }
+
+    tokens
+  }
+
+  /// Returns the VR to use for native output pixel data.
+  ///
+  fn native_pixel_data_vr(&self) -> ValueRepresentation {
+    // Get the Image Pixel Module. This is safe to unwrap because it must have
+    // been fully received by the time pixel data is encountered.
+    let image_pixel_module = self.decoded_image_pixel_module.as_ref().unwrap();
+
+    if u8::from(image_pixel_module.bits_allocated()) <= 8 {
+      ValueRepresentation::OtherByteString
+    } else {
+      ValueRepresentation::OtherWordString
+    }
   }
 
   /// If the output transfer is lossy, returns an insert transform that sets
@@ -1161,5 +1251,197 @@ impl TranscodeImageDataFunctions {
       process_monochrome_image: Box::new(process_monochrome_image),
       process_color_image: Box::new(process_color_image),
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  use crate::DataSetPixelDataExtensions;
+
+  #[test]
+  fn transcode_encapsulated_with_more_frames_than_number_of_frames() {
+    let ds = rle_data_set_with_number_of_frames(2, 3);
+
+    // Native output can't hold the frames beyond Number of Frames, so errors
+    assert_eq!(
+      transcode(&ds, &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN),
+      Err(P10PixelDataTranscodeTransformError::DataError(
+        DataError::new_value_invalid(
+          "Pixel data contains more frames than the 2 specified by Number of \
+           Frames, which is not supported when transcoding to native pixel \
+           data"
+            .to_string()
+        )
+        .with_path(&DataSetPath::new_with_data_element(
+          dictionary::NUMBER_OF_FRAMES.tag
+        ))
+      ))
+    );
+
+    // Encapsulated output retains all frames
+    let rle_ds = transcode(&ds, &transfer_syntax::RLE_LOSSLESS).unwrap();
+    assert_eq!(frames_data(&rle_ds), frames_data(&ds));
+    assert_eq!(frames_data(&rle_ds).len(), 3);
+  }
+
+  #[test]
+  fn transcode_native_with_more_frames_than_number_of_frames() {
+    let ds = native_data_set(2, 3);
+
+    // Native output can't hold the frames beyond Number of Frames, so errors
+    assert!(
+      transcode(&ds, &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN).is_err()
+    );
+
+    // Encapsulated output retains all frames
+    let rle_ds = transcode(&ds, &transfer_syntax::RLE_LOSSLESS).unwrap();
+    assert_eq!(
+      frames_data(&rle_ds),
+      frames_data(&rle_data_set_with_number_of_frames(2, 3))
+    );
+    assert_eq!(frames_data(&rle_ds).len(), 3);
+  }
+
+  #[test]
+  fn transcode_encapsulated_with_fewer_frames_than_number_of_frames() {
+    let ds = rle_data_set_with_number_of_frames(4, 3);
+
+    // Native output is padded with zeros to the length implied by Number of
+    // Frames
+    let native_ds =
+      transcode(&ds, &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN).unwrap();
+    assert_eq!(
+      frames_data(&native_ds),
+      vec![vec![0, 1], vec![2, 3], vec![4, 5], vec![0, 0]]
+    );
+
+    // Encapsulated output contains only the frames that were present
+    let rle_ds = transcode(&ds, &transfer_syntax::RLE_LOSSLESS).unwrap();
+    assert_eq!(rle_ds.get_pixel_data_frames().unwrap().len(), 3);
+    assert_eq!(
+      frames_data(
+        &transcode(&rle_ds, &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN)
+          .unwrap()
+      ),
+      vec![vec![0, 1], vec![2, 3], vec![4, 5], vec![0, 0]]
+    );
+  }
+
+  #[test]
+  fn transcode_native_with_fewer_frames_than_number_of_frames() {
+    let ds = native_data_set(3, 2);
+
+    // Native output is padded with zeros to the length implied by Number of
+    // Frames
+    let native_ds =
+      transcode(&ds, &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN).unwrap();
+    assert_eq!(
+      frames_data(&native_ds),
+      vec![vec![0, 1], vec![2, 3], vec![0, 0]]
+    );
+
+    // Encapsulated output contains only the frames that were present
+    let rle_ds = transcode(&ds, &transfer_syntax::RLE_LOSSLESS).unwrap();
+    assert_eq!(rle_ds.get_pixel_data_frames().unwrap().len(), 2);
+  }
+
+  #[test]
+  fn transcode_succeeds_when_frame_count_matches_number_of_frames() {
+    let ds = rle_data_set_with_number_of_frames(3, 3);
+
+    let output_ds =
+      transcode(&ds, &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN).unwrap();
+
+    assert_eq!(output_ds.get_pixel_data_frames().unwrap().len(), 3,);
+  }
+
+  fn transcode(
+    ds: &DataSet,
+    output_transfer_syntax: &'static TransferSyntax,
+  ) -> Result<DataSet, P10PixelDataTranscodeTransformError> {
+    ds.transcode_pixel_data(
+      output_transfer_syntax,
+      PixelDataDecodeConfig::default(),
+      PixelDataEncodeConfig::default(),
+      None,
+    )
+    .map(|ds| ds.unwrap())
+  }
+
+  fn frames_data(ds: &DataSet) -> Vec<Vec<u8>> {
+    ds.get_pixel_data_frames()
+      .unwrap()
+      .iter_mut()
+      .map(|frame| frame.combine_chunks().to_vec())
+      .collect()
+  }
+
+  /// Returns a data set with native 8-bit monochrome pixel data containing
+  /// `frame_count` frames, but with the specified Number of Frames.
+  ///
+  fn native_data_set(number_of_frames: usize, frame_count: usize) -> DataSet {
+    let mut ds = DataSet::new();
+
+    ds.insert(
+      dictionary::TRANSFER_SYNTAX_UID.tag,
+      DataElementValue::new_unique_identifier(&[
+        transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN.uid,
+      ])
+      .unwrap(),
+    );
+    ds.insert_int_value(
+      &dictionary::NUMBER_OF_FRAMES,
+      &[number_of_frames as i64],
+    )
+    .unwrap();
+    ds.insert_int_value(&dictionary::SAMPLES_PER_PIXEL, &[1])
+      .unwrap();
+    ds.insert_string_value(
+      &dictionary::PHOTOMETRIC_INTERPRETATION,
+      &["MONOCHROME2"],
+    )
+    .unwrap();
+    ds.insert_int_value(&dictionary::ROWS, &[1]).unwrap();
+    ds.insert_int_value(&dictionary::COLUMNS, &[2]).unwrap();
+    ds.insert_int_value(&dictionary::BITS_ALLOCATED, &[8])
+      .unwrap();
+    ds.insert_int_value(&dictionary::BITS_STORED, &[8]).unwrap();
+    ds.insert_int_value(&dictionary::HIGH_BIT, &[7]).unwrap();
+    ds.insert_int_value(&dictionary::PIXEL_REPRESENTATION, &[0])
+      .unwrap();
+    ds.insert(
+      dictionary::PIXEL_DATA.tag,
+      DataElementValue::new_binary(
+        ValueRepresentation::OtherByteString,
+        (0..frame_count as u8 * 2).collect::<Vec<u8>>().into(),
+      )
+      .unwrap(),
+    );
+
+    ds
+  }
+
+  /// Returns a data set with RLE Lossless pixel data containing three frames,
+  /// but with the specified Number of Frames.
+  ///
+  fn rle_data_set_with_number_of_frames(
+    number_of_frames: usize,
+    frame_count: usize,
+  ) -> DataSet {
+    let mut ds = transcode(
+      &native_data_set(frame_count, frame_count),
+      &transfer_syntax::RLE_LOSSLESS,
+    )
+    .unwrap();
+
+    ds.insert_int_value(
+      &dictionary::NUMBER_OF_FRAMES,
+      &[number_of_frames as i64],
+    )
+    .unwrap();
+
+    ds
   }
 }
