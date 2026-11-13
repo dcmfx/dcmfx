@@ -176,7 +176,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx"
-version = "0.55.0"
+version = "0.55.1"
 dependencies = [
  "bytes",
  "dcmfx_character_set",
@@ -190,11 +190,11 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_character_set"
-version = "0.55.0"
+version = "0.55.1"
 
 [[package]]
 name = "dcmfx_core"
-version = "0.55.0"
+version = "0.55.1"
 dependencies = [
  "byteorder",
  "bytes",
@@ -209,7 +209,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_deidentify"
-version = "0.55.0"
+version = "0.55.1"
 dependencies = [
  "bytes",
  "dcmfx_core",
@@ -220,7 +220,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_json"
-version = "0.55.0"
+version = "0.55.1"
 dependencies = [
  "base64",
  "byteorder",
@@ -234,7 +234,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_p10"
-version = "0.55.0"
+version = "0.55.1"
 dependencies = [
  "byteorder",
  "bytes",
@@ -246,7 +246,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_pixel_data"
-version = "0.55.0"
+version = "0.55.1"
 dependencies = [
  "bytemuck",
  "byteorder",
@@ -276,7 +276,7 @@ dependencies = [
 
 [[package]]
 name = "dcmfx_waveform"
-version = "0.55.0"
+version = "0.55.1"
 dependencies = [
  "bytes",
  "dcmfx_core",
