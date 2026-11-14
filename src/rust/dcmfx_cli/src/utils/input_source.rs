@@ -1,10 +1,17 @@
-use std::{path::PathBuf, sync::Arc};
+use std::{
+  path::{Path, PathBuf},
+  sync::Arc,
+};
 
 use object_store::{
   ObjectStore, ObjectStoreExt, path::Path as ObjectStorePath,
 };
 
 use dcmfx::p10::P10Error;
+
+use super::object_store::{
+  local_path_to_store_and_path, object_url_to_store_and_path,
+};
 
 /// Defines an input source for a CLI command that abstracts over the different
 /// locations input can come from.
@@ -38,6 +45,38 @@ impl core::fmt::Display for InputSource {
 }
 
 impl InputSource {
+  /// Resolves a single, non-glob input path to an input source. Object store
+  /// URLs are tried first, with the local file system used as the fallback.
+  ///
+  /// Exits the process with an error if the path isn't a recognized object
+  /// store URL and doesn't reference an existing local file.
+  ///
+  pub async fn resolve(path: &Path) -> Self {
+    let path_str = path.to_string_lossy();
+
+    let (object_store, object_path) =
+      match object_url_to_store_and_path(&path_str).await {
+        Ok(result) => result,
+
+        Err(_) => {
+          if !path.is_file() {
+            crate::utils::exit_with_error(
+              &format!("Input file '{}' does not exist", path.display()),
+              "",
+            );
+          }
+
+          local_path_to_store_and_path(path_str.to_string()).await
+        }
+      };
+
+    InputSource::Object {
+      object_store,
+      object_path,
+      display_path: path.to_path_buf(),
+    }
+  }
+
   /// Returns the file name of this input source, i.e. the final part of the
   /// path to its object. This is used when deriving output filenames.
   ///
