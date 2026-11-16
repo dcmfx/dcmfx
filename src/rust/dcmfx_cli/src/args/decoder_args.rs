@@ -2,7 +2,7 @@ use clap::{Args, ValueEnum, builder::PossibleValue};
 
 use dcmfx::pixel_data::{
   PixelDataDecodeConfig,
-  decode::{HighThroughputJpeg2000Decoder, JpegXlDecoder},
+  decode::{HighThroughputJpeg2000Decoder, JpegBaselineDecoder, JpegXlDecoder},
 };
 
 #[derive(Args, Debug)]
@@ -20,6 +20,19 @@ pub struct DecoderArgs {
     default_value_t = HighThroughputJpeg2000DecoderArg::OpenJph
   )]
   high_throughput_jpeg_2000_decoder: HighThroughputJpeg2000DecoderArg,
+
+  #[arg(
+    long,
+    help_heading = "Pixel Data Decoding",
+    help = "The library to use for decoding JPEG Baseline 8-bit pixel data. \
+      The libjpeg-turbo library is preferred because it is faster. However, \
+      WASM builds of DCMfx always use zune-jpeg and so testing that library \
+      via the CLI tool is sometimes useful.\n\
+      \n\
+      There can be very slight differences in output between decoders.",
+    default_value_t = JpegBaselineDecoderArg::LibJpegTurbo
+  )]
+  jpeg_baseline_decoder: JpegBaselineDecoderArg,
 
   #[arg(
     long,
@@ -42,6 +55,7 @@ impl DecoderArgs {
       high_throughput_jpeg_2000_decoder: self
         .high_throughput_jpeg_2000_decoder
         .into(),
+      jpeg_baseline_decoder: self.jpeg_baseline_decoder.into(),
       jpeg_xl_decoder: self.jpeg_xl_decoder.into(),
     }
   }
@@ -90,6 +104,47 @@ impl core::fmt::Display for HighThroughputJpeg2000DecoderArg {
     match self {
       HighThroughputJpeg2000DecoderArg::OpenJpeg => write!(f, "openjpeg"),
       HighThroughputJpeg2000DecoderArg::OpenJph => write!(f, "openjph"),
+    }
+  }
+}
+
+/// Enum for specifying the decoder to use for JPEG Baseline 8-bit pixel data.
+///
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum JpegBaselineDecoderArg {
+  ZuneJpeg,
+  LibJpegTurbo,
+}
+
+impl From<JpegBaselineDecoderArg> for JpegBaselineDecoder {
+  fn from(value: JpegBaselineDecoderArg) -> Self {
+    match value {
+      JpegBaselineDecoderArg::ZuneJpeg => JpegBaselineDecoder::ZuneJpeg,
+      JpegBaselineDecoderArg::LibJpegTurbo => JpegBaselineDecoder::LibJpegTurbo,
+    }
+  }
+}
+
+impl ValueEnum for JpegBaselineDecoderArg {
+  fn value_variants<'a>() -> &'a [Self] {
+    &[Self::ZuneJpeg, Self::LibJpegTurbo]
+  }
+
+  fn to_possible_value(&self) -> Option<PossibleValue> {
+    Some(match self {
+      Self::ZuneJpeg => PossibleValue::new("zune-jpeg")
+        .help("Use zune-jpeg for decoding JPEG Baseline 8-bit pixel data."),
+      Self::LibJpegTurbo => PossibleValue::new("libjpeg-turbo")
+        .help("Use libjpeg-turbo for decoding JPEG Baseline 8-bit pixel data."),
+    })
+  }
+}
+
+impl core::fmt::Display for JpegBaselineDecoderArg {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      JpegBaselineDecoderArg::ZuneJpeg => write!(f, "zune-jpeg"),
+      JpegBaselineDecoderArg::LibJpegTurbo => write!(f, "libjpeg-turbo"),
     }
   }
 }

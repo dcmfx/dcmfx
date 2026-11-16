@@ -21,6 +21,8 @@ mod jpeg_encoder;
 #[cfg(feature = "native")]
 mod libjpeg_12bit;
 #[cfg(all(feature = "native", feature = "std"))]
+mod libjpeg_turbo;
+#[cfg(all(feature = "native", feature = "std"))]
 mod libjxl;
 mod native;
 #[cfg(feature = "native")]
@@ -36,14 +38,44 @@ pub struct PixelDataEncodeConfig {
   quality: u8,
   effort: u8,
   zlib_compression_level: u32,
+  jpeg_baseline_encoder: JpegBaselineEncoder,
 }
 
 impl Default for PixelDataEncodeConfig {
+  #[cfg(all(feature = "native", feature = "std"))]
   fn default() -> Self {
     PixelDataEncodeConfig {
       quality: 90,
       effort: 7,
       zlib_compression_level: 6,
+      jpeg_baseline_encoder: JpegBaselineEncoder::LibJpegTurbo,
+    }
+  }
+
+  #[cfg(not(all(feature = "native", feature = "std")))]
+  fn default() -> Self {
+    PixelDataEncodeConfig {
+      quality: 90,
+      effort: 7,
+      zlib_compression_level: 6,
+      jpeg_baseline_encoder: JpegBaselineEncoder::JpegEncoder,
+    }
+  }
+}
+
+/// The library to use for encoding JPEG Baseline 8-bit pixel data.
+///
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum JpegBaselineEncoder {
+  JpegEncoder,
+  LibJpegTurbo,
+}
+
+impl core::fmt::Display for JpegBaselineEncoder {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    match self {
+      Self::JpegEncoder => f.write_str("jpeg-encoder"),
+      Self::LibJpegTurbo => f.write_str("libjpeg-turbo"),
     }
   }
 }
@@ -115,6 +147,28 @@ impl PixelDataEncodeConfig {
   pub fn set_zlib_compression_level(&mut self, compression_level: u32) {
     self.zlib_compression_level = compression_level.clamp(0, 9);
   }
+
+  /// Returns the library used to encode pixel data into the 'JPEG Baseline
+  /// 8-bit' transfer syntax. This is also used to create the JPEG data that is
+  /// then losslessly recompressed when encoding into the 'JPEG XL JPEG
+  /// Recompression' transfer syntax.
+  ///
+  /// Default: [`JpegBaselineEncoder::LibJpegTurbo`] except on WASM where it
+  /// defaults to [`JpegBaselineEncoder::JpegEncoder`].
+  ///
+  pub fn jpeg_baseline_encoder(&self) -> JpegBaselineEncoder {
+    self.jpeg_baseline_encoder
+  }
+
+  /// Sets the library used to encode pixel data into the 'JPEG Baseline 8-bit'
+  /// transfer syntax.
+  ///
+  pub fn set_jpeg_baseline_encoder(
+    &mut self,
+    jpeg_baseline_encoder: JpegBaselineEncoder,
+  ) {
+    self.jpeg_baseline_encoder = jpeg_baseline_encoder;
+  }
 }
 
 /// Errors that can occur when encoding frames of image data into a specific
@@ -145,6 +199,10 @@ pub enum PixelDataEncodeError {
     input_color_space: Option<ColorSpace>,
   },
 
+  /// The encoder requested in the encoding config is not available because it
+  /// wasn't part of the build.
+  EncoderNotAvailable { name: String },
+
   /// There was another untyped error when encoding pixel data.
   OtherError { name: String, details: String },
 }
@@ -162,6 +220,7 @@ impl PixelDataEncodeError {
         "Image Pixel Module not supported by encoder".to_string()
       }
       Self::NotSupported { .. } => "Configuration not supported".to_string(),
+      Self::EncoderNotAvailable { .. } => "Encoder not available".to_string(),
       Self::OtherError { name, .. } => name.to_string(),
     }
   }
@@ -184,6 +243,10 @@ impl core::fmt::Display for PixelDataEncodeError {
 
       Self::NotSupported { .. } => {
         write!(f, "Image or pixel configuration not supported by encoder")
+      }
+
+      Self::EncoderNotAvailable { name } => {
+        write!(f, "Encoder '{name}' not available")
       }
 
       Self::OtherError { name, details } => {
@@ -228,6 +291,10 @@ impl DcmfxError for PixelDataEncodeError {
         if let Some(input_color_space) = input_color_space {
           lines.push(format!("  Input color space: {input_color_space:?}"));
         }
+      }
+
+      Self::EncoderNotAvailable { name } => {
+        lines.push(format!("  Name: {name}"));
       }
 
       Self::OtherError { details, .. } => {
@@ -352,10 +419,29 @@ pub fn encode_monochrome(
     &RLE_LOSSLESS => rle_lossless::encode_monochrome(image, image_pixel_module)
       .map(PixelDataFrame::new_from_bytes),
 
-    &JPEG_BASELINE_8BIT => {
-      jpeg_encoder::encode_monochrome(image, image_pixel_module, encode_config)
-        .map(PixelDataFrame::new_from_bytes)
-    }
+    &JPEG_BASELINE_8BIT => match encode_config.jpeg_baseline_encoder {
+      JpegBaselineEncoder::JpegEncoder => jpeg_encoder::encode_monochrome(
+        image,
+        image_pixel_module,
+        encode_config,
+      )
+      .map(PixelDataFrame::new_from_bytes),
+
+      #[cfg(all(feature = "native", feature = "std"))]
+      JpegBaselineEncoder::LibJpegTurbo => libjpeg_turbo::encode_monochrome(
+        image,
+        image_pixel_module,
+        encode_config,
+      )
+      .map(PixelDataFrame::new_from_bytes),
+
+      #[cfg(not(all(feature = "native", feature = "std")))]
+      JpegBaselineEncoder::LibJpegTurbo => {
+        Err(PixelDataEncodeError::EncoderNotAvailable {
+          name: encode_config.jpeg_baseline_encoder.to_string(),
+        })
+      }
+    },
 
     #[cfg(feature = "native")]
     &JPEG_EXTENDED_12BIT => {
@@ -419,11 +505,19 @@ pub fn encode_monochrome(
 
     #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL_JPEG_RECOMPRESSION => {
-      let jpeg_data = jpeg_encoder::encode_monochrome(
-        image,
-        image_pixel_module,
-        encode_config,
-      )?;
+      let jpeg_data = match encode_config.jpeg_baseline_encoder {
+        JpegBaselineEncoder::JpegEncoder => jpeg_encoder::encode_monochrome(
+          image,
+          image_pixel_module,
+          encode_config,
+        ),
+
+        JpegBaselineEncoder::LibJpegTurbo => libjpeg_turbo::encode_monochrome(
+          image,
+          image_pixel_module,
+          encode_config,
+        ),
+      }?;
 
       crate::jpeg_xl_jpeg_recompression::recompress_jpeg_to_jpeg_xl(&jpeg_data)
         .map(PixelDataFrame::new_from_bytes)
@@ -463,10 +557,25 @@ pub fn encode_color(
     &RLE_LOSSLESS => rle_lossless::encode_color(image, image_pixel_module)
       .map(PixelDataFrame::new_from_bytes),
 
-    &JPEG_BASELINE_8BIT => {
-      jpeg_encoder::encode_color(image, image_pixel_module, encode_config)
-        .map(PixelDataFrame::new_from_bytes)
-    }
+    &JPEG_BASELINE_8BIT => match encode_config.jpeg_baseline_encoder {
+      JpegBaselineEncoder::JpegEncoder => {
+        jpeg_encoder::encode_color(image, image_pixel_module, encode_config)
+          .map(PixelDataFrame::new_from_bytes)
+      }
+
+      #[cfg(all(feature = "native", feature = "std"))]
+      JpegBaselineEncoder::LibJpegTurbo => {
+        libjpeg_turbo::encode_color(image, image_pixel_module, encode_config)
+          .map(PixelDataFrame::new_from_bytes)
+      }
+
+      #[cfg(not(all(feature = "native", feature = "std")))]
+      JpegBaselineEncoder::LibJpegTurbo => {
+        Err(PixelDataEncodeError::EncoderNotAvailable {
+          name: encode_config.jpeg_baseline_encoder.to_string(),
+        })
+      }
+    },
 
     #[cfg(feature = "native")]
     &JPEG_EXTENDED_12BIT => {
@@ -528,8 +637,15 @@ pub fn encode_color(
 
     #[cfg(all(feature = "native", feature = "std"))]
     &JPEG_XL_JPEG_RECOMPRESSION => {
-      let jpeg_data =
-        jpeg_encoder::encode_color(image, image_pixel_module, encode_config)?;
+      let jpeg_data = match encode_config.jpeg_baseline_encoder {
+        JpegBaselineEncoder::JpegEncoder => {
+          jpeg_encoder::encode_color(image, image_pixel_module, encode_config)
+        }
+
+        JpegBaselineEncoder::LibJpegTurbo => {
+          libjpeg_turbo::encode_color(image, image_pixel_module, encode_config)
+        }
+      }?;
 
       crate::jpeg_xl_jpeg_recompression::recompress_jpeg_to_jpeg_xl(&jpeg_data)
         .map(PixelDataFrame::new_from_bytes)

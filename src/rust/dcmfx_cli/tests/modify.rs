@@ -890,6 +890,46 @@ fn jpeg_baseline_to_jpeg_baseline_with_low_quality() {
 }
 
 #[test]
+fn jpeg_baseline_to_implicit_vr_little_endian_using_zune_jpeg() {
+  modify_transfer_syntax_and_check_pixel_data(
+    "../../../test/assets/pydicom/test_files/examples_ybr_color.dcm",
+    "implicit-vr-little-endian",
+    "jpeg_baseline_to_implicit_vr_little_endian_using_zune_jpeg",
+    &["--jpeg-baseline-decoder", "zune-jpeg"],
+  );
+}
+
+#[test]
+fn monochrome_jpeg_xl_to_jpeg_baseline_using_jpeg_encoder() {
+  modify_transfer_syntax_and_check_pixel_data(
+    "../../../test/assets/other/monochrome_jpeg_xl.dcm",
+    "jpeg-baseline-8bit",
+    "monochrome_jpeg_xl_to_jpeg_baseline_using_jpeg_encoder",
+    &["--jpeg-baseline-encoder", "jpeg-encoder"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_rgb_to_jpeg_baseline_using_jpeg_encoder() {
+  modify_transfer_syntax_and_check_pixel_data(
+    "../../../test/assets/fo-dicom/TestPattern_RGB.dcm",
+    "jpeg-baseline-8bit",
+    "explicit_vr_little_endian_rgb_to_jpeg_baseline_using_jpeg_encoder",
+    &["--jpeg-baseline-encoder", "jpeg-encoder"],
+  );
+}
+
+#[test]
+fn explicit_vr_little_endian_ybr_to_jpeg_baseline_using_jpeg_encoder() {
+  modify_transfer_syntax_and_check_pixel_data(
+    "../../../test/assets/pydicom/test_files/SC_ybr_full_422_uncompressed.dcm",
+    "jpeg-baseline-8bit",
+    "explicit_vr_little_endian_ybr_to_jpeg_baseline_using_jpeg_encoder",
+    &["--jpeg-baseline-encoder", "jpeg-encoder"],
+  );
+}
+
+#[test]
 fn palette_color_to_jpeg_baseline() {
   modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/fo-dicom/TestPattern_Palette.dcm",

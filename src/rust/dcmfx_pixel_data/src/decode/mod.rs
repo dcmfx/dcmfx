@@ -23,6 +23,8 @@ mod jxl_oxide;
 #[cfg(feature = "native")]
 mod libjpeg_12bit;
 #[cfg(all(feature = "native", feature = "std"))]
+mod libjpeg_turbo;
+#[cfg(all(feature = "native", feature = "std"))]
 mod libjxl;
 mod native;
 #[cfg(feature = "native")]
@@ -42,6 +44,12 @@ pub struct PixelDataDecodeConfig {
   ///
   pub high_throughput_jpeg_2000_decoder: HighThroughputJpeg2000Decoder,
 
+  /// The library to use for decoding JPEG Baseline 8-bit pixel data. Defaults
+  /// to [`JpegBaselineDecoder::LibJpegTurbo`] except on WASM where it defaults
+  /// to [`JpegBaselineDecoder::ZuneJpeg`].
+  ///
+  pub jpeg_baseline_decoder: JpegBaselineDecoder,
+
   /// The library to use for decoding JPEG XL pixel data. Defaults to
   /// [`JpegXlDecoder::LibJxl`] except on WASM where it defaults to
   /// [`JpegXlDecoder::JxlOxide`].
@@ -54,6 +62,7 @@ impl Default for PixelDataDecodeConfig {
   fn default() -> Self {
     Self {
       high_throughput_jpeg_2000_decoder: HighThroughputJpeg2000Decoder::OpenJph,
+      jpeg_baseline_decoder: JpegBaselineDecoder::LibJpegTurbo,
       jpeg_xl_decoder: JpegXlDecoder::LibJxl,
     }
   }
@@ -63,6 +72,7 @@ impl Default for PixelDataDecodeConfig {
     Self {
       high_throughput_jpeg_2000_decoder:
         HighThroughputJpeg2000Decoder::OpenJpeg,
+      jpeg_baseline_decoder: JpegBaselineDecoder::ZuneJpeg,
       jpeg_xl_decoder: JpegXlDecoder::JxlOxide,
     }
   }
@@ -79,6 +89,21 @@ impl core::fmt::Display for HighThroughputJpeg2000Decoder {
     match self {
       Self::OpenJpeg => f.write_str("openjpeg"),
       Self::OpenJph => f.write_str("openjph"),
+    }
+  }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum JpegBaselineDecoder {
+  ZuneJpeg,
+  LibJpegTurbo,
+}
+
+impl core::fmt::Display for JpegBaselineDecoder {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    match self {
+      Self::ZuneJpeg => f.write_str("zune-jpeg"),
+      Self::LibJpegTurbo => f.write_str("libjpeg-turbo"),
     }
   }
 }
@@ -295,9 +320,23 @@ pub fn decode_monochrome(
 
     &RLE_LOSSLESS => rle_lossless::decode_monochrome(image_pixel_module, data),
 
-    &JPEG_BASELINE_8BIT => {
-      zune_jpeg::decode_monochrome(image_pixel_module, data)
-    }
+    &JPEG_BASELINE_8BIT => match decode_config.jpeg_baseline_decoder {
+      JpegBaselineDecoder::ZuneJpeg => {
+        zune_jpeg::decode_monochrome(image_pixel_module, data)
+      }
+
+      #[cfg(all(feature = "native", feature = "std"))]
+      JpegBaselineDecoder::LibJpegTurbo => {
+        libjpeg_turbo::decode_monochrome(image_pixel_module, data)
+      }
+
+      #[cfg(not(all(feature = "native", feature = "std")))]
+      JpegBaselineDecoder::LibJpegTurbo => {
+        Err(PixelDataDecodeError::DecoderNotAvailable {
+          name: decode_config.jpeg_baseline_decoder.to_string(),
+        })
+      }
+    },
 
     #[cfg(feature = "native")]
     &JPEG_EXTENDED_12BIT => {
@@ -322,37 +361,43 @@ pub fn decode_monochrome(
     &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2000 => {
-      #[cfg(feature = "std")]
-      if decode_config.high_throughput_jpeg_2000_decoder
-        == HighThroughputJpeg2000Decoder::OpenJph
-      {
-        return openjph::decode_monochrome(image_pixel_module, data);
-      }
+      match decode_config.high_throughput_jpeg_2000_decoder {
+        HighThroughputJpeg2000Decoder::OpenJpeg => {
+          openjpeg::decode_monochrome(image_pixel_module, data)
+        }
 
-      if decode_config.high_throughput_jpeg_2000_decoder
-        == HighThroughputJpeg2000Decoder::OpenJpeg
-      {
-        return openjpeg::decode_monochrome(image_pixel_module, data);
-      }
+        #[cfg(feature = "std")]
+        HighThroughputJpeg2000Decoder::OpenJph => {
+          openjph::decode_monochrome(image_pixel_module, data)
+        }
 
-      Err(PixelDataDecodeError::DecoderNotAvailable {
-        name: decode_config.high_throughput_jpeg_2000_decoder.to_string(),
-      })
+        #[cfg(not(feature = "std"))]
+        HighThroughputJpeg2000Decoder::OpenJph => {
+          Err(PixelDataDecodeError::DecoderNotAvailable {
+            name: decode_config.high_throughput_jpeg_2000_decoder.to_string(),
+          })
+        }
+      }
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-      #[cfg(all(feature = "native", feature = "std"))]
-      if decode_config.jpeg_xl_decoder == JpegXlDecoder::LibJxl {
-        return libjxl::decode_monochrome(image_pixel_module, data);
-      }
+      match decode_config.jpeg_xl_decoder {
+        #[cfg(all(feature = "native", feature = "std"))]
+        JpegXlDecoder::LibJxl => {
+          libjxl::decode_monochrome(image_pixel_module, data)
+        }
 
-      if decode_config.jpeg_xl_decoder == JpegXlDecoder::JxlOxide {
-        return jxl_oxide::decode_monochrome(image_pixel_module, data);
-      }
+        #[cfg(not(all(feature = "native", feature = "std")))]
+        JpegXlDecoder::LibJxl => {
+          Err(PixelDataDecodeError::DecoderNotAvailable {
+            name: decode_config.jpeg_xl_decoder.to_string(),
+          })
+        }
 
-      Err(PixelDataDecodeError::DecoderNotAvailable {
-        name: decode_config.jpeg_xl_decoder.to_string(),
-      })
+        JpegXlDecoder::JxlOxide => {
+          jxl_oxide::decode_monochrome(image_pixel_module, data)
+        }
+      }
     }
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => native::decode_monochrome(
@@ -388,7 +433,23 @@ pub fn decode_color(
 
     &RLE_LOSSLESS => rle_lossless::decode_color(image_pixel_module, data),
 
-    &JPEG_BASELINE_8BIT => zune_jpeg::decode_color(image_pixel_module, data),
+    &JPEG_BASELINE_8BIT => match decode_config.jpeg_baseline_decoder {
+      JpegBaselineDecoder::ZuneJpeg => {
+        zune_jpeg::decode_color(image_pixel_module, data)
+      }
+
+      #[cfg(all(feature = "native", feature = "std"))]
+      JpegBaselineDecoder::LibJpegTurbo => {
+        libjpeg_turbo::decode_color(image_pixel_module, data)
+      }
+
+      #[cfg(not(all(feature = "native", feature = "std")))]
+      JpegBaselineDecoder::LibJpegTurbo => {
+        Err(PixelDataDecodeError::DecoderNotAvailable {
+          name: decode_config.jpeg_baseline_decoder.to_string(),
+        })
+      }
+    },
 
     #[cfg(feature = "native")]
     &JPEG_EXTENDED_12BIT => {
@@ -413,37 +474,41 @@ pub fn decode_color(
     &HIGH_THROUGHPUT_JPEG_2000_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2000_WITH_RPCL_OPTIONS_LOSSLESS_ONLY
     | &HIGH_THROUGHPUT_JPEG_2000 => {
-      #[cfg(feature = "std")]
-      if decode_config.high_throughput_jpeg_2000_decoder
-        == HighThroughputJpeg2000Decoder::OpenJph
-      {
-        return openjph::decode_color(image_pixel_module, data);
-      }
+      match decode_config.high_throughput_jpeg_2000_decoder {
+        HighThroughputJpeg2000Decoder::OpenJpeg => {
+          openjpeg::decode_color(image_pixel_module, data)
+        }
 
-      if decode_config.high_throughput_jpeg_2000_decoder
-        == HighThroughputJpeg2000Decoder::OpenJpeg
-      {
-        return openjpeg::decode_color(image_pixel_module, data);
-      }
+        #[cfg(feature = "std")]
+        HighThroughputJpeg2000Decoder::OpenJph => {
+          openjph::decode_color(image_pixel_module, data)
+        }
 
-      Err(PixelDataDecodeError::DecoderNotAvailable {
-        name: decode_config.high_throughput_jpeg_2000_decoder.to_string(),
-      })
+        #[cfg(not(feature = "std"))]
+        HighThroughputJpeg2000Decoder::OpenJph => {
+          Err(PixelDataDecodeError::DecoderNotAvailable {
+            name: decode_config.high_throughput_jpeg_2000_decoder.to_string(),
+          })
+        }
+      }
     }
 
     &JPEG_XL_LOSSLESS | &JPEG_XL_JPEG_RECOMPRESSION | &JPEG_XL => {
-      #[cfg(all(feature = "native", feature = "std"))]
-      if decode_config.jpeg_xl_decoder == JpegXlDecoder::LibJxl {
-        return libjxl::decode_color(image_pixel_module, data);
-      }
+      match decode_config.jpeg_xl_decoder {
+        #[cfg(all(feature = "native", feature = "std"))]
+        JpegXlDecoder::LibJxl => libjxl::decode_color(image_pixel_module, data),
 
-      if decode_config.jpeg_xl_decoder == JpegXlDecoder::JxlOxide {
-        return jxl_oxide::decode_color(image_pixel_module, data);
-      }
+        #[cfg(not(all(feature = "native", feature = "std")))]
+        JpegXlDecoder::LibJxl => {
+          Err(PixelDataDecodeError::DecoderNotAvailable {
+            name: decode_config.jpeg_xl_decoder.to_string(),
+          })
+        }
 
-      Err(PixelDataDecodeError::DecoderNotAvailable {
-        name: decode_config.jpeg_xl_decoder.to_string(),
-      })
+        JpegXlDecoder::JxlOxide => {
+          jxl_oxide::decode_color(image_pixel_module, data)
+        }
+      }
     }
 
     &DEFLATED_IMAGE_FRAME_COMPRESSION => native::decode_color(

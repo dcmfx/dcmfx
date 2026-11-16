@@ -407,11 +407,14 @@ pub struct ModifyArgs {
 
   #[command(flatten)]
   decoder: crate::args::decoder_args::DecoderArgs,
+
+  #[command(flatten)]
+  encoder: crate::args::encoder_args::EncoderArgs,
 }
 
 impl ModifyArgs {
   fn pixel_data_encode_config(&self) -> PixelDataEncodeConfig {
-    let mut config = PixelDataEncodeConfig::default();
+    let mut config = self.encoder.pixel_data_encode_config();
 
     config.set_quality(self.quality.unwrap_or(90));
     config.set_effort(self.effort.unwrap_or(7));

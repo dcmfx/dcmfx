@@ -1,4 +1,7 @@
-use dcmfx_pixel_data::decode::{HighThroughputJpeg2000Decoder, JpegXlDecoder};
+use dcmfx_pixel_data::decode::{
+  HighThroughputJpeg2000Decoder, JpegBaselineDecoder, JpegXlDecoder,
+};
+use dcmfx_pixel_data::encode::JpegBaselineEncoder;
 use rand::rngs::SmallRng;
 use rand::{RngExt, SeedableRng};
 use rayon::prelude::*;
@@ -51,22 +54,40 @@ fn test_rle_lossless_encode_decode_cycle() {
 
 #[test]
 fn test_jpeg_baseline_8bit_encode_decode_cycle() {
-  test_encode_decode_cycle(
-    all_image_pixel_modules()
-      .into_iter()
-      .filter(|m| {
-        !m.photometric_interpretation().is_palette_color()
-          && !m.photometric_interpretation().is_ybr_full()
-          && m.bits_allocated() == BitsAllocated::Eight
-          && m.pixel_representation().is_unsigned()
-      })
-      .collect(),
-    &transfer_syntax::JPEG_BASELINE_8BIT,
-    encode_config(),
-    PixelDataDecodeConfig::default(),
-    0.01,
-    0.25,
-  );
+  for jpeg_baseline_encoder in [
+    JpegBaselineEncoder::JpegEncoder,
+    JpegBaselineEncoder::LibJpegTurbo,
+  ] {
+    for jpeg_baseline_decoder in [
+      JpegBaselineDecoder::ZuneJpeg,
+      JpegBaselineDecoder::LibJpegTurbo,
+    ] {
+      let mut encode_config = encode_config();
+      encode_config.set_jpeg_baseline_encoder(jpeg_baseline_encoder);
+
+      let decode_config = PixelDataDecodeConfig {
+        jpeg_baseline_decoder,
+        ..Default::default()
+      };
+
+      test_encode_decode_cycle(
+        all_image_pixel_modules()
+          .into_iter()
+          .filter(|m| {
+            !m.photometric_interpretation().is_palette_color()
+              && !m.photometric_interpretation().is_ybr_full()
+              && m.bits_allocated() == BitsAllocated::Eight
+              && m.pixel_representation().is_unsigned()
+          })
+          .collect(),
+        &transfer_syntax::JPEG_BASELINE_8BIT,
+        encode_config,
+        decode_config,
+        0.01,
+        0.25,
+      );
+    }
+  }
 }
 
 #[test]

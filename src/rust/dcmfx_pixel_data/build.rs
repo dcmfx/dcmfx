@@ -8,6 +8,7 @@ fn main() {
 
   if !std::env::var("TARGET").unwrap().contains("wasm") {
     build_charls();
+    build_libjpeg_turbo();
     build_libjxl();
     build_openjph();
 
@@ -99,7 +100,26 @@ fn build_libjpeg_12bit() {
       "vendor/libjpeg_12bit_6b/src/jutils.c",
     ],
     &["vendor/libjpeg_12bit_6b"],
-    &[],
+    // Rename exported symbols so they don't clash with libjpeg-turbo, which is
+    // linked into the same binary. NEED_SHORT_EXTERNAL_NAMES renames symbols to
+    // use a 'jpeg12_'/'jinit12_' style prefix, however libjpeg-turbo itself
+    // exports some 'jpeg12_' symbols for its 12-bit support, so those are then
+    // renamed a second time.
+    &[
+      ("NEED_SHORT_EXTERNAL_NAMES", "1"),
+      ("jpeg12_fdct_ifast", "jpeg6b12_fdct_ifast"),
+      ("jpeg12_fdct_islow", "jpeg6b12_fdct_islow"),
+      ("jpeg12_idct_1x1", "jpeg6b12_idct_1x1"),
+      ("jpeg12_idct_2x2", "jpeg6b12_idct_2x2"),
+      ("jpeg12_idct_4x4", "jpeg6b12_idct_4x4"),
+      ("jpeg12_idct_float", "jpeg6b12_idct_float"),
+      ("jpeg12_idct_ifast", "jpeg6b12_idct_ifast"),
+      ("jpeg12_idct_islow", "jpeg6b12_idct_islow"),
+      ("jpeg12_read_raw_data", "jpeg6b12_read_raw_data"),
+      ("jpeg12_read_scanlines", "jpeg6b12_read_scanlines"),
+      ("jpeg12_write_raw_data", "jpeg6b12_write_raw_data"),
+      ("jpeg12_write_scanlines", "jpeg6b12_write_scanlines"),
+    ],
     &[],
     "dcmfx_pixel_data_libjpeg_12bit",
   );
@@ -157,6 +177,126 @@ fn build_charls() {
     &[("CHARLS_STATIC", "1")],
     &[],
     "dcmfx_pixel_data_charls",
+  );
+}
+
+fn build_libjpeg_turbo() {
+  const DIR: &str = "vendor/libjpeg-turbo_3.2.1";
+
+  // Sources that are compiled once
+  let mut src_files: Vec<String> = [
+    "jaricom",
+    "jcapimin",
+    "jcarith",
+    "jchuff",
+    "jcicc",
+    "jcinit",
+    "jclhuff",
+    "jcmarker",
+    "jcmaster",
+    "jcomapi",
+    "jcparam",
+    "jcphuff",
+    "jctrans",
+    "jdapimin",
+    "jdarith",
+    "jdatadst",
+    "jdatasrc",
+    "jdhuff",
+    "jdicc",
+    "jdinput",
+    "jdlhuff",
+    "jdmarker",
+    "jdmaster",
+    "jdphuff",
+    "jdtrans",
+    "jerror",
+    "jfdctflt",
+    "jmemmgr",
+    "jmemnobs",
+    "jpeg_nbits",
+  ]
+  .iter()
+  .map(|name| format!("{DIR}/src/src/{name}.c"))
+  .collect();
+
+  // Sources that are compiled separately for each supported sample precision
+  // via the wrapper files
+  let multi_precision_sources: &[(&str, &[u8])] = &[
+    ("jcapistd", &[8, 12, 16]),
+    ("jccoefct", &[8, 12]),
+    ("jccolor", &[8, 12, 16]),
+    ("jcdctmgr", &[8, 12]),
+    ("jcdiffct", &[8, 12, 16]),
+    ("jclossls", &[8, 12, 16]),
+    ("jcmainct", &[8, 12, 16]),
+    ("jcprepct", &[8, 12, 16]),
+    ("jcsample", &[8, 12, 16]),
+    ("jdapistd", &[8, 12, 16]),
+    ("jdcoefct", &[8, 12]),
+    ("jdcolor", &[8, 12, 16]),
+    ("jddctmgr", &[8, 12]),
+    ("jddiffct", &[8, 12, 16]),
+    ("jdlossls", &[8, 12, 16]),
+    ("jdmainct", &[8, 12, 16]),
+    ("jdmerge", &[8, 12]),
+    ("jdpostct", &[8, 12, 16]),
+    ("jdsample", &[8, 12, 16]),
+    ("jfdctfst", &[8, 12]),
+    ("jfdctint", &[8, 12]),
+    ("jidctflt", &[8, 12]),
+    ("jidctfst", &[8, 12]),
+    ("jidctint", &[8, 12]),
+    ("jidctred", &[8, 12]),
+    ("jquant1", &[8, 12]),
+    ("jquant2", &[8, 12]),
+    ("jutils", &[8, 12, 16]),
+  ];
+  for (name, precisions) in multi_precision_sources {
+    for precision in *precisions {
+      src_files.push(format!("{DIR}/src/src/wrapper/{name}-{precision}.c"));
+    }
+  }
+
+  src_files.push(format!("{DIR}/libjpeg_turbo_interface.c"));
+
+  // Use the ARM Neon SIMD extensions on AArch64. These are written using
+  // intrinsics so don't require any additional tooling. The x86-64 SIMD
+  // extensions require NASM and so aren't currently used.
+  let mut defines = vec![];
+  if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap() == "aarch64" {
+    for name in [
+      "jsimd",
+      "arm/aarch64/jsimdcpu",
+      "arm/aarch64/jchuff-neon",
+      "arm/jccolor-neon",
+      "arm/jcgray-neon",
+      "arm/jcphuff-neon",
+      "arm/jcsample-neon",
+      "arm/jdcolor-neon",
+      "arm/jdmerge-neon",
+      "arm/jdsample-neon",
+      "arm/jfdctfst-neon",
+      "arm/jfdctint-neon",
+      "arm/jidctfst-neon",
+      "arm/jidctint-neon",
+      "arm/jidctred-neon",
+      "arm/jquanti-neon",
+    ] {
+      src_files.push(format!("{DIR}/src/simd/{name}.c"));
+    }
+
+    defines.push(("DCMFX_LIBJPEG_TURBO_SIMD", "1"));
+  }
+
+  let src_files: Vec<&str> = src_files.iter().map(String::as_str).collect();
+
+  compile(
+    &src_files,
+    &[DIR, "vendor/libjpeg-turbo_3.2.1/src/src"],
+    &defines,
+    &[],
+    "dcmfx_pixel_data_libjpeg_turbo",
   );
 }
 
