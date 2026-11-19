@@ -67,7 +67,7 @@ impl P10InputArgs {
   }
 }
 
-fn default_transfer_syntax_arg_validate(
+pub(crate) fn default_transfer_syntax_arg_validate(
   s: &str,
 ) -> Result<&'static TransferSyntax, String> {
   TransferSyntax::from_uid(s)
@@ -134,11 +134,7 @@ fn input_sources_for_input_filename(
           yield input_source;
         }
       } else {
-        yield InputSource::Object {
-          object_store,
-          object_path,
-          display_path: input_filename.clone(),
-        };
+        yield InputSource::resolve(&input_filename).await;
       }
     }
     // Local file system path
@@ -171,21 +167,7 @@ fn input_sources_for_input_filename(
           return;
         }
 
-        if !input_filename.is_file() {
-          crate::utils::exit_with_error(
-            &format!(
-              "Input file '{}' does not exist",
-              input_filename.display()
-            ),
-            "",
-          );
-        }
-
-        yield InputSource::Object {
-          object_store,
-          object_path,
-          display_path: input_filename.clone(),
-        }
+        yield InputSource::resolve(&input_filename).await;
       }
     }
   })

@@ -1,0 +1,13 @@
+---
+source: dcmfx_cli/tests/diff.rs
+assertion_line: 78
+expression: get_stdout(assert)
+---
+  (0008,2112) Source Image Sequence
+    Item
+-     (0008,0018) UI SOP Instance UID "1.2.3.4.1"
++     (0008,0018) UI SOP Instance UID "1.2.3.4.99"
++   Item
++     (0008,0018) UI SOP Instance UID "1.2.3.4.2"
+- (0010,0010) PN Patient's Name "Doe^Jane"
++ (0010,0010) PN Patient's Name "Doe^John"
