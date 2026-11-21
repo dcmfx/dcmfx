@@ -325,9 +325,6 @@ pub fn encode_color(
   }
 }
 
-static ENCODE_INITIALIZE_ONCE_LOCK: std::sync::OnceLock<()> =
-  std::sync::OnceLock::new();
-
 fn encode(
   data: &[u8],
   width: u16,
@@ -335,9 +332,6 @@ fn encode(
   image_pixel_module: &ImagePixelModule,
   quality: Option<u8>,
 ) -> Result<Vec<u8>, PixelDataEncodeError> {
-  ENCODE_INITIALIZE_ONCE_LOCK
-    .get_or_init(|| unsafe { ffi::openjph_encode_initialize() });
-
   let mut output_data = Vec::with_capacity(512 * 1024);
 
   let mut error_buffer = [0 as core::ffi::c_char; 256];
@@ -423,8 +417,6 @@ extern "C" fn append_output_data(
 
 mod ffi {
   unsafe extern "C" {
-    pub fn openjph_encode_initialize();
-
     pub fn openjph_encode(
       input_data: *const core::ffi::c_void,
       width: usize,
