@@ -1,0 +1,5 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+---
+Error: The data set path for --replace-value must end with a data element tag: 00081140/[1]

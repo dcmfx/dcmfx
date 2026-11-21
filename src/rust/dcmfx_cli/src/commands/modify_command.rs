@@ -139,6 +139,32 @@ pub struct ModifyArgs {
   merge_dicom_json_before_deidentify: Option<DataSet>,
 
   #[arg(
+    long = "replace-value",
+    num_args = 3,
+    value_names = ["DATA_SET_PATH", "VALUE", "REPLACEMENT"],
+    action = clap::ArgAction::Append,
+    help_heading = "Data Set Content",
+    help = "Replaces a value of the data element at the given data set path. \
+      Values that don't match pass through unchanged. The data set path is a \
+      data element tag in hex, e.g. 0008103E, which applies only to that data \
+      element in the root data set. Data elements in sequences are specified \
+      with a path that includes the sequence tag and item index, e.g. \
+      00081115/[0]/0020000E.\n\
+      \n\
+      Only data elements with a string VR are supported. Each value of a data \
+      element with multiple values is matched and replaced individually, and \
+      leading and trailing padding is ignored when matching. Data elements \
+      that aren't present aren't added.\n\
+      \n\
+      This argument can be specified multiple times. When more than one \
+      replacement matches a value the first one is used, and replaced values \
+      aren't matched again by later replacements. Replacements are made \
+      before --merge-dicom-json-before-deidentify, --deidentify, \
+      --merge-dicom-json, and --delete are applied."
+  )]
+  replace_values: Vec<String>,
+
+  #[arg(
     long = "delete",
     value_name = "DATA_ELEMENT_TAG",
     help_heading = "Data Set Content",
@@ -521,6 +547,15 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
     return Err(());
   }
 
+  let value_replacements = match parse_value_replacements(&args.replace_values)
+  {
+    Ok(value_replacements) => value_replacements,
+    Err(e) => {
+      eprintln!("Error: {e}");
+      return Err(());
+    }
+  };
+
   crate::validate_output_args(
     args.output_filename.as_ref(),
     args.output_directory.as_ref(),
@@ -552,6 +587,7 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
     move |input_source: InputSource| {
       let args = args.clone();
       let deidentifier = deidentifier.clone();
+      let value_replacements = value_replacements.clone();
 
       async move {
         if args.in_place
@@ -581,6 +617,7 @@ pub async fn run(args: ModifyArgs) -> Result<(), ()> {
           output_target,
           &args,
           deidentifier,
+          value_replacements,
         )
         .await
         {
@@ -623,6 +660,7 @@ async fn modify_input_source(
   output_target: OutputTarget,
   args: &ModifyArgs,
   deidentifier: Option<Deidentifier>,
+  value_replacements: Vec<ValueReplacement>,
 ) -> Result<(), ModifyCommandError> {
   if args.in_place {
     println!("Modifying \"{input_source}\" in place …");
@@ -639,6 +677,13 @@ async fn modify_input_source(
       output_target.display_path().display()
     );
   }
+
+  // Create a replace value transform, if needed
+  let replace_value_transform = if value_replacements.is_empty() {
+    None
+  } else {
+    Some(P10ReplaceValueTransform::new(value_replacements))
+  };
 
   // Create an de-identify transform, if needed
   let deidentify_transform = deidentifier.map(P10DeidentifyTransform::new);
@@ -688,6 +733,7 @@ async fn modify_input_source(
     &mut input_stream,
     &mut *output_stream,
     write_config,
+    replace_value_transform,
     deidentify_transform,
     filter_transform,
     args,
@@ -707,6 +753,7 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
   input_stream: &mut I,
   output_stream: &mut O,
   write_config: P10WriteConfig,
+  mut replace_value_transform: Option<P10ReplaceValueTransform>,
   mut deidentify_transform: Option<P10DeidentifyTransform>,
   mut filter_transform: Option<P10FilterTransform>,
   args: &ModifyArgs,
@@ -859,6 +906,27 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
       tokens = new_tokens
     }
 
+    // Pass tokens through the replace value transform if one is specified.
+    // This is done after pixel data transcoding so that replaced values don't
+    // affect how pixel data is decoded, and prior to all other modifications so
+    // that replacements match against the input's values.
+    let tokens =
+      if let Some(replace_value_transform) = replace_value_transform.as_mut() {
+        let mut new_tokens = vec![];
+
+        for token in tokens.iter() {
+          new_tokens.extend(
+            replace_value_transform
+              .add_token(token)
+              .map_err(ModifyCommandError::P10Error)?,
+          );
+        }
+
+        new_tokens
+      } else {
+        tokens
+      };
+
     // Pass tokens through the pre-de-identification insert transform if one is
     // specified
     let tokens =
@@ -919,6 +987,37 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
   }
 
   Ok(())
+}
+
+/// Parses the values of the --replace-value argument, which are a flattened
+/// list of (data set path, value, replacement) triples.
+///
+fn parse_value_replacements(
+  values: &[String],
+) -> Result<Vec<ValueReplacement>, String> {
+  values
+    .as_chunks::<3>()
+    .0
+    .iter()
+    .map(|[path, value, replacement]| {
+      let parsed_path = DataSetPath::from_string(path).map_err(|_| {
+        format!("Invalid data set path for --replace-value: {path}")
+      })?;
+
+      if parsed_path.final_data_element().is_err() {
+        return Err(format!(
+          "The data set path for --replace-value must end with a data element \
+           tag: {path}"
+        ));
+      }
+
+      Ok(ValueReplacement {
+        path: parsed_path,
+        value: value.clone(),
+        replacement: replacement.clone(),
+      })
+    })
+    .collect()
 }
 
 /// Passes tokens through an insert transform, if one is specified.

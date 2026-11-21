@@ -592,6 +592,96 @@ fn delete_private_tags() {
 }
 
 #[test]
+fn replace_value() {
+  let temp_dir = create_temp_dir();
+
+  let input_file = "../../../test/assets/fo-dicom/GH064.dcm";
+  let output_file = temp_dir.path().join("output.dcm");
+
+  dcmfx_cli()
+    .arg("modify")
+    .arg(input_file)
+    .arg("--output-filename")
+    .arg(&output_file)
+    .arg("--replace-value")
+    .arg("0008103E")
+    .arg("Survey_MST")
+    .arg("Localizer")
+    .arg("--replace-value")
+    .arg("0008103E")
+    .arg("Not Present")
+    .arg("Unused")
+    .arg("--replace-value")
+    .arg("00080008")
+    .arg("DERIVED")
+    .arg("ORIGINAL")
+    .arg("--replace-value")
+    .arg("00081140/[1]/00081150")
+    .arg("1.2.840.10008.5.1.4.1.1.4")
+    .arg("1.2.3")
+    .arg("--implementation-version-name")
+    .arg("DCMfx Test")
+    .assert()
+    .success()
+    .stdout(format!(
+      "Modifying \"{}\" => \"{}\" …\n",
+      input_file,
+      output_file.display()
+    ));
+
+  let assert = dcmfx_cli()
+    .arg("print")
+    .arg(&output_file)
+    .arg("--max-width")
+    .arg("120")
+    .assert()
+    .success();
+
+  assert_snapshot!("replace_value", get_stdout(assert));
+}
+
+#[test]
+fn errors_on_replace_value_with_sequence_item_path() {
+  let assert = dcmfx_cli()
+    .arg("modify")
+    .arg("--replace-value")
+    .arg("00081140/[1]")
+    .arg("A")
+    .arg("B")
+    .arg("--in-place")
+    .arg("tmp.dcm")
+    .assert()
+    .failure();
+
+  assert_snapshot!(
+    "errors_on_replace_value_with_sequence_item_path",
+    get_stderr(assert)
+  );
+}
+
+#[test]
+fn errors_on_replace_value_with_non_string_vr() {
+  let temp_dir = create_temp_dir();
+
+  let assert = dcmfx_cli()
+    .arg("modify")
+    .arg("../../../test/assets/fo-dicom/GH064.dcm")
+    .arg("--output-filename")
+    .arg(temp_dir.path().join("output.dcm"))
+    .arg("--replace-value")
+    .arg("00280010")
+    .arg("1")
+    .arg("2")
+    .assert()
+    .failure();
+
+  assert_snapshot!(
+    "errors_on_replace_value_with_non_string_vr",
+    get_stderr(assert)
+  );
+}
+
+#[test]
 fn modify_omit_dicom_header() {
   let temp_dir = create_temp_dir();
   let input_file = "../../../test/assets/fo-dicom/CT-MONO2-16-ankle.dcm";

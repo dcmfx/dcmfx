@@ -1,0 +1,10 @@
+---
+source: dcmfx_cli/tests/modify.rs
+expression: get_stderr(assert)
+---
+
+-----
+DICOM P10 error modifying "../../../test/assets/fo-dicom/GH064.dcm"
+
+  Error: Value replacement failed
+  Details: (0028,0010) Rows: Value replacement isn't supported for data elements with the US value representation, only for those with a string value representation

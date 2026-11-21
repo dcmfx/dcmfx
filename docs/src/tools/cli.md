@@ -234,13 +234,29 @@ Azure Blob Storage (`az://`).
    dcmfx modify input.dcm --in-place --delete 00100010 --delete 00100030
    ```
 
-10. Print a list of all DICOM files under the current directory:
+10. Replace specific values of data elements, leaving other values unchanged.
+    E.g. change a _'(0008,103E) Series Description'_ of "ABC" to "123", and
+    change "DERIVED" to "ORIGINAL" in the multi-valued _'(0008,0008) Image
+    Type'_ data element:
+
+    ```sh
+    dcmfx modify input.dcm --in-place \
+      --replace-value 0008103E ABC 123 \
+      --replace-value 00080008 DERIVED ORIGINAL
+    ```
+
+    A plain data element tag applies only to the data element in the root data
+    set. Data elements inside sequences are specified with a data set path that
+    includes the sequence tag and item index, e.g. `00081115/[0]/0020000E`.
+    Only data elements with a string VR are supported.
+
+11. Print a list of all DICOM files under the current directory:
 
     ```sh
     dcmfx list .
     ```
 
-11. Print a list of all DICOM files under the current directory as JSON Lines
+12. Print a list of all DICOM files under the current directory as JSON Lines
     that includes the value of each DICOM's '_(0008,0018) SOP Instance UID_'
     data element, followed by a summary of their transfer syntaxes and SOP
     classes:
@@ -249,7 +265,7 @@ Azure Blob Storage (`az://`).
     dcmfx list . --format json-lines --select 00080018 --summarize
     ```
 
-12. Archive all `*.dcm` files under the current directory into a compressed ZIP
+13. Archive all `*.dcm` files under the current directory into a compressed ZIP
     file along with a DICOMDIR, and name the archived DICOMs using the schema
     `PA000000/ST000000/SE000000/IM000000`.
 

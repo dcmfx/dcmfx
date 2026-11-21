@@ -50,6 +50,9 @@ pub use transforms::p10_custom_type_transform::{
 pub use transforms::p10_filter_transform::P10FilterTransform;
 pub use transforms::p10_insert_transform::P10InsertTransform;
 pub use transforms::p10_print_transform::P10PrintTransform;
+pub use transforms::p10_replace_value_transform::{
+  P10ReplaceValueTransform, ValueReplacement,
+};
 
 /// Returns whether a file contains DICOM P10 data by checking for the presence
 /// of the 'DICM' prefix at offset 128.
