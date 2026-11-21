@@ -1,6 +1,4 @@
 <div align="center">
-  <img src="https://emoji2svg.deno.dev/api/🩻" height="160px">
-
   <h1>DCMfx</h1>
   
   <p>
