@@ -1602,7 +1602,7 @@ pub(crate) mod tests {
       dictionary::PERSON_NAME.tag,
       raw_value(&dictionary::PERSON_NAME, "Smith^John"),
     );
-    let finding = text_item("99TEST", "1234", "Stained");
+    let finding = text_item("DCM", "121073", "Stained");
 
     let mut step = DataSet::new();
     step
@@ -1642,7 +1642,7 @@ pub(crate) mod tests {
     );
 
     // A kept item's modifiers are cleaned too
-    let mut item = text_item("99TEST", "1234", "Supine");
+    let mut item = text_item("DCM", "121073", "Supine");
     item
       .insert_sequence_value(
         &dictionary::CONTENT_ITEM_MODIFIER_SEQUENCE,
@@ -1910,7 +1910,7 @@ pub(crate) mod tests {
     );
     let mut untyped = text_item("99TEST", "2", "Doe untyped");
     untyped.delete(dictionary::VALUE_TYPE.tag);
-    let text = text_item("99TEST", "3", "Stained");
+    let text = text_item("DCM", "121073", "Stained");
 
     let mut original = DataSet::new();
     original.insert(

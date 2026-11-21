@@ -74,8 +74,14 @@ pub struct ProfileOptions {
   /// allows Structured Reports to be de-identified while retaining their
   /// findings and measurements.
   ///
-  /// Text content items whose concept name isn't listed in the table are
-  /// retained verbatim, as the standard specifies. Free text such as findings
+  /// Beyond the table, Sonographer content items, and text content items
+  /// whose concept name is from a private coding scheme (other than a few
+  /// known to be safe, such as Philips measurement labels), have their value
+  /// replaced with a dummy value, as vendors use these for names. See
+  /// [`action_for_content_item`](crate::action_for_content_item).
+  ///
+  /// Other text content items whose concept name isn't listed in the table
+  /// are retained verbatim, as the standard specifies. Free text such as findings
   /// isn't scanned for names or other identifying information. Removing a
   /// content item moves up the content items that follow it in the same
   /// sequence, so a by-reference relationship that identifies one of them by

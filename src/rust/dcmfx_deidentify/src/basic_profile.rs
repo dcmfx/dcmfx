@@ -920,6 +920,20 @@ impl ContentItemAction {
 /// type, the most restrictive action across the table's entries for the
 /// concept name is used.
 ///
+/// In addition to Table E.3.4-1:
+///
+/// - Sonographer, (121093, DCM) and (C1954848, UMLS), as a TEXT content item
+///   is treated as if the table listed it with the `D` action code, as its
+///   value is a person's name.
+///
+/// - Unlisted TEXT content items whose concept name is from a private coding
+///   scheme, i.e. one whose designator begins with "99", have their value
+///   replaced with a dummy value. Vendors use private concept names for
+///   free text such as the names of the referring physician and sonographer,
+///   which no standard table can list. A small number of private concept
+///   names known not to hold identifying information, such as the labels of
+///   measurements in Philips ultrasound SRs, are kept.
+///
 pub fn action_for_content_item(
   coding_scheme_designator: Option<&str>,
   code_value: Option<&str>,
@@ -944,7 +958,13 @@ pub fn action_for_content_item(
     content_item_table::TABLE.partition_point(|entry| entry_key(entry) < key);
   let end =
     content_item_table::TABLE.partition_point(|entry| entry_key(entry) <= key);
-  let entries = &content_item_table::TABLE[start..end];
+  let entries = || {
+    content_item_table::TABLE[start..end].iter().chain(
+      SUPPLEMENTARY_CONTENT_ITEM_TABLE
+        .iter()
+        .filter(move |entry| entry_key(entry) == key),
+    )
+  };
 
   let resolve = |entry: &ContentItemEntry| match option_action(
     entry.options,
@@ -960,19 +980,74 @@ pub fn action_for_content_item(
   };
 
   let value_type = value_type.map(trim_padding);
-  if let Some(entry) = entries
-    .iter()
-    .find(|entry| Some(entry.value_type) == value_type)
+  if let Some(entry) =
+    entries().find(|entry| Some(entry.value_type) == value_type)
   {
     return resolve(entry);
   }
 
-  entries
-    .iter()
+  if let Some(action) = entries()
     .map(resolve)
     .max_by_key(|action| action.strictness())
-    .unwrap_or(ContentItemAction::Keep)
+  {
+    return action;
+  }
+
+  if value_type == Some("TEXT")
+    && is_private_coding_scheme(key.0)
+    && !SAFE_PRIVATE_TEXT_CONCEPT_NAMES.contains(&key)
+  {
+    return ContentItemAction::ReplaceValue;
+  }
+
+  ContentItemAction::Keep
 }
+
+/// Returns whether a coding scheme designator identifies a private coding
+/// scheme. Designators beginning with "99" are reserved for private coding
+/// schemes by PS3.16 Section 8.
+///
+fn is_private_coding_scheme(coding_scheme_designator: &str) -> bool {
+  coding_scheme_designator.starts_with("99")
+}
+
+/// Content item concept names that aren't listed in Table E.3.4-1 of DICOM
+/// PS3.15 but that hold identifying information, and the action taken on
+/// content items with them. These are consulted alongside the table.
+///
+/// - Sonographer, whose value is a person's name. The DCM code is retired and
+///   replaced by the UMLS code, and is an organizational role rather than a
+///   concept name, but is used as the concept name of a TEXT content item
+///   holding the sonographer's name in Philips ultrasound SRs.
+///
+const SUPPLEMENTARY_CONTENT_ITEM_TABLE: &[ContentItemEntry] = &[
+  ContentItemEntry {
+    coding_scheme_designator: "DCM",
+    code_value: "121093",
+    value_type: "TEXT",
+    basic_profile: D,
+    options: 0,
+  },
+  ContentItemEntry {
+    coding_scheme_designator: "UMLS",
+    code_value: "C1954848",
+    value_type: "TEXT",
+    basic_profile: D,
+    options: 0,
+  },
+];
+
+/// Private TEXT content item concept names, as (Coding Scheme Designator,
+/// Code Value) pairs, whose values are known not to hold identifying
+/// information, and so are kept rather than replaced with a dummy value. See
+/// [`action_for_content_item`].
+///
+/// - Philips ultrasound: Label, which names a measurement, e.g. "AO Index",
+///   and Simpson's Disk Number, which numbers the disks of a Simpson's method
+///   volume measurement.
+///
+const SAFE_PRIVATE_TEXT_CONCEPT_NAMES: &[(&str, &str)] =
+  &[("99PMSBLUS", "T9900-04"), ("99PMSBLUS", "T5203-01")];
 
 #[cfg(test)]
 mod tests {
@@ -1452,7 +1527,29 @@ mod tests {
       ("DCM", "121112", "COMPOSITE", ContentItemAction::Remove),
       // Unlisted concept names are kept
       ("DCM", "111028", "IMAGE", ContentItemAction::Keep),
-      ("99TEST", "1234", "TEXT", ContentItemAction::Keep),
+      // Supplementary concept names are treated as if the table listed them
+      ("DCM", "121093", "TEXT", ContentItemAction::ReplaceValue),
+      ("UMLS", "C1954848", "TEXT", ContentItemAction::ReplaceValue),
+      ("DCM", "121093", "PNAME", ContentItemAction::ReplaceValue),
+      // Unlisted private TEXT concept names have their value replaced, apart
+      // from those known to be safe, and other private value types are kept
+      ("99TEST", "1234", "TEXT", ContentItemAction::ReplaceValue),
+      (
+        "99PMSBLUS",
+        "T9910-08",
+        "TEXT",
+        ContentItemAction::ReplaceValue,
+      ),
+      (
+        "99PMSBLUS ",
+        "T9910-08 ",
+        "TEXT ",
+        ContentItemAction::ReplaceValue,
+      ),
+      ("99PMSBLUS", "T9900-04", "TEXT", ContentItemAction::Keep),
+      ("99PMSBLUS", "T5203-01", "TEXT", ContentItemAction::Keep),
+      ("99TEST", "1234", "NUM", ContentItemAction::Keep),
+      ("99TEST", "1234", "CODE", ContentItemAction::Keep),
     ] {
       assert_eq!(
         action(scheme, code, value_type, &options),
@@ -1466,6 +1563,10 @@ mod tests {
     );
     assert_eq!(
       action_for_content_item(None, None, Some("TEXT"), &options),
+      ContentItemAction::Keep
+    );
+    assert_eq!(
+      action_for_content_item(Some("99TEST"), Some("1234"), None, &options),
       ContentItemAction::Keep
     );
 

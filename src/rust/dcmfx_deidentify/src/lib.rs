@@ -81,8 +81,10 @@
 //!   concept names, rather than the whole content being discarded: content
 //!   items whose concept names Table E.3.4-1 lists are removed or have their
 //!   values replaced with dummy values, with the SNOMED CT code for Unknown
-//!   replacing a code, and every other content item is kept, with text
-//!   content items retained verbatim.
+//!   replacing a code, as are Sonographer content items and text content
+//!   items with private concept names (other than a few known to be safe,
+//!   such as Philips measurement labels). Every other content item is kept,
+//!   with text content items retained verbatim.
 //!
 //! Patient Identity Removed (0012,0062), De-identification Method (0012,0063),
 //! De-identification Method Code Sequence (0012,0064) and Longitudinal

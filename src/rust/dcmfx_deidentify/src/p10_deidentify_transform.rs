@@ -1422,7 +1422,7 @@ mod tests {
       raw_value(&dictionary::TEXT_VALUE, "ACC123"),
     );
 
-    let mut finding = content_item("99TEST", "1234", "TEXT");
+    let mut finding = content_item("DCM", "121073", "TEXT");
     finding.insert(
       dictionary::TEXT_VALUE.tag,
       raw_value(&dictionary::TEXT_VALUE, "A mass"),
@@ -1712,7 +1712,7 @@ mod tests {
     // An unlisted TEXT content item: its tokens up to and including the
     // concept name are held back, and everything after the concept name is
     // emitted as it arrives rather than when the content item ends
-    let mut item = content_item("99TEST", "1234", "TEXT");
+    let mut item = content_item("DCM", "121073", "TEXT");
     item.insert(
       dictionary::TEXT_VALUE.tag,
       raw_value(&dictionary::TEXT_VALUE, "A mass"),
