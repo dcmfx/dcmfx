@@ -573,8 +573,12 @@ jobs:
           git config user.email "actions@github.com"
 
           git add .
-          git commit -m "chore: Update docs"
-          git push
+          if git diff --cached --quiet; then
+            echo "No docs changes to commit"
+          else
+            git commit -m "chore: Update docs"
+            git push
+          fi
 
   trigger_test_release_channels_workflow:
     name: Trigger 'Test Release Channels' workflow
