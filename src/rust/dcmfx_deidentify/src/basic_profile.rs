@@ -918,7 +918,10 @@ impl ContentItemAction {
 ///
 /// If the table lists the concept name but not with the content item's value
 /// type, the most restrictive action across the table's entries for the
-/// concept name is used.
+/// concept name is used. The exception is CODE content items, which are kept,
+/// as a coded value can't hold identifying information the way free text can.
+/// E.g. the table lists Finding Site only as TEXT, but it is commonly a CODE
+/// content item whose value is an anatomic site such as the left ventricle.
 ///
 /// In addition to Table E.3.4-1:
 ///
@@ -984,6 +987,10 @@ pub fn action_for_content_item(
     entries().find(|entry| Some(entry.value_type) == value_type)
   {
     return resolve(entry);
+  }
+
+  if value_type == Some("CODE") {
+    return ContentItemAction::Keep;
   }
 
   if let Some(action) = entries()
@@ -1525,6 +1532,17 @@ mod tests {
       ("DCM", "121112", "IMAGE", ContentItemAction::ReplaceValue),
       ("DCM", "121112", "WAVEFORM", ContentItemAction::Remove),
       ("DCM", "121112", "COMPOSITE", ContentItemAction::Remove),
+      // A CODE content item whose concept name is listed only with other
+      // value types is kept, as its value can't identify the patient
+      ("SRT", "G-C0E3", "CODE", ContentItemAction::Keep),
+      ("SCT", "363698007", "CODE", ContentItemAction::Keep),
+      ("DCM", "121112", "CODE", ContentItemAction::Keep),
+      ("SRT ", "G-C0E3 ", "CODE ", ContentItemAction::Keep),
+      ("SRT", "G-C0E3", "TEXT", ContentItemAction::ReplaceValue),
+      ("SRT", "G-C0E3", "NUM", ContentItemAction::ReplaceValue),
+      // A CODE content item whose concept name is listed as CODE is still
+      // cleaned
+      ("DCM", "121032", "CODE", ContentItemAction::Remove),
       // Unlisted concept names are kept
       ("DCM", "111028", "IMAGE", ContentItemAction::Keep),
       // Supplementary concept names are treated as if the table listed them

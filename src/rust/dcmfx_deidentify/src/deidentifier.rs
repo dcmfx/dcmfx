@@ -1713,12 +1713,26 @@ pub(crate) mod tests {
       .insert_sequence_value(&dictionary::MEASURED_VALUE_SEQUENCE, vec![])
       .unwrap();
 
-    // The code of a CODE content item is replaced with the dummy code
+    // The code of a content item is replaced with the dummy code. A CODE
+    // content item whose concept name is listed only as TEXT is kept, so this
+    // content item has no Value Type, which falls back to the TEXT entry
     let mut coded = content_item("DCM", "121030", "CODE");
+    coded.delete(dictionary::VALUE_TYPE.tag);
     coded
       .insert_sequence_value(
         &dictionary::CONCEPT_CODE_SEQUENCE,
         vec![code("MRN-12345678", "99HOSP", "MRN-12345678")],
+      )
+      .unwrap();
+
+    // A CODE content item whose concept name is listed only as TEXT keeps its
+    // code, e.g. a Finding Site
+    let finding_site_code = code("T-32600", "SRT", "Left Ventricle");
+    let mut finding_site = content_item("SRT", "G-C0E3", "CODE");
+    finding_site
+      .insert_sequence_value(
+        &dictionary::CONCEPT_CODE_SEQUENCE,
+        vec![finding_site_code.clone()],
       )
       .unwrap();
 
@@ -1732,7 +1746,7 @@ pub(crate) mod tests {
     data_set
       .insert_sequence_value(
         &dictionary::CONTENT_SEQUENCE,
-        vec![num, failed_measurement, coded],
+        vec![num, failed_measurement, coded, finding_site],
       )
       .unwrap();
     data_set.deidentify(&deidentifier).unwrap();
@@ -1788,6 +1802,12 @@ pub(crate) mod tests {
         .get_sequence_items(dictionary::CONCEPT_CODE_SEQUENCE.tag)
         .unwrap(),
       &[Deidentifier::dummy_code_item()]
+    );
+    assert_eq!(
+      items[3]
+        .get_sequence_items(dictionary::CONCEPT_CODE_SEQUENCE.tag)
+        .unwrap(),
+      &[finding_site_code]
     );
   }
 
