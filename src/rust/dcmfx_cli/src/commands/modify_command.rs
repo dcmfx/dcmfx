@@ -868,6 +868,15 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
           &transfer_syntax::DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN,
         ];
 
+        // Transfer syntaxes with encapsulated pixel data encode the rest of the
+        // data set as Explicit VR Little Endian, so without pixel data the
+        // input is treated as such
+        let mut input_transfer_syntax =
+          transcode_transform.input_transfer_syntax();
+        if input_transfer_syntax.is_encapsulated {
+          input_transfer_syntax = &transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN;
+        }
+
         let mut output_transfer_syntax =
           transcode_transform.output_transfer_syntax();
 
@@ -879,7 +888,7 @@ async fn streaming_rewrite<I: IoAsyncRead, O: IoAsyncWrite>(
         }
 
         if !directly_transcodable_transfer_syntaxes
-          .contains(&transcode_transform.input_transfer_syntax())
+          .contains(&input_transfer_syntax)
           || !directly_transcodable_transfer_syntaxes
             .contains(&output_transfer_syntax)
         {

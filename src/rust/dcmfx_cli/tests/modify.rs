@@ -750,6 +750,27 @@ fn dicom_sr_to_jpeg_baseline_8bit_outputs_explicit_vr_little_endian() {
 }
 
 #[test]
+fn jpeg_lossless_without_pixel_data_to_implicit_vr_little_endian() {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/UN_sequence.dcm",
+    "implicit-vr-little-endian",
+    "jpeg_lossless_without_pixel_data_to_implicit_vr_little_endian",
+    &[],
+  );
+}
+
+#[test]
+fn jpeg_lossless_without_pixel_data_to_jpeg_2000_outputs_explicit_vr_little_endian()
+ {
+  modify_transfer_syntax(
+    "../../../test/assets/pydicom/test_files/UN_sequence.dcm",
+    "jpeg-2000-lossless-only",
+    "jpeg_lossless_without_pixel_data_to_jpeg_2000_outputs_explicit_vr_little_endian",
+    &[],
+  );
+}
+
+#[test]
 fn explicit_vr_little_endian_to_explicit_vr_big_endian() {
   modify_transfer_syntax_and_check_pixel_data(
     "../../../test/assets/pydicom/test_files/dicomdirtests/77654033/CR1/6154.dcm",
