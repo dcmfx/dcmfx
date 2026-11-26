@@ -1,5 +1,5 @@
 use dcmfx::{
-  core::{DataElementTag, DataSet},
+  core::{DataElementTag, DataSet, ValueRepresentation},
   json::DataSetJsonExtensions,
 };
 
@@ -17,6 +17,13 @@ pub mod transform_arg;
 pub fn parse_data_element_tag(s: &str) -> Result<DataElementTag, String> {
   DataElementTag::from_hex_string(s)
     .map_err(|_| "Invalid data element tag".to_string())
+}
+
+pub fn parse_value_representation(
+  s: &str,
+) -> Result<ValueRepresentation, String> {
+  ValueRepresentation::from_bytes(s.to_ascii_uppercase().as_bytes())
+    .map_err(|_| "Invalid value representation".to_string())
 }
 
 pub fn parse_dicom_json_data_set(s: &str) -> Result<DataSet, String> {

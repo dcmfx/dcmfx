@@ -334,15 +334,11 @@ impl P10JsonTransform {
       return Ok(());
     }
 
-    // The following VRs use InlineBinary in the output
-    if vr == ValueRepresentation::OtherByteString
-      || vr == ValueRepresentation::OtherDoubleString
-      || vr == ValueRepresentation::OtherFloatString
-      || vr == ValueRepresentation::OtherLongString
-      || vr == ValueRepresentation::OtherVeryLongString
-      || vr == ValueRepresentation::OtherWordString
-      || vr == ValueRepresentation::Unknown
-    {
+    // The following VRs use InlineBinary in the output, which is streamed out
+    // directly. All other VRs have their 'Value' written once all their data
+    // has been received and converted, so that a 'Value' can be omitted if the
+    // data is invalid and is being ignored.
+    if is_inline_binary_vr(vr) {
       if self.config.pretty_print {
         stream.write_all(b",\n")?;
         self.write_indent(stream, 1)?;
@@ -350,12 +346,6 @@ impl P10JsonTransform {
       } else {
         stream.write_all(br#","InlineBinary":""#)?;
       }
-    } else if self.config.pretty_print {
-      stream.write_all(b",\n")?;
-      self.write_indent(stream, 1)?;
-      stream.write_all(b"\"Value\": [\n")?;
-    } else {
-      stream.write_all(br#","Value":["#)?;
     }
 
     Ok(())
@@ -384,14 +374,7 @@ impl P10JsonTransform {
     }
 
     // The following VRs are streamed out directly as Base64
-    if vr == ValueRepresentation::OtherByteString
-      || vr == ValueRepresentation::OtherDoubleString
-      || vr == ValueRepresentation::OtherFloatString
-      || vr == ValueRepresentation::OtherLongString
-      || vr == ValueRepresentation::OtherVeryLongString
-      || vr == ValueRepresentation::OtherWordString
-      || vr == ValueRepresentation::Unknown
-    {
+    if is_inline_binary_vr(vr) {
       self
         .write_base64(
           data,
@@ -450,14 +433,14 @@ impl P10JsonTransform {
       match self.convert_binary_value_to_json(&value, Vec::from(bytes)) {
         Ok(json_values) => json_values,
 
-        // If conversion of this data element to DICOM JSON failed, but its tag is
-        // in the list of those to ignore errors for, then emit an empty value
-        // rather than propagating the error.
+        // If conversion of this data element to DICOM JSON failed, but it's
+        // configured to have its invalid data ignored, then emit it without a
+        // value rather than propagating the error
         Err(_)
           if self
             .config
             .ignore_invalid_data
-            .contains(&self.current_data_element.0) =>
+            .matches(self.current_data_element.0, vr) =>
         {
           vec![]
         }
@@ -469,11 +452,29 @@ impl P10JsonTransform {
         }
       };
 
-    if self.config.pretty_print && !json_values.is_empty() {
-      self
-        .write_indent(stream, 2)
-        .map_err(JsonSerializeError::IOError)?;
+    // If there are no values then omit the 'Value' and close the data element
+    if json_values.is_empty() {
+      return if self.config.pretty_print {
+        stream
+          .write_all(b"\n")
+          .and_then(|_| self.write_indent(stream, 0))
+          .and_then(|_| stream.write_all(b"}"))
+      } else {
+        stream.write_all(b"}")
+      }
+      .map_err(JsonSerializeError::IOError);
     }
+
+    if self.config.pretty_print {
+      stream
+        .write_all(b",\n")
+        .and_then(|_| self.write_indent(stream, 1))
+        .and_then(|_| stream.write_all(b"\"Value\": [\n"))
+        .and_then(|_| self.write_indent(stream, 2))
+    } else {
+      stream.write_all(br#","Value":["#)
+    }
+    .map_err(JsonSerializeError::IOError)?;
 
     for (i, json_value) in json_values.iter().enumerate() {
       stream
@@ -985,6 +986,22 @@ impl P10JsonTransform {
       true
     }
   }
+}
+
+/// Returns whether the given VR has its value stored as an `InlineBinary` in
+/// DICOM JSON.
+///
+fn is_inline_binary_vr(vr: ValueRepresentation) -> bool {
+  matches!(
+    vr,
+    ValueRepresentation::OtherByteString
+      | ValueRepresentation::OtherDoubleString
+      | ValueRepresentation::OtherFloatString
+      | ValueRepresentation::OtherLongString
+      | ValueRepresentation::OtherVeryLongString
+      | ValueRepresentation::OtherWordString
+      | ValueRepresentation::Unknown
+  )
 }
 
 fn prepare_json_string(value: &str) -> String {

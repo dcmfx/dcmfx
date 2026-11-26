@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use dcmfx_core::DataElementTag;
+use dcmfx_core::{DataElementTag, ValueRepresentation};
 
 /// Config options used when converting a data set to DICOM JSON.
 ///
@@ -32,9 +32,49 @@ pub struct DicomJsonConfig {
   ///
   pub selected_binary_data_values: Option<Vec<DataElementTag>>,
 
-  /// The data element tags for which invalid data should be ignored rather than
+  /// The data elements for which invalid data should be ignored rather than
   /// causing the JSON conversion to error. Such data elements are emitted
-  /// without a value instead of causing an error to be returned.
+  /// without a value, i.e. the same as if their value was empty.
   ///
-  pub ignore_invalid_data: Vec<DataElementTag>,
+  pub ignore_invalid_data: IgnoreInvalidData,
+}
+
+/// Specifies the data elements for which invalid data is ignored when
+/// converting to DICOM JSON. The default value doesn't ignore invalid data in
+/// any data elements.
+///
+/// A data element's invalid data is ignored if it matches any of the fields,
+/// i.e. the fields are combined as a union.
+///
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct IgnoreInvalidData {
+  /// The tags of specific data elements for which invalid data is ignored.
+  ///
+  pub tags: Vec<DataElementTag>,
+
+  /// The value representations for which invalid data is ignored in all data
+  /// elements.
+  ///
+  pub vrs: Vec<ValueRepresentation>,
+
+  /// The value representations for which invalid data is ignored in private
+  /// data elements.
+  ///
+  pub private_vrs: Vec<ValueRepresentation>,
+
+  /// Whether invalid data is ignored in all private data elements, regardless
+  /// of their value representation.
+  ///
+  pub private: bool,
+}
+
+impl IgnoreInvalidData {
+  /// Returns whether invalid data in the specified data element should be
+  /// ignored.
+  ///
+  pub fn matches(&self, tag: DataElementTag, vr: ValueRepresentation) -> bool {
+    self.tags.contains(&tag)
+      || self.vrs.contains(&vr)
+      || (tag.is_private() && (self.private || self.private_vrs.contains(&vr)))
+  }
 }

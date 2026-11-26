@@ -259,7 +259,7 @@ fn test_data_set_matches_expected_json_output(
     store_encapsulated_pixel_data: true,
     pretty_print,
     selected_binary_data_values: None,
-    ignore_invalid_data: vec![],
+    ignore_invalid_data: IgnoreInvalidData::default(),
   };
 
   // Convert the data set to JSON
@@ -300,7 +300,7 @@ fn test_dicom_json_rewrite_cycle(
     store_encapsulated_pixel_data: true,
     pretty_print: false,
     selected_binary_data_values: None,
-    ignore_invalid_data: vec![],
+    ignore_invalid_data: IgnoreInvalidData::default(),
   };
 
   // Check the reverse by converting the expected JSON to a data set then back

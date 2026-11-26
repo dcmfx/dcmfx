@@ -267,9 +267,90 @@ fn with_ignore_invalid_data() {
     .assert()
     .success();
 
+  assert_eq!(get_stdout(assert).trim_end(), r#"{"00200011":{"vr":"IS"}}"#);
+}
+
+#[test]
+fn with_ignore_invalid_vr_and_private() {
+  // Create a DICOM P10 file with private FL and UL data elements and a public
+  // FD data element, all of which have an invalid length. Explicit VR is used
+  // so that the private data elements' VRs are preserved.
+  let invalid_value = |vr| {
+    DataElementValue::new_binary_unchecked(vr, Bytes::from_static(&[0, 0, 0]))
+  };
+
+  let data_set: DataSet = [
+    (
+      dictionary::TRANSFER_SYNTAX_UID.tag,
+      DataElementValue::new_unique_identifier(&[
+        transfer_syntax::EXPLICIT_VR_LITTLE_ENDIAN.uid,
+      ])
+      .unwrap(),
+    ),
+    (
+      DataElementTag::new(0x0009, 0x1001),
+      invalid_value(ValueRepresentation::FloatingPointSingle),
+    ),
+    (
+      DataElementTag::new(0x0009, 0x1002),
+      invalid_value(ValueRepresentation::UnsignedLong),
+    ),
+    (
+      dictionary::DIFFUSION_B_VALUE.tag,
+      invalid_value(ValueRepresentation::FloatingPointDouble),
+    ),
+  ]
+  .into_iter()
+  .collect();
+
+  let temp_dir = create_temp_dir();
+  let input_path = temp_dir.path().join("input.dcm");
+  data_set.write_p10_file(&input_path, None).unwrap();
+
+  let run = |args: &[&str]| {
+    dcmfx_cli()
+      .arg("dcm-to-json")
+      .arg(&input_path)
+      .arg("--output-filename")
+      .arg("-")
+      .args(args)
+      .assert()
+  };
+
+  // Ignoring all private data elements doesn't cover the public FD
+  run(&["--ignore-invalid-private"]).failure();
+
+  // Ignoring FL and FD everywhere doesn't cover the private UL
+  run(&["--ignore-invalid-vr", "FL", "--ignore-invalid-vr", "FD"]).failure();
+
+  // Ignoring private FL, UL, and FD doesn't cover the public FD
+  run(&[
+    "--ignore-invalid-private-vr",
+    "FL",
+    "--ignore-invalid-private-vr",
+    "UL",
+    "--ignore-invalid-private-vr",
+    "FD",
+  ])
+  .failure();
+
+  // Ignoring all private data elements, and FL and FD everywhere, succeeds
+  let assert = run(&[
+    "--ignore-invalid-private",
+    "--ignore-invalid-vr",
+    "fl",
+    "--ignore-invalid-vr",
+    "FD",
+  ])
+  .success();
+
   assert_eq!(
     get_stdout(assert).trim_end(),
-    r#"{"00200011":{"vr":"IS","Value":[]}}"#
+    concat!(
+      r#"{"00020010":{"vr":"UI","Value":["1.2.840.10008.1.2.1"]},"#,
+      r#""00091001":{"vr":"FL"},"00091002":{"vr":"UL"},"#,
+      r#""00189087":{"vr":"FD"}}"#
+    )
   );
 }
 

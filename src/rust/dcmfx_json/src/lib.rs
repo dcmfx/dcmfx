@@ -21,7 +21,7 @@ mod transforms;
 use dcmfx_core::{DataSet, DataSetPath};
 use dcmfx_p10::{DataSetP10Extensions, P10Token};
 
-pub use json_config::DicomJsonConfig;
+pub use json_config::{DicomJsonConfig, IgnoreInvalidData};
 pub use json_error::{JsonDeserializeError, JsonSerializeError};
 pub use transforms::p10_json_transform::P10JsonTransform;
 
@@ -138,7 +138,12 @@ mod tests {
     store_encapsulated_pixel_data: true,
     pretty_print: false,
     selected_binary_data_values: None,
-    ignore_invalid_data: Vec::new(),
+    ignore_invalid_data: IgnoreInvalidData {
+      tags: Vec::new(),
+      vrs: Vec::new(),
+      private_vrs: Vec::new(),
+      private: false,
+    },
   };
 
   #[test]
@@ -184,13 +189,155 @@ mod tests {
     // When the tag's errors are ignored the data element is emitted without a
     // value
     let config = DicomJsonConfig {
-      ignore_invalid_data: vec![dictionary::SERIES_NUMBER.tag],
+      ignore_invalid_data: IgnoreInvalidData {
+        tags: vec![dictionary::SERIES_NUMBER.tag],
+        ..IgnoreInvalidData::default()
+      },
       ..JSON_CONFIG
     };
     assert_eq!(
       serde_json::from_str::<serde_json::Value>(&ds.to_json(config).unwrap())
         .unwrap(),
-      serde_json::json!({ "00200011": { "vr": "IS", "Value": [] } }),
+      serde_json::json!({ "00200011": { "vr": "IS" } }),
+    );
+  }
+
+  #[test]
+  fn ignore_invalid_data_by_vr_and_private_test() {
+    use ValueRepresentation::{
+      FloatingPointDouble as FD, FloatingPointSingle as FL, UnsignedLong as UL,
+    };
+
+    let invalid_value = |vr| {
+      DataElementValue::new_binary_unchecked(vr, Bytes::from_static(&[0, 0, 0]))
+    };
+
+    // Public FL and FD data elements, and private FL and UL data elements, all
+    // with an invalid length
+    let public_fl_tag = dictionary::SLICE_THICKNESS.tag;
+    let ds: DataSet = [
+      (public_fl_tag, invalid_value(FL)),
+      (dictionary::DIFFUSION_B_VALUE.tag, invalid_value(FD)),
+      (DataElementTag::new(0x0009, 0x1001), invalid_value(FL)),
+      (DataElementTag::new(0x0009, 0x1002), invalid_value(UL)),
+    ]
+    .into_iter()
+    .collect();
+
+    let to_json = |ignore_invalid_data: IgnoreInvalidData| {
+      ds.to_json(DicomJsonConfig {
+        ignore_invalid_data,
+        ..JSON_CONFIG
+      })
+      .map(|json| serde_json::from_str::<serde_json::Value>(&json).unwrap())
+    };
+
+    let expected_json = serde_json::json!({
+      "00091001": { "vr": "FL" },
+      "00091002": { "vr": "UL" },
+      "00180050": { "vr": "FL" },
+      "00189087": { "vr": "FD" }
+    });
+
+    // Nothing ignored
+    assert!(to_json(IgnoreInvalidData::default()).is_err());
+
+    // Ignoring FL and FD everywhere doesn't cover the private UL
+    assert!(
+      to_json(IgnoreInvalidData {
+        vrs: vec![FL, FD],
+        ..IgnoreInvalidData::default()
+      })
+      .is_err()
+    );
+
+    // Ignoring all private data elements doesn't cover the public FL and FD
+    assert!(
+      to_json(IgnoreInvalidData {
+        private: true,
+        ..IgnoreInvalidData::default()
+      })
+      .is_err()
+    );
+
+    // Ignoring all private data elements, and FL and FD everywhere
+    assert_eq!(
+      to_json(IgnoreInvalidData {
+        vrs: vec![FL, FD],
+        private: true,
+        ..IgnoreInvalidData::default()
+      })
+      .unwrap(),
+      expected_json
+    );
+
+    // Ignoring private FL and UL, and FD everywhere, doesn't cover the public
+    // FL
+    assert!(
+      to_json(IgnoreInvalidData {
+        vrs: vec![FD],
+        private_vrs: vec![FL, UL],
+        ..IgnoreInvalidData::default()
+      })
+      .is_err()
+    );
+
+    // Adding the public FL's tag covers everything
+    assert_eq!(
+      to_json(IgnoreInvalidData {
+        tags: vec![public_fl_tag],
+        vrs: vec![FD],
+        private_vrs: vec![FL, UL],
+        private: false,
+      })
+      .unwrap(),
+      expected_json
+    );
+  }
+
+  #[test]
+  fn ignore_invalid_data_pretty_print_test() {
+    let ds: DataSet = [
+      (
+        dictionary::SLICE_THICKNESS.tag,
+        DataElementValue::new_binary_unchecked(
+          ValueRepresentation::FloatingPointSingle,
+          Bytes::from_static(&[0, 0, 0]),
+        ),
+      ),
+      (
+        dictionary::PATIENT_SEX.tag,
+        DataElementValue::new_code_string(&["O"]).unwrap(),
+      ),
+    ]
+    .into_iter()
+    .collect();
+
+    let json = ds
+      .to_json(DicomJsonConfig {
+        pretty_print: true,
+        ignore_invalid_data: IgnoreInvalidData {
+          vrs: vec![ValueRepresentation::FloatingPointSingle],
+          ..IgnoreInvalidData::default()
+        },
+        ..JSON_CONFIG
+      })
+      .unwrap();
+
+    assert_eq!(
+      json,
+      r#"{
+  "00100040": {
+    "vr": "CS",
+    "Value": [
+      "O"
+    ]
+  },
+  "00180050": {
+    "vr": "FL"
+  }
+}
+"#
     );
   }
 

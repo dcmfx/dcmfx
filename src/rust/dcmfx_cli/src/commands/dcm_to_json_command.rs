@@ -118,6 +118,43 @@ pub struct ToJsonArgs {
     value_parser = crate::args::parse_data_element_tag,
   )]
   ignore_invalid_data: Vec<DataElementTag>,
+
+  #[arg(
+    long = "ignore-invalid-vr",
+    value_name = "VR",
+    help_heading = "Output",
+    help = "The value representations for which invalid data that can't be \
+      converted to DICOM JSON should be ignored rather than causing the whole \
+      command to fail, e.g. 'FL' or 'FD'. Such data elements will be emitted \
+      without a value. This argument can be specified multiple times to \
+      ignore invalid data in multiple value representations.",
+    value_parser = crate::args::parse_value_representation,
+  )]
+  ignore_invalid_vrs: Vec<ValueRepresentation>,
+
+  #[arg(
+    long = "ignore-invalid-private-vr",
+    value_name = "VR",
+    help_heading = "Output",
+    help = "The value representations for which invalid data that can't be \
+      converted to DICOM JSON should be ignored in private data elements, \
+      rather than causing the whole command to fail, e.g. 'FL' or 'FD'. Such \
+      data elements will be emitted without a value. This argument can be \
+      specified multiple times to ignore invalid data in multiple value \
+      representations.",
+    value_parser = crate::args::parse_value_representation,
+  )]
+  ignore_invalid_private_vrs: Vec<ValueRepresentation>,
+
+  #[arg(
+    long = "ignore-invalid-private",
+    help_heading = "Output",
+    help = "Ignore invalid data that can't be converted to DICOM JSON in all \
+      private data elements, rather than causing the whole command to fail. \
+      Such data elements will be emitted without a value.",
+    default_value_t = false
+  )]
+  ignore_invalid_private: bool,
 }
 
 enum ToJsonError {
@@ -148,7 +185,12 @@ pub async fn run(args: ToJsonArgs) -> Result<(), ()> {
     pretty_print: args.pretty_print,
     store_encapsulated_pixel_data: args.store_encapsulated_pixel_data,
     selected_binary_data_values,
-    ignore_invalid_data: args.ignore_invalid_data.clone(),
+    ignore_invalid_data: IgnoreInvalidData {
+      tags: args.ignore_invalid_data.clone(),
+      vrs: args.ignore_invalid_vrs.clone(),
+      private_vrs: args.ignore_invalid_private_vrs.clone(),
+      private: args.ignore_invalid_private,
+    },
   });
 
   let args = Arc::new(args);
