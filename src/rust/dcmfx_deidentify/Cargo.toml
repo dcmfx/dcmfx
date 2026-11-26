@@ -1,6 +1,6 @@
 [package]
 name = "dcmfx_deidentify"
-version = "0.57.2"
+version = "0.57.3"
 description = "DCMfx de-identification library"
 
 repository.workspace = true
